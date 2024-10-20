@@ -12,10 +12,15 @@ PLATFORMS: list[str] = ["light", "cover", "fan"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set Niko Home Control from a config entry."""
-    hub = Hub(
-        hass, entry.data["name"], entry.data["host"], entry.data["port"], entry.entry_id
-    )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
+    config = entry.data["config"]
+    options = entry.data["options"]
+    enabled_entities = entry.data["entities"]
+    hub = Hub(hass, config["name"], config["host"], config["port"], entry.entry_id)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "hub": hub,
+        "enabled_entities": enabled_entities,
+        "options": options,
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

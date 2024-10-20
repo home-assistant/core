@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
-from .hub import Hub
+from .controller import NikoHomeControlController
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -20,13 +20,22 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+DATA_SCHEMA_ENTITIES = vol.Schema(
+    {
+        vol.Required("lights", default=True): bool,
+        vol.Required("covers", default=True): bool,
+        vol.Required("fans", default=True): bool,
+    }
+)
+
+DATA_SCHEMA_OPTIONAL = vol.Schema({vol.Optional("treatAsDevice", default=True): bool})
+
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int]:
     """Validate the user input allows us to connect."""
     name = data[CONF_NAME]
     host = data[CONF_HOST]
     port = data[CONF_PORT]
-    hub = Hub(hass, name, host, port, None)
 
     try:
         ipaddress.ip_address(host)
@@ -36,7 +45,9 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int
     if port < 0 or port > 65535:
         raise InvalidPort
 
-    if not hub:
+    controller = NikoHomeControlController(host, port)
+
+    if not controller:
         raise CannotConnect
 
     return {"name": name, "host": host, "port": port}
@@ -48,13 +59,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    def __init__(self):
+        """Initialize the config flow."""
+        self._config = {}
+        self._entities = {}
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=DOMAIN, data=user_input)
+                self._config = user_input
+                return await self.async_step_entities()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidHost:
@@ -66,6 +83,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_entities(self, user_input=None):
+        """Import a config entry."""
+        errors = {}
+        if user_input is not None:
+            self._entities = user_input
+            return await self.async_step_optional()
+
+        return self.async_show_form(
+            step_id="entities", data_schema=DATA_SCHEMA_ENTITIES, errors=errors
+        )
+
+    async def async_step_optional(self, user_input=None):
+        """Handle the optional step."""
+        errors = {}
+        if user_input is not None:
+            return self.async_create_entry(
+                title=DOMAIN,
+                data={
+                    "config": self._config,
+                    "options": user_input,
+                    "entities": self._entities,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="optional", data_schema=DATA_SCHEMA_OPTIONAL, errors=errors
+        )
+
+    async def async_step_import(self, import_info):
+        """Import a config entry."""
+        return await self.async_step_user()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

@@ -10,16 +10,13 @@ class Action:
         self._action_id = action["id"]
         self._type = action["type"]
         self._name = action["name"]
-        self._attr_is_on = action["value1"] > 0
         self._hub = hub
-        if self._type == "2":
-            self._attr_brightness = action["value1"] * 2.55
-        elif self._type == "3":
-            self._attr_percentage = action["value1"]
-            self._attr_is_on = action["value1"] > 0
-        elif self._type == "4":
-            self._attr_current_cover_position = action["value1"]
-            self._attr_is_closed = action["value1"] == 0
+        self._location = hub._locations[action["location"]]
+
+    @property
+    def location(self):
+        """A Niko Action location."""
+        return self._location
 
     @property
     def name(self):

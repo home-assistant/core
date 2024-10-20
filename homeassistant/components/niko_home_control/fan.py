@@ -14,14 +14,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control fan platform."""
-    hub = hass.data[DOMAIN][entry.entry_id]
+    hub = hass.data[DOMAIN][entry.entry_id]["hub"]
+    enabled_entities = hass.data[DOMAIN][entry.entry_id]["enabled_entities"]
+    if enabled_entities["fans"] is False:
+        return
+
     entities: list[NikoHomeControlFan] = []
 
     for action in hub.actions:
         entity = None
         action_type = action.action_type
         if action_type == 3:
-            NikoHomeControlFan(action, hub)
+            NikoHomeControlFan(action, hub, options=entry.data["options"])
 
         if entity:
             hub.entities.append(entity)
@@ -33,7 +37,7 @@ async def async_setup_entry(
 class NikoHomeControlFan(FanEntity):
     """Representation of an Niko fan."""
 
-    def __init__(self, action, hub):
+    def __init__(self, action, hub, options):
         """Set up the Niko Home Control action platform."""
         self._hub = hub
         self._action = action
@@ -45,6 +49,19 @@ class NikoHomeControlFan(FanEntity):
             FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
         )
         self._preset_modes = ["low", "medium", "high", "very_high"]
+
+        if options["treatAsDevice"] is not False:
+            self._attr_device_info = {
+                "identifiers": {(DOMAIN, self._attr_unique_id)},
+                "manufacturer": "Niko",
+                "name": action.name,
+                "model": "P.O.M",
+                "suggested_area": action.location,
+                "via_device": hub._via_device,
+            }
+
+        else:
+            self._attr_device_info = hub._device_info
 
     @property
     def should_poll(self) -> bool:

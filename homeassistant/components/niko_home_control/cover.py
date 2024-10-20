@@ -1,18 +1,11 @@
 """Setup NikoHomeControlcover."""
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COVER_CLOSE, COVER_OPEN, COVER_STOP, DOMAIN
@@ -24,14 +17,18 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Niko Home Control cover."""
-    hub = hass.data[DOMAIN][entry.entry_id]
+    hub = hass.data[DOMAIN][entry.entry_id]["hub"]
+    enabled_entities = hass.data[DOMAIN][entry.entry_id]["enabled_entities"]
+    if enabled_entities["covers"] is False:
+        return
+
     entities = []
 
     for action in hub.actions:
         _LOGGER.debug(action.name)
         action_type = action.action_type
         if action_type == 4:  # blinds/covers
-            entity = NikoHomeControlCover(action, hub)
+            entity = NikoHomeControlCover(action, hub, options=entry.data["options"])
             hub.entities.append(entity)
             entities.append(entity)
 
@@ -46,12 +43,24 @@ class NikoHomeControlCover(CoverEntity):
         """No polling needed for a Niko cover."""
         return False
 
-    def __init__(self, cover, hub) -> None:
+    def __init__(self, cover, hub, options) -> None:
         """Set up the Niko Home Control cover."""
         self._cover = cover
         self._attr_unique_id = f"cover-{cover.action_id}"
         self._attr_name = cover.name
         self._moving = False
+        if options["treatAsDevice"] is not False:
+            self._attr_device_info = {
+                "identifiers": {(DOMAIN, self._attr_unique_id)},
+                "manufacturer": "Niko",
+                "name": cover.name,
+                "model": "P.O.M",
+                "suggested_area": cover.location,
+                "via_device": hub._via_device,
+            }
+
+        else:
+            self._attr_device_info = hub._device_info
 
     @property
     def id(self):
@@ -62,10 +71,7 @@ class NikoHomeControlCover(CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return (
-            CoverEntityFeature.CLOSE
-            | CoverEntityFeature.OPEN
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.SET_POSITION
+            CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN | CoverEntityFeature.STOP
         )
 
     @property
@@ -116,34 +122,10 @@ class NikoHomeControlCover(CoverEntity):
         # 253 = stop
         self._cover.turn_on(COVER_STOP)
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Set the cover position."""
-        _LOGGER.debug("Set cover position: %s", self.name)
-
-        if self._moving:
-            raise HomeAssistantError("Cover is already moving")
-
-        self._moving = True
-        target = kwargs.get(ATTR_POSITION, 100)
-
-        if target > self.current_cover_position:
-            self._cover.turn_on(COVER_OPEN)
-            while target > self.current_cover_position:
-                await asyncio.sleep(1)
-
-        else:
-            self._cover.turn_on(COVER_CLOSE)
-            while target < self.current_cover_position:
-                await asyncio.sleep(1)
-
-        self.stop_cover()
-        self._moving = False
-
     def update_state(self, state):
         """Update HA state."""
         _LOGGER.debug("Update state: %s", self.name)
         _LOGGER.debug("State: %s", state)
         self._cover.state = state
         self._attr_is_closed = state == 0
-        self._attr_current_cover_position = state
         self.async_write_ha_state()

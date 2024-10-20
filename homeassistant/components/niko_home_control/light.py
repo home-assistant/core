@@ -20,16 +20,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    hub = hass.data[DOMAIN][entry.entry_id]
+    hub = hass.data[DOMAIN][entry.entry_id]["hub"]
+    enabled_entities = hass.data[DOMAIN][entry.entry_id]["enabled_entities"]
+
+    if enabled_entities["lights"] is False:
+        return
+
     entities = []
 
     for action in hub.actions:
         entity = None
         action_type = action.action_type
         if action_type == 1:
-            entity = NikoHomeControlLight(action, hub)
+            entity = NikoHomeControlLight(action, hub, options=entry.data["options"])
         if action_type == 2:
-            entity = NikoHomeControlDimmableLight(action, hub)
+            entity = NikoHomeControlDimmableLight(
+                action, hub, options=entry.data["options"]
+            )
 
         if entity:
             hub.entities.append(entity)
@@ -41,7 +48,7 @@ async def async_setup_entry(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    def __init__(self, light, hub):
+    def __init__(self, light, hub, options):
         """Set up the Niko Home Control light platform."""
         self._hub = hub
         self._light = light
@@ -50,6 +57,19 @@ class NikoHomeControlLight(LightEntity):
         self._attr_unique_id = f"light-{light.action_id}"
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
+
+        if options["treatAsDevice"] is not False:
+            self._attr_device_info = {
+                "identifiers": {(DOMAIN, self._attr_unique_id)},
+                "manufacturer": "Niko",
+                "name": light.name,
+                "model": "P.O.M",
+                "suggested_area": light.location,
+                "via_device": hub._via_device,
+            }
+
+        else:
+            self._attr_device_info = hub._device_info
 
     @property
     def should_poll(self) -> bool:
@@ -64,7 +84,7 @@ class NikoHomeControlLight(LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on: %s", self.name)
-        self._light.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
+        self._light.turn_on(100)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
@@ -83,9 +103,9 @@ class NikoHomeControlLight(LightEntity):
 class NikoHomeControlDimmableLight(NikoHomeControlLight):
     """Representation of an Niko Dimmable Light."""
 
-    def __init__(self, light, hub):
+    def __init__(self, light, hub, options):
         """Set up the Niko Home Control Dimmable Light platform."""
-        super().__init__(light, hub)
+        super().__init__(light, hub, options)
         self._attr_unique_id = f"dimmable-{light.action_id}"
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -104,9 +124,6 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
 
     def update_state(self, state):
         """Update HA state."""
-        _LOGGER.debug("Update state: %s", self.name)
-        _LOGGER.debug("State: %s", state)
-        self._light.state = state
-        self._attr_is_on = state > 0
+        super().update_state(state)
         self._attr_brightness = state * 2.55
         self.async_write_ha_state()

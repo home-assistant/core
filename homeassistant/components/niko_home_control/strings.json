@@ -8,6 +8,21 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
+      },
+      "entities": {
+        "description": "Entities to add.",
+        "data": {
+          "lights": "Lights",
+          "covers": "Covers",
+          "fans": "Fans",
+          "thermostats": "Thermostats"
+        }
+      },
+      "optional": {
+        "description": "Treat Entities as devices?",
+        "data": {
+          "treatAsDevice": "Show entity as device? (makes it possible to asign an area)"
+        }
       }
     },
     "error": {
