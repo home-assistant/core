@@ -85,10 +85,9 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
 
             if not errors:
-                await self.async_set_unique_id(username)
-                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
+                    unique_id=username,
                     data_updates={
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
