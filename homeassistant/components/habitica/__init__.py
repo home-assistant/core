@@ -3,6 +3,7 @@
 from http import HTTPStatus
 
 from aiohttp import ClientResponseError
+from habiticalib import Habitica
 from habitipy.aio import HabitipyAsync
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,6 +34,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CALENDAR,
+    Platform.IMAGE,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TODO,
@@ -59,9 +61,7 @@ async def async_setup_entry(
 
         def _make_headers(self) -> dict[str, str]:
             headers = super()._make_headers()
-            headers.update(
-                {"x-client": f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"}
-            )
+            headers.update({"x-client": XCLIENT_HEADERS})
             return headers
 
     websession = async_get_clientsession(
@@ -76,6 +76,7 @@ async def async_setup_entry(
             "password": config_entry.data[CONF_API_KEY],
         },
     )
+    habitica = Habitica(session=websession, x_client=XCLIENT_HEADERS)
     try:
         user = await api.user.get(userFields="profile")
     except ClientResponseError as e:
@@ -93,7 +94,7 @@ async def async_setup_entry(
             data={**config_entry.data, CONF_NAME: name},
         )
 
-    coordinator = HabiticaDataUpdateCoordinator(hass, api)
+    coordinator = HabiticaDataUpdateCoordinator(hass, api, habitica)
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator

@@ -6,12 +6,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
+from io import BytesIO
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
 
+from habiticalib import Habitica
+from habiticalib.types import UserStyles
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -36,7 +39,9 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, habitipy: HabitipyAsync) -> None:
+    def __init__(
+        self, hass: HomeAssistant, habitipy: HabitipyAsync, habitica: Habitica
+    ) -> None:
         """Initialize the Habitica data coordinator."""
         super().__init__(
             hass,
@@ -52,6 +57,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         )
         self.api = habitipy
         self.content: dict[str, Any] = {}
+        self.habitica = habitica
 
     async def _async_update_data(self) -> HabiticaData:
         try:
@@ -89,3 +95,13 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             ) from e
         else:
             await self.async_request_refresh()
+
+    async def generate_avatar(self, user_styles: UserStyles) -> bytes:
+        """Generate Avatar."""
+
+        avatar = BytesIO()
+        await self.habitica.generate_avatar(
+            fp=avatar, user_styles=user_styles, fmt="PNG"
+        )
+
+        return avatar.getvalue()
