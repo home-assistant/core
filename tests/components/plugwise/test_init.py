@@ -16,10 +16,18 @@ import pytest
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+from syrupy import SnapshotAssertion
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -223,6 +231,39 @@ async def test_migrate_unique_id_relay(
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == new_unique_id
+
+
+async def test_entry_migration(
+    hass: HomeAssistant,
+    mock_smile_anna_2: MagicMock,
+    snapshot: SnapshotAssertion) -> None:
+    """Test config entry version 1 -> 2 migration."""
+    entry = MockConfigEntry(
+        title="My Plugwise",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_PASSWORD: "test-password",
+            CONF_PORT: 80,
+            CONF_USERNAME: "smile",
+        },
+        minor_version=1,
+        version=1,
+        unique_id="smile98765",
+    )
+
+    entry.runtime_data = MagicMock(api=mock_smile_anna_2)
+    entry.add_to_hass(hass)
+
+    assert entry.version == 1
+    assert entry.minor_version == 1
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert that the migrated entry matches the expected structure
+    assert hass.config_entries.async_get_entry(entry.entry_id) == snapshot
 
 
 async def test_update_device(

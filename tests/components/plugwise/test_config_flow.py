@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SOURCE,
+    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -33,9 +34,10 @@ TEST_HOSTNAME = "smileabcdef"
 TEST_HOSTNAME2 = "stretchabc"
 TEST_PASSWORD = "test_password"
 TEST_PORT = 81
+TEST_TIMEOUT_LEGACY = 30
+TEST_TIMEOUT = 10
 TEST_USERNAME = "smile"
 TEST_USERNAME2 = "stretch"
-
 TEST_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_HOST),
     ip_addresses=[ip_address(TEST_HOST)],
@@ -59,7 +61,7 @@ TEST_DISCOVERY2 = ZeroconfServiceInfo(
     port=DEFAULT_PORT,
     properties={
         "product": "stretch",
-        "version": "1.2.3",
+        "version": "4.1.2",
         "hostname": f"{TEST_HOSTNAME2}.local.",
     },
     type="mock_type",
@@ -73,7 +75,7 @@ TEST_DISCOVERY_ANNA = ZeroconfServiceInfo(
     port=DEFAULT_PORT,
     properties={
         "product": "smile_thermo",
-        "version": "1.2.3",
+        "version": "3.2.1",
         "hostname": f"{TEST_HOSTNAME}.local.",
     },
     type="mock_type",
@@ -87,7 +89,7 @@ TEST_DISCOVERY_ADAM = ZeroconfServiceInfo(
     port=DEFAULT_PORT,
     properties={
         "product": "smile_open_therm",
-        "version": "1.2.3",
+        "version": "4.3.2",
         "hostname": f"{TEST_HOSTNAME2}.local.",
     },
     type="mock_type",
@@ -122,6 +124,7 @@ async def test_form(
         CONF_HOST: TEST_HOST,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
+        CONF_TIMEOUT: TEST_TIMEOUT_LEGACY,
         CONF_USERNAME: TEST_USERNAME,
     }
 
@@ -130,10 +133,10 @@ async def test_form(
 
 
 @pytest.mark.parametrize(
-    ("discovery", "username"),
+    ("discovery", "parameters"),
     [
-        (TEST_DISCOVERY, TEST_USERNAME),
-        (TEST_DISCOVERY2, TEST_USERNAME2),
+        (TEST_DISCOVERY, (TEST_USERNAME, TEST_TIMEOUT)),
+        (TEST_DISCOVERY2, (TEST_USERNAME2, TEST_TIMEOUT_LEGACY)),
     ],
 )
 async def test_zeroconf_flow(
@@ -141,13 +144,13 @@ async def test_zeroconf_flow(
     mock_setup_entry: AsyncMock,
     mock_smile_config_flow: MagicMock,
     discovery: ZeroconfServiceInfo,
-    username: str,
+    parameters: tuple[str, str],
 ) -> None:
     """Test config flow for smile devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
-        data=TEST_DISCOVERY,
+        data=discovery,
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
@@ -162,11 +165,13 @@ async def test_zeroconf_flow(
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Test Smile Name"
+    username, timeout = parameters
     assert result2.get("data") == {
         CONF_HOST: TEST_HOST,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
-        CONF_USERNAME: TEST_USERNAME,
+        CONF_TIMEOUT: timeout,
+        CONF_USERNAME: username,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -201,6 +206,7 @@ async def test_zeroconf_flow_stretch(
         CONF_HOST: TEST_HOST,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
+        CONF_TIMEOUT: TEST_TIMEOUT_LEGACY,
         CONF_USERNAME: TEST_USERNAME2,
     }
 

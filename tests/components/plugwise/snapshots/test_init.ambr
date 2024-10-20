@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_entry_migration
+  ConfigEntrySnapshot({
+    'data': dict({
+      'host': '127.0.0.1',
+      'mac': 'AA:BB:CC:DD:EE:FF',
+      'password': 'test-password',
+      'port': 80,
+      'timeout': 10,
+      'username': 'smile',
+    }),
+    'disabled_by': None,
+    'domain': 'plugwise',
+    'entry_id': <ANY>,
+    'minor_version': 2,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'title': 'My Plugwise',
+    'unique_id': 'smile98765',
+    'version': 1,
+  })
+# ---
