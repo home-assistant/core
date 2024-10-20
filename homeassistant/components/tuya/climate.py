@@ -137,26 +137,26 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # If both temperature values for celsius and fahrenheit are present,
         # use whatever the device is set to, with a fallback to celsius.
-        prefered_temperature_unit = None
+        preferred_temperature_unit = None
         if all(
             dpcode in device.status
             for dpcode in (DPCode.TEMP_CURRENT, DPCode.TEMP_CURRENT_F)
         ) or all(
             dpcode in device.status for dpcode in (DPCode.TEMP_SET, DPCode.TEMP_SET_F)
         ):
-            prefered_temperature_unit = UnitOfTemperature.CELSIUS
+            preferred_temperature_unit = UnitOfTemperature.CELSIUS
             if any(
                 "f" in device.status[dpcode].lower()
                 for dpcode in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT)
                 if isinstance(device.status.get(dpcode), str)
             ):
-                prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
+                preferred_temperature_unit = UnitOfTemperature.FAHRENHEIT
         else:
             # Default to System Temperature Unit
-            prefered_temperature_unit = system_temperature_unit
+            preferred_temperature_unit = system_temperature_unit
 
         # Figure out current temperature, use preferred unit or what is available
-        # Note the TEMP_CURRENT property may be in celcius or fahrenheit
+        # Note the TEMP_CURRENT property may be in celsius or fahrenheit
         temperature_type = self.find_dpcode(
             (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
         )
@@ -165,17 +165,17 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
         )
         if temperature_type_fahrenheit and (
-            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
+            preferred_temperature_unit == UnitOfTemperature.FAHRENHEIT
             or (
-                prefered_temperature_unit == UnitOfTemperature.CELSIUS
+                preferred_temperature_unit == UnitOfTemperature.CELSIUS
                 and not temperature_type
             )
         ):
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._current_temperature = temperature_type_fahrenheit
         elif temperature_type:
-            # We aren't explicitly FAHRENHEIT or CELCIUS. So Fallback to the prefered unit (Usually Celcius)
-            self._attr_temperature_unit = prefered_temperature_unit
+            # We aren't explicitly FAHRENHEIT or CELSIUS. So Fallback to the preferred unit (Usually Celsius)
+            self._attr_temperature_unit = preferred_temperature_unit
             self._current_temperature = temperature_type
 
         # Figure out setting temperature, use preferred unit or what is available
@@ -186,9 +186,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
         if temperature_type_fahrenheit and (
-            prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
+            preferred_temperature_unit == UnitOfTemperature.FAHRENHEIT
             or (
-                prefered_temperature_unit == UnitOfTemperature.CELSIUS
+                preferred_temperature_unit == UnitOfTemperature.CELSIUS
                 and not temperature_type
             )
         ):
