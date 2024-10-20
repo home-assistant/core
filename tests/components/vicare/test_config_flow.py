@@ -10,13 +10,13 @@ from PyViCare.PyViCareUtils import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import CONF_HEATING_TYPE, DOMAIN, HeatingType
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_MAC, MODULE
+from . import MOCK_MAC, MODULE, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -206,3 +206,22 @@ async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test config flow options."""
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.auto.value
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_HEATING_TYPE: HeatingType.gas.value}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.gas.value
