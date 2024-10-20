@@ -51,7 +51,7 @@ class HMCover(HMDevice, CoverEntity):
         """
         state = self._hm_get_state()
         if isinstance(state, int):
-            return int(self._hm_get_state() * 100)
+            return int(state * 100)
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
