@@ -266,8 +266,8 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
                 return
             self._attr_state = MediaPlayerState(mapped_active_queue_state)
         if player.powered:
-            if player.state is None:
-                return
+            if TYPE_CHECKING:
+                assert player.state is not None
             mapped_player_state = STATE_MAPPING.get(player.state)
             if mapped_player_state is None:
                 return
