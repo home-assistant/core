@@ -10,6 +10,8 @@
       'username': 'smile',
     }),
     'disabled_by': None,
+    'discovery_keys': dict({
+    }),
     'domain': 'plugwise',
     'entry_id': <ANY>,
     'minor_version': 2,
