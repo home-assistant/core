@@ -33,7 +33,7 @@ dependencies    = [
     "aiozoneinfo==0.2.1",
     "astral==2.2",
     "async-interrupt==1.2.0",
-    "attrs==23.2.0",
+    "attrs==24.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==24.6.0",
     "bcrypt==4.2.0",
@@ -73,7 +73,7 @@ dependencies    = [
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.15.4",
+    "yarl==1.15.5",
 ]
 
 [project.urls]

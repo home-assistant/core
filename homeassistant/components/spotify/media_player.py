@@ -169,20 +169,20 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
     @ensure_item
     def media_content_type(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media type."""
-        return MediaType.PODCAST if item.type == MediaType.EPISODE else MediaType.MUSIC
+        return MediaType.PODCAST if item.type == ItemType.EPISODE else MediaType.MUSIC
 
     @property
     @ensure_item
     def media_duration(self, item: Item) -> int:  # noqa: PLR0206
         """Duration of current playing media in seconds."""
-        return item.duration_ms / 1000
+        return round(item.duration_ms / 1000)
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if not self.currently_playing or self.currently_playing.progress_ms is None:
             return None
-        return self.currently_playing.progress_ms / 1000
+        return round(self.currently_playing.progress_ms / 1000)
 
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
@@ -380,7 +380,6 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return await async_browse_media_internal(
             self.hass,
             self.coordinator.client,
-            self.coordinator.current_user,
             media_content_type,
             media_content_id,
         )

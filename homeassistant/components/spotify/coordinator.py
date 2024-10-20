@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 
 from spotifyaio import (
+    ContextType,
     PlaybackState,
     Playlist,
     SpotifyClient,
@@ -12,7 +13,6 @@ from spotifyaio import (
     UserProfile,
 )
 
-from homeassistant.components.media_player import MediaType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
@@ -77,7 +77,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 self._playlist = None
                 if context.uri == SPOTIFY_DJ_PLAYLIST_URI:
                     dj_playlist = True
-                elif context.context_type == MediaType.PLAYLIST:
+                elif context.context_type == ContextType.PLAYLIST:
                     # Make sure any playlist lookups don't break the current
                     # playback state update
                     try:
