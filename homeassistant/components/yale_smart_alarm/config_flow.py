@@ -51,8 +51,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    entry: ConfigEntry | None
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> YaleOptionsFlowHandler:
@@ -63,7 +61,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Yale."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -88,18 +85,15 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
 
             if not errors:
-                existing_entry = await self.async_set_unique_id(username)
-                if existing_entry and self.entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry,
-                        data={
-                            **self.entry.data,
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        },
-                    )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                await self.async_set_unique_id(username)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                    },
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
