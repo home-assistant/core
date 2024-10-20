@@ -40,6 +40,9 @@ class ConversationInput:
     agent_id: str | None = None
     """Agent to use for processing."""
 
+    extra_system_prompt: str | None = None
+    """Extra prompt to provide extra info to LLMs how to understand the command."""
+
 
 @dataclass(slots=True)
 class ConversationResult:
