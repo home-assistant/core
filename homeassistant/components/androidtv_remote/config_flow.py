@@ -151,7 +151,18 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if not (mac := discovery_info.properties.get("bt")):
             return self.async_abort(reason="cannot_connect")
         self.mac = mac
-        await self.async_set_unique_id(format_mac(self.mac))
+        existing_config_entry = await self.async_set_unique_id(format_mac(mac))
+        # Sometimes, devices send an invalid zeroconf message with multiple addresses
+        # and one of them, which could end up being in discovery_info.host, is from a
+        # different device. If any of the discovery_info.ip_addresses matches the
+        # existing host, don't update the host.
+        if existing_config_entry and len(discovery_info.ip_addresses) > 1:
+            existing_host = existing_config_entry.data[CONF_HOST]
+            if existing_host != self.host:
+                if existing_host in [
+                    str(ip_address) for ip_address in discovery_info.ip_addresses
+                ]:
+                    self.host = existing_host
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
