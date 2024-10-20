@@ -303,11 +303,9 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             self._delay_cancel()
             self._delay_cancel = None
 
-        state = (
-            None
-            if isinstance(result, TemplateError)
-            else template.result_as_boolean(result)
-        )
+        state: bool | None = None
+        if result is not None and not isinstance(result, TemplateError):
+            state = template.result_as_boolean(result)
 
         if state == self._attr_is_on:
             return
@@ -402,7 +400,9 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             return
 
         raw = self._rendered.get(CONF_STATE)
-        state = template.result_as_boolean(raw)
+        state: bool | None = None
+        if raw is not None:
+            state = template.result_as_boolean(raw)
 
         key = CONF_DELAY_ON if state else CONF_DELAY_OFF
         delay = self._rendered.get(key) or self._config.get(key)
