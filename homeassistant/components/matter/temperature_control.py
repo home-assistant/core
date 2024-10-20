@@ -281,7 +281,8 @@ DISCOVERY_SCHEMAS = [
             clusters.TemperatureControl.Attributes.Step,
             clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
             clusters.TemperatureControl.Attributes.TemperatureSetpoint,
-        ),        device_type=(
+        ),
+        device_type=(
             device_types.CookSurface,
             device_types.Dishwasher,
             device_types.HeatingCoolingUnit,
