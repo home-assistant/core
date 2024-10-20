@@ -40,7 +40,6 @@ DATA_SCHEMA = vol.Schema(
 
 DATA_SCHEMA_AUTH = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }
 )
@@ -70,7 +69,8 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            username = user_input[CONF_USERNAME]
+            reauth_entry = self._get_reauth_entry()
+            username = reauth_entry.data[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
             try:
@@ -87,9 +87,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
-                    unique_id=username,
                     data_updates={
-                        CONF_USERNAME: username,
                         CONF_PASSWORD: password,
                     },
                 )
