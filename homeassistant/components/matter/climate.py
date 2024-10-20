@@ -410,10 +410,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
         if feature_map & (
-            ThermostatFeature.kHeating |
-            TemperatureControlFeature.kTemperatureLevel |
-            TemperatureControlFeature.kTemperatureNumber | 
-            TemperatureControlFeature.kTemperatureStep
+            ThermostatFeature.kHeating
+            | TemperatureControlFeature.kTemperatureLevel
+            | TemperatureControlFeature.kTemperatureNumber
+            | TemperatureControlFeature.kTemperatureStep
         ):
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
