@@ -187,6 +187,14 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
 
 
+class TCTLMode(StrEnum):
+    """TemperatureControl mode for climate devices."""
+
+    TN = "TemperatureNumber"
+    TL = "TemperatureLevel"
+    STEP = "TemperatureStep"
+
+
 class MatterClimate(MatterEntity, ClimateEntity):
     """Representation of a Matter climate entity."""
 
