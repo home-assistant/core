@@ -276,11 +276,14 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
-        if feature_map & TemperatureControlFeature.kHeating:
+        # TemperatureLevel feature
+        if feature_map & TemperatureControlFeature.kTN:
             self._attr_hvac_modes.append(HVACMode.HEAT)
-        if feature_map & TemperatureControlFeature.kCooling:
+        # TemperatureLevel feature
+        if feature_map & TemperatureControlFeature.kTL:
             self._attr_hvac_modes.append(HVACMode.COOL)
-        if feature_map & TemperatureControlFeature.kAutoMode:
+        # TemperatureStep feature
+        if feature_map & TemperatureControlFeature.kSTEP:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
             # only enable temperature_range feature if the device actually supports that
 
