@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 type HueBLEConfigEntry = ConfigEntry[HueBleLight]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bool:
     """Set up the integration from a config entry."""
 
     assert entry.unique_id is not None
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_forward_entry_unload(entry, "light")
