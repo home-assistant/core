@@ -302,7 +302,6 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
-homeassistant.components.map.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*

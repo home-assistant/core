@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SOURCE, CONF_URL, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -53,7 +53,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         def _get_form(
-            user_input: dict[str, Any], errors: dict[str, str] | None = None
+            user_input: Mapping[str, Any], errors: dict[str, str] | None = None
         ) -> ConfigFlowResult:
             """Show the form to the user."""
             url_schema: VolDictType = {}
@@ -89,16 +89,10 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        reauth_entry = None
-        if self.context.get("entry_id"):
-            reauth_entry = self.hass.config_entries.async_get_entry(
-                self.context["entry_id"]
-            )
-
         if user_input is None:
-            return _get_form(
-                cast(dict[str, Any], reauth_entry.data) if reauth_entry else {}
-            )
+            if self.source == SOURCE_REAUTH:
+                return _get_form(self._get_reauth_entry().data)
+            return _get_form({})
 
         if self._hassio_discovery:
             # In case of Supervisor discovery, use pushed URL
@@ -135,16 +129,13 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return _get_form(user_input, errors)
 
-        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and reauth_entry is not None:
+        if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
             # Persist the same webhook id across reauths.
             if CONF_WEBHOOK_ID in reauth_entry.data:
                 user_input[CONF_WEBHOOK_ID] = reauth_entry.data[CONF_WEBHOOK_ID]
-            self.hass.config_entries.async_update_entry(reauth_entry, data=user_input)
-            # Need to manually reload, as the listener won't have been
-            # installed because the initial load did not succeed (the reauth
-            # flow will not be initiated if the load succeeds).
-            await self.hass.config_entries.async_reload(reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+
+            return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         # Search for duplicates: there isn't a useful unique_id, but
         # at least prevent entries with the same motionEye URL.

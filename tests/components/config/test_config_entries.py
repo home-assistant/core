@@ -393,6 +393,10 @@ async def test_available_flows(
 ############################
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.error.Should be unique."],
+)
 async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can initialize a flow."""
     mock_platform(hass, "test.config_flow", None)
@@ -772,6 +776,10 @@ async def test_get_progress_index_unauth(
     assert response["error"]["code"] == "unauthorized"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.error.Should be unique."],
+)
 async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can query the API for same result as we get from init a flow."""
     mock_platform(hass, "test.config_flow", None)
@@ -804,6 +812,10 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     assert data == data2
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.error.Should be unique."],
+)
 async def test_get_progress_flow_unauth(
     hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:

@@ -4555,11 +4555,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "panel_iframe": {
-      "name": "iframe Panel",
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "pcs_lighting": {
       "name": "PCS Lighting",
       "integration_type": "virtual",

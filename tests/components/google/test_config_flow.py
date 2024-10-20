@@ -26,9 +26,11 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.google.const import (
+    CONF_CALENDAR_ACCESS,
     CONF_CREDENTIAL_TYPE,
     DOMAIN,
     CredentialType,
+    FeatureAccess,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -437,10 +439,6 @@ async def test_multiple_config_entries(
     assert len(entries) == 2
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.google.config.abort.missing_credentials"],
-)
 async def test_missing_configuration(
     hass: HomeAssistant,
 ) -> None:
@@ -478,10 +476,27 @@ async def test_wrong_configuration(
     assert result.get("reason") == "oauth_error"
 
 
+@pytest.mark.parametrize(
+    ("options"),
+    [
+        ({}),
+        (
+            {
+                CONF_CALENDAR_ACCESS: FeatureAccess.read_write.name,
+            }
+        ),
+        (
+            {
+                CONF_CALENDAR_ACCESS: FeatureAccess.read_only.name,
+            }
+        ),
+    ],
+)
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
+    options: dict[str, Any] | None,
 ) -> None:
     """Test reauth of an existing config entry."""
     config_entry = MockConfigEntry(
@@ -490,6 +505,7 @@ async def test_reauth_flow(
             "auth_implementation": DOMAIN,
             "token": {"access_token": "OLD_ACCESS_TOKEN"},
         },
+        options=options,
     )
     config_entry.add_to_hass(hass)
     await async_import_client_credential(
@@ -544,6 +560,8 @@ async def test_reauth_flow(
         },
         "credential_type": "device_auth",
     }
+    # Options are preserved during reauth
+    assert entries[0].options == options
 
     assert len(mock_setup.mock_calls) == 1
 

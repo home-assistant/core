@@ -13,9 +13,9 @@ import pytest
 
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
-    SOURCE_SYSTEM,
     ConfigEntriesFlowManager,
     FlowResult,
+    OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -468,18 +468,19 @@ def supervisor_client() -> Generator[AsyncMock]:
 
 async def _ensure_translation_exists(
     hass: HomeAssistant,
-    ignore_translations: list[str],
+    ignore_translations: dict[str, StoreInfo],
     category: str,
     component: str,
     key: str,
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
-    if full_key in ignore_translations:
-        return
-
     translations = await async_get_translations(hass, "en", category, [component])
     if full_key in translations:
+        return
+
+    if full_key in ignore_translations:
+        ignore_translations[full_key] = "used"
         return
 
     key_parts = key.split(".")
@@ -497,14 +498,14 @@ async def _ensure_translation_exists(
     ):
         return
 
-    raise ValueError(
+    pytest.fail(
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
     )
 
 
 @pytest.fixture
-def ignore_translations() -> list[str]:
+def ignore_translations() -> str | list[str]:
     """Ignore specific translations.
 
     Override or parametrize this fixture with a fixture that returns,
@@ -514,8 +515,12 @@ def ignore_translations() -> list[str]:
 
 
 @pytest.fixture(autouse=True)
-def check_config_translations(ignore_translations: list[str]) -> Generator[None]:
+def check_config_translations(ignore_translations: str | list[str]) -> Generator[None]:
     """Ensure config_flow translations are available."""
+    if not isinstance(ignore_translations, list):
+        ignore_translations = [ignore_translations]
+
+    _ignore_translations = {k: "unused" for k in ignore_translations}
     _original = FlowManager._async_handle_step
 
     async def _async_handle_step(
@@ -525,17 +530,36 @@ def check_config_translations(ignore_translations: list[str]) -> Generator[None]
         if isinstance(self, ConfigEntriesFlowManager):
             category = "config"
             component = flow.handler
+        elif isinstance(self, OptionsFlowManager):
+            category = "options"
+            component = flow.hass.config_entries.async_get_entry(flow.handler).domain
         else:
             return result
 
-        if (
-            result["type"] is FlowResultType.ABORT
-            and flow.source != SOURCE_SYSTEM
-            and flow.source not in DISCOVERY_SOURCES
-        ):
+        # Check if this flow has been seen before
+        # Gets set to False on first run, and to True on subsequent runs
+        setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
+
+        if result["type"] is FlowResultType.FORM:
+            if errors := result.get("errors"):
+                for error in errors.values():
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"error.{error}",
+                    )
+            return result
+
+        if result["type"] is FlowResultType.ABORT:
+            # We don't need translations for a discovery flow which immediately
+            # aborts, since such flows won't be seen by users
+            if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
+                return result
             await _ensure_translation_exists(
                 flow.hass,
-                ignore_translations,
+                _ignore_translations,
                 category,
                 component,
                 f"abort.{result["reason"]}",
@@ -548,3 +572,10 @@ def check_config_translations(ignore_translations: list[str]) -> Generator[None]
         _async_handle_step,
     ):
         yield
+
+    unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
+    if unused_ignore:
+        pytest.fail(
+            f"Unused ignore translations: {', '.join(unused_ignore)}. "
+            "Please remove them from the ignore_translations fixture."
+        )
