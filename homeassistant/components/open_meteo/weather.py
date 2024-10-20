@@ -156,6 +156,8 @@ class OpenMeteoWeatherEntity(
 
         hourly = self.coordinator.data.hourly
         for index, datetime in enumerate(self.coordinator.data.hourly.time):
+            if datetime.tzinfo is None:
+                datetime = datetime.replace(tzinfo=dt_util.UTC)
             if dt_util.as_utc(datetime) < today:
                 continue
 
