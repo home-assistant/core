@@ -310,6 +310,7 @@ async def test_flow_errors(
         CONF_HOST: TEST_HOST,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
+        CONF_TIMEOUT: TEST_TIMEOUT_LEGACY,
         CONF_USERNAME: TEST_USERNAME,
     }
 
