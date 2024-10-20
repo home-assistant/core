@@ -37,7 +37,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             API_URL, data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         )
         await self.async_set_unique_id(user_id)
-        if self.source == SOURCE_REAUTH:
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title=ENTRY_TITLE, data=data)
