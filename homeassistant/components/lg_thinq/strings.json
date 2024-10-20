@@ -990,6 +990,14 @@
           "normal": "[%key:component::lg_thinq::entity::sensor::current_dish_washing_course::state::delicate%]"
         }
       }
+    },
+    "text": {
+      "absolute_to_start": {
+        "name": "Schedule turn-on"
+      },
+      "absolute_to_stop": {
+        "name": "Schedule turn-off"
+      }
     }
   }
 }
