@@ -12,7 +12,7 @@ astral==2.2
 async-interrupt==1.2.0
 async-upnp-client==0.41.0
 atomicwrites-homeassistant==1.4.1
-attrs==23.2.0
+attrs==24.2.0
 awesomeversion==24.6.0
 bcrypt==4.2.0
 bleak-retry-connector==3.6.0
