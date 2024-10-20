@@ -50,7 +50,7 @@ class MicrosoftSpeechToTextEntity(SpeechToTextEntity):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Microsoft",
-            model="Azure Speech Services",
+            model="Azure Speech Service",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
         self._entry = entry

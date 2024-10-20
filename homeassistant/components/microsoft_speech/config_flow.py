@@ -20,59 +20,16 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import DOMAIN, SUPPORTED_LANGUAGES
+from .const import DOMAIN, SUPPORTED_LANGUAGES, SUPPORTED_REGIONS
 
 _LOGGER = logging.getLogger(__name__)
-
-REGIONS = [
-    "australiacentral",
-    "australiacentral2",
-    "australiaeast",
-    "australiasoutheast",
-    "brazilsouth",
-    "brazilsoutheast",
-    "canadacentral",
-    "canadaeast",
-    "centralus",
-    "eastasia",
-    "eastus",
-    "eastus2",
-    "francecentral",
-    "francesouth",
-    "germanynorth",
-    "germanywestcentral",
-    "indiaeast",
-    "indiacentral",
-    "japaneast",
-    "japanwest",
-    "koreacentral",
-    "koreasouth",
-    "northeurope",
-    "northcentralus",
-    "norwayeast",
-    "norwaywest",
-    "southafricanorth",
-    "southafricawest",
-    "southeastasia",
-    "southcentralus",
-    "switzerlandnorth",
-    "switzerlandwest",
-    "uaecentral",
-    "uaenorth",
-    "uksouth",
-    "ukwest",
-    "westeurope",
-    "westus",
-    "westus2",
-    "westus3",
-]
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): str,
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_REGION): SelectSelector(
-            SelectSelectorConfig(options=REGIONS)
+            SelectSelectorConfig(options=SUPPORTED_REGIONS)
         ),
         vol.Required(CONF_LANGUAGE, default="en-US"): LanguageSelector(
             LanguageSelectorConfig(languages=SUPPORTED_LANGUAGES)

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import azure.cognitiveservices.speech as speechsdk
 
-from homeassistant.components.tts import Voice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_REGION, Platform
 from homeassistant.core import HomeAssistant
@@ -14,9 +13,9 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 
-from .const import DATA_SPEECH_CONFIG, DATA_VOICES, SUPPORTED_LANGUAGES
+from .const import DATA_SPEECH_CONFIG
 
-PLATFORMS: list[Platform] = [Platform.STT, Platform.TTS]
+PLATFORMS: list[Platform] = [Platform.STT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -32,17 +31,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     voices_result = await hass.async_add_executor_job(voices_future.get)
 
     if voices_result.reason == speechsdk.ResultReason.VoicesListRetrieved:
-        voices: dict[str, list[Voice]] = {}
-        voices = {language: [] for language in SUPPORTED_LANGUAGES}
+        entry.runtime_data = {}
+        entry.runtime_data[DATA_SPEECH_CONFIG] = speech_config
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        return True
 
-        for voice in voices_result.voices:
-            voice_instance = Voice(
-                voice_id=voice.short_name,
-                name=voice.local_name,
-            )
-            voices[voice.locale] = voices.get(voice.locale, [])
-            voices[voice.locale].append(voice_instance)
-    elif voices_result.reason == speechsdk.ResultReason.Canceled:
+    if voices_result.reason == speechsdk.ResultReason.Canceled:
         if hasattr(voices_result, "error_details"):
             if "Authentication error" in voices_result.error_details:
                 raise ConfigEntryAuthFailed("Invalid API key or region")
@@ -52,12 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
         raise ConfigEntryError("Unknown error while connecting to Microsoft Azure")
 
-    entry.runtime_data = {}
-    entry.runtime_data[DATA_SPEECH_CONFIG] = speech_config
-    entry.runtime_data[DATA_VOICES] = voices
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
+    return False
 
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
