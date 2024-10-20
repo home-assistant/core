@@ -417,6 +417,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
+        # TemperatureLevel feature
+        if feature_map & TemperatureControlFeature.TN:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+        # TemperatureLevel feature
+        if feature_map & TemperatureControlFeature.TL:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+        # TemperatureStep feature
+        if feature_map & TemperatureControlFeature.STEP:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+
     @callback
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
