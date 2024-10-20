@@ -429,13 +429,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
         # TemperatureLevel feature
-        if feature_map & TemperatureControlFeature.TN:
+        if feature_map & TemperatureControlFeature.kTN:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         # TemperatureLevel feature
-        if feature_map & TemperatureControlFeature.TL:
+        if feature_map & TemperatureControlFeature.kTL:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         # TemperatureStep feature
-        if feature_map & TemperatureControlFeature.STEP:
+        if feature_map & TemperatureControlFeature.kSTEP:
             self._attr_hvac_modes.append(HVACMode.HEAT)
 
     @callback
