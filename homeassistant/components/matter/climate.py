@@ -190,6 +190,7 @@ class TCTLMode(StrEnum):
     TL = "TemperatureLevel"
     STEP = "TemperatureStep"
 
+
 TCTL_SYSTEM_MODE_MAP = {
     TCTLMode.TN: 0,
     TCTLMode.TL: 1,
