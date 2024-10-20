@@ -274,8 +274,14 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterClimate,
         required_attributes=(clusters.TemperatureControl.Attributes.FeatureMap,),
-        optional_attributes=(),
-        device_type=(
+        optional_attributes=(
+            clusters.TemperatureControl.Attributes.MinTemperature,
+            clusters.TemperatureControl.Attributes.MaxTemperature,
+            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
+            clusters.TemperatureControl.Attributes.Step,
+            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
+            clusters.TemperatureControl.Attributes.TemperatureSetpoint,
+        ),        device_type=(
             device_types.CookSurface,
             device_types.Dishwasher,
             device_types.HeatingCoolingUnit,
