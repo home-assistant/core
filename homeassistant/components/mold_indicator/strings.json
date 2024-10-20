@@ -1,5 +1,6 @@
 {
   "config": {
+    "title": "Mold Indicator",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
@@ -8,6 +9,7 @@
     },
     "step": {
       "user": {
+        "title": "Create Mold Indicator",
         "description": "Add Mold indicator helper",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -27,6 +29,7 @@
     }
   },
   "options": {
+    "title": "Mold Indicator Options",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
@@ -35,6 +38,7 @@
     },
     "step": {
       "init": {
+        "title": "Adjust Calibration Factor",
         "description": "Adjust the calibration factor as required",
         "data": {
           "calibration_factor": "[%key:component::mold_indicator::config::step::user::data::calibration_factor%]"
