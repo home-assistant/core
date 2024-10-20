@@ -236,8 +236,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if self._feature_map == feature_map:
             return
         self._feature_map = feature_map
-        product_id = self._endpoint.node.device_info.productID
-        vendor_id = self._endpoint.node.device_info.vendorID
         self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
