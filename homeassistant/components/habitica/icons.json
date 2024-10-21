@@ -56,6 +56,12 @@
       "gold": {
         "default": "mdi:sack"
       },
+      "gems": {
+        "default": "mdi:diamond-stone"
+      },
+      "trinkets": {
+        "default": "mdi:timer-sand"
+      },
       "class": {
         "default": "mdi:sword",
         "state": {
@@ -90,6 +96,9 @@
   "services": {
     "api_call": {
       "service": "mdi:console"
+    },
+    "cast_skill": {
+      "service": "mdi:creation-outline"
     }
   }
 }

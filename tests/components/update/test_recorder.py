@@ -10,6 +10,7 @@ from homeassistant.components.update.const import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_RELEASE_SUMMARY,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN,
 )
 from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_PLATFORM
@@ -34,7 +35,8 @@ async def test_exclude_attributes(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
     state = hass.states.get("update.update_already_in_progress")
-    assert state.attributes[ATTR_IN_PROGRESS] == 50
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
         == "https://brands.home-assistant.io/_/test/icon.png"
@@ -56,3 +58,4 @@ async def test_exclude_attributes(
             assert ATTR_IN_PROGRESS not in state.attributes
             assert ATTR_RELEASE_SUMMARY not in state.attributes
             assert ATTR_INSTALLED_VERSION in state.attributes
+            assert ATTR_UPDATE_PERCENTAGE not in state.attributes

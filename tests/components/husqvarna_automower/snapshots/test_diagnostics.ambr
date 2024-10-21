@@ -152,9 +152,9 @@
       '654321': dict({
         'cutting_height': 25,
         'enabled': True,
-        'last_time_completed_naive': '2024-07-31T18:07:49',
+        'last_time_completed_naive': None,
         'name': 'Back lawn',
-        'progress': 30,
+        'progress': None,
       }),
     }),
   })
