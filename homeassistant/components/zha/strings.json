@@ -778,10 +778,10 @@
         "name": "Irrigation interval"
       },
       "valve_countdown_1": {
-        "name": "Irrigtion time 1"
+        "name": "Irrigation time 1"
       },
       "valve_countdown_2": {
-        "name": "Irrigtion time 2"
+        "name": "Irrigation time 2"
       }
     },
     "select": {
@@ -1061,10 +1061,10 @@
         "name": "Irrigation end time"
       },
       "valve_duration_1": {
-        "name": "Irrigtion duration 1"
+        "name": "Irrigation duration 1"
       },
       "valve_duration_2": {
-        "name": "Irrigtion duration 2"
+        "name": "Irrigation duration 2"
       }
     },
     "switch": {
