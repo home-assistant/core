@@ -49,9 +49,9 @@
     }
   },
   "services": {
-    "get_minutely_forecasts": {
-      "name": "Get minutely forecasts",
-      "description": "Get minutely weather forecasts."
+    "get_minute_forecasts": {
+      "name": "Get minute forecasts",
+      "description": "Get minute weather forecasts."
     }
   }
 }
