@@ -7354,7 +7354,6 @@
       "iot_class": "calculated"
     },
     "random": {
-      "name": "Random",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7446,6 +7445,7 @@
     "nmap_tracker",
     "plant",
     "proximity",
+    "random",
     "rpi_power",
     "schedule",
     "season",
