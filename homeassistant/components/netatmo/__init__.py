@@ -89,6 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientResponseError as ex:
         _LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
         if ex.status in (
+            HTTPStatus.INTERNAL_SERVER_ERROR,
             HTTPStatus.BAD_REQUEST,
             HTTPStatus.UNAUTHORIZED,
             HTTPStatus.FORBIDDEN,
