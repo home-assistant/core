@@ -5,6 +5,7 @@ import logging
 from pycomfoconnect import Bridge, ComfoConnect
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -13,24 +14,30 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_USER_AGENT,
+    DEFAULT_PIN,
+    DEFAULT_TOKEN,
+    DEFAULT_USER_AGENT,
+    DOMAIN,
+)
 
-DOMAIN = "comfoconnect"
+_LOGGER = logging.getLogger(__name__)
 
 SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received_{}"
 
-CONF_USER_AGENT = "user_agent"
+PLATFORMS = [Platform.FAN, Platform.SENSOR]
 
 DEFAULT_NAME = "ComfoAirQ"
-DEFAULT_PIN = 0
-DEFAULT_TOKEN = "00000000000000000000000000000001"
-DEFAULT_USER_AGENT = "Home Assistant"
+INTEGRATION_TITLE = "ComfoConnect"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -50,41 +57,89 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
+    if not hass.config_entries.async_entries(DOMAIN):
+        # Start import flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+        if result["type"] == FlowResultType.ABORT:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{result['reason']}",
+                breaks_in_ha_version="2025.4.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": INTEGRATION_TITLE,
+                },
+            )
+            return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ComfoConnect bridge."""
+    if conf := config.get(DOMAIN):
+        hass.async_create_task(_async_import(hass, conf))
+    return True
 
-    conf = config[DOMAIN]
-    host = conf[CONF_HOST]
-    name = conf[CONF_NAME]
-    token = conf[CONF_TOKEN]
-    user_agent = conf[CONF_USER_AGENT]
-    pin = conf[CONF_PIN]
 
-    # Run discovery on the configured ip
-    bridges = Bridge.discover(host)
+type ComfoConnectConfigEntry = ConfigEntry[ComfoConnectBridge]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ComfoConnectConfigEntry
+) -> bool:
+    """Set up ComfoConnect from a config entry."""
+    bridges = Bridge.discover(entry.data[CONF_HOST])
     if not bridges:
-        _LOGGER.error("Could not connect to ComfoConnect bridge on %s", host)
-        return False
+        raise ConfigEntryNotReady("Could not connect to ComfoConnect bridge")
     bridge = bridges[0]
-    _LOGGER.debug("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
+    ccb = ComfoConnectBridge(
+        hass,
+        bridge,
+        entry.title,
+        entry.data[CONF_TOKEN],
+        entry.data[CONF_USER_AGENT],
+        entry.data[CONF_PIN],
+    )
+    await hass.async_add_executor_job(ccb.connect)
+    entry.runtime_data = ccb
 
-    # Setup ComfoConnect Bridge
-    ccb = ComfoConnectBridge(hass, bridge, name, token, user_agent, pin)
-    hass.data[DOMAIN] = ccb
-
-    # Start connection with bridge
-    ccb.connect()
-
-    # Schedule disconnect on shutdown
     def _shutdown(_event: Event) -> None:
         ccb.disconnect()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
-    # Load platforms
-    discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ComfoConnectConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class ComfoConnectBridge:
