@@ -73,7 +73,7 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="battery",
         name="Battery",
-        icon="mdi:battery",
+        device_class=SensorDeviceClass.BATTERY,
     ),
     SensorEntityDescription(
         key="co2_air_quality",
