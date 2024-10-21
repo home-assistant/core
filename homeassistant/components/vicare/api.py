@@ -15,10 +15,6 @@ from PyViCare.PyViCareUtils import PyViCareInternalServerError, PyViCareRateLimi
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-# TODO the following two API examples are based on our suggested best practices
-# for libraries using OAuth2 with requests or aiohttp. Delete the one you won't use.
-# For more info see the docs at https://developers.home-assistant.io/docs/api_lib_auth/#oauth2.
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -45,7 +41,7 @@ class ConfigEntryAuth(AbstractViCareOAuthManager):
         # return self.session.token["access_token"]
 
     def get(self, url: str) -> Any:
-        """perform get request"""
+        """Perform get request."""
         try:
             run_coroutine_threadsafe(
                 self.session.async_ensure_token_valid(), self.hass.loop
