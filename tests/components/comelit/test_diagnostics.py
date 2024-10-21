@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -42,7 +43,13 @@ async def test_entry_diagnostics_bridge(
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props(
+            "entry_id",
+            "created_at",
+            "modified_at",
+        )
+    )
 
 
 async def test_entry_diagnostics_vedo(
@@ -65,4 +72,10 @@ async def test_entry_diagnostics_vedo(
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props(
+            "entry_id",
+            "created_at",
+            "modified_at",
+        )
+    )

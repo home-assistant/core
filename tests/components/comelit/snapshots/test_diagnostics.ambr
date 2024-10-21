@@ -56,7 +56,6 @@
       'last_update success': True,
     }),
     'entry': dict({
-      'created_at': '2024-10-21T15:53:00.486762+00:00',
       'data': dict({
         'host': 'fake_host',
         'pin': '**REDACTED**',
@@ -66,9 +65,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'comelit',
-      'entry_id': '01JAQWG7A6F6G5V0QJX6HBC94T',
       'minor_version': 1,
-      'modified_at': '2024-10-21T15:53:00.486770+00:00',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -122,7 +119,6 @@
       'last_update success': True,
     }),
     'entry': dict({
-      'created_at': '2024-10-21T15:53:00.748277+00:00',
       'data': dict({
         'host': 'fake_vedo_host',
         'pin': '**REDACTED**',
@@ -133,9 +129,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'comelit',
-      'entry_id': '01JAQWG7JC9CXSAFH6Q8FWMADX',
       'minor_version': 1,
-      'modified_at': '2024-10-21T15:53:00.748282+00:00',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
