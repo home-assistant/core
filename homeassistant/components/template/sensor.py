@@ -328,6 +328,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
 
     domain = SENSOR_DOMAIN
     extra_template_keys = (CONF_STATE,)
+    extra_parse_result_keys = (CONF_STATE,)
 
     def __init__(
         self,
