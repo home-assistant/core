@@ -4,24 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from aiocomelit.const import (
-    BRIDGE,
-    CLIMATE,
-    COVER,
-    IRRIGATION,
-    LIGHT,
-    OTHER,
-    SCENARIO,
-    WATT,
-    AlarmAreaState,
-    AlarmZoneState,
-)
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.components.comelit.diagnostics import TO_REDACT
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -36,11 +24,12 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(
+async def test_entry_diagnostics_bridge(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics."""
+    """Test Bridge config entry diagnostics."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_BRIDGE_DATA)
     entry.add_to_hass(hass)
 
@@ -59,65 +48,16 @@ async def test_entry_diagnostics(
     entry_dict = entry.as_dict()
     for key in TO_REDACT:
         entry_dict["data"][key] = REDACTED
-    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
 
-    assert result == {
-        "entry": entry_dict,
-        "type": entry.data.get(CONF_TYPE, BRIDGE),
-        "device_info": {
-            "last_update success": coordinator.last_update_success,
-            "last_exception": repr(coordinator.last_exception),
-            "devices": [
-                {
-                    CLIMATE: [],
-                },
-                {
-                    COVER: [
-                        {
-                            "0": {
-                                "name": "Cover0",
-                                "status": 0,
-                                "human_status": "closed",
-                                "protected": 0,
-                                "val": 0,
-                                "zone": "Open space",
-                                "power": 0.0,
-                                "power_unit": WATT,
-                            },
-                        }
-                    ],
-                },
-                {
-                    LIGHT: [
-                        {
-                            "0": {
-                                "name": "Light0",
-                                "status": 0,
-                                "human_status": "off",
-                                "protected": 0,
-                                "val": 0,
-                                "zone": "Bathroom",
-                                "power": 0.0,
-                                "power_unit": WATT,
-                            }
-                        }
-                    ],
-                },
-                {
-                    OTHER: [],
-                },
-                {
-                    IRRIGATION: [],
-                },
-                {
-                    SCENARIO: [],
-                },
-            ],
-        },
-    }
 
+async def test_entry_diagnostics_vedo(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Vedo System config entry diagnostics."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_VEDO_DATA)
     entry.add_to_hass(hass)
 
@@ -136,49 +76,5 @@ async def test_entry_diagnostics(
     entry_dict = entry.as_dict()
     for key in TO_REDACT:
         entry_dict["data"][key] = REDACTED
-    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    assert result == {
-        "entry": entry_dict,
-        "type": entry.data.get(CONF_TYPE, BRIDGE),
-        "device_info": {
-            "last_update success": coordinator.last_update_success,
-            "last_exception": repr(coordinator.last_exception),
-            "devices": [
-                {
-                    "aree": [
-                        {
-                            "0": {
-                                "alarm": False,
-                                "alarm_memory": False,
-                                "anomaly": False,
-                                "armed": False,
-                                "human_status": AlarmAreaState.UNKNOWN.value,
-                                "in_time": False,
-                                "name": "Area0",
-                                "out_time": False,
-                                "p1": True,
-                                "p2": False,
-                                "ready": False,
-                                "sabotage": False,
-                            }
-                        },
-                    ],
-                },
-                {
-                    "zone": [
-                        {
-                            "0": {
-                                "human_status": AlarmZoneState.REST.value,
-                                "name": "Zone0",
-                                "status": 0,
-                                "status_api": "0x000",
-                            }
-                        },
-                    ],
-                },
-            ],
-        },
-    }
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
