@@ -196,28 +196,26 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
+        reconfigure_entry = self._get_reconfigure_entry()
         errors = None
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
         if user_input is not None:
-            user_input[CONF_HOST] = entry.data[CONF_HOST]
+            user_input[CONF_HOST] = reconfigure_entry.data[CONF_HOST]
 
-            await self.hass.config_entries.async_unload(entry.entry_id)
+            await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
             if (error := await validate_connection(user_input)) is not None:
                 errors = {CONF_BASE: error}
 
             if errors is None:
-                data = entry.data.copy()
-                data.update(user_input)
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_setup(entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
 
-            await self.hass.config_entries.async_setup(entry.entry_id)
+            await self.hass.config_entries.async_setup(reconfigure_entry.entry_id)
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, entry.data),
-            errors=errors or {},
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, reconfigure_entry.data
+            ),
+            errors=errors,
         )

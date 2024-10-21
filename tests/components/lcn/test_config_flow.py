@@ -204,20 +204,19 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
     entry.add_to_hass(hass)
     old_entry_data = entry.data.copy()
 
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
     with (
         patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
         patch("homeassistant.components.lcn.async_setup", return_value=True),
         patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_RECONFIGURE,
-                "entry_id": entry.entry_id,
-            },
-            data=CONFIG_DATA.copy(),
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_DATA.copy(),
         )
-
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
 
@@ -242,18 +241,18 @@ async def test_step_reconfigure_error(
 ) -> None:
     """Test for error in reconfigure step is handled correctly."""
     entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
     with patch(
         "homeassistant.components.lcn.PchkConnectionManager.async_connect",
         side_effect=error,
     ):
-        data = {**CONNECTION_DATA, CONF_HOST: "pchk"}
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_RECONFIGURE,
-                "entry_id": entry.entry_id,
-            },
-            data=data,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_DATA.copy(),
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM

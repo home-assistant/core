@@ -9,7 +9,6 @@ from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
-from functools import cached_property
 import logging
 import math
 from operator import attrgetter
@@ -19,6 +18,7 @@ import time
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config import DATA_CUSTOMIZE
@@ -337,7 +337,9 @@ class CachedProperties(type):
                 Also invalidates the corresponding cached_property by calling
                 delattr on it.
                 """
-                if getattr(o, private_attr_name, _SENTINEL) == val:
+                if (
+                    old_val := getattr(o, private_attr_name, _SENTINEL)
+                ) == val and type(old_val) is type(val):
                     return
                 setattr(o, private_attr_name, val)
                 # Invalidate the cache of the cached property

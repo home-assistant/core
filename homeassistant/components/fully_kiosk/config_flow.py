@@ -32,6 +32,8 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    host: str
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_device_info: dict[str, Any] = {}
@@ -135,15 +137,13 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            result = await self._create_entry(
-                self.context[CONF_HOST], user_input, errors
-            )
+            result = await self._create_entry(self.host, user_input, errors)
             if result:
                 return result
 
         placeholders = {
             "name": self._discovered_device_info["deviceName"],
-            CONF_HOST: self.context[CONF_HOST],
+            CONF_HOST: self.host,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -168,6 +168,6 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(device_id)
         self._abort_if_unique_id_configured()
 
-        self.context[CONF_HOST] = device_info["hostname4"]
+        self.host = device_info["hostname4"]
         self._discovered_device_info = device_info
         return await self.async_step_discovery_confirm()

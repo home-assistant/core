@@ -4,9 +4,6 @@
       "user": {
         "description": "Do you want to add Radio Browser to Home Assistant?"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }
