@@ -22,6 +22,10 @@ from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type SwissPublicTransportConfigEntry = ConfigEntry[
+    SwissPublicTransportDataUpdateCoordinator
+]
+
 
 class DataConnection(TypedDict):
     """A connection data class."""
@@ -51,7 +55,7 @@ class SwissPublicTransportDataUpdateCoordinator(
 ):
     """A SwissPublicTransport Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwissPublicTransportConfigEntry
 
     def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
