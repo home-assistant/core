@@ -1118,6 +1118,7 @@ async def test_existing_topic_and_subscription(
         "cloud_project_id": CLOUD_PROJECT_ID,
         "project_id": PROJECT_ID,
         "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+        "subscriber_id_imported": True,
         "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
         "token": {
             "refresh_token": "mock-refresh-token",

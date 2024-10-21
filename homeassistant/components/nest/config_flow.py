@@ -31,6 +31,7 @@ from . import api
 from .const import (
     CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID_IMPORTED,
     CONF_SUBSCRIPTION_NAME,
     CONF_TOPIC_NAME,
     DATA_SDM,
@@ -344,6 +345,9 @@ class NestFlowHandler(
                     errors["base"] = "pubsub_api_error"
                 else:
                     user_input[CONF_SUBSCRIPTION_NAME] = subscription_name
+            else:
+                # The user created this subscription themselves so do not delete when removing the integration.
+                user_input[CONF_SUBSCRIBER_ID_IMPORTED] = True
 
             if not errors:
                 self._data.update(user_input)
