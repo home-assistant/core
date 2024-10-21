@@ -20,6 +20,7 @@ import pytest
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -33,6 +34,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     BrowseMedia,
     MediaClass,
+    MediaPlayerEnqueue,
     MediaType,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -61,7 +63,9 @@ async def test_media_player_entity(
     ]
     states = [
         MediaPlayerEntityState(
-            key=1, volume=50, muted=True, state=MediaPlayerState.PAUSED
+            key=1, volume=50, muted=True, state=MediaPlayerState.PAUSED,
+            repeat="off", shuffle=False, artist="artist", album="album",
+            title="title", duration=100, position=0,
         )
     ]
     user_service: list[UserService] = []
@@ -206,7 +210,9 @@ async def test_media_player_entity_with_source(
     ]
     states = [
         MediaPlayerEntityState(
-            key=1, volume=50, muted=True, state=MediaPlayerState.PLAYING
+            key=1, volume=50, muted=True, state=MediaPlayerState.PLAYING,
+            repeat="off", shuffle=False, artist="artist", album="album",
+            title="title", duration=100, position=0,
         )
     ]
     user_service: list[UserService] = []
@@ -257,7 +263,7 @@ async def test_media_player_entity_with_source(
         )
 
     mock_client.media_player_command.assert_has_calls(
-        [call(1, media_url="http://www.example.com/xy.mp3", announcement=None)]
+        [call(1, media_url='http://www.example.com/xy.mp3', announcement=False, enqueue=MediaPlayerEnqueue.REPLACE)]
     )
 
     client = await hass_ws_client()
@@ -284,7 +290,7 @@ async def test_media_player_entity_with_source(
     )
 
     mock_client.media_player_command.assert_has_calls(
-        [call(1, media_url="media-source://tts?message=hello", announcement=True)]
+        [call(1, media_url="media-source://tts?message=hello", announcement=True, enqueue=MediaPlayerEnqueue.REPLACE)]
     )
 
 
