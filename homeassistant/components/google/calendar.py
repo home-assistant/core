@@ -338,6 +338,7 @@ class GoogleCalendarEntity(
         self.entity_description = entity_description
         self._ignore_availability = entity_description.ignore_availability
         self._offset = entity_description.offset
+        self._viewer_email = self.coordinator.config_entry.unique_id
         self._event: CalendarEvent | None = None
         if entity_description.entity_id:
             self.entity_id = entity_description.entity_id
@@ -367,6 +368,13 @@ class GoogleCalendarEntity(
         return event
 
     def _event_filter(self, event: Event) -> bool:
+        if any(
+            attendee.email == self._viewer_email
+            and attendee.response_status == "declined"
+            for attendee in event.attendees
+        ):
+            return False
+
         """Return True if the event is visible."""
         if event.event_type == EventTypeEnum.WORKING_LOCATION:
             return self.entity_description.working_location
