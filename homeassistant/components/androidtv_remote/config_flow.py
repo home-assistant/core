@@ -63,7 +63,6 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     host: str
     name: str
     mac: str
-    reauth_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -107,7 +106,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.api.async_finish_pairing(pin)
                 if self.source == SOURCE_REAUTH:
                     await self.hass.config_entries.async_reload(
-                        self.reauth_entry.entry_id
+                        self._get_reauth_entry().entry_id
                     )
                     return self.async_abort(reason="reauth_successful")
                 return self.async_create_entry(
@@ -152,7 +151,18 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if not (mac := discovery_info.properties.get("bt")):
             return self.async_abort(reason="cannot_connect")
         self.mac = mac
-        await self.async_set_unique_id(format_mac(self.mac))
+        existing_config_entry = await self.async_set_unique_id(format_mac(mac))
+        # Sometimes, devices send an invalid zeroconf message with multiple addresses
+        # and one of them, which could end up being in discovery_info.host, is from a
+        # different device. If any of the discovery_info.ip_addresses matches the
+        # existing host, don't update the host.
+        if existing_config_entry and len(discovery_info.ip_addresses) > 1:
+            existing_host = existing_config_entry.data[CONF_HOST]
+            if existing_host != self.host:
+                if existing_host in [
+                    str(ip_address) for ip_address in discovery_info.ip_addresses
+                ]:
+                    self.host = existing_host
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
@@ -183,7 +193,6 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         self.host = entry_data[CONF_HOST]
         self.name = entry_data[CONF_NAME]
         self.mac = entry_data[CONF_MAC]
-        self.reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

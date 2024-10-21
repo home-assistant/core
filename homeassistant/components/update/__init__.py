@@ -34,6 +34,7 @@ from .const import (
     ATTR_RELEASE_URL,
     ATTR_SKIPPED_VERSION,
     ATTR_TITLE,
+    ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
     DOMAIN,
     SERVICE_INSTALL,
@@ -207,7 +208,12 @@ class UpdateEntity(
     """Representation of an update entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_ENTITY_PICTURE, ATTR_IN_PROGRESS, ATTR_RELEASE_SUMMARY}
+        {
+            ATTR_ENTITY_PICTURE,
+            ATTR_IN_PROGRESS,
+            ATTR_RELEASE_SUMMARY,
+            ATTR_UPDATE_PERCENTAGE,
+        }
     )
 
     entity_description: UpdateEntityDescription
@@ -418,12 +424,17 @@ class UpdateEntity(
         if (release_summary := self.release_summary) is not None:
             release_summary = release_summary[:255]
 
+        update_percentage = None
+
         # If entity supports progress, return the in_progress value.
         # Otherwise, we use the internal progress value.
         if UpdateEntityFeature.PROGRESS in self.supported_features_compat:
             in_progress = self.in_progress
         else:
             in_progress = self.__in_progress
+        if type(in_progress) is not bool and isinstance(in_progress, int):
+            update_percentage = in_progress
+            in_progress = True
 
         installed_version = self.installed_version
         latest_version = self.latest_version
@@ -445,6 +456,7 @@ class UpdateEntity(
             ATTR_RELEASE_URL: self.release_url,
             ATTR_SKIPPED_VERSION: skipped_version,
             ATTR_TITLE: self.title,
+            ATTR_UPDATE_PERCENTAGE: update_percentage,
         }
 
     @final
