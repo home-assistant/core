@@ -4,9 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/google_tasks",
   "dependencies": [],
   "codeowners": [],
-  "requirements": [
-    "dateparser==1.1.1"
-  ],
+  "requirements": ["dateparser==1.1.1"],
   "iot_class": "cloud_polling",
   "version": "1.0.0"
 }

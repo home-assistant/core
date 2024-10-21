@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-import re  # Import regex for date pattern matching
+import re
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -29,20 +29,30 @@ TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
 DATE_PATTERN = r"\d{4}/\d{2}/\d{2}"  # Define a regex pattern for YYYY/MM/DD format
 
 
+# Helper function to ensure proper date format (ISO 8601 with UTC time)
+def _format_due_date(due: date) -> str:
+    """Format due date for Google Tasks API."""
+    return due.isoformat() + "T00:00:00.000Z"  # Format the date as all-day in UTC
+
+
 def _convert_todo_item(item: TodoItem) -> dict[str, str | None]:
-    """Convert TodoItem dataclass items to dictionary of attributes the tasks API."""
+    """Convert TodoItem dataclass items to dictionary of attributes for the tasks API."""
     result: dict[str, str | None] = {}
     result["title"] = item.summary
     if item.status is not None:
         result["status"] = TODO_STATUS_MAP_INV[item.status]
     else:
         result["status"] = TodoItemStatus.NEEDS_ACTION
+
     if (due := item.due) is not None:
-        # due API field is a timestamp string, but with only date resolution
-        result["due"] = dt_util.start_of_local_day(due).isoformat()
+        # Ensure 'due' is treated as a date-only field (strip time) before sending to the API
+        result["due"] = _format_due_date(due)  # Format date for Google Tasks API
     else:
         result["due"] = None
-    result["notes"] = item.description
+
+    result["notes"] = (
+        item.description if item.description else None
+    )  # Avoid sending empty strings
     return result
 
 
@@ -50,7 +60,7 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
     """Convert tasks API items into a TodoItem."""
     due: date | None = None
     if (due_str := item.get("due")) is not None:
-        # If 'due' field is in ISO format, convert it to date
+        # Parse the date as a local date without time components
         due = datetime.fromisoformat(due_str).date()
     else:
         # Check for custom date format (YYYY/MM/DD) in title or description
@@ -166,7 +176,7 @@ def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     All tasks have an order amongst their siblings based on position.
 
-        Home Assistant To-do items do not support the Google Task parent/sibling
+    Home Assistant To-do items do not support the Google Task parent/sibling
     relationships and the desired behavior is for them to be filtered.
     """
     parents = [task for task in tasks if task.get("parent") is None]

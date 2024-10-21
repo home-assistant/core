@@ -711,6 +711,9 @@ datadog==0.15.0
 # homeassistant.components.metoffice
 datapoint==0.9.9
 
+# homeassistant.components.google_tasks
+dateparser==1.1.1
+
 # homeassistant.components.bluetooth
 dbus-fast==2.24.0
 
@@ -988,7 +991,6 @@ goalzero==0.2.2
 goodwe==0.3.6
 
 # homeassistant.components.google_mail
-# homeassistant.components.google_tasks
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
