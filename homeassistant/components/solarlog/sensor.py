@@ -256,11 +256,7 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=3,
-        value_fn=(
-            lambda inverter: None
-            if inverter.consumption_year is None
-            else inverter.consumption_year
-        ),
+        value_fn=lambda inverter: inverter.consumption_year,
     ),
 )
 
@@ -288,6 +284,14 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities)
+
+    def _async_add_new_device(device_id: int) -> None:
+        async_add_entities(
+            SolarLogInverterSensor(coordinator, sensor, device_id)
+            for sensor in INVERTER_SENSOR_TYPES
+        )
+
+    coordinator.new_device_callbacks.append(_async_add_new_device)
 
 
 class SolarLogCoordinatorSensor(SolarLogCoordinatorEntity, SensorEntity):
