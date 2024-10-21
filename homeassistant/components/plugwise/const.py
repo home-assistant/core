@@ -24,6 +24,7 @@ REBOOT: Final = "reboot"
 SMILE: Final = "smile"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
+VERSION: Final = "version"
 
 PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
@@ -69,6 +70,7 @@ DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
     "stretch": timedelta(seconds=60),
     "thermostat": timedelta(seconds=60),
 }
+DEFAULT_TIMEOUT: Final = 30
 DEFAULT_USERNAME: Final = "smile"
 
 MASTER_THERMOSTATS: Final[list[str]] = [
