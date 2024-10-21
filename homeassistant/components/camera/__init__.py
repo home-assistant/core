@@ -402,7 +402,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async def get_ice_server() -> RTCIceServer:
-        return RTCIceServer(urls="stun:stun.home-assistant.io:3478")
+        return RTCIceServer(urls="stun:stun.home-assistant.io:80")
 
     register_ice_server(hass, get_ice_server)
     return True
