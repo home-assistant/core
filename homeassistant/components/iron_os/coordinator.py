@@ -18,7 +18,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
-SCAN_INTERVAL_GITHUB = timedelta(minutes=60)
+SCAN_INTERVAL_GITHUB = timedelta(hours=3)
 
 
 class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
