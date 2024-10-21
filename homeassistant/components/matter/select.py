@@ -266,4 +266,16 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSelectEntity,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeSensitivityLevel,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="MatterSelectedTemperatureLevel",
+            translation_key="mode",
+        ),
+        entity_class=MatterModeSelectEntity,
+        required_attributes=(
+            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
+            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
+        ),
+    ),
 ]
