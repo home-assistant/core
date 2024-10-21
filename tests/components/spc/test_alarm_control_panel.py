@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyspcwebgw.const import AreaMode
 
-from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -19,7 +19,7 @@ async def test_update_alarm_device(hass: HomeAssistant, mock_client: AsyncMock) 
 
     entity_id = "alarm_control_panel.house"
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
     assert hass.states.get(entity_id).attributes["changed_by"] == "Sven"
 
     mock_area = mock_client.return_value.areas["1"]
@@ -30,5 +30,5 @@ async def test_update_alarm_device(hass: HomeAssistant, mock_client: AsyncMock) 
     await mock_client.call_args_list[0][1]["async_callback"](mock_area)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     assert hass.states.get(entity_id).attributes["changed_by"] == "Anna"

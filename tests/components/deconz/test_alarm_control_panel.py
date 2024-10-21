@@ -9,6 +9,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -17,13 +18,6 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -117,21 +111,21 @@ async def test_alarm_control_panel(
 
     for action, state in (
         # Event signals alarm control panel armed state
-        (AncillaryControlPanel.ARMED_AWAY, STATE_ALARM_ARMED_AWAY),
-        (AncillaryControlPanel.ARMED_NIGHT, STATE_ALARM_ARMED_NIGHT),
-        (AncillaryControlPanel.ARMED_STAY, STATE_ALARM_ARMED_HOME),
-        (AncillaryControlPanel.DISARMED, STATE_ALARM_DISARMED),
+        (AncillaryControlPanel.ARMED_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (AncillaryControlPanel.ARMED_NIGHT, AlarmControlPanelState.ARMED_NIGHT),
+        (AncillaryControlPanel.ARMED_STAY, AlarmControlPanelState.ARMED_HOME),
+        (AncillaryControlPanel.DISARMED, AlarmControlPanelState.DISARMED),
         # Event signals alarm control panel arming state
-        (AncillaryControlPanel.ARMING_AWAY, STATE_ALARM_ARMING),
-        (AncillaryControlPanel.ARMING_NIGHT, STATE_ALARM_ARMING),
-        (AncillaryControlPanel.ARMING_STAY, STATE_ALARM_ARMING),
+        (AncillaryControlPanel.ARMING_AWAY, AlarmControlPanelState.ARMING),
+        (AncillaryControlPanel.ARMING_NIGHT, AlarmControlPanelState.ARMING),
+        (AncillaryControlPanel.ARMING_STAY, AlarmControlPanelState.ARMING),
         # Event signals alarm control panel pending state
-        (AncillaryControlPanel.ENTRY_DELAY, STATE_ALARM_PENDING),
-        (AncillaryControlPanel.EXIT_DELAY, STATE_ALARM_PENDING),
+        (AncillaryControlPanel.ENTRY_DELAY, AlarmControlPanelState.PENDING),
+        (AncillaryControlPanel.EXIT_DELAY, AlarmControlPanelState.PENDING),
         # Event signals alarm control panel triggered state
-        (AncillaryControlPanel.IN_ALARM, STATE_ALARM_TRIGGERED),
+        (AncillaryControlPanel.IN_ALARM, AlarmControlPanelState.TRIGGERED),
         # Event signals alarm control panel unknown state keeps previous state
-        (AncillaryControlPanel.NOT_READY, STATE_ALARM_TRIGGERED),
+        (AncillaryControlPanel.NOT_READY, AlarmControlPanelState.TRIGGERED),
     ):
         await sensor_ws_data({"state": {"panel": action}})
         assert hass.states.get("alarm_control_panel.keypad").state == state

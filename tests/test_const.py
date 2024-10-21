@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import const
-from homeassistant.components import lock, sensor
+from homeassistant.components import alarm_control_panel, lock, sensor
 
 from .common import (
     extract_stack_to_frame,
@@ -207,6 +207,38 @@ def _create_tuples_lock_states(
     _create_tuples_lock_states(lock.LockState, "STATE_", "2025.10"),
 )
 def test_deprecated_constants_lock(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    remove_in_version: str,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, const, enum, constant_prefix, remove_in_version
+    )
+
+
+def _create_tuples_alarm_states(
+    enum: type[Enum], constant_prefix: str, remove_in_version: str
+) -> list[tuple[Enum, str]]:
+    return [
+        (enum_field, constant_prefix, remove_in_version)
+        for enum_field in enum
+        if enum_field
+        not in [
+            lock.LockState.OPEN,
+            lock.LockState.OPENING,
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix", "remove_in_version"),
+    _create_tuples_lock_states(
+        alarm_control_panel.AlarmControlPanelState, "STATE_ALARM_", "2025.11"
+    ),
+)
+def test_deprecated_constants_alarm(
     caplog: pytest.LogCaptureFixture,
     enum: Enum,
     constant_prefix: str,
