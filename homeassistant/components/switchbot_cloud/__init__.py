@@ -17,6 +17,7 @@ from .coordinator import SwitchBotCoordinator
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
+    Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
@@ -31,6 +32,7 @@ class SwitchbotDevices:
     switches: list[Device | Remote] = field(default_factory=list)
     sensors: list[Device] = field(default_factory=list)
     vacuums: list[Device] = field(default_factory=list)
+    locks: list[Device] = field(default_factory=list)
 
 
 @dataclass
@@ -97,6 +99,10 @@ def make_device_data(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
 
+        if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
+            devices_data.locks.append(
+                prepare_device(hass, api, device, coordinators_by_id)
+            )
     return devices_data
 
 
