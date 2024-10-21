@@ -15,8 +15,8 @@ CONF_SOURCES = "sources"
 CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 
 type VolumeResolution = Literal[50, 80, 100, 200]
-CONF_VOLUME_RESOLUTION = "volume_resolution"
-CONF_VOLUME_RESOLUTION_DEFAULT: VolumeResolution = 50
+OPTION_VOLUME_RESOLUTION = "volume_resolution"
+OPTION_VOLUME_RESOLUTION_DEFAULT: VolumeResolution = 50
 VOLUME_RESOLUTION_ALLOWED: tuple[VolumeResolution, ...] = typing.get_args(
     VolumeResolution.__value__
 )

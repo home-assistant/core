@@ -28,9 +28,9 @@ from . import OnkyoConfigEntry
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
-    CONF_VOLUME_RESOLUTION,
     DOMAIN,
     OPTION_MAX_VOLUME,
+    OPTION_VOLUME_RESOLUTION,
     PYEISCP_COMMANDS,
     ZONES,
     InputSource,
@@ -271,7 +271,7 @@ async def async_setup_entry(
     entities: dict[str, OnkyoMediaPlayer] = {}
     all_entities[entry.entry_id] = entities
 
-    volume_resolution: VolumeResolution = entry.data[CONF_VOLUME_RESOLUTION]
+    volume_resolution: VolumeResolution = entry.options[OPTION_VOLUME_RESOLUTION]
     max_volume: float = entry.options[OPTION_MAX_VOLUME]
     sources = data.sources
 

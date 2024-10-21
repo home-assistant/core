@@ -21,11 +21,9 @@ def create_receiver_info(id: int) -> ReceiverInfo:
 
 def create_empty_config_entry() -> MockConfigEntry:
     """Create an empty config entry for use in unit tests."""
-    config = {
-        CONF_HOST: "",
-        "volume_resolution": 80,
-    }
+    config = {CONF_HOST: ""}
     options = {
+        "volume_resolution": 80,
         "input_sources": {"12": "tv"},
         "max_volume": 100,
     }

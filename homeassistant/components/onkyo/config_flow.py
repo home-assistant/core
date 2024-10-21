@@ -28,12 +28,12 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
-    CONF_VOLUME_RESOLUTION,
-    CONF_VOLUME_RESOLUTION_DEFAULT,
     DOMAIN,
     OPTION_INPUT_SOURCES,
     OPTION_MAX_VOLUME,
     OPTION_MAX_VOLUME_DEFAULT,
+    OPTION_VOLUME_RESOLUTION,
+    OPTION_VOLUME_RESOLUTION_DEFAULT,
     VOLUME_RESOLUTION_ALLOWED,
     InputSource,
 )
@@ -49,8 +49,8 @@ INPUT_SOURCES_ALL_MEANINGS = [
 STEP_CONFIGURE_SCHEMA = vol.Schema(
     {
         vol.Required(
-            CONF_VOLUME_RESOLUTION,
-            default=CONF_VOLUME_RESOLUTION_DEFAULT,
+            OPTION_VOLUME_RESOLUTION,
+            default=OPTION_VOLUME_RESOLUTION_DEFAULT,
         ): vol.In(VOLUME_RESOLUTION_ALLOWED),
         vol.Required(OPTION_INPUT_SOURCES, default=[]): SelectSelector(
             SelectSelectorConfig(
@@ -174,9 +174,9 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._receiver_info.model_name,
                     data={
                         CONF_HOST: self._receiver_info.host,
-                        CONF_VOLUME_RESOLUTION: user_input[CONF_VOLUME_RESOLUTION],
                     },
                     options={
+                        OPTION_VOLUME_RESOLUTION: user_input[OPTION_VOLUME_RESOLUTION],
                         OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
                         OPTION_INPUT_SOURCES: sources_store,
                     },
@@ -241,9 +241,9 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             title=name,
             data={
                 CONF_HOST: host,
-                CONF_VOLUME_RESOLUTION: volume_resolution,
             },
             options={
+                OPTION_VOLUME_RESOLUTION: volume_resolution,
                 OPTION_MAX_VOLUME: max_volume,
                 OPTION_INPUT_SOURCES: sources_store,
             },
@@ -282,6 +282,7 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
             return self.async_create_entry(
                 data={
+                    OPTION_VOLUME_RESOLUTION: self.options[OPTION_VOLUME_RESOLUTION],
                     OPTION_MAX_VOLUME: user_input[OPTION_MAX_VOLUME],
                     OPTION_INPUT_SOURCES: sources_store,
                 }

@@ -280,7 +280,7 @@ async def test_configure_no_resolution(hass: HomeAssistant) -> None:
         )
 
         assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-        assert configure_result["data"]["volume_resolution"] == 50
+        assert configure_result["options"]["volume_resolution"] == 50
 
 
 async def test_configure_resolution_set(hass: HomeAssistant) -> None:
@@ -314,7 +314,7 @@ async def test_configure_resolution_set(hass: HomeAssistant) -> None:
         )
 
         assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-        assert configure_result["data"]["volume_resolution"] == 200
+        assert configure_result["options"]["volume_resolution"] == 200
 
 
 async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
@@ -427,7 +427,7 @@ async def test_import_success(
 
         assert import_result["type"] is FlowResultType.CREATE_ENTRY
         assert import_result["data"]["host"] == "host 1"
-        assert import_result["data"]["volume_resolution"] == 80
+        assert import_result["options"]["volume_resolution"] == 80
         assert import_result["options"]["max_volume"] == 100
         assert import_result["options"]["input_sources"] == {
             "00": "Auxiliary",
@@ -456,6 +456,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
+        "volume_resolution": 80,
         "max_volume": 42.0,
         "input_sources": {
             "12": "television",
