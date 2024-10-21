@@ -12,7 +12,7 @@ from opendata_transport.exceptions import (
     OpendataTransportError,
 )
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
@@ -22,7 +22,7 @@ from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type SwissPublicTransportConfigEntry = config_entries.ConfigEntry[
+type SwissPublicTransportConfigEntry = ConfigEntry[
     SwissPublicTransportDataUpdateCoordinator
 ]
 

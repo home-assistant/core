@@ -8,13 +8,13 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from homeassistant import core
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import UnitOfTime
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -84,7 +84,7 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant,
+    hass: HomeAssistant,
     config_entry: SwissPublicTransportConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
