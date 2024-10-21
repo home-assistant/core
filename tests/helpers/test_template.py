@@ -4626,6 +4626,8 @@ def test_result_as_boolean(hass: HomeAssistant) -> None:
     assert template.result_as_boolean(0.0) is False
     assert template.result_as_boolean("0.00") is False
     assert template.result_as_boolean(None) is False
+    assert template.result_as_boolean(" some random string ") is False
+    assert template.result_as_boolean(datetime.now()) is False
 
 
 def test_result_as_boolean_or_none(hass: HomeAssistant) -> None:
@@ -4654,8 +4656,10 @@ def test_result_as_boolean_or_none(hass: HomeAssistant) -> None:
     assert template.result_as_boolean_or_none(" disable ") is False
     assert template.result_as_boolean_or_none(0) is False
     assert template.result_as_boolean_or_none(0.0) is False
-    assert template.result_as_boolean_or_none("0.00") is False
+    assert template.result_as_boolean_or_none("0.00") is None
     assert template.result_as_boolean_or_none(None) is None
+    assert template.result_as_boolean_or_none(" some random string ") is None
+    assert template.result_as_boolean_or_none(datetime.now()) is None
 
 
 def test_closest_function_to_entity_id(hass: HomeAssistant) -> None:

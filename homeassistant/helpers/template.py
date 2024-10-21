@@ -1282,12 +1282,12 @@ def result_as_boolean_or_none(template_result: Any | None) -> bool | None:
     None stays None
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
     False/0/'0'/'false'/'no'/'off'/'disable' are considered falsy
-
+    All other values are None
     """
     if template_result is None:
         return None
 
-    return forgiving_boolean(template_result, default=False)
+    return forgiving_boolean(template_result, default=None)
 
 
 def result_as_boolean(template_result: Any | None) -> bool:
@@ -1295,7 +1295,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-
+    All other values are falsy
     """
     if template_result is None:
         return False
