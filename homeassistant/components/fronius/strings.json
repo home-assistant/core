@@ -292,6 +292,12 @@
       },
       "temperature_cell": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "backup_mode": {
+        "name": "Backup Mode"
+      },
+      "battery_standby": {
+        "name": "Battery Standby"
       }
     }
   }
