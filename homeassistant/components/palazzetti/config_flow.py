@@ -28,7 +28,7 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.connect()
             except CommunicationError:
                 LOGGER.exception("Communication error")
-                errors["base"] = "invalid_host"
+                errors["base"] = "cannot_connect"
             else:
                 formatted_mac = dr.format_mac(client.mac)
 

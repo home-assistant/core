@@ -50,5 +50,7 @@ def mock_palazzetti():
         client.is_heating = True
         client.room_temperature = 18
         client.target_temperature = 21
+        client.target_temperature_min = 5
+        client.target_temperature_max = 50
         client.fan_speed = 3
         yield client

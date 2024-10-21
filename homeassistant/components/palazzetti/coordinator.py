@@ -6,7 +6,6 @@ from pypalazzetti.exceptions import CommunicationError, ValidationError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -38,11 +37,11 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.client.connect()
             await self.client.update_state()
         except (CommunicationError, ValidationError) as err:
-            raise ConfigEntryNotReady from err
+            raise UpdateFailed(f"Error communicating with the API: {err}") from err
 
     async def _async_update_data(self) -> None:
         """Fetch data from Palazzetti."""
         try:
             await self.client.update_state()
         except (CommunicationError, ValidationError) as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(f"Error communicating with the API: {err}") from err
