@@ -105,7 +105,7 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=REAUTH_SCHEMA,
                 errors=errors,
                 description_placeholders={
-                    "username": username,
+                    CONF_USERNAME: username,
                     CONF_NAME: reauth_entry.title,
                 },
             )
