@@ -7,8 +7,6 @@ from unittest.mock import patch
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.components.comelit.diagnostics import TO_REDACT
-from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -44,11 +42,6 @@ async def test_entry_diagnostics_bridge(
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
-
-    entry_dict = entry.as_dict()
-    for key in TO_REDACT:
-        entry_dict["data"][key] = REDACTED
-
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
 
 
@@ -72,9 +65,4 @@ async def test_entry_diagnostics_vedo(
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
-
-    entry_dict = entry.as_dict()
-    for key in TO_REDACT:
-        entry_dict["data"][key] = REDACTED
-
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
