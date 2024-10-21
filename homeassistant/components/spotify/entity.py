@@ -15,9 +15,8 @@ class SpotifyEntity(CoordinatorEntity[SpotifyCoordinator]):
     def __init__(self, coordinator: SpotifyCoordinator) -> None:
         """Initialize the Spotify entity."""
         super().__init__(coordinator)
-        user_identifier = coordinator.current_user.user_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, user_identifier)},
+            identifiers={(DOMAIN, coordinator.current_user.user_id)},
             manufacturer="Spotify AB",
             model=f"Spotify {coordinator.current_user.product}",
             name=f"Spotify {coordinator.config_entry.title}",
