@@ -729,7 +729,7 @@ class DockTrait(_Trait):
 
     def query_attributes(self) -> dict[str, Any]:
         """Return dock query attributes."""
-        return {"isDocked": self.state.state == vacuum.VacuumEntityState.DOCKED}
+        return {"isDocked": self.state.state == vacuum.VacuumState.DOCKED}
 
     async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
@@ -825,8 +825,8 @@ class EnergyStorageTrait(_Trait):
             "capacityUntilFull": [
                 {"rawValue": 100 - battery_level, "unit": "PERCENTAGE"}
             ],
-            "isCharging": self.state.state == vacuum.VacuumEntityState.DOCKED,
-            "isPluggedIn": self.state.state == vacuum.VacuumEntityState.DOCKED,
+            "isCharging": self.state.state == vacuum.VacuumState.DOCKED,
+            "isPluggedIn": self.state.state == vacuum.VacuumState.DOCKED,
         }
 
     async def execute(self, command, data, params, challenge):
@@ -882,8 +882,8 @@ class StartStopTrait(_Trait):
 
         if domain == vacuum.DOMAIN:
             return {
-                "isRunning": state == vacuum.VacuumEntityState.CLEANING,
-                "isPaused": state == vacuum.VacuumEntityState.PAUSED,
+                "isRunning": state == vacuum.VacuumState.CLEANING,
+                "isPaused": state == vacuum.VacuumState.PAUSED,
             }
 
         if domain in COVER_VALVE_DOMAINS:

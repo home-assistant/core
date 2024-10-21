@@ -9,7 +9,7 @@ from typing import Any
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -81,7 +81,7 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
         self._attr_battery_level = self.romy.battery_level
         try:
             assert self.romy.status is not None
-            self._attr_vacuum_state = VacuumEntityState(self.romy.status)
+            self._attr_vacuum_state = VacuumState(self.romy.status)
         except (AssertionError, ValueError):
             self._attr_vacuum_state = None
 

@@ -16,7 +16,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     StateVacuumEntityDescription,
     VacuumEntityFeature,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
@@ -118,22 +118,22 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         self.schedule_update_ha_state()
 
     @property
-    def vacuum_state(self) -> VacuumEntityState | None:
+    def vacuum_state(self) -> VacuumState | None:
         """Return the state of the vacuum cleaner."""
         if self.error is not None:
-            return VacuumEntityState.ERROR
+            return VacuumState.ERROR
 
         if self.device.is_cleaning:
-            return VacuumEntityState.CLEANING
+            return VacuumState.CLEANING
 
         if self.device.is_charging:
-            return VacuumEntityState.DOCKED
+            return VacuumState.DOCKED
 
         if self.device.vacuum_status == sucks.CLEAN_MODE_STOP:
-            return VacuumEntityState.IDLE
+            return VacuumState.IDLE
 
         if self.device.vacuum_status == sucks.CHARGE_MODE_RETURNING:
-            return VacuumEntityState.RETURNING
+            return VacuumState.RETURNING
 
         return None
 
@@ -197,7 +197,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if self.state == VacuumEntityState.CLEANING:
+        if self.state == VacuumState.CLEANING:
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(
@@ -220,12 +220,12 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
 
 _STATE_TO_VACUUM_STATE = {
-    State.IDLE: VacuumEntityState.IDLE,
-    State.CLEANING: VacuumEntityState.CLEANING,
-    State.RETURNING: VacuumEntityState.RETURNING,
-    State.DOCKED: VacuumEntityState.DOCKED,
-    State.ERROR: VacuumEntityState.ERROR,
-    State.PAUSED: VacuumEntityState.PAUSED,
+    State.IDLE: VacuumState.IDLE,
+    State.CLEANING: VacuumState.CLEANING,
+    State.RETURNING: VacuumState.RETURNING,
+    State.DOCKED: VacuumState.DOCKED,
+    State.ERROR: VacuumState.ERROR,
+    State.PAUSED: VacuumState.PAUSED,
 }
 
 _ATTR_ROOMS = "rooms"

@@ -12,7 +12,7 @@ from homeassistant.components.vacuum import (
     ENTITY_ID_FORMAT,
     StateVacuumEntity,
     VacuumEntityFeature,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
@@ -44,13 +44,13 @@ STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
 
-POSSIBLE_STATES: dict[str, VacuumEntityState] = {
-    STATE_IDLE: VacuumEntityState.IDLE,
-    STATE_DOCKED: VacuumEntityState.DOCKED,
-    STATE_ERROR: VacuumEntityState.ERROR,
-    STATE_PAUSED: VacuumEntityState.PAUSED,
-    STATE_RETURNING: VacuumEntityState.RETURNING,
-    STATE_CLEANING: VacuumEntityState.CLEANING,
+POSSIBLE_STATES: dict[str, VacuumState] = {
+    STATE_IDLE: VacuumState.IDLE,
+    STATE_DOCKED: VacuumState.DOCKED,
+    STATE_ERROR: VacuumState.ERROR,
+    STATE_PAUSED: VacuumState.PAUSED,
+    STATE_RETURNING: VacuumState.RETURNING,
+    STATE_CLEANING: VacuumState.CLEANING,
 }
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES

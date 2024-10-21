@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,10 +26,10 @@ from .const import DOMAIN, LOGGER, SERVICE_CLEAN_ROOM, SHARK
 from .coordinator import SharkIqUpdateCoordinator
 
 OPERATING_STATE_MAP = {
-    OperatingModes.PAUSE: VacuumEntityState.PAUSED,
-    OperatingModes.START: VacuumEntityState.CLEANING,
-    OperatingModes.STOP: VacuumEntityState.IDLE,
-    OperatingModes.RETURN: VacuumEntityState.RETURNING,
+    OperatingModes.PAUSE: VacuumState.PAUSED,
+    OperatingModes.START: VacuumState.CLEANING,
+    OperatingModes.STOP: VacuumState.IDLE,
+    OperatingModes.RETURN: VacuumState.RETURNING,
 }
 
 FAN_SPEEDS_MAP = {
@@ -152,7 +152,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return self.sharkiq.get_property_value(Properties.RECHARGING_TO_RESUME)
 
     @property
-    def vacuum_state(self) -> VacuumEntityState | None:
+    def vacuum_state(self) -> VacuumState | None:
         """Get the current vacuum state.
 
         NB: Currently, we do not return an error state because they can be very, very stale.
@@ -160,7 +160,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         user a notification.
         """
         if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
-            return VacuumEntityState.DOCKED
+            return VacuumState.DOCKED
         op_mode = self.sharkiq.get_property_value(Properties.OPERATING_MODE)
         return OPERATING_STATE_MAP.get(op_mode)
 

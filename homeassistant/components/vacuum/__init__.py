@@ -44,7 +44,7 @@ from .const import (  # noqa: F401
     _DEPRECATED_STATE_RETURNING,
     DOMAIN,
     STATES,
-    VacuumEntityState,
+    VacuumState,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,9 +75,9 @@ SERVICE_STOP = "stop"
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 # These STATE_* constants are deprecated as of Home Assistant 2024.11.
-# Please use the VacuumEntityState enum instead.
-_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumEntityState.IDLE, "2025.11")
-_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumEntityState.PAUSED, "2025.11")
+# Please use the VacuumState enum instead.
+_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumState.IDLE, "2025.11")
+_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumState.PAUSED, "2025.11")
 
 
 class VacuumEntityFeature(IntFlag):
@@ -243,29 +243,21 @@ class StateVacuumEntity(
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
-    _attr_vacuum_state: VacuumEntityState | None = None
+    _attr_vacuum_state: VacuumState | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
     __vacuum_legacy_state: bool = False
     __vacuum_legacy_state_reported: bool = False
 
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Post initialisation processing."""
-        super().__init_subclass__(**kwargs)
-        if any(method in cls.__dict__ for method in ("_attr_state", "state")):
-            # Integrations should use the 'alarm_state' property instead of
-            # setting the state directly.
-            cls.__vacuum_legacy_state = True
-
     def __setattr__(self, __name: str, __value: Any) -> None:
         """Set attribute.
 
-        Deprecation warning if settings '_attr_state' directly
+        Deprecation warning if setting '_attr_state' directly
         unless already reported.
         """
         if __name == "_attr_state":
             if self.__vacuum_legacy_state_reported is not True:
-                self._report_deprecated_alarm_state_handling()
+                self._report_deprecated_vacuum_state_handling()
             self.__vacuum_legacy_state_reported = True
         return super().__setattr__(__name, __value)
 
@@ -279,16 +271,14 @@ class StateVacuumEntity(
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
         if self.__vacuum_legacy_state and not self.__vacuum_legacy_state_reported:
-            self._report_deprecated_alarm_state_handling()
+            self._report_deprecated_vacuum_state_handling()
 
     @callback
-    def _report_deprecated_alarm_state_handling(self) -> None:
+    def _report_deprecated_vacuum_state_handling(self) -> None:
         """Report on deprecated handling of vacuum state.
 
         Integrations should implement vacuum_state instead of using state directly.
         """
-        if self.__vacuum_legacy_state_reported is True:
-            return
         self.__vacuum_legacy_state_reported = True
         if "custom_components" in type(self).__module__:
             # Do not report on core integrations as they have been fixed.
@@ -297,7 +287,7 @@ class StateVacuumEntity(
                 "Entity %s (%s) is setting state directly"
                 " which will stop working in HA Core 2025.11."
                 " Entities should implement the 'vacuum_state' property and"
-                " return it's state using the VacuumEntityState enum, please %s",
+                " return its state using the VacuumState enum, please %s",
                 self.entity_id,
                 type(self),
                 report_issue,
@@ -311,7 +301,7 @@ class StateVacuumEntity(
     @property
     def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner."""
-        charging = bool(self.vacuum_state == VacuumEntityState.DOCKED)
+        charging = bool(self.vacuum_state == VacuumState.DOCKED)
 
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
@@ -355,14 +345,14 @@ class StateVacuumEntity(
         """Return the state of the vacuum cleaner."""
         if (vacuum_state := self.vacuum_state) is None:
             return None
-        return str(vacuum_state)
+        return vacuum_state
 
     @cached_property
-    def vacuum_state(self) -> VacuumEntityState | None:
-        """Return the current vacuum entity state.
+    def vacuum_state(self) -> VacuumState | None:
+        """Return the current vacuum state.
 
-        Integrations should overwrite this or use the 'attr_vacuum_state'
-        attribute to set the alarm status using the 'VacuumEntityState' enum.
+        Integrations should overwrite this or use the '_attr_vacuum_state'
+        attribute to set the vacuum status using the 'VacuumState' enum.
         """
         return self._attr_vacuum_state
 

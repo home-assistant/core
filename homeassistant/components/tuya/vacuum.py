@@ -9,7 +9,7 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,29 +21,29 @@ from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
 
 TUYA_MODE_RETURN_HOME = "chargego"
 TUYA_STATUS_TO_HA = {
-    "charge_done": VacuumEntityState.DOCKED,
-    "chargecompleted": VacuumEntityState.DOCKED,
-    "chargego": VacuumEntityState.DOCKED,
-    "charging": VacuumEntityState.DOCKED,
-    "cleaning": VacuumEntityState.CLEANING,
-    "docking": VacuumEntityState.RETURNING,
-    "goto_charge": VacuumEntityState.RETURNING,
-    "goto_pos": VacuumEntityState.CLEANING,
-    "mop_clean": VacuumEntityState.CLEANING,
-    "part_clean": VacuumEntityState.CLEANING,
-    "paused": VacuumEntityState.PAUSED,
-    "pick_zone_clean": VacuumEntityState.CLEANING,
-    "pos_arrived": VacuumEntityState.CLEANING,
-    "pos_unarrive": VacuumEntityState.CLEANING,
-    "random": VacuumEntityState.CLEANING,
-    "sleep": VacuumEntityState.IDLE,
-    "smart_clean": VacuumEntityState.CLEANING,
-    "smart": VacuumEntityState.CLEANING,
-    "spot_clean": VacuumEntityState.CLEANING,
-    "standby": VacuumEntityState.IDLE,
-    "wall_clean": VacuumEntityState.CLEANING,
-    "wall_follow": VacuumEntityState.CLEANING,
-    "zone_clean": VacuumEntityState.CLEANING,
+    "charge_done": VacuumState.DOCKED,
+    "chargecompleted": VacuumState.DOCKED,
+    "chargego": VacuumState.DOCKED,
+    "charging": VacuumState.DOCKED,
+    "cleaning": VacuumState.CLEANING,
+    "docking": VacuumState.RETURNING,
+    "goto_charge": VacuumState.RETURNING,
+    "goto_pos": VacuumState.CLEANING,
+    "mop_clean": VacuumState.CLEANING,
+    "part_clean": VacuumState.CLEANING,
+    "paused": VacuumState.PAUSED,
+    "pick_zone_clean": VacuumState.CLEANING,
+    "pos_arrived": VacuumState.CLEANING,
+    "pos_unarrive": VacuumState.CLEANING,
+    "random": VacuumState.CLEANING,
+    "sleep": VacuumState.IDLE,
+    "smart_clean": VacuumState.CLEANING,
+    "smart": VacuumState.CLEANING,
+    "spot_clean": VacuumState.CLEANING,
+    "standby": VacuumState.IDLE,
+    "wall_clean": VacuumState.CLEANING,
+    "wall_follow": VacuumState.CLEANING,
+    "zone_clean": VacuumState.CLEANING,
 }
 
 
@@ -134,12 +134,12 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         return self.device.status.get(DPCode.SUCTION)
 
     @property
-    def vacuum_state(self) -> VacuumEntityState | None:
+    def vacuum_state(self) -> VacuumState | None:
         """Return Tuya vacuum device state."""
         if self.device.status.get(DPCode.PAUSE) and not (
             self.device.status.get(DPCode.STATUS)
         ):
-            return VacuumEntityState.PAUSED
+            return VacuumState.PAUSED
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
         return TUYA_STATUS_TO_HA.get(status)

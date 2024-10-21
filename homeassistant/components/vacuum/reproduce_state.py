@@ -24,18 +24,18 @@ from . import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    VacuumEntityState,
+    VacuumState,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES_TOGGLE = {STATE_ON, STATE_OFF}
 VALID_STATES_STATE = {
-    VacuumEntityState.CLEANING,
-    VacuumEntityState.DOCKED,
-    VacuumEntityState.IDLE,
-    VacuumEntityState.PAUSED,
-    VacuumEntityState.RETURNING,
+    VacuumState.CLEANING,
+    VacuumState.DOCKED,
+    VacuumState.IDLE,
+    VacuumState.PAUSED,
+    VacuumState.RETURNING,
 }
 
 
@@ -71,13 +71,13 @@ async def _async_reproduce_state(
             service = SERVICE_TURN_ON
         elif state.state == STATE_OFF:
             service = SERVICE_TURN_OFF
-        elif state.state == VacuumEntityState.CLEANING:
+        elif state.state == VacuumState.CLEANING:
             service = SERVICE_START
-        elif state.state in [VacuumEntityState.DOCKED, VacuumEntityState.RETURNING]:
+        elif state.state in [VacuumState.DOCKED, VacuumState.RETURNING]:
             service = SERVICE_RETURN_TO_BASE
-        elif state.state == VacuumEntityState.IDLE:
+        elif state.state == VacuumState.IDLE:
             service = SERVICE_STOP
-        elif state.state == VacuumEntityState.PAUSED:
+        elif state.state == VacuumState.PAUSED:
             service = SERVICE_PAUSE
 
         await hass.services.async_call(
