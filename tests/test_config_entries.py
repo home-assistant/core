@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Generator
 from datetime import timedelta
 import logging
+import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -5335,18 +5336,9 @@ async def test_unhashable_unique_id(
         version=1,
     )
 
-    entries[entry.entry_id] = entry
-    assert (
-        "Config entry 'title' from integration test has an invalid unique_id "
-        f"'{unique_id!s}'"
-    ) in caplog.text
-
-    assert entry.entry_id in entries
-    assert entries[entry.entry_id] is entry
-    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
-    del entries[entry.entry_id]
-    assert not entries
-    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+    match = f"Unique ID '{unique_id}' for entry mock_id is not hashable"
+    with pytest.raises(TypeError, match=re.escape(match)):
+        entries[entry.entry_id] = entry
 
 
 @pytest.mark.parametrize("unique_id", [123])
