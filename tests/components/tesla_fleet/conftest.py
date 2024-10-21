@@ -167,3 +167,13 @@ def mock_request():
         return_value=COMMAND_OK,
     ) as mock_request:
         yield mock_request
+
+
+@pytest.fixture(autouse=True)
+def mock_signed_command() -> Generator[AsyncMock]:
+    """Mock Tesla Fleet Api signed_command method."""
+    with patch(
+        "homeassistant.components.tesla_fleet.VehicleSigned.signed_command",
+        return_value=COMMAND_OK,
+    ) as mock_signed_command:
+        yield mock_signed_command
