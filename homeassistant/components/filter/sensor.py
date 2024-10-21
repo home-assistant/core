@@ -204,7 +204,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Filter sensor entry."""
-    name: str | None = entry.options[CONF_NAME]
+    name: str = entry.options[CONF_NAME]
     entity_id: str = entry.options[CONF_ENTITY_ID]
 
     filter_config = {
