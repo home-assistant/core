@@ -75,9 +75,6 @@ async def test_form_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
     assert len(mock_setup_entry.mock_calls) == 0
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
     with (
         patch(
             "homeassistant.components.microsoft_speech.config_flow.validate_input",
@@ -132,9 +129,6 @@ async def test_form_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
     with (
         patch(
             "homeassistant.components.microsoft_speech.config_flow.validate_input",
