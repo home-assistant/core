@@ -44,5 +44,150 @@
         }
       }
     }
+  },
+  "common": {
+    "field_date_name": "Date",
+    "field_include_hebrew_date_info_name": "Include Hebrew Date Info",
+    "field_include_hebrew_date_info_description": "True to return Hebrew year, month, day, and related calendar information.",
+    "field_include_holiday_info_name": "Include Holiday Info",
+    "field_include_holiday_info_description": "True to return information about the holiday that falls on this date, if any.",
+    "field_include_zmanim_name": "Include Zmanim",
+    "field_include_zmanim_description": "True to return the day's zmanim timestamps."
+  },
+  "services": {
+    "get_gregorian_date": {
+      "name": "Get Gregorian Date",
+      "description": "Returns Hebrew Calendar information for a given Gregorian date.  Pass one or more include_* parameters to specify which fields to return.",
+      "fields": {
+        "date": {
+          "name": "[%key:component::jewish_calendar::common::field_date_name%]",
+          "description": "Look up the specified date or time.  If you pass a date with a time, it will be evaluated relative to sunset, returning the following day if after sunset (not candle lighting). Defaults to today (relative to midnight, not sunset)."
+        },
+        "include_hebrew_date_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_description%]"
+        },
+        "include_holiday_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_holiday_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_holiday_info_description%]"
+        },
+        "include_zmanim": {
+          "name": "[%key:component::jewish_calendar::common::field_include_zmanim_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_zmanim_description%]"
+        }
+      }
+    },
+    "get_gregorian_date_range": {
+      "name": "Get Gregorian Date Range",
+      "description": "Returns Hebrew Calendar information for a range of Gregorian dates.  Pass one or more include_* parameters to specify which fields to return.",
+      "fields": {
+        "date": {
+          "name": "[%key:component::jewish_calendar::common::field_date_name%]",
+          "description": "The first day to return.  If you pass a date with a time, it will be evaluated relative to sunset, returning the following day if after sunset (not candle lighting). Defaults to today (relative to midnight, not sunset)."
+        },
+        "number_of_days": {
+          "name": "Number of Days",
+          "description": "The number of days to return, including 'date'."
+        },
+        "include_hebrew_date_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_description%]"
+        },
+        "include_holiday_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_holiday_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_holiday_info_description%]"
+        },
+        "include_zmanim": {
+          "name": "[%key:component::jewish_calendar::common::field_include_zmanim_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_zmanim_description%]"
+        }
+      }
+    },
+    "get_hebrew_date": {
+      "name": "Get Hebrew Date",
+      "description": "Returns Hebrew Calendar information for a given Hebrew date.  Pass one or more include_* parameters to specify which fields to return.",
+      "fields": {
+        "year": {
+          "name": "Hebrew Year",
+          "description": "The year of the date to return.  Omit this to return the specified date in the current Hebrew year (eg, a Yahrzeit)."
+        },
+        "month": {
+          "name": "Hebrew Month",
+          "description": "The month of the date to return.  You must specify Adar I or Adar II in case the year is a leap year; in non-leap years, they will both return Adar."
+        },
+        "day": {
+          "name": "Hebrew Day of Month",
+          "description": "The day of month of the date to return."
+        },
+        "include_hebrew_date_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_description%]"
+        },
+        "include_holiday_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_holiday_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_holiday_info_description%]"
+        },
+        "include_zmanim": {
+          "name": "[%key:component::jewish_calendar::common::field_include_zmanim_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_zmanim_description%]"
+        }
+      }
+    },
+    "get_next_holiday": {
+      "name": "Get Next Holiday",
+      "description": "Returns Hebrew Calendar information for the next holiday on or after a given date, optionally filtered.  Pass one or more include_* parameters to specify which fields to return.",
+      "fields": {
+        "date": {
+          "name": "[%key:component::jewish_calendar::common::field_date_name%]",
+          "description": "Get a holiday the specified date or time.  If you pass a date with a time, it will be evaluated relative to sunset, returning the following day if after sunset (not candle lighting). Defaults to today (relative to midnight, not sunset)."
+        },
+        "types": {
+          "name": "Types",
+          "description": "The categories of holidays to return.  If omitted, returns any holiday."
+        },
+        "include_hebrew_date_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_description%]"
+        },
+        "include_holiday_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_holiday_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_holiday_info_description%]"
+        },
+        "include_zmanim": {
+          "name": "[%key:component::jewish_calendar::common::field_include_zmanim_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_zmanim_description%]"
+        }
+      }
+    },
+    "get_holidays": {
+      "name": "Get Holiday Info",
+      "description": "Returns Hebrew Calendar information for holiday(s) in a given year.  Exactly one of 'types' or 'holidays' is required to filter holidays to return. Pass one or more include_* parameters to specify which fields to return.",
+      "fields": {
+        "year": {
+          "name": "Hebrew Year",
+          "description": "Return holidays in the specified year.  Defaults to the current Hebrew year."
+        },
+        "types": {
+          "name": "Types",
+          "description": "Only return holidays in the specified categories."
+        },
+        "holidays": {
+          "name": "Holiday Names",
+          "description": "Only return holidays with the specified names."
+        },
+        "include_hebrew_date_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_hebrew_date_info_description%]"
+        },
+        "include_holiday_info": {
+          "name": "[%key:component::jewish_calendar::common::field_include_holiday_info_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_holiday_info_description%]"
+        },
+        "include_zmanim": {
+          "name": "[%key:component::jewish_calendar::common::field_include_zmanim_name%]",
+          "description": "[%key:component::jewish_calendar::common::field_include_zmanim_description%]"
+        }
+      }
+    }
   }
 }
