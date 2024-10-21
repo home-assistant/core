@@ -31,7 +31,7 @@ class BangOlufsenData:
     client: MozartClient
 
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
