@@ -89,7 +89,6 @@ from .webrtc import (
     RTCIceServer,
     WebRTCClientConfiguration,
     async_get_supported_providers,
-    async_register_rtsp_to_web_rtc_provider,  # noqa: F401
     register_ice_server,
     ws_get_client_config,
 )
