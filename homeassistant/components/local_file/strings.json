@@ -14,7 +14,7 @@
         },
         "data_description": {
           "name": "Name for the created entity.",
-          "file_path": "The full path to the new image file to be displayed."
+          "file_path": "The full path to the image file to be displayed. Be sure the path of the file is in the allowed paths, you can read more about this in the documentation."
         }
       }
     }
