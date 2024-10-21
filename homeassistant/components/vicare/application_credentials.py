@@ -97,18 +97,6 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
             }
         )
 
-    # async def _async_refresh_token(self, token: dict) -> dict:
-    #     """Refresh tokens."""
-    #     _LOGGER.warning("REFRESHING TOKEN {token}")
-    #     new_token = await self._token_request(
-    #         {
-    #             "grant_type": "refresh_token",
-    #             "client_id": self.client_id,
-    #             "refresh_token": token["refresh_token"],
-    #         }
-    #     )
-    #     return {**token, **new_token}
-
     def _generateCodeChallengePair(self) -> tuple:
         # code_verifier = secrets.token_urlsafe(128).decode('utf-8')
         # code challenge must not be larger than 128 chars
