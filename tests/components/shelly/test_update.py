@@ -16,6 +16,7 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateEntityFeature,
@@ -64,6 +65,7 @@ async def test_block_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "2.0.0"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     supported_feat = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_feat == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
 
@@ -80,6 +82,7 @@ async def test_block_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "2.0.0"
     assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_RELEASE_URL] == GEN1_RELEASE_URL
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2.0.0")
@@ -90,6 +93,7 @@ async def test_block_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "2.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "2.0.0"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -117,6 +121,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     monkeypatch.setitem(
         mock_block_device.status["update"], "beta_version", "2.0.0-beta"
@@ -128,6 +133,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "2.0.0-beta"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
 
     await hass.services.async_call(
@@ -143,6 +149,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "2.0.0-beta"
     assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2.0.0-beta")
     await mock_rest_update(hass, freezer)
@@ -152,6 +159,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "2.0.0-beta"
     assert state.attributes[ATTR_LATEST_VERSION] == "2.0.0-beta"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -292,6 +300,7 @@ async def test_rpc_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     supported_feat = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_feat == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
 
@@ -309,6 +318,7 @@ async def test_rpc_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_RELEASE_URL] == GEN2_RELEASE_URL
 
     inject_rpc_device_event(
@@ -326,7 +336,9 @@ async def test_rpc_update(
         },
     )
 
-    assert hass.states.get(entity_id).attributes[ATTR_IN_PROGRESS] == 0
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 0
 
     inject_rpc_device_event(
         monkeypatch,
@@ -344,7 +356,9 @@ async def test_rpc_update(
         },
     )
 
-    assert hass.states.get(entity_id).attributes[ATTR_IN_PROGRESS] == 50
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
 
     inject_rpc_device_event(
         monkeypatch,
@@ -368,6 +382,7 @@ async def test_rpc_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "2"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -406,6 +421,7 @@ async def test_rpc_sleeping_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
     assert state.attributes[ATTR_RELEASE_URL] == GEN2_RELEASE_URL
 
@@ -417,6 +433,7 @@ async def test_rpc_sleeping_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "2"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
 
     entry = entity_registry.async_get(entity_id)
@@ -456,6 +473,7 @@ async def test_rpc_restored_sleeping_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
 
     # Make device online
@@ -472,6 +490,7 @@ async def test_rpc_restored_sleeping_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "2"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
 
 
@@ -522,6 +541,7 @@ async def test_rpc_restored_sleeping_update_no_last_state(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
 
 
@@ -551,6 +571,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "1"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
 
     monkeypatch.setitem(
@@ -568,6 +589,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2b"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -596,7 +618,8 @@ async def test_rpc_beta_update(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2b"
-    assert state.attributes[ATTR_IN_PROGRESS] == 0
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 0
 
     inject_rpc_device_event(
         monkeypatch,
@@ -614,7 +637,9 @@ async def test_rpc_beta_update(
         },
     )
 
-    assert hass.states.get(entity_id).attributes[ATTR_IN_PROGRESS] == 40
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 40
 
     inject_rpc_device_event(
         monkeypatch,
@@ -638,6 +663,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "2b"
     assert state.attributes[ATTR_LATEST_VERSION] == "2b"
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     entry = entity_registry.async_get(entity_id)
     assert entry
