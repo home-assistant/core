@@ -5,10 +5,9 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
-from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.vodafone_station.const import DOMAIN
-from homeassistant.components.vodafone_station.diagnostics import TO_REDACT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -43,9 +42,10 @@ async def test_entry_diagnostics(
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
-
-    entry_dict = entry.as_dict()
-    for key in TO_REDACT:
-        entry_dict["data"][key] = REDACTED
-
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props(
+            "entry_id",
+            "created_at",
+            "modified_at",
+        )
+    )

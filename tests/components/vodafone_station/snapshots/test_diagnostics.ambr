@@ -20,7 +20,6 @@
       'sys_reboot_cause': 'Web Reboot',
     }),
     'entry': dict({
-      'created_at': '2024-10-21T16:06:23.534213+00:00',
       'data': dict({
         'host': 'fake_host',
         'password': '**REDACTED**',
@@ -30,9 +29,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'vodafone_station',
-      'entry_id': '01JAQX8QHEF6G5V0QJX6HBC94T',
       'minor_version': 1,
-      'modified_at': '2024-10-21T16:06:23.534219+00:00',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
