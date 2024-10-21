@@ -102,6 +102,46 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         (
+            "lock",
+            {"state": "{{ states('sensor.one') }}"},
+            "unlocked",
+            {"one": "on", "two": ""},
+            {},
+            {
+                "lock": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+                "unlock": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {
+                "lock": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+                "unlock": [
+                    {
+                        "action": "input_boolean.toggle",
+                        "target": {"entity_id": "input_boolean.test"},
+                        "data": {},
+                    }
+                ],
+            },
+            {},
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             "30.0",
