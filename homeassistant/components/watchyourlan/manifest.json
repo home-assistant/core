@@ -1,0 +1,10 @@
+{
+  "domain": "watchyourlan",
+  "name": "WatchYourLAN",
+  "codeowners": ["@drwahl"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/watchyourlan",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "requirements": ["watchyourlanclient==2024.1009a0"]
+}
