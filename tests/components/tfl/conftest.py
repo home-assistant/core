@@ -317,7 +317,7 @@ MOCK_DATA_TFL_STOP_POINT_INFO_WITH_CHILDREN = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.tfl.async_setup_entry", return_value=True
