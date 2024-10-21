@@ -484,6 +484,9 @@ axis==62
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.2
 
+# homeassistant.components.microsoft_speech
+azure-cognitiveservices-speech==1.41.1
+
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
 
