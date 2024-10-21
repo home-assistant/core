@@ -7336,7 +7336,6 @@
       "iot_class": "calculated"
     },
     "mold_indicator": {
-      "name": "Mold Indicator",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7429,6 +7428,7 @@
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
+    "mold_indicator",
     "moon",
     "nextbus",
     "nmap_tracker",

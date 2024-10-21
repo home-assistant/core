@@ -9,7 +9,6 @@
     },
     "step": {
       "user": {
-        "title": "Create Mold Indicator",
         "description": "Add Mold indicator helper",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
