@@ -1,4 +1,106 @@
 # serializer version: 1
+# name: test_agents_download[with_hassio]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_download[without_hassio]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_download_exception
+  dict({
+    'error': dict({
+      'code': 'backup_agents_download',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_download_unknown_agent
+  dict({
+    'error': dict({
+      'code': 'unknown_agent',
+      'message': 'Agent domain.test not found',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_info[with_hassio]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'id': 'domain.test',
+        }),
+      ]),
+      'syncing': False,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_info[without_hassio]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agents': list([
+        dict({
+          'id': 'domain.test',
+        }),
+      ]),
+      'syncing': False,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_synced[with_hassio]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'agent_id': 'domain.test',
+        'date': '1970-01-01T00:00:00Z',
+        'id': 'abc123',
+        'name': 'Test',
+        'size': 13.37,
+        'slug': 'abc123',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_synced[without_hassio]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'agent_id': 'domain.test',
+        'date': '1970-01-01T00:00:00Z',
+        'id': 'abc123',
+        'name': 'Test',
+        'size': 13.37,
+        'slug': 'abc123',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_backup_end[with_hassio-hass_access_token]
   dict({
     'error': dict({
@@ -140,6 +242,80 @@
   dict({
     'error': dict({
       'code': 'pre_backup_actions_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync[with_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'only_supervisor',
+      'message': 'Only allowed as Supervisor',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync[with_hassio-hass_supervisor_access_token]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync[without_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync[without_hassio-hass_supervisor_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync_excepion[exception0]
+  dict({
+    'error': dict({
+      'code': 'backup_sync_failed',
+      'message': '',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync_excepion[exception1]
+  dict({
+    'error': dict({
+      'code': 'backup_sync_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_sync_excepion[exception2]
+  dict({
+    'error': dict({
+      'code': 'backup_sync_failed',
       'message': 'Boom',
     }),
     'id': 1,
