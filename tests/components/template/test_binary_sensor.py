@@ -253,7 +253,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count) -> None:
                             "value_template": "{{ states.sensor.xyz.state }}",
                             "icon_template": "{% if "
                             "states.binary_sensor.test_state.state == "
-                            "'Works' %}"
+                            "'on' %}"
                             "mdi:check"
                             "{% endif %}",
                         },
@@ -270,7 +270,7 @@ async def test_setup_invalid_sensors(hass: HomeAssistant, count) -> None:
                         "state": "{{ states.sensor.xyz.state }}",
                         "icon": "{% if "
                         "states.binary_sensor.test_state.state == "
-                        "'Works' %}"
+                        "'on' %}"
                         "mdi:check"
                         "{% endif %}",
                     },
@@ -287,7 +287,7 @@ async def test_icon_template(hass: HomeAssistant, entity_id) -> None:
     state = hass.states.get(entity_id)
     assert state.attributes.get("icon") == ""
 
-    hass.states.async_set("binary_sensor.test_state", "Works")
+    hass.states.async_set("binary_sensor.test_state", STATE_ON)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes["icon"] == "mdi:check"
@@ -306,7 +306,7 @@ async def test_icon_template(hass: HomeAssistant, entity_id) -> None:
                             "value_template": "{{ states.sensor.xyz.state }}",
                             "entity_picture_template": "{% if "
                             "states.binary_sensor.test_state.state == "
-                            "'Works' %}"
+                            "'on' %}"
                             "/local/sensor.png"
                             "{% endif %}",
                         },
@@ -323,7 +323,7 @@ async def test_icon_template(hass: HomeAssistant, entity_id) -> None:
                         "state": "{{ states.sensor.xyz.state }}",
                         "picture": "{% if "
                         "states.binary_sensor.test_state.state == "
-                        "'Works' %}"
+                        "'on' %}"
                         "/local/sensor.png"
                         "{% endif %}",
                     },
@@ -340,7 +340,7 @@ async def test_entity_picture_template(hass: HomeAssistant, entity_id) -> None:
     state = hass.states.get(entity_id)
     assert state.attributes.get("entity_picture") == ""
 
-    hass.states.async_set("binary_sensor.test_state", "Works")
+    hass.states.async_set("binary_sensor.test_state", STATE_ON)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes["entity_picture"] == "/local/sensor.png"
@@ -737,7 +737,7 @@ async def test_invalid_attribute_template(
     hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that errors are logged if rendering template fails."""
-    hass.states.async_set("binary_sensor.test_sensor", "true")
+    hass.states.async_set("binary_sensor.test_sensor", STATE_ON)
     assert len(hass.states.async_all()) == 2
     assert ("test_attribute") in caplog_setup_text
     assert ("TemplateError") in caplog_setup_text
@@ -802,7 +802,7 @@ async def test_no_update_template_match_all(
         },
     )
     await hass.async_block_till_done()
-    hass.states.async_set("binary_sensor.test_sensor", "true")
+    hass.states.async_set("binary_sensor.test_sensor", STATE_ON)
     assert len(hass.states.async_all()) == 5
 
     assert hass.states.get("binary_sensor.all_state").state == STATE_UNKNOWN
@@ -818,7 +818,7 @@ async def test_no_update_template_match_all(
     assert hass.states.get("binary_sensor.all_entity_picture").state == ON
     assert hass.states.get("binary_sensor.all_attribute").state == ON
 
-    hass.states.async_set("binary_sensor.test_sensor", "false")
+    hass.states.async_set("binary_sensor.test_sensor", STATE_OFF)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.all_state").state == ON
