@@ -1,5 +1,5 @@
 {
-  "domain": "mass",
+  "domain": "music_assistant",
   "name": "Music Assistant",
   "after_dependencies": ["media_source", "media_player"],
   "codeowners": ["@music-assistant"],

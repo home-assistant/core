@@ -6,7 +6,6 @@
     }
   },
   "config": {
-    "flow_title": "{name}",
     "step": {
       "init": {
         "data": {

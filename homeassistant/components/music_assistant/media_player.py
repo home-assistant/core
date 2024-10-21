@@ -427,7 +427,7 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
 
         # forward to our advanced play_media handler
         await self._async_play_media_advanced(
-            media_id=media_id if isinstance(media_id, list) else [media_id],
+            media_id=media_id if isinstance(media_id, list) else [media_id],  # type: ignore[unreachable]
             enqueue=enqueue,
             media_type=media_type,
             radio_mode=kwargs[ATTR_MEDIA_EXTRA].get(ATTR_RADIO_MODE),
@@ -476,7 +476,7 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
                 with suppress(MediaNotFoundError):
                     if media_type is not None:
                         continue
-                    item = await self.mass.music.get_item(
+                    item = await self.mass.music.get_item(  # type: ignore[unreachable]
                         MediaType(media_type), media_id_str, "library"
                     )
                     if item.uri is not None:
@@ -552,7 +552,7 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
+        return await media_source.async_browse_media(  # type: ignore[no-any-return]
             self.hass,
             media_content_id,
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
@@ -599,7 +599,7 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
                 ):
                     continue
                 if searchname == item.name.lower():
-                    return item
+                    return item  # type: ignore[no-any-return]
         # nothing found in the library, fallback to global search
         search_name = name
         if album and artist:
@@ -622,7 +622,7 @@ class MassPlayer(MassBaseEntity, MediaPlayerEntity):
         ):
             for item in results:
                 # simply return the first item because search is already sorted by best match
-                return item
+                return item  # type: ignore[no-any-return]
         return None
 
     def _update_media_image_url(

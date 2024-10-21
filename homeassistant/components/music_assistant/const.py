@@ -2,7 +2,7 @@
 
 import logging
 
-DOMAIN = "mass"
+DOMAIN = "music_assistant"
 DOMAIN_EVENT = f"{DOMAIN}_event"
 
 DEFAULT_NAME = "Music Assistant"

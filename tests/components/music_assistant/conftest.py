@@ -13,5 +13,7 @@ def use_mocked_zeroconf(mock_async_zeroconf: MagicMock):
 @pytest.fixture(autouse=True)
 def mock_setup_entry():
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.mass.async_setup_entry", return_value=True):
+    with patch(
+        "homeassistant.components.music_assistant.async_setup_entry", return_value=True
+    ):
         yield

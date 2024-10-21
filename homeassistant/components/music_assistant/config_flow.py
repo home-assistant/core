@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a manual configuration."""
         if user_input is None:
-            return self.async_show_form(
+            return self.async_show_form(  # type: ignore[no-any-return]
                 step_id="manual", data_schema=get_manual_schema({})
             )
 
@@ -89,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return await self._async_create_entry_or_abort()
 
-        return self.async_show_form(
+        return self.async_show_form(  # type: ignore[no-any-return]
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
 
@@ -103,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # abort if discovery info is not what we expect
         if "server_id" not in discovery_info.properties:
-            return self.async_abort(reason="missing_server_id")
+            return self.async_abort(reason="missing_server_id")  # type: ignore[no-any-return]
         # abort if we already have exactly this server_id
         # reload the integration if the host got updated
         server_id = discovery_info.properties["server_id"]
@@ -127,9 +127,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await get_server_info(self.hass, self.server_info.base_url)
             except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
+                return self.async_abort(reason="cannot_connect")  # type: ignore[no-any-return]
             return await self._async_create_entry_or_abort()
-        return self.async_show_form(
+        return self.async_show_form(  # type: ignore[no-any-return]
             step_id="discovery_confirm",
             description_placeholders={"url": self.server_info.base_url},
         )
@@ -156,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
-        return self.async_create_entry(
+        return self.async_create_entry(  # type: ignore[no-any-return]
             title=DEFAULT_TITLE,
             data={
                 CONF_URL: self.server_info.base_url,
@@ -169,14 +169,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of an existing entry."""
         reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
-            return self.async_update_reload_and_abort(
+            return self.async_update_reload_and_abort(  # type: ignore[no-any-return]
                 reconfigure_entry,
                 data={
                     CONF_URL: user_input[CONF_URL],
                 },
             )
 
-        return self.async_show_form(
+        return self.async_show_form(  # type: ignore[no-any-return]
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
