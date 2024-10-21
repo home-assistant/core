@@ -7384,7 +7384,6 @@
       "iot_class": "local_polling"
     },
     "timer": {
-      "name": "Timer",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -7454,6 +7453,7 @@
     "switch_as_x",
     "threshold",
     "time_date",
+    "timer",
     "tod",
     "trend",
     "uptime",
