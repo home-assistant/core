@@ -49,7 +49,7 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
         return self._handle("title")
 
     @property
-    def update_percentage(self) -> int | None:
+    def update_percentage(self) -> int | float | None:
         """Update installation progress."""
         return self._handle("update_percentage")
 
