@@ -1413,6 +1413,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "duwi": {
+      "name": "Duwi",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
       "integration_type": "service",
