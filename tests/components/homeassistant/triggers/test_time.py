@@ -767,7 +767,7 @@ async def test_if_at_template_renders_bad_value(
     await hass.async_block_till_done()
 
     assert (
-        "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+        "expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
         in caplog.text
     )
 
