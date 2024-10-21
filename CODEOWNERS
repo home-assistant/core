@@ -1001,6 +1001,7 @@ build.json @home-assistant/supervisor
 /tests/components/nina/ @DeerMaximum
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/nmbs/ @thibmaek
+/tests/components/nmbs/ @thibmaek
 /homeassistant/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
 /tests/components/nobo_hub/ @echoromeo @oyvindwe
