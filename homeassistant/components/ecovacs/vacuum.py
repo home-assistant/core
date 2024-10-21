@@ -13,15 +13,10 @@ from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
     StateVacuumEntityDescription,
     VacuumEntityFeature,
+    VacuumState,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
@@ -123,22 +118,22 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         self.schedule_update_ha_state()
 
     @property
-    def state(self) -> str | None:
+    def vacuum_state(self) -> VacuumState | None:
         """Return the state of the vacuum cleaner."""
         if self.error is not None:
-            return STATE_ERROR
+            return VacuumState.ERROR
 
         if self.device.is_cleaning:
-            return STATE_CLEANING
+            return VacuumState.CLEANING
 
         if self.device.is_charging:
-            return STATE_DOCKED
+            return VacuumState.DOCKED
 
         if self.device.vacuum_status == sucks.CLEAN_MODE_STOP:
-            return STATE_IDLE
+            return VacuumState.IDLE
 
         if self.device.vacuum_status == sucks.CHARGE_MODE_RETURNING:
-            return STATE_RETURNING
+            return VacuumState.RETURNING
 
         return None
 
@@ -202,7 +197,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if self.state == STATE_CLEANING:
+        if self.state == VacuumState.CLEANING:
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(
@@ -225,12 +220,12 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
 
 _STATE_TO_VACUUM_STATE = {
-    State.IDLE: STATE_IDLE,
-    State.CLEANING: STATE_CLEANING,
-    State.RETURNING: STATE_RETURNING,
-    State.DOCKED: STATE_DOCKED,
-    State.ERROR: STATE_ERROR,
-    State.PAUSED: STATE_PAUSED,
+    State.IDLE: VacuumState.IDLE,
+    State.CLEANING: VacuumState.CLEANING,
+    State.RETURNING: VacuumState.RETURNING,
+    State.DOCKED: VacuumState.DOCKED,
+    State.ERROR: VacuumState.ERROR,
+    State.PAUSED: VacuumState.PAUSED,
 }
 
 _ATTR_ROOMS = "rooms"
@@ -284,7 +279,7 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         async def on_status(event: StateEvent) -> None:
-            self._attr_state = _STATE_TO_VACUUM_STATE[event.state]
+            self._attr_vacuum_state = _STATE_TO_VACUUM_STATE[event.state]
             self.async_write_ha_state()
 
         self._subscribe(self._capability.battery.event, on_battery)

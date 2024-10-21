@@ -10,7 +10,7 @@ from typing import Protocol
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.lock import LockState
-from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
+from homeassistant.components.vacuum import VacuumState
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
@@ -110,9 +110,9 @@ ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.VACUUM: (
         {
             STATE_ON,
-            STATE_CLEANING,
-            STATE_RETURNING,
-            STATE_ERROR,
+            VacuumState.CLEANING,
+            VacuumState.RETURNING,
+            VacuumState.ERROR,
         },
         STATE_ON,
         STATE_OFF,
