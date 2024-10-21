@@ -3,7 +3,9 @@
 from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
+import zoneinfo
 
+from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
@@ -38,6 +40,15 @@ def mock_expires_at() -> float:
 def mock_scope() -> str:
     """Fixture to set correct scope for the token."""
     return "iam:read amc:api"
+
+
+@pytest.fixture(name="values")
+def mock_values() -> dict[str, MowerAttributes]:
+    """Fixture to set correct scope for the token."""
+    return mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN),
+        zoneinfo.ZoneInfo("Europe/Berlin"),
+    )
 
 
 @pytest.fixture
@@ -81,17 +92,13 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client() -> Generator[AsyncMock]:
+def mock_automower_client(values) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
-
-    mower_dict = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
 
     mock = AsyncMock(spec=AutomowerSession)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
     mock.commands = AsyncMock(spec_set=_MowerCommands)
-    mock.get_status.return_value = mower_dict
+    mock.get_status.return_value = values
 
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",

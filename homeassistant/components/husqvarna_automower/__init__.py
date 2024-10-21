@@ -1,6 +1,7 @@
 """The Husqvarna Automower integration."""
 
 import logging
+from zoneinfo import ZoneInfo
 
 from aioautomower.session import AutomowerSession
 from aiohttp import ClientResponseError
@@ -14,6 +15,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.util import dt as dt_util
 
 from . import api
 from .const import DOMAIN
@@ -48,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         aiohttp_client.async_get_clientsession(hass),
         session,
     )
-    automower_api = AutomowerSession(api_api)
+    automower_api = AutomowerSession(api_api, ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)))
     try:
         await api_api.async_get_access_token()
     except ClientResponseError as err:
