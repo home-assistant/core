@@ -45,14 +45,8 @@ class MadVRConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the device."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        return await self._handle_config_step(user_input, step_id="reconfigure_confirm")
+        return await self._handle_config_step(user_input, step_id="reconfigure")
 
     async def _handle_config_step(
         self, user_input: dict[str, Any] | None = None, step_id: str = "user"

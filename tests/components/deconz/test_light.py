@@ -413,7 +413,7 @@ async def test_light_state_change(
                     ATTR_ENTITY_ID: "light.hue_go",
                     ATTR_XY_COLOR: (0.411, 0.351),
                     ATTR_FLASH: FLASH_LONG,
-                    ATTR_EFFECT: "None",
+                    ATTR_EFFECT: "none",
                 },
             },
             {

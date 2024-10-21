@@ -45,6 +45,7 @@ async def test_streaming(
     assert sensor_state.attributes["started_at"] == datetime(
         year=2021, month=3, day=10, hour=3, minute=18, second=11, tzinfo=tzutc()
     )
+    assert sensor_state.attributes["viewers"] == 42
 
 
 async def test_oauth_without_sub_and_follow(

@@ -23,7 +23,7 @@ async def test_downloading_backup(
 
     with (
         patch(
-            "homeassistant.components.backup.manager.BackupManager.get_backup",
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
             return_value=TEST_BACKUP,
         ),
         patch("pathlib.Path.exists", return_value=True),
