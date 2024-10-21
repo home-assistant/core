@@ -7,10 +7,11 @@ from typing import Final
 DOMAIN: Final = "palazzetti"
 PALAZZETTI: Final = "Palazzetti"
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=30)
 ON_OFF_NOT_AVAILABLE = "on_off_not_available"
-FAN_MODE_OUT_OF_BOUNDS = "fan_speed_out_of_bounds"
-TEMPERATURE_OUT_OF_BOUNDS = "temperature_out_of_bounds"
+ERROR_INVALID_FAN_MODE = "invalid_fan_mode"
+ERROR_INVALID_TARGET_TEMPERATURE = "invalid_target_temperature"
+ERROR_CANNOT_CONNECT = "cannot_connect"
 
 FAN_SILENT: Final = "SILENT"
 FAN_HIGH: Final = "HIGH"

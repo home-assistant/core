@@ -9,22 +9,21 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "invalid_host": "The host is not responding or is not a Palazzetti CBox"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "exceptions": {
     "on_off_not_available": {
-      "message": "The appliance cannot be turned on or off atthe moment. Try again later."
+      "message": "The appliance cannot be turned on or off at the moment. Try again later."
     },
-    "fan_speed_out_of_bounds": {
-      "message": "This fan mode ({value}) is not supported."
+    "invalid_fan_mode": {
+      "message": "Fan mode {value} is invalid."
     },
-    "target_temperature_out_of_bounds": {
-      "message": "This target temperature ({value}) is not supported."
+    "invalid_target_temperatures": {
+      "message": "Target temperature {value} is invalid."
     }
   }
 }
