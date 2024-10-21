@@ -402,9 +402,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             return
 
         raw = self._rendered.get(CONF_STATE)
-        state: bool | None = None
-        if raw is not None:
-            state = template.result_as_boolean_or_none(raw)
+        state = template.result_as_boolean_or_none(raw)
 
         key = CONF_DELAY_ON if state else CONF_DELAY_OFF
         delay = self._rendered.get(key) or self._config.get(key)
