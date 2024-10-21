@@ -10,7 +10,6 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
@@ -163,17 +162,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT32,
                     CONF_VIRTUAL_COUNT: 5,
-                }
-            ]
-        },
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_DATA_TYPE: DataType.INT32,
-                    CONF_VIRTUAL_COUNT: 5,
-                    CONF_LAZY_ERROR: 3,
                 }
             ]
         },
