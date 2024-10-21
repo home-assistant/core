@@ -353,7 +353,7 @@ async def test_reconfigure_errors(
     error_type,
     errors_msg,
 ) -> None:
-    """Testerrors during the reconfigure config flow."""
+    """Test errors during the reconfigure config flow."""
     result = await mock_added_config_entry.start_reconfigure_flow(hass)
     await hass.async_block_till_done()
 

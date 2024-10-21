@@ -207,8 +207,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         """Trigger a reconfiguration flow."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
-        entry_data = reconfigure_entry.data
-        username = entry_data[CONF_USERNAME]
+        username = reconfigure_entry.data[CONF_USERNAME]
         await self.async_set_unique_id(username)
         if user_input:
             user_input[CONF_USERNAME] = username
@@ -229,7 +228,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 data = {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_USERNAME: username,
                     CONF_TOKEN: token,
                     CONF_DEVICE_ID: self.hardware_id,
                 }
@@ -240,7 +239,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: entry_data[CONF_USERNAME],
+                CONF_USERNAME: username,
             },
         )
 
