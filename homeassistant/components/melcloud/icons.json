@@ -3,6 +3,26 @@
     "sensor": {
       "energy_consumed": {
         "default": "mdi:factory"
+      },
+      "status": {
+        "state": {
+          "idle": "mdi:pause",
+          "heat_water": "mdi:water-thermometer",
+          "heat_zones": "mdi:sun-thermometer",
+          "cool": "mdi:snowflake-alert",
+          "defrost": "mdi:snowflake-melt",
+          "standby": "mdi:pause",
+          "legionella": "mdi:medication",
+          "unknown": "mdi:help"
+        }
+      }
+    },
+    "water_heater": {
+      "domestic_hot_water": {
+        "default": "mdi:heat-pump",
+        "state": {
+          "off": "mdi:heat-pump-outline"
+        }
       }
     }
   },
