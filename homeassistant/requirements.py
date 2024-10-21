@@ -24,6 +24,7 @@ DATA_REQUIREMENTS_MANAGER = "requirements_manager"
 CONSTRAINT_FILE = "package_constraints.txt"
 DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "dhcp": ("dhcp",),
+    "location": ("locations",),
     "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
