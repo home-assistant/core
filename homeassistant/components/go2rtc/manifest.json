@@ -6,6 +6,6 @@
   "dependencies": ["camera"],
   "documentation": "https://www.home-assistant.io/integrations/go2rtc",
   "iot_class": "local_polling",
-  "requirements": ["go2rtc-client==0.0.1b0"],
+  "requirements": ["go2rtc-client==0.0.1b1"],
   "single_config_entry": true
 }
