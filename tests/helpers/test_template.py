@@ -4628,6 +4628,36 @@ def test_result_as_boolean(hass: HomeAssistant) -> None:
     assert template.result_as_boolean(None) is False
 
 
+def test_result_as_boolean_or_none(hass: HomeAssistant) -> None:
+    """Test converting a template result to a boolean."""
+
+    assert template.result_as_boolean_or_none(True) is True
+    assert template.result_as_boolean_or_none(" 1 ") is True
+    assert template.result_as_boolean_or_none(" true ") is True
+    assert template.result_as_boolean_or_none(" TrUE ") is True
+    assert template.result_as_boolean_or_none(" YeS ") is True
+    assert template.result_as_boolean_or_none(" On ") is True
+    assert template.result_as_boolean_or_none(" Enable ") is True
+    assert template.result_as_boolean_or_none(1) is True
+    assert template.result_as_boolean_or_none(-1) is True
+    assert template.result_as_boolean_or_none(500) is True
+    assert template.result_as_boolean_or_none(0.5) is True
+    assert template.result_as_boolean_or_none(0.389) is True
+    assert template.result_as_boolean_or_none(35) is True
+
+    assert template.result_as_boolean_or_none(False) is False
+    assert template.result_as_boolean_or_none(" 0 ") is False
+    assert template.result_as_boolean_or_none(" false ") is False
+    assert template.result_as_boolean_or_none(" FaLsE ") is False
+    assert template.result_as_boolean_or_none(" no ") is False
+    assert template.result_as_boolean_or_none(" off ") is False
+    assert template.result_as_boolean_or_none(" disable ") is False
+    assert template.result_as_boolean_or_none(0) is False
+    assert template.result_as_boolean_or_none(0.0) is False
+    assert template.result_as_boolean_or_none("0.00") is False
+    assert template.result_as_boolean_or_none(None) is None
+
+
 def test_closest_function_to_entity_id(hass: HomeAssistant) -> None:
     """Test closest function to entity id."""
     hass.states.async_set(
