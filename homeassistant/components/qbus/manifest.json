@@ -1,0 +1,17 @@
+{
+  "domain": "qbus",
+  "name": "Qbus",
+  "codeowners": ["@Qbus-iot", "@thomasddn"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://www.home-assistant.io/integrations/qbus",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "mqtt": [
+    "cloudapp/QBUSMQTTGW/state",
+    "cloudapp/QBUSMQTTGW/config",
+    "cloudapp/QBUSMQTTGW/+/state"
+  ],
+  "requirements": ["qbusmqttapi==1.0.0"],
+  "single_config_entry": false
+}
