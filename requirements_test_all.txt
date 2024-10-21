@@ -234,6 +234,7 @@ aioesphomeapi==27.0.0
 aioflo==2021.11.0
 
 # homeassistant.components.github
+# homeassistant.components.iron_os
 aiogithubapi==24.6.0
 
 # homeassistant.components.guardian
@@ -943,7 +944,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.58
+holidays==0.59
 
 # homeassistant.components.frontend
 home-assistant-frontend==20241002.3
