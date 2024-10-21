@@ -1467,10 +1467,14 @@ def floors(hass: HomeAssistant) -> Iterable[str | None]:
 
 
 def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
-    """Get the floor ID from a floor name."""
+    """Get the floor ID from a floor or area name, alias, device id, or entity id."""
     floor_registry = fr.async_get(hass)
-    if floor := floor_registry.async_get_floor_by_name(str(lookup_value)):
+    lookup_str = str(lookup_value)
+    if floor := floor_registry.async_get_floor_by_name(lookup_str):
         return floor.floor_id
+    floors_list = floor_registry.async_get_floors_by_alias(lookup_str)
+    if floors_list:
+        return floors_list[0].floor_id
 
     if aid := area_id(hass, lookup_value):
         area_reg = area_registry.async_get(hass)
@@ -1521,10 +1525,14 @@ def areas(hass: HomeAssistant) -> Iterable[str | None]:
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area ID from an area name, device id, or entity id."""
+    """Get the area ID from an area name, alias, device id, or entity id."""
     area_reg = area_registry.async_get(hass)
-    if area := area_reg.async_get_area_by_name(str(lookup_value)):
+    lookup_str = str(lookup_value)
+    if area := area_reg.async_get_area_by_name(lookup_str):
         return area.id
+    areas_list = area_reg.async_get_areas_by_alias(lookup_str)
+    if areas_list:
+        return areas_list[0].id
 
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
