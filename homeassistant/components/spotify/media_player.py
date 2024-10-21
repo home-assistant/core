@@ -77,8 +77,6 @@ async def async_setup_entry(
     spotify = SpotifyMediaPlayer(
         data.coordinator,
         data.devices,
-        entry.unique_id,
-        entry.title,
     )
     async_add_entities([spotify])
 
@@ -107,13 +105,11 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         self,
         coordinator: SpotifyCoordinator,
         device_coordinator: DataUpdateCoordinator[list[Device]],
-        user_id: str,
-        name: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.devices = device_coordinator
-        self._attr_unique_id = user_id
+        self._attr_unique_id = coordinator.current_user.user_id
 
     @property
     def currently_playing(self) -> PlaybackState | None:
