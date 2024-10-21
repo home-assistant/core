@@ -23,6 +23,7 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
@@ -172,7 +173,8 @@ async def test_firmware_update_notification_from_zigpy(
     assert state.state == STATE_ON
     attrs = state.attributes
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert (
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )
@@ -231,7 +233,8 @@ async def test_firmware_update_notification_from_service_call(
         assert state.state == STATE_ON
         attrs = state.attributes
         assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-        assert not attrs[ATTR_IN_PROGRESS]
+        assert attrs[ATTR_IN_PROGRESS] is False
+        assert attrs[ATTR_UPDATE_PERCENTAGE] is None
         assert (
             attrs[ATTR_LATEST_VERSION]
             == f"0x{fw_image.firmware.header.file_version:08x}"
@@ -301,7 +304,8 @@ async def test_firmware_update_success(
     assert state.state == STATE_ON
     attrs = state.attributes
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert (
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )
@@ -389,7 +393,8 @@ async def test_firmware_update_success(
                     assert (
                         attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
                     )
-                    assert attrs[ATTR_IN_PROGRESS] == 58
+                    assert attrs[ATTR_IN_PROGRESS] is True
+                    assert attrs[ATTR_UPDATE_PERCENTAGE] == 58
                     assert (
                         attrs[ATTR_LATEST_VERSION]
                         == f"0x{fw_image.firmware.header.file_version:08x}"
@@ -446,7 +451,8 @@ async def test_firmware_update_success(
         attrs[ATTR_INSTALLED_VERSION]
         == f"0x{fw_image.firmware.header.file_version:08x}"
     )
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_LATEST_VERSION] == attrs[ATTR_INSTALLED_VERSION]
 
     # If we send a progress notification incorrectly, it won't be handled
@@ -454,7 +460,8 @@ async def test_firmware_update_success(
     entity.entity_data.entity._update_progress(50, 100, 0.50)
 
     state = hass.states.get(entity_id)
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert state.state == STATE_OFF
 
 
@@ -493,7 +500,8 @@ async def test_firmware_update_raises(
     assert state.state == STATE_ON
     attrs = state.attributes
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert (
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )

@@ -46,6 +46,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 0>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.my_nc_url_local_none',

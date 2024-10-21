@@ -1239,8 +1239,8 @@ build.json @home-assistant/supervisor
 /tests/components/roku/ @ctalkington
 /homeassistant/components/romy/ @xeniter
 /tests/components/romy/ @xeniter
-/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1 @Orhideous
-/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1 @Orhideous
+/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
+/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
 /homeassistant/components/rpi_power/ @shenxn @swetoast
