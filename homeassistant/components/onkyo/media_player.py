@@ -41,6 +41,39 @@ from .services import DATA_MP_ENTITIES
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_MAX_VOLUME_DEFAULT = 100
+CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
+CONF_SOURCES_DEFAULT = {
+    "tv": "TV",
+    "bd": "Bluray",
+    "game": "Game",
+    "aux1": "Aux1",
+    "video1": "Video 1",
+    "video2": "Video 2",
+    "video3": "Video 3",
+    "video4": "Video 4",
+    "video5": "Video 5",
+    "video6": "Video 6",
+    "video7": "Video 7",
+    "fm": "Radio",
+}
+
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(OPTION_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=100)
+        ),
+        vol.Optional(
+            CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
+        ): cv.positive_int,
+        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
+            cv.string: cv.string
+        },
+    }
+)
+
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
@@ -91,41 +124,7 @@ VIDEO_INFORMATION_MAPPING = [
     "output_color_depth",
     "picture_mode",
 ]
-
-CONF_MAX_VOLUME_DEFAULT = 100
-CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
-CONF_SOURCES_DEFAULT = {
-    "tv": "TV",
-    "bd": "Bluray",
-    "game": "Game",
-    "aux1": "Aux1",
-    "video1": "Video 1",
-    "video2": "Video 2",
-    "video3": "Video 3",
-    "video4": "Video 4",
-    "video5": "Video 5",
-    "video6": "Video 6",
-    "video7": "Video 7",
-    "fm": "Radio",
-}
-
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(OPTION_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
-        vol.Optional(
-            CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
-        ): cv.positive_int,
-        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
-            cv.string: cv.string
-        },
-    }
-)
 ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
-
 
 type InputLibValue = str | tuple[str, ...]
 
