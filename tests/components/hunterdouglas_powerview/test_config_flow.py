@@ -6,12 +6,14 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
+from homeassistant.components.hunterdouglas_powerview import _migrate_unique_ids
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+import homeassistant.helpers.entity_registry as er
 
-from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA
+from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA, MOCK_MAC
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -350,3 +352,79 @@ async def test_form_unsupported_device(
     assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    api_version: int,
+) -> None:
+    """Test migrate to newest version."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.2.3.4"},
+        unique_id=MOCK_MAC,
+        version=1,
+        minor_version=1,
+    )
+
+    assert entry.version == 1
+    assert entry.minor_version == 1
+    assert await entry.async_migrate(hass) is False
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert await entry.async_migrate(hass) is True
+
+
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_migrate_id(
+    hass: HomeAssistant,
+    api_version: int,
+) -> None:
+    """Test migration to new entity ids."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.2.3.4"},
+        unique_id=MOCK_MAC,
+        version=1,
+        minor_version=1,
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    # Add entries with int unique_id
+    entity_registry.async_get_or_create(
+        domain="cover",
+        platform="powerview",
+        unique_id=123,
+        config_entry=entry,
+    )
+    # Add entries with a str unique_id not starting with entry.unique_id
+    entity_registry.async_get_or_create(
+        domain="cover",
+        platform="powerview",
+        unique_id="old_unique_id",
+        config_entry=entry,
+    )
+
+    await _migrate_unique_ids(hass, entry)
+
+    # Reload the registry entries
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+
+    # Ensure the IDs have been migrated
+    for reg_entry in registry_entries:
+        assert reg_entry.unique_id.startswith(f"{entry.unique_id}_")
