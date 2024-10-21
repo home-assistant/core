@@ -355,7 +355,7 @@ async def async_setup_entry(
             )
             entities.append(QswSensor(coordinator, _desc, entry, port_id))
 
-    # Can be removed in HA 2025.2.0
+    # Can be removed in HA 2025.5.0
     entity_reg = er.async_get(hass)
     reg_entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
     for entity in reg_entities:
