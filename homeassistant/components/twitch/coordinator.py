@@ -36,7 +36,7 @@ class TwitchUpdate:
     picture: str
     subscribed: bool | None
     subscription_gifted: bool | None
-    subscription_tier: int | None
+    subscription_tier: str | None
     follows: bool
     following_since: datetime | None
     viewers: int | None
