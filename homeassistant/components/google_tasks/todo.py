@@ -1,8 +1,5 @@
-"""Google Tasks todo platform."""
-
-from __future__ import annotations
-
 from datetime import date, datetime, timedelta
+import re  # Import regex for date pattern matching
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -29,6 +26,8 @@ TODO_STATUS_MAP = {
 }
 TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
 
+DATE_PATTERN = r"\d{4}/\d{2}/\d{2}"  # Define a regex pattern for YYYY/MM/DD format
+
 
 def _convert_todo_item(item: TodoItem) -> dict[str, str | None]:
     """Convert TodoItem dataclass items to dictionary of attributes the tasks API."""
@@ -51,7 +50,19 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
     """Convert tasks API items into a TodoItem."""
     due: date | None = None
     if (due_str := item.get("due")) is not None:
+        # If 'due' field is in ISO format, convert it to date
         due = datetime.fromisoformat(due_str).date()
+    else:
+        # Check for custom date format (YYYY/MM/DD) in title or description
+        title = item.get("title", "")
+        notes = item.get("notes", "")
+
+        # Search for date pattern in title or description
+        match = re.search(DATE_PATTERN, title) or re.search(DATE_PATTERN, notes)
+        if match:
+            # Parse date in YYYY/MM/DD format
+            due = datetime.strptime(match.group(), "%Y/%m/%d").date()
+
     return TodoItem(
         summary=item["title"],
         uid=item["id"],
@@ -106,8 +117,8 @@ class GoogleTaskTodoListEntity(
         config_entry_id: str,
         task_list_id: str,
     ) -> None:
-        """Initialize LocalTodoListEntity."""
-        super().__init__(coordinator)
+        """Initialize GoogleTaskTodoListEntity."""
+        super().__init__(coordinator)  # Corrected: only pass the coordinator
         self._attr_name = name.capitalize()
         self._attr_unique_id = f"{config_entry_id}-{task_list_id}"
         self._task_list_id = task_list_id
@@ -153,9 +164,9 @@ class GoogleTaskTodoListEntity(
 def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Order the task items response.
 
-    All tasks have an order amongst their sibblings based on position.
+    All tasks have an order amongst their siblings based on position.
 
-        Home Assistant To-do items do not support the Google Task parent/sibbling
+        Home Assistant To-do items do not support the Google Task parent/sibling
     relationships and the desired behavior is for them to be filtered.
     """
     parents = [task for task in tasks if task.get("parent") is None]

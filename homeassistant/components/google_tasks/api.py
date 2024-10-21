@@ -96,7 +96,16 @@ class AsyncConfigEntryAuth:
         task: dict[str, Any],
     ) -> None:
         """Update a task resource."""
+        if not task:
+            _LOGGER.debug(
+                "No fields to update for task %s in list %s", task_id, task_list_id
+            )
+            return
+
         service = await self._get_service()
+        _LOGGER.debug(
+            "Patching task %s in list %s with data: %s", task_id, task_list_id, task
+        )
         cmd: HttpRequest = service.tasks().patch(
             tasklist=task_list_id,
             task=task_id,
@@ -152,8 +161,12 @@ class AsyncConfigEntryAuth:
         try:
             result = await self._hass.async_add_executor_job(request.execute)
         except HttpError as err:
+            error_content = (
+                err.content.decode("utf-8") if err.content else "No error content"
+            )
+            _LOGGER.error("Google Tasks API error: %s, Content: %s", err, error_content)
             raise GoogleTasksApiError(
-                f"Google Tasks API responded with error ({err.status_code})"
+                f"Google Tasks API responded with error ({err.status_code}):{error_content}"
             ) from err
         if result:
             _raise_if_error(result)

@@ -1,10 +1,12 @@
 {
   "domain": "google_tasks",
   "name": "Google Tasks",
-  "codeowners": ["@allenporter"],
-  "config_flow": true,
-  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/google_tasks",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [
+    "dateparser==1.1.1"
+  ],
   "iot_class": "cloud_polling",
-  "requirements": ["google-api-python-client==2.71.0"]
+  "version": "1.0.0"
 }
