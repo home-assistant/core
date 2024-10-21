@@ -31,7 +31,3 @@ When doing so, do not forget to run `script/setup` to generate the translations.
 
 Other information like the category and whether to enable per default are read from the feature,
 as are information about units and display precision hints.
-
-In order to make the tests pass, you will also need to perform the following steps:
-1. Add feature fixture into `tests/components/tplink/fixtures/features.json`
-2. Execute `pytest tests/components/tplink --snapshot-update` to update the snapshots
