@@ -168,6 +168,7 @@ async def async_setup_entry(
         coordinators[CONNECTED_PLC_DEVICES] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=CONNECTED_PLC_DEVICES,
             update_method=async_update_connected_plc_devices,
             update_interval=LONG_UPDATE_INTERVAL,
@@ -176,6 +177,7 @@ async def async_setup_entry(
         coordinators[SWITCH_LEDS] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=SWITCH_LEDS,
             update_method=async_update_led_status,
             update_interval=SHORT_UPDATE_INTERVAL,
@@ -184,6 +186,7 @@ async def async_setup_entry(
         coordinators[LAST_RESTART] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=LAST_RESTART,
             update_method=async_update_last_restart,
             update_interval=SHORT_UPDATE_INTERVAL,
@@ -192,6 +195,7 @@ async def async_setup_entry(
         coordinators[REGULAR_FIRMWARE] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=REGULAR_FIRMWARE,
             update_method=async_update_firmware_available,
             update_interval=FIRMWARE_UPDATE_INTERVAL,
@@ -200,6 +204,7 @@ async def async_setup_entry(
         coordinators[CONNECTED_WIFI_CLIENTS] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=CONNECTED_WIFI_CLIENTS,
             update_method=async_update_wifi_connected_station,
             update_interval=SHORT_UPDATE_INTERVAL,
@@ -207,6 +212,7 @@ async def async_setup_entry(
         coordinators[NEIGHBORING_WIFI_NETWORKS] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=NEIGHBORING_WIFI_NETWORKS,
             update_method=async_update_wifi_neighbor_access_points,
             update_interval=LONG_UPDATE_INTERVAL,
@@ -214,6 +220,7 @@ async def async_setup_entry(
         coordinators[SWITCH_GUEST_WIFI] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=SWITCH_GUEST_WIFI,
             update_method=async_update_guest_wifi_status,
             update_interval=SHORT_UPDATE_INTERVAL,
