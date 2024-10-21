@@ -97,17 +97,19 @@ class AirzoneZoneSwitch(AirzoneZoneEntity, AirzoneBaseSwitch):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         param = self.entity_description.api_param
-        params: dict[str, Any] = {}
-        params[param] = {
-            API_VALUE: True,
+        params: dict[str, Any] = {
+            param: {
+                API_VALUE: True,
+            }
         }
         await self._async_update_params(params)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         param = self.entity_description.api_param
-        params: dict[str, Any] = {}
-        params[param] = {
-            API_VALUE: False,
+        params: dict[str, Any] = {
+            param: {
+                API_VALUE: False,
+            }
         }
         await self._async_update_params(params)
