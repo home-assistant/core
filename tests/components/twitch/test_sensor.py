@@ -80,9 +80,7 @@ async def test_oauth_with_sub(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is True
     assert sensor_state.attributes["subscription_is_gifted"] is False
-    assert {"1000": 1, "2000": 2, "3000": 3}.get(
-        sensor_state.attributes["subscription_tier"], None
-    ) == 1
+    assert sensor_state.attributes["subscription_tier"] == 1
 
     assert sensor_state.attributes["following"] is False
 
