@@ -14,5 +14,5 @@
   "documentation": "https://www.home-assistant.io/integrations/victron_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["victron-ble-ha-parser==0.4.4"]
+  "requirements": ["victron-ble-ha-parser==0.4.5"]
 }
