@@ -93,7 +93,7 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 description_placeholders={
-                    "username": username,
+                    CONF_USERNAME: username,
                     CONF_NAME: reauth_entry.title,
                 },
             )
