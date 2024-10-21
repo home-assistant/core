@@ -69,12 +69,10 @@ async def async_setup_vedo_entry(
 
     coordinator: ComelitVedoSystem = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[ComelitVedoSwitchEntity] = []
-    entities.extend(
+    async_add_entities(
         ComelitVedoSwitchEntity(coordinator, device, config_entry.entry_id)
         for device in coordinator.data[ALARM_ZONES].values()
     )
-    async_add_entities(entities)
 
 
 class ComelitVedoSwitchEntity(CoordinatorEntity[ComelitVedoSystem], SwitchEntity):
