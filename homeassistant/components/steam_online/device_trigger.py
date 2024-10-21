@@ -67,7 +67,7 @@ def async_attach_trigger(
         for entity in er.async_entries_for_device(
             er.async_get(hass), config[ATTR_DEVICE_ID]
         )
-        if entity.unique_id == config_entry.data[CONF_ACCOUNT]
+        if entity.unique_id.endswith(config_entry.data[CONF_ACCOUNT])
     ).entity_id
 
     # Get all sensor id's except the primary user
