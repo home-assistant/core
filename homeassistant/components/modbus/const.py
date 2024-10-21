@@ -4,6 +4,7 @@ from enum import Enum
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_WRITE_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_LIGHTS,
@@ -47,6 +48,7 @@ CONF_SWAP_BYTE = "byte"
 CONF_SWAP_WORD = "word"
 CONF_SWAP_WORD_BYTE = "word_byte"
 CONF_TARGET_TEMP = "target_temp_register"
+CONF_TARGET_TEMP_WRITE = "target_temp_write_register"
 CONF_TARGET_TEMP_WRITE_REGISTERS = "target_temp_write_registers"
 CONF_FAN_MODE_REGISTER = "fan_mode_register"
 CONF_FAN_MODE_ON = "state_fan_on"
@@ -62,6 +64,7 @@ CONF_FAN_MODE_DIFFUSE = "state_fan_diffuse"
 CONF_FAN_MODE_VALUES = "values"
 CONF_HVAC_MODE_REGISTER = "hvac_mode_register"
 CONF_HVAC_ONOFF_REGISTER = "hvac_onoff_register"
+CONF_HVAC_ONOFF_WRITE_REGISTER = "hvac_onoff_write_register"
 CONF_HVAC_MODE_OFF = "state_off"
 CONF_HVAC_MODE_HEAT = "state_heat"
 CONF_HVAC_MODE_COOL = "state_cool"
