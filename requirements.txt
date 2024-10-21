@@ -11,7 +11,7 @@ aiohttp-fast-zlib==0.1.1
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
-attrs==23.2.0
+attrs==24.2.0
 atomicwrites-homeassistant==1.4.1
 awesomeversion==24.6.0
 bcrypt==4.2.0

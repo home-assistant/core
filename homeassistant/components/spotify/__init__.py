@@ -29,7 +29,7 @@ from .util import (
     spotify_uri_from_media_browser_url,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
 
 __all__ = [
     "async_browse_media",
