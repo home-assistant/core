@@ -11,7 +11,10 @@ import pytest
 from homeassistant.components.swiss_public_transport import config_flow
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
+    CONF_IS_ARRIVAL,
     CONF_START,
+    CONF_TIME,
+    CONF_TIME_OFFSET,
     CONF_VIA,
     MAX_VIA,
 )
@@ -43,6 +46,23 @@ MOCK_DATA_STEP_TOO_MANY_STATIONS = {
     CONF_VIA: MOCK_DATA_STEP_ONE_VIA[CONF_VIA] * (MAX_VIA + 1),
 }
 
+MOCK_DATA_STEP_TIME = {
+    **MOCK_DATA_STEP,
+    CONF_TIME: "18:03:00",
+}
+
+MOCK_DATA_STEP_TIME_OFFSET_ARRIVAL = {
+    **MOCK_DATA_STEP,
+    CONF_TIME_OFFSET: {"hours": 0, "minutes": 10, "seconds": 0},
+    CONF_IS_ARRIVAL: True,
+}
+
+MOCK_DATA_STEP_TIME_OFFSET_MUTEX = {
+    **MOCK_DATA_STEP,
+    CONF_TIME: "18:03:00",
+    CONF_TIME_OFFSET: {"hours": 0, "minutes": 10, "seconds": 0},
+}
+
 
 @pytest.mark.parametrize(
     ("user_input", "config_title"),
@@ -52,6 +72,11 @@ MOCK_DATA_STEP_TOO_MANY_STATIONS = {
         (
             MOCK_DATA_STEP_MANY_VIA,
             "test_start test_destination via via_station_1, via_station_2, via_station_3",
+        ),
+        (MOCK_DATA_STEP_TIME, "test_start test_destination at 18:03:00"),
+        (
+            MOCK_DATA_STEP_TIME_OFFSET_ARRIVAL,
+            "test_start test_destination arrival in 00:10:00",
         ),
     ],
 )
@@ -93,6 +118,7 @@ async def test_flow_user_init_data_success(
         (OpendataTransportConnectionError(), "cannot_connect", MOCK_DATA_STEP),
         (OpendataTransportError(), "bad_config", MOCK_DATA_STEP),
         (None, "too_many_via_stations", MOCK_DATA_STEP_TOO_MANY_STATIONS),
+        (None, "mutex_time_offset", MOCK_DATA_STEP_TIME_OFFSET_MUTEX),
         (IndexError(), "unknown", MOCK_DATA_STEP),
     ],
 )
