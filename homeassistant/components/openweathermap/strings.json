@@ -47,5 +47,11 @@
         }
       }
     }
+  },
+  "services": {
+    "get_minute_forecasts": {
+      "name": "Get minute forecasts",
+      "description": "Get minute weather forecasts."
+    }
   }
 }
