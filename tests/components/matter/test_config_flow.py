@@ -827,10 +827,6 @@ async def test_addon_running(
     assert setup_entry.call_count == 1
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.matter.config.abort.cannot_connect"],
-)
 @pytest.mark.parametrize(
     (
         "discovery_info",
@@ -1322,7 +1318,7 @@ async def test_addon_not_installed_failures(
     install_addon: AsyncMock,
 ) -> None:
     """Test add-on install failure."""
-    install_addon.side_effect = HassioAPIError()
+    install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1359,7 +1355,7 @@ async def test_addon_not_installed_failures_zeroconf(
     zeroconf_info: ZeroconfServiceInfo,
 ) -> None:
     """Test add-on install failure."""
-    install_addon.side_effect = HassioAPIError()
+    install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=zeroconf_info

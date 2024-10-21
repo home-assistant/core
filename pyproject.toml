@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==69.2.0", "wheel~=0.43.0"]
+requires = ["setuptools==75.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -33,7 +33,7 @@ dependencies    = [
     "aiozoneinfo==0.2.1",
     "astral==2.2",
     "async-interrupt==1.2.0",
-    "attrs==23.2.0",
+    "attrs==24.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==24.6.0",
     "bcrypt==4.2.0",
@@ -69,11 +69,11 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.4.17",
+    "uv==0.4.22",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.15.2",
+    "yarl==1.15.5",
 ]
 
 [project.urls]
