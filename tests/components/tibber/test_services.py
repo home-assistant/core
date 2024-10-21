@@ -1,7 +1,7 @@
 """Test service for Tibber integration."""
 
 import datetime as dt
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,6 +20,7 @@ def generate_mock_home_data():
     mock_homes = [
         MagicMock(
             name="first_home",
+            update_info_and_price_info=AsyncMock(),
             info={
                 "viewer": {
                     "home": {
@@ -61,6 +62,7 @@ def generate_mock_home_data():
         ),
         MagicMock(
             name="second_home",
+            update_info_and_price_info=AsyncMock(),
             info={
                 "viewer": {
                     "home": {
@@ -128,6 +130,7 @@ async def test_get_prices(
     """Test get_prices with mock data."""
     freezer.move_to(START_TIME)
     mock_tibber_setup.get_homes.return_value = generate_mock_home_data()
+    mock_tibber_setup.update_info_and_price_info.return_value = data
 
     result = await hass.services.async_call(
         DOMAIN, PRICE_SERVICE_NAME, data, blocking=True, return_response=True
