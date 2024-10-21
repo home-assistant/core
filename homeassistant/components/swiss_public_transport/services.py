@@ -4,7 +4,7 @@ from typing import cast
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -41,7 +41,9 @@ SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
 )
 
 
-def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> ConfigEntry:
+def async_get_entry(
+    hass: HomeAssistant, config_entry_id: str
+) -> SwissPublicTransportConfigEntry:
     """Get the Swiss public transport config entry."""
     if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
