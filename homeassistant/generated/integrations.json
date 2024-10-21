@@ -7284,7 +7284,7 @@
     "filter": {
       "name": "Filter",
       "integration_type": "helper",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "generic_hygrostat": {
