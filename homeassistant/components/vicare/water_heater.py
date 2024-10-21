@@ -133,6 +133,16 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_target_temperature_low = (
+                    self._api.getDomesticHotWaterMinTemperature()
+                )
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_target_temperature_high = (
+                    self._api.getDomesticHotWaterMaxTemperature()
+                )
+
+            with suppress(PyViCareNotSupportedFeatureError):
                 self._current_mode = self._circuit.getActiveMode()
 
         except requests.exceptions.ConnectionError:
