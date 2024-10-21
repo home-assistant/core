@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
@@ -30,16 +31,22 @@ class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
             # Empty payload, unexpected payload.
             return self.async_abort(reason="invalid_discovery_info")
 
-        return await self.async_step_confirm()
+        return await self.async_step_confirm_from_mqtt()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        return self.async_abort(reason="not_supported")
+        try:
+            if not mqtt.is_connected(self.hass):
+                return self.async_abort(reason="mqtt_not_connected")
+        except KeyError:
+            return self.async_abort(reason="mqtt_not_configured")
 
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
+        return await self.async_step_confirm_from_user()
+
+    def step_confirm(
+        self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the setup."""
 
@@ -51,4 +58,16 @@ class PGLabFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        return self.async_show_form(step_id="confirm")
+        return self.async_show_form(step_id=step_id)
+
+    async def async_step_confirm_from_mqtt(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup from MQTT discovered."""
+        return self.step_confirm(step_id="confirm_from_mqtt", user_input=user_input)
+
+    async def async_step_confirm_from_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup from user add integration."""
+        return self.step_confirm(step_id="confirm_from_user", user_input=user_input)
