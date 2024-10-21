@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter the host name or the IP address of the Palazzetti CBox",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "exceptions": {
+    "on_off_not_available": {
+      "message": "The appliance cannot be turned on or off at the moment. Try again later."
+    },
+    "invalid_fan_mode": {
+      "message": "Fan mode {value} is invalid."
+    },
+    "invalid_target_temperatures": {
+      "message": "Target temperature {value} is invalid."
+    }
+  }
+}
