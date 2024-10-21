@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.vacuum import ATTR_BATTERY_LEVEL, VacuumEntityState
+from homeassistant.components.vacuum import ATTR_BATTERY_LEVEL, VacuumState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -37,7 +37,7 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
             },
         ),
         (
-            VacuumEntityState.CLEANING,
+            VacuumState.CLEANING,
             100,
             {
                 "vacuum": {
@@ -142,10 +142,10 @@ async def test_templates_with_entities(hass: HomeAssistant) -> None:
     """Test templates with values from other entities."""
     _verify(hass, STATE_UNKNOWN, None)
 
-    hass.states.async_set(_STATE_INPUT_SELECT, VacuumEntityState.CLEANING)
+    hass.states.async_set(_STATE_INPUT_SELECT, VacuumState.CLEANING)
     hass.states.async_set(_BATTERY_LEVEL_INPUT_NUMBER, 100)
     await hass.async_block_till_done()
-    _verify(hass, VacuumEntityState.CLEANING, 100)
+    _verify(hass, VacuumState.CLEANING, 100)
 
 
 @pytest.mark.parametrize(
@@ -363,8 +363,8 @@ async def test_state_services(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumEntityState.CLEANING
-    _verify(hass, VacuumEntityState.CLEANING, None)
+    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumState.CLEANING
+    _verify(hass, VacuumState.CLEANING, None)
     assert len(calls) == 1
     assert calls[-1].data["action"] == "start"
     assert calls[-1].data["caller"] == _TEST_VACUUM
@@ -374,8 +374,8 @@ async def test_state_services(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumEntityState.PAUSED
-    _verify(hass, VacuumEntityState.PAUSED, None)
+    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumState.PAUSED
+    _verify(hass, VacuumState.PAUSED, None)
     assert len(calls) == 2
     assert calls[-1].data["action"] == "pause"
     assert calls[-1].data["caller"] == _TEST_VACUUM
@@ -385,8 +385,8 @@ async def test_state_services(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumEntityState.IDLE
-    _verify(hass, VacuumEntityState.IDLE, None)
+    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumState.IDLE
+    _verify(hass, VacuumState.IDLE, None)
     assert len(calls) == 3
     assert calls[-1].data["action"] == "stop"
     assert calls[-1].data["caller"] == _TEST_VACUUM
@@ -396,8 +396,8 @@ async def test_state_services(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.async_block_till_done()
 
     # verify
-    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumEntityState.RETURNING
-    _verify(hass, VacuumEntityState.RETURNING, None)
+    assert hass.states.get(_STATE_INPUT_SELECT).state == VacuumState.RETURNING
+    _verify(hass, VacuumState.RETURNING, None)
     assert len(calls) == 4
     assert calls[-1].data["action"] == "return_to_base"
     assert calls[-1].data["caller"] == _TEST_VACUUM
@@ -501,7 +501,7 @@ async def _register_basic_vacuum(hass: HomeAssistant) -> None:
             "input_select",
             {
                 "input_select": {
-                    "state": {"name": "State", "options": [VacuumEntityState.CLEANING]}
+                    "state": {"name": "State", "options": [VacuumState.CLEANING]}
                 }
             },
         )
@@ -519,7 +519,7 @@ async def _register_basic_vacuum(hass: HomeAssistant) -> None:
                                 "service": "input_select.select_option",
                                 "data": {
                                     "entity_id": _STATE_INPUT_SELECT,
-                                    "option": VacuumEntityState.CLEANING,
+                                    "option": VacuumState.CLEANING,
                                 },
                             }
                         }
@@ -551,11 +551,11 @@ async def _register_components(hass: HomeAssistant) -> None:
                     "state": {
                         "name": "State",
                         "options": [
-                            VacuumEntityState.CLEANING,
-                            VacuumEntityState.DOCKED,
-                            VacuumEntityState.IDLE,
-                            VacuumEntityState.PAUSED,
-                            VacuumEntityState.RETURNING,
+                            VacuumState.CLEANING,
+                            VacuumState.DOCKED,
+                            VacuumState.IDLE,
+                            VacuumState.PAUSED,
+                            VacuumState.RETURNING,
                         ],
                     },
                     "fan_speed": {
@@ -575,7 +575,7 @@ async def _register_components(hass: HomeAssistant) -> None:
                     "service": "input_select.select_option",
                     "data": {
                         "entity_id": _STATE_INPUT_SELECT,
-                        "option": VacuumEntityState.CLEANING,
+                        "option": VacuumState.CLEANING,
                     },
                 },
                 {
@@ -591,7 +591,7 @@ async def _register_components(hass: HomeAssistant) -> None:
                     "service": "input_select.select_option",
                     "data": {
                         "entity_id": _STATE_INPUT_SELECT,
-                        "option": VacuumEntityState.PAUSED,
+                        "option": VacuumState.PAUSED,
                     },
                 },
                 {
@@ -607,7 +607,7 @@ async def _register_components(hass: HomeAssistant) -> None:
                     "service": "input_select.select_option",
                     "data": {
                         "entity_id": _STATE_INPUT_SELECT,
-                        "option": VacuumEntityState.IDLE,
+                        "option": VacuumState.IDLE,
                     },
                 },
                 {
@@ -623,7 +623,7 @@ async def _register_components(hass: HomeAssistant) -> None:
                     "service": "input_select.select_option",
                     "data": {
                         "entity_id": _STATE_INPUT_SELECT,
-                        "option": VacuumEntityState.RETURNING,
+                        "option": VacuumState.RETURNING,
                     },
                 },
                 {

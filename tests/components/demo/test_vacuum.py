@@ -22,7 +22,7 @@ from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -71,35 +71,35 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
     assert state.attributes.get(ATTR_FAN_SPEED) == "medium"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
-    assert state.state == VacuumEntityState.DOCKED
+    assert state.state == VacuumState.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_MOST)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12412
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
     assert state.attributes.get(ATTR_FAN_SPEED) == "medium"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
-    assert state.state == VacuumEntityState.DOCKED
+    assert state.state == VacuumState.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_BASIC)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12360
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
-    assert state.state == VacuumEntityState.DOCKED
+    assert state.state == VacuumState.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_MINIMAL)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
     assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
-    assert state.state == VacuumEntityState.DOCKED
+    assert state.state == VacuumState.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_NONE)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
     assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
-    assert state.state == VacuumEntityState.DOCKED
+    assert state.state == VacuumState.DOCKED
 
 
 async def test_methods(hass: HomeAssistant) -> None:
@@ -107,29 +107,29 @@ async def test_methods(hass: HomeAssistant) -> None:
     await common.async_start(hass, ENTITY_VACUUM_BASIC)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_BASIC)
-    assert state.state == VacuumEntityState.CLEANING
+    assert state.state == VacuumState.CLEANING
 
     await common.async_stop(hass, ENTITY_VACUUM_BASIC)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_BASIC)
-    assert state.state == VacuumEntityState.IDLE
+    assert state.state == VacuumState.IDLE
 
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
     await hass.async_block_till_done()
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 100
-    assert state.state == VacuumEntityState.DOCKED
+    assert state.state == VacuumState.DOCKED
 
     await async_setup_component(hass, "notify", {})
     await hass.async_block_till_done()
     await common.async_locate(hass, ENTITY_VACUUM_COMPLETE)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.state == VacuumEntityState.IDLE
+    assert state.state == VacuumState.IDLE
 
     await common.async_return_to_base(hass, ENTITY_VACUUM_COMPLETE)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.state == VacuumEntityState.RETURNING
+    assert state.state == VacuumState.RETURNING
 
     await common.async_set_fan_speed(
         hass, FAN_SPEEDS[-1], entity_id=ENTITY_VACUUM_COMPLETE
@@ -141,21 +141,21 @@ async def test_methods(hass: HomeAssistant) -> None:
     await common.async_clean_spot(hass, ENTITY_VACUUM_COMPLETE)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.state == VacuumEntityState.CLEANING
+    assert state.state == VacuumState.CLEANING
 
     await common.async_pause(hass, ENTITY_VACUUM_COMPLETE)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.state == VacuumEntityState.PAUSED
+    assert state.state == VacuumState.PAUSED
 
     await common.async_return_to_base(hass, ENTITY_VACUUM_COMPLETE)
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.state == VacuumEntityState.RETURNING
+    assert state.state == VacuumState.RETURNING
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.state == VacuumEntityState.DOCKED
+    assert state.state == VacuumState.DOCKED
 
 
 async def test_unsupported_methods(hass: HomeAssistant) -> None:
@@ -247,4 +247,4 @@ async def test_send_command(hass: HomeAssistant) -> None:
     new_state_complete = hass.states.get(ENTITY_VACUUM_COMPLETE)
 
     assert old_state_complete != new_state_complete
-    assert new_state_complete.state == VacuumEntityState.IDLE
+    assert new_state_complete.state == VacuumState.IDLE

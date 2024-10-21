@@ -21,7 +21,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
@@ -263,7 +263,7 @@ async def test_xiaomi_vacuum_services(
     # Check state attributes
     state = hass.states.get(entity_id)
 
-    assert state.state == VacuumEntityState.ERROR
+    assert state.state == VacuumState.ERROR
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
     assert state.attributes.get(ATTR_ERROR) == "Error message"
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-80"
@@ -449,7 +449,7 @@ async def test_xiaomi_specific_services(
 
     # Check state attributes
     state = hass.states.get(entity_id)
-    assert state.state == VacuumEntityState.CLEANING
+    assert state.state == VacuumState.CLEANING
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
     assert state.attributes.get(ATTR_ERROR) is None
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-30"

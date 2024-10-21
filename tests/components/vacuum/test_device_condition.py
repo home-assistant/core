@@ -5,7 +5,7 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.vacuum import DOMAIN, VacuumEntityState
+from homeassistant.components.vacuum import DOMAIN, VacuumState
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -117,7 +117,7 @@ async def test_if_state(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, VacuumEntityState.DOCKED)
+    hass.states.async_set(entry.entity_id, VacuumState.DOCKED)
 
     assert await async_setup_component(
         hass,
@@ -169,7 +169,7 @@ async def test_if_state(
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "is_docked - event - test_event2"
 
-    hass.states.async_set(entry.entity_id, VacuumEntityState.CLEANING)
+    hass.states.async_set(entry.entity_id, VacuumState.CLEANING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
@@ -177,7 +177,7 @@ async def test_if_state(
     assert service_calls[1].data["some"] == "is_cleaning - event - test_event1"
 
     # Returning means it's still cleaning
-    hass.states.async_set(entry.entity_id, VacuumEntityState.RETURNING)
+    hass.states.async_set(entry.entity_id, VacuumState.RETURNING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
@@ -202,7 +202,7 @@ async def test_if_state_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, VacuumEntityState.CLEANING)
+    hass.states.async_set(entry.entity_id, VacuumState.CLEANING)
 
     assert await async_setup_component(
         hass,

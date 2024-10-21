@@ -22,7 +22,7 @@ from homeassistant.components.vacuum import (
     SERVICE_STOP,
     StateVacuumEntity,
     VacuumEntityFeature,
-    VacuumEntityState,
+    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -77,7 +77,7 @@ def test_deprecated_constants(
 
 
 @pytest.mark.parametrize(
-    ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumEntityState, "STATE_")
+    ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumState, "STATE_")
 )
 @pytest.mark.parametrize(
     "module",
@@ -98,11 +98,11 @@ def test_deprecated_constants_for_state(
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        (SERVICE_CLEAN_SPOT, VacuumEntityState.CLEANING),
-        (SERVICE_PAUSE, VacuumEntityState.PAUSED),
-        (SERVICE_RETURN_TO_BASE, VacuumEntityState.RETURNING),
-        (SERVICE_START, VacuumEntityState.CLEANING),
-        (SERVICE_STOP, VacuumEntityState.IDLE),
+        (SERVICE_CLEAN_SPOT, VacuumState.CLEANING),
+        (SERVICE_PAUSE, VacuumState.PAUSED),
+        (SERVICE_RETURN_TO_BASE, VacuumState.RETURNING),
+        (SERVICE_START, VacuumState.CLEANING),
+        (SERVICE_STOP, VacuumState.IDLE),
     ],
 )
 async def test_state_services(
@@ -417,7 +417,7 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
 
         def start(self) -> None:
             """Start cleaning."""
-            self._attr_state = VacuumEntityState.CLEANING
+            self._attr_state = VacuumState.CLEANING
 
     entity = MockLegacyVacuum()
 
