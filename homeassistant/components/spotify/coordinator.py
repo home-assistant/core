@@ -15,11 +15,11 @@ from spotifyaio import (
 )
 from spotifyaio.models import AudioFeatures
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
+from . import SpotifyConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
     """Class to manage fetching Spotify data."""
 
     current_user: UserProfile
-    config_entry: ConfigEntry
+    config_entry: SpotifyConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: SpotifyClient) -> None:
         """Initialize."""
