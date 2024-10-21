@@ -50,6 +50,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 16>,
       'title': 'IronOS V2.22 | TS101 & S60 Added | PinecilV2 improved',
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.pinecil_firmware',
