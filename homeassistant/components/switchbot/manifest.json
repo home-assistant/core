@@ -32,7 +32,8 @@
     "@RenierM26",
     "@murtas",
     "@Eloston",
-    "@dsypniewski"
+    "@dsypniewski",
+    "@nickconway"
   ],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

@@ -76,6 +76,9 @@
       },
       "door_auto_lock_paused": {
         "name": "Auto-lock paused"
+      },
+      "success": {
+        "name": "Success"
       }
     },
     "sensor": {
