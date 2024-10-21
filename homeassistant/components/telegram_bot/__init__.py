@@ -72,6 +72,7 @@ ATTR_MSG = "message"
 ATTR_MSGID = "id"
 ATTR_PARSER = "parse_mode"
 ATTR_PASSWORD = "password"
+ATTR_REACTION = "reaction"
 ATTR_REPLY_TO_MSGID = "reply_to_message_id"
 ATTR_REPLYMARKUP = "reply_markup"
 ATTR_SHOW_ALERT = "show_alert"
@@ -90,6 +91,7 @@ ATTR_OPTIONS = "options"
 ATTR_ANSWERS = "answers"
 ATTR_OPEN_PERIOD = "open_period"
 ATTR_IS_ANONYMOUS = "is_anonymous"
+ATTR_IS_BIG = "is_big"
 ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
 ATTR_MESSAGE_THREAD_ID = "message_thread_id"
 
@@ -112,6 +114,7 @@ SERVICE_SEND_POLL = "send_poll"
 SERVICE_EDIT_MESSAGE = "edit_message"
 SERVICE_EDIT_CAPTION = "edit_caption"
 SERVICE_EDIT_REPLYMARKUP = "edit_replymarkup"
+SERVICE_SET_MESSAGE_REACTION = "set_message_reaction"
 SERVICE_ANSWER_CALLBACK_QUERY = "answer_callback_query"
 SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_LEAVE_CHAT = "leave_chat"
@@ -246,6 +249,18 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
+    {
+        vol.Required(ATTR_MESSAGEID): vol.Any(
+            cv.positive_int, vol.All(cv.string, "last")
+        ),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Required(ATTR_REACTION): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_IS_BIG, default=False): cv.boolean,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.template,
@@ -280,6 +295,7 @@ SERVICE_MAP = {
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
     SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
+    SERVICE_SET_MESSAGE_REACTION: SERVICE_SCHEMA_SET_MESSAGE_REACTION,
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
     SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
@@ -456,6 +472,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await notify_service.answer_callback_query(
                 context=service.context, **kwargs
             )
+        elif msgtype == SERVICE_SET_MESSAGE_REACTION:
+            await notify_service.set_message_reaction(context=service.context, **kwargs)
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
         else:
@@ -837,6 +855,32 @@ class TelegramNotificationService:
             callback_query_id,
             text=message,
             show_alert=show_alert,
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
+        )
+
+    async def set_message_reaction(
+        self, chat_id, reaction, is_big=False, context=None, **kwargs
+    ):
+        """Set the bot's reaction for a given message."""
+        chat_id = self._get_target_chat_ids(chat_id)[0]
+        message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
+        params = self._get_msg_kwargs(kwargs)
+        _LOGGER.debug(
+            "Set reaction to message %s in chat ID %s to %s with params: %s",
+            message_id or inline_message_id,
+            chat_id,
+            reaction,
+            params,
+        )
+        await self._send_msg(
+            self.bot.set_message_reaction,
+            "Error setting message reaction",
+            params[ATTR_MESSAGE_TAG],
+            chat_id,
+            message_id,
+            reaction=reaction,
+            is_big=is_big,
             read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
