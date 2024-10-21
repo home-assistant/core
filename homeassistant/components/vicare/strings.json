@@ -245,6 +245,15 @@
       "energy_summary_consumption_heating_lastsevendays": {
         "name": "Heating electricity consumption last seven days"
       },
+      "energy_consumption_cooling_today": {
+        "name": "Cooling electricity consumption today"
+      },
+      "energy_consumption_cooling_this_month": {
+        "name": "Cooling electricity consumption this month"
+      },
+      "energy_consumption_cooling_this_year": {
+        "name": "Cooling electricity consumption this year"
+      },
       "energy_dhw_summary_consumption_heating_currentday": {
         "name": "DHW electricity consumption today"
       },
