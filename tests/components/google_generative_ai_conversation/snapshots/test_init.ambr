@@ -9,6 +9,10 @@
         'contents': list([
           'Describe this image from my doorbell camera',
           b'image bytes',
+          dict({
+            'data': b'context bytes',
+            'mime_type': 'text/plain',
+          }),
         ]),
         'model': 'models/gemini-2.0-flash',
       }),
