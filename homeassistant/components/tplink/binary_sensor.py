@@ -58,6 +58,10 @@ BINARY_SENSOR_DESCRIPTIONS: Final = (
         key="water_alert",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
+    TPLinkBinarySensorEntityDescription(
+        key="motion_detected",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
 )
 
 BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARY_SENSOR_DESCRIPTIONS}
