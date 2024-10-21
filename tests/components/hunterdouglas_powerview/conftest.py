@@ -111,7 +111,7 @@ def firmware_json(api_version: int) -> str:
 def rooms_json(api_version: int) -> str:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
-        return "gen2/rooms.json"
+        return "gen1/rooms.json"
     if api_version == 2:
         return "gen2/rooms.json"
     if api_version == 3:
@@ -124,7 +124,7 @@ def rooms_json(api_version: int) -> str:
 def scenes_json(api_version: int) -> str:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
-        return "gen2/scenes.json"
+        return "gen1/scenes.json"
     if api_version == 2:
         return "gen2/scenes.json"
     if api_version == 3:
@@ -137,7 +137,7 @@ def scenes_json(api_version: int) -> str:
 def shades_json(api_version: int) -> str:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
-        return "gen2/shades.json"
+        return "gen1/shades.json"
     if api_version == 2:
         return "gen2/shades.json"
     if api_version == 3:

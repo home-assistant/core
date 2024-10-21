@@ -595,7 +595,7 @@ class PowerViewShadeTDBUBottom(PowerViewShadeDualRailBase):
     ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._shade.id}_bottom"
+        self._attr_unique_id = f"{self._attr_unique_id}_bottom"
 
     @callback
     def _clamp_cover_limit(self, target_hass_position: int) -> int:
@@ -632,7 +632,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
     ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._shade.id}_top"
+        self._attr_unique_id = f"{self._attr_unique_id}_top"
 
     @property
     def should_poll(self) -> bool:
@@ -740,7 +740,7 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
     ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._shade.id}_combined"
+        self._attr_unique_id = f"{self._attr_unique_id}_combined"
 
     @property
     def is_closed(self) -> bool:
@@ -806,7 +806,7 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
     ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._shade.id}_front"
+        self._attr_unique_id = f"{self._attr_unique_id}_front"
 
     @property
     def should_poll(self) -> bool:
@@ -862,7 +862,7 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
     ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._shade.id}_rear"
+        self._attr_unique_id = f"{self._attr_unique_id}_rear"
 
     @property
     def should_poll(self) -> bool:
