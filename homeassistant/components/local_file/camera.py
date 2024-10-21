@@ -72,19 +72,20 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Camera that works with local files."""
     file_path: str = config[CONF_FILE_PATH]
+    file_path_slug = slugify(file_path)
 
     if not await hass.async_add_executor_job(check_file_path_access, file_path):
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"no_access_path_{slugify(file_path)}",
+            f"no_access_path_{file_path_slug}",
             breaks_in_ha_version="2025.5.0",
             is_fixable=False,
             learn_more_url="https://www.home-assistant.io/integrations/local_file/",
             severity=ir.IssueSeverity.WARNING,
             translation_key="no_access_path",
             translation_placeholders={
-                "file_path": slugify(file_path),
+                "file_path": file_path_slug,
             },
         )
         return
