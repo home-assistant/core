@@ -385,7 +385,7 @@ async def async_setup_entry(
                         hass,
                         DOMAIN,
                         f"uptime_seconds_deprecated_{entity_id}_{item}",
-                        breaks_in_ha_version="2025.2.0",
+                        breaks_in_ha_version="2025.5.0",
                         is_fixable=False,
                         severity=ir.IssueSeverity.WARNING,
                         translation_key="uptime_seconds_deprecated",
