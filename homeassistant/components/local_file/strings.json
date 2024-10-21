@@ -14,7 +14,7 @@
         },
         "data_description": {
           "name": "Name for the created entity.",
-          "file_path": "Path to file, see documentation for further details."
+          "file_path": "The full path to the new image file to be displayed."
         }
       }
     }
@@ -44,7 +44,7 @@
       "fields": {
         "file_path": {
           "name": "File path",
-          "description": "The full path to the new image file to be displayed."
+          "description": "[%key:component::local_file::config::step::user::data_description::file_path%]"
         }
       }
     }
