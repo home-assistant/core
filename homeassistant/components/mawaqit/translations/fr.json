@@ -1,0 +1,86 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "MAWAQIT",
+        "description": "Inscrivez-vous sur https://mawaqit.net/ puis connectez-vous ci-dessous. La mosqu\u00e9e la plus proche sera choisie mais vous pouvez la changer ult\u00e9rieurement dans les param\u00e8tres du plugin Mawaqit :",
+        "data": {
+          "username": "E-mail",
+          "password": "Mot de passe",
+          "server": "Serveur"
+        }
+      },
+      "keep_or_reset": {
+        "title": "Une autre instance de MAWAQIT est déjà configurée",
+        "data": {
+          "choice": "Vous pouvez choisir de garder la configuration existante ou de la réinitialiser :",
+          "keep": "Garder la configuration existante",
+          "reset": "Réinitialiser pour configurer une nouvelle mosquée"
+        }
+      },
+      "keyword_search": {
+        "title": "Recherchez votre mosquée",
+        "description": "Recherchez une mosquée en entrant un mot-clé :",
+        "data": {
+          "Keyword": "Rechercher"
+        }
+      },
+      "search_method": {
+        "title": "Choisissez la méthode pour trouver votre mosquée",
+        "data": {
+          "search_method_choice": "choisissez la méthode de recherche :"
+        }
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Plusieurs mosquées sont disponibles autour de vous, sélectionnez-en une :",
+          "uuid": "Mosquée"
+        },
+        "title": "Votre mosquée préférée"
+      },
+      "select_server": {
+        "title": "Choisissiez votre mosqu\u00e9e favorite",
+        "description": "Plusieurs mosqu\u00e9es sont disponibles autour de vous, s\u00e9lectionnez-en une :",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "server": "Serveur"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect_to_server": "Impossible de se connecter au serveur, veuillez réessayer plus tard.",
+      "wrong_credential": "Identifiant ou mot de passe incorrect, veuillez réessayer.",
+      "no_mosque_found_keyword": "Aucune mosquée trouvée avec ce mot-clé."
+    },
+    "abort": {
+      "no_mosque": "Désolé, il n'y a pas de mosquée MAWAQIT dans votre quartier.",
+      "one_instance_allowed": "Une seule entrée MAWAQIT est nécessaire. Si vous souhaitez reconfigurer votre mosquée, vous pouvez cliquer sur \"Configurer\" à côté de l'entrée existante.",
+      "configuration_kept": "Vous avez choisi de conserver la configuration existante."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calculation_method": "Changer votre mosqu\u00e9e :"
+        }
+      }
+    }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Rechercher les mosquées les plus proches de votre emplacement",
+        "search_method_keyword": "Rechercher une mosquée par mot-clé"
+      }
+    },
+    "choice_translation_key": {
+      "options": {
+        "keep": "Garder la configuration existante",
+        "reset": "Réinitialiser pour configurer une nouvelle mosquée"
+      }
+    }
+  },
+  "title": "MAWAQIT"
+}
