@@ -7,7 +7,7 @@ from asyncio import CancelledError, Task
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
@@ -556,6 +556,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._bluesound_device_name
 
     @property
+    def sync_status(self) -> SyncStatus:
+        """Return the sync status."""
+        return self._sync_status
+
+    @property
     def source_list(self) -> list[str] | None:
         """List of available input sources."""
         if self._status is None or (self.is_grouped and not self.is_master):
@@ -693,7 +698,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             reverse=True,
         )
         return [
-            cast(str, entity.name)
+            entity.sync_status.name
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]
