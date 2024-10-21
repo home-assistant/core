@@ -25,6 +25,7 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_icon_and_entity_picture,
     help_test_entity_id_update_discovery_update,
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -774,4 +775,20 @@ async def test_value_template_fails(
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
         in caplog.text
+    )
+
+
+async def test_entity_icon_and_entity_picture(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the entity icon or picture setup."""
+    domain = update.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_icon_and_entity_picture(
+        hass,
+        mqtt_mock_entry,
+        domain,
+        config,
+        default_entity_picture="https://brands.home-assistant.io/_/mqtt/icon.png",
     )
