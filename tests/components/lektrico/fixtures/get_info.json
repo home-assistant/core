@@ -13,5 +13,6 @@
   "led_max_brightness": 20,
   "dynamic_current": 32,
   "user_current": 32,
-  "lb_mode": 0
+  "lb_mode": 0,
+  "require_auth": true
 }
