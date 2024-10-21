@@ -51,7 +51,7 @@ class HMCover(HMDevice, CoverEntity):
         """
 
         state = self._hm_get_state()
-        if isinstance(state, int):
+        if isinstance(state, float):
             return int(state * 100)
         return None
 
