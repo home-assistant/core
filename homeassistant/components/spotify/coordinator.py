@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from spotifyaio import (
     ContextType,
@@ -21,7 +22,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .models import SpotifyData
+
+if TYPE_CHECKING:
+    from .models import SpotifyData
 
 _LOGGER = logging.getLogger(__name__)
 
