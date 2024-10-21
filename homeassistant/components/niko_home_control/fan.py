@@ -56,10 +56,10 @@ class NikoHomeControlFan(FanEntity):
                 "manufacturer": "Niko",
                 "name": action.name,
                 "model": "P.O.M",
-                "suggested_area": action.location,
                 "via_device": hub._via_device,
             }
-
+            if options["importLocations"] is not False:
+                self._attr_device_info["suggested_area"] = action.location
         else:
             self._attr_device_info = hub._device_info
 

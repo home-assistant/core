@@ -21,7 +21,8 @@
       "optional": {
         "description": "Treat Entities as devices?",
         "data": {
-          "treatAsDevice": "Show entity as device? (makes it possible to asign an area)"
+          "treatAsDevice": "Show entity as device? (makes it possible to asign an area)",
+          "importLocations": "Import locations from Niko Home Control?"
         }
       }
     },

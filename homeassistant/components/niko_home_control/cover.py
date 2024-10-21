@@ -55,9 +55,10 @@ class NikoHomeControlCover(CoverEntity):
                 "manufacturer": "Niko",
                 "name": cover.name,
                 "model": "P.O.M",
-                "suggested_area": cover.location,
                 "via_device": hub._via_device,
             }
+            if options["importLocations"] is not False:
+                self._attr_device_info["suggested_area"] = cover.location
 
         else:
             self._attr_device_info = hub._device_info
