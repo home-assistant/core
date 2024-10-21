@@ -36,6 +36,9 @@
       },
       "uv_nano": {
         "default": "mdi:air-filter"
+      },
+      "warm_mode": {
+        "default": "mdi:heat-wave"
       }
     },
     "binary_sensor": {

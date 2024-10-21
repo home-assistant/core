@@ -55,6 +55,9 @@
       },
       "uv_nano": {
         "name": "UVnano"
+      },
+      "warm_mode": {
+        "name": "Heating"
       }
     },
     "binary_sensor": {
