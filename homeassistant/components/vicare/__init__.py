@@ -15,10 +15,15 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
 )
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
 from homeassistant.config_entries import ConfigEntry
 
 # from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
@@ -185,6 +190,45 @@ async def async_migrate_devices_and_entities(
                 entity_registry.async_update_entity(
                     entity_id=entity_entry.entity_id, new_unique_id=entity_new_unique_id
                 )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        if entry.minor_version == 1:
+            _LOGGER.debug(
+                "Migrating from version %s.%s", entry.version, entry.minor_version
+            )
+
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(entry.data.get(CONF_CLIENT_ID, ""), "", DOMAIN),
+                DOMAIN,
+            )
+            hass.config_entries.async_update_entry(
+                entry,
+                minor_version=2,
+                data={
+                    "auth_implementation": DOMAIN,
+                    CONF_TOKEN: {
+                        # "status": 0,
+                        # "userid": str(USER_ID),
+                        # "access_token": "mock-access-token",
+                        # "refresh_token": "mock-refresh-token",
+                        # "expires_at": expires_at,
+                        # "scope": ",".join(scopes),
+                    },
+                },
+            )
+
+            _LOGGER.debug(
+                "Migration to version %s.%s successful",
+                entry.version,
+                entry.minor_version,
+            )
+            raise ConfigEntryAuthFailed
+    return True
 
 
 def get_supported_devices(
