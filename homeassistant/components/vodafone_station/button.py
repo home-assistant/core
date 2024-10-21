@@ -63,6 +63,14 @@ BUTTON_TYPES: Final = (
         ),
         is_suitable=lambda info: info.get("vf_internet_key_online_since") != "",
     ),
+    VodafoneStationEntityDescription(
+        key="cleanup",
+        translation_key="cleanup",
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda coordinator: coordinator.cleanup_device_tracker_entities(),
+        is_suitable=lambda _: True,
+        icon="",
+    ),
 )
 
 
