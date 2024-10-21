@@ -4716,7 +4716,6 @@
     'entry': dict({
       'data': dict({
         'client_id': '**REDACTED**',
-        'heating_type': 'auto',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),
@@ -4725,8 +4724,9 @@
       }),
       'domain': 'vicare',
       'entry_id': '1234',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
+        'heating_type': 'auto',
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
