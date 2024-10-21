@@ -31,6 +31,20 @@
         "name": "Keypad disabled"
       }
     },
+    "select": {
+      "auto_lock_time": {
+        "name": "Auto-Lock time",
+        "state": {
+          "0": "Disabled",
+          "15": "15 seconds",
+          "30": "30 seconds",
+          "60": "60 seconds",
+          "120": "120 seconds",
+          "240": "240 seconds",
+          "300": "300 seconds"
+        }
+      }
+    },
     "switch": {
       "beeper": {
         "name": "Keypress Beep"
