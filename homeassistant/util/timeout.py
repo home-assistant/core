@@ -72,11 +72,12 @@ class _GlobalFreezeContext:
                     continue
                 zone.pause()
 
-        self._manager.global_freezes.append(self)
+        self._manager.global_freezes.add(self)
 
     def _exit(self) -> None:
         """Finish freeze."""
-        self._manager.global_freezes.remove(self)
+        self._manager.global_freezes.discard(self)
+
         if not self._manager.freezes_done:
             return
 
@@ -421,7 +422,7 @@ class TimeoutManager:
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._zones: dict[str, _ZoneTimeoutManager] = {}
         self._globals: list[_GlobalTaskContext] = []
-        self._freezes: list[_GlobalFreezeContext] = []
+        self._freezes: set[_GlobalFreezeContext] = set()
 
     @property
     def zones_done(self) -> bool:
@@ -444,7 +445,7 @@ class TimeoutManager:
         return self._globals
 
     @property
-    def global_freezes(self) -> list[_GlobalFreezeContext]:
+    def global_freezes(self) -> set[_GlobalFreezeContext]:
         """Return all global Freezes."""
         return self._freezes
 
