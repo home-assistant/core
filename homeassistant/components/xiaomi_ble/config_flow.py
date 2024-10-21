@@ -23,12 +23,10 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_process_advertisements,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN
 
