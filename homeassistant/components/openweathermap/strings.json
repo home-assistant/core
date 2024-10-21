@@ -53,5 +53,10 @@
       "name": "Get minute forecasts",
       "description": "Get minute weather forecasts."
     }
+  },
+  "exceptions": {
+    "service_minute_forecast_mode": {
+      "message": "Minute forecasts are available only when {name} mode is set to v3.0"
+    }
   }
 }
