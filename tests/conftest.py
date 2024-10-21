@@ -1895,7 +1895,17 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
         yield calls
 
 
-_BOOLEAN_STATES = {STATE_ON, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
+_BOOLEAN_STATES = {STATE_ON, STATE_OFF}
+_INTERNAL_STATES = {STATE_UNAVAILABLE, STATE_UNKNOWN}
+_TOGGLE_PLATFORMS = {
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.REMOTE,
+    Platform.SIREN,
+    Platform.SWITCH,
+}
 
 
 @pytest.fixture(autouse=True)
@@ -1914,9 +1924,11 @@ def set_state() -> Generator[None]:
         state_info: ha.StateInfo | None = None,
         timestamp: float | None = None,
     ) -> None:
-        platform = entity_id.split(".", 1)[0]
-        if platform in {Platform.BINARY_SENSOR} and new_state not in _BOOLEAN_STATES:
-            _LOGGER.error("Invalid state %s used for %s", new_state, entity_id)
+        if (
+            new_state not in _INTERNAL_STATES
+            and entity_id.split(".", 1)[0] in _TOGGLE_PLATFORMS
+            and new_state not in _BOOLEAN_STATES
+        ):
             raise InvalidStateError(
                 f"Invalid state {new_state} for {entity_id}. "
                 f"State should be one of {_BOOLEAN_STATES}."
