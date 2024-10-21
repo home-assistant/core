@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
 import functools
@@ -38,7 +38,7 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import block_async_io
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import InvalidStateError, ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
 from . import patch_recorder  # noqa: F401, isort:skip
@@ -63,7 +63,15 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
-from homeassistant.const import BASE_PLATFORMS, HASSIO_USER_NAME
+from homeassistant.const import (
+    BASE_PLATFORMS,
+    HASSIO_USER_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import (
     Context,
     CoreState,
@@ -1885,6 +1893,47 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
 
     with patch("homeassistant.core.ServiceRegistry.async_call", _async_call):
         yield calls
+
+
+_BOOLEAN_STATES = {STATE_ON, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
+
+
+@pytest.fixture(autouse=True)
+def set_state() -> Generator[None]:
+    """Ensure tests."""
+    _original_async_set = ha.StateMachine.async_set
+
+    @ha.callback
+    def _async_set(
+        self,
+        entity_id: str,
+        new_state: str,
+        attributes: Mapping[str, Any] | None = None,
+        force_update: bool = False,
+        context: Context | None = None,
+        state_info: ha.StateInfo | None = None,
+        timestamp: float | None = None,
+    ) -> None:
+        platform = entity_id.split(".", 1)[0]
+        if platform in {Platform.BINARY_SENSOR} and new_state not in _BOOLEAN_STATES:
+            _LOGGER.error("Invalid state %s used for %s", new_state, entity_id)
+            raise InvalidStateError(
+                f"Invalid state {new_state} for {entity_id}. "
+                f"State should be one of {_BOOLEAN_STATES}."
+            )
+        return _original_async_set(
+            self,
+            entity_id,
+            new_state,
+            attributes,
+            force_update,
+            context,
+            state_info,
+            timestamp,
+        )
+
+    with patch("homeassistant.core.StateMachine.async_set", _async_set):
+        yield
 
 
 @pytest.fixture
