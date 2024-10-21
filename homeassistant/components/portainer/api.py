@@ -16,7 +16,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
     def __init__(self, websession: ClientSession, entry) -> None:
         """Initialize Portainer auth."""
         self.entry = entry
-        super().__init__(websession, entry.data["ip_address"])
+        super().__init__(websession, entry.data["host"], entry.data["port"])
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""

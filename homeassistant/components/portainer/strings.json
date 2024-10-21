@@ -1,16 +1,18 @@
 {
   "config": {
     "step": {
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Portainer integration needs to re-authenticate your account"
-      },
-      "missing_scope": {
-        "title": "Your account is missing some API connections",
-        "description": "For the best experience with this integration both the `Authentication API` and the `Portainer Connect API` should be connected. Please make sure that both of them are connected to your account in the [Developer Portal]({application_url})."
-      },
-      "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      "user": {
+        "description": "Set up your Portainer instance.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device running your Portainer instance.",
+          "access_token": "The access token from the Portainer admin panel. e.g. prt_xxxxx"
+        }
       }
     },
     "abort": {
