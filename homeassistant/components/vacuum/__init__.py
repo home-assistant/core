@@ -249,6 +249,14 @@ class StateVacuumEntity(
     __vacuum_legacy_state: bool = False
     __vacuum_legacy_state_reported: bool = False
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if any(method in cls.__dict__ for method in ("_attr_state", "state")):
+            # Integrations should use the 'vacuum_state' property instead of
+            # setting the state directly.
+            cls.__vacuum_legacy_state = True
+
     def __setattr__(self, __name: str, __value: Any) -> None:
         """Set attribute.
 

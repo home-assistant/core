@@ -39,8 +39,8 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 
 
 @pytest.fixture(name="supported_features")
-async def alarm_control_panel_supported_features() -> VacuumEntityFeature:
-    """Return the supported features for the test alarm control panel entity."""
+async def vacuum_supported_features() -> VacuumEntityFeature:
+    """Return the supported features for the test vacuum entity."""
     return (
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
@@ -61,7 +61,7 @@ async def setup_vacuum_platform_test_entity(
     entity_registry: er.EntityRegistry,
     supported_features: VacuumEntityFeature,
 ) -> MagicMock:
-    """Set up alarm control panel entity using an entity platform."""
+    """Set up vacuum entity using an entity platform."""
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
@@ -80,7 +80,6 @@ async def setup_vacuum_platform_test_entity(
         ),
     )
 
-    # Unnamed sensor without device class -> no name
     entity = MockVacuum(
         supported_features=supported_features,
     )

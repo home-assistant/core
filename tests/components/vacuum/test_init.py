@@ -354,7 +354,7 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
         @property
         def state(self) -> str:
             """Return the state of the entity."""
-            return "disarmed"
+            return VacuumState.CLEANING
 
     entity = MockLegacyVacuum()
 
