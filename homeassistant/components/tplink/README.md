@@ -31,3 +31,4 @@ When doing so, do not forget to run `script/setup` to generate the translations.
 
 Other information like the category and whether to enable per default are read from the feature,
 as are information about units and display precision hints.
+
