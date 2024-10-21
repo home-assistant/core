@@ -18,6 +18,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.components.update.const import (
     ATTR_AUTO_UPDATE,
+    ATTR_DISPLAY_PRECISION,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -92,6 +93,7 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.state == STATE_ON
     assert update.state_attributes == {
         ATTR_AUTO_UPDATE: False,
+        ATTR_DISPLAY_PRECISION: 0,
         ATTR_INSTALLED_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,
         ATTR_LATEST_VERSION: "1.0.1",
@@ -1056,6 +1058,7 @@ async def test_update_percentage_backwards_compatibility(
 
     expected_attributes = {
         ATTR_AUTO_UPDATE: False,
+        ATTR_DISPLAY_PRECISION: 0,
         ATTR_ENTITY_PICTURE: "https://brands.home-assistant.io/_/test/icon.png",
         ATTR_FRIENDLY_NAME: "legacy",
         ATTR_INSTALLED_VERSION: "1.0.0",

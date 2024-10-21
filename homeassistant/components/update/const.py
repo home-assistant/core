@@ -23,6 +23,7 @@ SERVICE_SKIP: Final = "skip"
 
 ATTR_AUTO_UPDATE: Final = "auto_update"
 ATTR_BACKUP: Final = "backup"
+ATTR_DISPLAY_PRECISION: Final = "display_precision"
 ATTR_INSTALLED_VERSION: Final = "installed_version"
 ATTR_IN_PROGRESS: Final = "in_progress"
 ATTR_LATEST_VERSION: Final = "latest_version"
