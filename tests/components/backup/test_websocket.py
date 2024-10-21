@@ -142,6 +142,32 @@ async def test_generate(
 
 
 @pytest.mark.parametrize(
+    "with_hassio",
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_restore(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    with_hassio: bool,
+) -> None:
+    """Test calling the restore command."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
+    ):
+        await client.send_json_auto_id({"type": "backup/restore", "slug": "abc123"})
+        assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
     "access_token_fixture_name",
     ["hass_access_token", "hass_supervisor_access_token"],
 )
