@@ -1424,6 +1424,8 @@ def _raise_on_templated_service(
         return
     if _path[-10:] == ["All", 0, "label_id", "Any", 1, "All", 1, 0, "Any", 0]:
         return
+    if domain == "camera" and _service in ("record", "snapshot"):
+        return
     if domain == "unifiprotect" and _service == "set_chime_paired_doorbells":
         return
     if schema in (dynamic_template, template, template_complex):
