@@ -33,10 +33,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
 from .const import MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
-from .coordinator import SpotifyCoordinator
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
 from .entity import SpotifyEntity
 
 _LOGGER = logging.getLogger(__name__)

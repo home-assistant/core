@@ -9,8 +9,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SpotifyConfigEntry
-from .coordinator import SpotifyCoordinator
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
 from .entity import SpotifyEntity
 
 

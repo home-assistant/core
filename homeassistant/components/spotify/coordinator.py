@@ -15,14 +15,18 @@ from spotifyaio import (
 )
 from spotifyaio.models import AudioFeatures
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from . import SpotifyConfigEntry
 from .const import DOMAIN
+from .models import SpotifyData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 @dataclass
