@@ -808,3 +808,52 @@ async def test_availability(
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
+                        "command": "echo {{ states.sensor.input_sensor.state }}",
+                        "availability": "{{ value|is_number}}",
+                        "unit_of_measurement": " ",
+                        "state_class": "measurement",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_template_render_not_break_for_availability(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Ensure command with templates get rendered properly."""
+    hass.states.async_set("sensor.input_sensor", "sensor_value")
+
+    # Give time for template to load
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input_sensor", "1")
+
+    # Give time for template to load
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "1"

@@ -23,9 +23,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
@@ -231,10 +234,34 @@ class ManualTriggerEntity(TriggerBaseEntity):
         Ex: self._process_manual_data(payload)
         """
 
-        self.async_write_ha_state()
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
+        now = dt_util.utcnow()
+        attr = {}
+        if state_attributes := self.state_attributes:
+            attr.update(state_attributes)
+        if extra_state_attributes := self.extra_state_attributes:
+            attr.update(extra_state_attributes)
+        try:
+            entity_state = str(self.state)
+        except ValueError:
+            # Catch value errors e.g. sensor state expecting a number
+            # but the value is not a number.
+            # Return unknown state to not mix with availability template.
+            entity_state = STATE_UNKNOWN
+        if len(entity_state) > MAX_LENGTH_STATE_STATE:
+            entity_state = entity_state[:MAX_LENGTH_STATE_STATE]
+        state = State(
+            self.entity_id,
+            entity_state,
+            attr,
+            now,
+            now,
+            now,
+            None,
+            True,
+            None,
+            now.timestamp(),
+        )
+        this = state.as_dict()
 
         run_variables: dict[str, Any] = {"value": value}
         # Silently try if variable is a json and store result in `value_json` if it is.
@@ -243,6 +270,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
         variables = {"this": this, **(run_variables or {})}
 
         self._render_templates(variables)
+        self.async_write_ha_state()
 
 
 class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
