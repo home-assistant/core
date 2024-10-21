@@ -35,7 +35,6 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Steam devices."""
-    # registry = er.async_get(hass)
     conditions = []
 
     base_condition = {
