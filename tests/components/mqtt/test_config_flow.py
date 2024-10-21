@@ -455,8 +455,6 @@ async def test_hassio_confirm(
     mock_finish_setup: MagicMock,
 ) -> None:
     """Test we can finish a config flow."""
-    mock_try_connection.return_value = True
-
     result = await hass.config_entries.flow.async_init(
         "mqtt",
         data=HassioServiceInfo(
@@ -1027,7 +1025,6 @@ async def test_bad_certificate(
         test_input.pop(mqtt.CONF_CLIENT_KEY)
 
     mqtt_mock = await mqtt_mock_entry()
-    mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
     hass.config_entries.async_update_entry(
@@ -1276,7 +1273,7 @@ async def test_invalid_discovery_prefix(
 
 def get_default(schema: vol.Schema, key: str) -> Any | None:
     """Get default value for key in voluptuous schema."""
-    for schema_key in schema:
+    for schema_key in schema:  # type:ignore[attr-defined]
         if schema_key == key:
             if schema_key.default == vol.UNDEFINED:
                 return None
@@ -1286,7 +1283,7 @@ def get_default(schema: vol.Schema, key: str) -> Any | None:
 
 def get_suggested(schema: vol.Schema, key: str) -> Any | None:
     """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema:
+    for schema_key in schema:  # type:ignore[attr-defined]
         if schema_key == key:
             if (
                 schema_key.description is None

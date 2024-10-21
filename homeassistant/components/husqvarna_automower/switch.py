@@ -40,9 +40,7 @@ async def async_setup_entry(
             _stay_out_zones = coordinator.data[mower_id].stay_out_zones
             if _stay_out_zones is not None:
                 entities.extend(
-                    AutomowerStayOutZoneSwitchEntity(
-                        coordinator, mower_id, stay_out_zone_uid
-                    )
+                    StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)
                     for stay_out_zone_uid in _stay_out_zones.zones
                 )
             async_remove_entities(hass, coordinator, entry, mower_id)
@@ -86,7 +84,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
 
-class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
+class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     """Defining the Automower stay out zone switch."""
 
     _attr_translation_key = "stay_out_zones"

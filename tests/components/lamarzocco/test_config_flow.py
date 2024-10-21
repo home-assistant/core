@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from lmcloud.models import LaMarzoccoDeviceInfo
+import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
@@ -365,6 +366,10 @@ async def test_bluetooth_discovery(
     }
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.lamarzocco.config.error.machine_not_found"],
+)
 async def test_bluetooth_discovery_errors(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,

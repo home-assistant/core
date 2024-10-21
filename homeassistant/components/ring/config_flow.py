@@ -164,8 +164,8 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
 
+        reauth_entry = self._get_reauth_entry()
         if user_input:
             user_input[CONF_USERNAME] = reauth_entry.data[CONF_USERNAME]
             # Reauth will use the same hardware id and re-authorise an existing
