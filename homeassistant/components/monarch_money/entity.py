@@ -81,3 +81,9 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     def account_data(self) -> MonarchAccount:
         """Return the account data."""
         return self.coordinator.data.account_data[self._account_id]
+
+    async def async_get_holdings(self):
+        """Get holdings."""
+        if holdings := self.account_data.holdings:
+            return holdings.to_json()
+        return "{}"
