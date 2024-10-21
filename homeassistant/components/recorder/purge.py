@@ -648,7 +648,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         if entity_filter and not entity_filter(entity_id)
     ]
     if excluded_metadata_ids:
-        has_more_states_to_purge = _purge_filtered_states(
+        has_more_states_to_purge = not _purge_filtered_states(
             instance, session, excluded_metadata_ids, database_engine, now_timestamp
         )
 
@@ -665,7 +665,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
             if event_type_id is not None
         ]
     ):
-        has_more_events_to_purge = _purge_filtered_events(
+        has_more_events_to_purge = not _purge_filtered_events(
             instance, session, excluded_event_type_ids, now_timestamp
         )
 
