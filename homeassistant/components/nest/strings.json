@@ -27,21 +27,21 @@
       },
       "pubsub": {
         "title": "Configure Google Cloud Pub/Sub",
-        "description": "Home Assistant uses Cloud Pub/Sub to efficiently receive updates from Nest. Nest servers publish updates to a Pub/Sub Topic and Home Assistat receives the updates through a Pub/Sub Subscription.\n\n1. You will need to ensure a Pub/Sub topic is configured in the [Device Access Console]({device_access_console_url})\n2. Visit the [Cloud Console]({url}) to find your Google Cloud Project ID and confirm it is correct below. 3. The next step will attempt to audo-discover Pub/Sub topics and subscriptions.\n\nSee the integration documentation for [more info]({more_info_url}).",
+        "description": "Home Assistant uses Cloud Pub/Sub receive realtime Nest device updates. Nest servers publish updates to a Pub/Sub Topic and Home Assistat receives the updates through a Pub/Sub Subscription.\n\n1. Visit the [Device Access Console]({device_access_console_url}) and ensure a Pub/Sub topic is configured.\n2. Visit the [Cloud Console]({url}) to find your Google Cloud Project ID and confirm it is correct below.\n3. The next step will attempt to audo-discover Pub/Sub topics and subscriptions.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "data": {
           "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }
       },
       "pubsub_topic": {
         "title": "Configure Cloud Pub/Sub Topic",
-        "description": "Select the Pub/Sub topic to use. It needs to match the topic in the [Device Access Console]({device_access_console_url}). See the integration documentation for [more info]({more_info_url}).",
+        "description": "Nest devices publish updates on a Cloud Pub/Sub Topic. Select the Pub/Sub topic below that is the same as the [Device Access Console]({device_access_console_url}). See the integration documentation for [more info]({more_info_url}).",
         "data": {
           "topic_name": "Pub/Sub Topic Name"
         }
       },
       "pubsub_subscription": {
         "title": "Configure Cloud Pub/Sub Subscription",
-        "description": "Select the Pub/Sub subscription to use for topic {topic}. You may use an existing subscription if one exists, or create a new subcription for the topic. See the integration documentation for [more info]({more_info_url}).",
+        "description": "Home Assistant receives realtime Nest device updates with a Cloud Pub/Sub Subscription for topic `{topic}`.\n\nSelect an existing subscription below if one already exists, or the next step will create a new one for you. See the integration documentation for [more info]({more_info_url}).",
         "data": {
           "subscription_name": "Pub/Sub Subscription Name"
         }
