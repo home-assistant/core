@@ -11,7 +11,7 @@ from music_assistant.common.models.enums import EventType
 from music_assistant.common.models.errors import MusicAssistantError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +28,7 @@ from .helpers import MassEntryData
 if TYPE_CHECKING:
     from music_assistant.common.models.event import MassEvent
 
-PLATFORMS = ("media_player",)
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
@@ -36,7 +36,6 @@ LISTEN_READY_TIMEOUT = 30
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    # ruff: noqa: PLR0915
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
     mass = MusicAssistantClient(mass_url, http_session)
@@ -58,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="invalid_server_version",
         )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
-    except Exception as err:
+    except MusicAssistantError as err:
         LOGGER.exception("Failed to connect to music assistant server", exc_info=err)
         raise ConfigEntryNotReady(
             f"Unknown error connecting to the Music Assistant server {mass_url}"
@@ -148,17 +147,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        mass_entry_data: MassEntryData = hass.data[DOMAIN].pop(entry.entry_id)
+        mass_entry_data: MassEntryData = entry.runtime_data.pop(entry.entry_id)
         mass_entry_data.listen_task.cancel()
         await mass_entry_data.mass.disconnect()
 
     return unload_ok
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    device_entry: dr.DeviceEntry,
-) -> bool:
-    """Remove a config entry from a device."""
-    return True

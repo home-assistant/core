@@ -163,31 +163,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing entry."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        if user_input is not None:
-            return self.async_update_reload_and_abort(  # type: ignore[no-any-return]
-                reconfigure_entry,
-                data={
-                    CONF_URL: user_input[CONF_URL],
-                },
-            )
-
-        return self.async_show_form(  # type: ignore[no-any-return]
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_URL,
-                        default=reconfigure_entry.data.get(CONF_URL),
-                    ): str,
-                }
-            ),
-        )
-
 
 class FailedConnect(HomeAssistantError):
     """Failed to connect to the MusicAssistant Server."""
