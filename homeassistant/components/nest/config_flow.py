@@ -19,7 +19,7 @@ from google_nest_sdm.admin_client import (
     EligibleSubscriptions,
     EligibleTopics,
 )
-from google_nest_sdm.exceptions import ApiException, AuthException
+from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.structure import Structure
 import voluptuous as vol
 
@@ -260,12 +260,9 @@ class NestFlowHandler(
                 eligible_topics = await self._admin_client.list_eligible_topics(
                     device_access_project_id=device_access_project_id
                 )
-            except AuthException as err:
-                _LOGGER.error("Subscriber authentication error: %s", err)
-                return self.async_abort(reason="invalid_access_token")
             except ApiException as err:
                 _LOGGER.error("Error listing eligible Pub/Sub topics: %s", err)
-                errors[CONF_CLOUD_PROJECT_ID] = "pubsub_api_error"
+                errors["base"] = "pubsub_api_error"
             else:
                 if not eligible_topics.topic_names:
                     errors["base"] = "no_pubsub_topics"
@@ -310,7 +307,10 @@ class NestFlowHandler(
                     vol.Optional(CONF_TOPIC_NAME, default=topics[0]): vol.In(topics),
                 }
             ),
-            description_placeholders={"url": CLOUD_CONSOLE_URL},
+            description_placeholders={
+                "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
+                "more_info_url": MORE_INFO_URL,
+            },
             errors={},
         )
 
@@ -364,32 +364,37 @@ class NestFlowHandler(
                     )
                 return await self._async_finish()
 
+        subscriptions = {}
         try:
             eligible_subscriptions = (
                 await self._admin_client.list_eligible_subscriptions(
                     expected_topic_name=self._data[CONF_TOPIC_NAME],
                 )
             )
-        except AuthException as err:
-            _LOGGER.error("Subscriber authentication error: %s", err)
-            return self.async_abort(reason="invalid_access_token")
         except ApiException as err:
             _LOGGER.error(
                 "Error talking to API to list eligible Pub/Sub subscriptions: %s", err
             )
             errors["base"] = "pubsub_api_error"
-        subscriptions = list(eligible_subscriptions.subscription_names)
-        subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
+        else:
+            subscriptions.update(
+                {name: name for name in eligible_subscriptions.subscription_names}
+            )
+        subscriptions[CREATE_NEW_SUBSCRIPTION_KEY] = "Create New"
         return self.async_show_form(
             step_id="pubsub_subscription",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_SUBSCRIPTION_NAME, default=subscriptions[0]
+                        CONF_SUBSCRIPTION_NAME,
+                        default=next(iter(subscriptions)),
                     ): vol.In(subscriptions),
                 }
             ),
-            description_placeholders={"url": CLOUD_CONSOLE_URL},
+            description_placeholders={
+                "topic": self._data[CONF_TOPIC_NAME],
+                "more_info_url": MORE_INFO_URL,
+            },
             errors=errors,
         )
 

@@ -165,7 +165,11 @@ class OAuthFixture:
         )
 
     async def async_complete_pubsub_flow(
-        self, result: dict, selected_topic: str, user_input: dict | None = None
+        self,
+        result: dict,
+        selected_topic: str,
+        selected_subscription: str = "create_new_subscription",
+        user_input: dict | None = None,
     ) -> ConfigEntry:
         """Fixture to walk through the Pub/Sub topic and subscription steps.
 
@@ -176,9 +180,7 @@ class OAuthFixture:
         # Validate Pub/Sub topics are shown
         assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "pubsub_topic"
-        assert result.get("data_schema")({}) == {
-            "topic_name": selected_topic,
-        }
+        assert not result.get("errors")
 
         # Select Pub/Sub topic the show available subscriptions (none)
         result = await self.async_configure(
@@ -189,15 +191,13 @@ class OAuthFixture:
         )
         assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "pubsub_subscription"
-        assert result.get("data_schema")({}) == {
-            "subscription_name": "create_new_subscription",
-        }
+        assert not result.get("errors")
 
         # Create the subscription and end the flow
         return await self.async_finish_setup(
             result,
             {
-                "subscription_name": "create_new_subscription",
+                "subscription_name": selected_subscription,
             },
         )
 
@@ -276,6 +276,18 @@ def mock_create_subscription_status() -> str:
     return HTTPStatus.OK
 
 
+@pytest.fixture(name="list_topics_status")
+def mock_list_topics_status() -> str:
+    """Fixture to configure the return code when listing topics."""
+    return HTTPStatus.OK
+
+
+@pytest.fixture(name="list_subscriptions_status")
+def mock_list_subscriptions_status() -> str:
+    """Fixture to configure the return code when listing subscriptions."""
+    return HTTPStatus.OK
+
+
 @pytest.fixture(autouse=True)
 def mock_pubsub_api_responses(
     aioclient_mock: AiohttpClientMocker,
@@ -285,6 +297,8 @@ def mock_pubsub_api_responses(
     device_access_project_id: str,
     cloud_project_id: str,
     create_subscription_status: HTTPStatus,
+    list_topics_status: HTTPStatus,
+    list_subscriptions_status: HTTPStatus,
 ) -> None:
     """Configure a server response for an SDM managed Pub/Sub topic.
 
@@ -296,7 +310,7 @@ def mock_pubsub_api_responses(
         status=HTTPStatus.FORBIDDEN if sdm_managed_topic else HTTPStatus.NOT_FOUND,
     )
     aioclient_mock.get(
-        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}",
+        f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/topics",
         json={
             "topics": [
                 {
@@ -305,6 +319,7 @@ def mock_pubsub_api_responses(
                 for topic_name in user_managed_topics or ()
             ]
         },
+        status=list_topics_status,
     )
     # We check for a topic created by the SDM Device Access Console (but note we don't have permission to read it)
     # or the user has created one themselves in the Google Cloud Project.
@@ -324,6 +339,7 @@ def mock_pubsub_api_responses(
                 for (subscription_name, topic) in subscriptions or ()
             ]
         },
+        status=list_subscriptions_status,
     )
     aioclient_mock.put(
         f"https://pubsub.googleapis.com/v1/projects/{cloud_project_id}/subscriptions/home-assistant-{RAND_SUBSCRIBER_SUFFIX}",
@@ -1057,3 +1073,132 @@ async def test_token_error(
     result = await oauth.async_configure(result, user_input=None)
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == error_reason
+
+
+@pytest.mark.parametrize(
+    ("user_managed_topics", "subscriptions"),
+    [
+        (
+            [f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id"],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
+                )
+            ],
+        )
+    ],
+)
+async def test_existing_topic_and_subscription(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
+    """Test selecting existing user managed topic and subscription."""
+    await setup_platform()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    entry = await oauth.async_complete_pubsub_flow(
+        result,
+        selected_topic=f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
+        selected_subscription=f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+    )
+
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "imported-cred",
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "subscription_name": f"projects/{CLOUD_PROJECT_ID}/subscriptions/some-subscription-id",
+        "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/some-topic-id",
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
+
+
+async def test_no_eligible_topics(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
+    """Test the case where there are no eligible pub/sub topics."""
+    await setup_platform()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub"
+    assert result.get("errors") == {"base": "no_pubsub_topics"}
+
+
+@pytest.mark.parametrize(
+    ("list_topics_status"),
+    [
+        (HTTPStatus.INTERNAL_SERVER_ERROR),
+    ],
+)
+async def test_list_topics_failure(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
+    """Test selecting existing user managed topic and subscription."""
+    await setup_platform()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub"
+    assert result.get("errors") == {"base": "pubsub_api_error"}
+
+
+@pytest.mark.parametrize(
+    ("sdm_managed_topic", "list_subscriptions_status"),
+    [
+        (True, HTTPStatus.INTERNAL_SERVER_ERROR),
+    ],
+)
+async def test_list_subscriptions_failure(
+    hass: HomeAssistant, oauth, subscriber, setup_platform
+) -> None:
+    """Test selecting existing user managed topic and subscription."""
+    await setup_platform()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await oauth.async_app_creds_flow(result)
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_topic"
+    assert not result.get("errors")
+
+    # Select Pub/Sub topic the show available subscriptions (none)
+    result = await oauth.async_configure(
+        result,
+        {
+            "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        },
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "pubsub_subscription"
+    assert result.get("errors") == {"base": "pubsub_api_error"}

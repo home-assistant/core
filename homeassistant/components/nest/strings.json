@@ -27,7 +27,7 @@
       },
       "pubsub": {
         "title": "Configure Google Cloud Pub/Sub",
-        "description": "Home Assistant uses Cloud Pub/Sub to efficiently receive updates from Nest devices. Nest servers publish updates to a Pub/Sub Topic and Home Assistat receives the updates through a Pub/Sub Subscription.\n\nYou will need to ensure a Pub/Sub topic is configured in the [Device Access Console]({device_access_console_url}), then the next step will attempt to audo-discover Pub/Sub topics and subscriptions. See the integration documentation for [more info]({more_info_url}).\n\nVisit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
+        "description": "Home Assistant uses Cloud Pub/Sub to efficiently receive updates from Nest. Nest servers publish updates to a Pub/Sub Topic and Home Assistat receives the updates through a Pub/Sub Subscription.\n\n1. You will need to ensure a Pub/Sub topic is configured in the [Device Access Console]({device_access_console_url})\n2. Visit the [Cloud Console]({url}) to find your Google Cloud Project ID and confirm it is correct below. 3. The next step will attempt to audo-discover Pub/Sub topics and subscriptions.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "data": {
           "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }
@@ -41,9 +41,9 @@
       },
       "pubsub_subscription": {
         "title": "Configure Cloud Pub/Sub Subscription",
-        "description": "Select the Pub/Sub subscription to use for topic {topic}. See the integration documentation for [more info]({more_info_url}).",
+        "description": "Select the Pub/Sub subscription to use for topic {topic}. You may use an existing subscription if one exists, or create a new subcription for the topic. See the integration documentation for [more info]({more_info_url}).",
         "data": {
-          "topic_name": "Pub/Sub Topic Name"
+          "subscription_name": "Pub/Sub Subscription Name"
         }
       },
       "reauth_confirm": {
