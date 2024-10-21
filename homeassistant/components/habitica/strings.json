@@ -46,6 +46,42 @@
       },
       "revive": {
         "name": "Revive from death"
+      },
+      "mpheal": {
+        "name": "Ethereal surge"
+      },
+      "earth": {
+        "name": "Earthquake"
+      },
+      "frost": {
+        "name": "Chilling frost"
+      },
+      "defensive_stance": {
+        "name": "Defensive stance"
+      },
+      "valorous_presence": {
+        "name": "Valorous presence"
+      },
+      "intimidate": {
+        "name": "Intimidating gaze"
+      },
+      "tools_of_trade": {
+        "name": "Tools of the trade"
+      },
+      "stealth": {
+        "name": "Stealth"
+      },
+      "heal": {
+        "name": "Healing light"
+      },
+      "brightness": {
+        "name": "Searing brightness"
+      },
+      "protect_aura": {
+        "name": "Protective aura"
+      },
+      "heal_all": {
+        "name": "Blessing"
       }
     },
     "sensor": {
