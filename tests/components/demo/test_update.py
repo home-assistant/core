@@ -11,6 +11,7 @@ from homeassistant.components.update import (
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
     ATTR_TITLE,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateDeviceClass,
@@ -131,6 +132,7 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     events = []
     async_track_state_change_event(
@@ -148,19 +150,31 @@ async def test_update_with_progress(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    assert len(events) == 10
+    assert len(events) == 11
     assert events[0].data["new_state"].state == STATE_ON
-    assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] == 10
-    assert events[1].data["new_state"].attributes[ATTR_IN_PROGRESS] == 20
-    assert events[2].data["new_state"].attributes[ATTR_IN_PROGRESS] == 30
-    assert events[3].data["new_state"].attributes[ATTR_IN_PROGRESS] == 40
-    assert events[4].data["new_state"].attributes[ATTR_IN_PROGRESS] == 50
-    assert events[5].data["new_state"].attributes[ATTR_IN_PROGRESS] == 60
-    assert events[6].data["new_state"].attributes[ATTR_IN_PROGRESS] == 70
-    assert events[7].data["new_state"].attributes[ATTR_IN_PROGRESS] == 80
-    assert events[8].data["new_state"].attributes[ATTR_IN_PROGRESS] == 90
-    assert events[9].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
-    assert events[9].data["new_state"].state == STATE_OFF
+    assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[0].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 0
+    assert events[1].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[1].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 10
+    assert events[2].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[2].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 20
+    assert events[3].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[3].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 30
+    assert events[4].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[4].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 40
+    assert events[5].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[5].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 50
+    assert events[6].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[6].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 60
+    assert events[7].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[7].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 70
+    assert events[8].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[8].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 80
+    assert events[9].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[9].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 90
+    assert events[10].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
+    assert events[10].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert events[10].data["new_state"].state == STATE_OFF
 
 
 async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
@@ -169,6 +183,7 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
     events = []
     async_track_state_change_event(
@@ -194,11 +209,18 @@ async def test_update_with_progress_raising(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert fake_sleep.call_count == 5
-    assert len(events) == 5
+    assert len(events) == 6
     assert events[0].data["new_state"].state == STATE_ON
-    assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] == 10
-    assert events[1].data["new_state"].attributes[ATTR_IN_PROGRESS] == 20
-    assert events[2].data["new_state"].attributes[ATTR_IN_PROGRESS] == 30
-    assert events[3].data["new_state"].attributes[ATTR_IN_PROGRESS] == 40
-    assert events[4].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
-    assert events[4].data["new_state"].state == STATE_ON
+    assert events[0].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[0].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 0
+    assert events[1].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[1].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 10
+    assert events[2].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[2].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 20
+    assert events[3].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[3].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 30
+    assert events[4].data["new_state"].attributes[ATTR_IN_PROGRESS] is True
+    assert events[4].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] == 40
+    assert events[5].data["new_state"].attributes[ATTR_IN_PROGRESS] is False
+    assert events[5].data["new_state"].attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert events[5].data["new_state"].state == STATE_ON
