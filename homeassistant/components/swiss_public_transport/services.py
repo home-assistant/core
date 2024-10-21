@@ -1,7 +1,5 @@
 """Define services for the Swiss public transport integration."""
 
-from typing import cast
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -67,10 +65,8 @@ def setup_services(hass: HomeAssistant) -> None:
         call: ServiceCall,
     ) -> ServiceResponse:
         """Fetch a set of connections."""
-        config_entry = cast(
-            SwissPublicTransportConfigEntry,
-            async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID]),
-        )
+        config_entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+
         limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
         try:
             connections = await config_entry.runtime_data.fetch_connections_as_json(
