@@ -11,7 +11,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
@@ -33,13 +32,11 @@ from .const import TEST_INSTALLS_WITH_DHW
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
     hass: HomeAssistant,
-    dhw: EvoDHW,
+    dhw_id: str,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test SERVICE_SET_OPERATION_MODE of a evohome HotWater entity."""
-
-    assert dhw.operation_list == ["auto", "on", "off"]
 
     freezer.move_to("2024-07-10T11:55:00Z")
     results = []
@@ -50,7 +47,7 @@ async def test_set_operation_mode(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_OPERATION_MODE: "auto",
             },
             blocking=True,
@@ -66,7 +63,7 @@ async def test_set_operation_mode(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_OPERATION_MODE: "off",
             },
             blocking=True,
@@ -82,7 +79,7 @@ async def test_set_operation_mode(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_OPERATION_MODE: "on",
             },
             blocking=True,
@@ -96,7 +93,7 @@ async def test_set_operation_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_set_away_mode(hass: HomeAssistant, dhw: EvoDHW) -> None:
+async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
     """Test SERVICE_SET_AWAY_MODE of a evohome HotWater entity."""
 
     # set_away_mode: off
@@ -105,7 +102,7 @@ async def test_set_away_mode(hass: HomeAssistant, dhw: EvoDHW) -> None:
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_AWAY_MODE: "off",
             },
             blocking=True,
@@ -121,7 +118,7 @@ async def test_set_away_mode(hass: HomeAssistant, dhw: EvoDHW) -> None:
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_ENTITY_ID: dhw_id,
                 ATTR_AWAY_MODE: "on",
             },
             blocking=True,
@@ -133,7 +130,7 @@ async def test_set_away_mode(hass: HomeAssistant, dhw: EvoDHW) -> None:
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_off(hass: HomeAssistant, dhw: EvoDHW) -> None:
+async def test_turn_off(hass: HomeAssistant, dhw_id: str) -> None:
     """Test SERVICE_TURN_OFF of a evohome HotWater entity."""
 
     # Entity water_heater.domestic_hot_water does not support this service
@@ -142,14 +139,14 @@ async def test_turn_off(hass: HomeAssistant, dhw: EvoDHW) -> None:
             Platform.WATER_HEATER,
             SERVICE_TURN_OFF,
             {
-                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_ENTITY_ID: dhw_id,
             },
             blocking=True,
         )
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_on(hass: HomeAssistant, dhw: EvoDHW) -> None:
+async def test_turn_on(hass: HomeAssistant, dhw_id: str) -> None:
     """Test SERVICE_TURN_ON of a evohome HotWater entity."""
 
     # Entity water_heater.domestic_hot_water does not support this service
@@ -158,7 +155,7 @@ async def test_turn_on(hass: HomeAssistant, dhw: EvoDHW) -> None:
             Platform.WATER_HEATER,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_ENTITY_ID: dhw_id,
             },
             blocking=True,
         )
