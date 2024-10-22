@@ -119,10 +119,10 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 stream.started_at if stream else None,
                 stream.thumbnail_url if stream else None,
                 channel.profile_image_url,
-                sub is not None if sub else None,
+                bool(sub),
                 sub.is_gift if sub else None,
                 {"1000": 1, "2000": 2, "3000": 3}.get(sub.tier) if sub else None,
-                follow is not None,
+                bool(follow),
                 follow.followed_at if follow else None,
                 stream.viewer_count if stream else None,
             )
