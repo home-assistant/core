@@ -21,9 +21,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
 from homeassistant.config_entries import ConfigEntry
-
-# from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN
+from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
@@ -203,7 +201,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await async_import_client_credential(
                 hass,
                 DOMAIN,
-                ClientCredential(entry.data.get(CONF_CLIENT_ID, ""), "", DOMAIN),
+                ClientCredential(
+                    entry.data[CONF_CLIENT_ID],
+                    "",
+                    entry.data[CONF_USERNAME],
+                ),
                 DOMAIN,
             )
             hass.config_entries.async_update_entry(
