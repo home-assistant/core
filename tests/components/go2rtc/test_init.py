@@ -24,7 +24,7 @@ from homeassistant.components.camera import (
     WebRTCAnswer as HAWebRTCAnswer,
     WebRTCCandidate as HAWebRTCCandidate,
     WebRTCError,
-    WebRTCMessages,
+    WebRTCMessage,
     WebRTCSendMessage,
 )
 from homeassistant.components.go2rtc import WebRTCProvider
@@ -290,7 +290,7 @@ async def message_callbacks(
 async def test_receiving_messages_from_go2rtc_server(
     message_callbacks: Callbacks,
     message: ReceiveMessages,
-    expected_message: WebRTCMessages,
+    expected_message: WebRTCMessage,
 ) -> None:
     """Test receiving message from go2rtc server."""
     on_message, send_message = message_callbacks

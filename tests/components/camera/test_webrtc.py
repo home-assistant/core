@@ -17,7 +17,7 @@ from homeassistant.components.camera.webrtc import (
     WebRTCAnswer,
     WebRTCCandidate,
     WebRTCError,
-    WebRTCMessages,
+    WebRTCMessage,
     WebRTCSendMessage,
     async_register_rtsp_to_web_rtc_provider,
     async_register_webrtc_provider,
@@ -322,7 +322,7 @@ async def test_websocket_webrtc_offer(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -361,7 +361,7 @@ async def test_websocket_webrtc_offer_webrtc_provider(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     register_test_provider: TestProvider,
-    message: WebRTCMessages,
+    message: WebRTCMessage,
     expected_frontend_message: dict[str, Any],
 ) -> None:
     """Test initiating a WebRTC stream with a webrtc provider."""
@@ -395,7 +395,7 @@ async def test_websocket_webrtc_offer_webrtc_provider(
         response = await client.receive_json()
         assert response["id"] == subscription_id
         assert response["type"] == "event"
-        assert response["event"]["type"] == "session_id"
+        assert response["event"]["type"] == "session"
         session_id = response["event"]["session_id"]
 
         send_message(message)
@@ -501,7 +501,7 @@ async def test_websocket_webrtc_offer_failure(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Error
     response = await client.receive_json()
@@ -545,7 +545,7 @@ async def test_websocket_webrtc_offer_sync(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -587,7 +587,7 @@ async def test_websocket_webrtc_offer_sync_no_answer(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -653,7 +653,7 @@ async def test_rtsp_to_webrtc_offer(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -703,7 +703,7 @@ async def test_unsupported_rtsp_to_webrtc_stream_type(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -743,7 +743,7 @@ async def test_rtsp_to_webrtc_provider_unregistered(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -810,7 +810,7 @@ async def test_rtsp_to_webrtc_offer_not_accepted(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()

@@ -92,7 +92,7 @@ from .webrtc import (
     WebRTCCandidate,  # noqa: F401
     WebRTCClientConfiguration,
     WebRTCError,
-    WebRTCMessages,  # noqa: F401
+    WebRTCMessage,  # noqa: F401
     WebRTCSendMessage,
     async_get_supported_legacy_provider,
     async_get_supported_provider,

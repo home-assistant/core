@@ -18,7 +18,7 @@ from homeassistant.components.camera import (
     WebRTCAnswer as HAWebRTCAnswer,
     WebRTCCandidate as HAWebRTCCandidate,
     WebRTCError,
-    WebRTCMessages,
+    WebRTCMessage,
     WebRTCSendMessage,
     async_register_webrtc_provider,
 )
@@ -118,7 +118,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         @callback
         def on_messages(message: ReceiveMessages) -> None:
             """Handle messages."""
-            value: WebRTCMessages
+            value: WebRTCMessage
             match message:
                 case WebRTCCandidate():
                     value = HAWebRTCCandidate(message.candidate)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import asdict, dataclass, field
-from functools import partial
+from functools import cache, partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -104,41 +104,56 @@ class WebRTCClientConfiguration:
         return data
 
 
-@dataclass(frozen=True)
-class WebRTCSessionId:
-    """WebRTC session ID."""
+_WEBRTC = "WebRTC"
 
-    type: str = field(default="session_id", init=False)
+
+@dataclass(frozen=True)
+class WebRTCMessage:
+    """Base class for WebRTC messages."""
+
+    @classmethod
+    @cache
+    def _get_type(cls) -> str:
+        _, _, name = cls.__name__.partition(_WEBRTC)
+        return name.lower()
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the message."""
+        data = asdict(self)
+        data["type"] = self._get_type()
+        return data
+
+
+@dataclass(frozen=True)
+class WebRTCSession(WebRTCMessage):
+    """WebRTC session."""
+
     session_id: str
 
 
 @dataclass(frozen=True)
-class WebRTCAnswer:
+class WebRTCAnswer(WebRTCMessage):
     """WebRTC answer."""
 
-    type: str = field(default="answer", init=False)
     answer: str
 
 
 @dataclass(frozen=True)
-class WebRTCCandidate:
+class WebRTCCandidate(WebRTCMessage):
     """WebRTC candidate."""
 
-    type: str = field(default="candidate", init=False)
     candidate: str
 
 
 @dataclass(frozen=True)
-class WebRTCError:
+class WebRTCError(WebRTCMessage):
     """WebRTC error."""
 
-    type: str = field(default="error", init=False)
     code: str
     message: str
 
 
-type WebRTCMessages = WebRTCAnswer | WebRTCCandidate | WebRTCSessionId | WebRTCError
-type WebRTCSendMessage = Callable[[WebRTCMessages], None]
+type WebRTCSendMessage = Callable[[WebRTCMessage], None]
 
 
 class CameraWebRTCProvider(Protocol):
@@ -268,16 +283,16 @@ async def ws_webrtc_offer(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
     @callback
-    def send_message(message: WebRTCMessages) -> None:
+    def send_message(message: WebRTCMessage) -> None:
         """Push a value to websocket."""
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                asdict(message),
+                message.as_dict(),
             )
         )
 
-    send_message(WebRTCSessionId(session_id))
+    send_message(WebRTCSession(session_id))
 
     try:
         await camera.async_handle_async_webrtc_offer(offer, session_id, send_message)
