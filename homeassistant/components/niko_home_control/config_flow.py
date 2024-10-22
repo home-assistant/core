@@ -28,7 +28,12 @@ DATA_SCHEMA_ENTITIES = vol.Schema(
     }
 )
 
-DATA_SCHEMA_OPTIONAL = vol.Schema({vol.Optional("treatAsDevice", default=True): bool})
+DATA_SCHEMA_OPTIONAL = vol.Schema(
+    {
+        vol.Optional("treatAsDevice", default=True): bool,
+        vol.Optional("importLocations", default=True): bool,
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int]:
