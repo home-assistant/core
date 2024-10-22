@@ -596,8 +596,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
-        """Handle the WebRTC offer in async. Messages and result are sent via send_message callback.
+        """Handle the async WebRTC offer.
 
+        Async means that it could take some time to process the offer and responses/message
+        will be sent with the send_message callback.
         Integration overriding this method must also implement async_on_webrtc_candidate.
         This is used by cameras with CameraEntityFeature.STREAM and StreamType.WEB_RTC.
 
