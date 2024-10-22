@@ -1,6 +1,6 @@
 set_value:
   name: "Set Value"
-  description: "Set a custom value on the Wolf SmartSet System."
+  description: "Set a custom value on the Wolf SmartSet System. You find these values in the network-tab when you change parameters on the webpage (www.wolf-smartset.com)"
   fields:
     value_id:
       required: true
