@@ -73,6 +73,7 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
             CONF_ADDRESS: "AA:BB:CC:DD:EE:AA",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
+            CONF_SENSOR_TYPE: "hygrometer",
         },
         unique_id="aabbccddeeaa",
     )
@@ -81,7 +82,7 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 2
+    assert len(hass.states.async_all("sensor")) == 4
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
     battery_sensor_attrs = battery_sensor.attributes
