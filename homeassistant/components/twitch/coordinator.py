@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from twitchAPI.helper import first
-from twitchAPI.object.api import FollowedChannelsResult, TwitchUser, UserSubscription
+from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
 from twitchAPI.twitch import Twitch
 from twitchAPI.type import TwitchAPIException, TwitchResourceNotFound
 
@@ -83,11 +83,23 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             False,
         )
         data = {}
+        streams: list[Stream] = [
+            s
+            async for s in self.twitch.get_followed_streams(
+                user_id=self.current_user.id, first=100
+            )
+        ]
+        follows: list[FollowedChannel] = [
+            f
+            async for f in await self.twitch.get_followed_channels(
+                user_id=self.current_user.id, first=100
+            )
+        ]
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
-            stream = await first(self.twitch.get_streams(user_id=[channel.id], first=1))
+            stream = next((s for s in streams if s.user_id == channel.id), None)
+            follow = next((f for f in follows if f.broadcaster_id == channel.id), None)
             sub: UserSubscription | None = None
-            follows: FollowedChannelsResult | None = None
             try:
                 sub = await self.twitch.check_user_subscription(
                     user_id=self.current_user.id, broadcaster_id=channel.id
@@ -96,10 +108,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 LOGGER.debug("User is not subscribed to %s", channel.display_name)
             except TwitchAPIException as exc:
                 LOGGER.error("Error response on check_user_subscription: %s", exc)
-            else:
-                follows = await self.twitch.get_followed_channels(
-                    self.current_user.id, broadcaster_id=channel.id
-                )
+
             data[channel.id] = TwitchUpdate(
                 channel.display_name,
                 followers.total,
@@ -113,8 +122,8 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 sub is not None if sub else None,
                 sub.is_gift if sub else None,
                 {"1000": 1, "2000": 2, "3000": 3}.get(sub.tier) if sub else None,
-                follows is not None and follows.total > 0,
-                follows.data[0].followed_at if follows and follows.total else None,
+                follow is not None,
+                follow.followed_at if follow else None,
                 stream.viewer_count if stream else None,
             )
         return data
