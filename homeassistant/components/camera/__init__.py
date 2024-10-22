@@ -636,12 +636,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     )
                 return
 
-        if (
-            self._webrtc_provider
-            and await self._webrtc_provider.async_handle_webrtc_offer(
+        if self._webrtc_provider:
+            await self._webrtc_provider.async_handle_webrtc_offer(
                 self, offer_sdp, session_id, send_message
             )
-        ):
             return
 
         if self._legacy_webrtc_provider and (

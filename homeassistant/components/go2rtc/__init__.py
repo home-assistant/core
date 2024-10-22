@@ -98,11 +98,8 @@ class WebRTCProvider(CameraWebRTCProvider):
         offer_sdp: str,
         session_id: str,
         send_message: WebRTCSendMessage,
-    ) -> bool:
-        """Handle the WebRTC offer and return the answer via the provided callback.
-
-        Return value determines if the offer was handled successfully.
-        """
+    ) -> None:
+        """Handle the WebRTC offer and return the answer via the provided callback."""
         self._sessions[session_id] = ws_client = Go2RtcWsClient(
             self._session, self._url, source=camera.entity_id
         )
@@ -110,7 +107,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         streams = await self._rest_client.streams.list()
         if camera.entity_id not in streams:
             if not (stream_source := await camera.stream_source()):
-                return False
+                send_message(
+                    WebRTCError(
+                        "go2rtc_webrtc_offer_failed", "Camera has no stream source"
+                    )
+                )
+                return
             await self._rest_client.streams.add(camera.entity_id, stream_source)
 
         @callback
@@ -133,8 +135,6 @@ class WebRTCProvider(CameraWebRTCProvider):
         ws_client.subscribe(on_messages)
         await ws_client.send(WebRTCOffer(offer_sdp))
 
-        return True
-
     async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
         """Handle the WebRTC candidate."""
 
@@ -146,8 +146,8 @@ class WebRTCProvider(CameraWebRTCProvider):
     @callback
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
-        if ws_client := self._sessions.pop(session_id, None):
-            self._hass.async_create_task(ws_client.close())
+        ws_client = self._sessions.pop(session_id)
+        self._hass.async_create_task(ws_client.close())
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

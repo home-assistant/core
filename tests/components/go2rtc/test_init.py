@@ -34,7 +34,6 @@ from homeassistant.components.go2rtc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 
@@ -181,14 +180,14 @@ async def _test_setup_and_signaling(
 
     # Set stream source to None and provider should be skipped
     rest_client.streams.list.return_value = {}
+    receive_message_callback.reset_mock()
     camera.set_stream_source(None)
-    with pytest.raises(
-        HomeAssistantError,
-        match="Camera does not support WebRTC",
-    ):
-        await camera.async_handle_webrtc_offer(
-            OFFER_SDP, "session_id", receive_message_callback
-        )
+    await camera.async_handle_webrtc_offer(
+        OFFER_SDP, "session_id", receive_message_callback
+    )
+    receive_message_callback.assert_called_once_with(
+        WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
+    )
 
     # Remove go2rtc config entry
     assert go2rtc_config_entry.state is ConfigEntryState.LOADED
@@ -358,7 +357,8 @@ async def test_close_session(
     session_id = "session_id"
 
     # Session doesn't exist
-    camera.close_webrtc_session(session_id)
+    with pytest.raises(KeyError):
+        camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
 
     # Store session
@@ -369,7 +369,8 @@ async def test_close_session(
     camera.close_webrtc_session(session_id)
     ws_client.close.assert_called_once()
 
-    # Close again should not call close
+    # Close again should raise an error
     ws_client.reset_mock()
-    camera.close_webrtc_session(session_id)
+    with pytest.raises(KeyError):
+        camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()

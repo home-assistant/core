@@ -53,13 +53,12 @@ class TestProvider(CameraWebRTCProvider):
         offer_sdp: str,
         session_id: str,
         send_message: WebRTCSendMessage,
-    ) -> bool:
+    ) -> None:
         """Handle the WebRTC offer and return the answer via the provided callback.
 
         Return value determines if the offer was handled successfully.
         """
         send_message(WebRTCAnswer(answer="answer"))
-        return True
 
     async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
         """Handle the WebRTC candidate."""
@@ -395,7 +394,7 @@ async def test_websocket_webrtc_offer_webrtc_provider(
         assert response["id"] == subscription_id
         assert response["type"] == "event"
         assert response["event"]["type"] == "session_id"
-        session_id = response["event"]["sessionId"]
+        session_id = response["event"]["session_id"]
 
         send_message(message)
 

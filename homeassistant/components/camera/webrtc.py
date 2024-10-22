@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
@@ -108,45 +108,33 @@ class WebRTCClientConfiguration:
 class WebRTCSessionId:
     """WebRTC session ID."""
 
+    type: str = field(default="session_id", init=False)
     session_id: str
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        return {"sessionId": self.session_id, "type": "session_id"}
 
 
 @dataclass(frozen=True)
 class WebRTCAnswer:
     """WebRTC answer."""
 
+    type: str = field(default="answer", init=False)
     answer: str
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        return {"answer": self.answer, "type": "answer"}
 
 
 @dataclass(frozen=True)
 class WebRTCCandidate:
     """WebRTC candidate."""
 
+    type: str = field(default="candidate", init=False)
     candidate: str
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        return {"candidate": self.candidate, "type": "candidate"}
 
 
 @dataclass(frozen=True)
 class WebRTCError:
     """WebRTC error."""
 
+    type: str = field(default="error", init=False)
     code: str
     message: str
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        return {"code": self.code, "message": self.message, "type": "error"}
 
 
 type WebRTCMessages = WebRTCAnswer | WebRTCCandidate | WebRTCSessionId | WebRTCError
@@ -166,11 +154,8 @@ class CameraWebRTCProvider(Protocol):
         offer_sdp: str,
         session_id: str,
         send_message: WebRTCSendMessage,
-    ) -> bool:
-        """Handle the WebRTC offer and return the answer via the provided callback.
-
-        Return value determines if the offer was handled successfully.
-        """
+    ) -> None:
+        """Handle the WebRTC offer and return the answer via the provided callback."""
 
     async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
         """Handle the WebRTC candidate."""
@@ -288,7 +273,7 @@ async def ws_webrtc_offer(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                message.to_frontend_dict(),
+                asdict(message),
             )
         )
 
