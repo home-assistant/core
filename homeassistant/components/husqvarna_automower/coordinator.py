@@ -43,9 +43,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         )
         self.api = api
         self.ws_connected: bool = False
-        self.reconnect_time = (
-            DEFAULT_RECONNECT_TIME  # Initialize the reconnect time
-        )
+        self.reconnect_time = DEFAULT_RECONNECT_TIME
 
     async def _async_update_data(self) -> dict[str, MowerAttributes]:
         """Subscribe for websocket and poll data from the API."""
