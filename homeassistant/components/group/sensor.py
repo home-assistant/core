@@ -324,9 +324,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         self.hass = hass
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
-        self._state_class = state_class
-        self._device_class = device_class
-        self._native_unit_of_measurement = unit_of_measurement
+        self._configured_state_class = state_class
+        self._configured_device_class = device_class
+        self._configured_unit_of_measurement = unit_of_measurement
         self._valid_units: set[str | None] = set()
         self._can_convert: bool = False
         self._attr_name = name
@@ -346,20 +346,20 @@ class SensorGroup(GroupEntity, SensorEntity):
     def calculate_state_attributes(self, valid_state_entities: list[str]) -> None:
         """Calculate state attributes."""
         self._attr_state_class = self._calculate_state_class(
-            self._state_class, valid_state_entities
+            self._configured_state_class, valid_state_entities
         )
         self._attr_device_class = self._calculate_device_class(
-            self._device_class, valid_state_entities
+            self._configured_device_class, valid_state_entities
         )
         self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
-            self._native_unit_of_measurement, valid_state_entities
+            self._configured_unit_of_measurement, valid_state_entities
         )
         self._valid_units = self._get_valid_units()
 
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
-        self.calculate_state_attributes(self._get_state_of_entities())
+        self.calculate_state_attributes(self._get_valid_entities())
         states: list[StateType] = []
         valid_units = self._valid_units
         valid_states: list[bool] = []
@@ -378,8 +378,8 @@ class SensorGroup(GroupEntity, SensorEntity):
                             numeric_state, uom, self.native_unit_of_measurement
                         )
 
-                    # If we have valid units and incoming is not part of it
-                    # we should skip this state
+                    # If we have valid units and the entity's unit does not match
+                    # we raise which skips the state and log a warning once
                     if valid_units and uom not in valid_units:
                         raise HomeAssistantError("Not a valid unit")  # noqa: TRY301
 
@@ -677,9 +677,9 @@ class SensorGroup(GroupEntity, SensorEntity):
         If device class is not set, use one unit of measurement.
         Only calculate valid units if there are no valid units set.
         """
-        # If we once have a set of valid units we should not recalculate it
-        # when all states needs to be considered
         if (valid_units := self._valid_units) and not self._ignore_non_numeric:
+            # If we have valid units already and not using ignore_non_numeric
+            # we should not recalculate.
             return valid_units
 
         native_uom = self.native_unit_of_measurement
@@ -693,22 +693,21 @@ class SensorGroup(GroupEntity, SensorEntity):
             return {native_uom}
         return set()
 
-    def _get_state_of_entities(
+    def _get_valid_entities(
         self,
     ) -> list[str]:
-        """Return if states are valid."""
-        state_of_entities: dict[str, bool] = {}
-        for entity_id in self._entity_ids:
-            if (state := self.hass.states.get(entity_id)) is not None:
-                try:
-                    float(state.state)
-                    state_of_entities[entity_id] = True
-                except ValueError:
-                    state_of_entities[entity_id] = False
-            else:
-                state_of_entities[entity_id] = False
+        """Return list of valid entities."""
+
+        def _has_numeric_state(entity_id: str) -> bool:
+            """Test if state is numeric."""
+            if not (state := self.hass.states.get(entity_id)):
+                return False
+            try:
+                float(state.state)
+            except ValueError:
+                return False
+            return True
+
         return [
-            entity_id
-            for entity_id, state_valid in state_of_entities.items()
-            if state_valid is True
+            entity_id for entity_id in self._entity_ids if _has_numeric_state(entity_id)
         ]
