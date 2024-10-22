@@ -179,6 +179,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
+        self._away_hold = False
         self._retry = 0
 
         self._attr_unique_id = str(device.deviceid)
@@ -328,9 +329,14 @@ class HoneywellUSThermostat(ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._away and self._is_hold():
+            self._away_hold = True
             return PRESET_AWAY
         if self._is_hold():
             return PRESET_HOLD
+        #Someone has changed the stat manually out of hold in away mode
+        if self._away and self._away_hold:
+            self._away = False
+            self._away_hold = False
         return PRESET_NONE
 
     @property
