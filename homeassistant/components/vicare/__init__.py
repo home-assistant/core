@@ -114,7 +114,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
     ]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Unload ViCare config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -124,7 +124,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_migrate_devices_and_entities(
-    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
+    hass: HomeAssistant, entry: ViCareConfigEntry, device: ViCareDevice
 ) -> None:
     """Migrate old entry."""
     device_registry = dr.async_get(hass)
@@ -191,7 +191,7 @@ async def async_migrate_devices_and_entities(
                 )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.version == 1:
         if entry.minor_version == 1:
@@ -207,7 +207,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "",
                     entry.data[CONF_USERNAME],
                 ),
-                DOMAIN,
             )
             hass.config_entries.async_update_entry(
                 entry,
