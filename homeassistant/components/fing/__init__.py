@@ -7,6 +7,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from .coordinator import FingDataUpdateCoordinator
 
@@ -27,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) 
         _LOGGER.warning(
             "Skip setting up Fing integration; Received an empty NetworkId from the request - Check if the API version is the latest"
         )
-        return False
+        raise ConfigEntryError(
+            "The Agent's API version is outdated. Please update the agent to the latest version."
+        )
 
     config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

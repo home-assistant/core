@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 def mocked_entry():
     """Fixture for mock config entry."""
     return {
-        "name": "Fing Agent",  # Mocked Name
         AGENT_IP: "192.168.1.1",  # Mocked IP
         AGENT_PORT: "49090",  # Mocked PORT
         AGENT_KEY: "test_key",  # Mocked KEY

@@ -19,6 +19,9 @@
       "url_error": "[%key:common::config_flow::error::invalid_host]",
       "http_status_error": "Http request failed -> {message}",
       "api_version_error": "Network ID parameter is empty. Use the latest API."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }
