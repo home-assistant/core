@@ -210,7 +210,7 @@ async def test_ws_get_client_config(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "configuration": {"iceServers": [{"urls": "stun:stun.home-assistant.io:3478"}]}
+        "configuration": {"iceServers": [{"urls": "stun:stun.home-assistant.io:80"}]}
     }
 
 
