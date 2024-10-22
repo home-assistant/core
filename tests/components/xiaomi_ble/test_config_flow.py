@@ -2,7 +2,12 @@
 
 from unittest.mock import patch
 
-from xiaomi_ble import XiaomiBluetoothDeviceData as DeviceData, XiaomiCloudBLEDevice
+from xiaomi_ble import (
+    XiaomiBluetoothDeviceData as DeviceData,
+    XiaomiCloudBLEDevice,
+    XiaomiCloudException,
+    XiaomiCloudInvalidAuthenticationException,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
@@ -266,7 +271,7 @@ async def test_async_step_bluetooth_valid_device_v4_encryption(
     assert result3["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
-async def test_async_step_bluetooth_valid_device_v4_encryption_from_cloud(
+async def test_bluetooth_discovery_device_v4_encryption_from_cloud(
     hass: HomeAssistant,
 ) -> None:
     """Test discovery via bluetooth with a valid v4 device, with auth from cloud."""
@@ -300,6 +305,137 @@ async def test_async_step_bluetooth_valid_device_v4_encryption_from_cloud(
     assert result3["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
     assert result3["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
     assert result3["result"].unique_id == "54:EF:44:E3:9C:BC"
+
+
+async def test_bluetooth_discovery_device_v4_encryption_from_cloud_wrong_key(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery via bluetooth with a valid v4 device, with wrong auth from cloud."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=JTYJGD03MI_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "cloud_auth"},
+    )
+
+    device = XiaomiCloudBLEDevice(
+        name="x",
+        mac="54:EF:44:E3:9C:BC",
+        bindkey="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    )
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.XiaomiCloudTokenFetch.get_device_info",
+        return_value=device,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={"username": "x@x.x", "password": "x"},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "get_encryption_key_4_5"
+    assert result3["errors"]["bindkey"] == "decryption_failed"
+
+    # Verify we can fallback to manual key
+    with patch(
+        "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result4["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result4["result"].unique_id == "54:EF:44:E3:9C:BC"
+
+
+async def test_bluetooth_discovery_incorrect_cloud_auth(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery via bluetooth with incorrect cloud auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=JTYJGD03MI_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "cloud_auth"},
+    )
+
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.XiaomiCloudTokenFetch.get_device_info",
+        side_effect=XiaomiCloudInvalidAuthenticationException,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={"username": "x@x.x", "password": "wrong"},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "cloud_auth"
+    assert result3["errors"]["base"] == "auth_failed"
+
+    device = XiaomiCloudBLEDevice(
+        name="x",
+        mac="54:EF:44:E3:9C:BC",
+        bindkey="5b51a7c91cde6707c9ef18dfda143a58",
+    )
+    # Verify we can try again with the correct password
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.XiaomiCloudTokenFetch.get_device_info",
+        return_value=device,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            user_input={"username": "x@x.x", "password": "correct"},
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result4["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result4["result"].unique_id == "54:EF:44:E3:9C:BC"
+
+
+async def test_bluetooth_discovery_cloud_offline(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery via bluetooth when the cloud is offline."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=JTYJGD03MI_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "cloud_auth"},
+    )
+
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.XiaomiCloudTokenFetch.get_device_info",
+        side_effect=XiaomiCloudException,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={"username": "x@x.x", "password": "wrong"},
+        )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "api_error"
 
 
 async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key(
