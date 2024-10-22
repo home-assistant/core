@@ -19,10 +19,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN, LINE_TYPES, UPTIME_DEVIATION
+from .const import _LOGGER, DOMAIN, LINE_TYPES
 from .coordinator import VodafoneStationRouter
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
+UPTIME_DEVIATION = 30
 
 
 @dataclass(frozen=True, kw_only=True)

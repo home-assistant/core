@@ -11,5 +11,3 @@ DEFAULT_HOST = "192.168.1.1"
 DEFAULT_USERNAME = "vodafone"
 
 LINE_TYPES = ["dsl", "fiber", "internet_key"]
-
-UPTIME_DEVIATION = 30
