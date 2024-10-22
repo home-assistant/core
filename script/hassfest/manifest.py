@@ -88,12 +88,10 @@ NO_IOT_CLASS = [
     "logbook",
     "logger",
     "lovelace",
-    "map",
     "media_source",
     "my",
     "onboarding",
     "panel_custom",
-    "panel_iframe",
     "plant",
     "profiler",
     "proxy",
@@ -117,8 +115,6 @@ NO_IOT_CLASS = [
 # https://github.com/home-assistant/developers.home-assistant/pull/1512
 NO_DIAGNOSTICS = [
     "dlna_dms",
-    "gdacs",
-    "geonetnz_quakes",
     "hyperion",
     "nightscout",
     "pvpc_hourly_pricing",

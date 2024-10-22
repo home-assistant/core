@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from bimmer_connected.utils import MyBMWJSONEncoder
 
-from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry

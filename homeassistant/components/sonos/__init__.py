@@ -413,7 +413,7 @@ class SonosDiscoveryManager:
                 continue
 
             if self.hosts_in_error.pop(ip_addr, None):
-                _LOGGER.info("Connection reestablished to Sonos device %s", ip_addr)
+                _LOGGER.warning("Connection reestablished to Sonos device %s", ip_addr)
             # Each speaker has the topology for other online speakers, so add them in here if they were not
             # configured. The metadata is already in Soco for these.
             if new_hosts := {

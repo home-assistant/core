@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from argparse import ArgumentParser
+from collections.abc import Sequence
 from dataclasses import dataclass
 import json
 from pathlib import Path
@@ -123,12 +125,10 @@ EXCEPTIONS = {
     "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
-    "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
-    "aiovodafone",  # https://github.com/chemelli74/aiovodafone/pull/131
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
@@ -149,7 +149,6 @@ EXCEPTIONS = {
     "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
-    "nessclient",  # https://github.com/nickw444/nessclient/pull/65
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
@@ -160,28 +159,41 @@ EXCEPTIONS = {
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
-    "russound",  # https://github.com/laf/russound/pull/14   # codespell:ignore laf
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
+    # Using License-Expression (with hatchling)
+    "ftfy",  # Apache-2.0
 }
 
 TODO = {
     "aiocache": AwesomeVersion(
-        "0.12.2"
+        "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
 }
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Run the main script."""
-    raw_licenses = json.loads(Path("licenses.json").read_text())
-    package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     exit_code = 0
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        "path",
+        nargs="?",
+        metavar="PATH",
+        default="licenses.json",
+        help="Path to json licenses file",
+    )
+
+    argv = argv or sys.argv[1:]
+    args = parser.parse_args(argv)
+
+    raw_licenses = json.loads(Path(args.path).read_text())
+    package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
     for package in package_definitions:
         previous_unapproved_version = TODO.get(package.name)
         approved = False

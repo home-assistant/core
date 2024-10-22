@@ -6,12 +6,13 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import functools
-from functools import cached_property
 import linecache
 import logging
 import sys
 from types import FrameType
 from typing import Any, cast
+
+from propcache import cached_property
 
 from homeassistant.core import async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
@@ -129,15 +130,19 @@ class MissingIntegrationFrame(HomeAssistantError):
 
 def report(
     what: str,
-    exclude_integrations: set | None = None,
+    *,
+    exclude_integrations: set[str] | None = None,
     error_if_core: bool = True,
+    error_if_integration: bool = False,
     level: int = logging.WARNING,
     log_custom_component_only: bool = False,
-    error_if_integration: bool = False,
 ) -> None:
     """Report incorrect usage.
 
-    Async friendly.
+    If error_if_core is True, raise instead of log if an integration is not found
+    when unwinding the stack frame.
+    If error_if_integration is True, raise instead of log if an integration is found
+    when unwinding the stack frame.
     """
     try:
         integration_frame = get_integration_frame(

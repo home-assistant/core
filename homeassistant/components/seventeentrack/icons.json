@@ -30,6 +30,9 @@
   "services": {
     "get_packages": {
       "service": "mdi:package"
+    },
+    "archive_package": {
+      "service": "mdi:archive"
     }
   }
 }

@@ -51,7 +51,7 @@ BUTTON_SCHEMA = (
 CONFIG_BUTTON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.template,
-        vol.Optional(CONF_PRESS): selector.ActionSelector(),
+        vol.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }

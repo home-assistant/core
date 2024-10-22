@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,6 +17,7 @@ from .const import (
     DATA_LAST_WAKE_UP,
     DOMAIN,
     EVENT_RECORDING,
+    OPTION_PREFERRED,
     SAMPLE_CHANNELS,
     SAMPLE_RATE,
     SAMPLE_WIDTH,
@@ -57,6 +59,7 @@ __all__ = (
     "PipelineNotFound",
     "WakeWordSettings",
     "EVENT_RECORDING",
+    "OPTION_PREFERRED",
     "SAMPLES_PER_CHUNK",
     "SAMPLE_RATE",
     "SAMPLE_WIDTH",
@@ -99,7 +102,7 @@ async def async_pipeline_from_audio_stream(
     wake_word_phrase: str | None = None,
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
-    tts_audio_output: str | None = None,
+    tts_audio_output: str | dict[str, Any] | None = None,
     wake_word_settings: WakeWordSettings | None = None,
     audio_settings: AudioSettings | None = None,
     device_id: str | None = None,

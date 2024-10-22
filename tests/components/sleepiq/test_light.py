@@ -1,6 +1,6 @@
 """The tests for SleepIQ light platform."""
 
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -16,7 +16,7 @@ async def test_setup(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
 ) -> None:
     """Test for successfully setting up the SleepIQ platform."""
-    entry = await setup_platform(hass, DOMAIN)
+    entry = await setup_platform(hass, LIGHT_DOMAIN)
 
     assert len(entity_registry.entities) == 2
 
@@ -33,10 +33,10 @@ async def test_setup(
 
 async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test light change."""
-    await setup_platform(hass, DOMAIN)
+    await setup_platform(hass, LIGHT_DOMAIN)
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: f"light.sleepnumber_{BED_NAME_LOWER}_light_1"},
         blocking=True,
@@ -45,7 +45,7 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     mock_asyncsleepiq.beds[BED_ID].foundation.lights[0].turn_on.assert_called_once()
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_off",
         {ATTR_ENTITY_ID: f"light.sleepnumber_{BED_NAME_LOWER}_light_1"},
         blocking=True,
@@ -56,7 +56,7 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
 
 async def test_switch_get_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test light update."""
-    await setup_platform(hass, DOMAIN)
+    await setup_platform(hass, LIGHT_DOMAIN)
 
     assert (
         hass.states.get(f"light.sleepnumber_{BED_NAME_LOWER}_light_1").state

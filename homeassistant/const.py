@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final
 from .helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
+    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -41,6 +42,7 @@ class Platform(StrEnum):
 
     AIR_QUALITY = "air_quality"
     ALARM_CONTROL_PANEL = "alarm_control_panel"
+    ASSIST_SATELLITE = "assist_satellite"
     BINARY_SENSOR = "binary_sensor"
     BUTTON = "button"
     CALENDAR = "calendar"
@@ -74,9 +76,9 @@ class Platform(StrEnum):
     TIME = "time"
     TODO = "todo"
     TTS = "tts"
+    UPDATE = "update"
     VACUUM = "vacuum"
     VALVE = "valve"
-    UPDATE = "update"
     WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
@@ -281,6 +283,8 @@ CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
+CONF_TRIGGER: Final = "trigger"
+CONF_TRIGGERS: Final = "triggers"
 CONF_TRIGGER_TIME: Final = "trigger_time"
 CONF_TTL: Final = "ttl"
 CONF_TYPE: Final = "type"
@@ -475,24 +479,92 @@ STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
 STATE_STANDBY: Final = "standby"
-STATE_ALARM_DISARMED: Final = "disarmed"
-STATE_ALARM_ARMED_HOME: Final = "armed_home"
-STATE_ALARM_ARMED_AWAY: Final = "armed_away"
-STATE_ALARM_ARMED_NIGHT: Final = "armed_night"
-STATE_ALARM_ARMED_VACATION: Final = "armed_vacation"
-STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = "armed_custom_bypass"
-STATE_ALARM_PENDING: Final = "pending"
-STATE_ALARM_ARMING: Final = "arming"
-STATE_ALARM_DISARMING: Final = "disarming"
-STATE_ALARM_TRIGGERED: Final = "triggered"
-STATE_LOCKED: Final = "locked"
-STATE_UNLOCKED: Final = "unlocked"
-STATE_LOCKING: Final = "locking"
-STATE_UNLOCKING: Final = "unlocking"
-STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
+
+# #### LOCK STATES ####
+# STATE_* below are deprecated as of 2024.10
+# use the LockState enum instead.
+_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
+    "locked",
+    "LockState.LOCKED",
+    "2025.10",
+)
+_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
+    "unlocked",
+    "LockState.UNLOCKED",
+    "2025.10",
+)
+_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
+    "locking",
+    "LockState.LOCKING",
+    "2025.10",
+)
+_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
+    "unlocking",
+    "LockState.UNLOCKING",
+    "2025.10",
+)
+_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
+    "jammed",
+    "LockState.JAMMED",
+    "2025.10",
+)
+
+# #### ALARM CONTROL PANEL STATES ####
+# STATE_ALARM_* below are deprecated as of 2024.11
+# use the AlarmControlPanelState enum instead.
+_DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
+    "disarmed",
+    "AlarmControlPanelState.DISARMED",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_HOME: Final = DeprecatedConstant(
+    "armed_home",
+    "AlarmControlPanelState.ARMED_HOME",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_AWAY: Final = DeprecatedConstant(
+    "armed_away",
+    "AlarmControlPanelState.ARMED_AWAY",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_NIGHT: Final = DeprecatedConstant(
+    "armed_night",
+    "AlarmControlPanelState.ARMED_NIGHT",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_VACATION: Final = DeprecatedConstant(
+    "armed_vacation",
+    "AlarmControlPanelState.ARMED_VACATION",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = DeprecatedConstant(
+    "armed_custom_bypass",
+    "AlarmControlPanelState.ARMED_CUSTOM_BYPASS",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_PENDING: Final = DeprecatedConstant(
+    "pending",
+    "AlarmControlPanelState.PENDING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMING: Final = DeprecatedConstant(
+    "arming",
+    "AlarmControlPanelState.ARMING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_DISARMING: Final = DeprecatedConstant(
+    "disarming",
+    "AlarmControlPanelState.DISARMING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_TRIGGERED: Final = DeprecatedConstant(
+    "triggered",
+    "AlarmControlPanelState.TRIGGERED",
+    "2025.11",
+)
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -691,11 +763,17 @@ _DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
 class UnitOfEnergy(StrEnum):
     """Energy units."""
 
-    GIGA_JOULE = "GJ"
-    KILO_WATT_HOUR = "kWh"
+    JOULE = "J"
+    KILO_JOULE = "kJ"
     MEGA_JOULE = "MJ"
-    MEGA_WATT_HOUR = "MWh"
+    GIGA_JOULE = "GJ"
     WATT_HOUR = "Wh"
+    KILO_WATT_HOUR = "kWh"
+    MEGA_WATT_HOUR = "MWh"
+    CALORIE = "cal"
+    KILO_CALORIE = "kcal"
+    MEGA_CALORIE = "Mcal"
+    GIGA_CALORIE = "Gcal"
 
 
 _DEPRECATED_ENERGY_KILO_WATT_HOUR: Final = DeprecatedConstantEnum(
@@ -863,6 +941,7 @@ class UnitOfLength(StrEnum):
     FEET = "ft"
     YARDS = "yd"
     MILES = "mi"
+    NAUTICAL_MILES = "nmi"
 
 
 _DEPRECATED_LENGTH_MILLIMETERS: Final = DeprecatedConstantEnum(
@@ -1158,20 +1237,35 @@ _DEPRECATED_MASS_POUNDS: Final = DeprecatedConstantEnum(
 """Deprecated: please use UnitOfMass.POUNDS"""
 
 
-# Conductivity units
-class UnitOfConductivity(StrEnum):
+class UnitOfConductivity(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+    },
+):
     """Conductivity units."""
 
+    SIEMENS_PER_CM = "S/cm"
+    MICROSIEMENS_PER_CM = "µS/cm"
+    MILLISIEMENS_PER_CM = "mS/cm"
+
+    # Deprecated aliases
     SIEMENS = "S/cm"
+    """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
     MICROSIEMENS = "µS/cm"
+    """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
     MILLISIEMENS = "mS/cm"
+    """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
 
 
 _DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
-    UnitOfConductivity.MICROSIEMENS,
-    "2025.6",
+    UnitOfConductivity.MICROSIEMENS_PER_CM,
+    "2025.11",
 )
-"""Deprecated: please use UnitOfConductivity.MICROSIEMENS"""
+"""Deprecated: please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
@@ -1280,10 +1374,12 @@ class UnitOfSpeed(StrEnum):
 
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
+    INCHES_PER_SECOND = "in/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
     MILES_PER_HOUR = "mph"
+    MILLIMETERS_PER_SECOND = "mm/s"
 
 
 _DEPRECATED_SPEED_FEET_PER_SECOND: Final = DeprecatedConstantEnum(

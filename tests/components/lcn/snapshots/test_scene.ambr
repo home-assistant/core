@@ -1,0 +1,93 @@
+# serializer version: 1
+# name: test_setup_lcn_scene[scene.romantic-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.romantic',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Romantic',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk.json-m000007-0.0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_scene[scene.romantic-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Romantic',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.romantic',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_lcn_scene[scene.romantic_transition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.romantic_transition',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Romantic Transition',
+    'platform': 'lcn',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'lcn/config_entry_pchk.json-m000007-0.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_lcn_scene[scene.romantic_transition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Romantic Transition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.romantic_transition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

@@ -192,15 +192,7 @@ async def test_light_strip(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    call_dict = bulb.set_color_zones.calls[0][1]
-    call_dict.pop("callb")
-    assert call_dict == {
-        "apply": 0,
-        "color": [],
-        "duration": 0,
-        "end_index": 0,
-        "start_index": 0,
-    }
+    assert len(bulb.set_color_zones.calls) == 0
     bulb.set_color_zones.reset_mock()
 
     await hass.services.async_call(
@@ -209,15 +201,7 @@ async def test_light_strip(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    call_dict = bulb.set_color_zones.calls[0][1]
-    call_dict.pop("callb")
-    assert call_dict == {
-        "apply": 0,
-        "color": [],
-        "duration": 0,
-        "end_index": 0,
-        "start_index": 0,
-    }
+    assert len(bulb.set_color_zones.calls) == 0
     bulb.set_color_zones.reset_mock()
 
     bulb.color_zones = [
@@ -238,7 +222,7 @@ async def test_light_strip(hass: HomeAssistant) -> None:
         blocking=True,
     )
     # Single color uses the fast path
-    assert bulb.set_color.calls[0][0][0] == [1820, 19660, 65535, 3500]
+    assert bulb.set_color.calls[1][0][0] == [1820, 19660, 65535, 3500]
     bulb.set_color.reset_mock()
     assert len(bulb.set_color_zones.calls) == 0
 
@@ -422,7 +406,9 @@ async def test_light_strip(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    bulb.get_color_zones = MockLifxCommand(bulb)
+    bulb.get_color_zones = MockLifxCommand(
+        bulb, msg_seq_num=0, msg_color=[0, 0, 65535, 3500] * 3, msg_index=0, msg_count=3
+    )
     bulb.get_color = MockFailingLifxCommand(bulb)
 
     with pytest.raises(HomeAssistantError):
@@ -587,14 +573,14 @@ async def test_extended_multizone_messages(hass: HomeAssistant) -> None:
     bulb.set_extended_color_zones.reset_mock()
 
     bulb.color_zones = [
-        (0, 65535, 65535, 3500),
-        (54612, 65535, 65535, 3500),
-        (54612, 65535, 65535, 3500),
-        (54612, 65535, 65535, 3500),
-        (46420, 65535, 65535, 3500),
-        (46420, 65535, 65535, 3500),
-        (46420, 65535, 65535, 3500),
-        (46420, 65535, 65535, 3500),
+        [0, 65535, 65535, 3500],
+        [54612, 65535, 65535, 3500],
+        [54612, 65535, 65535, 3500],
+        [54612, 65535, 65535, 3500],
+        [46420, 65535, 65535, 3500],
+        [46420, 65535, 65535, 3500],
+        [46420, 65535, 65535, 3500],
+        [46420, 65535, 65535, 3500],
     ]
 
     await hass.services.async_call(
@@ -1308,7 +1294,11 @@ async def test_config_zoned_light_strip_fails(
         def __call__(self, callb=None, *args, **kwargs):
             """Call command."""
             self.call_count += 1
-            response = None if self.call_count >= 2 else MockMessage()
+            response = (
+                None
+                if self.call_count >= 2
+                else MockMessage(seq_num=0, color=[], index=0, count=0)
+            )
             if callb:
                 callb(self.bulb, response)
 
@@ -1349,7 +1339,15 @@ async def test_legacy_zoned_light_strip(
             self.call_count += 1
             self.bulb.color_zones = [None] * 12
             if callb:
-                callb(self.bulb, MockMessage())
+                callb(
+                    self.bulb,
+                    MockMessage(
+                        seq_num=0,
+                        index=0,
+                        count=self.bulb.zones_count,
+                        color=self.bulb.color_zones,
+                    ),
+                )
 
     get_color_zones_mock = MockPopulateLifxZonesCommand(light_strip)
     light_strip.get_color_zones = get_color_zones_mock
@@ -1946,6 +1944,33 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     bulb.power_level = 65535
     bulb.color_zones = None
     bulb.color = [65535, 65535, 65535, 65535]
+    bulb.get_color_zones = next(
+        iter(
+            [
+                MockLifxCommand(
+                    bulb,
+                    msg_seq_num=0,
+                    msg_color=[0, 0, 65535, 3500] * 8,
+                    msg_index=0,
+                    msg_count=16,
+                ),
+                MockLifxCommand(
+                    bulb,
+                    msg_seq_num=1,
+                    msg_color=[0, 0, 65535, 3500] * 8,
+                    msg_index=0,
+                    msg_count=16,
+                ),
+                MockLifxCommand(
+                    bulb,
+                    msg_seq_num=2,
+                    msg_color=[0, 0, 65535, 3500] * 8,
+                    msg_index=8,
+                    msg_count=16,
+                ),
+            ]
+        )
+    )
     assert bulb.get_color_zones.calls == []
 
     with (

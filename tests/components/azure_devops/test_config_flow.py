@@ -62,7 +62,7 @@ async def test_reauth_authorization_error(
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -71,7 +71,7 @@ async def test_reauth_authorization_error(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "reauth"
+    assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -114,7 +114,7 @@ async def test_reauth_connection_error(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -123,7 +123,7 @@ async def test_reauth_connection_error(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "reauth"
+    assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -170,7 +170,7 @@ async def test_reauth_project_error(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -179,7 +179,7 @@ async def test_reauth_project_error(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "reauth"
+    assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "project_error"}
 
 
@@ -197,8 +197,7 @@ async def test_reauth_flow(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["step_id"] == "reauth_confirm"
 
     mock_devops_client.authorize.return_value = True
     mock_devops_client.authorized = True

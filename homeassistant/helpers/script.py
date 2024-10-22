@@ -9,13 +9,14 @@ from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cached_property, partial
+from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -1349,7 +1350,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-type _VarsType = dict[str, Any] | MappingProxyType[str, Any]
+type _VarsType = dict[str, Any] | Mapping[str, Any] | MappingProxyType[str, Any]
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

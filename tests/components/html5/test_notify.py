@@ -495,7 +495,7 @@ async def test_callback_view_with_jwt(
     assert push_payload["body"] == "Hello"
     assert push_payload["icon"] == "beer.png"
 
-    bearer_token = "Bearer {}".format(push_payload["data"]["jwt"])
+    bearer_token = f"Bearer {push_payload['data']['jwt']}"
 
     resp = await client.post(
         PUBLISH_URL, json={"type": "push"}, headers={AUTHORIZATION: bearer_token}

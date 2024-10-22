@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from reolink_aio.api import Chime
 
-from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -35,6 +35,7 @@ TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_CAM_NAME = "test_reolink_cam"
 TEST_NVR_NAME2 = "test2_reolink_name"
+TEST_CAM_NAME = "test_reolink_cam"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
@@ -51,7 +52,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reolink_connect_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
     with (
@@ -65,6 +66,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.check_new_firmware.return_value = False
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
+        host_mock.is_hub = False
         host_mock.mac_address = TEST_MAC
         host_mock.uid = TEST_UID
         host_mock.onvif_enabled = True
@@ -78,6 +80,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.protocol = "rtsp"
         host_mock.channels = [0]
         host_mock.stream_channels = [0]
+        host_mock.new_devices = False
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
@@ -90,6 +93,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.camera_sw_version_update_required.return_value = False
         host_mock.camera_uid.return_value = TEST_UID_CAM
+        host_mock.camera_online.return_value = True
         host_mock.channel_for_uid.return_value = 0
         host_mock.get_encoding.return_value = "h264"
         host_mock.firmware_update_available.return_value = False
@@ -136,14 +140,14 @@ def reolink_platforms() -> Generator[None]:
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add the reolink mock config entry to hass."""
     config_entry = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
         data={
             CONF_HOST: TEST_HOST,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
-            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

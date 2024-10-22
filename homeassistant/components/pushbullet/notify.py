@@ -92,7 +92,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # This also seems to work to send to all devices in own account.
             if ttype == "email":
                 self._push_data(message, title, data, self.pushbullet, email=tname)
-                _LOGGER.info("Sent notification to email %s", tname)
+                _LOGGER.debug("Sent notification to email %s", tname)
                 continue
 
             # Target is sms, send directly, don't use a target object.
@@ -100,7 +100,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 self._push_data(
                     message, title, data, self.pushbullet, phonenumber=tname
                 )
-                _LOGGER.info("Sent sms notification to %s", tname)
+                _LOGGER.debug("Sent sms notification to %s", tname)
                 continue
 
             if ttype not in self.pbtargets:

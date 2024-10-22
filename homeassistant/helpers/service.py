@@ -1264,11 +1264,17 @@ def async_register_entity_service(
     """
     if schema is None or isinstance(schema, dict):
         schema = cv.make_entity_service_schema(schema)
-    # Do a sanity check to check this is a valid entity service schema,
-    # the check could be extended to require All/Any to have sub schema(s)
-    # with all entity service fields
     elif not cv.is_entity_service_schema(schema):
-        raise HomeAssistantError("The schema is not an entity service schema")
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
+
+        report(
+            (
+                "registers an entity service with a non entity service schema "
+                "which will stop working in HA Core 2025.9"
+            ),
+            error_if_core=False,
+        )
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)

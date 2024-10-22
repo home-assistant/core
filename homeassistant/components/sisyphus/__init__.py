@@ -1,10 +1,9 @@
 """Support for controlling Sisyphus Kinetic Art Tables."""
 
-# mypy: ignore-errors
 import asyncio
 import logging
 
-# from sisyphus_control import Table
+from sisyphus_control import Table
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform

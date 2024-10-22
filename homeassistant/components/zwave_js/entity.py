@@ -22,11 +22,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, EVENT_VALUE_UPDATED, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
 
-EVENT_VALUE_UPDATED = "value updated"
 EVENT_VALUE_REMOVED = "value removed"
 EVENT_DEAD = "dead"
 EVENT_ALIVE = "alive"
@@ -335,5 +334,6 @@ class ZWaveBaseEntity(Entity):
                 value, new_value, options=options, wait_for_result=wait_for_result
             )
         except BaseZwaveJSServerError as err:
-            LOGGER.error("Unable to set value %s: %s", value.value_id, err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Unable to set value {value.value_id}: {err}"
+            ) from err

@@ -75,18 +75,5 @@
         }
       }
     }
-  },
-  "issues": {
-    "service_target_deprecation": {
-      "title": "Deprecating use of target for ScreenLogic actions",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Deprecating target for ScreenLogic actions",
-            "description": "Use of an Area, Device, or Entity as a target for ScreenLogic actions is being deprecated. Instead, use `config_entry` with the entry_id of the desired ScreenLogic integration.\n\nPlease update your automations and scripts and select **submit** to fix this issue."
-          }
-        }
-      }
-    }
   }
 }

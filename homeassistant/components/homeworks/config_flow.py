@@ -39,7 +39,6 @@ from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
-from . import DEFAULT_FADE_RATE, calculate_unique_id
 from .const import (
     CONF_ADDR,
     CONF_BUTTONS,
@@ -56,8 +55,11 @@ from .const import (
     DEFAULT_LIGHT_NAME,
     DOMAIN,
 )
+from .util import calculate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_FADE_RATE = 1.0
 
 CONTROLLER_EDIT = {
     vol.Required(CONF_HOST): selector.TextSelector(),
@@ -556,23 +558,19 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Lutron Homeworks."""
 
     async def _validate_edit_controller(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any], reconfigure_entry: ConfigEntry
     ) -> dict[str, Any]:
         """Validate controller setup."""
         _validate_credentials(user_input)
         user_input[CONF_PORT] = int(user_input[CONF_PORT])
 
-        our_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert our_entry
-        other_entries = self._async_current_entries()
-        for entry in other_entries:
-            if entry.entry_id == our_entry.entry_id:
-                continue
-            if (
-                user_input[CONF_HOST] == entry.options[CONF_HOST]
-                and user_input[CONF_PORT] == entry.options[CONF_PORT]
-            ):
-                raise SchemaFlowError("duplicated_host_port")
+        if any(
+            entry.entry_id != reconfigure_entry.entry_id
+            and user_input[CONF_HOST] == entry.options[CONF_HOST]
+            and user_input[CONF_PORT] == entry.options[CONF_PORT]
+            for entry in self._async_current_entries()
+        ):
+            raise SchemaFlowError("duplicated_host_port")
 
         await _try_connection(user_input)
         return user_input
@@ -581,15 +579,13 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
         suggested_values = {
-            CONF_HOST: entry.options[CONF_HOST],
-            CONF_PORT: entry.options[CONF_PORT],
-            CONF_USERNAME: entry.data.get(CONF_USERNAME),
-            CONF_PASSWORD: entry.data.get(CONF_PASSWORD),
+            CONF_HOST: reconfigure_entry.options[CONF_HOST],
+            CONF_PORT: reconfigure_entry.options[CONF_PORT],
+            CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+            CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
         }
 
         if user_input:
@@ -600,25 +596,24 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
             try:
-                await self._validate_edit_controller(user_input)
+                await self._validate_edit_controller(user_input, reconfigure_entry)
             except SchemaFlowError as err:
                 errors["base"] = str(err)
             else:
                 password = user_input.pop(CONF_PASSWORD, None)
                 username = user_input.pop(CONF_USERNAME, None)
-                new_data = entry.data | {
+                new_data = reconfigure_entry.data | {
                     CONF_PASSWORD: password,
                     CONF_USERNAME: username,
                 }
-                new_options = entry.options | {
+                new_options = reconfigure_entry.options | {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                 }
                 return self.async_update_reload_and_abort(
-                    entry,
+                    reconfigure_entry,
                     data=new_data,
                     options=new_options,
-                    reason="reconfigure_successful",
                     reload_even_if_entry_is_unchanged=False,
                 )
 

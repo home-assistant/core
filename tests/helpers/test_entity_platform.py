@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -878,9 +879,9 @@ async def test_setup_entry(
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 1
     assert len(entity_registry.entities) == 1
-    assert (
-        entity_registry.entities["test_domain.test1"].config_entry_id == "super-mock-id"
-    )
+
+    entity_registry_entry = entity_registry.entities["test_domain.test1"]
+    assert entity_registry_entry.config_entry_id == "super-mock-id"
 
 
 async def test_setup_entry_platform_not_ready(
@@ -1131,7 +1132,9 @@ async def test_add_entity_with_invalid_id(
 
 
 async def test_device_info_called(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device info is forwarded correctly."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -1185,18 +1188,9 @@ async def test_device_info_called(
     assert len(hass.states.async_entity_ids()) == 2
 
     device = device_registry.async_get_device(identifiers={("hue", "1234")})
-    assert device is not None
-    assert device.identifiers == {("hue", "1234")}
-    assert device.configuration_url == "http://192.168.0.100/config"
-    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "abcd")}
-    assert device.entry_type is dr.DeviceEntryType.SERVICE
-    assert device.manufacturer == "test-manuf"
-    assert device.model == "test-model"
-    assert device.name == "test-name"
+    assert device == snapshot
+    assert device.config_entries == {config_entry.entry_id}
     assert device.primary_config_entry == config_entry.entry_id
-    assert device.suggested_area == "Heliport"
-    assert device.sw_version == "test-sw"
-    assert device.hw_version == "test-hw"
     assert device.via_device_id == via.id
 
 
@@ -1811,23 +1805,24 @@ async def test_register_entity_service_none_schema(
 
 
 async def test_register_entity_service_non_entity_service_schema(
-    hass: HomeAssistant,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test attempting to register a service with a non entity service schema."""
     entity_platform = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
     )
+    expected_message = "registers an entity service with a non entity service schema"
 
-    for schema in (
-        vol.Schema({"some": str}),
-        vol.All(vol.Schema({"some": str})),
-        vol.Any(vol.Schema({"some": str})),
+    for idx, schema in enumerate(
+        (
+            vol.Schema({"some": str}),
+            vol.All(vol.Schema({"some": str})),
+            vol.Any(vol.Schema({"some": str})),
+        )
     ):
-        with pytest.raises(
-            HomeAssistantError,
-            match="The schema is not an entity service schema",
-        ):
-            entity_platform.async_register_entity_service("hello", schema, Mock())
+        entity_platform.async_register_entity_service(f"hello_{idx}", schema, Mock())
+        assert expected_message in caplog.text
+        caplog.clear()
 
     for idx, schema in enumerate(
         (
@@ -1839,6 +1834,7 @@ async def test_register_entity_service_non_entity_service_schema(
         entity_platform.async_register_entity_service(
             f"test_service_{idx}", schema, Mock()
         )
+        assert expected_message not in caplog.text
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])
