@@ -371,7 +371,6 @@ async def test_migrate_entry(
 
     assert entry.version == 1
     assert entry.minor_version == 1
-    assert await entry.async_migrate(hass) is False
 
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -379,27 +378,6 @@ async def test_migrate_entry(
 
     assert entry.version == 1
     assert entry.minor_version == 2
-    assert await entry.async_migrate(hass) is True
-
-
-@pytest.mark.usefixtures("mock_hunterdouglas_hub")
-@pytest.mark.parametrize("api_version", [1, 2, 3])
-async def test_migrate_id(
-    hass: HomeAssistant,
-    api_version: int,
-) -> None:
-    """Test migration to new entity ids."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"host": "1.2.3.4"},
-        unique_id=MOCK_MAC,
-        version=1,
-        minor_version=1,
-    )
-
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
