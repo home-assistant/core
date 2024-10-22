@@ -15,6 +15,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -228,6 +229,85 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
     }
     VALID_UNITS = set(UnitOfEnergy)
+
+
+class EnergyDistanceConverter(BaseUnitConverter):
+    """Utility to convert vehicle energy consumption values."""
+
+    UNIT_CLASS = "ENERGY_DISTANCE"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI: _MILE_TO_M / 1000,
+    }
+    VALID_UNITS = {
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+    }
+
+    @classmethod
+    @lru_cache
+    def converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Return a function to convert a consumption unit from one unit to another."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in converter_factory_allow_none.
+            return lambda value: value
+
+        return cls._converter_factory(from_unit, to_unit)
+
+    @classmethod
+    @lru_cache
+    def converter_factory_allow_none(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float | None], float | None]:
+        """Return a function to convert a consumption unit from one unit to another which allows None."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in this case.
+            return lambda value: value
+
+        convert = cls._converter_factory(from_unit, to_unit)
+        return lambda value: None if value is None else convert(value)
+
+    @classmethod
+    def _converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Convert a consumption unit from one unit to another."""
+        # We cannot use the implementation from BaseUnitConverter here because the
+        # scale is not a constant value to divide or multiply with.
+        if (
+            from_unit not in EnergyDistanceConverter.VALID_UNITS
+            or to_unit not in EnergyDistanceConverter.VALID_UNITS
+        ):
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            )
+
+        if from_unit == UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR:
+            to_ratio = cls._UNIT_CONVERSION[to_unit]
+            return lambda val: cls._mi_per_kwh_to_kwh_per_100km(val) * to_ratio
+        if to_unit == UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR:
+            from_ratio = cls._UNIT_CONVERSION[from_unit]
+            return lambda val: cls._kwh_per_100km_to_mi_per_kwh(val / from_ratio)
+
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return lambda val: (val / from_ratio) * to_ratio
+
+    @classmethod
+    def _kwh_per_100km_to_mi_per_kwh(cls, x: float) -> float:
+        """Convert a consumption in kWh/100km to mi/kWh."""
+        return float(100 / (_MILE_TO_M / _KM_TO_M) / x)
+
+    @classmethod
+    def _mi_per_kwh_to_kwh_per_100km(cls, x: float) -> float:
+        """Convert a consumption in mi/kWh to kWh/100km."""
+        return float(100 / (_MILE_TO_M / _KM_TO_M) / x)
 
 
 class InformationConverter(BaseUnitConverter):
