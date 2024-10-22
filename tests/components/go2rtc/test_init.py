@@ -255,10 +255,10 @@ async def message_callbacks(
     init_test_integration: MockCamera,
 ) -> Callbacks:
     """Prepare and return receive message callback."""
-    receivce_callback = Mock(spec_set=WebRTCSendMessage)
+    receive_callback = Mock(spec_set=WebRTCSendMessage)
 
     await init_test_integration.async_handle_async_webrtc_offer(
-        OFFER_SDP, "session_id", receivce_callback
+        OFFER_SDP, "session_id", receive_callback
     )
     ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
     ws_client.subscribe.assert_called_once()
@@ -266,7 +266,7 @@ async def message_callbacks(
     # Simulate messages from the go2rtc server
     send_callback = ws_client.subscribe.call_args[0][0]
 
-    return Callbacks(receivce_callback, send_callback)
+    return Callbacks(receive_callback, send_callback)
 
 
 @pytest.mark.parametrize(

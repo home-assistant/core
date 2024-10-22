@@ -255,7 +255,7 @@ async def ws_webrtc_offer(
 
     This signal path is used to route the offer created by the client to the
     camera device through the integration for negotiation on initial setup.
-    The ws endpoint returns an subscription id, where ice candidates and the
+    The ws endpoint returns a subscription id, where ice candidates and the
     final answer will be returned.
     The actual streaming is handled entirely between the client and camera device.
 
