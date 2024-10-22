@@ -239,7 +239,7 @@ async def test_join_cannot_join_to_self(
     hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
 ) -> None:
     """Test that joining to self is not allowed."""
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(ServiceValidationError, match="Cannot join player to itself"):
         await hass.services.async_call(
             BLUESOUND_DOMAIN,
             SERVICE_JOIN,
@@ -249,8 +249,6 @@ async def test_join_cannot_join_to_self(
             },
             blocking=True,
         )
-
-    assert str(exc.value) == "Cannot join player to itself"
 
 
 async def test_join(
