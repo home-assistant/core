@@ -163,7 +163,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             ),
         )
 
-        return events_sorted[0] if events_sorted else None
+        return next(iter(events_sorted), None)
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -190,8 +190,8 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         ]
 
     @property
-    def extra_state_attributes(self) -> dict[str, bool] | None:
+    def extra_state_attributes(self) -> dict[str, bool | None] | None:
         """Return entity specific state attributes."""
-        if event := self.event:
-            return {"yesterdaily": event.start < date.today()}
-        return None
+        return {
+            "yesterdaily": self.event.start < self.today.date() if self.event else None
+        }
