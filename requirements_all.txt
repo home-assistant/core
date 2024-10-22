@@ -530,7 +530,7 @@ autarco==3.0.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==62
+axis==63
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.2

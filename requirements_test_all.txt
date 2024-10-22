@@ -479,7 +479,7 @@ aurorapy==0.2.7
 autarco==3.0.0
 
 # homeassistant.components.axis
-axis==62
+axis==63
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.2
