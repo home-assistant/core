@@ -713,7 +713,7 @@ async def test_force_update_disabled(
     def test_callback(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)  # type:ignore[arg-type]
 
     async_fire_mqtt_message(hass, "test-topic", "100")
     await hass.async_block_till_done()
@@ -751,7 +751,7 @@ async def test_force_update_enabled(
     def test_callback(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)  # type:ignore[arg-type]
 
     async_fire_mqtt_message(hass, "test-topic", "100")
     await hass.async_block_till_done()
@@ -956,7 +956,7 @@ async def test_invalid_state_class(
                     }
                 }
             },
-            "The option `options` can only be used together with "
+            "The option `options` must be used together with "
             "device class `enum`, got `device_class` 'gas'",
         ),
         (

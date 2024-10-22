@@ -167,6 +167,35 @@
           "description": "Enable Follow Me mode."
         }
       }
+    },
+    "set_sensors_used_in_climate": {
+      "name": "Set Sensors Used in Climate",
+      "description": "Sets the participating sensors for a climate.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Ecobee thermostat on which to set active sensors."
+        },
+        "preset_mode": {
+          "name": "Climate Name",
+          "description": "Name of the climate program to set the sensors active on.\nDefaults to currently active program."
+        },
+        "device_ids": {
+          "name": "Sensors",
+          "description": "Sensors to set as participating sensors."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_preset": {
+      "message": "Invalid climate name, available options are: {options}"
+    },
+    "invalid_sensor": {
+      "message": "Invalid sensor for thermostat, available options are: {options}"
+    },
+    "sensor_lookup_failed": {
+      "message": "There was an error getting the sensor ids from sensor names. Try reloading the ecobee integration."
     }
   },
   "issues": {

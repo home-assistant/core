@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import aiohttp
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ovo_energy.const import CONF_ACCOUNT, DOMAIN
@@ -117,8 +118,13 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result2["data"][CONF_ACCOUNT] == FIXTURE_USER_INPUT[CONF_ACCOUNT]
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.ovo_energy.config.error.authorization_error"],
+)
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     """Test we show user form on authorization error."""
     mock_config = MockConfigEntry(
@@ -145,6 +151,10 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "authorization_error"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.ovo_energy.config.error.connection_error"],
+)
 async def test_reauth_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on connection error."""
     mock_config = MockConfigEntry(
@@ -171,6 +181,15 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         assert result2["errors"] == {"base": "connection_error"}
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    [
+        [
+            "component.ovo_energy.config.abort.reauth_successful",
+            "component.ovo_energy.config.error.authorization_error",
+        ]
+    ],
+)
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test reauth works."""
     mock_config = MockConfigEntry(

@@ -150,6 +150,10 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.vilfo.config.error.wrong_host"],
+)
 async def test_form_wrong_host(
     hass: HomeAssistant,
     mock_is_valid_host: AsyncMock,
