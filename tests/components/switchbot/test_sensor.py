@@ -70,10 +70,9 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:aa",
+            CONF_ADDRESS: "AA:BB:CC:DD:EE:AA",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
-            CONF_SENSOR_TYPE: "bot",
         },
         unique_id="aabbccddeeaa",
     )
