@@ -49,6 +49,10 @@ class NikoHomeControlCover(CoverEntity):
         self._attr_unique_id = f"cover-{cover.action_id}"
         self._attr_name = cover.name
         self._moving = False
+
+        area = None
+        if options["importLocations"] is not False:
+            area = cover.location
         if options["treatAsDevice"] is not False:
             self._attr_device_info = {
                 "identifiers": {(DOMAIN, self._attr_unique_id)},
@@ -56,10 +60,8 @@ class NikoHomeControlCover(CoverEntity):
                 "name": cover.name,
                 "model": "P.O.M",
                 "via_device": hub._via_device,
+                "suggested_area": area,
             }
-            if options["importLocations"] is not False:
-                self._attr_device_info["suggested_area"] = cover.location
-
         else:
             self._attr_device_info = hub._device_info
 

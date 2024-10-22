@@ -58,6 +58,9 @@ class NikoHomeControlLight(LightEntity):
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
+        area = None
+        if options["importLocations"] is not False:
+            area = light.location
         if options["treatAsDevice"] is not False:
             self._attr_device_info = {
                 "identifiers": {(DOMAIN, self._attr_unique_id)},
@@ -65,9 +68,8 @@ class NikoHomeControlLight(LightEntity):
                 "name": light.name,
                 "model": "P.O.M",
                 "via_device": hub._via_device,
+                "suggested_area": area,
             }
-            if options["importLocations"] is not False:
-                self._attr_device_info["suggested_area"] = light.location
         else:
             self._attr_device_info = hub._device_info
 

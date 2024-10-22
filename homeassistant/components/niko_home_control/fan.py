@@ -50,6 +50,9 @@ class NikoHomeControlFan(FanEntity):
         )
         self._preset_modes = ["low", "medium", "high", "very_high"]
 
+        area = None
+        if options["importLocations"] is not False:
+            area = action.location
         if options["treatAsDevice"] is not False:
             self._attr_device_info = {
                 "identifiers": {(DOMAIN, self._attr_unique_id)},
@@ -57,9 +60,8 @@ class NikoHomeControlFan(FanEntity):
                 "name": action.name,
                 "model": "P.O.M",
                 "via_device": hub._via_device,
+                "suggested_area": area,
             }
-            if options["importLocations"] is not False:
-                self._attr_device_info["suggested_area"] = action.location
         else:
             self._attr_device_info = hub._device_info
 
