@@ -266,6 +266,42 @@ async def test_async_step_bluetooth_valid_device_v4_encryption(
     assert result3["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
+async def test_async_step_bluetooth_valid_device_v4_encryption_from_cloud(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery via bluetooth with a valid device, with v4 encryption."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=JTYJGD03MI_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "cloud_auth"},
+    )
+    device = XiaomiCloudBLEDevice(
+        name="x",
+        mac="54:EF:44:E3:9C:BC",
+        bindkey="5b51a7c91cde6707c9ef18dfda143a58",
+    )
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.XiaomiCloudTokenFetch.get_device_info",
+        return_value=device,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={"username": "x@x.x", "password": "x"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result3["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result3["result"].unique_id == "54:EF:44:E3:9C:BC"
+
+
 async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key(
     hass: HomeAssistant,
 ) -> None:
