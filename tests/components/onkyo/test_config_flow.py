@@ -417,22 +417,19 @@ async def test_import_success(
         "info": info,
     }
 
-    with (
-        patch("homeassistant.components.onkyo.config_flow"),
-    ):
-        import_result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
-        )
-        await hass.async_block_till_done()
+    import_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
+    )
+    await hass.async_block_till_done()
 
-        assert import_result["type"] is FlowResultType.CREATE_ENTRY
-        assert import_result["data"]["host"] == "host 1"
-        assert import_result["options"]["volume_resolution"] == 80
-        assert import_result["options"]["max_volume"] == 100
-        assert import_result["options"]["input_sources"] == {
-            "00": "Auxiliary",
-            "01": "Video",
-        }
+    assert import_result["type"] is FlowResultType.CREATE_ENTRY
+    assert import_result["data"]["host"] == "host 1"
+    assert import_result["options"]["volume_resolution"] == 80
+    assert import_result["options"]["max_volume"] == 100
+    assert import_result["options"]["input_sources"] == {
+        "00": "Auxiliary",
+        "01": "Video",
+    }
 
 
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
