@@ -229,34 +229,6 @@ async def test_api_supervisor_stats(
     assert aioclient_mock.call_count == 1
 
 
-async def test_api_discovery_message(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API discovery message."""
-    aioclient_mock.get(
-        "http://127.0.0.1/discovery/test",
-        json={"result": "ok", "data": {"service": "mqtt"}},
-    )
-
-    data = await hassio_handler.get_discovery_message("test")
-    assert data["service"] == "mqtt"
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_retrieve_discovery(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API discovery message."""
-    aioclient_mock.get(
-        "http://127.0.0.1/discovery",
-        json={"result": "ok", "data": {"discovery": [{"service": "mqtt"}]}},
-    )
-
-    data = await hassio_handler.retrieve_discovery_messages()
-    assert data["discovery"][-1]["service"] == "mqtt"
-    assert aioclient_mock.call_count == 1
-
-
 async def test_api_ingress_panels(
     hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -287,7 +259,7 @@ async def test_api_ingress_panels(
 @pytest.mark.parametrize(
     ("api_call", "method", "payload"),
     [
-        ("retrieve_discovery_messages", "GET", None),
+        ("get_resolution_info", "GET", None),
         ("refresh_updates", "POST", None),
         ("update_diagnostics", "POST", True),
     ],

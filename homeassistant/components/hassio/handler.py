@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
+from .const import ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,15 +74,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
     """
     hassio: HassIO = hass.data[DOMAIN]
     return await hassio.update_diagnostics(diagnostics)
-
-
-@bind_hass
-async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
-    """Return discovery data for an add-on."""
-    hassio: HassIO = hass.data[DOMAIN]
-    data = await hassio.retrieve_discovery_messages()
-    discovered_addons = data[ATTR_DISCOVERY]
-    return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
 @bind_hass
@@ -331,22 +322,6 @@ class HassIO:
         This method returns a coroutine.
         """
         return self.send_command("/refresh_updates", timeout=300)
-
-    @api_data
-    def retrieve_discovery_messages(self) -> Coroutine:
-        """Return all discovery data from Hass.io API.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/discovery", method="get", timeout=60)
-
-    @api_data
-    def get_discovery_message(self, uuid: str) -> Coroutine:
-        """Return a single discovery data message.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/discovery/{uuid}", method="get")
 
     @api_data
     def get_resolution_info(self) -> Coroutine:
