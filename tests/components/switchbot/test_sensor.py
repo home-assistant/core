@@ -86,7 +86,7 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
     battery_sensor_attrs = battery_sensor.attributes
-    assert battery_sensor.state == "89"
+    assert battery_sensor.state == "100"
     assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
     assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"

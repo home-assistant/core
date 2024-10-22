@@ -214,7 +214,7 @@ WOMETERTHPC_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"5\x00d"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-    address="aa:bb:cc:dd:ee:aa",
+    address="AA:BB:CC:DD:EE:AA",
     rssi=-60,
     source="local",
     advertisement=generate_advertisement_data(
@@ -225,7 +225,7 @@ WOMETERTHPC_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"5\x00d"},
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("aa:bb:cc:dd:ee:aa", "WoTHPc"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:AA", "WoTHPc"),
     time=0,
     connectable=True,
     tx_power=-127,
