@@ -28,11 +28,14 @@ from .const import (
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
     ATTR_API_DAILY_FORECAST,
+    ATTR_API_DATETIME,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST,
     ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
     ATTR_API_MINUTE_FORECAST,
+    ATTR_API_PRECIPITATION,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -113,10 +116,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _get_minute_weather_data(self, minute_forecast: list[MinutelyWeatherForecast]):
         return {
-            "forecast": [
+            ATTR_API_FORECAST: [
                 {
-                    "datetime": item.date_time,
-                    "precipitation": round(item.precipitation, 2),
+                    ATTR_API_DATETIME: item.date_time,
+                    ATTR_API_PRECIPITATION: round(item.precipitation, 2),
                 }
                 for item in minute_forecast
             ]
