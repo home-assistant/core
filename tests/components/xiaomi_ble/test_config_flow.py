@@ -96,20 +96,25 @@ async def test_async_step_bluetooth_valid_device_but_missing_payload_then_full(
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=MISSING_PAYLOAD_ENCRYPTED,
         )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "get_encryption_key_4_5"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
 
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             user_input={"bindkey": "a115210eed7a88e50ad52662e732a9fb"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
-    assert result2["result"].unique_id == "A4:C1:38:56:53:84"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
+    assert result3["result"].unique_id == "A4:C1:38:56:53:84"
 
 
 async def test_async_step_bluetooth_during_onboarding(hass: HomeAssistant) -> None:
@@ -239,21 +244,26 @@ async def test_async_step_bluetooth_valid_device_v4_encryption(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=JTYJGD03MI_SERVICE_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "get_encryption_key_4_5"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
 
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
-    assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
-    assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result3["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result3["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
 async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key(
@@ -265,31 +275,36 @@ async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=JTYJGD03MI_SERVICE_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "get_encryption_key_4_5"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"bindkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "get_encryption_key_4_5"
-    assert result2["errors"]["bindkey"] == "decryption_failed"
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "get_encryption_key_4_5"
+    assert result3["errors"]["bindkey"] == "decryption_failed"
 
     # Test can finish flow
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
-    assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
-    assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result4["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result4["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
 async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key_length(
@@ -301,31 +316,36 @@ async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key_length(
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=JTYJGD03MI_SERVICE_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "get_encryption_key_4_5"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"bindkey": "5b51a7c91cde6707c9ef18fda143a58"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "get_encryption_key_4_5"
-    assert result2["errors"]["bindkey"] == "expected_32_characters"
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "get_encryption_key_4_5"
+    assert result3["errors"]["bindkey"] == "expected_32_characters"
 
     # Test can finish flow
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
-    assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
-    assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result4["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result4["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
 async def test_async_step_bluetooth_not_xiaomi(hass: HomeAssistant) -> None:
@@ -457,20 +477,25 @@ async def test_async_step_user_short_payload_then_full(hass: HomeAssistant) -> N
             result["flow_id"],
             user_input={"address": "A4:C1:38:56:53:84"},
         )
-    assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "get_encryption_key_4_5"
+    assert result1["type"] is FlowResultType.MENU
+    assert result1["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
 
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             user_input={"bindkey": "a115210eed7a88e50ad52662e732a9fb"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Temperature/Humidity Sensor 5384 (LYWSD03MMC)"
-    assert result2["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Temperature/Humidity Sensor 5384 (LYWSD03MMC)"
+    assert result3["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
 
 
 async def test_async_step_user_with_found_devices_v4_encryption(
@@ -492,21 +517,26 @@ async def test_async_step_user_with_found_devices_v4_encryption(
         result["flow_id"],
         user_input={"address": "54:EF:44:E3:9C:BC"},
     )
-    assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "get_encryption_key_4_5"
+    assert result1["type"] is FlowResultType.MENU
+    assert result1["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
 
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
-    assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
-    assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result3["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result3["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
 async def test_async_step_user_with_found_devices_v4_encryption_wrong_key(
@@ -530,31 +560,36 @@ async def test_async_step_user_with_found_devices_v4_encryption_wrong_key(
         result["flow_id"],
         user_input={"address": "54:EF:44:E3:9C:BC"},
     )
-    assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "get_encryption_key_4_5"
+    assert result1["type"] is FlowResultType.MENU
+    assert result1["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
 
     # Try an incorrect key
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"bindkey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "get_encryption_key_4_5"
-    assert result2["errors"]["bindkey"] == "decryption_failed"
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "get_encryption_key_4_5"
+    assert result3["errors"]["bindkey"] == "decryption_failed"
 
     # Check can still finish flow
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
-    assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
-    assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result4["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result4["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
 async def test_async_step_user_with_found_devices_v4_encryption_wrong_key_length(
@@ -578,33 +613,38 @@ async def test_async_step_user_with_found_devices_v4_encryption_wrong_key_length
         result["flow_id"],
         user_input={"address": "54:EF:44:E3:9C:BC"},
     )
-    assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "get_encryption_key_4_5"
+    assert result1["type"] is FlowResultType.MENU
+    assert result1["step_id"] == "get_encryption_key_4_5_choose_method"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
 
     # Try an incorrect key
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"bindkey": "5b51a7c91cde6707c9ef1dfda143a58"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "get_encryption_key_4_5"
-    assert result2["errors"]["bindkey"] == "expected_32_characters"
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "get_encryption_key_4_5"
+    assert result3["errors"]["bindkey"] == "expected_32_characters"
 
     # Check can still finish flow
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
-    assert result2["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
-    assert result2["result"].unique_id == "54:EF:44:E3:9C:BC"
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Smoke Detector 9CBC (JTYJGD03MI)"
+    assert result4["data"] == {"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"}
+    assert result4["result"].unique_id == "54:EF:44:E3:9C:BC"
 
 
 async def test_async_step_user_with_found_devices_legacy_encryption(
@@ -1003,14 +1043,19 @@ async def test_async_step_reauth_v4(hass: HomeAssistant) -> None:
     assert len(results) == 1
     result = results[0]
 
-    assert result["step_id"] == "get_encryption_key_4_5"
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
     )
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_async_step_reauth_v4_wrong_key(hass: HomeAssistant) -> None:
@@ -1052,22 +1097,27 @@ async def test_async_step_reauth_v4_wrong_key(hass: HomeAssistant) -> None:
     assert len(results) == 1
     result = results[0]
 
-    assert result["step_id"] == "get_encryption_key_4_5"
+    assert result["step_id"] == "get_encryption_key_4_5_choose_method"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        user_input={"next_step_id": "get_encryption_key_4_5"},
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
         user_input={"bindkey": "5b51a7c91cde6707c9ef18dada143a58"},
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "get_encryption_key_4_5"
-    assert result2["errors"]["bindkey"] == "decryption_failed"
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "get_encryption_key_4_5"
+    assert result3["errors"]["bindkey"] == "decryption_failed"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
         user_input={"bindkey": "5b51a7c91cde6707c9ef18dfda143a58"},
     )
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result4["type"] is FlowResultType.ABORT
+    assert result4["reason"] == "reauth_successful"
 
 
 async def test_async_step_reauth_abort_early(hass: HomeAssistant) -> None:
