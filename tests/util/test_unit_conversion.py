@@ -400,6 +400,12 @@ _CONVERTED_VALUE: dict[
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
         ),
         (
+            25,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            4,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        ),
+        (
             20,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
             3.106856,
@@ -409,6 +415,18 @@ _CONVERTED_VALUE: dict[
             20,
             UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
             5,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        ),
+        (
+            10,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            16.09344,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        ),
+        (
+            16.09344,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            10,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
         ),
     ],

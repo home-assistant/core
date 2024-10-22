@@ -783,6 +783,7 @@ class UnitOfEnergyDistance(StrEnum):
     KILO_WATT_HOUR_PER_100_KM = "kWh/100km"
     KILO_WATT_HOUR_PER_100_MI = "kWh/100mi"
     MILES_PER_KILO_WATT_HOUR = "mi/kWh"
+    KM_PER_KILO_WATT_HOUR = "km/kWh"
 
 
 _DEPRECATED_ENERGY_KILO_WATT_HOUR: Final = DeprecatedConstantEnum(

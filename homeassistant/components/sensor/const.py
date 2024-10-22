@@ -193,7 +193,7 @@ class SensorDeviceClass(StrEnum):
     Use this device class for sensors measuring energy by distance, for example the amount
     of electric energy consumed by an electric car.
 
-    Unit of measurement: `kWh/100km`, `kWh/100mi`, `mi/kWh`
+    Unit of measurement: `kWh/100km`, `kWh/100mi`, `mi/kWh`, `km/kWh`
     """
 
     ENERGY_STORAGE = "energy_storage"

@@ -243,6 +243,7 @@ class EnergyDistanceConverter(BaseUnitConverter):
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
         UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
     }
 
     @classmethod
@@ -289,12 +290,32 @@ class EnergyDistanceConverter(BaseUnitConverter):
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
+        if (
+            from_unit == UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR
+            and to_unit == UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR
+        ):
+            return lambda val: cls._kwh_per_100km_to_km_per_kwh(
+                cls._mi_per_kwh_to_kwh_per_100km(val)
+            )
+        if (
+            from_unit == UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR
+            and to_unit == UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR
+        ):
+            return lambda val: cls._kwh_per_100km_to_mi_per_kwh(
+                cls._km_per_kwh_to_kwh_per_100km(val)
+            )
         if from_unit == UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR:
             to_ratio = cls._UNIT_CONVERSION[to_unit]
             return lambda val: cls._mi_per_kwh_to_kwh_per_100km(val) * to_ratio
+        if from_unit == UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR:
+            to_ratio = cls._UNIT_CONVERSION[to_unit]
+            return lambda val: cls._km_per_kwh_to_kwh_per_100km(val) * to_ratio
         if to_unit == UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR:
             from_ratio = cls._UNIT_CONVERSION[from_unit]
             return lambda val: cls._kwh_per_100km_to_mi_per_kwh(val / from_ratio)
+        if to_unit == UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR:
+            from_ratio = cls._UNIT_CONVERSION[from_unit]
+            return lambda val: cls._kwh_per_100km_to_km_per_kwh(val / from_ratio)
 
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return lambda val: (val / from_ratio) * to_ratio
@@ -305,9 +326,19 @@ class EnergyDistanceConverter(BaseUnitConverter):
         return float(100 / (_MILE_TO_M / _KM_TO_M) / x)
 
     @classmethod
+    def _kwh_per_100km_to_km_per_kwh(cls, x: float) -> float:
+        """Convert a consumption in kWh/100km to km/kWh."""
+        return float(100 / x)
+
+    @classmethod
     def _mi_per_kwh_to_kwh_per_100km(cls, x: float) -> float:
         """Convert a consumption in mi/kWh to kWh/100km."""
         return float(100 / (_MILE_TO_M / _KM_TO_M) / x)
+
+    @classmethod
+    def _km_per_kwh_to_kwh_per_100km(cls, x: float) -> float:
+        """Convert a consumption in km/kWh to kWh/100km."""
+        return float(100 / x)
 
 
 class InformationConverter(BaseUnitConverter):
