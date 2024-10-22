@@ -23,10 +23,15 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import media_browser
-from .const import LOGGER
+from .const import (
+    CAMBRIDGE_MEDIA_TYPE_AIRABLE,
+    CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
+    CAMBRIDGE_MEDIA_TYPE_PRESET,
+)
 from .entity import CambridgeAudioEntity, command
 
 BASE_FEATURES = (
@@ -307,16 +312,28 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     ) -> None:
         """Play media on the Cambridge Audio device."""
 
-        if media_type != "preset_item_id":
-            LOGGER.debug(
-                "Unsupported media type for Cambridge Audio device: %s", media_type
+        if media_type not in {
+            CAMBRIDGE_MEDIA_TYPE_PRESET,
+            CAMBRIDGE_MEDIA_TYPE_AIRABLE,
+            CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
+        }:
+            raise HomeAssistantError(
+                f"Unsupported media type for Cambridge Audio device: {media_type}"
             )
-            return
-        preset_id = int(media_id)
-        preset = None
-        for _preset in self.client.preset_list.presets:
-            if _preset.preset_id == preset_id:
-                preset = _preset
-        if not preset:
-            raise ValueError(f"Missing preset for media_id: {media_id}")
-        await self.client.recall_preset(preset.preset_id)
+
+        if media_type == CAMBRIDGE_MEDIA_TYPE_PRESET:
+            preset_id = int(media_id)
+            preset = None
+            for _preset in self.client.preset_list.presets:
+                if _preset.preset_id == preset_id:
+                    preset = _preset
+            if not preset:
+                raise ValueError(f"Missing preset for media_id: {media_id}")
+            await self.client.recall_preset(preset.preset_id)
+
+        if media_type == CAMBRIDGE_MEDIA_TYPE_AIRABLE:
+            preset_id = int(media_id)
+            await self.client.play_radio_airable("Radio", preset_id)
+
+        if media_type == CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO:
+            await self.client.play_radio_url("Radio", media_id)
