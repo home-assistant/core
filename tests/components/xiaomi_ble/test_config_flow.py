@@ -269,7 +269,7 @@ async def test_async_step_bluetooth_valid_device_v4_encryption(
 async def test_async_step_bluetooth_valid_device_v4_encryption_from_cloud(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery via bluetooth with a valid device, with v4 encryption."""
+    """Test discovery via bluetooth with a valid v4 device, with auth from cloud."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
