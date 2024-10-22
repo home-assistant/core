@@ -14,7 +14,6 @@ from evohomeasync2.broker import Broker
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
-from homeassistant.components.evohome.coordinator import EvoBroker
 from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -143,7 +142,14 @@ async def setup_evohome(
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
         patch("evohomeasync2.broker.Broker.get", mock_get_factory(install)),
     ):
-        mock_client.side_effect = EvohomeClient
+        evo: EvohomeClient | None = None
+
+        def evohome_client(*args, **kwargs) -> EvohomeClient:
+            nonlocal evo
+            evo = EvohomeClient(*args, **kwargs)
+            return evo
+
+        mock_client.side_effect = evohome_client
 
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
@@ -155,21 +161,19 @@ async def setup_evohome(
 
         assert isinstance(mock_client.call_args.kwargs["session"], ClientSession)
 
-        assert mock_client.account_info is not None
+        assert evo and evo.account_info is not None
 
+        mock_client.return_value = evo
         yield mock_client
 
 
-def get_dhw_entity(hass: HomeAssistant) -> EvoDHW:
+def get_dhw_entity(hass: HomeAssistant, evo: EvohomeClient) -> EvoDHW:
     """Return the WaterHeater entity of the evohome integration."""
 
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
-
-    if (dhw := broker.tcs.hotwater) is None:
+    if (dhw := evo._get_single_tcs().hotwater) is None:
         pytest.fail("DHW expected, but was not found")
 
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
+    entity_id = er.async_get(hass).async_get_entity_id(
         Platform.WATER_HEATER, DOMAIN, dhw._id
     )
 
@@ -185,5 +189,5 @@ async def dhw(
 ) -> AsyncGenerator[EvoDHW]:
     """Return the WaterHeater entity of the evohome integration."""
 
-    async for _ in setup_evohome(hass, config, install=install):
-        yield get_dhw_entity(hass)
+    async for mock_client in setup_evohome(hass, config, install=install):
+        yield get_dhw_entity(hass, mock_client.return_value)
