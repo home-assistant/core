@@ -36,60 +36,31 @@ from homeassistant.exceptions import ServiceValidationError
 from .conftest import PlayerMocks
 
 
-async def test_pause(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_NEXT_TRACK, "skip"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "back"),
+    ],
+)
+async def test_simple_actions(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    service: str,
+    method: str,
 ) -> None:
-    """Test the media player pause."""
+    """Test the media player simple actions."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
+        service,
         {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
-    player_mocks.player_data.player.pause.assert_called_once()
-
-
-async def test_play(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
-) -> None:
-    """Test the media player play."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
-        blocking=True,
-    )
-
-    player_mocks.player_data.player.play.assert_called_once()
-
-
-async def test_next_track(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
-) -> None:
-    """Test the media player next track."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
-        blocking=True,
-    )
-
-    player_mocks.player_data.player.skip.assert_called_once()
-
-
-async def test_previous_track(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
-) -> None:
-    """Test the media player previous track."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
-        blocking=True,
-    )
-
-    player_mocks.player_data.player.back.assert_called_once()
+    getattr(player_mocks.player_data.player, method).assert_called_once_with()
 
 
 async def test_volume_set(
@@ -307,7 +278,9 @@ async def test_attr_master(
     player_mocks: PlayerMocks,
 ) -> None:
     """Test the media player master."""
-    attr_master = hass.states.get("media_player.player_name1111").attributes[ATTR_MASTER]
+    attr_master = hass.states.get("media_player.player_name1111").attributes[
+        ATTR_MASTER
+    ]
     assert attr_master is False
 
     updated_sync_status = dataclasses.replace(
@@ -319,7 +292,9 @@ async def test_attr_master(
     # give the long polling loop a chance to update the state; this could be any async call
     await hass.async_block_till_done()
 
-    attr_master = hass.states.get("media_player.player_name1111").attributes[ATTR_MASTER]
+    attr_master = hass.states.get("media_player.player_name1111").attributes[
+        ATTR_MASTER
+    ]
 
     assert attr_master is True
 
