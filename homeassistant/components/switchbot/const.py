@@ -20,6 +20,7 @@ class SupportedModels(StrEnum):
     CEILING_LIGHT = "ceiling_light"
     CURTAIN = "curtain"
     HYGROMETER = "hygrometer"
+    HYGROMETER_CO2 = "hygrometer_co2"
     LIGHT_STRIP = "light_strip"
     CONTACT = "contact"
     PLUG = "plug"
