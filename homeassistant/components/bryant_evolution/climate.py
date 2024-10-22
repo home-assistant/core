@@ -1,6 +1,5 @@
 """Support for Bryant Evolution HVAC systems."""
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -9,23 +8,21 @@ from evolutionhttp import BryantEvolutionLocalClient
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_FILENAME, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BryantEvolutionConfigEntry, names
 from .const import CONF_SYSTEM_ZONE, DOMAIN
+from .coordinator import EvolutionCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -38,21 +35,25 @@ async def async_setup_entry(
     # Add a climate entity for each system/zone.
     sam_uid = names.sam_device_uid(config_entry)
     entities: list[Entity] = []
+
     for sz in config_entry.data[CONF_SYSTEM_ZONE]:
         system_id = sz[0]
         zone_id = sz[1]
-        client = config_entry.runtime_data.get(tuple(sz))
         climate = BryantEvolutionClimate(
-            client,
+            await BryantEvolutionLocalClient.get_client(
+                system_id, zone_id, config_entry.data[CONF_FILENAME]
+            ),
+            config_entry.runtime_data,  # coordinator
             system_id,
             zone_id,
+            config_entry.data[CONF_FILENAME],
             sam_uid,
         )
         entities.append(climate)
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
-class BryantEvolutionClimate(ClimateEntity):
+class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEntity):
     """ClimateEntity for Bryant Evolution HVAC systems.
 
     Design note: this class updates using polling. However, polling
@@ -82,12 +83,18 @@ class BryantEvolutionClimate(ClimateEntity):
     def __init__(
         self,
         client: BryantEvolutionLocalClient,
+        coordinator: EvolutionCoordinator,
         system_id: int,
         zone_id: int,
+        tty: str,
         sam_uid: str,
     ) -> None:
         """Initialize an entity from parts."""
+        super().__init__(coordinator)
         self._client = client
+        self._system_id = system_id
+        self._zone_id = zone_id
+        self._tty = tty
         self._attr_name = None
         self._attr_unique_id = names.zone_entity_uid(sam_uid, system_id, zone_id)
         self._attr_device_info = DeviceInfo(
@@ -96,105 +103,34 @@ class BryantEvolutionClimate(ClimateEntity):
             via_device=(DOMAIN, names.system_device_uid(sam_uid, system_id)),
             name=f"System {system_id} Zone {zone_id}",
         )
+        self._set_attrs_from_coordinator()
 
-    async def async_update(self) -> None:
-        """Update the entity state."""
-        self._attr_current_temperature = await self._client.read_current_temperature()
-        if (fan_mode := await self._client.read_fan_mode()) is not None:
-            self._attr_fan_mode = fan_mode.lower()
-        else:
-            self._attr_fan_mode = None
-        self._attr_target_temperature = None
-        self._attr_target_temperature_high = None
-        self._attr_target_temperature_low = None
-        self._attr_hvac_mode = await self._read_hvac_mode()
+    def _set_attrs_from_coordinator(self) -> None:
+        # Propagate some parameters that are really system-level, not zone-level,
+        # but that the climate entity needs.
+        self._attr_fan_mode = self.coordinator.data.read_fan_mode(self._system_id)
+        self._attr_hvac_mode = self.coordinator.data.read_hvac_mode(self._system_id)
 
-        # Set target_temperature or target_temperature_{high, low} based on mode.
-        match self._attr_hvac_mode:
-            case HVACMode.HEAT:
-                self._attr_target_temperature = (
-                    await self._client.read_heating_setpoint()
-                )
-            case HVACMode.COOL:
-                self._attr_target_temperature = (
-                    await self._client.read_cooling_setpoint()
-                )
-            case HVACMode.HEAT_COOL:
-                self._attr_target_temperature_high = (
-                    await self._client.read_cooling_setpoint()
-                )
-                self._attr_target_temperature_low = (
-                    await self._client.read_heating_setpoint()
-                )
-            case HVACMode.OFF:
-                pass
-            case _:
-                _LOGGER.error("Unknown HVAC mode %s", self._attr_hvac_mode)
-
-        # Note: depends on current temperature and target temperature low read
-        # above.
-        self._attr_hvac_action = await self._read_hvac_action()
-
-    async def _read_hvac_mode(self) -> HVACMode:
-        mode_and_active = await self._client.read_hvac_mode()
-        if not mode_and_active:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="failed_to_read_hvac_mode"
-            )
-        mode = mode_and_active[0]
-        mode_enum = {
-            "HEAT": HVACMode.HEAT,
-            "COOL": HVACMode.COOL,
-            "AUTO": HVACMode.HEAT_COOL,
-            "OFF": HVACMode.OFF,
-        }.get(mode.upper())
-        if mode_enum is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_parse_hvac_mode",
-                translation_placeholders={"mode": mode},
-            )
-        return mode_enum
-
-    async def _read_hvac_action(self) -> HVACAction:
-        """Return the current running hvac operation."""
-        mode_and_active = await self._client.read_hvac_mode()
-        if not mode_and_active:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="failed_to_read_hvac_action"
-            )
-        mode, is_active = mode_and_active
-        if not is_active:
-            return HVACAction.OFF
-        match mode.upper():
-            case "HEAT":
-                return HVACAction.HEATING
-            case "COOL":
-                return HVACAction.COOLING
-            case "OFF":
-                return HVACAction.OFF
-            case "AUTO":
-                # In AUTO, we need to figure out what the actual action is
-                # based on the setpoints.
-                if (
-                    self.current_temperature is not None
-                    and self.target_temperature_low is not None
-                ):
-                    if self.current_temperature > self.target_temperature_low:
-                        # If the system is on and the current temperature is
-                        # higher than the point at which heating would activate,
-                        # then we must be cooling.
-                        return HVACAction.COOLING
-                    return HVACAction.HEATING
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="failed_to_parse_hvac_mode",
-            translation_placeholders={
-                "mode_and_active": mode_and_active,
-                "current_temperature": str(self.current_temperature),
-                "target_temperature_low": str(self.target_temperature_low),
-            },
+        # Read the zone-level parameters.
+        self._attr_current_temperature = self.coordinator.data.read_current_temperature(
+            self._system_id, self._zone_id
         )
+        (
+            self._attr_target_temperature,
+            self._attr_target_temperature_low,
+            self._attr_target_temperature_high,
+        ) = self.coordinator.data.read_target_temperatures(
+            self._system_id, self._zone_id
+        )
+        self._attr_hvac_action = self.coordinator.data.read_hvac_action(
+            self._system_id, self._zone_id
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._set_attrs_from_coordinator()
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -206,6 +142,7 @@ class BryantEvolutionClimate(ClimateEntity):
             )
         self._attr_hvac_mode = hvac_mode
         self._async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -241,6 +178,7 @@ class BryantEvolutionClimate(ClimateEntity):
         # If we get here, we must have changed something unless HA allowed an
         # invalid service call (without any recognized kwarg).
         self._async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -250,3 +188,4 @@ class BryantEvolutionClimate(ClimateEntity):
             )
         self._attr_fan_mode = fan_mode.lower()
         self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
