@@ -1,6 +1,7 @@
 """The Hunter Douglas PowerView integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
@@ -151,10 +152,11 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) 
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
     )
+    if TYPE_CHECKING:
+        assert entry.unique_id
     for reg_entry in registry_entries:
         if isinstance(reg_entry.unique_id, int) or (
             isinstance(reg_entry.unique_id, str)
-            and entry.unique_id is not None
             and not reg_entry.unique_id.startswith(entry.unique_id)
         ):
             _LOGGER.debug(
