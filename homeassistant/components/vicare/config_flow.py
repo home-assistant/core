@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 
 # from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_entry_oauth2_flow
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_HEATING_TYPE, DEFAULT_HEATING_TYPE, DOMAIN, HeatingType
@@ -27,13 +28,6 @@ SCOPES = [
     "IoT User",
     "offline_access",  # required to get a refresh_token
 ]
-
-# REAUTH_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_PASSWORD): cv.string,
-#         vol.Required(CONF_CLIENT_ID): cv.string,
-#     }
-# )
 
 USER_SCHEMA = vol.Schema(
     # REAUTH_SCHEMA.extend(
@@ -57,7 +51,6 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    entry: ConfigEntry | None
 
     @property
     def logger(self) -> logging.Logger:

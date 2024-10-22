@@ -29,6 +29,7 @@ from homeassistant.config_entries import (
     ConfigEntryBaseFlow,
     ConfigEntryState,
     ConfigFlow,
+    ConfigFlowContext,
     ConfigFlowResult,
     OptionsFlow,
     OptionsFlowManager,
@@ -192,7 +193,7 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
     @property
     @abstractmethod
-    def flow_manager(self) -> FlowManager[ConfigFlowResult]:
+    def flow_manager(self) -> FlowManager[ConfigFlowContext, ConfigFlowResult]:
         """Return the flow manager of the flow."""
 
     async def async_step_install_addon(

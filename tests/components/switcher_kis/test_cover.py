@@ -14,10 +14,7 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -58,7 +55,7 @@ async def test_cover(
 
     # Test initial state - open
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Test set position
     with patch(
@@ -78,7 +75,7 @@ async def test_cover(
         assert mock_api.call_count == 2
         mock_control_device.assert_called_once_with(77, 0)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_OPEN
+        assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 77
 
     # Test open
@@ -99,7 +96,7 @@ async def test_cover(
         assert mock_api.call_count == 4
         mock_control_device.assert_called_once_with(100, 0)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_OPENING
+        assert state.state == CoverState.OPENING
 
     # Test close
     with patch(
@@ -119,7 +116,7 @@ async def test_cover(
         assert mock_api.call_count == 6
         mock_control_device.assert_called_once_with(0, 0)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_CLOSING
+        assert state.state == CoverState.CLOSING
 
     # Test stop
     with patch(
@@ -139,7 +136,7 @@ async def test_cover(
         assert mock_api.call_count == 8
         mock_control_device.assert_called_once_with(0)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_OPEN
+        assert state.state == CoverState.OPEN
 
     # Test closed on position == 0
     monkeypatch.setattr(device, "position", 0)
@@ -147,7 +144,7 @@ async def test_cover(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
@@ -172,7 +169,7 @@ async def test_cover_control_fail(
 
     # Test initial state - open
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Test exception during set position
     with patch(
@@ -197,7 +194,7 @@ async def test_cover_control_fail(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Test error response during set position
     with patch(

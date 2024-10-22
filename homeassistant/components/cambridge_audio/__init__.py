@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONNECT_TIMEOUT, STREAM_MAGIC_EXCEPTIONS
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SELECT]
 
 _LOGGER = logging.getLogger(__name__)
 
