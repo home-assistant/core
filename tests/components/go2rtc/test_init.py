@@ -150,7 +150,7 @@ async def _test_setup_and_signaling(
     receive_message_callback = Mock(spec_set=WebRTCSendMessage)
 
     async def test() -> None:
-        await camera.async_handle_webrtc_offer(
+        await camera.async_handle_async_webrtc_offer(
             OFFER_SDP, "session_id", receive_message_callback
         )
         ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
@@ -182,7 +182,7 @@ async def _test_setup_and_signaling(
     rest_client.streams.list.return_value = {}
     receive_message_callback.reset_mock()
     camera.set_stream_source(None)
-    await camera.async_handle_webrtc_offer(
+    await camera.async_handle_async_webrtc_offer(
         OFFER_SDP, "session_id", receive_message_callback
     )
     receive_message_callback.assert_called_once_with(
@@ -259,7 +259,7 @@ async def message_callbacks(
     """Prepare and return receive message callback."""
     receivce_callback = Mock(spec_set=WebRTCSendMessage)
 
-    await init_test_integration.async_handle_webrtc_offer(
+    await init_test_integration.async_handle_async_webrtc_offer(
         OFFER_SDP, "session_id", receivce_callback
     )
     ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
@@ -338,7 +338,9 @@ async def test_on_candidate(
     caplog.clear()
 
     # Store session
-    await init_test_integration.async_handle_webrtc_offer(OFFER_SDP, session_id, Mock())
+    await init_test_integration.async_handle_async_webrtc_offer(
+        OFFER_SDP, session_id, Mock()
+    )
     ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
     ws_client.reset_mock()
 
@@ -362,7 +364,9 @@ async def test_close_session(
     ws_client.close.assert_not_called()
 
     # Store session
-    await init_test_integration.async_handle_webrtc_offer(OFFER_SDP, session_id, Mock())
+    await init_test_integration.async_handle_async_webrtc_offer(
+        OFFER_SDP, session_id, Mock()
+    )
     ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
 
     # Close session

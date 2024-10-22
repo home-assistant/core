@@ -47,7 +47,7 @@ class TestProvider(CameraWebRTCProvider):
         """Determine if the provider supports the stream source."""
         return self._is_supported
 
-    async def async_handle_webrtc_offer(
+    async def async_handle_async_webrtc_offer(
         self,
         camera: Camera,
         offer_sdp: str,
@@ -368,8 +368,8 @@ async def test_websocket_webrtc_offer_webrtc_provider(
     client = await hass_ws_client(hass)
     with (
         patch.object(
-            register_test_provider, "async_handle_webrtc_offer", autospec=True
-        ) as mock_async_handle_webrtc_offer,
+            register_test_provider, "async_handle_async_webrtc_offer", autospec=True
+        ) as mock_async_handle_async_webrtc_offer,
         patch.object(
             register_test_provider, "async_close_session", autospec=True
         ) as mock_async_close_session,
@@ -385,9 +385,11 @@ async def test_websocket_webrtc_offer_webrtc_provider(
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         subscription_id = response["id"]
-        mock_async_handle_webrtc_offer.assert_called_once()
-        assert mock_async_handle_webrtc_offer.call_args[0][1] == WEBRTC_OFFER
-        send_message: WebRTCSendMessage = mock_async_handle_webrtc_offer.call_args[0][3]
+        mock_async_handle_async_webrtc_offer.assert_called_once()
+        assert mock_async_handle_async_webrtc_offer.call_args[0][1] == WEBRTC_OFFER
+        send_message: WebRTCSendMessage = (
+            mock_async_handle_async_webrtc_offer.call_args[0][3]
+        )
 
         # Session id
         response = await client.receive_json()

@@ -613,7 +613,9 @@ async def test_camera_web_rtc(
 
     camera_obj = get_camera_from_entity_id(hass, "camera.my_camera")
     send_message = Mock(spec_set=WebRTCSendMessage)
-    await camera_obj.async_handle_webrtc_offer("a=recvonly", "session_id", send_message)
+    await camera_obj.async_handle_async_webrtc_offer(
+        "a=recvonly", "session_id", send_message
+    )
     send_message.assert_called_once_with(WebRTCAnswer("v=0\r\ns=-\r\n"))
 
     # Nest WebRTC cameras return a placeholder
@@ -637,7 +639,9 @@ async def test_camera_web_rtc_unsupported(
 
     camera_obj = get_camera_from_entity_id(hass, "camera.my_camera")
     send_message = Mock(spec_set=WebRTCSendMessage)
-    await camera_obj.async_handle_webrtc_offer("a=recvonly", "session_id", send_message)
+    await camera_obj.async_handle_async_webrtc_offer(
+        "a=recvonly", "session_id", send_message
+    )
     send_message.assert_called_once_with(
         WebRTCError("webrtc_offer_failed", "No answer on WebRTC offer")
     )
@@ -666,7 +670,7 @@ async def test_camera_web_rtc_offer_failure(
         HomeAssistantError,
         match="Nest API error: Bad Request",
     ):
-        await camera_obj.async_handle_webrtc_offer(
+        await camera_obj.async_handle_async_webrtc_offer(
             "a=recvonly", "session_id", send_message
         )
     send_message.assert_not_called()
@@ -727,5 +731,7 @@ async def test_camera_multiple_streams(
     # WebRTC stream
     camera_obj = get_camera_from_entity_id(hass, "camera.my_camera")
     send_message = Mock(spec_set=WebRTCSendMessage)
-    await camera_obj.async_handle_webrtc_offer("a=recvonly", "session_id", send_message)
+    await camera_obj.async_handle_async_webrtc_offer(
+        "a=recvonly", "session_id", send_message
+    )
     send_message.assert_called_once_with(WebRTCAnswer("v=0\r\ns=-\r\n"))

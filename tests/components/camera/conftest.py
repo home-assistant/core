@@ -80,14 +80,14 @@ async def mock_camera_webrtc(
 ) -> AsyncGenerator[None]:
     """Initialize a demo camera platform with WebRTC."""
 
-    async def async_handle_webrtc_offer(
+    async def async_handle_async_webrtc_offer(
         offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         send_message(WebRTCAnswer(WEBRTC_ANSWER))
 
     with patch(
-        "homeassistant.components.camera.Camera.async_handle_webrtc_offer",
-        side_effect=async_handle_webrtc_offer,
+        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+        side_effect=async_handle_async_webrtc_offer,
     ):
         yield
 

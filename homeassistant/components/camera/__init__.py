@@ -593,13 +593,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Integrations can override with a native WebRTC implementation.
         """
 
-    async def async_handle_webrtc_offer(
+    async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         """Handle the WebRTC offer in async. Messages and result are sent via send_message callback.
 
-        This is used by cameras with CameraEntityFeature.STREAM
-        and StreamType.WEB_RTC.
+        Integration overriding this method must also implement async_on_webrtc_candidate.
+        This is used by cameras with CameraEntityFeature.STREAM and StreamType.WEB_RTC.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -637,7 +637,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 return
 
         if self._webrtc_provider:
-            await self._webrtc_provider.async_handle_webrtc_offer(
+            await self._webrtc_provider.async_handle_async_webrtc_offer(
                 self, offer_sdp, session_id, send_message
             )
             return

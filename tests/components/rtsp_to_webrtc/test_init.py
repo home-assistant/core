@@ -103,7 +103,7 @@ async def test_offer_for_stream_source(
 
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
     send_message = Mock(spec_set=WebRTCSendMessage)
-    await camera.async_handle_webrtc_offer(OFFER_SDP, "session_id", send_message)
+    await camera.async_handle_async_webrtc_offer(OFFER_SDP, "session_id", send_message)
     send_message.assert_called_once_with(WebRTCAnswer(ANSWER_SDP))
 
     # Validate request parameters were sent correctly
@@ -134,5 +134,7 @@ async def test_offer_failure(
         HomeAssistantError,
         match="RTSPtoWebRTC server communication failure: ",
     ):
-        await camera.async_handle_webrtc_offer(OFFER_SDP, "session_id", send_message)
+        await camera.async_handle_async_webrtc_offer(
+            OFFER_SDP, "session_id", send_message
+        )
     send_message.assert_not_called()

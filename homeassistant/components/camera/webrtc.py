@@ -148,7 +148,7 @@ class CameraWebRTCProvider(Protocol):
     def async_is_supported(self, stream_source: str) -> bool:
         """Determine if the provider supports the stream source."""
 
-    async def async_handle_webrtc_offer(
+    async def async_handle_async_webrtc_offer(
         self,
         camera: Camera,
         offer_sdp: str,
@@ -280,7 +280,7 @@ async def ws_webrtc_offer(
     send_message(WebRTCSessionId(session_id))
 
     try:
-        await camera.async_handle_webrtc_offer(offer, session_id, send_message)
+        await camera.async_handle_async_webrtc_offer(offer, session_id, send_message)
     except HomeAssistantError as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         send_message(
