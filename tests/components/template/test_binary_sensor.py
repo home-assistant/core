@@ -1469,25 +1469,33 @@ async def test_device_id(
 @pytest.mark.parametrize(
     ("state_template", "expected_result"),
     [
-        ("{{ None }}", STATE_OFF),
+        ("{{ None }}", STATE_OFF),  # Would be nice if this mapped to STATE_UNKNOWN
         ("{{ True }}", STATE_ON),
         ("{{ False }}", STATE_OFF),
         ("{{ 1 }}", STATE_ON),
         (
-            "{% if states('binary_sensor.three') in ('unknown','unavailable') %}"
+            "{% if states('binary_sensor.other') in ('unknown','unavailable') %}"
             "{{ None }}"
             "{% else %}"
-            "{{ states('binary_sensor.three') == 'off' }}"
+            "{{ states('binary_sensor.other') == 'off' }}"
             "{% endif %}",
-            STATE_OFF,  # Sadly None currently maps to OFF
+            STATE_OFF,  # Would be nice if this mapped to STATE_UNKNOWN
         ),
         (
-            "{% if states('binary_sensor.three') in ('unknown','unavailable') %}"
+            "{% if states('binary_sensor.other') in ('unknown','unavailable') %}"
             "{{ none_sentinel() }}"
             "{% else %}"
-            "{{ states('binary_sensor.three') == 'off' }}"
+            "{{ states('binary_sensor.other') == 'off' }}"
             "{% endif %}",
-            STATE_OFF,
+            STATE_UNKNOWN,
+        ),
+        (
+            "{% if states('binary_sensor.other') in ('unknown','unavailable') %}"
+            "{{ 0 / 0 }}"
+            "{% else %}"
+            "{{ states('binary_sensor.other') == 'off' }}"
+            "{% endif %}",
+            STATE_UNAVAILABLE,
         ),
     ],
 )
@@ -1497,9 +1505,7 @@ async def test_state(
     expected_result: str,
 ) -> None:
     """Test the config flow."""
-    hass.states.async_set("binary_sensor.one", "on")
-    hass.states.async_set("binary_sensor.two", "off")
-    hass.states.async_set("binary_sensor.three", "unknown")
+    hass.states.async_set("binary_sensor.other", "unknown")
 
     template_config_entry = MockConfigEntry(
         data={},

@@ -301,11 +301,13 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             self._delay_cancel()
             self._delay_cancel = None
 
-        state = (
-            None
-            if result is template.NONE_SENTINEL or isinstance(result, TemplateError)
-            else template.result_as_boolean(result)
-        )
+        state: bool | None = None
+        if (
+            not isinstance(result, TemplateError)
+            # Temporary workaround for None in binary_sensor templates
+            and result != str(template.NONE_SENTINEL_STRING)
+        ):
+            state = template.result_as_boolean(result)
 
         if state == self._attr_is_on:
             return

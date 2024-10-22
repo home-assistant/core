@@ -128,6 +128,7 @@ ALL_STATES_RATE_LIMIT = 60  # seconds
 DOMAIN_STATES_RATE_LIMIT = 1  # seconds
 # Temporary workaround for None in binary_sensor templates
 NONE_SENTINEL = object()
+NONE_SENTINEL_STRING = str(NONE_SENTINEL)
 
 _render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
 
@@ -1279,7 +1280,7 @@ def forgiving_boolean[_T](
 
 
 # Temporary workaround for None in binary_sensor templates
-def none_sentinel():
+def none_sentinel() -> object:
     """Return a sentinel value for None."""
     return NONE_SENTINEL
 
