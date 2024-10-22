@@ -19,6 +19,11 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
         return self._handle("auto_update")
 
     @property
+    def display_precision(self) -> int:
+        """Return number of decimal digits for display of update progress."""
+        return self._handle("display_precision")
+
+    @property
     def installed_version(self) -> str | None:
         """Version currently installed and in use."""
         return self._handle("installed_version")
