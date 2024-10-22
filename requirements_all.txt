@@ -2626,7 +2626,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.2
+sensorpush-ble==1.7.0
 
 # homeassistant.components.sensoterra
 sensoterra==2.0.1
