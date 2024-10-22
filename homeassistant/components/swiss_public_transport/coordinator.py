@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import logging
 from typing import TypedDict
 
@@ -14,17 +14,36 @@ from opendata_transport.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
+from .const import (
+    CONNECTIONS_COUNT,
+    DEFAULT_DEPARTURE_MODE,
+    DEFAULT_DEPARTURE_TIME,
+    DEFAULT_DEPARTURE_TIME_OFFSET_MINUTES,
+    DEFAULT_UPDATE_TIME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+STORAGE_KEY_FORMAT = "{domain}.{entry_id}"
+STORAGE_VERSION = 1
 
 type SwissPublicTransportConfigEntry = ConfigEntry[
     SwissPublicTransportDataUpdateCoordinator
 ]
+
+
+class ConfigConnection(TypedDict):
+    """A connection config class."""
+
+    departure_mode: str
+    departure_time_offset: float
+    departure_time: str
 
 
 class DataConnection(TypedDict):
@@ -66,6 +85,71 @@ class SwissPublicTransportDataUpdateCoordinator(
             update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )
         self._opendata = opendata
+        self._store = Store[ConfigConnection](
+            hass,
+            STORAGE_VERSION,
+            STORAGE_KEY_FORMAT.format(
+                domain=DOMAIN, entry_id=self.config_entry.entry_id
+            ),
+        )
+        self._config: ConfigConnection | None = None
+
+    async def _async_setup(self):
+        """Set up the coordinator."""
+        await self.load_store()
+
+    async def load_store(self):
+        """Load the store."""
+        self._config = await self._store.async_load() or ConfigConnection(
+            departure_mode=DEFAULT_DEPARTURE_MODE,
+            departure_time=DEFAULT_DEPARTURE_TIME,
+            departure_time_offset=timedelta(
+                minutes=DEFAULT_DEPARTURE_TIME_OFFSET_MINUTES
+            ).total_seconds(),
+        )
+
+    async def save_store(self):
+        """Save the store."""
+        await self._store.async_save(self._config)
+
+    @property
+    def departure_mode(self) -> str:
+        """Return the departure mode of the config."""
+        if self._config:
+            return self._config["departure_mode"]
+        return DEFAULT_DEPARTURE_MODE
+
+    @departure_mode.setter
+    def departure_mode(self, value: str) -> None:
+        """Set the departure mode of the config."""
+        if self._config:
+            self._config["departure_mode"] = value
+
+    @property
+    def departure_time(self) -> time:
+        """Return the departure time of the config."""
+        if self._config:
+            return time.fromisoformat(self._config["departure_time"])
+        return time.fromisoformat(DEFAULT_DEPARTURE_TIME)
+
+    @departure_time.setter
+    def departure_time(self, value: time) -> None:
+        """Set the departure time of the config."""
+        if self._config:
+            self._config["departure_time"] = value.isoformat()
+
+    @property
+    def departure_time_offset(self) -> timedelta:
+        """Return the departure time offset of the config."""
+        if self._config:
+            return timedelta(seconds=self._config["departure_time_offset"])
+        return timedelta(minutes=DEFAULT_DEPARTURE_TIME_OFFSET_MINUTES)
+
+    @departure_time_offset.setter
+    def departure_time_offset(self, value: timedelta) -> None:
+        """Set the departure time offset of the config."""
+        if self._config:
+            self._config["departure_time_offset"] = value.total_seconds()
 
     def remaining_time(self, departure) -> timedelta | None:
         """Calculate the remaining time for the departure."""
@@ -80,7 +164,29 @@ class SwissPublicTransportDataUpdateCoordinator(
 
     async def fetch_connections(self, limit: int) -> list[DataConnection]:
         """Fetch connections using the opendata api."""
+        assert self._config
         self._opendata.limit = limit
+        now = dt_util.now()
+        if self._config["departure_mode"] == "now":
+            now_local = dt_util.as_local(now)
+            self._opendata.date = now_local.date()
+            self._opendata.time = now_local.time()
+        elif self._config["departure_mode"] == "relative":
+            now_local_offset = dt_util.as_local(
+                dt_util.now() + self.departure_time_offset
+            )
+            self._opendata.date = now_local_offset.date()
+            self._opendata.time = now_local_offset.time()
+        elif self._config["departure_mode"] == "absolute":
+            now_local = dt_util.as_local(now)
+            time_of_day = self.departure_time
+            self._opendata.date = (
+                now_local.date()
+                if time_of_day > now_local.time()
+                else (now_local + timedelta(days=1)).date()
+            )
+            self._opendata.time = time_of_day
+
         try:
             await self._opendata.async_get_data()
         except OpendataTransportConnectionError as e:

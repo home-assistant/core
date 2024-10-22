@@ -25,6 +25,21 @@
       "line": {
         "default": "mdi:transit-connection-variant"
       }
+    },
+    "select": {
+      "departure_mode": {
+        "default": "mdi:wrench-clock"
+      }
+    },
+    "time": {
+      "departure_time": {
+        "default": "mdi:clock-in"
+      }
+    },
+    "number": {
+      "departure_time_offset": {
+        "default": "mdi:clock-start"
+      }
     }
   },
   "services": {
