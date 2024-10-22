@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DESTINATION,
+    CONF_IS_ARRIVAL,
     CONF_START,
     CONF_TIME,
     CONF_TIME_OFFSET,
@@ -76,6 +77,7 @@ async def async_setup_entry(
         session,
         via=config.get(CONF_VIA),
         time=config.get(CONF_TIME),
+        isArrivalTime=config.get(CONF_IS_ARRIVAL, False),
     )
     if time_offset:
         offset_opendata(opendata, time_offset)
