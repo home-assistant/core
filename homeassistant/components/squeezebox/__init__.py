@@ -18,11 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceEntryType,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import DeviceEntryType
 
 from .const import (
     CONF_HTTPS,
@@ -32,7 +28,6 @@ from .const import (
     SERVER_MODEL,
     STATUS_API_TIMEOUT,
     STATUS_QUERY_LIBRARYNAME,
-    STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
     STATUS_QUERY_VERSION,
 )
