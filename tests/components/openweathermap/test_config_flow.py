@@ -18,7 +18,7 @@ from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DEFAULT_OWM_MODE,
     DOMAIN,
-    OWM_MODE_V25,
+    OWM_MODE_V30,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
@@ -40,7 +40,7 @@ CONFIG = {
     CONF_LATITUDE: 50,
     CONF_LONGITUDE: 40,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
-    CONF_MODE: OWM_MODE_V25,
+    CONF_MODE: OWM_MODE_V30,
 }
 
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
