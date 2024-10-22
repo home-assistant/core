@@ -19,11 +19,17 @@
           "from": "Start station",
           "to": "End station",
           "via": "List of up to 5 via stations",
-          "time": "Select a fixed time of day",
-          "time_offset": "Select a moving time offset",
-          "is_arrival": "Use arrival instead of departure for time and offset configuration"
+          "is_arrival": "Use arrival instead of departure",
+          "time_mode": "Select a time mode"
         },
-        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\nOptionally, you can also configure connections at a specific time or moving offset for departure or arrival.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\nOptionally, you can also configure connections at a specific time or moving offset.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "title": "Swiss Public Transport"
+      },
+      "optional": {
+        "data": {
+          "time": "Select the time of day",
+          "time_offset": "Select an offset duration"
+        },
         "title": "Swiss Public Transport"
       }
     }
@@ -87,6 +93,15 @@
     },
     "config_entry_not_found": {
       "message": "Swiss public transport integration instance \"{target}\" not found."
+    }
+  },
+  "selector": {
+    "time_mode": {
+      "options": {
+        "now": "Now",
+        "fixed": "At a fixed time of day",
+        "offset": "At an offset from now"
+      }
     }
   }
 }
