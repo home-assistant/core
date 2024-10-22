@@ -21,7 +21,7 @@
         "description": "Configure {name}",
         "data": {
           "volume_resolution": "Number of steps it takes for the receiver to go from the lowest to the highest possible volume",
-          "input_sources": "List of input sources this receiver supports"
+          "input_sources": "List of input sources supported by the receiver"
         }
       }
     },
