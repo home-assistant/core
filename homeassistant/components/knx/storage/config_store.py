@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
 
-KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
-KNXEntityStoreModel = dict[
+type KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
+type KNXEntityStoreModel = dict[
     str, KNXPlatformStoreModel
 ]  # platform: KNXPlatformStoreModel
 

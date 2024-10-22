@@ -104,7 +104,7 @@ from homeassistant.const import (
     ATTR_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -140,7 +140,6 @@ from .const import (
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
-    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
     CONF_BAUDRATE,
     CONF_CONSIDER_UNAVAILABLE_BATTERY,
     CONF_CONSIDER_UNAVAILABLE_MAINS,
@@ -171,7 +170,7 @@ if TYPE_CHECKING:
     from .entity import ZHAEntity
     from .update import ZHAFirmwareUpdateCoordinator
 
-    _LogFilterType = Filter | Callable[[LogRecord], bool]
+    type _LogFilterType = Filter | Callable[[LogRecord], bool]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -496,7 +495,7 @@ class ZHAGatewayProxy(EventBase):
         self.hass = hass
         self.config_entry = config_entry
         self.gateway = gateway
-        self.device_proxies: dict[str, ZHADeviceProxy] = {}
+        self.device_proxies: dict[EUI64, ZHADeviceProxy] = {}
         self.group_proxies: dict[int, ZHAGroupProxy] = {}
         self._ha_entity_refs: collections.defaultdict[EUI64, list[EntityReference]] = (
             collections.defaultdict(list)
@@ -510,6 +509,12 @@ class ZHAGatewayProxy(EventBase):
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
         self._reload_task: asyncio.Task | None = None
+        config_entry.async_on_unload(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._handle_entity_registry_updated,
+            )
+        )
 
     @property
     def ha_entity_refs(self) -> collections.defaultdict[EUI64, list[EntityReference]]:
@@ -532,6 +537,46 @@ class ZHAGatewayProxy(EventBase):
                 remove_future=remove_future,
             )
         )
+
+    async def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle when entity registry updated."""
+        entity_id = event.data["entity_id"]
+        entity_entry: er.RegistryEntry | None = er.async_get(self.hass).async_get(
+            entity_id
+        )
+        if (
+            entity_entry is None
+            or entity_entry.config_entry_id != self.config_entry.entry_id
+            or entity_entry.device_id is None
+        ):
+            return
+        device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
+            entity_entry.device_id
+        )
+        assert device_entry
+
+        ieee_address = next(
+            identifier
+            for domain, identifier in device_entry.identifiers
+            if domain == DOMAIN
+        )
+        assert ieee_address
+
+        ieee = EUI64.convert(ieee_address)
+
+        assert ieee in self.device_proxies
+
+        zha_device_proxy = self.device_proxies[ieee]
+        entity_key = (entity_entry.domain, entity_entry.unique_id)
+        if entity_key not in zha_device_proxy.device.platform_entities:
+            return
+        platform_entity = zha_device_proxy.device.platform_entities[entity_key]
+        if entity_entry.disabled:
+            platform_entity.disable()
+        else:
+            platform_entity.enable()
 
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and entities."""
@@ -1118,7 +1163,7 @@ def async_add_entities(
     if not entities:
         return
 
-    entities_to_add = []
+    entities_to_add: list[ZHAEntity] = []
     for entity_data in entities:
         try:
             entities_to_add.append(entity_class(entity_data))
@@ -1130,6 +1175,9 @@ def async_add_entities(
                 "Error while adding entity from entity data: %s", entity_data
             )
     _async_add_entities(entities_to_add, update_before_add=False)
+    for entity in entities_to_add:
+        if not entity.enabled:
+            entity.entity_data.entity.disable()
     entities.clear()
 
 
@@ -1153,7 +1201,6 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
         vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
-        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
         vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
         vol.Optional(
@@ -1200,7 +1247,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     # deep copy the yaml config to avoid modifying the original and to safely
     # pass it to the ZHA library
     app_config = copy.deepcopy(ha_zha_data.yaml_config.get(CONF_ZIGPY, {}))
-    database = app_config.get(
+    database = ha_zha_data.yaml_config.get(
         CONF_DATABASE,
         hass.config.path(DEFAULT_DATABASE_NAME),
     )
@@ -1230,7 +1277,6 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         enable_light_transitioning_flag=zha_options.get(
             CONF_ENABLE_LIGHT_TRANSITIONING_FLAG
         ),
-        always_prefer_xy_color_mode=zha_options.get(CONF_ALWAYS_PREFER_XY_COLOR_MODE),
         group_members_assume_state=zha_options.get(CONF_GROUP_MEMBERS_ASSUME_STATE),
     )
     device_options: DeviceOptions = DeviceOptions(

@@ -9,11 +9,7 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import (
-    SOURCE_TYPES,
-    SourceType,
-    TrackerEntity,
-)
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -65,8 +61,8 @@ PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
-        vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.In(
-            SOURCE_TYPES
+        vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.Coerce(
+            SourceType
         ),
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -191,7 +187,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         return self._location_name
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        source_type: SourceType | str = self._config[CONF_SOURCE_TYPE]
+        source_type: SourceType = self._config[CONF_SOURCE_TYPE]
         return source_type

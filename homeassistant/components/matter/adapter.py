@@ -56,10 +56,6 @@ class MatterAdapter:
         """Set up all existing nodes and subscribe to new nodes."""
         initialized_nodes: set[int] = set()
         for node in self.matter_client.get_nodes():
-            if not node.available:
-                # ignore un-initialized nodes at startup
-                # catch them later when they become available.
-                continue
             initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
@@ -143,10 +139,18 @@ class MatterAdapter:
     def _setup_node(self, node: MatterNode) -> None:
         """Set up an node."""
         LOGGER.debug("Setting up entities for node %s", node.node_id)
-
-        for endpoint in node.endpoints.values():
-            # Node endpoints are translated into HA devices
-            self._setup_endpoint(endpoint)
+        try:
+            for endpoint in node.endpoints.values():
+                # Node endpoints are translated into HA devices
+                self._setup_endpoint(endpoint)
+        except Exception as err:  # noqa: BLE001
+            # We don't want to crash the whole setup when a single node fails to setup
+            # for whatever reason, so we catch all exceptions here.
+            LOGGER.exception(
+                "Error setting up node %s: %s",
+                node.node_id,
+                err,
+            )
 
     def _create_device_registry(
         self,

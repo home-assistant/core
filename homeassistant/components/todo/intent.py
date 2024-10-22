@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
 from . import TodoItem, TodoItemStatus, TodoListEntity
-from .const import DOMAIN, DOMAIN_DATA
+from .const import DATA_COMPONENT, DOMAIN
 
 INTENT_LIST_ADD_ITEM = "HassListAddItem"
 
@@ -34,7 +34,7 @@ class ListAddItemIntent(intent.IntentHandler):
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
         target_list: TodoListEntity | None = None
@@ -49,7 +49,7 @@ class ListAddItemIntent(intent.IntentHandler):
                 result=match_result, constraints=match_constraints
             )
 
-        target_list = hass.data[DOMAIN_DATA].get_entity(
+        target_list = hass.data[DATA_COMPONENT].get_entity(
             match_result.states[0].entity_id
         )
         if target_list is None:
@@ -62,4 +62,13 @@ class ListAddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE
+        response.async_set_results(
+            [
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=list_name,
+                    id=match_result.states[0].entity_id,
+                )
+            ]
+        )
         return response

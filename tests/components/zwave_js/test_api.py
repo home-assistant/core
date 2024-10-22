@@ -524,7 +524,7 @@ async def test_add_node(
         data={
             "source": "controller",
             "event": "inclusion started",
-            "secure": False,
+            "strategy": 2,
         },
     )
     client.driver.receive_event(event)
@@ -590,6 +590,7 @@ async def test_add_node(
         "status": 0,
         "ready": False,
         "low_security": False,
+        "low_security_reason": None,
     }
     assert msg["event"]["node"] == node_details
 
@@ -1822,7 +1823,7 @@ async def test_replace_failed_node(
         data={
             "source": "controller",
             "event": "inclusion started",
-            "secure": False,
+            "strategy": 2,
         },
     )
     client.driver.receive_event(event)

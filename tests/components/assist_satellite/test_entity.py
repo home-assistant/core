@@ -37,7 +37,7 @@ async def test_entity_state(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
+    assert state.state == AssistSatelliteState.IDLE
 
     context = Context()
     audio_stream = object()
@@ -73,18 +73,18 @@ async def test_entity_state(
     assert kwargs["end_stage"] == PipelineStage.TTS
 
     for event_type, event_data, expected_state in (
-        (PipelineEventType.RUN_START, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.RUN_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (PipelineEventType.RUN_START, {}, AssistSatelliteState.IDLE),
+        (PipelineEventType.RUN_END, {}, AssistSatelliteState.IDLE),
         (
             PipelineEventType.WAKE_WORD_START,
             {},
-            AssistSatelliteState.LISTENING_WAKE_WORD,
+            AssistSatelliteState.IDLE,
         ),
-        (PipelineEventType.WAKE_WORD_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.STT_START, {}, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_START, {}, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_END, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.WAKE_WORD_END, {}, AssistSatelliteState.IDLE),
+        (PipelineEventType.STT_START, {}, AssistSatelliteState.LISTENING),
+        (PipelineEventType.STT_VAD_START, {}, AssistSatelliteState.LISTENING),
+        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.LISTENING),
+        (PipelineEventType.STT_END, {}, AssistSatelliteState.LISTENING),
         (PipelineEventType.INTENT_START, {}, AssistSatelliteState.PROCESSING),
         (
             PipelineEventType.INTENT_END,
@@ -105,7 +105,7 @@ async def test_entity_state(
 
     entity.tts_response_finished()
     state = hass.states.get(ENTITY_ID)
-    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
+    assert state.state == AssistSatelliteState.IDLE
 
 
 async def test_new_pipeline_cancels_pipeline(
@@ -241,7 +241,7 @@ async def test_announce(
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )
-        assert entity.state == AssistSatelliteState.LISTENING_WAKE_WORD
+        assert entity.state == AssistSatelliteState.IDLE
 
     assert entity.announcements[0] == expected_params
 

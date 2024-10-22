@@ -20,6 +20,7 @@ import voluptuous as vol
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -86,7 +87,6 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
         self.config: dict[str, Any] = {}
-        self.reauth_config_entry: ConfigEntry | None = None
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
     async def async_step_user(
@@ -118,13 +118,14 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
 
             else:
                 if (
-                    self.reauth_config_entry
-                    and self.reauth_config_entry.unique_id is not None
-                    and self.reauth_config_entry.unique_id in self.sites
-                ):
-                    return await self.async_step_site(
-                        {CONF_SITE_ID: self.reauth_config_entry.unique_id}
+                    self.source == SOURCE_REAUTH
+                    and (
+                        (reauth_unique_id := self._get_reauth_entry().unique_id)
+                        is not None
                     )
+                    and reauth_unique_id in self.sites
+                ):
+                    return await self.async_step_site({CONF_SITE_ID: reauth_unique_id})
 
                 return await self.async_step_site()
 
@@ -160,8 +161,8 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
             config_entry = await self.async_set_unique_id(unique_id)
             abort_reason = "configuration_updated"
 
-            if self.reauth_config_entry:
-                config_entry = self.reauth_config_entry
+            if self.source == SOURCE_REAUTH:
+                config_entry = self._get_reauth_entry()
                 abort_reason = "reauth_successful"
 
             if config_entry:
@@ -192,24 +193,20 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert config_entry
-        self.reauth_config_entry = config_entry
+        reauth_entry = self._get_reauth_entry()
 
         self.context["title_placeholders"] = {
-            CONF_HOST: config_entry.data[CONF_HOST],
-            CONF_SITE_ID: config_entry.title,
+            CONF_HOST: reauth_entry.data[CONF_HOST],
+            CONF_SITE_ID: reauth_entry.title,
         }
 
         self.reauth_schema = {
-            vol.Required(CONF_HOST, default=config_entry.data[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=config_entry.data[CONF_USERNAME]): str,
+            vol.Required(CONF_HOST, default=reauth_entry.data[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=config_entry.data[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=reauth_entry.data[CONF_PORT]): int,
             vol.Required(
-                CONF_VERIFY_SSL, default=config_entry.data[CONF_VERIFY_SSL]
+                CONF_VERIFY_SSL, default=reauth_entry.data[CONF_VERIFY_SSL]
             ): bool,
         }
 

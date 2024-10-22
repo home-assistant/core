@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import StoreAddonUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -15,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -28,6 +31,7 @@ from .const import (
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
 )
+from .coordinator import HassioDataUpdateCoordinator
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
@@ -36,10 +40,10 @@ from .entity import (
 )
 from .handler import (
     HassioAPIError,
-    async_update_addon,
     async_update_core,
     async_update_os,
     async_update_supervisor,
+    get_supervisor_client,
 )
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
@@ -95,6 +99,16 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         | UpdateEntityFeature.BACKUP
         | UpdateEntityFeature.RELEASE_NOTES
     )
+
+    def __init__(
+        self,
+        coordinator: HassioDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        addon: dict[str, Any],
+    ) -> None:
+        """Initialize object."""
+        super().__init__(coordinator, entity_description, addon)
+        self._supervisor_client = get_supervisor_client(self.hass)
 
     @property
     def _addon_data(self) -> dict:
@@ -165,8 +179,10 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         try:
-            await async_update_addon(self.hass, slug=self._addon_slug, backup=backup)
-        except HassioAPIError as err:
+            await self._supervisor_client.store.update_addon(
+                self._addon_slug, StoreAddonUpdate(backup=backup)
+            )
+        except SupervisorError as err:
             raise HomeAssistantError(f"Error updating {self.title}: {err}") from err
 
         await self.coordinator.force_info_update_supervisor()

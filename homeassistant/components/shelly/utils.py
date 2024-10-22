@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
-import re
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -43,6 +43,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     API_WS_URL,
     BASIC_INPUTS_EVENTS_TYPES,
+    COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
@@ -326,7 +327,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         channel_id = key.split(":")[-1]
         if key.startswith(("cover:", "input:", "light:", "switch:", "thermostat:")):
             return f"{device_name} {channel.title()} {channel_id}"
-        if key.startswith(("rgb:", "rgbw:")):
+        if key.startswith(("cct", "rgb:", "rgbw:")):
             return f"{device_name} {channel.upper()} light {channel_id}"
         if key.startswith("em1"):
             return f"{device_name} EM{channel_id}"
@@ -544,15 +545,15 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 
 
 @callback
-def async_remove_orphaned_virtual_entities(
+def async_remove_orphaned_entities(
     hass: HomeAssistant,
     config_entry_id: str,
     mac: str,
     platform: str,
-    virt_comp_type: str,
-    virt_comp_ids: list[str],
+    keys: Iterable[str],
+    key_suffix: str | None = None,
 ) -> None:
-    """Remove orphaned virtual entities."""
+    """Remove orphaned entities."""
     orphaned_entities = []
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
@@ -567,14 +568,15 @@ def async_remove_orphaned_virtual_entities(
     for entity in entities:
         if not entity.entity_id.startswith(platform):
             continue
-        if virt_comp_type not in entity.unique_id:
+        if key_suffix is not None and key_suffix not in entity.unique_id:
             continue
-        # we are looking for the component ID, e.g. boolean:201
-        if not (match := re.search(r"[a-z]+:\d+", entity.unique_id)):
+        # we are looking for the component ID, e.g. boolean:201, em1data:1
+        if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
             continue
-        virt_comp_id = match.group()
-        if virt_comp_id not in virt_comp_ids:
-            orphaned_entities.append(f"{virt_comp_id}-{virt_comp_type}")
+
+        key = match.group()
+        if key not in keys:
+            orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)

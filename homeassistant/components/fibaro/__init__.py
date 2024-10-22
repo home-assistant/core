@@ -241,11 +241,14 @@ class FibaroController:
                 platform = Platform.LOCK
             elif device.has_central_scene_event:
                 platform = Platform.EVENT
-            elif device.value.has_value:
-                if device.value.is_bool_value:
-                    platform = Platform.BINARY_SENSOR
-                else:
-                    platform = Platform.SENSOR
+            elif device.value.has_value and device.value.is_bool_value:
+                platform = Platform.BINARY_SENSOR
+            elif (
+                device.value.has_value
+                or "power" in device.properties
+                or "energy" in device.properties
+            ):
+                platform = Platform.SENSOR
 
         # Switches that control lights should show up as lights
         if platform == Platform.SWITCH and device.properties.get("isLight", False):

@@ -13,7 +13,6 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     device_registry as dr,
-    entity_registry as er,
 )
 
 from . import api
@@ -87,12 +86,6 @@ def cleanup_removed_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, available_devices: list[str]
 ) -> None:
     """Cleanup entity and device registry from removed devices."""
-    entity_reg = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
-        if entity.unique_id.split("_")[0] not in available_devices:
-            _LOGGER.debug("Removing obsolete entity entry %s", entity.entity_id)
-            entity_reg.async_remove(entity.entity_id)
-
     device_reg = dr.async_get(hass)
     identifiers = {(DOMAIN, mower_id) for mower_id in available_devices}
     for device in dr.async_entries_for_config_entry(device_reg, config_entry.entry_id):

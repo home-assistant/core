@@ -214,7 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class MicrosoftFaceGroupEntity(Entity):  # pylint: disable=hass-enforce-class-module
+class MicrosoftFaceGroupEntity(Entity):
     """Person-Group state/data Entity."""
 
     _attr_should_poll = False

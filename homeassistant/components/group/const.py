@@ -16,7 +16,7 @@ CONF_HIDE_MEMBERS = "hide_members"
 CONF_IGNORE_NON_NUMERIC = "ignore_non_numeric"
 
 DOMAIN = "group"
-DOMAIN_DATA: HassKey[EntityComponent[Group]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[Group]] = HassKey(DOMAIN)
 REG_KEY: HassKey[GroupIntegrationRegistry] = HassKey(f"{DOMAIN}_registry")
 GROUP_ORDER: HassKey[int] = HassKey("group_order")
 

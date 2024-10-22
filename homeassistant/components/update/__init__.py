@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import cached_property, lru_cache
+from functools import lru_cache
 import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -33,6 +34,7 @@ from .const import (
     ATTR_RELEASE_URL,
     ATTR_SKIPPED_VERSION,
     ATTR_TITLE,
+    ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
     DOMAIN,
     SERVICE_INSTALL,
@@ -42,7 +44,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN_DATA: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -80,7 +82,7 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Select entities."""
-    component = hass.data[DOMAIN_DATA] = EntityComponent[UpdateEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[UpdateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -113,12 +115,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
@@ -195,6 +197,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "release_url",
     "supported_features",
     "title",
+    "update_percentage",
 }
 
 
@@ -206,7 +209,12 @@ class UpdateEntity(
     """Representation of an update entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_ENTITY_PICTURE, ATTR_IN_PROGRESS, ATTR_RELEASE_SUMMARY}
+        {
+            ATTR_ENTITY_PICTURE,
+            ATTR_IN_PROGRESS,
+            ATTR_RELEASE_SUMMARY,
+            ATTR_UPDATE_PERCENTAGE,
+        }
     )
 
     entity_description: UpdateEntityDescription
@@ -220,6 +228,7 @@ class UpdateEntity(
     _attr_state: None = None
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
+    _attr_update_percentage: int | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
 
@@ -277,8 +286,7 @@ class UpdateEntity(
 
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
-        Can either return a boolean (True if in progress, False if not)
-        or an integer to indicate the progress in from 0 to 100%.
+        Should return a boolean (True if in progress, False if not).
         """
         return self._attr_in_progress
 
@@ -327,6 +335,16 @@ class UpdateEntity(
             self._report_deprecated_supported_features_values(new_features)
             return new_features
         return features
+
+    @cached_property
+    def update_percentage(self) -> int | None:
+        """Update installation progress.
+
+        Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
+
+        Can either return an integer to indicate the progress from 0 to 100% or None.
+        """
+        return self._attr_update_percentage
 
     @final
     async def async_skip(self) -> None:
@@ -421,8 +439,13 @@ class UpdateEntity(
         # Otherwise, we use the internal progress value.
         if UpdateEntityFeature.PROGRESS in self.supported_features_compat:
             in_progress = self.in_progress
+            update_percentage = self.update_percentage
+            if type(in_progress) is not bool and isinstance(in_progress, int):
+                update_percentage = in_progress
+                in_progress = True
         else:
             in_progress = self.__in_progress
+            update_percentage = None
 
         installed_version = self.installed_version
         latest_version = self.latest_version
@@ -444,6 +467,7 @@ class UpdateEntity(
             ATTR_RELEASE_URL: self.release_url,
             ATTR_SKIPPED_VERSION: skipped_version,
             ATTR_TITLE: self.title,
+            ATTR_UPDATE_PERCENTAGE: update_percentage,
         }
 
     @final
@@ -492,7 +516,7 @@ async def websocket_release_notes(
     msg: dict[str, Any],
 ) -> None:
     """Get the full release notes for a entity."""
-    entity = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
+    entity = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(

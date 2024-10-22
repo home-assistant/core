@@ -44,6 +44,7 @@ from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 ENTITY_ID2 = f"{ENTITY_ID}_2"
+ENTITY_ID3 = f"{ENTITY_ID}_3"
 
 
 @pytest.mark.parametrize(
@@ -153,6 +154,42 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                 }
             ]
         },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_DEVICE_ADDRESS: 10,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_DEVICE_CLASS: "switch",
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: [1, 2, 3],
+                    },
+                }
+            ]
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1236,
+                    CONF_DEVICE_ADDRESS: 10,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_DEVICE_CLASS: "switch",
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: [0, 5, 6],
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
+        },
     ],
 )
 async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
@@ -218,6 +255,18 @@ async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
             None,
             STATE_OFF,
         ),
+        (
+            [0x03],
+            False,
+            {CONF_VERIFY: {CONF_STATE_ON: [1, 3]}},
+            STATE_ON,
+        ),
+        (
+            [0x04],
+            False,
+            {CONF_VERIFY: {CONF_STATE_OFF: [0, 4]}},
+            STATE_OFF,
+        ),
     ],
 )
 async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
@@ -269,6 +318,13 @@ async def test_restore_state_switch(
                     CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {},
                 },
+                {
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 3",
+                    CONF_ADDRESS: 18,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_VERIFY: {CONF_STATE_ON: [1, 3]},
+                },
             ],
         },
     ],
@@ -306,6 +362,19 @@ async def test_switch_service_turn(
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
+    mock_modbus.read_holding_registers.return_value = ReadResult([0x03])
+    assert hass.states.get(ENTITY_ID3).state == STATE_OFF
+    await hass.services.async_call(
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID3}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID3).state == STATE_ON
+    mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
+    await hass.services.async_call(
+        "switch", "turn_off", service_data={"entity_id": ENTITY_ID3}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID3).state == STATE_OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
@@ -319,6 +388,12 @@ async def test_switch_service_turn(
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    mock_modbus.write_register.side_effect = ModbusException("fail write_")
+    await hass.services.async_call(
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID3}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID3).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -331,6 +406,26 @@ async def test_switch_service_turn(
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                     CONF_VERIFY: {},
+                }
+            ]
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1236,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {CONF_STATE_ON: [1, 3]},
+                }
+            ]
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1235,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {CONF_STATE_OFF: [0, 5]},
                 }
             ]
         },
