@@ -98,7 +98,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # aiopyarr defaults to the service port if one isn't given
-            # this is counter to standard practice  where http = 80
+            # this is counter to standard practice where http = 80
             # and https = 443.
             if CONF_URL in user_input:
                 url = yarl.URL(user_input[CONF_URL])
