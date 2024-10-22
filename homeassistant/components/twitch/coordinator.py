@@ -36,8 +36,10 @@ class TwitchUpdate:
     picture: str
     subscribed: bool | None
     subscription_gifted: bool | None
+    subscription_tier: int | None
     follows: bool
     following_since: datetime | None
+    viewers: int | None
 
 
 class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
@@ -110,7 +112,9 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 channel.profile_image_url,
                 sub is not None if sub else None,
                 sub.is_gift if sub else None,
+                {"1000": 1, "2000": 2, "3000": 3}.get(sub.tier) if sub else None,
                 follows is not None and follows.total > 0,
                 follows.data[0].followed_at if follows and follows.total else None,
+                stream.viewer_count if stream else None,
             )
         return data

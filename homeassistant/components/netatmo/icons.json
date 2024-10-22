@@ -1,5 +1,18 @@
 {
   "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_guard": "mdi:snowflake-thermometer",
+              "schedule": "mdi:clock-outline",
+              "manual": "mdi:gesture-tap"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "temp_trend": {
         "default": "mdi:trending-up"

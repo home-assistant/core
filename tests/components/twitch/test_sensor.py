@@ -45,6 +45,7 @@ async def test_streaming(
     assert sensor_state.attributes["started_at"] == datetime(
         year=2021, month=3, day=10, hour=3, minute=18, second=11, tzinfo=tzutc()
     )
+    assert sensor_state.attributes["viewers"] == 42
 
 
 async def test_oauth_without_sub_and_follow(
@@ -79,6 +80,7 @@ async def test_oauth_with_sub(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is True
     assert sensor_state.attributes["subscription_is_gifted"] is False
+    assert sensor_state.attributes["subscription_tier"] == 1
     assert sensor_state.attributes["following"] is False
 
 
