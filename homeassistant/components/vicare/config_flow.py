@@ -13,11 +13,10 @@ import voluptuous as vol
 
 # from homeassistant.components import dhcp
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 
 # from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_entry_oauth2_flow
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_HEATING_TYPE, DEFAULT_HEATING_TYPE, DOMAIN, HeatingType
@@ -30,9 +29,7 @@ SCOPES = [
 ]
 
 USER_SCHEMA = vol.Schema(
-    # REAUTH_SCHEMA.extend(
     {
-        #     vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
             [e.value for e in HeatingType]
         ),
@@ -40,10 +37,6 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-# class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
-#     """Handle a config flow for ViCare."""
-# AbstractOAuth2FlowHandler
-# LocalOAuth2Implementation
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -51,6 +44,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
+    MINOR_VERSION = 2
 
     @property
     def logger(self) -> logging.Logger:
