@@ -46,6 +46,8 @@ async def setup_integration(
 
     mock_receiver = AsyncMock()
     mock_receiver.conn.close = Mock()
+    mock_receiver.callbacks.connect = Mock()
+    mock_receiver.callbacks.update = Mock()
 
     with (
         patch(
