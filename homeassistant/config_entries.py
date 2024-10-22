@@ -170,11 +170,13 @@ DISCOVERY_SOURCES = {
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
     SOURCE_HARDWARE,
+    SOURCE_HASSIO,
     SOURCE_HOMEKIT,
     SOURCE_IMPORT,
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_MQTT,
     SOURCE_SSDP,
+    SOURCE_SYSTEM,
     SOURCE_USB,
     SOURCE_ZEROCONF,
 }
@@ -527,10 +529,21 @@ class ConfigEntry(Generic[_DataT]):
         integration: loader.Integration | None = None,
     ) -> None:
         """Set up an entry."""
-        current_entry.set(self)
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
+        current_entry.set(self)
+        try:
+            await self.__async_setup_with_context(hass, integration)
+        finally:
+            current_entry.set(None)
+
+    async def __async_setup_with_context(
+        self,
+        hass: HomeAssistant,
+        integration: loader.Integration | None,
+    ) -> None:
+        """Set up an entry, with current_entry set."""
         if integration is None and not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
@@ -2434,6 +2447,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         *,
         reason: str = "unique_id_mismatch",
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Abort if the unique ID does not match the reauth/reconfigure context.
 
@@ -2447,7 +2461,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             self.source == SOURCE_RECONFIGURE
             and self._get_reconfigure_entry().unique_id != self.unique_id
         ):
-            raise data_entry_flow.AbortFlow(reason)
+            raise data_entry_flow.AbortFlow(reason, description_placeholders)
 
     @callback
     def _abort_if_unique_id_configured(

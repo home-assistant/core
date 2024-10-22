@@ -16,10 +16,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type SwissPublicTransportConfigEntry = ConfigEntry[
+    SwissPublicTransportDataUpdateCoordinator
+]
 
 
 class DataConnection(TypedDict):
@@ -50,7 +55,7 @@ class SwissPublicTransportDataUpdateCoordinator(
 ):
     """A SwissPublicTransport Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwissPublicTransportConfigEntry
 
     def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
@@ -68,13 +73,6 @@ class SwissPublicTransportDataUpdateCoordinator(
 
         if departure_datetime:
             return departure_datetime - dt_util.as_local(dt_util.utcnow())
-        return None
-
-    def nth_departure_time(self, i: int) -> datetime | None:
-        """Get nth departure time."""
-        connections = self._opendata.connections
-        if len(connections) > i and connections[i] is not None:
-            return dt_util.parse_datetime(connections[i]["departure"])
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
@@ -96,7 +94,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         connections = self._opendata.connections
         return [
             DataConnection(
-                departure=self.nth_departure_time(i),
+                departure=dt_util.parse_datetime(connections[i]["departure"]),
                 train_number=connections[i]["number"],
                 platform=connections[i]["platform"],
                 transfers=connections[i]["transfers"],
@@ -109,4 +107,24 @@ class SwissPublicTransportDataUpdateCoordinator(
             )
             for i in range(limit)
             if len(connections) > i and connections[i] is not None
+        ]
+
+    async def fetch_connections_as_json(self, limit: int) -> list[JsonValueType]:
+        """Fetch connections using the opendata api."""
+        return [
+            {
+                "departure": connection["departure"].isoformat()
+                if connection["departure"]
+                else None,
+                "duration": connection["duration"],
+                "platform": connection["platform"],
+                "remaining_time": connection["remaining_time"],
+                "start": connection["start"],
+                "destination": connection["destination"],
+                "train_number": connection["train_number"],
+                "transfers": connection["transfers"],
+                "delay": connection["delay"],
+                "line": connection["line"],
+            }
+            for connection in await self.fetch_connections(limit)
         ]

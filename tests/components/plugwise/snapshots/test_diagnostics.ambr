@@ -4,7 +4,7 @@
     'devices': dict({
       '02cf28bfec924855854c544690a609ef': dict({
         'available': True,
-        'dev_class': 'vcr',
+        'dev_class': 'vcr_plug',
         'firmware': '2019-06-21T02:00:00+02:00',
         'location': 'cd143c07248f491493cea0533bc3d669',
         'model': 'Plug',
@@ -25,7 +25,7 @@
       }),
       '21f2b542c49845e6bb416884c55778d6': dict({
         'available': True,
-        'dev_class': 'game_console',
+        'dev_class': 'game_console_plug',
         'firmware': '2019-06-21T02:00:00+02:00',
         'location': 'cd143c07248f491493cea0533bc3d669',
         'model': 'Plug',
@@ -46,7 +46,7 @@
       }),
       '4a810418d5394b3f82727340b91ba740': dict({
         'available': True,
-        'dev_class': 'router',
+        'dev_class': 'router_plug',
         'firmware': '2019-06-21T02:00:00+02:00',
         'location': 'cd143c07248f491493cea0533bc3d669',
         'model': 'Plug',
@@ -67,7 +67,7 @@
       }),
       '675416a629f343c495449970e2ca37b5': dict({
         'available': True,
-        'dev_class': 'router',
+        'dev_class': 'router_plug',
         'firmware': '2019-06-21T02:00:00+02:00',
         'location': 'cd143c07248f491493cea0533bc3d669',
         'model': 'Plug',
@@ -166,7 +166,7 @@
       }),
       '78d1126fc4c743db81b61c20e88342a7': dict({
         'available': True,
-        'dev_class': 'central_heating_pump',
+        'dev_class': 'central_heating_pump_plug',
         'firmware': '2019-06-21T02:00:00+02:00',
         'location': 'c50f167537524366a5af7aa3942feb1e',
         'model': 'Plug',
@@ -200,7 +200,7 @@
       }),
       'a28f588dc4a049a483fd03a30361ad3a': dict({
         'available': True,
-        'dev_class': 'settop',
+        'dev_class': 'settop_plug',
         'firmware': '2019-06-21T02:00:00+02:00',
         'location': 'cd143c07248f491493cea0533bc3d669',
         'model': 'Plug',
@@ -323,7 +323,7 @@
       }),
       'cd0ddb54ef694e11ac18ed1cbce5dbbd': dict({
         'available': True,
-        'dev_class': 'vcr',
+        'dev_class': 'vcr_plug',
         'firmware': '2019-06-21T02:00:00+02:00',
         'location': 'cd143c07248f491493cea0533bc3d669',
         'model': 'Plug',
