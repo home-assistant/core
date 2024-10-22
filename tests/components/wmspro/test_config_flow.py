@@ -335,7 +335,7 @@ async def test_config_flow_duplicate_entries(
     mock_hub_ping: AsyncMock,
     mock_hub_configuration_test: AsyncMock,
 ) -> None:
-    """Test we handle an unknown error."""
+    """Test we prevent creation of duplicate config entries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -375,7 +375,7 @@ async def test_config_flow_multiple_entries(
     mock_hub_configuration_test: AsyncMock,
     mock_hub_configuration_prod: AsyncMock,
 ) -> None:
-    """Test we handle an unknown error."""
+    """Test we allow creation of different config entries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
