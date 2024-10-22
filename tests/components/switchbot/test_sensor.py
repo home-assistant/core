@@ -97,5 +97,11 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
     assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
     assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
 
+    co2_sensor = hass.states.get("sensor.test_name_carbon_dioxide")
+    co2_sensor_attrs = co2_sensor.attributes
+    assert co2_sensor.state == "725"
+    assert co2_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Carbon dioxide"
+    assert co2_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

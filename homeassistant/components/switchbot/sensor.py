@@ -53,7 +53,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "co2": SensorEntityDescription(
         key="co2",
-        name=None,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
