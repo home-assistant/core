@@ -12,142 +12,153 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.evohome.water_heater import EvoDHW
+from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE,
+    ATTR_OPERATION_MODE,
+    SERVICE_SET_AWAY_MODE,
+    SERVICE_SET_OPERATION_MODE,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import TEST_INSTALLS_WITH_DHW
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
-    install: str,
+    hass: HomeAssistant,
     dhw: EvoDHW,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test water_heater services of a evohome-compatible DHW zone."""
+    """Test SERVICE_SET_OPERATION_MODE of a evohome HotWater entity."""
+
+    assert dhw.operation_list == ["auto", "on", "off"]
 
     freezer.move_to("2024-07-10T11:55:00Z")
     results = []
 
-    # set_operation_mode(auto): FollowSchedule
-    with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
-        await dhw.async_set_operation_mode("auto")
+    # SERVICE_SET_OPERATION_MODE: auto
+    with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.WATER_HEATER,
+            SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_OPERATION_MODE: "auto",
+            },
+            blocking=True,
+        )
 
         assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == (
-            {
-                "mode": "FollowSchedule",
-                "state": None,
-                "untilTime": None,
-            },
-        )
+        assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
 
-    # set_operation_mode(off): TemporaryOverride, advanced
-    with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
-        await dhw.async_set_operation_mode("off")
+    # SERVICE_SET_OPERATION_MODE: off (until next scheduled setpoint)
+    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+        await hass.services.async_call(
+            Platform.WATER_HEATER,
+            SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_OPERATION_MODE: "off",
+            },
+            blocking=True,
+        )
 
         assert mock_fcn.await_count == 1
-        assert install != "default" or mock_fcn.await_args.args == (
-            {
-                "mode": "TemporaryOverride",
-                "state": "Off",
-                "untilTime": "2024-07-10T12:00:00Z",  # varies by install
-            },
-        )
-        assert mock_fcn.await_args.kwargs == {}
-
+        assert mock_fcn.await_args.args == ()
         results.append(mock_fcn.await_args.args)
 
-    # set_operation_mode(on): TemporaryOverride, advanced
-    with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
-        await dhw.async_set_operation_mode("on")
+    # SERVICE_SET_OPERATION_MODE: on (until next scheduled setpoint)
+    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
+        await hass.services.async_call(
+            Platform.WATER_HEATER,
+            SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_OPERATION_MODE: "on",
+            },
+            blocking=True,
+        )
 
         assert mock_fcn.await_count == 1
-        assert install != "default" or mock_fcn.await_args.args == (
-            {
-                "mode": "TemporaryOverride",
-                "state": "On",
-                "untilTime": "2024-07-10T12:00:00Z",  # varies by install
-            },
-        )
-        assert mock_fcn.await_args.kwargs == {}
-
+        assert mock_fcn.await_args.args == ()
         results.append(mock_fcn.await_args.args)
 
     assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_away_mode_off(dhw: EvoDHW) -> None:
-    """Test water_heater services of a evohome-compatible DHW zone."""
+async def test_set_away_mode(hass: HomeAssistant, dhw: EvoDHW) -> None:
+    """Test SERVICE_SET_AWAY_MODE of a evohome HotWater entity."""
 
-    # turn_away_mode_off(): FollowSchedule
-    with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
-        await dhw.async_turn_away_mode_off()
+    # set_away_mode: off
+    with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.WATER_HEATER,
+            SERVICE_SET_AWAY_MODE,
+            {
+                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_AWAY_MODE: "off",
+            },
+            blocking=True,
+        )
 
         assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == (
+        assert mock_fcn.await_args.args == ()
+        assert mock_fcn.await_args.kwargs == {}
+
+    # set_away_mode: off
+    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+        await hass.services.async_call(
+            Platform.WATER_HEATER,
+            SERVICE_SET_AWAY_MODE,
             {
-                "mode": "FollowSchedule",
-                "state": None,
-                "untilTime": None,
+                ATTR_ENTITY_ID: dhw.entity_id,
+                ATTR_AWAY_MODE: "on",
             },
+            blocking=True,
         )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_away_mode_on(dhw: EvoDHW) -> None:
-    """Test water_heater services of a evohome-compatible DHW zone."""
+async def test_turn_off(hass: HomeAssistant, dhw: EvoDHW) -> None:
+    """Test SERVICE_TURN_OFF of a evohome HotWater entity."""
 
-    # turn_away_mode_on(): PermanentOverride, Off
-    with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
-        await dhw.async_turn_away_mode_on()
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == (
+    # Entity water_heater.domestic_hot_water does not support this service
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            Platform.WATER_HEATER,
+            SERVICE_TURN_OFF,
             {
-                "mode": "PermanentOverride",
-                "state": "Off",
-                "untilTime": None,
+                ATTR_ENTITY_ID: dhw.entity_id,
             },
+            blocking=True,
         )
-        assert mock_fcn.await_args.kwargs == {}
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_off(dhw: EvoDHW) -> None:
-    """Test water_heater services of a evohome-compatible DHW zone."""
+async def test_turn_on(hass: HomeAssistant, dhw: EvoDHW) -> None:
+    """Test SERVICE_TURN_ON of a evohome HotWater entity."""
 
-    # turn_off(): PermanentOverride, Off
-    with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
-        await dhw.async_turn_off()
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == (
+    # Entity water_heater.domestic_hot_water does not support this service
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            Platform.WATER_HEATER,
+            SERVICE_TURN_ON,
             {
-                "mode": "PermanentOverride",
-                "state": "Off",
-                "untilTime": None,
+                ATTR_ENTITY_ID: dhw.entity_id,
             },
+            blocking=True,
         )
-        assert mock_fcn.await_args.kwargs == {}
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_on(dhw: EvoDHW) -> None:
-    """Test water_heater services of a evohome-compatible DHW zone."""
-
-    # turn_on(): PermanentOverride, On
-    with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
-        await dhw.async_turn_on()
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == (
-            {
-                "mode": "PermanentOverride",
-                "state": "On",
-                "untilTime": None,
-            },
-        )
-        assert mock_fcn.await_args.kwargs == {}
