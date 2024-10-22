@@ -11,9 +11,15 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
+from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
+from .coordinator import TaskUpdateCoordinator
+from .todo import GoogleTaskTodoListEntity
+
+_all_ = [AsyncConfigEntryAuth, DOMAIN, TaskUpdateCoordinator, GoogleTaskTodoListEntity]
 
 PLATFORMS: list[Platform] = [Platform.TODO]
+DOMAIN = "google_tasks"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
