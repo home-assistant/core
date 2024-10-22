@@ -155,6 +155,9 @@ class FFmpegConvertResponse(web.StreamResponse):
             # 16-bit samples
             command_args.extend(["-sample_fmt", "s16"])
 
+        # Remove metadata and cover art
+        command_args.extend(["-map_metadata", "-1", "-vn"])
+
         # Output to stdout
         command_args.append("pipe:")
 
