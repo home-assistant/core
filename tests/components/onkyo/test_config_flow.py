@@ -199,7 +199,6 @@ async def test_discovery_with_one_selected(hass: HomeAssistant) -> None:
             return_value=infos,
         ),
     ):
-        infos = [create_receiver_info(1), create_receiver_info(2)]
         form_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {"next_step_id": "eiscp_discovery"},
@@ -384,7 +383,6 @@ async def test_import_fail(
 ) -> None:
     """Test import flow failed."""
     with (
-        patch("homeassistant.components.onkyo.config_flow"),
         patch(
             "homeassistant.components.onkyo.config_flow.async_interview",
             return_value=None,
