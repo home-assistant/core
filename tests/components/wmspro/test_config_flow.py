@@ -6,10 +6,14 @@ import aiohttp
 
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.wmspro.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import setup_config_entry
+
+from tests.common import MockConfigEntry
 
 
 async def test_config_flow(
@@ -332,29 +336,14 @@ async def test_config_flow_unknown_error(
 
 async def test_config_flow_duplicate_entries(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
     mock_dest_refresh: AsyncMock,
     mock_hub_configuration_test: AsyncMock,
 ) -> None:
     """Test we prevent creation of duplicate config entries."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.2.3.4",
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-    }
-
-    await hass.async_block_till_done()
+    await setup_config_entry(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -374,30 +363,15 @@ async def test_config_flow_duplicate_entries(
 
 async def test_config_flow_multiple_entries(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
     mock_dest_refresh: AsyncMock,
     mock_hub_configuration_test: AsyncMock,
     mock_hub_configuration_prod: AsyncMock,
 ) -> None:
     """Test we allow creation of different config entries."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.2.3.4",
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-    }
-
-    await hass.async_block_till_done()
+    await setup_config_entry(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_hub_configuration_prod.return_value = mock_hub_configuration_test.return_value
 
