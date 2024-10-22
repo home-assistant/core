@@ -13,3 +13,6 @@ UNKNOWN = "unknown"
 
 DEFAULT_HOST = "192.168.0.2"
 DEFAULT_PORT = 80
+
+LIGHT_MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
+LIGHT_MIN_MIREDS = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds

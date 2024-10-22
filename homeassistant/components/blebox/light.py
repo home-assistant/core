@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import math
 from typing import Any
 
 import blebox_uniapi.light
@@ -24,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxConfigEntry
+from .const import LIGHT_MAX_MIREDS, LIGHT_MIN_MIREDS
 from .entity import BleBoxEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,8 +60,8 @@ COLOR_MODE_MAP = {
 class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
 
-    _attr_max_mireds = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
-    _attr_min_mireds = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
+    _attr_max_mireds = LIGHT_MAX_MIREDS
+    _attr_min_mireds = LIGHT_MIN_MIREDS
 
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
@@ -133,13 +135,20 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     def _color_temp_to_native_scale(self, x):
         """Convert color temperature from mireds to native Blebox temperature scale."""
         scaled = ((x - self.min_mireds) / (self.max_mireds - self.min_mireds)) * 255
-        bounded = max(min(scaled, 255), 0)
+        # note: within the operating temperature range here the mired
+        # scale has less "integer steps" (~216) than the native scale used
+        # by blebox devices. Thus we need to use rounding method that is opposite
+        # to the one used in _color_temp_from_native_scale in order to avoid
+        # temperature value jumping by one step when the temparatur value is read
+        # back from the device
+        bounded = max(min(math.floor(scaled), 255), 0)
         return int(bounded)
 
     def _color_temp_from_native_scale(self, x):
         """Convert color temperature from native Blebox temperature scale to mireds."""
         scaled = (x / 255) * (self.max_mireds - self.min_mireds) + self.min_mireds
-        bounded = max(min(scaled, self.max_mireds), self.min_mireds)
+        # note: see _color_temp_to_native_scale for explanation of rounding method
+        bounded = max(min(math.ceil(scaled), self.max_mireds), self.min_mireds)
         return int(bounded)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
