@@ -215,6 +215,55 @@ async def test_simple_zone_timeout() -> None:
             await asyncio.sleep(0.3)
 
 
+async def test_simple_zone_timeout_does_not_leak_upward(
+    hass: HomeAssistant,
+) -> None:
+    """Test a zone timeout does not leak upward."""
+    timeout = TimeoutManager()
+    current_task = asyncio.current_task()
+    assert current_task is not None
+
+    async with timeout.async_timeout(0.1, "test"):
+        assert current_task.cancelling() == 0
+        await asyncio.sleep(0.3)
+
+    # After the context manager exits, the task should no longer be cancelling
+    assert current_task.cancelling() == 0
+
+
+async def test_simple_zone_timeout_does_swallow_cancellation(
+    hass: HomeAssistant,
+) -> None:
+    """Test a zone timeout does not swallow cancellation."""
+    timeout = TimeoutManager()
+    current_task = asyncio.current_task()
+    assert current_task is not None
+
+    async def task_with_timeout() -> None:
+        new_task = asyncio.current_task()
+        assert new_task is not None
+        with pytest.raises(asyncio.TimeoutError):
+            async with timeout.async_timeout(0.1, "test"):
+                await asyncio.sleep(0.3)
+
+    # After the context manager exits, the task should no longer be cancelling
+    assert current_task.cancelling() == 0
+
+    task = asyncio.create_task(task_with_timeout())
+    await asyncio.sleep(0)
+    task.cancel()
+    assert task.cancelling() == 1
+
+    # Cancellation should not leak into the current task
+    assert current_task.cancelling() == 0
+    # Cancellation should not be swallowed if the task is cancelled
+    # and it also times out
+    await asyncio.sleep(0)
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert task.cancelling() == 1
+
+
 async def test_multiple_zone_timeout() -> None:
     """Test a simple zone timeout."""
     timeout = TimeoutManager()
