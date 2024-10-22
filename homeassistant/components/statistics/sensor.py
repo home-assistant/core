@@ -486,16 +486,21 @@ class StatisticsSensor(SensorEntity):
             )
             return
 
-        (
-            self._attr_native_unit_of_measurement,
-            self._attr_device_class,
-            self._attr_state_class,
-        ) = self._calculate_attributes(new_state)
+        self._calculate_state_attributes(new_state)
 
-    def _calculate_attributes(
-        self, new_state: State
-    ) -> tuple[str | None, SensorDeviceClass | None, SensorStateClass | None]:
-        """Return the entity attributes."""
+    def _calculate_state_attributes(self, new_state: State) -> None:
+        """Set the entity state attributes."""
+
+        self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
+            new_state
+        )
+        self._attr_device_class = self._calculate_device_class(
+            new_state, self._attr_native_unit_of_measurement
+        )
+        self._attr_state_class = self._calculate_state_class(new_state)
+
+    def _calculate_unit_of_measurement(self, new_state: State) -> str | None:
+        """Return the calculated unit of measurement."""
 
         # Calculate the unit of measurement based on the state characteristics
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -523,23 +528,30 @@ class StatisticsSensor(SensorEntity):
         elif self._state_characteristic == STAT_CHANGE_SECOND:
             unit = base_unit + "/s"
 
+        return unit
+
+    def _calculate_device_class(
+        self, new_state: State, unit: str | None
+    ) -> SensorDeviceClass | None:
+        """Return the calculated device class."""
+
         # Calculate the device class based on the state characteristics,
         # the source device class and the unit of measurement is
         # in the device class units list.
         device_class: SensorDeviceClass | None = None
         if self._state_characteristic in STATS_DATETIME:
-            device_class = SensorDeviceClass.TIMESTAMP
+            return SensorDeviceClass.TIMESTAMP
         if self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
             device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
             source_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
             if source_device_class is None:
-                device_class = None
+                return None
             if (
                 sensor_device_class := try_parse_enum(
                     SensorDeviceClass, source_device_class
                 )
             ) is None:
-                device_class = None
+                return None
             if (
                 sensor_device_class
                 and (
@@ -550,21 +562,23 @@ class StatisticsSensor(SensorEntity):
                 and sensor_state_classes
                 and SensorStateClass.MEASUREMENT not in sensor_state_classes
             ):
-                device_class = None
+                return None
             if device_class not in DEVICE_CLASS_UNITS:
-                device_class = None
+                return None
             if (
                 device_class in DEVICE_CLASS_UNITS
                 and unit not in DEVICE_CLASS_UNITS[device_class]
             ):
-                device_class = None
+                return None
 
-        # Automatically set state class when output is a number
-        state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
+        return device_class
+
+    def _calculate_state_class(self, new_state: State) -> SensorStateClass | None:
+        """Return the calculated state class."""
         if self._state_characteristic in STATS_NOT_A_NUMBER:
-            state_class = None
-
-        return (unit, device_class, state_class)
+            return None
+        # Automatically set state class when output is a number
+        return SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> float | datetime | None:
@@ -719,11 +733,7 @@ class StatisticsSensor(SensorEntity):
         ):
             for state in reversed(states):
                 self._add_state_to_queue(state)
-                (
-                    self._attr_native_unit_of_measurement,
-                    self._attr_device_class,
-                    self._attr_state_class,
-                ) = self._calculate_attributes(state)
+                self._calculate_state_attributes(state)
         self._async_purge_update_and_schedule()
 
         # only write state to the state machine if we are not in preview mode
