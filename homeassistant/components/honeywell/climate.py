@@ -333,7 +333,7 @@ class HoneywellUSThermostat(ClimateEntity):
             return PRESET_AWAY
         if self._is_hold():
             return PRESET_HOLD
-        #Someone has changed the stat manually out of hold in away mode
+        # Someone has changed the stat manually out of hold in away mode
         if self._away and self._away_hold:
             self._away = False
             self._away_hold = False
