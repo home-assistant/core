@@ -183,7 +183,6 @@ async def test_simple_global_timeout_does_swallow_cancellation(
             async with timeout.async_timeout(0.1):
                 await asyncio.sleep(0.3)
 
-    assert cancelling_inside_timeout == 0
     # After the context manager exits, the task should no longer be cancelling
     assert current_task.cancelling() == 0
 
@@ -192,6 +191,7 @@ async def test_simple_global_timeout_does_swallow_cancellation(
     task.cancel()
     assert task.cancelling() == 1
 
+    assert cancelling_inside_timeout == 0
     # Cancellation should not leak into the current task
     assert current_task.cancelling() == 0
     # Cancellation should not be swallowed if the task is cancelled
@@ -259,7 +259,6 @@ async def test_simple_zone_timeout_does_swallow_cancellation(
                 cancelling_inside_timeout = current_task.cancelling()
                 await asyncio.sleep(0.3)
 
-    assert cancelling_inside_timeout == 0
     # After the context manager exits, the task should no longer be cancelling
     assert current_task.cancelling() == 0
 
@@ -269,6 +268,7 @@ async def test_simple_zone_timeout_does_swallow_cancellation(
     assert task.cancelling() == 1
 
     # Cancellation should not leak into the current task
+    assert cancelling_inside_timeout == 0
     assert current_task.cancelling() == 0
     # Cancellation should not be swallowed if the task is cancelled
     # and it also times out
