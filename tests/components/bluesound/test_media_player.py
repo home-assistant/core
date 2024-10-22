@@ -10,7 +10,14 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.bluesound import DOMAIN as BLUESOUND_DOMAIN
+from homeassistant.components.bluesound.const import (
+    ATTR_MASTER,
+    SERVICE_CLEAR_TIMER,
+    SERVICE_JOIN,
+    SERVICE_SET_TIMER,
+)
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -22,7 +29,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -92,7 +99,7 @@ async def test_volume_set(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.player_name1111", "volume_level": 0.5},
+        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_MEDIA_VOLUME_LEVEL: 0.5},
         blocking=True,
     )
 
@@ -160,7 +167,7 @@ async def test_status_updated(
     """Test the media player status updated."""
     pre_state = hass.states.get("media_player.player_name1111")
     assert pre_state.state == "playing"
-    assert pre_state.attributes["volume_level"] == 0.1
+    assert pre_state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.1
 
     status = player_mocks.player_data.status_long_polling_mock.get()
     status = dataclasses.replace(status, state="pause", volume=50, etag="changed")
@@ -172,7 +179,7 @@ async def test_status_updated(
     post_state = hass.states.get("media_player.player_name1111")
 
     assert post_state.state == MediaPlayerState.PAUSED
-    assert post_state.attributes["volume_level"] == 0.5
+    assert post_state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
 
 
 async def test_unavailable_when_offline(
@@ -194,7 +201,7 @@ async def test_unavailable_when_offline(
 
     post_state = hass.states.get("media_player.player_name1111")
 
-    assert post_state.state == "unavailable"
+    assert post_state.state == STATE_UNAVAILABLE
 
 
 async def test_set_sleep_timer(
@@ -203,7 +210,7 @@ async def test_set_sleep_timer(
     """Test the set sleep timer action."""
     await hass.services.async_call(
         BLUESOUND_DOMAIN,
-        "set_sleep_timer",
+        SERVICE_SET_TIMER,
         {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
@@ -220,7 +227,7 @@ async def test_clear_sleep_timer(
 
     await hass.services.async_call(
         BLUESOUND_DOMAIN,
-        "clear_sleep_timer",
+        SERVICE_CLEAR_TIMER,
         {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
@@ -235,10 +242,10 @@ async def test_join_cannot_join_to_self(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             BLUESOUND_DOMAIN,
-            "join",
+            SERVICE_JOIN,
             {
                 ATTR_ENTITY_ID: "media_player.player_name1111",
-                "master": "media_player.player_name1111",
+                ATTR_MASTER: "media_player.player_name1111",
             },
             blocking=True,
         )
@@ -255,10 +262,10 @@ async def test_join(
     """Test the join action."""
     await hass.services.async_call(
         BLUESOUND_DOMAIN,
-        "join",
+        SERVICE_JOIN,
         {
             ATTR_ENTITY_ID: "media_player.player_name1111",
-            "master": "media_player.player_name2222",
+            ATTR_MASTER: "media_player.player_name2222",
         },
         blocking=True,
     )
@@ -302,7 +309,7 @@ async def test_attr_master(
     player_mocks: PlayerMocks,
 ) -> None:
     """Test the media player master."""
-    attr_master = hass.states.get("media_player.player_name1111").attributes["master"]
+    attr_master = hass.states.get("media_player.player_name1111").attributes[ATTR_MASTER]
     assert attr_master is False
 
     updated_sync_status = dataclasses.replace(
@@ -314,7 +321,7 @@ async def test_attr_master(
     # give the long polling loop a chance to update the state; this could be any async call
     await hass.async_block_till_done()
 
-    attr_master = hass.states.get("media_player.player_name1111").attributes["master"]
+    attr_master = hass.states.get("media_player.player_name1111").attributes[ATTR_MASTER]
 
     assert attr_master is True
 
