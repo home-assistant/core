@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.hunterdouglas_powerview import _migrate_unique_ids
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -370,16 +369,6 @@ async def test_migrate_entry(
         minor_version=1,
     )
 
-    assert entry.version == 1
-    assert entry.minor_version == 1
-
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.version == 1
-    assert entry.minor_version == 2
-
     # Add entries with int unique_id
     entity_registry.async_get_or_create(
         domain="cover",
@@ -395,7 +384,15 @@ async def test_migrate_entry(
         config_entry=entry,
     )
 
-    await _migrate_unique_ids(hass, entry)
+    assert entry.version == 1
+    assert entry.minor_version == 1
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
 
     # Reload the registry entries
     registry_entries = er.async_entries_for_config_entry(
