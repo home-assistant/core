@@ -86,7 +86,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     await hub.refresh()
                     rooms = set(hub.rooms.keys())
-                    for entry in self.hass.config_entries.async_entries(DOMAIN):
+                    for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
                         if (
                             entry.runtime_data
                             and entry.runtime_data.rooms

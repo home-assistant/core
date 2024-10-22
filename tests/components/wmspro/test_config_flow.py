@@ -333,6 +333,7 @@ async def test_config_flow_unknown_error(
 async def test_config_flow_duplicate_entries(
     hass: HomeAssistant,
     mock_hub_ping: AsyncMock,
+    mock_dest_refresh: AsyncMock,
     mock_hub_configuration_test: AsyncMock,
 ) -> None:
     """Test we prevent creation of duplicate config entries."""
@@ -353,6 +354,8 @@ async def test_config_flow_duplicate_entries(
         CONF_HOST: "1.2.3.4",
     }
 
+    await hass.async_block_till_done()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -372,6 +375,7 @@ async def test_config_flow_duplicate_entries(
 async def test_config_flow_multiple_entries(
     hass: HomeAssistant,
     mock_hub_ping: AsyncMock,
+    mock_dest_refresh: AsyncMock,
     mock_hub_configuration_test: AsyncMock,
     mock_hub_configuration_prod: AsyncMock,
 ) -> None:
@@ -392,6 +396,8 @@ async def test_config_flow_multiple_entries(
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
     }
+
+    await hass.async_block_till_done()
 
     mock_hub_configuration_prod.return_value = mock_hub_configuration_test.return_value
 
