@@ -18,7 +18,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     Forecast,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -113,12 +112,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         }
 
     def _get_minute_weather_data(self, minute_forecast: list[MinutelyWeatherForecast]):
-        forecasts = [
-            {"datetime": item.date_time, "precipitation": round(item.precipitation, 2)}
-            for item in minute_forecast
-        ]
-
-        return {Platform.WEATHER + "." + DOMAIN: {"forecast": forecasts}}
+        return {
+            "forecast": [
+                {
+                    "datetime": item.date_time,
+                    "precipitation": round(item.precipitation, 2),
+                }
+                for item in minute_forecast
+            ]
+        }
 
     def _get_current_weather_data(self, current_weather: CurrentWeather):
         return {

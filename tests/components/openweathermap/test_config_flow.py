@@ -60,8 +60,8 @@ def _create_mocked_owm_factory(is_valid: bool):
         wind_speed=9.83,
         wind_bearing=199,
         wind_gust=None,
-        rain={},
-        snow={},
+        rain=None,
+        snow=None,
         condition=WeatherCondition(
             id=803,
             main="Clouds",
@@ -106,11 +106,14 @@ def _create_mocked_owm_factory(is_valid: bool):
         rain=0,
         snow=0,
     )
-    minutely_weather_forecast = MinutelyWeatherForecast(
-        date_time=1728672360, precipitation=2.54
-    )
+    minutely_weather_forecast = [
+        MinutelyWeatherForecast(date_time=1728672360, precipitation=0),
+        MinutelyWeatherForecast(date_time=1728672420, precipitation=1.23),
+        MinutelyWeatherForecast(date_time=1728672480, precipitation=4.5),
+        MinutelyWeatherForecast(date_time=1728672540, precipitation=0),
+    ]
     weather_report = WeatherReport(
-        current_weather, [minutely_weather_forecast], [], [daily_weather_forecast]
+        current_weather, minutely_weather_forecast, [], [daily_weather_forecast]
     )
 
     mocked_owm_client = MagicMock()

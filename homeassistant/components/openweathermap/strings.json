@@ -49,14 +49,14 @@
     }
   },
   "services": {
-    "get_minute_forecasts": {
-      "name": "Get minute forecasts",
-      "description": "Get minute weather forecasts."
+    "get_minute_forecast": {
+      "name": "Get minute forecast",
+      "description": "Get minute weather forecast."
     }
   },
   "exceptions": {
     "service_minute_forecast_mode": {
-      "message": "Minute forecasts are available only when {name} mode is set to v3.0"
+      "message": "Minute forecast is available only when {name} mode is set to v3.0"
     }
   }
 }
