@@ -590,6 +590,7 @@ async def test_add_node(
         "status": 0,
         "ready": False,
         "low_security": False,
+        "low_security_reason": None,
     }
     assert msg["event"]["node"] == node_details
 
