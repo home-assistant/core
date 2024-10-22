@@ -1252,3 +1252,23 @@ async def test_preset_mode(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLD
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+
+    device.raw_ui_data["StatusHeat"] = 3
+    device.raw_ui_data["StatusCool"] = 3
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
