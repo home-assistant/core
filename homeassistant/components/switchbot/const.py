@@ -50,7 +50,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
     SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
-    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER,
+    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
 }
