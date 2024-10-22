@@ -126,6 +126,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 
 ALL_STATES_RATE_LIMIT = 60  # seconds
 DOMAIN_STATES_RATE_LIMIT = 1  # seconds
+# Temporary workaround for None in binary_sensor templates
+NONE_SENTINEL = object()
 
 _render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
 
@@ -1274,6 +1276,12 @@ def forgiving_boolean[_T](
         if default is _SENTINEL:
             raise_no_default("bool", value)
         return default
+
+
+# Temporary workaround for None in binary_sensor templates
+def none_sentinel():
+    """Return a sentinel value for None."""
+    return NONE_SENTINEL
 
 
 def result_as_boolean(template_result: Any | None) -> bool:
@@ -2952,6 +2960,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
         self.tests["contains"] = contains
+
+        # Temporary workaround for None in binary_sensor templates
+        self.globals["none_sentinel"] = none_sentinel
+        self.filters["none_sentinel"] = self.globals["none_sentinel"]
 
         if hass is None:
             return

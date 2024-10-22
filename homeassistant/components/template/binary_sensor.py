@@ -303,7 +303,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
 
         state = (
             None
-            if isinstance(result, TemplateError)
+            if result is template.NONE_SENTINEL or isinstance(result, TemplateError)
             else template.result_as_boolean(result)
         )
 
