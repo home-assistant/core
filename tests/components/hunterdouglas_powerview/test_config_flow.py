@@ -358,6 +358,7 @@ async def test_form_unsupported_device(
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_migrate_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     api_version: int,
 ) -> None:
     """Test migrate to newest version."""
@@ -378,8 +379,6 @@ async def test_migrate_entry(
 
     assert entry.version == 1
     assert entry.minor_version == 2
-
-    entity_registry = er.async_get(hass)
 
     # Add entries with int unique_id
     entity_registry.async_get_or_create(
