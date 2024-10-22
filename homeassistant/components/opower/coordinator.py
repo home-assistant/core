@@ -59,6 +59,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             entry_data[CONF_PASSWORD],
             entry_data.get(CONF_TOTP_SECRET),
         )
+        self.last_known_rates: dict[str, float] = {}
 
         @callback
         def _dummy_listener() -> None:
@@ -86,6 +87,35 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         # Because Opower provides historical usage/cost with a delay of a couple of days
         # we need to insert data into statistics.
         await self._insert_statistics()
+        # Estimate forecast values with the last known rate if they are empty
+        for _, forecast in enumerate(forecasts):
+            if (
+                forecast.usage_to_date > 0
+                and forecast.cost_to_date == 0
+                and forecast.account.utility_account_id in self.last_known_rates
+            ):
+                forecast.cost_to_date = (
+                    self.last_known_rates[forecast.account.utility_account_id]
+                    * forecast.usage_to_date
+                )
+            if (
+                forecast.forecasted_usage > 0
+                and forecast.forecasted_cost == 0
+                and forecast.account.utility_account_id in self.last_known_rates
+            ):
+                forecast.forecasted_cost = (
+                    self.last_known_rates[forecast.account.utility_account_id]
+                    * forecast.forecasted_usage
+                )
+            if (
+                forecast.typical_usage > 0
+                and forecast.typical_cost == 0
+                and forecast.account.utility_account_id in self.last_known_rates
+            ):
+                forecast.typical_cost = (
+                    self.last_known_rates[forecast.account.utility_account_id]
+                    * forecast.typical_usage
+                )
         return {forecast.account.utility_account_id: forecast for forecast in forecasts}
 
     async def _insert_statistics(self) -> None:
@@ -216,6 +246,37 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 self.hass, consumption_metadata, consumption_statistics
             )
 
+    def _check_read_needs_estimation(
+        self,
+        finer_cost_reads: list[CostRead],
+        rough_cost_reads: list[CostRead],
+        start_time: float,
+    ) -> bool:
+        def _get_cost_sum(
+            cost_reads: list[CostRead], start_time: float
+        ) -> tuple[float, float]:
+            cost_sum = 0
+            consumption_sum = 0
+            # Sum up cost/consumption beyond the start time
+            for _, cost_read in enumerate(cost_reads):
+                if cost_read.start_time >= start_time:
+                    cost_sum += cost_read.provided_cost
+                    consumption_sum += cost_read.consumption
+            return cost_sum, consumption_sum
+
+        cost_sum, consumption_sum = _get_cost_sum(rough_cost_reads, start_time)
+        finer_cost_sum, finer_consumption_sum = _get_cost_sum(
+            finer_cost_reads, start_time
+        )
+        _LOGGER.debug(
+            "Calculated total cost/consumption: (%s/%s) fine values: (%s/%s)",
+            cost_sum,
+            consumption_sum,
+            finer_cost_sum,
+            finer_consumption_sum,
+        )
+        return True
+
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None
     ) -> list[CostRead]:
@@ -230,16 +291,90 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         - hour resolution for past 2 months (if account's read resolution supports it)
         """
 
+        def _apply_estimiated_costs(
+            cost_reads: list[CostRead],
+            finer_cost_reads: list[CostRead],
+            rough_cost_reads: list[CostRead],
+        ) -> None:
+            if len(cost_reads) == 0:
+                return
+            for i, rough_cost_read in enumerate(rough_cost_reads):
+                # Skip to the first rough time window that is relevant
+                if cost_reads[0].start_time >= rough_cost_read.end_time:
+                    continue
+                if rough_cost_read.consumption <= 0:
+                    _LOGGER.debug(
+                        "%s - %s: Consumption 0, skipping",
+                        rough_cost_read.start_time,
+                        rough_cost_read.end_time,
+                    )
+                    break
+                rate = rough_cost_read.provided_cost / rough_cost_read.consumption
+                calculated_cost_sum = 0
+                calculated_consumption_sum = 0
+                for _, finer_cost_read in enumerate(finer_cost_reads):
+                    # Ensure cost read is within the rough estimating window
+                    if rough_cost_read.start_time <= finer_cost_read.start_time:
+                        # Continue estimating costs with the last known rate if this is
+                        # the last known billing period (our current billing period).
+                        # This should be replaced by updated values in the future.
+                        if (
+                            rough_cost_read.end_time <= finer_cost_read.start_time
+                            and i < len(rough_cost_reads) - 1
+                        ):
+                            break
+                        finer_cost_read.provided_cost = (
+                            rate * finer_cost_read.consumption
+                        )
+                        calculated_cost_sum += finer_cost_read.provided_cost
+                        calculated_consumption_sum += finer_cost_read.consumption
+                _LOGGER.debug(
+                    "%s - %s: Applied estimated rate: %s Real cost/Estimated cost: %s/%s Real consumption/Estimated consumption: %s/%s",
+                    rough_cost_read.start_time,
+                    rough_cost_read.end_time,
+                    rate,
+                    rough_cost_read.provided_cost,
+                    calculated_cost_sum,
+                    rough_cost_read.consumption,
+                    calculated_consumption_sum,
+                )
+
+        # Rough cost reads included for fine cost estimate if needed.
         def _update_with_finer_cost_reads(
-            cost_reads: list[CostRead], finer_cost_reads: list[CostRead]
+            cost_reads: list[CostRead],
+            finer_cost_reads: list[CostRead],
+            rough_cost_reads: list[CostRead],
         ) -> None:
             for i, cost_read in enumerate(cost_reads):
                 for j, finer_cost_read in enumerate(finer_cost_reads):
-                    if cost_read.start_time == finer_cost_read.start_time:
-                        cost_reads[i:] = finer_cost_reads[j:]
-                        return
-                    if cost_read.end_time == finer_cost_read.start_time:
-                        cost_reads[i + 1 :] = finer_cost_reads[j:]
+                    if finer_cost_read.start_time in (
+                        cost_read.start_time,
+                        cost_read.end_time,
+                    ):
+                        # Some utilities only provide costs at the bill view. Calculates
+                        # the total costs/consumption to estimate the billing rate, then
+                        # applies it to the finer data.
+                        # Estimated hourly/daily costs are only applied if Opower detects that
+                        # costs are only provided on the rougher view.
+                        needs_estimation = self._check_read_needs_estimation(
+                            finer_cost_reads,
+                            rough_cost_reads,
+                            finer_cost_read.start_time,
+                        )
+                        if cost_read.start_time == finer_cost_read.start_time:
+                            if needs_estimation:
+                                _apply_estimiated_costs(
+                                    cost_reads[i:], finer_cost_reads, rough_cost_reads
+                                )
+                            cost_reads[i:] = finer_cost_reads[j:]
+                        else:
+                            if needs_estimation:
+                                _apply_estimiated_costs(
+                                    cost_reads[i + 1 :],
+                                    finer_cost_reads,
+                                    rough_cost_reads,
+                                )
+                            cost_reads[i + 1 :] = finer_cost_reads[j:]
                         return
                     if cost_read.end_time < finer_cost_read.start_time:
                         break
@@ -255,6 +390,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.BILL, start, end
         )
+        if (
+            len(cost_reads) > 0
+            and cost_reads[-1].consumption > 0
+            and cost_reads[-1].provided_cost > 0
+        ):
+            _LOGGER.debug("Last values %s", cost_reads[-1])
+            self.last_known_rates[account.utility_account_id] = (
+                cost_reads[-1].provided_cost / cost_reads[-1].consumption
+            )
         _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
         if account.read_resolution == ReadResolution.BILLING:
             return cost_reads
@@ -271,7 +415,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             account, AggregateType.DAY, start, end
         )
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
-        _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
+        rough_cost_reads = cost_reads.copy()
+        _update_with_finer_cost_reads(cost_reads, daily_cost_reads, rough_cost_reads)
         if account.read_resolution == ReadResolution.DAY:
             return cost_reads
 
@@ -285,6 +430,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             account, AggregateType.HOUR, start, end
         )
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
-        _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
+        _update_with_finer_cost_reads(cost_reads, hourly_cost_reads, rough_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
         return cost_reads
