@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.entity_registry as er
 
-from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA, MOCK_MAC
+from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA, MOCK_SERIAL
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -42,7 +42,7 @@ async def test_user_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result2["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -102,7 +102,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -144,7 +144,7 @@ async def test_form_homekit_and_dhcp(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result2["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -227,7 +227,7 @@ async def test_form_cannot_connect(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -271,7 +271,7 @@ async def test_form_no_data(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -310,7 +310,7 @@ async def test_form_unknown_exception(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result2["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -349,7 +349,7 @@ async def test_form_unsupported_device(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -364,7 +364,7 @@ async def test_migrate_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "1.2.3.4"},
-        unique_id=MOCK_MAC,
+        unique_id=MOCK_SERIAL,
         version=1,
         minor_version=1,
     )
@@ -384,14 +384,14 @@ async def test_migrate_entry(
     # Add entries with int unique_id
     entity_registry.async_get_or_create(
         domain="cover",
-        platform="powerview",
+        platform="hunterdouglas_powerview",
         unique_id=123,
         config_entry=entry,
     )
     # Add entries with a str unique_id not starting with entry.unique_id
     entity_registry.async_get_or_create(
         domain="cover",
-        platform="powerview",
+        platform="hunterdouglas_powerview",
         unique_id="old_unique_id",
         config_entry=entry,
     )
