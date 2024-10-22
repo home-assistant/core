@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 # from collections.abc import Mapping
-# from contextlib import suppress
+from contextlib import suppress
 import logging
+import os
 
-# import os
 # from typing import Any
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -29,6 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import api
 from .const import (
@@ -223,6 +224,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     },
                 },
             )
+            with suppress(FileNotFoundError):
+                await hass.async_add_executor_job(
+                    os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+                )
 
             _LOGGER.debug(
                 "Migration to version %s.%s successful",
