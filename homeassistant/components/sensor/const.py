@@ -187,7 +187,7 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `Wh`, `kWh`, `MWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
-    ENERGY_DISTANCE = "ENERGY_DISTANCE"
+    ENERGY_DISTANCE = "energy_distance"
     """Energy distance.
 
     Use this device class for sensors measuring energy by distance, for example the amount
