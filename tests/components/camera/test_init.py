@@ -3,9 +3,10 @@
 from http import HTTPStatus
 import io
 from types import ModuleType
-from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
+from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import (
@@ -22,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -194,7 +195,38 @@ async def test_get_image_fails(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_snapshot_service(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("filename_template", "expected_filename", "expected_issues"),
+    [
+        (
+            "/test/snapshot.jpg",
+            "/test/snapshot.jpg",
+            [],
+        ),
+        (
+            "/test/snapshot_{{ entity_id }}.jpg",
+            "/test/snapshot_<entity camera.demo_camera=streaming>.jpg",
+            ["deprecated_filename_template_camera.demo_camera_snapshot"],
+        ),
+        (
+            "/test/snapshot_{{ entity_id.name }}.jpg",
+            "/test/snapshot_Demo camera.jpg",
+            ["deprecated_filename_template_camera.demo_camera_snapshot"],
+        ),
+        (
+            "/test/snapshot_{{ entity_id.entity_id }}.jpg",
+            "/test/snapshot_camera.demo_camera.jpg",
+            ["deprecated_filename_template_camera.demo_camera_snapshot"],
+        ),
+    ],
+)
+async def test_snapshot_service(
+    hass: HomeAssistant,
+    filename_template: str,
+    expected_filename: str,
+    expected_issues: list,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test snapshot service."""
     mopen = mock_open()
 
@@ -210,15 +242,24 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
             camera.SERVICE_SNAPSHOT,
             {
                 ATTR_ENTITY_ID: "camera.demo_camera",
-                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+                camera.ATTR_FILENAME: filename_template,
             },
             blocking=True,
         )
+
+        mopen.assert_called_once_with(expected_filename, "wb")
 
         mock_write = mopen().write
 
         assert len(mock_write.mock_calls) == 1
         assert mock_write.mock_calls[0][1][0] == b"Test"
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1 + len(expected_issues)
+    for expected_issue in expected_issues:
+        issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
+        assert issue is not None
+        assert issue == snapshot
 
 
 @pytest.mark.usefixtures("mock_camera")
@@ -231,7 +272,10 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.camera.os.makedirs",
         ),
-        pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"),
+        pytest.raises(
+            HomeAssistantError,
+            match="Cannot write `/test/snapshot.jpg`, no access to path",
+        ),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -242,6 +286,28 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_snapshot_service_os_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test snapshot service with os error."""
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch("homeassistant.components.camera.os.makedirs", side_effect=OSError),
+    ):
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+    assert "Can't write image to file:" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
@@ -525,7 +591,34 @@ async def test_record_service_invalid_path(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
-async def test_record_service(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("filename_template", "expected_filename", "expected_issues"),
+    [
+        ("/test/recording.mpg", "/test/recording.mpg", []),
+        (
+            "/test/recording_{{ entity_id }}.mpg",
+            "/test/recording_<entity camera.demo_camera=streaming>.mpg",
+            ["deprecated_filename_template_camera.demo_camera_record"],
+        ),
+        (
+            "/test/recording_{{ entity_id.name }}.mpg",
+            "/test/recording_Demo camera.mpg",
+            ["deprecated_filename_template_camera.demo_camera_record"],
+        ),
+        (
+            "/test/recording_{{ entity_id.entity_id }}.mpg",
+            "/test/recording_camera.demo_camera.mpg",
+            ["deprecated_filename_template_camera.demo_camera_record"],
+        ),
+    ],
+)
+async def test_record_service(
+    hass: HomeAssistant,
+    filename_template: str,
+    expected_filename: str,
+    expected_issues: list,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test record service."""
     with (
         patch(
@@ -541,12 +634,24 @@ async def test_record_service(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             camera.DOMAIN,
             camera.SERVICE_RECORD,
-            {ATTR_ENTITY_ID: "camera.demo_camera", camera.CONF_FILENAME: "/my/path"},
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: filename_template,
+            },
             blocking=True,
         )
         # So long as we call stream.record, the rest should be covered
         # by those tests.
-        assert mock_record.called
+        mock_record.assert_called_once_with(
+            ANY, expected_filename, duration=30, lookback=0
+        )
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1 + len(expected_issues)
+    for expected_issue in expected_issues:
+        issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
+        assert issue is not None
+        assert issue == snapshot
 
 
 @pytest.mark.usefixtures("mock_camera")

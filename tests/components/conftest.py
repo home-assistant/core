@@ -6,7 +6,7 @@ from collections.abc import Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import Repository, StoreAddon, StoreInfo
 import pytest
@@ -194,7 +194,9 @@ def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner],
 
 
 @pytest.fixture(name="addon_manager")
-def addon_manager_fixture(hass: HomeAssistant) -> AddonManager:
+def addon_manager_fixture(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> AddonManager:
     """Return an AddonManager instance."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_manager
@@ -363,10 +365,7 @@ def stop_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 @pytest.fixture(name="addon_options")
 def addon_options_fixture(addon_info: AsyncMock) -> dict[str, Any]:
     """Mock add-on options."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_options
-
-    return mock_addon_options(addon_info)
+    return addon_info.return_value.options
 
 
 @pytest.fixture(name="set_addon_options_side_effect")
@@ -382,13 +381,12 @@ def set_addon_options_side_effect_fixture(
 
 @pytest.fixture(name="set_addon_options")
 def set_addon_options_fixture(
+    supervisor_client: AsyncMock,
     set_addon_options_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock set add-on options."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_set_addon_options
-
-    yield from mock_set_addon_options(set_addon_options_side_effect)
+    supervisor_client.addons.addon_options.side_effect = set_addon_options_side_effect
+    return supervisor_client.addons.addon_options
 
 
 @pytest.fixture(name="uninstall_addon")
@@ -407,12 +405,9 @@ def create_backup_fixture() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="update_addon")
-def update_addon_fixture() -> Generator[AsyncMock]:
+def update_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock update add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_update_addon
-
-    yield from mock_update_addon()
+    return supervisor_client.store.update_addon
 
 
 @pytest.fixture(name="store_addons")
@@ -440,6 +435,22 @@ def store_info_fixture(
     return supervisor_client.store.info
 
 
+@pytest.fixture(name="addon_stats")
+def addon_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addon stats info."""
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import mock_addon_stats
+
+    return mock_addon_stats(supervisor_client)
+
+
+@pytest.fixture(name="addon_changelog")
+def addon_changelog_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addon changelog."""
+    supervisor_client.store.addon_changelog.return_value = ""
+    return supervisor_client.store.addon_changelog
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -459,8 +470,20 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
-            "homeassistant.components.hassio.handler.HassIO.client",
-            new=PropertyMock(return_value=supervisor_client),
+            "homeassistant.components.hassio.discovery.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.coordinator.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.update.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=supervisor_client,
         ),
     ):
         yield supervisor_client
@@ -475,12 +498,12 @@ async def _ensure_translation_exists(
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
-    if full_key in ignore_translations:
-        ignore_translations[full_key] = "used"
-        return
-
     translations = await async_get_translations(hass, "en", category, [component])
     if full_key in translations:
+        return
+
+    if full_key in ignore_translations:
+        ignore_translations[full_key] = "used"
         return
 
     key_parts = key.split(".")
@@ -539,6 +562,18 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         # Check if this flow has been seen before
         # Gets set to False on first run, and to True on subsequent runs
         setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
+
+        if result["type"] is FlowResultType.FORM:
+            if errors := result.get("errors"):
+                for error in errors.values():
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"error.{error}",
+                    )
+            return result
 
         if result["type"] is FlowResultType.ABORT:
             # We don't need translations for a discovery flow which immediately

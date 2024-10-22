@@ -54,9 +54,10 @@ def mock_update_entities() -> list[MockUpdateEntity]:
             unique_id="update_already_in_progres",
             installed_version="1.0.0",
             latest_version="1.0.1",
-            in_progress=50,
+            in_progress=True,
             supported_features=UpdateEntityFeature.INSTALL
             | UpdateEntityFeature.PROGRESS,
+            update_percentage=50,
         ),
         MockUpdateEntity(
             name="Update No Install",
