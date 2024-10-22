@@ -154,9 +154,10 @@ async def test_simple_global_timeout_does_not_leak_upward(
     current_task = asyncio.current_task()
     assert current_task is not None
 
-    async with timeout.async_timeout(0.1), timeout.async_freeze():
-        assert current_task.cancelling() == 0
-        await asyncio.sleep(0.3)
+    with pytest.raises(asyncio.TimeoutError):
+        async with timeout.async_timeout(0.1):
+            assert current_task.cancelling() == 0
+            await asyncio.sleep(0.3)
 
     # After the context manager exits, the task should no longer be cancelling
     assert current_task.cancelling() == 0
@@ -174,7 +175,8 @@ async def test_simple_global_timeout_does_swallow_cancellation(
         new_task = asyncio.current_task()
         assert new_task is not None
         with pytest.raises(asyncio.TimeoutError):
-            async with timeout.async_timeout(0.1), timeout.async_freeze():
+            assert current_task.cancelling() == 0
+            async with timeout.async_timeout(0.1):
                 await asyncio.sleep(0.3)
 
     # After the context manager exits, the task should no longer be cancelling
@@ -223,9 +225,10 @@ async def test_simple_zone_timeout_does_not_leak_upward(
     current_task = asyncio.current_task()
     assert current_task is not None
 
-    async with timeout.async_timeout(0.1, "test"):
-        assert current_task.cancelling() == 0
-        await asyncio.sleep(0.3)
+    with pytest.raises(asyncio.TimeoutError):
+        async with timeout.async_timeout(0.1, "test"):
+            assert current_task.cancelling() == 0
+            await asyncio.sleep(0.3)
 
     # After the context manager exits, the task should no longer be cancelling
     assert current_task.cancelling() == 0
