@@ -51,7 +51,6 @@ async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_comports: Mock,
-    mock_serial: Mock,
     mock_momonga: Mock,
 ) -> None:
     """Test we get the form."""
@@ -61,13 +60,8 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     with (
-        patch.object(
-            mock_serial,
-            "__init__",
-        ) as mock_serial_init,
         patch.object(mock_momonga, "__init__") as mock_momonga_init,
     ):
-        mock_serial_init.return_value = None
         mock_momonga_init.return_value = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -80,7 +74,6 @@ async def test_form(
         assert result["data"] == user_input
         mock_setup_entry.assert_called_once()
         mock_comports.assert_called_once()
-        mock_serial_init.assert_called_once_with(user_input[CONF_DEVICE], 115200)
         mock_momonga_init.assert_called_once_with(
             dev=user_input[CONF_DEVICE],
             rbid=user_input[CONF_ID],
@@ -101,7 +94,6 @@ async def test_form_errors(
     error: Exception,
     message: str,
     mock_comports: Mock,
-    mock_serial: Mock,
     mock_momonga: Mock,
 ) -> None:
     """Test we handle error."""
@@ -109,10 +101,8 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with (
-        patch.object(mock_serial, "__init__") as mock_serial_init,
         patch.object(mock_momonga, "__init__", side_effect=error) as mock_momonga_init,
     ):
-        mock_serial_init.return_value = None
         result_configure = await hass.config_entries.flow.async_configure(
             result_init["flow_id"],
             user_input,
@@ -122,7 +112,6 @@ async def test_form_errors(
         assert result_configure["errors"] == {"base": message}
         await hass.async_block_till_done()
         mock_comports.assert_called()
-        mock_serial_init.assert_called_once_with(user_input[CONF_DEVICE], 115200)
         mock_momonga_init.assert_called_once_with(
             dev=user_input[CONF_DEVICE],
             rbid=user_input[CONF_ID],

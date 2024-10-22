@@ -68,7 +68,6 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return discovered_device_id, discovered_device_name
 
-    @callback
     async def _get_usb_devices(self) -> dict[str, ListPortInfo]:
         """Return a list of available USB devices."""
         devices = await self.hass.async_add_executor_job(comports)

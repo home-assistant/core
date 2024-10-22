@@ -18,7 +18,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_momonga(exception=None) -> Generator[Mock]:
-    """Mock for Serial class."""
+    """Mock for Momonga class."""
 
     class MockMomonga:
         def __init__(self, *args, **kwargs) -> None:
