@@ -10,7 +10,7 @@ from slugify import slugify
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import FibaroAuthFailed, FibaroConnectFailed, init_controller
@@ -117,5 +117,8 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: reauth_entry.title,
+            },
         )

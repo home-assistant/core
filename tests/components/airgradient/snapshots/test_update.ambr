@@ -47,6 +47,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 0>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.airgradient_firmware',
