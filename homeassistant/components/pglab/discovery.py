@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING, Any
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.mqtt import Client as PyPGLabMqttClient
 
-from homeassistant.components.mqtt import ReceiveMessage
-from homeassistant.components.mqtt.subscription import (
+from homeassistant.components.mqtt import (
     EntitySubscription,
+    ReceiveMessage,
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
@@ -212,7 +212,7 @@ class PGLabDiscovery:
                 if discovery_info.hash == pglab_device.hash:
                     # Best case, there is nothing to do.
                     # The device is still in the same configuration. Same name, same shutters, same relay etc.
-                    return None
+                    return
 
                 LOGGER.warning(
                     "Changed internal configuration of device(%s). Rebuilding all entities",
