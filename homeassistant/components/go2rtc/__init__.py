@@ -12,8 +12,8 @@ from go2rtc_client.ws import (
     WsError,
 )
 
-from homeassistant.components.camera import Camera
-from homeassistant.components.camera.webrtc import (
+from homeassistant.components.camera import (
+    Camera,
     CameraWebRTCProvider,
     WebRTCAnswer as HAWebRTCAnswer,
     WebRTCCandidate as HAWebRTCCandidate,

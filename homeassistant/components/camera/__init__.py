@@ -89,12 +89,15 @@ from .webrtc import (
     CameraWebRTCProvider,
     RTCIceServer,
     WebRTCAnswer,
+    WebRTCCandidate,  # noqa: F401
     WebRTCClientConfiguration,
     WebRTCError,
+    WebRTCMessages,  # noqa: F401
     WebRTCSendMessage,
     async_get_supported_legacy_provider,
     async_get_supported_provider,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
+    async_register_webrtc_provider,  # noqa: F401
     async_register_ws,
     register_ice_server,
 )

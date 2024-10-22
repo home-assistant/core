@@ -20,9 +20,7 @@ from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
     Camera,
     CameraEntityFeature,
-)
-from homeassistant.components.camera.const import StreamType
-from homeassistant.components.camera.webrtc import (
+    StreamType,
     WebRTCAnswer as HAWebRTCAnswer,
     WebRTCCandidate as HAWebRTCCandidate,
     WebRTCError,
