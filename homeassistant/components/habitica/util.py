@@ -79,16 +79,16 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
     return used_in
 
 
-frequency_map = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}
-weekday_map = {"m": MO, "t": TU, "w": WE, "th": TH, "f": FR, "s": SA, "su": SU}
+FREQUENCY_MAP = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}
+WEEKDAY_MAP = {"m": MO, "t": TU, "w": WE, "th": TH, "f": FR, "s": SA, "su": SU}
 
 
 def build_rrule(task: dict[str, Any]) -> rrule:
     """Build rrule string."""
 
-    rrule_frequency = frequency_map.get(task["frequency"], DAILY)
+    rrule_frequency = FREQUENCY_MAP.get(task["frequency"], DAILY)
     weekdays = [
-        weekday_map[day] for day, is_active in task["repeat"].items() if is_active
+        WEEKDAY_MAP[day] for day, is_active in task["repeat"].items() if is_active
     ]
     bymonthday = (
         task["daysOfMonth"]

@@ -90,7 +90,7 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
             ),
         )
 
-        return events_sorted[0] if events_sorted else None
+        return next(iter(events_sorted), None)
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -110,7 +110,7 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
             and not task["completed"]
             and task.get("date")
             and (start := to_date(task["date"]))
-            and (start_date.date() <= start <= end_date.date())
+            and (start_date.date() <= start < end_date.date())
         ]
 
 
@@ -127,7 +127,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         """Habitica daystart."""
         return datetime.fromisoformat(self.coordinator.data.user["lastCron"])
 
-    def calculate_end_date(self, next_recurrence) -> date:
+    def calculate_end_date(self, next_recurrence: datetime) -> date:
         """Calculate the end date for a yesterdaily."""
         return (
             dt_util.start_of_local_day()
