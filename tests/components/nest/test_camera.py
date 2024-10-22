@@ -623,7 +623,7 @@ async def test_camera_web_rtc(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -708,7 +708,7 @@ async def test_camera_web_rtc_offer_failure(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -717,7 +717,7 @@ async def test_camera_web_rtc_offer_failure(
     assert response["event"] == {
         "type": "error",
         "code": "webrtc_offer_failed",
-        "message": "Nest API error: Bad Request",
+        "message": "Nest API error: Bad Request response from API (400)",
     }
 
 
@@ -793,7 +793,7 @@ async def test_camera_multiple_streams(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()

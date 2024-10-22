@@ -119,7 +119,7 @@ async def test_offer_for_stream_source(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
@@ -171,7 +171,7 @@ async def test_offer_failure(
     response = await client.receive_json()
     assert response["id"] == subscription_id
     assert response["type"] == "event"
-    assert response["event"]["type"] == "session_id"
+    assert response["event"]["type"] == "session"
 
     # Answer
     response = await client.receive_json()
