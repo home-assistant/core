@@ -680,7 +680,7 @@
       'location': '',
       'message': '5 Minuten ruhig durchatmen',
       'start_time': '2024-09-21 00:00:00',
-      'yesterdaily': True,
+      'yesterdaily': False,
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_user_dailies',
