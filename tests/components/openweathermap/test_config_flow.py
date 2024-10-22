@@ -7,6 +7,7 @@ from pyopenweathermap import (
     CurrentWeather,
     DailyTemperature,
     DailyWeatherForecast,
+    MinutelyWeatherForecast,
     RequestError,
     WeatherCondition,
     WeatherReport,
@@ -105,7 +106,12 @@ def _create_mocked_owm_factory(is_valid: bool):
         rain=0,
         snow=0,
     )
-    weather_report = WeatherReport(current_weather, [], [daily_weather_forecast])
+    minutely_weather_forecast = MinutelyWeatherForecast(
+        date_time=1728672360, precipitation=2.54
+    )
+    weather_report = WeatherReport(
+        current_weather, [minutely_weather_forecast], [], [daily_weather_forecast]
+    )
 
     mocked_owm_client = MagicMock()
     mocked_owm_client.validate_key = AsyncMock(return_value=is_valid)

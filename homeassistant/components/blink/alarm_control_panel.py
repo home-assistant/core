@@ -9,13 +9,10 @@ from blinkpy.blinkpy import Blink, BlinkSyncModule
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-)
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -80,8 +77,10 @@ class BlinkSyncModuleHA(
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
-        self._attr_state = (
-            STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
+        self._attr_alarm_state = (
+            AlarmControlPanelState.ARMED_AWAY
+            if self.sync.arm
+            else AlarmControlPanelState.DISARMED
         )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

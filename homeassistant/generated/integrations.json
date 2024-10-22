@@ -7354,13 +7354,11 @@
       "iot_class": "calculated"
     },
     "mold_indicator": {
-      "name": "Mold Indicator",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "random": {
-      "name": "Random",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7391,7 +7389,6 @@
       "iot_class": "local_polling"
     },
     "timer": {
-      "name": "Timer",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -7401,7 +7398,6 @@
       "iot_class": "calculated"
     },
     "trend": {
-      "name": "Trend",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7447,11 +7443,13 @@
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
+    "mold_indicator",
     "moon",
     "nextbus",
     "nmap_tracker",
     "plant",
     "proximity",
+    "random",
     "rpi_power",
     "schedule",
     "season",
@@ -7461,7 +7459,9 @@
     "switch_as_x",
     "threshold",
     "time_date",
+    "timer",
     "tod",
+    "trend",
     "uptime",
     "utility_meter",
     "version",
