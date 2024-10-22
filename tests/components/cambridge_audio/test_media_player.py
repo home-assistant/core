@@ -11,10 +11,13 @@ from aiostreammagic.models import CallbackType
 import pytest
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     DOMAIN as MP_DOMAIN,
+    SERVICE_PLAY_MEDIA,
     MediaPlayerEntityFeature,
     RepeatMode,
 )
@@ -302,3 +305,85 @@ async def test_media_seek(
     )
 
     mock_stream_magic_client.media_seek.assert_called_once_with(100)
+
+
+async def test_play_media_preset_item_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_stream_magic_client: AsyncMock,
+) -> None:
+    """Test playing media with a preset item id."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: "preset",
+            ATTR_MEDIA_CONTENT_ID: "1",
+        },
+        blocking=True,
+    )
+    assert mock_stream_magic_client.recall_preset.call_count == 1
+    assert mock_stream_magic_client.recall_preset.call_args_list[0].args[0] == 1
+    with pytest.raises(ValueError) as ve:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: "preset",
+                ATTR_MEDIA_CONTENT_ID: "UNKNOWN_PRESET",
+            },
+            blocking=True,
+        )
+    assert "UNKNOWN_PRESET" in str(ve.value)
+
+
+async def test_play_media_airable_radio_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_stream_magic_client: AsyncMock,
+) -> None:
+    """Test playing media with an airable radio id."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: "airable",
+            ATTR_MEDIA_CONTENT_ID: "12345678",
+        },
+        blocking=True,
+    )
+    assert mock_stream_magic_client.play_radio_airable.call_count == 1
+    call_args = mock_stream_magic_client.play_radio_airable.call_args_list[0].args
+    assert call_args[0] == "Radio"
+    assert call_args[1] == 12345678
+
+
+async def test_play_media_internet_radio(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_stream_magic_client: AsyncMock,
+) -> None:
+    """Test playing media with a url."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: "internet_radio",
+            ATTR_MEDIA_CONTENT_ID: "https://example.com",
+        },
+        blocking=True,
+    )
+    assert mock_stream_magic_client.play_radio_url.call_count == 1
+    call_args = mock_stream_magic_client.play_radio_url.call_args_list[0].args
+    assert call_args[0] == "Radio"
+    assert call_args[1] == "https://example.com"
