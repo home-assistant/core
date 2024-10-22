@@ -4,7 +4,7 @@ from datetime import timedelta
 
 DOMAIN = "smart_meter_b_route"
 ENTRY_TITLE = "Smart Meter B-route"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
 
 ATTR_API_INSTANTANEOUS_POWER = "instantaneous_power"
 ATTR_API_TOTAL_CONSUMPTION = "total_consumption"
