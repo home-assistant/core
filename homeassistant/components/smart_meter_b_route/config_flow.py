@@ -105,7 +105,7 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 device_id = get_serial_by_id(user_input[CONF_DEVICE])
                 device = device_options[device_id]
-                if not self.context["unique_id"]:
+                if not self.context.get("unique_id"):
                     await self.async_set_unique_id(
                         _generate_unique_id(device), raise_on_progress=False
                     )

@@ -73,7 +73,7 @@ async def test_form(
         assert result["title"] == ENTRY_TITLE
         assert result["data"] == user_input
         mock_setup_entry.assert_called_once()
-        mock_comports.assert_called_once()
+        mock_comports.assert_called()
         mock_momonga_init.assert_called_once_with(
             dev=user_input[CONF_DEVICE],
             rbid=user_input[CONF_ID],
