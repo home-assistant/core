@@ -97,12 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         or host
     )
     version = STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION] or None
-    # mac can be missing
-    mac_connect = (
-        {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
-        if STATUS_QUERY_MAC in status
-        else None
-    )
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
@@ -113,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         model=SERVER_MODEL,
         sw_version=version,
         entry_type=DeviceEntryType.SERVICE,
-        connections=mac_connect,
+        connections=None,
     )
     _LOGGER.debug("LMS Device %s", device)
 
