@@ -1,25 +1,37 @@
 """The tests for the go2rtc component."""
 
 from collections.abc import Callable
+import logging
+from typing import NamedTuple
 from unittest.mock import AsyncMock, Mock
 
-from go2rtc_client import Stream, WebRTCSdpAnswer, WebRTCSdpOffer
+from go2rtc_client import Stream
 from go2rtc_client.models import Producer
+from go2rtc_client.ws import (
+    ReceiveMessages,
+    WebRTCAnswer,
+    WebRTCCandidate,
+    WebRTCOffer,
+    WsError,
+)
 import pytest
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
     Camera,
     CameraEntityFeature,
+    StreamType,
+    WebRTCAnswer as HAWebRTCAnswer,
+    WebRTCCandidate as HAWebRTCCandidate,
+    WebRTCError,
+    WebRTCMessage,
+    WebRTCSendMessage,
 )
-from homeassistant.components.camera.const import StreamType
-from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 
@@ -65,12 +77,6 @@ class MockCamera(Camera):
 
 
 @pytest.fixture
-def integration_entity() -> MockCamera:
-    """Mock Camera Entity."""
-    return MockCamera()
-
-
-@pytest.fixture
 def integration_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Test mock config entry."""
     entry = MockConfigEntry(domain=TEST_DOMAIN)
@@ -82,8 +88,7 @@ def integration_config_entry(hass: HomeAssistant) -> ConfigEntry:
 async def init_test_integration(
     hass: HomeAssistant,
     integration_config_entry: ConfigEntry,
-    integration_entity: MockCamera,
-) -> None:
+) -> MockCamera:
     """Initialize components."""
 
     async def async_setup_entry_init(
@@ -112,8 +117,9 @@ async def init_test_integration(
             async_unload_entry=async_unload_entry_init,
         ),
     )
+    test_camera = MockCamera()
     setup_test_component_platform(
-        hass, CAMERA_DOMAIN, [integration_entity], from_config_entry=True
+        hass, CAMERA_DOMAIN, [test_camera], from_config_entry=True
     )
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", Mock())
 
@@ -121,88 +127,103 @@ async def init_test_integration(
         assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return integration_config_entry
+    return test_camera
 
 
-@pytest.mark.usefixtures("init_test_integration")
-async def _test_setup(
+async def _test_setup_and_signaling(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    rest_client: AsyncMock,
+    ws_client: Mock,
+    go2rtc_config_entry: MockConfigEntry,
     after_setup_fn: Callable[[], None],
+    camera: MockCamera,
 ) -> None:
     """Test the go2rtc config entry."""
-    entity_id = "camera.test"
-    camera = get_camera_from_entity_id(hass, entity_id)
+    entity_id = camera.entity_id
     assert camera.frontend_stream_type == StreamType.HLS
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, go2rtc_config_entry)
     after_setup_fn()
 
-    mock_client.webrtc.forward_whep_sdp_offer.return_value = WebRTCSdpAnswer(ANSWER_SDP)
+    receive_message_callback = Mock(spec_set=WebRTCSendMessage)
 
-    answer = await camera.async_handle_web_rtc_offer(OFFER_SDP)
-    assert answer == ANSWER_SDP
+    async def test() -> None:
+        await camera.async_handle_async_webrtc_offer(
+            OFFER_SDP, "session_id", receive_message_callback
+        )
+        ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+        ws_client.subscribe.assert_called_once()
 
-    mock_client.webrtc.forward_whep_sdp_offer.assert_called_once_with(
-        entity_id, WebRTCSdpOffer(OFFER_SDP)
-    )
-    mock_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
+        # Simulate the answer from the go2rtc server
+        callback = ws_client.subscribe.call_args[0][0]
+        callback(WebRTCAnswer(ANSWER_SDP))
+        receive_message_callback.assert_called_once_with(HAWebRTCAnswer(ANSWER_SDP))
+
+    await test()
+
+    rest_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
 
     # If the stream is already added, the stream should not be added again.
-    mock_client.streams.add.reset_mock()
-    mock_client.streams.list.return_value = {
+    rest_client.streams.add.reset_mock()
+    rest_client.streams.list.return_value = {
         entity_id: Stream([Producer("rtsp://stream")])
     }
 
-    answer = await camera.async_handle_web_rtc_offer(OFFER_SDP)
-    assert answer == ANSWER_SDP
-    mock_client.streams.add.assert_not_called()
-    assert mock_client.webrtc.forward_whep_sdp_offer.call_count == 2
-    assert isinstance(camera._webrtc_providers[0], WebRTCProvider)
+    receive_message_callback.reset_mock()
+    ws_client.reset_mock()
+    await test()
+
+    rest_client.streams.add.assert_not_called()
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
 
     # Set stream source to None and provider should be skipped
-    mock_client.streams.list.return_value = {}
+    rest_client.streams.list.return_value = {}
+    receive_message_callback.reset_mock()
     camera.set_stream_source(None)
-    with pytest.raises(
-        HomeAssistantError,
-        match="WebRTC offer was not accepted by the supported providers",
-    ):
-        await camera.async_handle_web_rtc_offer(OFFER_SDP)
+    await camera.async_handle_async_webrtc_offer(
+        OFFER_SDP, "session_id", receive_message_callback
+    )
+    receive_message_callback.assert_called_once_with(
+        WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
+    )
 
     # Remove go2rtc config entry
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    assert go2rtc_config_entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_remove(go2rtc_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert go2rtc_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    assert camera._webrtc_providers == []
+    assert camera._webrtc_provider is None
     assert camera.frontend_stream_type == StreamType.HLS
 
 
-@pytest.mark.usefixtures("init_test_integration")
 async def test_setup_go_binary(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_server: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    rest_client: AsyncMock,
+    ws_client: Mock,
+    server: AsyncMock,
+    config_entry: MockConfigEntry,
+    init_test_integration: MockCamera,
 ) -> None:
     """Test the go2rtc config entry with binary."""
 
     def after_setup() -> None:
-        mock_server.assert_called_once_with(hass, "/usr/bin/go2rtc")
-        mock_server.return_value.start.assert_called_once()
+        server.assert_called_once_with(hass, "/usr/bin/go2rtc")
+        server.return_value.start.assert_called_once()
 
-    await _test_setup(hass, mock_client, mock_config_entry, after_setup)
+    await _test_setup_and_signaling(
+        hass, rest_client, ws_client, config_entry, after_setup, init_test_integration
+    )
 
-    mock_server.return_value.stop.assert_called_once()
+    server.return_value.stop.assert_called_once()
 
 
-@pytest.mark.usefixtures("init_test_integration")
 async def test_setup_go(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_server: Mock,
+    rest_client: AsyncMock,
+    ws_client: Mock,
+    server: Mock,
+    init_test_integration: MockCamera,
 ) -> None:
     """Test the go2rtc config entry without binary."""
     config_entry = MockConfigEntry(
@@ -212,8 +233,146 @@ async def test_setup_go(
     )
 
     def after_setup() -> None:
-        mock_server.assert_not_called()
+        server.assert_not_called()
 
-    await _test_setup(hass, mock_client, config_entry, after_setup)
+    await _test_setup_and_signaling(
+        hass, rest_client, ws_client, config_entry, after_setup, init_test_integration
+    )
 
-    mock_server.assert_not_called()
+    server.assert_not_called()
+
+
+class Callbacks(NamedTuple):
+    """Callbacks for the test."""
+
+    on_message: Mock
+    send_message: Mock
+
+
+@pytest.fixture
+async def message_callbacks(
+    ws_client: Mock,
+    init_test_integration: MockCamera,
+) -> Callbacks:
+    """Prepare and return receive message callback."""
+    receive_callback = Mock(spec_set=WebRTCSendMessage)
+
+    await init_test_integration.async_handle_async_webrtc_offer(
+        OFFER_SDP, "session_id", receive_callback
+    )
+    ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+    ws_client.subscribe.assert_called_once()
+
+    # Simulate messages from the go2rtc server
+    send_callback = ws_client.subscribe.call_args[0][0]
+
+    return Callbacks(receive_callback, send_callback)
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_message"),
+    [
+        (
+            WebRTCCandidate("candidate"),
+            HAWebRTCCandidate("candidate"),
+        ),
+        (
+            WebRTCAnswer(ANSWER_SDP),
+            HAWebRTCAnswer(ANSWER_SDP),
+        ),
+        (
+            WsError("error"),
+            WebRTCError("go2rtc_webrtc_offer_failed", "error"),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_receiving_messages_from_go2rtc_server(
+    message_callbacks: Callbacks,
+    message: ReceiveMessages,
+    expected_message: WebRTCMessage,
+) -> None:
+    """Test receiving message from go2rtc server."""
+    on_message, send_message = message_callbacks
+
+    send_message(message)
+    on_message.assert_called_once_with(expected_message)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_receiving_unknown_message_from_go2rtc_server(
+    message_callbacks: Callbacks,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test receiving unknown message from go2rtc server."""
+    on_message, send_message = message_callbacks
+
+    send_message({"type": "unknown"})
+    on_message.assert_not_called()
+    assert (
+        "homeassistant.components.go2rtc",
+        logging.WARNING,
+        "Unknown message {'type': 'unknown'}",
+    ) in caplog.record_tuples
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_on_candidate(
+    ws_client: Mock,
+    init_test_integration: MockCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test frontend sending candidate to go2rtc server."""
+    camera = init_test_integration
+    session_id = "session_id"
+
+    # Session doesn't exist
+    await camera.async_on_webrtc_candidate(session_id, "candidate")
+    assert (
+        "homeassistant.components.go2rtc",
+        logging.DEBUG,
+        f"Unknown session {session_id}. Ignoring candidate",
+    ) in caplog.record_tuples
+    caplog.clear()
+
+    # Store session
+    await init_test_integration.async_handle_async_webrtc_offer(
+        OFFER_SDP, session_id, Mock()
+    )
+    ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+    ws_client.reset_mock()
+
+    await camera.async_on_webrtc_candidate(session_id, "candidate")
+    ws_client.send.assert_called_once_with(WebRTCCandidate("candidate"))
+    assert caplog.record_tuples == []
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_close_session(
+    ws_client: Mock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test closing session."""
+    camera = init_test_integration
+    session_id = "session_id"
+
+    # Session doesn't exist
+    with pytest.raises(KeyError):
+        camera.close_webrtc_session(session_id)
+    ws_client.close.assert_not_called()
+
+    # Store session
+    await init_test_integration.async_handle_async_webrtc_offer(
+        OFFER_SDP, session_id, Mock()
+    )
+    ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+
+    # Close session
+    camera.close_webrtc_session(session_id)
+    ws_client.close.assert_called_once()
+
+    # Close again should raise an error
+    ws_client.reset_mock()
+    with pytest.raises(KeyError):
+        camera.close_webrtc_session(session_id)
+    ws_client.close.assert_not_called()

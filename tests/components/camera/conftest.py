@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera.webrtc import WebRTCAnswer, WebRTCSendMessage
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -56,23 +57,37 @@ def mock_camera_hls_fixture(mock_camera: None) -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="mock_camera_web_rtc")
-async def mock_camera_web_rtc_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
+@pytest.fixture
+async def mock_camera_webrtc_frontendtype_only(
+    hass: HomeAssistant,
+) -> AsyncGenerator[None]:
     """Initialize a demo camera platform with WebRTC."""
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.camera.Camera.frontend_stream_type",
-            new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
-        ),
-        patch(
-            "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-            return_value=WEBRTC_ANSWER,
-        ),
+    with patch(
+        "homeassistant.components.camera.Camera.frontend_stream_type",
+        new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_camera_webrtc(
+    mock_camera_webrtc_frontendtype_only: None,
+) -> AsyncGenerator[None]:
+    """Initialize a demo camera platform with WebRTC."""
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+    ) -> None:
+        send_message(WebRTCAnswer(WEBRTC_ANSWER))
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+        side_effect=async_handle_async_webrtc_offer,
     ):
         yield
 

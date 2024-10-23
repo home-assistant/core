@@ -6,7 +6,7 @@ import shutil
 from typing import Any
 from urllib.parse import urlparse
 
-from go2rtc_client import Go2RtcClient
+from go2rtc_client import Go2RtcRestClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,7 +34,7 @@ async def _validate_url(
         return "invalid_url"
 
     try:
-        client = Go2RtcClient(async_get_clientsession(hass), value)
+        client = Go2RtcRestClient(async_get_clientsession(hass), value)
         await client.streams.list()
     except Exception:  # noqa: BLE001
         return "cannot_connect"
