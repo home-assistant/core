@@ -157,7 +157,7 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
 class AlarmDecoderOptionsFlowHandler(OptionsFlow):
     """Handle AlarmDecoder options."""
 
-    selected_zone: str | None = None
+    selected_zone: str
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize AlarmDecoder options flow."""

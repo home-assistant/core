@@ -19,7 +19,7 @@
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
     },
     "legacy_templates_false": {
-      "title": "`legacy_templates` config key is being removed",
+      "title": "legacy_templates config key is being removed",
       "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "legacy_templates_true": {
@@ -43,7 +43,7 @@
       "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
     },
     "storage_corruption": {
-      "title": "Storage corruption detected for `{storage_key}`",
+      "title": "Storage corruption detected for {storage_key}",
       "fix_flow": {
         "step": {
           "confirm": {

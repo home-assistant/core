@@ -28,6 +28,7 @@ class LegacyLazyState(State):
         "_attributes",
         "_last_changed_ts",
         "_last_updated_ts",
+        "_last_reported_ts",
         "_context",
         "attr_cache",
     ]

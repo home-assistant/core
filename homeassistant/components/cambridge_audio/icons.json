@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "select": {
+      "display_brightness": {
+        "default": "mdi:brightness-7",
+        "state": {
+          "bright": "mdi:brightness-7",
+          "dim": "mdi:brightness-6",
+          "off": "mdi:brightness-3"
+        }
+      }
+    }
+  }
+}

@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import datetime
-from functools import cached_property
 import logging
 
 import aiohttp
+from propcache import cached_property
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,

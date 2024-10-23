@@ -8,10 +8,7 @@ from unittest.mock import patch
 
 import aiodhcpwatcher
 import pytest
-from scapy import (
-    arch,  # noqa: F401
-    interfaces,
-)
+from scapy import interfaces
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
@@ -1212,7 +1209,7 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
 async def test_dhcp_rediscover(
     hass: HomeAssistant,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
@@ -1303,7 +1300,7 @@ async def test_dhcp_rediscover(
 async def test_dhcp_rediscover_no_match(
     hass: HomeAssistant,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
     entry_unique_id: str,
 ) -> None:

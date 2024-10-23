@@ -9,8 +9,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    STATE_CLOSED,
-    STATE_OPEN,
+    CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -57,7 +56,7 @@ async def test_covers(
                     blocking=True,
                 )
                 mock_open.assert_called_once()
-            assert hass.states.get(entity_id).state == STATE_OPEN
+            assert hass.states.get(entity_id).state == CoverState.OPEN
 
         # Test close windows
         if closefunc:
@@ -72,7 +71,7 @@ async def test_covers(
                     blocking=True,
                 )
                 mock_close.assert_called_once()
-            assert hass.states.get(entity_id).state == STATE_CLOSED
+            assert hass.states.get(entity_id).state == CoverState.CLOSED
 
 
 async def test_errors(hass: HomeAssistant) -> None:

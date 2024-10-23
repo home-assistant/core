@@ -16,6 +16,7 @@ from hassil.expression import Expression, ListReference, Sequence
 from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
 from hassil.recognize import (
     MISSING_ENTITY,
+    MatchEntity,
     RecognizeResult,
     UnmatchedTextEntity,
     recognize_all,
@@ -437,69 +438,67 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        custom_result: RecognizeResult | None = None
-        name_result: RecognizeResult | None = None
-        best_results: list[RecognizeResult] = []
-        best_text_chunks_matched: int | None = None
-        for result in recognize_all(
-            user_input.text,
-            lang_intents.intents,
-            slot_lists=slot_lists,
-            intent_context=intent_context,
-            language=language,
-        ):
-            # User intents have highest priority
-            if (result.intent_metadata is not None) and result.intent_metadata.get(
-                METADATA_CUSTOM_SENTENCE
-            ):
-                if (custom_result is None) or (
-                    result.text_chunks_matched > custom_result.text_chunks_matched
-                ):
-                    custom_result = result
+        strict_result = self._recognize_strict(
+            user_input, lang_intents, slot_lists, intent_context, language
+        )
 
-                # Clear builtin results
-                best_results = []
-                name_result = None
-                continue
-
-            # Prioritize results with a "name" slot, but still prefer ones with
-            # more literal text matched.
-            if (
-                ("name" in result.entities)
-                and (not result.entities["name"].is_wildcard)
-                and (
-                    (name_result is None)
-                    or (result.text_chunks_matched > name_result.text_chunks_matched)
-                )
-            ):
-                name_result = result
-
-            if (best_text_chunks_matched is None) or (
-                result.text_chunks_matched > best_text_chunks_matched
-            ):
-                # Only overwrite if more literal text was matched.
-                # This causes wildcards to match last.
-                best_results = [result]
-                best_text_chunks_matched = result.text_chunks_matched
-            elif result.text_chunks_matched == best_text_chunks_matched:
-                # Accumulate results with the same number of literal text matched.
-                # We will resolve the ambiguity below.
-                best_results.append(result)
-
-        if custom_result is not None:
-            # Prioritize user intents
-            return custom_result
-
-        if name_result is not None:
-            # Prioritize matches with entity names above area names
-            return name_result
-
-        if best_results:
+        if strict_result is not None:
             # Successful strict match
-            return best_results[0]
+            return strict_result
+
+        # Try again with all entities (including unexposed)
+        entity_registry = er.async_get(self.hass)
+        all_entity_names: list[tuple[str, str, dict[str, Any]]] = []
+
+        for state in self.hass.states.async_all():
+            context = {"domain": state.domain}
+            if state.attributes:
+                # Include some attributes
+                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
+                    if attr not in state.attributes:
+                        continue
+                    context[attr] = state.attributes[attr]
+
+            if entity := entity_registry.async_get(state.entity_id):
+                # Skip config/hidden entities
+                if (entity.entity_category is not None) or (
+                    entity.hidden_by is not None
+                ):
+                    continue
+
+                if entity.aliases:
+                    # Also add aliases
+                    for alias in entity.aliases:
+                        if not alias.strip():
+                            continue
+
+                        all_entity_names.append((alias, alias, context))
+
+            # Default name
+            all_entity_names.append((state.name, state.name, context))
+
+        slot_lists = {
+            **slot_lists,
+            "name": TextSlotList.from_tuples(all_entity_names, allow_template=False),
+        }
+
+        strict_result = self._recognize_strict(
+            user_input,
+            lang_intents,
+            slot_lists,
+            intent_context,
+            language,
+        )
+
+        if strict_result is not None:
+            # Not a successful match, but useful for an error message.
+            # This should fail the intent handling phase (async_match_targets).
+            return strict_result
 
         # Try again with missing entities enabled
         maybe_result: RecognizeResult | None = None
+        best_num_matched_entities = 0
+        best_num_unmatched_entities = 0
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -512,35 +511,126 @@ class DefaultAgent(ConversationEntity):
                 continue
 
             # Don't count missing entities that couldn't be filled from context
+            num_matched_entities = 0
+            for matched_entity in result.entities_list:
+                if matched_entity.name not in result.unmatched_entities:
+                    num_matched_entities += 1
+
             num_unmatched_entities = 0
-            for entity in result.unmatched_entities_list:
-                if isinstance(entity, UnmatchedTextEntity):
-                    if entity.text != MISSING_ENTITY:
+            for unmatched_entity in result.unmatched_entities_list:
+                if isinstance(unmatched_entity, UnmatchedTextEntity):
+                    if unmatched_entity.text != MISSING_ENTITY:
                         num_unmatched_entities += 1
                 else:
                     num_unmatched_entities += 1
 
-            if maybe_result is None:
-                # First result
-                maybe_result = result
-                best_num_unmatched_entities = num_unmatched_entities
-            elif num_unmatched_entities < best_num_unmatched_entities:
-                # Fewer unmatched entities
-                maybe_result = result
-                best_num_unmatched_entities = num_unmatched_entities
-            elif num_unmatched_entities == best_num_unmatched_entities:
-                if (result.text_chunks_matched > maybe_result.text_chunks_matched) or (
+            if (
+                (maybe_result is None)  # first result
+                or (num_matched_entities > best_num_matched_entities)
+                or (
+                    # Fewer unmatched entities
+                    (num_matched_entities == best_num_matched_entities)
+                    and (num_unmatched_entities < best_num_unmatched_entities)
+                )
+                or (
+                    # More literal text matched
+                    (num_matched_entities == best_num_matched_entities)
+                    and (num_unmatched_entities == best_num_unmatched_entities)
+                    and (result.text_chunks_matched > maybe_result.text_chunks_matched)
+                )
+                or (
+                    # Prefer match failures with entities
                     (result.text_chunks_matched == maybe_result.text_chunks_matched)
-                    and ("name" in result.unmatched_entities)  # prefer entities
-                ):
-                    # More literal text chunks matched, but prefer entities to areas, etc.
-                    maybe_result = result
+                    and (
+                        ("name" in result.entities)
+                        or ("name" in result.unmatched_entities)
+                    )
+                )
+            ):
+                maybe_result = result
+                best_num_matched_entities = num_matched_entities
+                best_num_unmatched_entities = num_unmatched_entities
 
-        if (maybe_result is not None) and maybe_result.unmatched_entities:
-            # Failed to match, but we have more information about why in unmatched_entities
-            return maybe_result
+        return maybe_result
 
-        # Complete match failure
+    def _recognize_strict(
+        self,
+        user_input: ConversationInput,
+        lang_intents: LanguageIntents,
+        slot_lists: dict[str, SlotList],
+        intent_context: dict[str, Any] | None,
+        language: str,
+    ) -> RecognizeResult | None:
+        """Search intents for a strict match to user input."""
+        custom_found = False
+        name_found = False
+        best_results: list[RecognizeResult] = []
+        best_name_quality: int | None = None
+        best_text_chunks_matched: int | None = None
+        for result in recognize_all(
+            user_input.text,
+            lang_intents.intents,
+            slot_lists=slot_lists,
+            intent_context=intent_context,
+            language=language,
+        ):
+            # Prioritize user intents
+            is_custom = (
+                result.intent_metadata is not None
+                and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
+            )
+
+            if custom_found and not is_custom:
+                continue
+
+            if not custom_found and is_custom:
+                custom_found = True
+                # Clear builtin results
+                name_found = False
+                best_results = []
+                best_name_quality = None
+                best_text_chunks_matched = None
+
+            # Prioritize results with a "name" slot
+            name = result.entities.get("name")
+            is_name = name and not name.is_wildcard
+
+            if name_found and not is_name:
+                continue
+
+            if not name_found and is_name:
+                name_found = True
+                # Clear non-name results
+                best_results = []
+                best_text_chunks_matched = None
+
+            if is_name:
+                # Prioritize results with a better "name" slot
+                name_quality = len(cast(MatchEntity, name).value.split())
+                if (best_name_quality is None) or (name_quality > best_name_quality):
+                    best_name_quality = name_quality
+                    # Clear worse name results
+                    best_results = []
+                    best_text_chunks_matched = None
+                elif name_quality < best_name_quality:
+                    continue
+
+            # Prioritize results with more literal text
+            # This causes wildcards to match last.
+            if (best_text_chunks_matched is None) or (
+                result.text_chunks_matched > best_text_chunks_matched
+            ):
+                best_results = [result]
+                best_text_chunks_matched = result.text_chunks_matched
+            elif result.text_chunks_matched == best_text_chunks_matched:
+                # Accumulate results with the same number of literal text matched.
+                # We will resolve the ambiguity below.
+                best_results.append(result)
+
+        if best_results:
+            # Successful strict match
+            return best_results[0]
+
         return None
 
     async def _build_speech(
@@ -824,20 +914,18 @@ class DefaultAgent(ConversationEntity):
         start = time.monotonic()
 
         entity_registry = er.async_get(self.hass)
-        states = [
-            state
-            for state in self.hass.states.async_all()
-            if async_should_expose(self.hass, DOMAIN, state.entity_id)
-        ]
 
-        # Gather exposed entity names.
+        # Gather entity names, keeping track of exposed names.
+        # We try intent recognition with only exposed names first, then all names.
         #
         # NOTE: We do not pass entity ids in here because multiple entities may
         # have the same name. The intent matcher doesn't gather all matching
         # values for a list, just the first. So we will need to match by name no
         # matter what.
-        entity_names = []
-        for state in states:
+        exposed_entity_names = []
+        for state in self.hass.states.async_all():
+            is_exposed = async_should_expose(self.hass, DOMAIN, state.entity_id)
+
             # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
             if state.attributes:
@@ -847,24 +935,23 @@ class DefaultAgent(ConversationEntity):
                         continue
                     context[attr] = state.attributes[attr]
 
-            entity = entity_registry.async_get(state.entity_id)
-
-            if not entity:
-                # Default name
-                entity_names.append((state.name, state.name, context))
-                continue
-
-            if entity.aliases:
+            if (
+                entity := entity_registry.async_get(state.entity_id)
+            ) and entity.aliases:
                 for alias in entity.aliases:
                     if not alias.strip():
                         continue
 
-                    entity_names.append((alias, alias, context))
+                    name_tuple = (alias, alias, context)
+                    if is_exposed:
+                        exposed_entity_names.append(name_tuple)
 
             # Default name
-            entity_names.append((state.name, state.name, context))
+            name_tuple = (state.name, state.name, context)
+            if is_exposed:
+                exposed_entity_names.append(name_tuple)
 
-        _LOGGER.debug("Exposed entities: %s", entity_names)
+        _LOGGER.debug("Exposed entities: %s", exposed_entity_names)
 
         # Expose all areas.
         areas = ar.async_get(self.hass)
@@ -898,7 +985,9 @@ class DefaultAgent(ConversationEntity):
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
-            "name": TextSlotList.from_tuples(entity_names, allow_template=False),
+            "name": TextSlotList.from_tuples(
+                exposed_entity_names, allow_template=False
+            ),
             "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
@@ -1092,12 +1181,22 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
     if matched_area_entity := result.entities.get("area"):
         matched_area = matched_area_entity.text.strip()
 
+    matched_floor: str | None = None
+    if matched_floor_entity := result.entities.get("floor"):
+        matched_floor = matched_floor_entity.text.strip()
+
     if unmatched_name := unmatched_text.get("name"):
         if matched_area:
             # device in area
             return ErrorKey.NO_ENTITY_IN_AREA, {
                 "entity": unmatched_name,
                 "area": matched_area,
+            }
+        if matched_floor:
+            # device on floor
+            return ErrorKey.NO_ENTITY_IN_FLOOR, {
+                "entity": unmatched_name,
+                "floor": matched_floor,
             }
 
         # device only
@@ -1181,16 +1280,61 @@ def _get_match_error_response(
 
     if reason == intent.MatchFailedReason.STATE:
         # Entity is not in correct state
-        assert match_error.constraints.states
-        state = next(iter(match_error.constraints.states))
-        if match_error.constraints.domains:
+        assert constraints.states
+        state = next(iter(constraints.states))
+        if constraints.domains:
             # Translate if domain is available
-            domain = next(iter(match_error.constraints.domains))
+            domain = next(iter(constraints.domains))
             state = translation.async_translate_state(
                 hass, state, domain, None, None, None
             )
 
         return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
+
+    if reason == intent.MatchFailedReason.ASSISTANT:
+        # Not exposed
+        if constraints.name:
+            if constraints.area_name:
+                return ErrorKey.NO_ENTITY_IN_AREA_EXPOSED, {
+                    "entity": constraints.name,
+                    "area": constraints.area_name,
+                }
+            if constraints.floor_name:
+                return ErrorKey.NO_ENTITY_IN_FLOOR_EXPOSED, {
+                    "entity": constraints.name,
+                    "floor": constraints.floor_name,
+                }
+            return ErrorKey.NO_ENTITY_EXPOSED, {"entity": constraints.name}
+
+        if constraints.device_classes:
+            device_class = next(iter(constraints.device_classes))
+
+            if constraints.area_name:
+                return ErrorKey.NO_DEVICE_CLASS_IN_AREA_EXPOSED, {
+                    "device_class": device_class,
+                    "area": constraints.area_name,
+                }
+            if constraints.floor_name:
+                return ErrorKey.NO_DEVICE_CLASS_IN_FLOOR_EXPOSED, {
+                    "device_class": device_class,
+                    "floor": constraints.floor_name,
+                }
+            return ErrorKey.NO_DEVICE_CLASS_EXPOSED, {"device_class": device_class}
+
+        if constraints.domains:
+            domain = next(iter(constraints.domains))
+
+            if constraints.area_name:
+                return ErrorKey.NO_DOMAIN_IN_AREA_EXPOSED, {
+                    "domain": domain,
+                    "area": constraints.area_name,
+                }
+            if constraints.floor_name:
+                return ErrorKey.NO_DOMAIN_IN_FLOOR_EXPOSED, {
+                    "domain": domain,
+                    "floor": constraints.floor_name,
+                }
+            return ErrorKey.NO_DOMAIN_EXPOSED, {"domain": domain}
 
     # Default error
     return ErrorKey.NO_INTENT, {}
