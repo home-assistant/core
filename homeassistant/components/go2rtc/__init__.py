@@ -76,16 +76,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-    if url is not None:
-        # Validate user provided URL
-        try:
-            client = Go2RtcClient(async_get_clientsession(hass), url)
-            await client.streams.list()
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Could not connect to go2rtc instance on %s", url)
-            return False
-    else:
+    if url is None:
         url = "http://localhost:1984/"
+
+    # Validate the server URL
+    try:
+        client = Go2RtcClient(async_get_clientsession(hass), url)
+        await client.streams.list()
+    except Exception:  # noqa: BLE001
+        _LOGGER.warning("Could not connect to go2rtc instance on %s", url)
+        return False
 
     client = Go2RtcClient(async_get_clientsession(hass), url)
 

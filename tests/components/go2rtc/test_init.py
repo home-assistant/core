@@ -253,17 +253,28 @@ async def test_setup_go(
     mock_server.assert_not_called()
 
 
+ERR_CONNECT = "Could not connect to go2rtc instance"
+ERR_URL = "Invalid config for 'go2rtc': invalid url"
+
+
 @pytest.mark.parametrize(
-    ("config", "go2rtc_binary", "is_docker_env"),
+    ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
     [
-        ({}, None, False),
-        ({}, None, True),
-        ({DOMAIN: {CONF_URL: "invalid"}}, None, True),
-        ({DOMAIN: {CONF_URL: "http://localhost:1984/"}}, None, True),
+        ({}, None, False, "KeyError: 'go2rtc'"),
+        ({}, None, True, "KeyError: 'go2rtc'"),
+        ({DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
+        ({DOMAIN: {CONF_URL: "invalid"}}, None, True, ERR_URL),
+        ({DOMAIN: {CONF_URL: "http://localhost:1984/"}}, None, True, ERR_CONNECT),
     ],
 )
-@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env")
-async def test_setup_with_error(hass: HomeAssistant, config: ConfigType) -> None:
+@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "mock_server")
+async def test_setup_with_error(
+    hass: HomeAssistant,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+    expected_log_message: str,
+) -> None:
     """Test setup integration fails."""
 
     assert not await async_setup_component(hass, DOMAIN, config)
+    assert expected_log_message in caplog.text
