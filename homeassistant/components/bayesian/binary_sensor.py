@@ -247,7 +247,6 @@ async def async_setup_entry(
         config_entry.options[CONF_NAME],
         len(config_entry.options.get(CONF_OBSERVATIONS, [])),
     )
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     config = config_entry.options
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
