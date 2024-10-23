@@ -108,7 +108,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     ) -> None:
         """Initialize object."""
         super().__init__(coordinator, entity_description, addon)
-        self._supervisor_client = get_supervisor_client(self.hass)
+        self._supervisor_client = get_supervisor_client(coordinator.hass)
 
     @property
     def _addon_data(self) -> dict:
