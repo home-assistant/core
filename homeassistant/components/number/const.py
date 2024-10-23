@@ -17,6 +17,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfArea,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -101,6 +102,12 @@ class NumberDeviceClass(StrEnum):
     """Atmospheric pressure.
 
     Unit of measurement: `UnitOfPressure` units
+    """
+
+    AREA = "area"
+    """Area
+
+    Unit of measurement: `UnitOfArea` units
     """
 
     BATTERY = "battery"
@@ -428,6 +435,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
+    NumberDeviceClass.AREA: set(UnitOfArea),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
     NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
