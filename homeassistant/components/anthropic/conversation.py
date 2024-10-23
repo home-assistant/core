@@ -159,6 +159,11 @@ class AnthropicConversationEntity(
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=user_input.conversation_id
                 )
+
+            if external_result := await llm_api.api.async_handle_externally(user_input):
+                # Handled externally
+                return external_result
+
             tools = [
                 _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
             ]

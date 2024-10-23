@@ -24,6 +24,7 @@ from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -456,6 +457,73 @@ async def test_function_exception(
             device_id="test_device",
         ),
     )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_assist_api_handled_externally(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+) -> None:
+    """Test that the Assist API handles sentence triggers and registered intents."""
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["my trigger"],
+                },
+                "action": {
+                    "set_conversation_response": "my response",
+                },
+            }
+        },
+    )
+
+    # Handled by sentence trigger instead of LLM
+    result = await conversation.async_converse(
+        hass,
+        "my trigger",
+        None,
+        context,
+        agent_id=agent_id,
+    )
+    assert result is not None
+    assert result.response.speech["plain"]["speech"] == "my response"
+
+    # Reuse custom sentences in test config to trigger default agent.
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.was_handled = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.was_handled = True
+            return intent_obj.create_response()
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    # Handled by registered intent instead of LLM
+    result = await conversation.async_converse(
+        hass,
+        "I'd like to order a stout",
+        None,
+        context,
+        agent_id=agent_id,
+    )
+    assert result is not None
+    assert result.response.intent is not None
+    assert result.response.intent.intent_type == handler.intent_type
+    assert handler.was_handled
 
 
 @pytest.mark.usefixtures("mock_init_component")
