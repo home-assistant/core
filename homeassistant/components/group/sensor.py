@@ -172,6 +172,17 @@ def async_create_preview_sensor(
     )
 
 
+def _has_numeric_state(hass: HomeAssistant, entity_id: str) -> bool:
+    """Test if state is numeric."""
+    if not (state := hass.states.get(entity_id)):
+        return False
+    try:
+        float(state.state)
+    except ValueError:
+        return False
+    return True
+
+
 def calc_min(
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
@@ -698,16 +709,8 @@ class SensorGroup(GroupEntity, SensorEntity):
     ) -> list[str]:
         """Return list of valid entities."""
 
-        def _has_numeric_state(entity_id: str) -> bool:
-            """Test if state is numeric."""
-            if not (state := self.hass.states.get(entity_id)):
-                return False
-            try:
-                float(state.state)
-            except ValueError:
-                return False
-            return True
-
         return [
-            entity_id for entity_id in self._entity_ids if _has_numeric_state(entity_id)
+            entity_id
+            for entity_id in self._entity_ids
+            if _has_numeric_state(self.hass, entity_id)
         ]
