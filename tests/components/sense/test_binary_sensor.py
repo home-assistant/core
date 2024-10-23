@@ -26,7 +26,7 @@ async def test_binary_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Sensor."""
-    await setup_platform(hass, config_entry, BINARY_SENSOR_DOMAIN)
+    await setup_platform(hass, config_entry, Platform.BINARY_SENSOR)
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
