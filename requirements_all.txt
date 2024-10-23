@@ -2626,7 +2626,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.2
+sensorpush-ble==1.7.0
 
 # homeassistant.components.sensoterra
 sensoterra==2.0.1
@@ -3039,7 +3039,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.10.07
+yt-dlp==2024.10.22
 
 # homeassistant.components.zamg
 zamg==0.3.6
