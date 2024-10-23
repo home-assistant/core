@@ -1,8 +1,7 @@
 """Mammotion button sensor entities."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Awaitable
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -35,19 +34,27 @@ BUTTON_SENSORS: tuple[MammotionButtonSensorEntityDescription, ...] = (
     ),
     MammotionButtonSensorEntityDescription(
         key="emergency_nudge_forward",
-        press_fn=lambda coordinator: coordinator.async_move_forward(0.3),
+        press_fn=lambda coordinator: coordinator.async_move_forward(0.4),
     ),
     MammotionButtonSensorEntityDescription(
         key="emergency_nudge_left",
-        press_fn=lambda coordinator: coordinator.async_move_left(0.3),
+        press_fn=lambda coordinator: coordinator.async_move_left(0.4),
     ),
     MammotionButtonSensorEntityDescription(
         key="emergency_nudge_right",
-        press_fn=lambda coordinator: coordinator.async_move_right(0.3),
+        press_fn=lambda coordinator: coordinator.async_move_right(0.4),
     ),
     MammotionButtonSensorEntityDescription(
         key="emergency_nudge_back",
-        press_fn=lambda coordinator: coordinator.async_move_back(0.3),
+        press_fn=lambda coordinator: coordinator.async_move_back(0.4),
+    ),
+    MammotionButtonSensorEntityDescription(
+        key="cancel_task",
+        press_fn=lambda coordinator: coordinator.async_cancel_task(),
+    ),
+    MammotionButtonSensorEntityDescription(
+        key="clear_all_mapdata",
+        press_fn=lambda coordinator: coordinator.clear_all_maps(),
     ),
 )
 

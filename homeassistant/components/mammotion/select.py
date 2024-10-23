@@ -1,16 +1,21 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Awaitable, Callable
+
+from pymammotion.data.model.mowing_modes import (
+    BorderPatrolMode,
+    BypassStrategy,
+    CuttingMode,
+    MowOrder,
+    ObstacleLapsMode,
+    PathAngleSetting,
+)
+from pymammotion.utility.device_type import DeviceType
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pymammotion.data.model.mowing_modes import (
-    BorderPatrolMode,
-    CuttingMode,
-    MowOrder,
-    ObstacleLapsMode,
-)
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator
@@ -18,33 +23,84 @@ from .entity import MammotionBaseEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class MammotionSelectEntityDescription(SelectEntityDescription):
+class MammotionConfigSelectEntityDescription(SelectEntityDescription):
     """Describes Mammotion select entity."""
 
     key: str
     options: list[str]
+    set_fn: Callable[[MammotionDataUpdateCoordinator, str], None]
 
 
-SELECT_ENTITIES: tuple[MammotionSelectEntityDescription, ...] = (
-    MammotionSelectEntityDescription(
-        key="cutting_mode",
-        entity_category=EntityCategory.CONFIG,
-        options=[mode.name for mode in CuttingMode]
+SELECT_ENTITIES: tuple[MammotionConfigSelectEntityDescription, ...] = (
+    MammotionConfigSelectEntityDescription(
+        key="channel_mode",
+        options=[mode.name for mode in CuttingMode],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "channel_mode", CuttingMode[value]
+        ),
     ),
-    MammotionSelectEntityDescription(
-        key="border_patrol_mode",
-        entity_category=EntityCategory.CONFIG,
-        options=[mode.name for mode in BorderPatrolMode]
+    MammotionConfigSelectEntityDescription(
+        key="mowing_laps",
+        options=[mode.name for mode in BorderPatrolMode],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "mowing_laps", BorderPatrolMode[value]
+        ),
     ),
-    MammotionSelectEntityDescription(
-        key="obstacle_laps_mode",
-        entity_category=EntityCategory.CONFIG,
-        options=[mode.name for mode in ObstacleLapsMode]
+    MammotionConfigSelectEntityDescription(
+        key="obstacle_laps",
+        options=[mode.name for mode in ObstacleLapsMode],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "obstacle_laps", ObstacleLapsMode[value]
+        ),
     ),
-    MammotionSelectEntityDescription(
-        key="mow_order",
-        entity_category=EntityCategory.CONFIG,
-        options=[order.name for order in MowOrder]
+    MammotionConfigSelectEntityDescription(
+        key="border_mode",
+        options=[order.name for order in MowOrder],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "border_mode", MowOrder[value]
+        ),
+    ),
+)
+
+LUBA1_SELECT_ENTITIES: tuple[MammotionConfigSelectEntityDescription, ...] = (
+    MammotionConfigSelectEntityDescription(
+        key="cutting_angle_mode",
+        options=[
+            angle_type.name
+            for angle_type in PathAngleSetting
+            if angle_type != PathAngleSetting.random_angle
+        ],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "toward_mode", PathAngleSetting[value]
+        ),
+    ),
+    MammotionConfigSelectEntityDescription(
+        key="bypass_mode",
+        options=[
+            strategy.name
+            for strategy in BypassStrategy
+            if strategy != BypassStrategy.no_touch
+        ],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "ultra_wave", BypassStrategy[value]
+        ),
+    ),
+)
+
+LUBA_PRO_SELECT_ENTITIES: tuple[MammotionConfigSelectEntityDescription, ...] = (
+    MammotionConfigSelectEntityDescription(
+        key="cutting_angle_mode",
+        options=[angle_type.name for angle_type in PathAngleSetting],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "toward_mode", PathAngleSetting[value]
+        ),
+    ),
+    MammotionConfigSelectEntityDescription(
+        key="bypass_mode",
+        options=[strategy.name for strategy in BypassStrategy],
+        set_fn=lambda coordinator, value: setattr(
+            coordinator.operation_settings, "ultra_wave", BypassStrategy[value]
+        ),
     ),
 )
 
@@ -57,26 +113,38 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Mammotion select entity."""
     coordinator = entry.runtime_data
+    entities = []
 
-    async_add_entities(
-        MammotionSelectEntity(coordinator, entity_description)
-        for entity_description in SELECT_ENTITIES
-    )
+    for entity_description in SELECT_ENTITIES:
+        entities.append(MammotionConfigSelectEntity(coordinator, entity_description))
+
+    if DeviceType.is_luba1(coordinator.device_name):
+        for entity_description in LUBA1_SELECT_ENTITIES:
+            entities.append(
+                MammotionConfigSelectEntity(coordinator, entity_description)
+            )
+    else:
+        for entity_description in LUBA_PRO_SELECT_ENTITIES:
+            entities.append(
+                MammotionConfigSelectEntity(coordinator, entity_description)
+            )
+
+    async_add_entities(entities)
 
 
 # Define the select entity class with entity_category: config
-class MammotionSelectEntity(MammotionBaseEntity, SelectEntity):
+class MammotionConfigSelectEntity(MammotionBaseEntity, SelectEntity, RestoreEntity):
     """Representation of a Mammotion select entities."""
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    entity_description: MammotionSelectEntityDescription
+    entity_description: MammotionConfigSelectEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: MammotionDataUpdateCoordinator,
-        entity_description: MammotionSelectEntityDescription,
+        entity_description: MammotionConfigSelectEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
         self.coordinator = coordinator
@@ -84,3 +152,8 @@ class MammotionSelectEntity(MammotionBaseEntity, SelectEntity):
         self._attr_translation_key = entity_description.key
         self._attr_options = entity_description.options
         self._attr_current_option = entity_description.options[0]
+
+    async def async_select_option(self, option: str) -> None:
+        self._attr_current_option = option
+        self.entity_description.set_fn(self.coordinator, option)
+        self.async_write_ha_state()

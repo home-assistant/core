@@ -36,6 +36,12 @@ BINARY_SENSORS: tuple[MammotionBinarySensorEntityDescription, ...] = (
     ),
 )
 
+"""
+TODO:
+read_and_set_sidelight(true, 1) is read
+read_and_set_sidelight(bool, 0) is write
+"""
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
