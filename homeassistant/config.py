@@ -16,7 +16,7 @@ from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
@@ -57,6 +57,8 @@ from .const import (
     CONF_TIME_ZONE,
     CONF_TYPE,
     CONF_UNIT_SYSTEM,
+    CONF_URL,
+    CONF_USERNAME,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     __version__,
 )
@@ -73,6 +75,7 @@ from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
+from .util.webrtc import RTCIceServer
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
 from .util.yaml.objects import NodeStrClass
 
@@ -93,6 +96,10 @@ LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
 INTEGRATION_LOAD_EXCEPTIONS = (IntegrationNotFound, RequirementsNotFound)
 
 SAFE_MODE_FILENAME = "safe-mode"
+
+CONF_CREDENTIAL: Final = "credential"
+CONF_ICE_SERVERS: Final = "ice_servers"
+CONF_WEBRTC: Final = "webrtc"
 
 DEFAULT_CONFIG = f"""
 # Loads default set of integrations. Do not remove.
@@ -301,6 +308,16 @@ def _validate_currency(data: Any) -> Any:
         raise
 
 
+def _validate_stun_or_turn_url(value: Any) -> str:
+    """Validate an URL."""
+    url_in = str(value)
+    url = urlparse(url_in)
+
+    if url.scheme not in ("stun", "stuns", "turn", "turns"):
+        raise vol.Invalid("invalid url")
+    return url_in
+
+
 CORE_CONFIG_SCHEMA = vol.All(
     CUSTOMIZE_CONFIG_SCHEMA.extend(
         {
@@ -361,6 +378,24 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_COUNTRY): cv.country,
             vol.Optional(CONF_LANGUAGE): cv.language,
             vol.Optional(CONF_DEBUG): cv.boolean,
+            vol.Optional(CONF_WEBRTC): vol.Schema(
+                {
+                    vol.Required(CONF_ICE_SERVERS): vol.All(
+                        cv.ensure_list,
+                        [
+                            vol.Schema(
+                                {
+                                    vol.Required(CONF_URL): vol.All(
+                                        cv.ensure_list, [_validate_stun_or_turn_url]
+                                    ),
+                                    vol.Optional(CONF_USERNAME): cv.string,
+                                    vol.Optional(CONF_CREDENTIAL): cv.string,
+                                }
+                            )
+                        ],
+                    )
+                }
+            ),
         }
     ),
     _filter_bad_internal_external_urls,
@@ -876,6 +911,16 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     if config.get(CONF_DEBUG):
         hac.debug = True
+
+    if CONF_WEBRTC in config:
+        hac.webrtc.ice_servers = [
+            RTCIceServer(
+                server[CONF_URL],
+                server.get(CONF_USERNAME),
+                server.get(CONF_CREDENTIAL),
+            )
+            for server in config[CONF_WEBRTC][CONF_ICE_SERVERS]
+        ]
 
     _raise_issue_if_historic_currency(hass, hass.config.currency)
     _raise_issue_if_no_country(hass, hass.config.country)
