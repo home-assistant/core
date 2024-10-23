@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from music_assistant.common.models.enums import EventType
 from music_assistant.common.models.event import MassEvent
+from music_assistant.common.models.player import Player
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -14,30 +15,26 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant.client import MusicAssistantClient
-    from music_assistant.common.models.player import Player
 
 
 class MassBaseEntity(Entity):
     """Base Entity from Music Assistant Player."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, mass: MusicAssistantClient, player_id: str) -> None:
         """Initialize MediaPlayer entity."""
         self.mass = mass
         self.player_id = player_id
-        self._attr_should_poll = False
-        player = mass.players.get(player_id)
-        if TYPE_CHECKING:
-            assert player is not None
-        provider = self.mass.get_provider(player.provider)
+        provider = self.mass.get_provider(self.player.provider)
         if TYPE_CHECKING:
             assert provider is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, player_id)},
-            manufacturer=player.device_info.manufacturer or provider.name,
-            model=player.device_info.model or player.name,
-            name=player.display_name,
+            manufacturer=self.player.device_info.manufacturer or provider.name,
+            model=self.player.device_info.model or self.player.name,
+            name=self.player.display_name,
             configuration_url=f"{mass.server_url}/#/settings/editplayer/{player_id}",
         )
 

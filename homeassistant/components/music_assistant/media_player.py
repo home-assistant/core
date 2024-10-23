@@ -106,8 +106,6 @@ ATTR_ANNOUNCE_VOLUME = "announce_volume"
 ATTR_SOURCE_PLAYER = "source_player"
 ATTR_AUTO_PLAY = "auto_play"
 
-# pylint: disable=too-many-public-methods
-
 _MassPlayerT = TypeVar("_MassPlayerT", bound="MassPlayer")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
@@ -155,10 +153,13 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         mass.subscribe(handle_player_added, EventType.PLAYER_ADDED)
     )
+    mass_players = []
     # add all current players
     for player in mass.players:
         added_ids.add(player.player_id)
-        async_add_entities([MassPlayer(mass, player.player_id)])
+        mass_players.append(MassPlayer(mass, player.player_id))
+
+    async_add_entities(mass_players)
 
 
 class MassPlayer(MassBaseEntity, MediaPlayerEntity):

@@ -13,13 +13,11 @@ from music_assistant.client.exceptions import (
 from music_assistant.common.models.api import ServerInfoMessage
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, LOGGER
@@ -48,10 +46,7 @@ async def get_server_info(hass: HomeAssistant, url: str) -> ServerInfoMessage:
         return client.server_info
 
 
-# ruff: noqa: ARG002
-
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MusicAssistant."""
 
     VERSION = 1
@@ -60,38 +55,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self.server_info: ServerInfoMessage | None = None
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        return await self.async_step_manual()
-
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a manual configuration."""
-        if user_input is None:
-            return self.async_show_form(  # type: ignore[no-any-return]
-                step_id="manual", data_schema=get_manual_schema({})
-            )
-
-        errors = {}
-        try:
+        if user_input is not None:
+            errors = {}
             self.server_info = await get_server_info(self.hass, user_input[CONF_URL])
-            await self.async_set_unique_id(self.server_info.server_id)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidServerVersion:
-            errors["base"] = "invalid_server_version"
-        except MusicAssistantClientException:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return await self._async_create_entry_or_abort()
-
-        return self.async_show_form(  # type: ignore[no-any-return]
-            step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
-        )
+            try:
+                await self.async_set_unique_id(self.server_info.server_id)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidServerVersion:
+                errors["base"] = "invalid_server_version"
+            except MusicAssistantClientException:
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            return self.async_show_form(  # type: ignore[no-any-return]
+                step_id="manual",
+                data_schema=get_manual_schema(user_input),
+                errors=errors,
+            )
+        return await self._async_create_entry_or_abort()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -162,7 +147,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_URL: self.server_info.base_url,
             },
         )
-
-
-class FailedConnect(HomeAssistantError):
-    """Failed to connect to the MusicAssistant Server."""
