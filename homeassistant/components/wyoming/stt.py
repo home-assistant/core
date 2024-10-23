@@ -130,6 +130,10 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
             _LOGGER.exception("Error processing audio stream")
             return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
+        finally:
+            self._SpeechToTextEntity__last_processed = dt_util.utcnow().isoformat()
+            self.async_write_ha_state()
+        
         return stt.SpeechResult(
             text,
             stt.SpeechResultState.SUCCESS,
