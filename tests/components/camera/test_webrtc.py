@@ -131,6 +131,7 @@ async def test_async_register_ice_server(
 
     called = 0
 
+    @callback
     def get_ice_servers() -> list[RTCIceServer]:
         nonlocal called
         called += 1
@@ -154,6 +155,7 @@ async def test_async_register_ice_server(
     # register another ICE server
     called_2 = 0
 
+    @callback
     def get_ice_servers_2() -> RTCIceServer:
         nonlocal called_2
         called_2 += 1

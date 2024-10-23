@@ -401,6 +401,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
     )
 
+    @callback
     def get_ice_servers() -> list[RTCIceServer]:
         return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
 

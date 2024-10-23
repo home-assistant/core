@@ -62,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][CONF_STUN_SERVER] = entry.options.get(CONF_STUN_SERVER)
     if server := entry.options.get(CONF_STUN_SERVER):
 
+        @callback
         def get_servers() -> list[RTCIceServer]:
             return [RTCIceServer(urls=[server])]
 
