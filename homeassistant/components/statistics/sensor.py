@@ -360,14 +360,14 @@ class StatisticsSensor(SensorEntity):
         self.samples_keep_last: bool = samples_keep_last
         self._precision: int = precision
         self._percentile: int = percentile
-        self._value: float | datetime | None = None
+        self._value: float | int | datetime | None = None
         self._available: bool = False
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
         self.attributes: dict[str, StateType] = {}
 
-        self._state_characteristic_fn: Callable[[], float | datetime | None] = (
+        self._state_characteristic_fn: Callable[[], float | int | datetime | None] = (
             self._callable_characteristic_fn(self._state_characteristic)
         )
 
@@ -578,7 +578,7 @@ class StatisticsSensor(SensorEntity):
         return SensorStateClass.MEASUREMENT
 
     @property
-    def native_value(self) -> float | datetime | None:
+    def native_value(self) -> float | int | datetime | None:
         """Return the state of the sensor."""
         return self._value
 
@@ -777,9 +777,9 @@ class StatisticsSensor(SensorEntity):
 
     def _callable_characteristic_fn(
         self, characteristic: str
-    ) -> Callable[[], float | datetime | None]:
+    ) -> Callable[[], float | int | datetime | None]:
         """Return the function callable of one characteristic function."""
-        function: Callable[[], float | datetime | None] = getattr(
+        function: Callable[[], float | int | datetime | None] = getattr(
             self,
             f"_stat_binary_{characteristic}"
             if self.is_binary
