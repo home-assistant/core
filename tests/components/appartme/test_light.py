@@ -6,10 +6,10 @@ from homeassistant.components.appartme.const import DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 
-from tests.common import MockConfigEntry
+from tests.common import HomeAssistant, MockConfigEntry
 
 
-async def test_light_entity(hass, mock_appartme_api):
+async def test_light_entity(hass: HomeAssistant, mock_appartme_api) -> None:
     """Test the Appartme light entity."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

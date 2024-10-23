@@ -10,10 +10,10 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import HomeAssistant, MockConfigEntry
 
 
-async def test_full_flow(hass):
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test the full config flow."""
 
     # Set up the application_credentials component
@@ -48,7 +48,7 @@ async def test_full_flow(hass):
         assert result["step_id"] == "pick_implementation"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test the options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

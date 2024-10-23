@@ -1,11 +1,13 @@
-"""config_flow platform for Appartme Integration."""
+"""Config flow platform for Appartme Integration."""
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import application_credentials
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -31,17 +33,30 @@ class AppartmeConfigFlow(
         """Create an entry after OAuth authentication."""
         return self.async_create_entry(title="Appartme System", data=data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await super().async_step_user(user_input)
 
-    async def async_step_reauth(self, user_input=None):
-        """Handle reauthentication if token expired."""
-        return await super().async_step_reauth(user_input)
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+
+        return await self.async_step_user()
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Define the options flow for reconfiguration."""
         return AppartmeOptionsFlow(config_entry)
 
@@ -62,10 +77,10 @@ class AppartmeConfigFlow(
         )
 
 
-class AppartmeOptionsFlow(config_entries.OptionsFlow):
+class AppartmeOptionsFlow(OptionsFlow):
     """Handle options flow for Appartme System."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry) -> None:
         """Initialize the options flow.
 
         Args:
@@ -74,7 +89,7 @@ class AppartmeOptionsFlow(config_entries.OptionsFlow):
         """
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input) -> ConfigFlowResult:
         """Manage the options."""
         errors = {}
         if user_input is not None:
@@ -107,5 +122,5 @@ class AppartmeOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=options_schema,
             errors=errors,
-            description_placeholders={"min_interval": UPDATE_INTERVAL_MIN},
+            description_placeholders={"min_interval": str(UPDATE_INTERVAL_MIN)},
         )

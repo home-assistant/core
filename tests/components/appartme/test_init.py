@@ -5,10 +5,10 @@ from unittest.mock import patch
 from homeassistant.components.appartme.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
-from tests.common import MockConfigEntry
+from tests.common import HomeAssistant, MockConfigEntry
 
 
-async def test_async_setup_entry(hass, mock_appartme_api):
+async def test_async_setup_entry(hass: HomeAssistant, mock_appartme_api) -> None:
     """Test setting up the Appartme integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
