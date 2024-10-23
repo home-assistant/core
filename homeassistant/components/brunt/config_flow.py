@@ -12,7 +12,7 @@ from brunt import BruntClientAsync
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
@@ -92,7 +92,10 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
-                description_placeholders={"username": username},
+                description_placeholders={
+                    CONF_USERNAME: username,
+                    CONF_NAME: reauth_entry.title,
+                },
             )
         user_input[CONF_USERNAME] = username
         errors = await validate_input(user_input)
@@ -101,7 +104,10 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 errors=errors,
-                description_placeholders={"username": username},
+                description_placeholders={
+                    CONF_USERNAME: username,
+                    CONF_NAME: reauth_entry.title,
+                },
             )
 
         return self.async_update_reload_and_abort(reauth_entry, data=user_input)
