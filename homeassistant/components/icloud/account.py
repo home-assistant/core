@@ -7,13 +7,13 @@ import logging
 import operator
 from typing import Any
 
-from pyicloud import PyiCloudService
-from pyicloud.exceptions import (
+from pyicloudng import PyiCloudService
+from pyicloudng.exceptions import (
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
 )
-from pyicloud.services.findmyiphone import AppleDevice
+from pyicloudng.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
@@ -111,6 +111,7 @@ class IcloudAccount:
             self.api = PyiCloudService(
                 self._username,
                 self._password,
+				'com',
                 self._icloud_dir.path,
                 with_family=self._with_family,
             )
