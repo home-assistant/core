@@ -27,7 +27,6 @@ class TwitchUpdate:
 
     name: str
     followers: int
-    views: int
     is_streaming: bool
     game: str | None
     title: str | None
@@ -103,7 +102,6 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             data[channel.id] = TwitchUpdate(
                 channel.display_name,
                 followers.total,
-                channel.view_count,
                 bool(stream),
                 stream.game_name if stream else None,
                 stream.title if stream else None,

@@ -119,6 +119,7 @@ from .util.unit_system import (
     UnitSystem,
     get_unit_system,
 )
+from .util.webrtc import RTCConfiguration
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -2965,6 +2966,8 @@ class Config:
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
+
+        self.webrtc = RTCConfiguration()
 
     def async_initialize(self) -> None:
         """Finish initializing a config object.
