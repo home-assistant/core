@@ -2,10 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import Self
 
 from fing_agent_api import FingAgent
 from fing_agent_api.models import Device
+import httpx
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,50 +16,54 @@ from .const import AGENT_IP, AGENT_KEY, AGENT_PORT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class FingDataFetcher:
-    """Keep data from the Fing Agent."""
+class FingDataObject:
+    """Fing Data Object."""
 
-    def __init__(self, hass: HomeAssistant, ip: str, port: int, key: str) -> None:
-        """Initialize Fing entity data."""
-        self._hass = hass
-        self._fing = FingAgent(ip, port, key)
-        self._network_id = None
-        self._devices: dict[str, Device] = {}
-
-    def get_devices(self):
-        """Return all the devices."""
-        return self._devices
-
-    def get_network_id(self) -> str | None:
-        """Return the network id."""
-        return self._network_id
-
-    async def fetch_data(self) -> Self:
-        """Fecth data from Fing."""
-        response = await self._fing.get_devices()
-        self._network_id = response.network_id
-        self._devices = {device.mac: device for device in response.devices}
-        return self
+    def __init__(
+        self, network_id: str | None = None, devices: dict[str, Device] | None = None
+    ) -> None:
+        """Initialize FingDataObject."""
+        self.network_id = network_id
+        self.devices = devices if devices is not None else {}
 
 
-class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataFetcher]):
+class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
     """Class to manage fetching data from Fing Agent."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Fing updater."""
-        self._fing_fetcher = FingDataFetcher(
-            hass,
+        self._hass = hass
+        self._fing = FingAgent(
             config_entry.data[AGENT_IP],
             int(config_entry.data[AGENT_PORT]),
             config_entry.data[AGENT_KEY],
         )
-
         update_interval = timedelta(seconds=30)
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _async_update_data(self) -> FingDataFetcher:
+    async def _async_update_data(self) -> FingDataObject:
         """Fetch data from Fing Agent."""
         try:
-            return await self._fing_fetcher.fetch_data()
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}") from err
+            response = await self._fing.get_devices()
+            return FingDataObject(
+                response.network_id, {device.mac: device for device in response.devices}
+            )
+        except httpx.NetworkError as err:
+            raise UpdateFailed("Failed to connect") from err
+        except httpx.TimeoutException as err:
+            raise UpdateFailed("Timeout establishing connection") from err
+        except httpx.HTTPStatusError as err:
+            if err.response.status_code == 401:
+                raise UpdateFailed("Invalid API key") from err
+            raise UpdateFailed(
+                f"Http request failed -> {err.response.status_code} - {err.response.reason_phrase}"
+            ) from err
+        except httpx.InvalidURL as err:
+            raise UpdateFailed("Invalid hostname or IP address") from err
+        except (
+            httpx.HTTPError,
+            httpx.InvalidURL,
+            httpx.CookieConflict,
+            httpx.StreamError,
+        ) as err:
+            raise UpdateFailed("Unexpected error from HTTP request") from err

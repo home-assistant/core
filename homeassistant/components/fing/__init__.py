@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) 
     coordinator = FingDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_config_entry_first_refresh()
 
-    if coordinator.data.get_network_id() is None:
+    if coordinator.data.network_id is None:
         _LOGGER.warning(
             "Skip setting up Fing integration; Received an empty NetworkId from the request - Check if the API version is the latest"
         )

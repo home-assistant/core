@@ -28,7 +28,7 @@ async def async_setup_entry(
     def add_entities() -> None:
         new_entities = [
             FingTrackedDevice(coordinator, device)
-            for device in coordinator.data.get_devices().values()
+            for device in coordinator.data.devices.values()
         ]
 
         new_ent_unique_ids = {entity.unique_id for entity in new_entities}
@@ -68,8 +68,8 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         """Set up FingDevice entity."""
         super().__init__(coordinator)
         self._mac = device.mac
-        self._device = coordinator.data.get_devices()[device.mac]
-        self._network_id = coordinator.data.get_network_id()
+        self._device = coordinator.data.devices[device.mac]
+        self._network_id = coordinator.data.network_id
         self._attr_name = self._device.name
 
     @property
@@ -122,7 +122,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        updated_device_data = self.coordinator.data.get_devices().get(self._mac)
+        updated_device_data = self.coordinator.data.devices.get(self._mac)
         if updated_device_data is not None:
             self._device = updated_device_data
             self.async_write_ha_state()
