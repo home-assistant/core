@@ -26,6 +26,7 @@ LIBRARY = [
     "Playlists",
     "Genres",
     "New Music",
+    "Apps",
 ]
 
 MEDIA_TYPE_TO_SQUEEZEBOX = {
@@ -41,6 +42,7 @@ MEDIA_TYPE_TO_SQUEEZEBOX = {
     MediaType.TRACK: "title",
     MediaType.PLAYLIST: "playlist",
     MediaType.GENRE: "genre",
+    "Apps": "apps",
 }
 
 SQUEEZEBOX_ID_BY_TYPE = {
@@ -50,10 +52,12 @@ SQUEEZEBOX_ID_BY_TYPE = {
     MediaType.PLAYLIST: "playlist_id",
     MediaType.GENRE: "genre_id",
     "Favorites": "item_id",
+    "Apps": "item_id",
 }
 
 CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | None]] = {
     "Favorites": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
+    "Apps": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
     "Artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
     "Albums": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
     "Tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
@@ -78,6 +82,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Playlists": MediaType.PLAYLIST,
     "Genres": MediaType.GENRE,
     "Favorites": None,  # can only be determined after inspecting the item
+    "Apps": None,  # can only be determined after inspecting the item
     "New Music": MediaType.ALBUM,
 }
 
@@ -142,6 +147,24 @@ async def build_item_response(
                     can_expand = False
                     can_play = True
 
+            if search_type == "Apps":
+                if "album_id" in item:
+                    item_id = str(item["album_id"])
+                    child_item_type = MediaType.ALBUM
+                    child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.ALBUM]
+                    can_expand = True
+                    can_play = True
+                elif item["hasitems"]:
+                    child_item_type = "Apps"
+                    child_media_class = CONTENT_TYPE_MEDIA_CLASS["Apps"]
+                    can_expand = True
+                    can_play = False
+                else:
+                    child_item_type = "Apps"
+                    child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK]
+                    can_expand = False
+                    can_play = True
+
             if artwork_track_id := item.get("artwork_track_id"):
                 if internal_request:
                     item_thumbnail = player.generate_image_url_from_track_id(
@@ -179,7 +202,7 @@ async def build_item_response(
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
-        can_play=search_type != "Favorites",
+        can_play=search_type not in ["Favorites", "Apps"],
         children=children,
         can_expand=True,
     )
@@ -212,7 +235,7 @@ async def library_payload(hass: HomeAssistant, player: Player) -> BrowseMedia:
                     media_class=media_class["children"],
                     media_content_id=item,
                     media_content_type=item,
-                    can_play=item != "Favorites",
+                    can_play=item not in ["Favorites", "Apps"],
                     can_expand=True,
                 )
             )
