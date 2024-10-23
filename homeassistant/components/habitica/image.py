@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 from habiticalib.types import UserStyles
+
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

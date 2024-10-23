@@ -8,13 +8,11 @@ from habitipy.aio import HabitipyAsync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    APPLICATION_NAME,
     CONF_API_KEY,
     CONF_NAME,
     CONF_URL,
     CONF_VERIFY_SSL,
     Platform,
-    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -22,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API_USER, DEVELOPER_ID, DOMAIN
+from .const import CONF_API_USER, DOMAIN, X_CLIENT
 from .coordinator import HabiticaDataUpdateCoordinator
 from .services import async_setup_services
 from .types import HabiticaConfigEntry
@@ -61,7 +59,7 @@ async def async_setup_entry(
 
         def _make_headers(self) -> dict[str, str]:
             headers = super()._make_headers()
-            headers.update({"x-client": XCLIENT_HEADERS})
+            headers.update({"x-client": X_CLIENT})
             return headers
 
     websession = async_get_clientsession(
@@ -76,7 +74,7 @@ async def async_setup_entry(
             "password": config_entry.data[CONF_API_KEY],
         },
     )
-    habitica = Habitica(session=websession, x_client=XCLIENT_HEADERS)
+    habitica = Habitica(session=websession, x_client=X_CLIENT)
     try:
         user = await api.user.get(userFields="profile")
     except ClientResponseError as e:

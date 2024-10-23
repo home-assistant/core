@@ -11,10 +11,10 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from habitipy.aio import HabitipyAsync
-
 from habiticalib import Habitica
 from habiticalib.types import UserStyles
+from habitipy.aio import HabitipyAsync
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
