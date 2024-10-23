@@ -543,13 +543,10 @@ class StatisticsSensor(SensorEntity):
             return SensorDeviceClass.TIMESTAMP
         if self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
             device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
-            source_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
-            if source_device_class is None:
+            if device_class is None:
                 return None
             if (
-                sensor_device_class := try_parse_enum(
-                    SensorDeviceClass, source_device_class
-                )
+                sensor_device_class := try_parse_enum(SensorDeviceClass, device_class)
             ) is None:
                 return None
             if (
