@@ -47,11 +47,11 @@ SWITCHS_FOR_3_PHASE_CHARGERS: tuple[LektricoSwitchEntityDescription, ...] = (
         translation_key="force_single_phase",
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda data: data["relay_mode"] == 1,
-        set_value_fn=lambda device, data, value: device.set_relay_mode(
-            data["dynamic_current"], 1
-        )
-        if value
-        else device.set_relay_mode(data["dynamic_current"], 3),
+        set_value_fn=lambda device, data, value: (
+            device.set_relay_mode(data["dynamic_current"], 1)
+            if value
+            else device.set_relay_mode(data["dynamic_current"], 3)
+        ),
     ),
 )
 
