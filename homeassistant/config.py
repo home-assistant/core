@@ -16,7 +16,7 @@ from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, overload
 from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
@@ -1212,6 +1212,39 @@ def _get_log_message_and_stack_print_pref(
     return (log_message, show_stack_trace, placeholders)
 
 
+# The complicated overloads are due to a limitation in mypy, details in
+# https://github.com/python/mypy/issues/7333
+@overload
+@callback
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+) -> ConfigType | None: ...
+
+
+@overload
+@callback
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: Literal[True],
+) -> ConfigType: ...
+
+
+@overload
+@callback
+async def async_process_component_and_handle_errors(
+    hass: HomeAssistant,
+    config: ConfigType,
+    integration: Integration,
+    *,
+    raise_on_failure: bool,
+) -> ConfigType | None: ...
+
+
 async def async_process_component_and_handle_errors(
     hass: HomeAssistant,
     config: ConfigType,
@@ -1230,7 +1263,7 @@ async def async_process_component_and_handle_errors(
         hass, config, integration
     )
     async_handle_component_errors(
-        hass, integration_config_info, integration, raise_on_failure
+        hass, integration_config_info, integration, raise_on_failure=raise_on_failure
     )
     return async_drop_config_annotations(integration_config_info, integration)
 

@@ -403,8 +403,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_reload_yaml(call: ServiceCall) -> None:
         """Reload YAML."""
         conf = await entity_component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            return
         await yaml_collection.async_load(
             await filter_yaml_data(hass, conf.get(DOMAIN, []))
         )
