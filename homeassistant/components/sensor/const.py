@@ -17,6 +17,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfArea,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -46,6 +47,7 @@ from homeassistant.helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
     ConductivityConverter,
     DataRateConverter,
@@ -119,6 +121,12 @@ class SensorDeviceClass(StrEnum):
     """Atmospheric pressure.
 
     Unit of measurement: `UnitOfPressure` units
+    """
+
+    AREA = "area"
+    """Area
+
+    Unit of measurement: `UnitOfArea` units
     """
 
     BATTERY = "battery"
@@ -493,6 +501,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    SensorDeviceClass.AREA: AreaConverter,
     SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
@@ -523,6 +532,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     SensorDeviceClass.AQI: {None},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.AREA: set(UnitOfArea),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
@@ -598,6 +608,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.APPARENT_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.AREA: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},

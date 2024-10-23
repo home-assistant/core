@@ -30,17 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 
-# Area constants to square meters
-_CM2_TO_M2 = 1e-4  # 1 cm² = 0.0001 m²
-_MM2_TO_M2 = 1e-6  # 1 mm² = 0.000001 m²
-_KM2_TO_M2 = 1e6  # 1 km² = 1,000,000 m²
-_IN2_TO_M2 = 0.00064516  # 1 in² = 0.00064516 m²
-_FT2_TO_M2 = 0.092903  # 1 ft² = 0.092903 m²
-_YD2_TO_M2 = 0.836127  # 1 yd² = 0.836127 m²
-_MI2_TO_M2 = 2.59e6  # 1 mi² = 2,590,000 m²
-_ACRE_TO_M2 = 4046.86  # 1 acre = 4,046.86 m²
-_HECTARE_TO_M2 = 10000  # 1 hectare = 10,000 m²
-
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
 _CM_TO_M = 0.01  # 1 cm = 0.01 m
@@ -52,6 +41,19 @@ _YARD_TO_M = _FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
 _MILE_TO_M = _YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
 
 _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
+# Area constants to square meters
+_CM2_TO_M2 = _CM_TO_M**2  # 1 cm² = 0.0001 m²
+_MM2_TO_M2 = _MM_TO_M**2  # 1 mm² = 0.000001 m²
+_KM2_TO_M2 = _KM_TO_M**2  # 1 km² = 1,000,000 m²
+
+_IN2_TO_M2 = _IN_TO_M**2  # 1 in² = 0.00064516 m²
+_FT2_TO_M2 = _FOOT_TO_M**2  # 1 ft² = 0.092903 m²
+_YD2_TO_M2 = _YARD_TO_M**2  # 1 yd² = 0.836127 m²
+_MI2_TO_M2 = _MILE_TO_M**2  # 1 mi² = 2,590,000 m²
+
+_ACRE_TO_M2 = 66 * _FOOT_TO_M * 660 * _FOOT_TO_M  # 1 acre = 4,046.86 m²
+_HECTARE_TO_M2 = 100 * 100  # 1 hectare = 10,000 m²
 
 # Duration conversion constants
 _MIN_TO_SEC = 60  # 1 min = 60 seconds
