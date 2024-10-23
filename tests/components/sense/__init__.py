@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.sense.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
