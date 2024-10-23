@@ -40,7 +40,7 @@ from .const import (
     UNSUPPORTED_DEVICES,
 )
 from .types import ViCareDevice
-from .utils import get_device, get_device_serial
+from .utils import deserialize_token, get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
@@ -208,25 +208,33 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> 
                     entry.data[CONF_USERNAME],
                 ),
             )
-            hass.config_entries.async_update_entry(
-                entry,
-                minor_version=2,
-                data={
-                    "auth_implementation": DOMAIN,
-                    CONF_TOKEN: {
-                        # "status": 0,
-                        # "userid": str(USER_ID),
-                        # "access_token": "mock-access-token",
-                        # "refresh_token": "mock-refresh-token",
-                        # "expires_at": expires_at,
-                        # "scope": ",".join(scopes),
-                    },
-                },
+
+            token_data = deserialize_token(
+                hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
             )
             with suppress(FileNotFoundError):
                 await hass.async_add_executor_job(
                     os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
                 )
+            if token_data is None:
+                return False
+
+            hass.config_entries.async_update_entry(
+                entry,
+                minor_version=2,
+                data={
+                    "auth_implementation": DOMAIN,
+                    CONF_TOKEN: token_data,
+                    # {
+                    # "status": 0,
+                    # "userid": str(USER_ID),
+                    # "access_token": "mock-access-token",
+                    # "refresh_token": "mock-refresh-token",
+                    # "expires_at": expires_at,
+                    # "scope": ",".join(scopes),
+                    # },
+                },
+            )
 
             _LOGGER.debug(
                 "Migration to version %s.%s successful",
