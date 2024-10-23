@@ -176,7 +176,7 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.7
+aioairzone-cloud==0.6.8
 
 # homeassistant.components.airzone
 aioairzone==0.9.5
@@ -530,7 +530,7 @@ autarco==3.0.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==62
+axis==63
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.2
@@ -1274,7 +1274,7 @@ leaone-ble==0.1.0
 led-ble==1.0.2
 
 # homeassistant.components.lektrico
-lektricowifi==0.0.42
+lektricowifi==0.0.43
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -2387,7 +2387,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.6.0
+python-roborock==2.6.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
