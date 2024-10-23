@@ -7,7 +7,7 @@ from collections import defaultdict
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import SupervisorClient, SupervisorError
 from aiohasupervisor.models import StoreInfo
 
 from homeassistant.config_entries import ConfigEntry
@@ -319,6 +319,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             lambda: defaultdict(set)
         )
         self._supervisor_client = get_supervisor_client(hass)
+
+    @property
+    def supervisor_client(self) -> SupervisorClient:
+        """Get supervisor client."""
+        return self._supervisor_client
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
