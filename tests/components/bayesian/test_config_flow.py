@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_unordered import unordered
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.bayesian import DOMAIN
@@ -950,55 +951,56 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert result0["type"] is FlowResultType.FORM
 
         # priors should never be Zero, because then the sensor can never return 'on'
-        result1 = await hass.config_entries.flow.async_configure(
-            result0["flow_id"],
-            {
-                CONF_NAME: "Office occupied",
-                CONF_PROBABILITY_THRESHOLD: 50,
-                CONF_PRIOR: 0,
-            },
-        )
+        with pytest.raises(vol.Invalid) as excinfo:
+            result1 = await hass.config_entries.flow.async_configure(
+                result0["flow_id"],
+                {
+                    CONF_NAME: "Office occupied",
+                    CONF_PROBABILITY_THRESHOLD: 50,
+                    CONF_PRIOR: 0,
+                },
+            )
+        assert CONF_PRIOR in excinfo.value.path
+        assert excinfo.value.error_message == "extreme_prior_error"
 
-        await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "extreme_prior_error"}
-        # Confirm that the config flow did not progress
-        assert result1["step_id"] != str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        # priors should never be 100% because then the sensor can never be 'off'
+        with pytest.raises(vol.Invalid) as excinfo:
+            result1 = await hass.config_entries.flow.async_configure(
+                result0["flow_id"],
+                {
+                    CONF_NAME: "Office occupied",
+                    CONF_PROBABILITY_THRESHOLD: 50,
+                    CONF_PRIOR: 100,
+                },
+            )
+        assert CONF_PRIOR in excinfo.value.path
+        assert excinfo.value.error_message == "extreme_prior_error"
 
-        # priors should never be 1 because then the sensor can never be 'off'
-        result1 = await hass.config_entries.flow.async_configure(
-            result0["flow_id"],
-            {
-                CONF_NAME: "Office occupied",
-                CONF_PROBABILITY_THRESHOLD: 50,
-                CONF_PRIOR: 100,
-            },
-        )
-        await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "extreme_prior_error"}
-
-        # Threshold should never be 1 because then the sensor can never be 'on'
-        result1 = await hass.config_entries.flow.async_configure(
-            result0["flow_id"],
-            {
-                CONF_NAME: "Office occupied",
-                CONF_PROBABILITY_THRESHOLD: 100,
-                CONF_PRIOR: 30,
-            },
-        )
-        await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "extreme_threshold_error"}
+        # Threshold should never be 100% because then the sensor can never be 'on'
+        with pytest.raises(vol.Invalid) as excinfo:
+            result1 = await hass.config_entries.flow.async_configure(
+                result0["flow_id"],
+                {
+                    CONF_NAME: "Office occupied",
+                    CONF_PROBABILITY_THRESHOLD: 100,
+                    CONF_PRIOR: 50,
+                },
+            )
+        assert CONF_PROBABILITY_THRESHOLD in excinfo.value.path
+        assert excinfo.value.error_message == "extreme_threshold_error"
 
         # Threshold should never be 0 because then the sensor can never be 'off'
-        result1 = await hass.config_entries.flow.async_configure(
-            result0["flow_id"],
-            {
-                CONF_NAME: "Office occupied",
-                CONF_PROBABILITY_THRESHOLD: 0,
-                CONF_PRIOR: 30,
-            },
-        )
-        await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "extreme_threshold_error"}
+        with pytest.raises(vol.Invalid) as excinfo:
+            result1 = await hass.config_entries.flow.async_configure(
+                result0["flow_id"],
+                {
+                    CONF_NAME: "Office occupied",
+                    CONF_PROBABILITY_THRESHOLD: 0,
+                    CONF_PRIOR: 50,
+                },
+            )
+        assert CONF_PROBABILITY_THRESHOLD in excinfo.value.path
+        assert excinfo.value.error_message == "extreme_threshold_error"
 
         # Now lets progress to testing observations
         result1 = await hass.config_entries.flow.async_configure(
@@ -1040,34 +1042,36 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         assert result3["step_id"] != str(ConfigFlowSteps.OBSERVATION_SELECTOR)
 
         # Observations with a probability of 0 will create certainties
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_ENTITY_ID: "sensor.work_laptop",
-                CONF_TO_STATE: "on",
-                CONF_P_GIVEN_T: 0,
-                CONF_P_GIVEN_F: 60,
-                CONF_NAME: "Work laptop on network",
-                "add_another": True,
-            },
-        )
-        await hass.async_block_till_done()
-        assert result3["errors"] == {"base": "extreme_prob_given_error"}
+        with pytest.raises(vol.Invalid) as excinfo:
+            result3 = await hass.config_entries.flow.async_configure(
+                result2["flow_id"],
+                {
+                    CONF_ENTITY_ID: "sensor.work_laptop",
+                    CONF_TO_STATE: "on",
+                    CONF_P_GIVEN_T: 0,
+                    CONF_P_GIVEN_F: 60,
+                    CONF_NAME: "Work laptop on network",
+                    "add_another": True,
+                },
+            )
+        assert CONF_P_GIVEN_T in excinfo.value.path
+        assert excinfo.value.error_message == "extreme_prob_given_error"
 
         # Observations with a probability of 1 will create certainties
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_ENTITY_ID: "sensor.work_laptop",
-                CONF_TO_STATE: "on",
-                CONF_P_GIVEN_T: 60,
-                CONF_P_GIVEN_F: 100,
-                CONF_NAME: "Work laptop on network",
-                "add_another": True,
-            },
-        )
-        await hass.async_block_till_done()
-        assert result3["errors"] == {"base": "extreme_prob_given_error"}
+        with pytest.raises(vol.Invalid) as excinfo:
+            result3 = await hass.config_entries.flow.async_configure(
+                result2["flow_id"],
+                {
+                    CONF_ENTITY_ID: "sensor.work_laptop",
+                    CONF_TO_STATE: "on",
+                    CONF_P_GIVEN_T: 60,
+                    CONF_P_GIVEN_F: 100,
+                    CONF_NAME: "Work laptop on network",
+                    "add_another": True,
+                },
+            )
+        assert CONF_P_GIVEN_F in excinfo.value.path
+        assert excinfo.value.error_message == "extreme_prob_given_error"
 
 
 @pytest.mark.parametrize(
