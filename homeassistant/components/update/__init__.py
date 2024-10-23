@@ -34,6 +34,7 @@ from .const import (
     ATTR_RELEASE_URL,
     ATTR_SKIPPED_VERSION,
     ATTR_TITLE,
+    ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
     DOMAIN,
     SERVICE_INSTALL,
@@ -196,6 +197,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "release_url",
     "supported_features",
     "title",
+    "update_percentage",
 }
 
 
@@ -207,7 +209,12 @@ class UpdateEntity(
     """Representation of an update entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_ENTITY_PICTURE, ATTR_IN_PROGRESS, ATTR_RELEASE_SUMMARY}
+        {
+            ATTR_ENTITY_PICTURE,
+            ATTR_IN_PROGRESS,
+            ATTR_RELEASE_SUMMARY,
+            ATTR_UPDATE_PERCENTAGE,
+        }
     )
 
     entity_description: UpdateEntityDescription
@@ -221,6 +228,7 @@ class UpdateEntity(
     _attr_state: None = None
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
+    _attr_update_percentage: int | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
 
@@ -278,8 +286,7 @@ class UpdateEntity(
 
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
-        Can either return a boolean (True if in progress, False if not)
-        or an integer to indicate the progress in from 0 to 100%.
+        Should return a boolean (True if in progress, False if not).
         """
         return self._attr_in_progress
 
@@ -328,6 +335,16 @@ class UpdateEntity(
             self._report_deprecated_supported_features_values(new_features)
             return new_features
         return features
+
+    @cached_property
+    def update_percentage(self) -> int | None:
+        """Update installation progress.
+
+        Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
+
+        Can either return an integer to indicate the progress from 0 to 100% or None.
+        """
+        return self._attr_update_percentage
 
     @final
     async def async_skip(self) -> None:
@@ -422,8 +439,13 @@ class UpdateEntity(
         # Otherwise, we use the internal progress value.
         if UpdateEntityFeature.PROGRESS in self.supported_features_compat:
             in_progress = self.in_progress
+            update_percentage = self.update_percentage
+            if type(in_progress) is not bool and isinstance(in_progress, int):
+                update_percentage = in_progress
+                in_progress = True
         else:
             in_progress = self.__in_progress
+            update_percentage = None
 
         installed_version = self.installed_version
         latest_version = self.latest_version
@@ -445,6 +467,7 @@ class UpdateEntity(
             ATTR_RELEASE_URL: self.release_url,
             ATTR_SKIPPED_VERSION: skipped_version,
             ATTR_TITLE: self.title,
+            ATTR_UPDATE_PERCENTAGE: update_percentage,
         }
 
     @final

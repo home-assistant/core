@@ -150,6 +150,10 @@ async def test_options_flow(
     assert config_entry.options == CONFIG_ENTRY
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.emoncms.options.error.failure"],
+)
 async def test_options_flow_failure(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

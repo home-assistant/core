@@ -48,6 +48,11 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
         """Title of the software."""
         return self._handle("title")
 
+    @property
+    def update_percentage(self) -> int | None:
+        """Update installation progress."""
+        return self._handle("update_percentage")
+
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update."""
         if backup:
