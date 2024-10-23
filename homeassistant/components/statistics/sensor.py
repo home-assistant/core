@@ -504,14 +504,13 @@ class StatisticsSensor(SensorEntity):
 
         # Calculate the unit of measurement based on the state characteristics
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        unit: str | None = None
         if self.is_binary and self._state_characteristic in STATS_BINARY_PERCENTAGE:
-            unit = PERCENTAGE
-        elif not base_unit:
-            unit = None
-        elif self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
-            unit = base_unit
-        elif (
+            return PERCENTAGE
+        if not base_unit:
+            return None
+        if self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
+            return base_unit
+        if (
             self._state_characteristic in STATS_NOT_A_NUMBER
             or self._state_characteristic
             in (
@@ -520,15 +519,15 @@ class StatisticsSensor(SensorEntity):
                 STAT_COUNT_BINARY_OFF,
             )
         ):
-            unit = None
-        elif self._state_characteristic == STAT_VARIANCE:
-            unit = base_unit + "²"
-        elif self._state_characteristic == STAT_CHANGE_SAMPLE:
-            unit = base_unit + "/sample"
-        elif self._state_characteristic == STAT_CHANGE_SECOND:
-            unit = base_unit + "/s"
+            return None
+        if self._state_characteristic == STAT_VARIANCE:
+            return base_unit + "²"
+        if self._state_characteristic == STAT_CHANGE_SAMPLE:
+            return base_unit + "/sample"
+        if self._state_characteristic == STAT_CHANGE_SECOND:
+            return base_unit + "/s"
 
-        return unit
+        return None
 
     def _calculate_device_class(
         self, new_state: State, unit: str | None
