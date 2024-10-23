@@ -89,8 +89,8 @@ from .webrtc import (
     RTCIceServer,
     WebRTCClientConfiguration,
     async_get_supported_providers,
+    async_register_ice_servers,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
-    register_ice_server,
     ws_get_client_config,
 )
 
@@ -401,10 +401,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
     )
 
-    async def get_ice_server() -> RTCIceServer:
-        return RTCIceServer(urls="stun:stun.home-assistant.io:80")
+    @callback
+    def get_ice_servers() -> list[RTCIceServer]:
+        return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
 
-    register_ice_server(hass, get_ice_server)
+    async_register_ice_servers(hass, get_ice_servers)
     return True
 
 
@@ -741,9 +742,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
         config = await self._async_get_webrtc_client_configuration()
 
-        ice_servers = await asyncio.gather(
-            *[server() for server in self.hass.data.get(DATA_ICE_SERVERS, [])]
-        )
+        ice_servers = [
+            server
+            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
+            for server in servers()
+        ]
         config.configuration.ice_servers.extend(ice_servers)
 
         return config
