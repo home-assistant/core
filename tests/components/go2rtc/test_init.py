@@ -210,14 +210,19 @@ async def test_setup_go_binary(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_server: AsyncMock,
+    mock_server_start: Mock,
+    mock_server_stop: Mock,
 ) -> None:
     """Test the go2rtc config entry with binary."""
 
     def after_setup() -> None:
         mock_server.assert_called_once_with(hass, "/usr/bin/go2rtc")
-        mock_server.return_value.start.assert_called_once()
+        mock_server_start.assert_called_once()
 
-    await _test_setup(hass, mock_client, {}, after_setup)
+    await _test_setup(hass, mock_client, {DOMAIN: {}}, after_setup)
+
+    await hass.async_stop()
+    mock_server_stop.assert_called_once()
 
 
 @pytest.mark.parametrize(

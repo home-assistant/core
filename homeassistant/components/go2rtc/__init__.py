@@ -11,8 +11,8 @@ from homeassistant.components.camera.webrtc import (
     CameraWebRTCProvider,
     async_register_webrtc_provider,
 )
-from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -59,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {vol.Optional(CONF_URL): cv.url}})
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
     url: str | None = None
-    if DOMAIN not in config or not (url := config[DOMAIN].get(CONF_URL)):
+    if not (url := config[DOMAIN].get(CONF_URL)):
         if not is_docker_env():
             _LOGGER.warning("Go2rtc URL required in non-docker installs")
             return False
@@ -70,6 +70,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # HA will manage the binary
         server = Server(hass, binary)
         await server.start()
+
+        async def on_stop(event: Event) -> None:
+            await server.stop()
+
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
     if url is not None:
         # Validate user provided URL
@@ -91,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _get_binary(hass: HomeAssistant) -> str | None:
     """Return the binary path if found."""
-    return await hass.async_add_executor_job(shutil.which, DOMAIN)
+    return await hass.async_add_executor_job(shutil.which, "go2rtc")
 
 
 class WebRTCProvider(CameraWebRTCProvider):
