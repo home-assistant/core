@@ -208,6 +208,7 @@ class UnitSystem:
             TEMPERATURE: self.temperature_unit,
             VOLUME: self.volume_unit,
             WIND_SPEED: self.wind_speed_unit,
+            AREA: self.area_unit,
         }
 
     def get_converted_unit(
@@ -260,13 +261,10 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.NAUTICAL_MILES): UnitOfLength.KILOMETERS,
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric area
-        ("area", UnitOfArea.SQUARE_FEET): UnitOfArea.SQUARE_METERS,
         ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_MILLIMETERS,
+        ("area", UnitOfArea.SQUARE_FEET): UnitOfArea.SQUARE_METERS,
         ("area", UnitOfArea.SQUARE_MILES): UnitOfArea.SQUARE_KILOMETERS,
         ("area", UnitOfArea.SQUARE_YARDS): UnitOfArea.SQUARE_METERS,
-        ("area", UnitOfArea.SQUARE_CENTIMETERS): UnitOfArea.SQUARE_METERS,
-        ("area", UnitOfArea.SQUARE_MILLIMETERS): UnitOfArea.SQUARE_METERS,
-        ("area", UnitOfArea.SQUARE_KILOMETERS): UnitOfArea.SQUARE_METERS,
         ("area", UnitOfArea.ACRES): UnitOfArea.HECTARES,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,

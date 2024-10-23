@@ -7,12 +7,14 @@ import pytest
 from homeassistant.components.sensor import DEVICE_CLASS_UNITS, SensorDeviceClass
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    AREA,
     LENGTH,
     MASS,
     PRESSURE,
     TEMPERATURE,
     VOLUME,
     WIND_SPEED,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
@@ -51,6 +53,7 @@ def test_invalid_units() -> None:
             temperature=INVALID_UNIT,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
@@ -64,6 +67,7 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
@@ -77,6 +81,7 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=INVALID_UNIT,
+            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
@@ -90,6 +95,7 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=INVALID_UNIT,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
@@ -103,6 +109,7 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
@@ -116,6 +123,7 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
@@ -129,6 +137,21 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            area=UnitOfArea.SQUARE_METERS,
+        )
+
+    with pytest.raises(ValueError):
+        UnitSystem(
+            SYSTEM_NAME,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            area=INVALID_UNIT,
         )
 
 
@@ -146,6 +169,8 @@ def test_invalid_value() -> None:
         METRIC_SYSTEM.pressure("50Pa", UnitOfPressure.PA)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.accumulated_precipitation("50mm", UnitOfLength.MILLIMETERS)
+    with pytest.raises(TypeError):
+        METRIC_SYSTEM.area("2m²", UnitOfArea.SQUARE_METERS)
 
 
 def test_as_dict() -> None:
@@ -158,6 +183,7 @@ def test_as_dict() -> None:
         MASS: UnitOfMass.GRAMS,
         PRESSURE: UnitOfPressure.PA,
         ACCUMULATED_PRECIPITATION: UnitOfLength.MILLIMETERS,
+        AREA: UnitOfArea.SQUARE_METERS,
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
@@ -312,6 +338,7 @@ def test_properties() -> None:
     assert METRIC_SYSTEM.volume_unit == UnitOfVolume.LITERS
     assert METRIC_SYSTEM.pressure_unit == UnitOfPressure.PA
     assert METRIC_SYSTEM.accumulated_precipitation_unit == UnitOfLength.MILLIMETERS
+    assert METRIC_SYSTEM.area_unit == UnitOfArea.SQUARE_METERS
 
 
 @pytest.mark.parametrize(
