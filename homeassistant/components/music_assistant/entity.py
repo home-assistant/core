@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from music_assistant.client import MusicAssistantClient
 
 
-class MassBaseEntity(Entity):
+class MusicAssistantEntity(Entity):
     """Base Entity from Music Assistant Player."""
 
     _attr_has_entity_name = True

@@ -52,7 +52,7 @@ from .const import (
     ATTR_STREAM_TITLE,
     DOMAIN,
 )
-from .entity import MassBaseEntity
+from .entity import MusicAssistantEntity
 from .helpers import get_mass
 
 if TYPE_CHECKING:
@@ -106,7 +106,7 @@ ATTR_ANNOUNCE_VOLUME = "announce_volume"
 ATTR_SOURCE_PLAYER = "source_player"
 ATTR_AUTO_PLAY = "auto_play"
 
-_MassPlayerT = TypeVar("_MassPlayerT", bound="MassPlayer")
+_MassPlayerT = TypeVar("_MassPlayerT", bound="MusicAssistantPlayer")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
@@ -147,7 +147,7 @@ async def async_setup_entry(
         added_ids.add(event.object_id)
         if TYPE_CHECKING:
             assert event.object_id is not None
-        async_add_entities([MassPlayer(mass, event.object_id)])
+        async_add_entities([MusicAssistantPlayer(mass, event.object_id)])
 
     # register listener for new players
     config_entry.async_on_unload(
@@ -157,15 +157,13 @@ async def async_setup_entry(
     # add all current players
     for player in mass.players:
         added_ids.add(player.player_id)
-        mass_players.append(MassPlayer(mass, player.player_id))
+        mass_players.append(MusicAssistantPlayer(mass, player.player_id))
 
     async_add_entities(mass_players)
 
 
-class MassPlayer(MassBaseEntity, MediaPlayerEntity):
+class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     """Representation of MediaPlayerEntity from Music Assistant Player."""
-
-    # pylint: disable=abstract-method,too-many-instance-attributes
 
     _attr_name = None
 
