@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Niko Home Control instance.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "entities": {
+        "description": "Entities to add.",
+        "data": {
+          "lights": "Lights",
+          "covers": "Covers",
+          "fans": "Fans",
+          "thermostats": "Thermostats"
+        }
+      },
+      "optional": {
+        "description": "Treat Entities as devices?",
+        "data": {
+          "treatAsDevice": "Show entity as device? (makes it possible to asign an area)",
+          "importLocations": "Import locations from Niko Home Control?"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

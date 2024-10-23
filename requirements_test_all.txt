@@ -1222,6 +1222,9 @@ nibe==2.11.0
 # homeassistant.components.nice_go
 nice-go==0.3.10
 
+# homeassistant.components.niko_home_control
+niko-home-control==0.2.1
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 

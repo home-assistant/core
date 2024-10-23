@@ -7,38 +7,33 @@ import logging
 from typing import Any
 
 import nikohomecontrol
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     brightness_supported,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    host = config[CONF_HOST]
+    host = hass.data[DOMAIN][entry.entry_id]["config"]["host"]
 
     try:
         nhc = nikohomecontrol.NikoHomeControl(
@@ -86,7 +81,7 @@ class NikoHomeControlLight(LightEntity):
         await self._data.async_update()
         state = self._data.get_state(self._light.id)
         self._attr_is_on = state != 0
-        if brightness_supported(self.supported_color_modes):
+        if brightness_supported(self._attr_supported_color_modes):
             self._attr_brightness = state * 2.55
 
 
