@@ -3,12 +3,12 @@
 from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
-import zoneinfo
 
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
+import aiozoneinfo
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -42,12 +42,18 @@ def mock_scope() -> str:
     return "iam:read amc:api"
 
 
+@pytest.fixture(name="mower_time_zone")
+async def mock_time_zone(hass: HomeAssistant) -> dict[str, MowerAttributes]:
+    """Fixture to set correct scope for the token."""
+    return await aiozoneinfo.async_get_time_zone("Europe/Berlin")
+
+
 @pytest.fixture(name="values")
-def mock_values() -> dict[str, MowerAttributes]:
+def mock_values(mower_time_zone) -> dict[str, MowerAttributes]:
     """Fixture to set correct scope for the token."""
     return mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN),
-        zoneinfo.ZoneInfo("Europe/Berlin"),
+        mower_time_zone,
     )
 
 

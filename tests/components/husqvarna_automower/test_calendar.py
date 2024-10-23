@@ -94,6 +94,7 @@ async def test_empty_calendar(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     get_events: GetEventsFn,
+    mower_time_zone: zoneinfo.ZoneInfo,
 ) -> None:
     """State if there is no schedule set."""
     await setup_integration(hass, mock_config_entry)
@@ -101,7 +102,7 @@ async def test_empty_calendar(
     json_values["data"][0]["attributes"]["calendar"]["tasks"] = []
     values = mower_list_to_dictionary_dataclass(
         json_values,
-        zoneinfo.ZoneInfo("Europe/Berlin"),
+        mower_time_zone,
     )
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
