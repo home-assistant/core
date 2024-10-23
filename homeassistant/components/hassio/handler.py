@@ -92,52 +92,6 @@ async def async_create_backup(
 
 
 @bind_hass
-@api_data
-async def async_update_os(hass: HomeAssistant, version: str | None = None) -> dict:
-    """Update Home Assistant Operating System.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/os/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version},
-        timeout=None,
-    )
-
-
-@bind_hass
-@api_data
-async def async_update_supervisor(hass: HomeAssistant) -> dict:
-    """Update Home Assistant Supervisor.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/supervisor/update"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_update_core(
-    hass: HomeAssistant, version: str | None = None, backup: bool = False
-) -> dict:
-    """Update Home Assistant Core.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/core/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version, "backup": backup},
-        timeout=None,
-    )
-
-
-@bind_hass
 @_api_bool
 async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
     """Apply a suggestion from supervisor's resolution center."""

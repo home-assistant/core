@@ -8,7 +8,7 @@ from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import StoreAddonUpdate
 import pytest
 
-from homeassistant.components.hassio import DOMAIN, HassioAPIError
+from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -239,9 +239,7 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
     update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
 
 
-async def test_update_os(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_update_os(hass: HomeAssistant, supervisor_client: AsyncMock) -> None:
     """Test updating OS update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -255,22 +253,17 @@ async def test_update_os(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/os/update",
-        json={"result": "ok", "data": {}},
-    )
-
+    supervisor_client.os.update.return_value = None
     await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_operating_system_update"},
         blocking=True,
     )
+    supervisor_client.os.update.assert_called_once()
 
 
-async def test_update_core(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_update_core(hass: HomeAssistant, supervisor_client: AsyncMock) -> None:
     """Test updating core update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -284,21 +277,18 @@ async def test_update_core(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/core/update",
-        json={"result": "ok", "data": {}},
-    )
-
+    supervisor_client.homeassistant.update.return_value = None
     await hass.services.async_call(
         "update",
         "install",
-        {"entity_id": "update.home_assistant_os_update"},
+        {"entity_id": "update.home_assistant_core_update"},
         blocking=True,
     )
+    supervisor_client.homeassistant.update.assert_called_once()
 
 
 async def test_update_supervisor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating supervisor update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -313,17 +303,14 @@ async def test_update_supervisor(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/supervisor/update",
-        json={"result": "ok", "data": {}},
-    )
-
+    supervisor_client.supervisor.update.return_value = None
     await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_supervisor_update"},
         blocking=True,
     )
+    supervisor_client.supervisor.update.assert_called_once()
 
 
 async def test_update_addon_with_error(
@@ -353,7 +340,7 @@ async def test_update_addon_with_error(
 
 
 async def test_update_os_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating OS update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -367,11 +354,7 @@ async def test_update_os_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/os/update",
-        exc=HassioAPIError,
-    )
-
+    supervisor_client.os.update.side_effect = SupervisorError
     with pytest.raises(
         HomeAssistantError, match=r"^Error updating Home Assistant Operating System:"
     ):
@@ -384,7 +367,7 @@ async def test_update_os_with_error(
 
 
 async def test_update_supervisor_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating supervisor update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -398,11 +381,7 @@ async def test_update_supervisor_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/supervisor/update",
-        exc=HassioAPIError,
-    )
-
+    supervisor_client.supervisor.update.side_effect = SupervisorError
     with pytest.raises(
         HomeAssistantError, match=r"^Error updating Home Assistant Supervisor:"
     ):
@@ -415,7 +394,7 @@ async def test_update_supervisor_with_error(
 
 
 async def test_update_core_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating core update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -429,11 +408,7 @@ async def test_update_core_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/core/update",
-        exc=HassioAPIError,
-    )
-
+    supervisor_client.homeassistant.update.side_effect = SupervisorError
     with pytest.raises(
         HomeAssistantError, match=r"^Error updating Home Assistant Core:"
     ):

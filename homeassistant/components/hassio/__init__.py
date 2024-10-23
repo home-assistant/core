@@ -106,10 +106,7 @@ from .handler import (  # noqa: F401
     async_reboot_host,
     async_set_green_settings,
     async_set_yellow_settings,
-    async_update_core,
     async_update_diagnostics,
-    async_update_os,
-    async_update_supervisor,
     get_supervisor_client,
 )
 from .http import HassIOView
