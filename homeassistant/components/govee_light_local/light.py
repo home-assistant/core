@@ -20,9 +20,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GoveeLocalConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import GoveeLocalApiCoordinator
+from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

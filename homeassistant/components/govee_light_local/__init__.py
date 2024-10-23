@@ -9,19 +9,16 @@ import logging
 
 from govee_local_api.controller import LISTENING_PORT
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DISCOVERY_TIMEOUT
-from .coordinator import GoveeLocalApiCoordinator
+from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
-
-type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
