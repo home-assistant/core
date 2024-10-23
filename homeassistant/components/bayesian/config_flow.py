@@ -101,24 +101,40 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_PROBABILITY_THRESHOLD, default=DEFAULT_PROBABILITY_THRESHOLD * 100
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.SLIDER,
-                step=1.0,
+        ): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.SLIDER,
+                    step=1.0,
+                    min=0,
+                    max=100,
+                    unit_of_measurement="%",
+                ),
+            ),
+            vol.Range(
                 min=0,
                 max=100,
-                unit_of_measurement="%",
+                min_included=False,
+                max_included=False,
+                msg="extreme_threshold_error",
             ),
         ),
-        vol.Required(
-            CONF_PRIOR, default=DEFAULT_PROBABILITY_THRESHOLD * 100
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.SLIDER,
-                step=1.0,
+        vol.Required(CONF_PRIOR, default=DEFAULT_PROBABILITY_THRESHOLD * 100): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.SLIDER,
+                    step=1.0,
+                    min=0,
+                    max=100,
+                    unit_of_measurement="%",
+                ),
+            ),
+            vol.Range(
                 min=0,
                 max=100,
-                unit_of_measurement="%",
+                min_included=False,
+                max_included=False,
+                msg="extreme_prior_error",
             ),
         ),
         vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
@@ -140,22 +156,40 @@ CONFIG_SCHEMA = vol.Schema(
 
 OBSERVATION_BOILERPLATE = vol.Schema(
     {
-        vol.Required(CONF_P_GIVEN_T): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.SLIDER,
-                step=1.0,
+        vol.Required(CONF_P_GIVEN_T): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.SLIDER,
+                    step=1.0,
+                    min=0,
+                    max=100,
+                    unit_of_measurement="%",
+                ),
+            ),
+            vol.Range(
                 min=0,
                 max=100,
-                unit_of_measurement="%",
+                min_included=False,
+                max_included=False,
+                msg="extreme_prob_given_error",
             ),
         ),
-        vol.Required(CONF_P_GIVEN_F): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.SLIDER,
-                step=1.0,
+        vol.Required(CONF_P_GIVEN_F): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.SLIDER,
+                    step=1.0,
+                    min=0,
+                    max=100,
+                    unit_of_measurement="%",
+                ),
+            ),
+            vol.Range(
                 min=0,
                 max=100,
-                unit_of_measurement="%",
+                min_included=False,
+                max_included=False,
+                msg="extreme_prob_given_error",
             ),
         ),
         vol.Required(CONF_NAME): selector.TextSelector(),
@@ -356,14 +390,6 @@ async def _validate_user(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate user input for the basic settings and convert to fractions for storage."""
-    if user_input[CONF_PRIOR] == 0:
-        raise SchemaFlowError("prior_low_error")
-    if user_input[CONF_PRIOR] == 100:
-        raise SchemaFlowError("prior_high_error")
-    if user_input[CONF_PROBABILITY_THRESHOLD] == 0:
-        raise SchemaFlowError("threshold_low_error")
-    if user_input[CONF_PROBABILITY_THRESHOLD] == 100:
-        raise SchemaFlowError("threshold_high_error")
     user_input = _convert_percentages_to_fractions(user_input)
     return {**user_input}
 
@@ -374,9 +400,6 @@ def _validate_probabilities_given(
     """Raise errors for invalid probability_given_true/false."""
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
-
-    if {user_input[CONF_P_GIVEN_T], user_input[CONF_P_GIVEN_F]} & {0, 100}:
-        raise SchemaFlowError("extreme_prob_given_error")
 
 
 async def _validate_observation_setup(

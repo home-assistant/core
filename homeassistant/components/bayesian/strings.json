@@ -17,10 +17,8 @@
   },
   "options": {
     "error": {
-      "prior_low_error": "[%key:component::bayesian::config::error::prior_low_error%]",
-      "prior_high_error": "[%key:component::bayesian::config::error::prior_high_error%]",
-      "threshold_low_error": "[%key:component::bayesian::config::error::threshold_low_error%]",
-      "threshold_high_error": "[%key:component::bayesian::config::error::threshold_high_error%]",
+      "extreme_prior_error": "[%key:component::bayesian::config::error::extreme_prior_error%]",
+      "extreme_threshold_error": "[%key:component::bayesian::config::error::extreme_threshold_error%]",
       "equal_probabilities": "[%key:component::bayesian::config::error::equal_probabilities%]",
       "extreme_prob_given_error": "[%key:component::bayesian::config::error::extreme_prob_given_error%]"
     },
@@ -144,10 +142,8 @@
   },
   "config": {
     "error": {
-      "prior_low_error": "A prior set to 0% means that it is impossible for the sensor to show 'on', use a low number like 0.1% instead",
-      "prior_high_error": "A prior set to 100% means that it is impossible for the sensor to show 'off', use a high number like 99.9% instead",
-      "threshold_low_error": "A threshold set to 0% means that the sensor will always be 'on', use a low number like 0.1% instead",
-      "threshold_high_error": "A threshold set to 100% means that the sensor will always be 'off', use a high number like 99.9% instead",
+      "extreme_prior_error": "A prior set to 0% means that it is impossible for the sensor to show 'on' and 100% means it will never show off, use a close number like 0.1% or 99.9% instead",
+      "extreme_threshold_error": "A threshold set to 0% means that the sensor will always be 'on' and 100% mean it will always be off, use a close number like 0.1% or 99.9% instead",
       "equal_probabilities": "If Probability Given True and Probability Given False are equal, this observation can have no effect, and is therefore redundant",
       "extreme_prob_given_error": "If either Probability Given False or True is 0 or 100 this will create certainties that override all other observations, use numbers close to 0 or 100 instead"
     },

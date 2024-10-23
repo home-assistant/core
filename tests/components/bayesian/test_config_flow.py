@@ -960,7 +960,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "prior_low_error"}
+        assert result1["errors"] == {"base": "extreme_prior_error"}
         # Confirm that the config flow did not progress
         assert result1["step_id"] != str(ConfigFlowSteps.OBSERVATION_SELECTOR)
 
@@ -974,7 +974,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "prior_high_error"}
+        assert result1["errors"] == {"base": "extreme_prior_error"}
 
         # Threshold should never be 1 because then the sensor can never be 'on'
         result1 = await hass.config_entries.flow.async_configure(
@@ -986,7 +986,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "threshold_high_error"}
+        assert result1["errors"] == {"base": "extreme_threshold_error"}
 
         # Threshold should never be 0 because then the sensor can never be 'off'
         result1 = await hass.config_entries.flow.async_configure(
@@ -998,7 +998,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["errors"] == {"base": "threshold_low_error"}
+        assert result1["errors"] == {"base": "extreme_threshold_error"}
 
         # Now lets progress to testing observations
         result1 = await hass.config_entries.flow.async_configure(
