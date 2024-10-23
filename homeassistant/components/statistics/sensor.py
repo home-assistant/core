@@ -735,6 +735,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for numeric sensor
 
     def _stat_average_linear(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -748,6 +750,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -803,12 +807,12 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 1.96 * cast(float, self._stat_standard_deviation())
         return None
 
     def _stat_distance_99_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 2.58 * cast(float, self._stat_standard_deviation())
         return None
 
@@ -835,17 +839,23 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_noisiness(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
     def _stat_percentile(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
             return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.stdev(self.states)
         return None
@@ -856,6 +866,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 abs(j - i)
@@ -864,6 +876,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences_nonnegative(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 (j - i if j >= i else j - 0)
@@ -885,6 +899,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_variance(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.variance(self.states)
         return None
@@ -892,6 +908,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for binary sensor
 
     def _stat_binary_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return 100.0 * int(self.states[0] is True)
         if len(self.states) >= 2:
             on_seconds: float = 0
             for i in range(1, len(self.states)):
