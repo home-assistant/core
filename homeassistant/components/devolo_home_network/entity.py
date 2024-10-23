@@ -9,6 +9,7 @@ from devolo_plc_api.device_api import (
 )
 from devolo_plc_api.plcnet_api import DataRate, LogicalNetwork
 
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
@@ -45,7 +46,6 @@ class DevoloEntity(Entity):
 
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{self.device.ip}",
-            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
             identifiers={(DOMAIN, str(self.device.serial_number))},
             manufacturer="devolo",
             model=self.device.product,
@@ -53,6 +53,10 @@ class DevoloEntity(Entity):
             serial_number=self.device.serial_number,
             sw_version=self.device.firmware_version,
         )
+        if self.device.mac:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, self.device.mac)
+            }
         self._attr_translation_key = self.entity_description.key
         self._attr_unique_id = (
             f"{self.device.serial_number}_{self.entity_description.key}"
