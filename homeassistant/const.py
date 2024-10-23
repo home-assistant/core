@@ -1706,6 +1706,7 @@ RESTART_EXIT_CODE: Final = 100
 UNIT_NOT_RECOGNIZED_TEMPLATE: Final = "{} is not a recognized {} unit."
 
 LENGTH: Final = "length"
+AREA: Final = "area"
 MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"

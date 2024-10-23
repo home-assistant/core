@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    AREA,
     LENGTH,
     MASS,
     PRESSURE,
@@ -16,6 +17,7 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
     WIND_SPEED,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
@@ -27,6 +29,7 @@ from homeassistant.const import (
 )
 
 from .unit_conversion import (
+    AreaConverter,
     DistanceConverter,
     PressureConverter,
     SpeedConverter,
@@ -42,6 +45,8 @@ _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 _CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
+
+AREA_UNITS = AreaConverter.VALID_UNITS
 
 MASS_UNITS: set[str] = {
     UnitOfMass.POUNDS,
@@ -66,6 +71,7 @@ _VALID_BY_TYPE: dict[str, set[str] | set[str | None]] = {
     MASS: MASS_UNITS,
     VOLUME: VOLUME_UNITS,
     PRESSURE: PRESSURE_UNITS,
+    AREA: AREA_UNITS,
 }
 
 
@@ -91,6 +97,7 @@ class UnitSystem:
         temperature: UnitOfTemperature,
         volume: UnitOfVolume,
         wind_speed: UnitOfSpeed,
+        area: UnitOfArea,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -103,6 +110,7 @@ class UnitSystem:
                 (volume, VOLUME),
                 (mass, MASS),
                 (pressure, PRESSURE),
+                (area, AREA),
             )
             if not _is_valid_unit(unit, unit_type)
         )
@@ -114,6 +122,7 @@ class UnitSystem:
         self.accumulated_precipitation_unit = accumulated_precipitation
         self.temperature_unit = temperature
         self.length_unit = length
+        self.area_unit = area
         self.mass_unit = mass
         self.pressure_unit = pressure
         self.volume_unit = volume
@@ -137,6 +146,16 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return DistanceConverter.convert(  # type: ignore[unreachable]
             length, from_unit, self.length_unit
+        )
+
+    def area(self, area: float | None, from_unit: str) -> float:
+        """Convert the given area to this unit system."""
+        if not isinstance(area, Number):
+            raise TypeError(f"{area!s} is not a numeric value.")
+
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return AreaConverter.convert(  # type: ignore[unreachable]
+            area, from_unit, self.area_unit
         )
 
     def accumulated_precipitation(self, precip: float | None, from_unit: str) -> float:
@@ -240,6 +259,15 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
         ("distance", UnitOfLength.NAUTICAL_MILES): UnitOfLength.KILOMETERS,
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
+        # Convert non-metric area
+        ("area", UnitOfArea.SQUARE_FEET): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_MILLIMETERS,
+        ("area", UnitOfArea.SQUARE_MILES): UnitOfArea.SQUARE_KILOMETERS,
+        ("area", UnitOfArea.SQUARE_YARDS): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.SQUARE_CENTIMETERS): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.SQUARE_MILLIMETERS): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.SQUARE_KILOMETERS): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.ACRES): UnitOfArea.HECTARES,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
@@ -291,6 +319,7 @@ METRIC_SYSTEM = UnitSystem(
     temperature=UnitOfTemperature.CELSIUS,
     volume=UnitOfVolume.LITERS,
     wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+    area=UnitOfArea.SQUARE_METERS,
 )
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
@@ -308,6 +337,12 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
         ("distance", UnitOfLength.METERS): UnitOfLength.FEET,
         ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
+        # Convert non-USCS areas
+        ("area", UnitOfArea.SQUARE_METERS): UnitOfArea.SQUARE_FEET,
+        ("area", UnitOfArea.SQUARE_CENTIMETERS): UnitOfArea.SQUARE_INCHES,
+        ("area", UnitOfArea.SQUARE_MILLIMETERS): UnitOfArea.SQUARE_INCHES,
+        ("area", UnitOfArea.SQUARE_KILOMETERS): UnitOfArea.SQUARE_MILES,
+        ("area", UnitOfArea.HECTARES): UnitOfArea.ACRES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS precipitation
@@ -362,6 +397,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     temperature=UnitOfTemperature.FAHRENHEIT,
     volume=UnitOfVolume.GALLONS,
     wind_speed=UnitOfSpeed.MILES_PER_HOUR,
+    area=UnitOfArea.SQUARE_FEET,
 )
 
 IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
