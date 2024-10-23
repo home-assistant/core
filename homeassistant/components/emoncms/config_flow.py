@@ -117,6 +117,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_choose_feeds()
         sync_mode_dropdown = {
             "options": [SYNC_MODE_MANUAL, SYNC_MODE_AUTO],
+            "mode": "dropdown",
             "translation_key": SYNC_MODE,
         }
         return self.async_show_form(
@@ -124,11 +125,11 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
+                        vol.Required(CONF_URL): str,
+                        vol.Required(CONF_API_KEY): str,
                         vol.Required(SYNC_MODE, default=SYNC_MODE_MANUAL): selector(
                             {"select": sync_mode_dropdown}
                         ),
-                        vol.Required(CONF_URL): str,
-                        vol.Required(CONF_API_KEY): str,
                     }
                 ),
                 user_input,
