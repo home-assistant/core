@@ -234,7 +234,7 @@ class EnergyConverter(BaseUnitConverter):
 class EnergyDistanceConverter(BaseUnitConverter):
     """Utility to convert vehicle energy consumption values."""
 
-    UNIT_CLASS = "ENERGY_DISTANCE"
+    UNIT_CLASS = "energy_distance"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI: _MILE_TO_M / 1000,
