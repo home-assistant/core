@@ -48,6 +48,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
+from homeassistant.util import webrtc as webrtc_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -525,6 +526,8 @@ def test_core_config_schema() -> None:
         {"country": "xx"},
         {"language": "xx"},
         {"radius": -10},
+        {"webrtc": "bla"},
+        {"webrtc": {}},
     ):
         with pytest.raises(MultipleInvalid):
             config_util.CORE_CONFIG_SCHEMA(value)
@@ -542,6 +545,7 @@ def test_core_config_schema() -> None:
             "country": "SE",
             "language": "sv",
             "radius": "10",
+            "webrtc": {"ice_servers": [{"url": "stun:custom_stun_server:3478"}]},
         }
     )
 
@@ -572,6 +576,97 @@ def test_customize_dict_schema() -> None:
     assert config_util.CUSTOMIZE_DICT_SCHEMA(
         {ATTR_FRIENDLY_NAME: 2, ATTR_ASSUMED_STATE: "0"}
     ) == {ATTR_FRIENDLY_NAME: "2", ATTR_ASSUMED_STATE: False}
+
+
+def test_webrtc_schema() -> None:
+    """Test webrtc config validation."""
+    invalid_webrtc_configs = (
+        "bla",
+        {},
+        {"ice_servers": [], "unknown_key": 123},
+        {"ice_servers": [{}]},
+        {"ice_servers": [{"invalid_key": 123}]},
+    )
+
+    valid_webrtc_configs = (
+        (
+            {"ice_servers": []},
+            {"ice_servers": []},
+        ),
+        (
+            {"ice_servers": {"url": "stun:custom_stun_server:3478"}},
+            {"ice_servers": [{"url": ["stun:custom_stun_server:3478"]}]},
+        ),
+        (
+            {"ice_servers": [{"url": "stun:custom_stun_server:3478"}]},
+            {"ice_servers": [{"url": ["stun:custom_stun_server:3478"]}]},
+        ),
+        (
+            {"ice_servers": [{"url": ["stun:custom_stun_server:3478"]}]},
+            {"ice_servers": [{"url": ["stun:custom_stun_server:3478"]}]},
+        ),
+        (
+            {
+                "ice_servers": [
+                    {
+                        "url": ["stun:custom_stun_server:3478"],
+                        "username": "bla",
+                        "credential": "hunter2",
+                    }
+                ]
+            },
+            {
+                "ice_servers": [
+                    {
+                        "url": ["stun:custom_stun_server:3478"],
+                        "username": "bla",
+                        "credential": "hunter2",
+                    }
+                ]
+            },
+        ),
+    )
+
+    for config in invalid_webrtc_configs:
+        with pytest.raises(MultipleInvalid):
+            config_util.CORE_CONFIG_SCHEMA({"webrtc": config})
+
+    for config, validated_webrtc in valid_webrtc_configs:
+        validated = config_util.CORE_CONFIG_SCHEMA({"webrtc": config})
+        assert validated["webrtc"] == validated_webrtc
+
+
+def test_validate_stun_or_turn_url() -> None:
+    """Test _validate_stun_or_turn_url."""
+    invalid_urls = (
+        "custom_stun_server",
+        "custom_stun_server:3478",
+        "bum:custom_stun_server:3478" "http://blah.com:80",
+    )
+
+    valid_urls = (
+        "stun:custom_stun_server:3478",
+        "turn:custom_stun_server:3478",
+        "stuns:custom_stun_server:3478",
+        "turns:custom_stun_server:3478",
+        # The validator does not reject urls with path
+        "stun:custom_stun_server:3478/path",
+        "turn:custom_stun_server:3478/path",
+        "stuns:custom_stun_server:3478/path",
+        "turns:custom_stun_server:3478/path",
+        # The validator allows any query
+        "stun:custom_stun_server:3478?query",
+        "turn:custom_stun_server:3478?query",
+        "stuns:custom_stun_server:3478?query",
+        "turns:custom_stun_server:3478?query",
+    )
+
+    for url in invalid_urls:
+        with pytest.raises(Invalid):
+            config_util._validate_stun_or_turn_url(url)
+
+    for url in valid_urls:
+        assert config_util._validate_stun_or_turn_url(url) == url
 
 
 def test_customize_glob_is_ordered() -> None:
@@ -870,6 +965,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "country": "SE",
             "language": "sv",
             "radius": 150,
+            "webrtc": {"ice_servers": [{"url": "stun:custom_stun_server:3478"}]},
         },
     )
 
@@ -891,6 +987,9 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
     assert hass.config.radius == 150
+    assert hass.config.webrtc == webrtc_util.RTCConfiguration(
+        [webrtc_util.RTCIceServer(urls=["stun:custom_stun_server:3478"])]
+    )
 
 
 @pytest.mark.parametrize(

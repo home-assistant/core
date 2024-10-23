@@ -13,6 +13,7 @@ from homeassistant.components.camera.webrtc import (
     async_register_webrtc_provider,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
@@ -222,6 +223,32 @@ async def test_ws_get_client_config(
     assert msg["success"]
     assert msg["result"] == {
         "configuration": {"iceServers": [{"urls": "stun:stun.home-assistant.io:80"}]}
+    }
+
+
+@pytest.mark.usefixtures("mock_camera_web_rtc")
+async def test_ws_get_client_config_custom_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get WebRTC client config."""
+    await async_process_ha_core_config(
+        hass,
+        {"webrtc": {"ice_servers": [{"url": "stun:custom_stun_server:3478"}]}},
+    )
+
+    await async_setup_component(hass, "camera", {})
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "camera/webrtc/get_client_config", "entity_id": "camera.demo_camera"}
+    )
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "configuration": {"iceServers": [{"urls": ["stun:custom_stun_server:3478"]}]}
     }
 
 
