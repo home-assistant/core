@@ -987,7 +987,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
     assert hass.config.radius == 150
-    assert hass.config.webrtc == webrtc_util.WebRTCCoreConfiguration(
+    assert hass.config.webrtc == webrtc_util.RTCConfiguration(
         [webrtc_util.RTCIceServer(urls=["stun:custom_stun_server:3478"])]
     )
 

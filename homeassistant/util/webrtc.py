@@ -67,10 +67,3 @@ class WebRTCClientConfiguration:
         if self.data_channel is not None:
             data["dataChannel"] = self.data_channel
         return data
-
-
-@dataclass
-class WebRTCCoreConfiguration:
-    """Core WebRTC configuration."""
-
-    ice_servers: list[RTCIceServer] = field(default_factory=list)
