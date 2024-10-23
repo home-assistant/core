@@ -308,7 +308,7 @@ def _validate_currency(data: Any) -> Any:
         raise
 
 
-def stun_or_turn_url(value: Any) -> str:
+def _validate_stun_or_turn_url(value: Any) -> str:
     """Validate an URL."""
     url_in = str(value)
     url = urlparse(url_in)
@@ -386,7 +386,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                             vol.Schema(
                                 {
                                     vol.Required(CONF_URL): vol.All(
-                                        cv.ensure_list, [stun_or_turn_url]
+                                        cv.ensure_list, [_validate_stun_or_turn_url]
                                     ),
                                     vol.Optional(CONF_USERNAME): cv.string,
                                     vol.Optional(CONF_CREDENTIAL): cv.string,
