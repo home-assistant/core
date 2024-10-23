@@ -909,9 +909,7 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_binary_average_step(self) -> StateType:
         if len(self.states) == 1:
-            if self.states[0] is True:
-                return 100.0
-            return 0.0
+            return 100.0 * int(self.states[0] is True)
         if len(self.states) >= 2:
             on_seconds: float = 0
             for i in range(1, len(self.states)):
