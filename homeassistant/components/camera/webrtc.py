@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
-from dataclasses import dataclass, field
+from collections.abc import Awaitable, Callable, Iterable
 from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
@@ -13,6 +12,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.webrtc import RTCIceServer
 
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 from .helper import get_camera_from_entity_id
@@ -24,72 +24,9 @@ if TYPE_CHECKING:
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_web_rtc_providers"
 )
-DATA_ICE_SERVERS: HassKey[list[Callable[[], Coroutine[Any, Any, RTCIceServer]]]] = (
-    HassKey("camera_web_rtc_ice_servers")
+DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
+    "camera_web_rtc_ice_servers"
 )
-
-
-@dataclass
-class RTCIceServer:
-    """RTC Ice Server.
-
-    See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
-    """
-
-    urls: list[str] | str
-    username: str | None = None
-    credential: str | None = None
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-
-        data = {
-            "urls": self.urls,
-        }
-        if self.username is not None:
-            data["username"] = self.username
-        if self.credential is not None:
-            data["credential"] = self.credential
-        return data
-
-
-@dataclass
-class RTCConfiguration:
-    """RTC Configuration.
-
-    See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
-    """
-
-    ice_servers: list[RTCIceServer] = field(default_factory=list)
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        if not self.ice_servers:
-            return {}
-
-        return {
-            "iceServers": [server.to_frontend_dict() for server in self.ice_servers]
-        }
-
-
-@dataclass(kw_only=True)
-class WebRTCClientConfiguration:
-    """WebRTC configuration for the client.
-
-    Not part of the spec, but required to configure client.
-    """
-
-    configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
-    data_channel: str | None = None
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        data: dict[str, Any] = {
-            "configuration": self.configuration.to_frontend_dict(),
-        }
-        if self.data_channel is not None:
-            data["dataChannel"] = self.data_channel
-        return data
 
 
 class CameraWebRTCProvider(Protocol):
@@ -188,9 +125,9 @@ async def async_get_supported_providers(
 
 
 @callback
-def register_ice_server(
+def async_register_ice_servers(
     hass: HomeAssistant,
-    get_ice_server_fn: Callable[[], Coroutine[Any, Any, RTCIceServer]],
+    get_ice_server_fn: Callable[[], Iterable[RTCIceServer]],
 ) -> Callable[[], None]:
     """Register a ICE server.
 

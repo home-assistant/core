@@ -11,7 +11,7 @@ aiohttp-fast-zlib==0.1.1
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
-attrs==23.2.0
+attrs==24.2.0
 atomicwrites-homeassistant==1.4.1
 awesomeversion==24.6.0
 bcrypt==4.2.0
@@ -29,7 +29,7 @@ cryptography==43.0.1
 Pillow==10.4.0
 propcache==0.2.0
 pyOpenSSL==24.2.1
-orjson==3.10.7
+orjson==3.10.10
 packaging>=23.1
 psutil-home-assistant==0.0.1
 python-slugify==8.0.4
@@ -43,4 +43,4 @@ uv==0.4.22
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.5
-yarl==1.15.3
+yarl==1.16.0

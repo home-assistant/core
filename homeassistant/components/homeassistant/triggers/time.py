@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import partial
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -26,7 +26,8 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -37,6 +38,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 _TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
+_TIME_AT_SCHEMA = vol.Any(cv.time, _TIME_TRIGGER_ENTITY)
 
 _TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
     {
@@ -45,15 +47,28 @@ _TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
     }
 )
 
+
+def valid_at_template(value: Any) -> template.Template:
+    """Validate either a jinja2 template, valid time, or valid trigger entity."""
+    tpl = cv.template(value)
+
+    if tpl.is_static:
+        _TIME_AT_SCHEMA(value)
+
+    return tpl
+
+
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
     _TIME_TRIGGER_ENTITY,
     _TIME_TRIGGER_ENTITY_WITH_OFFSET,
+    valid_at_template,
     msg=(
         "Expected HH:MM, HH:MM:SS, an Entity ID with domain 'input_datetime' or "
-        "'sensor', or a combination of a timestamp sensor entity and an offset."
+        "'sensor', a combination of a timestamp sensor entity and an offset, or Limited Template"
     ),
 )
+
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -78,6 +93,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
+    variables = trigger_info["variables"] or {}
     entities: dict[tuple[str, timedelta], CALLBACK_TYPE] = {}
     removes: list[CALLBACK_TYPE] = []
     job = HassJob(action, f"time trigger {trigger_info}")
@@ -202,6 +218,16 @@ async def async_attach_trigger(
     to_track: list[TrackEntity] = []
 
     for at_time in config[CONF_AT]:
+        if isinstance(at_time, template.Template):
+            render = template.render_complex(at_time, variables, limited=True)
+            try:
+                at_time = _TIME_AT_SCHEMA(render)
+            except vol.Invalid as exc:
+                raise HomeAssistantError(
+                    f"Limited Template for 'at' rendered a unexpected value '{render}', expected HH:MM, "
+                    f"HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+                ) from exc
+
         if isinstance(at_time, str):
             # entity
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))

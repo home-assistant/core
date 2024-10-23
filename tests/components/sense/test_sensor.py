@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE, CONSUMPTION_ID
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -29,7 +29,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Sensor."""
-    await setup_platform(hass, config_entry, SENSOR_DOMAIN)
+    await setup_platform(hass, config_entry, Platform.SENSOR)
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
