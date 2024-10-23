@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from functools import cache, partial
 import logging
@@ -33,8 +33,8 @@ DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
 DATA_WEBRTC_LEGACY_PROVIDERS: HassKey[set[CameraWebRTCLegacyProvider]] = HassKey(
     "camera_webrtc_legacy_providers"
 )
-DATA_ICE_SERVERS: HassKey[list[Callable[[], Coroutine[Any, Any, RTCIceServer]]]] = (
-    HassKey("camera_webrtc_ice_servers")
+DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
+    "camera_webrtc_ice_servers"
 )
 
 
@@ -408,9 +408,9 @@ async def async_get_supported_legacy_provider(
 
 
 @callback
-def register_ice_server(
+def async_register_ice_servers(
     hass: HomeAssistant,
-    get_ice_server_fn: Callable[[], Coroutine[Any, Any, RTCIceServer]],
+    get_ice_server_fn: Callable[[], Iterable[RTCIceServer]],
 ) -> Callable[[], None]:
     """Register a ICE server.
 

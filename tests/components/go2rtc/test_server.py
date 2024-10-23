@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Generator
 import logging
 import subprocess
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -21,13 +21,14 @@ def server(hass: HomeAssistant) -> Server:
 
 
 @pytest.fixture
-def mock_tempfile() -> Generator[MagicMock]:
+def mock_tempfile() -> Generator[Mock]:
     """Fixture to mock NamedTemporaryFile."""
     with patch(
-        "homeassistant.components.go2rtc.server.NamedTemporaryFile"
+        "homeassistant.components.go2rtc.server.NamedTemporaryFile", autospec=True
     ) as mock_tempfile:
-        mock_tempfile.return_value.__enter__.return_value.name = "test.yaml"
-        yield mock_tempfile
+        file = mock_tempfile.return_value.__enter__.return_value
+        file.name = "test.yaml"
+        yield file
 
 
 @pytest.fixture
@@ -42,11 +43,11 @@ def mock_process() -> Generator[MagicMock]:
         yield mock_popen
 
 
-@pytest.mark.usefixtures("mock_tempfile")
 async def test_server_run_success(
     mock_process: MagicMock,
     server: Server,
     caplog: pytest.LogCaptureFixture,
+    mock_tempfile: Mock,
 ) -> None:
     """Test that the server runs successfully."""
     # Simulate process output
@@ -63,12 +64,22 @@ async def test_server_run_success(
     mock_process.assert_called_once_with(
         TEST_BINARY,
         "-c",
-        "webrtc.ice_servers=[]",
-        "-c",
         "test.yaml",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
+
+    # Verify that the config file was written
+    mock_tempfile.write.assert_called_once_with(b"""
+api:
+  listen: "127.0.0.1:1984"
+
+rtsp:
+  listen: ""
+
+webrtc:
+  ice_servers: []
+""")
 
     # Check that server read the log lines
     for entry in ("log line 1", "log line 2"):

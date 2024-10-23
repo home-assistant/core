@@ -20,10 +20,10 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
+    async_register_ice_servers,
     async_register_rtsp_to_web_rtc_provider,
     async_register_webrtc_provider,
     get_camera_from_entity_id,
-    register_ice_server,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -236,37 +236,48 @@ async def test_async_register_ice_server(
 
     called = 0
 
-    async def get_ice_server() -> RTCIceServer:
+    @callback
+    def get_ice_servers() -> list[RTCIceServer]:
         nonlocal called
         called += 1
-        return RTCIceServer(urls="stun:example.com")
+        return [
+            RTCIceServer(urls="stun:example.com"),
+            RTCIceServer(urls="turn:example.com"),
+        ]
 
-    unregister = register_ice_server(hass, get_ice_server)
+    unregister = async_register_ice_servers(hass, get_ice_servers)
     assert not called
 
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
     config = await camera.async_get_webrtc_client_configuration()
 
-    assert config.configuration.ice_servers == [RTCIceServer(urls="stun:example.com")]
+    assert config.configuration.ice_servers == [
+        RTCIceServer(urls="stun:example.com"),
+        RTCIceServer(urls="turn:example.com"),
+    ]
     assert called == 1
 
     # register another ICE server
     called_2 = 0
 
-    async def get_ice_server_2() -> RTCIceServer:
+    @callback
+    def get_ice_servers_2() -> list[RTCIceServer]:
         nonlocal called_2
         called_2 += 1
-        return RTCIceServer(
-            urls=["stun:example2.com", "turn:example2.com"],
-            username="user",
-            credential="pass",
-        )
+        return [
+            RTCIceServer(
+                urls=["stun:example2.com", "turn:example2.com"],
+                username="user",
+                credential="pass",
+            )
+        ]
 
-    unregister_2 = register_ice_server(hass, get_ice_server_2)
+    unregister_2 = async_register_ice_servers(hass, get_ice_servers_2)
 
     config = await camera.async_get_webrtc_client_configuration()
     assert config.configuration.ice_servers == [
         RTCIceServer(urls="stun:example.com"),
+        RTCIceServer(urls="turn:example.com"),
         RTCIceServer(
             urls=["stun:example2.com", "turn:example2.com"],
             username="user",
@@ -321,14 +332,17 @@ async def test_ws_get_client_config(
         "getCandidatesUpfront": False,
     }
 
-    async def get_ice_server() -> RTCIceServer:
-        return RTCIceServer(
-            urls=["stun:example2.com", "turn:example2.com"],
-            username="user",
-            credential="pass",
-        )
+    @callback
+    def get_ice_server() -> list[RTCIceServer]:
+        return [
+            RTCIceServer(
+                urls=["stun:example2.com", "turn:example2.com"],
+                username="user",
+                credential="pass",
+            )
+        ]
 
-    register_ice_server(hass, get_ice_server)
+    async_register_ice_servers(hass, get_ice_server)
 
     await client.send_json_auto_id(
         {"type": "camera/webrtc/get_client_config", "entity_id": "camera.demo_camera"}
