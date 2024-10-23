@@ -30,16 +30,12 @@ async def test_single_instance_allowed(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_docker_with_binary(
+async def test_builtin_binary(
     hass: HomeAssistant,
 ) -> None:
     """Test config flow, where HA is running in docker with a go2rtc binary available."""
     binary = "/usr/bin/go2rtc"
     with (
-        patch(
-            "homeassistant.components.go2rtc.config_flow.is_docker_env",
-            return_value=True,
-        ),
         patch(
             "homeassistant.components.go2rtc.config_flow.shutil.which",
             return_value=binary,
@@ -57,29 +53,67 @@ async def test_docker_with_binary(
         }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_binary_from_config_dir(
+    hass: HomeAssistant,
+) -> None:
+    """Test config flow with a go2rtc binary available in the config dir."""
+    binary = "/config/go2rtc"
+    with (
+        patch(
+            "homeassistant.components.go2rtc.config_flow.os.access",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "go2rtc"
+        assert result["data"] == {
+            CONF_BINARY: binary,
+            CONF_URL: "http://localhost:1984/",
+        }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_binary_prefers_config_dir(
+    hass: HomeAssistant,
+) -> None:
+    """Test config flow, where HA is running in docker with a go2rtc binary available but also one in the config dir."""
+    binary = "/config/go2rtc"
+    with (
+        patch(
+            "homeassistant.components.go2rtc.config_flow.shutil.which",
+            return_value="/usr/bin/go2rtc",
+        ),
+        patch(
+            "homeassistant.components.go2rtc.config_flow.os.access",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "go2rtc"
+        assert result["data"] == {
+            CONF_BINARY: binary,
+            CONF_URL: "http://localhost:1984/",
+        }
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_client")
-@pytest.mark.parametrize(
-    ("is_docker_env", "shutil_which"),
-    [
-        (True, None),
-        (False, None),
-        (False, "/usr/bin/go2rtc"),
-    ],
-)
 async def test_config_flow_url(
     hass: HomeAssistant,
-    is_docker_env: bool,
-    shutil_which: str | None,
 ) -> None:
     """Test config flow with url input."""
     with (
         patch(
-            "homeassistant.components.go2rtc.config_flow.is_docker_env",
-            return_value=is_docker_env,
-        ),
-        patch(
             "homeassistant.components.go2rtc.config_flow.shutil.which",
-            return_value=shutil_which,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -110,8 +144,8 @@ async def test_flow_errors(
     """Test flow errors."""
     with (
         patch(
-            "homeassistant.components.go2rtc.config_flow.is_docker_env",
-            return_value=False,
+            "homeassistant.components.go2rtc.config_flow.shutil.which",
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(

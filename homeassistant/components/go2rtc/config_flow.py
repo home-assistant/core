@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+import os
 import shutil
 from typing import Any
 from urllib.parse import urlparse
@@ -14,9 +16,10 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.package import is_docker_env
 
 from .const import CONF_BINARY, DOMAIN
+
+LOGGER = logging.getLogger(__name__)
 
 _VALID_URL_SCHEMA = {"http", "https"}
 
@@ -46,13 +49,18 @@ class Go2RTCConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_binary(self) -> str | None:
         """Return the binary path if found."""
+        binary = self.hass.config.path("go2rtc")
+        if os.access(binary, os.X_OK):
+            LOGGER.info("Using go2rtc binary from config directory")
+            return binary
+
         return shutil.which(DOMAIN)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Init step."""
-        if is_docker_env() and (binary := self._get_binary()):
+        if binary := self._get_binary():
             return self.async_create_entry(
                 title=DOMAIN,
                 data={CONF_BINARY: binary, CONF_URL: "http://localhost:1984/"},
