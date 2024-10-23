@@ -24,8 +24,8 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_ID,
     CONF_NAME,
-    CONF_PLATFORM,
     CONF_STATE,
+    CONF_TYPE,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -290,7 +290,7 @@ async def _get_select_observation_schema(
         {
             vol.Required(CONF_INDEX): vol.In(
                 {
-                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
+                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_TYPE]})"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -306,7 +306,7 @@ async def _get_remove_observation_schema(
         {
             vol.Required(CONF_INDEX): cv.multi_select(
                 {
-                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
+                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_TYPE]})"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -322,7 +322,7 @@ async def _get_flow_step_for_editing(
     observations: list[dict[str, Any]] = user_input[CONF_OBSERVATIONS]
     selected_idx = int(user_input[CONF_INDEX])
 
-    return str(observations[selected_idx][CONF_PLATFORM])
+    return str(observations[selected_idx][CONF_TYPE])
 
 
 async def _get_state_schema(
@@ -420,14 +420,14 @@ async def _validate_observation_setup(
     )
     if idx := handler.options.get(CONF_INDEX):
         # if there is an index, that means we are in observation editing mode and we want to overwrite not append
-        user_input[CONF_PLATFORM] = observations[int(idx)][CONF_PLATFORM]
+        user_input[CONF_TYPE] = observations[int(idx)][CONF_TYPE]
         observations[int(idx)] = user_input
 
         # remove the index so it can not be saved
         handler.options.pop(CONF_INDEX, None)
     elif handler.parent_handler.cur_step is not None:
         # if we are in adding mode we need to record the platform from the step id
-        user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
+        user_input[CONF_TYPE] = handler.parent_handler.cur_step["step_id"]
         observations.append(user_input)
     _LOGGER.debug("Added observation with settings: %s", user_input)
     return {"add_another": True} if add_another else {}

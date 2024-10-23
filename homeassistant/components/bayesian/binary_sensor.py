@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
     CONF_STATE,
+    CONF_TYPE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
@@ -289,7 +290,10 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._observations = [
             Observation(
                 entity_id=observation.get(CONF_ENTITY_ID),
-                platform=observation[CONF_PLATFORM],
+                # YAML uses the key CONF_PLATFORM but ConfigFlow uses CONF_TYPE
+                platform=observation[CONF_PLATFORM]
+                if CONF_PLATFORM in observation
+                else observation[CONF_TYPE],
                 prob_given_false=observation[CONF_P_GIVEN_F],
                 prob_given_true=observation[CONF_P_GIVEN_T],
                 observed=None,
