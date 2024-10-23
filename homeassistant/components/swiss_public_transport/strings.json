@@ -22,7 +22,10 @@
           "is_arrival": "Use arrival instead of departure",
           "time_mode": "Select a time mode"
         },
-        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\nOptionally, you can also configure connections at a specific time or moving offset.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "data_description": {
+          "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station)."
+        },
+        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
         "title": "Swiss Public Transport"
       },
       "optional": {
