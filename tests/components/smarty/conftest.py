@@ -14,7 +14,7 @@ from tests.components.smhi.common import AsyncMock
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
+    """Override integration setup."""
     with patch(
         "homeassistant.components.smarty.async_setup_entry",
         return_value=True,

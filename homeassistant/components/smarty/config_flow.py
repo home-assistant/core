@@ -51,7 +51,6 @@ class SmartyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_config: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle a flow initialized by import."""
-        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
         error = await self.hass.async_add_executor_job(
             self._test_connection, import_config[CONF_HOST]
         )

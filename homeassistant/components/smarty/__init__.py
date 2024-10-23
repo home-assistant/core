@@ -107,7 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bo
         else:
             _LOGGER.debug("Update failed")
 
-    async_track_time_interval(hass, poll_device_update, timedelta(seconds=30))
+    entry.async_on_unload(
+        async_track_time_interval(hass, poll_device_update, timedelta(seconds=30))
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
