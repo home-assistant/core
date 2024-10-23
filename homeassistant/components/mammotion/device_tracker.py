@@ -6,6 +6,7 @@ from typing import Any
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import MammotionConfigEntry
 from .const import ATTR_DIRECTION
@@ -26,12 +27,12 @@ async def async_setup_entry(
     async_add_entities([MammotionTracker(coordinator)])
 
 
-class MammotionTracker(MammotionBaseEntity, TrackerEntity):
+class MammotionTracker(MammotionBaseEntity, TrackerEntity, RestoreEntity):
     """Mammotion device tracker."""
 
     _attr_force_update = False
     _attr_translation_key = "device_tracker"
-    _attr_icon = "mdi:car"
+    _attr_icon = "mdi:robot-mower"
 
     def __init__(self, coordinator: MammotionDataUpdateCoordinator) -> None:
         """Initialize the Tracker."""

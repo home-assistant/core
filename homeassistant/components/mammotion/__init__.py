@@ -8,14 +8,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
+    CONF_ACCOUNTNAME,
     CONF_AEP_DATA,
     CONF_AUTH_DATA,
+    CONF_CONNECT_DATA,
     CONF_DEVICE_DATA,
     CONF_REGION_DATA,
     CONF_RETRY_COUNT,
     CONF_SESSION_DATA,
     CONF_USE_WIFI,
     DEFAULT_RETRY_COUNT,
+    DOMAIN,
 )
 from .coordinator import MammotionDataUpdateCoordinator
 
@@ -27,7 +30,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.SWITCH,
     Platform.NUMBER,
-    Platform.SELECT
+    Platform.SELECT,
 ]
 
 type MammotionConfigEntry = ConfigEntry[MammotionDataUpdateCoordinator]
@@ -54,25 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
             options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
         )
 
-    mammotion_coordinator = MammotionDataUpdateCoordinator(hass)
-
+    mammotion_coordinator = MammotionDataUpdateCoordinator(hass, entry)
     await mammotion_coordinator.async_setup()
 
-    # config_updates = {}
-    if CONF_AUTH_DATA not in entry.data and mammotion_coordinator.manager.cloud_client:
-        config_updates = {
-            **entry.data,
-            CONF_AUTH_DATA: mammotion_coordinator.manager.cloud_client.get_login_by_oauth_response(),
-            CONF_REGION_DATA: mammotion_coordinator.manager.cloud_client.get_region_response(),
-            CONF_AEP_DATA: mammotion_coordinator.manager.cloud_client.get_aep_response(),
-            CONF_SESSION_DATA: mammotion_coordinator.manager.cloud_client.get_session_by_authcode_response(),
-            CONF_DEVICE_DATA: mammotion_coordinator.manager.cloud_client.get_devices_by_account_response(),
-        }
-        hass.config_entries.async_update_entry(entry, data=config_updates)
-
-    use_wifi = entry.data.get(CONF_USE_WIFI)
-    if use_wifi is False:
-        await mammotion_coordinator.async_config_entry_first_refresh()
+    await mammotion_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = mammotion_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -88,6 +76,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        if entry.runtime_data.manager.mqtt and entry.runtime_data.manager.mqtt.is_connected:
-            await hass.async_add_executor_job(entry.runtime_data.manager.mqtt.disconnect)
+        await entry.runtime_data.manager.remove_device(entry.runtime_data.device_name)
     return unload_ok
