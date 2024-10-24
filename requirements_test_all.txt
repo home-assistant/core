@@ -437,6 +437,9 @@ anthemav==1.4.1
 # homeassistant.components.anthropic
 anthropic==0.31.2
 
+# homeassistant.components.appartme
+appartme_paas==0.1.2
+
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.2
 
