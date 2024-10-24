@@ -20,10 +20,10 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HabiticaConfigEntry
 from .const import ASSETS_URL, DOMAIN, HEALER, MAGE, ROGUE, WARRIOR
 from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
+from .types import HabiticaConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)
