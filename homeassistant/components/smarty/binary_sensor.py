@@ -34,7 +34,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class SmartyBinarySensor(BinarySensorEntity, CoordinatorEntity[SmartyCoordinator]):
+class SmartyBinarySensor(CoordinatorEntity[SmartyCoordinator], BinarySensorEntity):
     """Representation of a Smarty Binary Sensor."""
 
     def __init__(

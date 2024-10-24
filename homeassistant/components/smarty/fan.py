@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities([SmartyFan(coordinator)])
 
 
-class SmartyFan(FanEntity, CoordinatorEntity[SmartyCoordinator]):
+class SmartyFan(CoordinatorEntity[SmartyCoordinator], FanEntity):
     """Representation of a Smarty Fan."""
 
     _attr_icon = "mdi:air-conditioner"
