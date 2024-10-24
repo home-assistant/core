@@ -11,14 +11,12 @@ from unittest.mock import MagicMock, patch
 from aiohttp import ClientSession
 from evohomeasync2 import EvohomeClient
 from evohomeasync2.broker import Broker
-from evohomeasync2.hotwater import HotWater
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
@@ -163,25 +161,3 @@ async def setup_evohome(
 
         mock_client.return_value = evo
         yield mock_client
-
-
-@pytest.fixture
-async def dhw_id(
-    hass: HomeAssistant,
-    config: dict[str, str],
-    install: str,
-) -> AsyncGenerator[str]:
-    """Return the entity_id of the evohome integration' WaterHeater.
-
-    Not all evohome systems have DHW.
-    """
-
-    dhw: HotWater | None
-
-    async for mock_client in setup_evohome(hass, config, install=install):
-        evo: EvohomeClient = mock_client.return_value
-
-        if (dhw := evo._get_single_tcs().hotwater) is None:
-            pytest.fail("DHW expected, but was not found")
-
-        yield f"{Platform.WATER_HEATER}.{slugify(dhw.name)}"
