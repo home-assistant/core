@@ -683,7 +683,7 @@ class TodoistProjectData:
             event = CalendarEvent(
                 summary=task.content,
                 start=start,
-                end=start + timedelta(days=1),
+                end=start + timedelta(minutes=30),
             )
             if event.start_datetime_local >= end_date:
                 continue
