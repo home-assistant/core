@@ -66,8 +66,6 @@ _LOGGER = logging.getLogger(__name__)
 PRESET_RESET = "Reset"  # reset all child zones to EVO_FOLLOW
 PRESET_CUSTOM = "Custom"
 
-HA_HVAC_TO_TCS = {HVACMode.OFF: EVO_HEATOFF, HVACMode.HEAT: EVO_AUTO}
-
 TCS_PRESET_TO_HA = {
     EVO_AWAY: PRESET_AWAY,
     EVO_CUSTOM: PRESET_CUSTOM,
@@ -150,13 +148,9 @@ async def async_setup_platform(
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for any evohome-compatible climate entity (controller, zone)."""
 
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return a list of available hvac operation modes."""
-        return list(HA_HVAC_TO_TCS)
 
 
 class EvoZone(EvoChild, EvoClimateEntity):
@@ -365,9 +359,9 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.systemId
         self._attr_name = evo_device.location.name
 
-        modes = [m[SZ_SYSTEM_MODE] for m in evo_broker.tcs.allowedSystemModes]
+        self._evo_modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowedSystemModes]
         self._attr_preset_modes = [
-            TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
+            TCS_PRESET_TO_HA[m] for m in self._evo_modes if m in list(TCS_PRESET_TO_HA)
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -401,14 +395,14 @@ class EvoController(EvoClimateEntity):
         """Set a Controller to any of its native EVO_* operating modes."""
         until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_tcs.set_mode(mode, until=until)  # type: ignore[arg-type]
+            self._evo_device.set_mode(mode, until=until)  # type: ignore[arg-type]
         )
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current operating mode of a Controller."""
-        tcs_mode = self._evo_tcs.system_mode
-        return HVACMode.OFF if tcs_mode == EVO_HEATOFF else HVACMode.HEAT
+        evo_mode = self._evo_device.system_mode
+        return HVACMode.OFF if evo_mode in (EVO_HEATOFF, "Off") else HVACMode.HEAT
 
     @property
     def current_temperature(self) -> float | None:
@@ -418,7 +412,7 @@ class EvoController(EvoClimateEntity):
         """
         temps = [
             z.temperature
-            for z in self._evo_tcs.zones.values()
+            for z in self._evo_device.zones.values()
             if z.temperature is not None
         ]
         return round(sum(temps) / len(temps), 1) if temps else None
@@ -426,9 +420,9 @@ class EvoController(EvoClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if not self._evo_tcs.system_mode:
+        if not self._evo_device.system_mode:
             return None
-        return TCS_PRESET_TO_HA.get(self._evo_tcs.system_mode)
+        return TCS_PRESET_TO_HA.get(self._evo_device.system_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Raise exception as Controllers don't have a target temperature."""
@@ -436,9 +430,13 @@ class EvoController(EvoClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
-        if not (tcs_mode := HA_HVAC_TO_TCS.get(hvac_mode)):
+        if hvac_mode == HVACMode.HEAT:
+            evo_mode = EVO_AUTO if EVO_AUTO in self._evo_modes else "Heat"
+        elif hvac_mode == HVACMode.OFF:
+            evo_mode = EVO_HEATOFF if EVO_HEATOFF in self._evo_modes else "Off"
+        else:
             raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
-        await self._set_tcs_mode(tcs_mode)
+        await self._set_tcs_mode(evo_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
@@ -451,6 +449,6 @@ class EvoController(EvoClimateEntity):
         attrs = self._device_state_attrs
         for attr in STATE_ATTRS_TCS:
             if attr == SZ_ACTIVE_FAULTS:
-                attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
+                attrs["activeSystemFaults"] = getattr(self._evo_device, attr)
             else:
-                attrs[attr] = getattr(self._evo_tcs, attr)
+                attrs[attr] = getattr(self._evo_device, attr)
