@@ -2,7 +2,7 @@
 
 from typing import Any, NamedTuple
 
-from duwi_smarthome_sdk.base_api import CustomerApi, SharingTokenListener
+from duwi_smarthome_sdk.base_api import CustomerApi
 from duwi_smarthome_sdk.device_scene_models import CustomerDevice, CustomerScene
 from duwi_smarthome_sdk.manager import Manager, SharingDeviceListener
 
@@ -50,7 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> bool
 
     hass.data.setdefault(DOMAIN, {})
 
-    token_listener = TokenListener(hass, entry)
     manager: Manager = Manager(
         customer_api=CustomerApi(
             address=entry.data[ADDRESS],
@@ -66,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> bool
             app_version=__version__,
         ),
         house_key=entry.data.get(HOUSE_KEY),
-        token_listener=token_listener,
+        token_refresh_callback=update_token,
     )
 
     # Fetch devices
@@ -174,61 +173,54 @@ class DeviceListener(SharingDeviceListener):
             device_registry.async_remove_device(device_entry.id)
 
 
-class TokenListener(SharingTokenListener):
-    """Token listener for upstream token updates."""
+@callback
+def update_token(
+    self, is_refresh: bool, token_info: dict[str, Any] | None = None
+) -> None:
+    """Update token info in the config entry."""
+    _LOGGER.info("Updating token: %s %s", is_refresh, token_info)
 
-    def __init__(self, hass: HomeAssistant, entry: DuwiConfigEntry) -> None:
-        """Initialize the TokenListener."""
-        self.hass = hass
-        self.entry = entry
+    if is_refresh:
+        # Prepare data for updating the config entry
+        data = {
+            PHONE: self.entry.data[PHONE] if self.entry.data is not None else None,
+            PASSWORD: (
+                self.entry.data[PASSWORD] if self.entry.data is not None else None
+            ),
+            HOUSE_KEY: (
+                self.entry.data[HOUSE_KEY] if self.entry.data is not None else None
+            ),
+            ADDRESS: (
+                self.entry.data[ADDRESS] if self.entry.data is not None else None
+            ),
+            WS_ADDRESS: (
+                self.entry.data[WS_ADDRESS] if self.entry.data is not None else None
+            ),
+            APP_KEY: (
+                self.entry.data[APP_KEY] if self.entry.data is not None else None
+            ),
+            APP_SECRET: (
+                self.entry.data[APP_SECRET] if self.entry.data is not None else None
+            ),
+            HOUSE_NO: (
+                self.entry.data[HOUSE_NO] if self.entry.data is not None else None
+            ),
+            ACCESS_TOKEN: (
+                token_info[ACCESS_TOKEN] if token_info is not None else None
+            ),
+            REFRESH_TOKEN: (
+                token_info[REFRESH_TOKEN] if token_info is not None else None
+            ),
+        }
+    else:
+        raise ConfigEntryAuthFailed(
+            "Failed to refresh token, please try reloading the integration or re-adding it."
+        )
 
-    def update_token(
-        self, is_refresh: bool, token_info: dict[str, Any] | None = None
-    ) -> None:
-        """Update token info in the config entry."""
-        _LOGGER.info("Updating token: %s %s", is_refresh, token_info)
+    @callback
+    def async_update_entry() -> None:
+        """Update the configuration entry with new token data."""
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
 
-        if is_refresh:
-            # Prepare data for updating the config entry
-            data = {
-                PHONE: self.entry.data[PHONE] if self.entry.data is not None else None,
-                PASSWORD: (
-                    self.entry.data[PASSWORD] if self.entry.data is not None else None
-                ),
-                HOUSE_KEY: (
-                    self.entry.data[HOUSE_KEY] if self.entry.data is not None else None
-                ),
-                ADDRESS: (
-                    self.entry.data[ADDRESS] if self.entry.data is not None else None
-                ),
-                WS_ADDRESS: (
-                    self.entry.data[WS_ADDRESS] if self.entry.data is not None else None
-                ),
-                APP_KEY: (
-                    self.entry.data[APP_KEY] if self.entry.data is not None else None
-                ),
-                APP_SECRET: (
-                    self.entry.data[APP_SECRET] if self.entry.data is not None else None
-                ),
-                HOUSE_NO: (
-                    self.entry.data[HOUSE_NO] if self.entry.data is not None else None
-                ),
-                ACCESS_TOKEN: (
-                    token_info[ACCESS_TOKEN] if token_info is not None else None
-                ),
-                REFRESH_TOKEN: (
-                    token_info[REFRESH_TOKEN] if token_info is not None else None
-                ),
-            }
-        else:
-            raise ConfigEntryAuthFailed(
-                "Failed to refresh token, please try reloading the integration or re-adding it."
-            )
-
-        @callback
-        def async_update_entry() -> None:
-            """Update the configuration entry with new token data."""
-            self.hass.config_entries.async_update_entry(self.entry, data=data)
-
-        # Schedule the asynchronous update job
-        self.hass.add_job(async_update_entry)
+    # Schedule the asynchronous update job
+    self.hass.add_job(async_update_entry)
