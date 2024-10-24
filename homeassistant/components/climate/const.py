@@ -92,6 +92,10 @@ SWING_BOTH = "both"
 SWING_VERTICAL = "vertical"
 SWING_HORIZONTAL = "horizontal"
 
+# Possible horizontal swing state
+SWING_HORIZONTAL_ON = "on"
+SWING_HORIZONTAL_OFF = "off"
+
 
 class HVACAction(StrEnum):
     """HVAC action for climate devices."""
@@ -134,6 +138,8 @@ ATTR_HVAC_MODES = "hvac_modes"
 ATTR_HVAC_MODE = "hvac_mode"
 ATTR_SWING_MODES = "swing_modes"
 ATTR_SWING_MODE = "swing_mode"
+ATTR_SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
+ATTR_SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_TARGET_TEMP_STEP = "target_temp_step"
@@ -153,6 +159,7 @@ SERVICE_SET_PRESET_MODE = "set_preset_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 SERVICE_SET_HVAC_MODE = "set_hvac_mode"
 SERVICE_SET_SWING_MODE = "set_swing_mode"
+SERVICE_SET_SWING_HORIZONTAL_MODE = "set_swing_horizontal_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
@@ -168,6 +175,7 @@ class ClimateEntityFeature(IntFlag):
     AUX_HEAT = 64
     TURN_OFF = 128
     TURN_ON = 256
+    SWING_HORIZONTAL_MODE = 512
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
