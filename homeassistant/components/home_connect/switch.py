@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 APPLIANCES_WITH_PROGRAMS = (
     "CleaningRobot",
-    "CoffeeMachine",
+    "CoffeeMaker",
     "Dishwasher",
     "Dryer",
     "Hood",
