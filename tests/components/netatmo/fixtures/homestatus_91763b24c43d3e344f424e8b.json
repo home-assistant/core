@@ -161,9 +161,9 @@
           "rf_strength": 58,
           "last_seen": 1642698124,
           "last_activity": 1627757310,
-          "reachable": false,
+          "reachable": true,
           "bridge": "12:34:56:00:f1:62",
-          "status": "no_news"
+          "status": "closed"
         },
         {
           "id": "12:34:56:00:e3:9b",
