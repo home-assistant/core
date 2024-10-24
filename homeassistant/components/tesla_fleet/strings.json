@@ -415,7 +415,7 @@
         "name": "Odometer"
       },
       "island_status": {
-        "name": "Grid Status",
+        "name": "Grid status",
         "state": {
           "on_grid": "[%key:common::state::connected%]",
           "off_grid": "[%key:common::state::disconnected%]",
