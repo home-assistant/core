@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from notifications_android_tv.notifications import ConnectError
+from notifications_android_tv import ConnectError
 
 from homeassistant import config_entries
 from homeassistant.components.nfandroidtv.const import DOMAIN
