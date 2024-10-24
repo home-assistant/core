@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from spotifyaio import (
     ContextType,
@@ -15,13 +16,20 @@ from spotifyaio import (
 )
 from spotifyaio.models import AudioFeatures
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .models import SpotifyData
+
 _LOGGER = logging.getLogger(__name__)
+
+
+type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 @dataclass
@@ -45,6 +53,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
     """Class to manage fetching Spotify data."""
 
     current_user: UserProfile
+    config_entry: SpotifyConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: SpotifyClient) -> None:
         """Initialize."""
