@@ -170,7 +170,7 @@ class ThinQMQTT:
         _LOGGER.debug("async_handle_device_event: message=%s", message)
         unique_id = (
             f"{message["deviceId"]}_{list(message["report"].keys())[0]}"
-            if (message["deviceType"]) == DeviceType.WASHTOWER
+            if message["deviceType"] == DeviceType.WASHTOWER
             else message["deviceId"]
         )
         coordinator = self.coordinators.get(unique_id)
