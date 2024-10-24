@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DATA
 
 # These are the available sensors
 SENSOR_TYPES = [
@@ -84,7 +84,7 @@ def setup_platform(
         return
 
     sensors = config[CONF_MONITORED_CONDITIONS]
-    bloomsky = hass.data[DOMAIN]
+    bloomsky = hass.data[DATA]
 
     for device in bloomsky.devices.values():
         for variable in sensors:

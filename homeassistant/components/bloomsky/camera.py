@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DATA
 
 
 def setup_platform(
@@ -24,7 +24,7 @@ def setup_platform(
     if discovery_info is not None:
         return
 
-    bloomsky = hass.data[DOMAIN]
+    bloomsky = hass.data[DATA]
 
     for device in bloomsky.devices.values():
         add_entities([BloomSkyCamera(bloomsky, device)])
