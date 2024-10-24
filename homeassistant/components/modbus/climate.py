@@ -44,7 +44,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
+    CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
@@ -70,6 +72,7 @@ from .const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
@@ -252,6 +255,16 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
             self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
+
+            if CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE in config:
+                self._hvac_onoff_register_write_type = config[
+                    CONF_HVAC_ONOFF_REGISTER_WRITE_TYPE
+                ]
+            elif self._hvac_onoff_write_registers:
+                self._hvac_onoff_register_write_type = CALL_TYPE_WRITE_REGISTERS
+            else:
+                self._hvac_onoff_register_write_type = CALL_TYPE_WRITE_REGISTER
+
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
         else:
@@ -268,21 +281,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
             # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
-            if self._hvac_onoff_write_registers:
-                await self._hub.async_pb_call(
-                    self._slave,
-                    self._hvac_onoff_register,
-                    [0 if hvac_mode == HVACMode.OFF else 1],
-                    CALL_TYPE_WRITE_REGISTERS,
-                )
-            else:
-                await self._hub.async_pb_call(
-                    self._slave,
-                    self._hvac_onoff_register,
-                    0 if hvac_mode == HVACMode.OFF else 1,
-                    CALL_TYPE_WRITE_REGISTER,
-                )
-
+            await self._hub.async_pb_call(
+                self._slave,
+                self._hvac_onoff_register,
+                0 if hvac_mode == HVACMode.OFF else 1,
+                self._hvac_onoff_register_write_type,
+            )
         if self._hvac_mode_register is not None:
             # Write a value to the mode register for the desired mode.
             for value, mode in self._hvac_mode_mapping:
@@ -473,10 +477,17 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value
         # in the mode register.
+
         if self._hvac_onoff_register is not None:
-            onoff = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
-            )
+            if self._hvac_onoff_register_write_type == CALL_TYPE_WRITE_COIL:
+                onoff = await self._async_read_register(
+                    CALL_TYPE_COIL, self._hvac_onoff_register, raw=True
+                )
+            else:
+                onoff = await self._async_read_register(
+                    CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
+                )
+
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
 
@@ -497,6 +508,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             # Return the raw value read from the register, do not change
             # the object's state
             self._attr_available = True
+
+            if register_type in (CALL_TYPE_COIL):
+                return bool(result.bits[0] & 1)
             return int(result.registers[0])
 
         # The regular handling of the value
