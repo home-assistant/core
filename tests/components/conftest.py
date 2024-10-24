@@ -478,10 +478,6 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
-            "homeassistant.components.hassio.update.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-        patch(
             "homeassistant.components.hassio.get_supervisor_client",
             return_value=supervisor_client,
         ),
