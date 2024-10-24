@@ -1,10 +1,12 @@
 """Tesla Fleet Data Coordinator."""
 
 from datetime import datetime, timedelta
+from random import randint
+from time import time
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
-from tesla_fleet_api.const import VehicleDataEndpoint
+from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     LoginRequired,
@@ -19,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, TeslaFleetState
+from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
 VEHICLE_INTERVAL_SECONDS = 90
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
@@ -27,6 +29,7 @@ VEHICLE_WAIT = timedelta(minutes=15)
 
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
+ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -180,6 +183,63 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         self.updated_once = True
         return data
+
+
+class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site history import and export from the Tesla Fleet API."""
+
+    updated_once: bool
+
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+        """Initialize Tesla Fleet Energy Site History coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name=f"Tesla Fleet Energy History {api.energy_site_id}",
+            update_interval=timedelta(seconds=300),
+        )
+        self.api = api
+        self.data = {}
+        self.updated_once = False
+
+    async def async_config_entry_first_refresh(self) -> None:
+        """Set up the data coordinator."""
+        await super().async_config_entry_first_refresh()
+
+        # Calculate seconds until next 5 minute period plus a random delay
+        delta = randint(310, 330) - (int(time()) % 300)
+        self.logger.debug("Scheduling next %s refresh in %s seconds", self.name, delta)
+        self.update_interval = timedelta(seconds=delta)
+        self._schedule_refresh()
+        self.update_interval = ENERGY_HISTORY_INTERVAL
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site history data using Tesla Fleet API."""
+
+        try:
+            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
+        except RateLimited as e:
+            LOGGER.warning(
+                "%s rate limited, will retry in %s seconds",
+                self.name,
+                e.data.get("after"),
+            )
+            if "after" in e.data:
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
+            return self.data
+        except (InvalidToken, OAuthExpired, LoginRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+        self.updated_once = True
+
+        # Add all time periods together
+        output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
+        for period in data.get("time_series", []):
+            for key in ENERGY_HISTORY_FIELDS:
+                output[key] += period.get(key, 0)
+
+        return output
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
