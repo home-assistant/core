@@ -6,7 +6,7 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import partial
@@ -18,7 +18,7 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
-from propcache import cached_property
+from propcache import cached_property, under_cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -166,6 +166,13 @@ class Image:
 
     content_type: str = attr.ib()
     content: bytes = attr.ib()
+
+
+@dataclass(frozen=True)
+class CameraCapabilities:
+    """Camera capabilities."""
+
+    frontend_stream_types: set[StreamType]
 
 
 @bind_hass
@@ -345,6 +352,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
     websocket_api.async_register_command(hass, ws_get_client_config)
+    websocket_api.async_register_command(hass, ws_camera_capabilities)
 
     await component.async_setup(config)
 
@@ -455,6 +463,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def __init__(self) -> None:
         """Initialize a camera."""
+        self._cache: dict[str, Any] = {}
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
@@ -718,6 +727,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         new_providers = await self._async_get_supported_webrtc_providers()
         self._webrtc_providers = new_providers
         if old_providers != new_providers:
+            self._invalidate_camera_capabilities_cache()
             self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_providers(
@@ -751,6 +761,31 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         config.configuration.ice_servers.extend(ice_servers)
 
         return config
+
+    @callback
+    def _invalidate_camera_capabilities_cache(self) -> None:
+        """Invalidate the camera capabilities cache."""
+        self._cache.pop("camera_capabilities", None)
+
+    @final
+    @under_cached_property
+    def camera_capabilities(self) -> CameraCapabilities:
+        """Return the camera capabilities."""
+        frontend_stream_types = set()
+        if CameraEntityFeature.STREAM in self.supported_features_compat:
+            if (
+                type(self).async_handle_web_rtc_offer
+                != Camera.async_handle_web_rtc_offer
+            ):
+                # The camera has a native WebRTC implementation
+                frontend_stream_types.add(StreamType.WEB_RTC)
+            else:
+                frontend_stream_types.add(StreamType.HLS)
+
+                if self._webrtc_providers:
+                    frontend_stream_types.add(StreamType.WEB_RTC)
+
+        return CameraCapabilities(frontend_stream_types)
 
 
 class CameraView(HomeAssistantView):
@@ -840,6 +875,28 @@ class CameraMjpegStream(CameraView):
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest from err
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/capabilities",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_capabilities(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get camera capabilities websocket command.
+
+    Async friendly.
+    """
+    try:
+        camera = get_camera_from_entity_id(hass, msg["entity_id"])
+        connection.send_result(msg["id"], asdict(camera.camera_capabilities))
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error requesting camera capabilities: %s", ex)
+        connection.send_error(msg["id"], "camera_capabilities_failed", str(ex))
 
 
 @websocket_api.websocket_command(

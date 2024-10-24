@@ -17,6 +17,8 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
+from .common import add_webrtc_provider
+
 from tests.typing import WebSocketGenerator
 
 
@@ -76,23 +78,7 @@ async def test_async_register_webrtc_provider_twice(
 ) -> None:
     """Test registering a WebRTC provider twice should raise."""
     await async_setup_component(hass, "camera", {})
-
-    class TestProvider(CameraWebRTCProvider):
-        """Test provider."""
-
-        async def async_is_supported(self, stream_source: str) -> bool:
-            """Determine if the provider supports the stream source."""
-            return True
-
-        async def async_handle_web_rtc_offer(
-            self, camera: Camera, offer_sdp: str
-        ) -> str | None:
-            """Handle the WebRTC offer and return an answer."""
-            return "answer"
-
-    provider = TestProvider()
-    async_register_webrtc_provider(hass, provider)
-    await hass.async_block_till_done()
+    provider = await add_webrtc_provider(hass)
 
     with pytest.raises(ValueError, match="Provider already registered"):
         async_register_webrtc_provider(hass, provider)
