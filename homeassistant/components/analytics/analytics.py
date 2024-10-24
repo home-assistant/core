@@ -414,6 +414,7 @@ def async_devices_payload(hass: HomeAssistant) -> dict:
         new_indexes[device.id] = len(devices)
         devices.append(
             {
+                "integration": config_entry.domain,
                 "manufacturer": device.manufacturer,
                 "model_id": device.model_id,
                 "model": device.model,
