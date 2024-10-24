@@ -1,0 +1,18 @@
+{
+        "printer-state": "idle",
+        "printer-name": "Test Legacy Printer",
+        "printer-location": null,
+        "printer-make-and-model": "Test C822 Series",
+        "printer-uri-supported": [
+          "http://192.168.1.32/ipp",
+          "http://192.168.1.32:631/ipp",
+          "http://192.168.1.32/ipp/lp",
+          "http://192.168.1.32:631/ipp/lp",
+          "ipp://192.168.1.32/ipp",
+          "ipp://192.168.1.32:631/ipp",
+          "ipp://192.168.1.32/ipp/lp",
+          "ipp://192.168.1.32:631/ipp/lp"
+        ],
+        "printer-info": "PCL,XPS,IBMPPR,EPSONFX",
+        "printer-more-info": null
+}
