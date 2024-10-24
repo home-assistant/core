@@ -4,6 +4,9 @@
       "electricity_price": {
         "name": "Electricity price"
       },
+      "electricity_price_excl_tax": {
+        "name": "Electricity price excluding tax"
+      },
       "month_cost": {
         "name": "Monthly cost"
       },
