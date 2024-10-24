@@ -27,6 +27,7 @@ from .const import (
     ATTR_RETRY,
     ATTR_SOUND,
     ATTR_TIMESTAMP,
+    ATTR_TTL,
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
@@ -76,6 +77,7 @@ class PushoverNotificationService(BaseNotificationService):
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
+        ttl = data.get(ATTR_TTL)
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
@@ -112,6 +114,7 @@ class PushoverNotificationService(BaseNotificationService):
                 timestamp,
                 sound,
                 html,
+                ttl,
             )
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
