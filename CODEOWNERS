@@ -749,6 +749,8 @@ build.json @home-assistant/supervisor
 /tests/components/ista_ecotrend/ @tr4nt0r
 /homeassistant/components/isy994/ @bdraco @shbatm
 /tests/components/isy994/ @bdraco @shbatm
+/homeassistant/components/ituran/ @shmuelzon
+/tests/components/ituran/ @shmuelzon
 /homeassistant/components/izone/ @Swamp-Ig
 /tests/components/izone/ @Swamp-Ig
 /homeassistant/components/jellyfin/ @j-stienstra @ctalkington
