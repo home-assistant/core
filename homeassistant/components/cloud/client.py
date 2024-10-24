@@ -281,6 +281,10 @@ class CloudClient(Interface):
             self._google_config.async_deinitialize()
         self._google_config = None
 
+        if self._cloud_ice_servers_listener:
+            self._cloud_ice_servers_listener()
+            self._cloud_ice_servers_listener = None
+
     @callback
     def user_message(self, identifier: str, title: str, message: str) -> None:
         """Create a message for user to UI."""
