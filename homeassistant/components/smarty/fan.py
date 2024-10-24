@@ -10,7 +10,6 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -19,6 +18,7 @@ from homeassistant.util.scaling import int_states_in_range
 
 from . import SmartyConfigEntry
 from .coordinator import SmartyCoordinator
+from .entity import SmartyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities([SmartyFan(coordinator)])
 
 
-class SmartyFan(CoordinatorEntity[SmartyCoordinator], FanEntity):
+class SmartyFan(SmartyEntity, FanEntity):
     """Representation of a Smarty Fan."""
 
     _attr_icon = "mdi:air-conditioner"
