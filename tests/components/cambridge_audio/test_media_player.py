@@ -376,13 +376,14 @@ async def test_media_volume(
     )
 
     mock_stream_magic_client.set_volume.assert_called_once_with(30)
-  
+
+
 async def test_play_media_preset_item_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_stream_magic_client: AsyncMock,
 ) -> None:
-  """Test playing media with a preset item id."""
+    """Test playing media with a preset item id."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
