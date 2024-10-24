@@ -9,11 +9,9 @@ from enum import Enum
 from typing import cast
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.ice_servers import IceServer
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
-from homeassistant.components.camera.webrtc import RTCIceServer, register_ice_server
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     CONF_DESCRIPTION,
@@ -314,29 +312,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     async def _on_initialized() -> None:
-        """Perform actions when cloud is initialized."""
-
+        """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
-
-        if cloud.is_logged_in and not cloud.subscription_expired:
-
-            async def register_cloud_ice_server(
-                ice_server: IceServer,
-            ) -> Callable[[], None]:
-                """Register cloud ice server."""
-
-                async def get_ice_server() -> RTCIceServer:
-                    return RTCIceServer(
-                        urls=ice_server["urls"],
-                        username=ice_server["username"],
-                        credential=ice_server["credential"],
-                    )
-
-                return register_ice_server(hass, get_ice_server)
-
-            await cloud.ice_servers.async_register_ice_servers_listener(
-                register_cloud_ice_server
-            )
 
     cloud.register_on_start(_on_start)
     cloud.iot.register_on_connect(_on_connect)
