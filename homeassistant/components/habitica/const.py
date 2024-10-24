@@ -25,7 +25,15 @@ UNIT_TASKS = "tasks"
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_SKILL = "skill"
 ATTR_TASK = "task"
+ATTR_TYPE = "type"
+ATTR_PRIORITY = "priority"
+ATTR_TAG = "tag"
+ATTR_KEYWORD = "keyword"
+
 SERVICE_CAST_SKILL = "cast_skill"
+SERVICE_GET_TASKS = "get_tasks"
+
+PRIORITIES = {"trivial": 0.1, "easy": 1, "medium": 1.5, "hard": 2}
 
 WARRIOR = "warrior"
 ROGUE = "rogue"
