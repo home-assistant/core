@@ -463,6 +463,8 @@ build.json @home-assistant/supervisor
 /tests/components/filesize/ @gjohansson-ST
 /homeassistant/components/filter/ @dgomes
 /tests/components/filter/ @dgomes
+/homeassistant/components/fing/ @Lorenzo-Gasparini
+/tests/components/fing/ @Lorenzo-Gasparini
 /homeassistant/components/fireservicerota/ @cyberjunky
 /tests/components/fireservicerota/ @cyberjunky
 /homeassistant/components/firmata/ @DaAwesomeP
