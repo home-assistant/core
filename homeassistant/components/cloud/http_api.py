@@ -42,6 +42,7 @@ from .const import (
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
+    PREF_ENABLE_CLOUD_ICE_SERVERS,
     PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
@@ -448,6 +449,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
             vol.Coerce(tuple), validate_language_voice
         ),
         vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
+        vol.Optional(PREF_ENABLE_CLOUD_ICE_SERVERS): bool,
     }
 )
 @websocket_api.async_response
