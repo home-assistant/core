@@ -4,7 +4,6 @@ import logging
 
 from aioautomower.session import AutomowerSession
 from aiohttp import ClientResponseError
-import aiozoneinfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -53,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
     time_zone_str = str(dt_util.DEFAULT_TIME_ZONE)
     automower_api = AutomowerSession(
         api_api,
-        await aiozoneinfo.async_get_time_zone(time_zone_str),
+        await dt_util.async_get_time_zone(time_zone_str),
     )
     try:
         await api_api.async_get_access_token()
