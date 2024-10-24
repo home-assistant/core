@@ -163,19 +163,3 @@ async def test_import_unknown_error(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
-
-
-async def test_import_existing_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test we handle existing entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "192.168.0.2", CONF_NAME: "Smarty"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
