@@ -412,7 +412,12 @@ class StatisticsSensor(SensorEntity):
             self.async_write_ha_state()
 
     async def _async_stats_sensor_startup(self) -> None:
-        """Add listener and get recorded state."""
+        """Add listener and get recorded state.
+
+        Historical data needs to be loaded from the database first before we
+        can start accepting new incoming changes.
+        This is needed to ensure that the buffer is properly sorted by time.
+        """
         _LOGGER.debug("Startup for %s", self.entity_id)
         if "recorder" in self.hass.config.components:
             await self._initialize_from_database()
@@ -439,14 +444,6 @@ class StatisticsSensor(SensorEntity):
             return
 
         try:
-            if len(self.ages) > 0:
-                if new_state.last_updated < self.ages[-1]:
-                    _LOGGER.error(
-                        "Value added to queue is older than the newest one %s / %s, it will be ignored",
-                        new_state.last_updated,
-                        self.ages[-1],
-                    )
-                    return
             if self.is_binary:
                 assert new_state.state in ("on", "off")
                 self.states.append(new_state.state == "on")
@@ -715,7 +712,9 @@ class StatisticsSensor(SensorEntity):
         """
 
         value = self._state_characteristic_fn()
-        _LOGGER.debug("Updating value %s\n %s\n => %s", self.states, self.ages, value)
+        _LOGGER.debug(
+            "Updating value: states: %s, ages: %s => %s", self.states, self.ages, value
+        )
         if self._state_characteristic not in STATS_NOT_A_NUMBER:
             with contextlib.suppress(TypeError):
                 value = round(cast(float, value), self._precision)
@@ -748,9 +747,7 @@ class StatisticsSensor(SensorEntity):
                     * (self.states[i] + self.states[i - 1])
                     * (self.ages[i] - self.ages[i - 1]).total_seconds()
                 )
-                assert (self.ages[i] - self.ages[i - 1]).total_seconds() >= 0
             age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
-            assert age_range_seconds >= 0
             return area / age_range_seconds
         return None
 
