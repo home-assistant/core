@@ -81,12 +81,12 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "slow": "mdi:circle-medium",
-              "low": "mdi:circle-medium",
-              "mid": "mdi:circle-medium",
-              "high": "mdi:circle-medium",
-              "power": "mdi:circle-medium",
-              "auto": "mdi:circle-medium"
+              "slow": "mdi:fan-chevron-down",
+              "low": "mdi:fan-speed-1",
+              "mid": "mdi:fan-speed-2",
+              "high": "mdi:fan-speed-3",
+              "power": "mdi:fan-chevron-up",
+              "auto": "mdi:fan-auto"
             }
           }
         }
