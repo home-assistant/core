@@ -42,6 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_interval=SCAN_INTERVAL,
         update_method=twentemilieu.update,
