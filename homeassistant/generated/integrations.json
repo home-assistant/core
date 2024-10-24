@@ -698,12 +698,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "bloomsky": {
-      "name": "BloomSky",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "blue_current": {
       "name": "Blue Current",
       "integration_type": "hub",
@@ -4325,8 +4319,8 @@
     },
     "onkyo": {
       "name": "Onkyo",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "onvif": {
@@ -5669,7 +5663,7 @@
     "smarty": {
       "name": "Salda Smarty",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "smhi": {

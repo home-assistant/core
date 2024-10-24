@@ -9,12 +9,28 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
 
+# Default configuration for HA
+# - Api is listening only on localhost
+# - Disable rtsp listener
+# - Clear default ice servers
+_GO2RTC_CONFIG = """
+api:
+  listen: "127.0.0.1:1984"
+
+rtsp:
+  listen: ""
+
+webrtc:
+  ice_servers: []
+"""
+
 
 def _create_temp_file() -> str:
     """Create temporary config file."""
     # Set delete=False to prevent the file from being deleted when the file is closed
     # Linux is clearing tmp folder on reboot, so no need to delete it manually
-    with NamedTemporaryFile(prefix="go2rtc", suffix=".yaml", delete=False) as file:
+    with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
+        file.write(_GO2RTC_CONFIG.encode())
         return file.name
 
 
@@ -42,8 +58,6 @@ class Server:
 
         self._process = await asyncio.create_subprocess_exec(
             self._binary,
-            "-c",
-            "webrtc.ice_servers=[]",
             "-c",
             config_file,
             stdout=asyncio.subprocess.PIPE,
