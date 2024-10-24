@@ -44,6 +44,7 @@ FLOWS = {
         "airvisual_pro",
         "airzone",
         "airzone_cloud",
+        "ais_tracker",
         "alarmdecoder",
         "amberelectric",
         "ambient_network",

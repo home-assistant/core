@@ -1,0 +1,10 @@
+{
+  "domain": "ais_tracker",
+  "name": "AIS tracker",
+  "codeowners": ["@mib1185"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ais_tracker",
+  "iot_class": "local_push",
+  "loggers": ["pyais"],
+  "requirements": ["pyais==2.7.1"]
+}
