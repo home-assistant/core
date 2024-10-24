@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import motionmount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_PIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
@@ -26,6 +26,10 @@ class MotionMountEntity(Entity):
     def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
         """Initialize general MotionMount entity."""
         self.mm = mm
+
+        # We store the pin, as we might need it during reconnect
+        self.pin = config_entry.data[CONF_PIN]
+
         mac = format_mac(mm.mac.hex())
 
         # Create a base unique id
@@ -80,6 +84,8 @@ class MotionMountEntity(Entity):
 
         Returns false if the connection failed to be ensured.
         """
+        if TYPE_CHECKING:
+            assert self.platform.config_entry
 
         if self.mm.is_connected:
             return True
@@ -91,6 +97,19 @@ class MotionMountEntity(Entity):
             # The purpose of `_ensure_connected()` is only to make sure we try to
             # reconnect, where failures should not be logged each time
             return False
-        else:
-            _LOGGER.warning("Successfully reconnected to MotionMount")
-            return True
+
+        # Check we're properly authenticated or be able to become so
+        if not self.mm.is_authenticated:
+            if self.pin is None:
+                await self.mm.disconnect()
+                self.platform.config_entry.async_start_reauth(self.hass)
+                return False
+            await self.mm.authenticate(self.pin)
+            if not self.mm.is_authenticated:
+                self.pin = None
+                await self.mm.disconnect()
+                self.platform.config_entry.async_start_reauth(self.hass)
+                return False
+
+        _LOGGER.warning("Successfully reconnected to MotionMount")
+        return True
