@@ -22,13 +22,14 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CAMBRIDGE_MEDIA_TYPE_AIRABLE,
     CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
     CAMBRIDGE_MEDIA_TYPE_PRESET,
+    DOMAIN,
 )
 from .entity import CambridgeAudioEntity, command
 
@@ -306,17 +307,30 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
             CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
         }:
             raise HomeAssistantError(
-                f"Unsupported media type for Cambridge Audio device: {media_type}"
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={"media_type": media_type},
             )
 
         if media_type == CAMBRIDGE_MEDIA_TYPE_PRESET:
-            preset_id = int(media_id)
+            try:
+                preset_id = int(media_id)
+            except ValueError as ve:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="preset_non_integer",
+                    translation_placeholders={"preset_id": media_id},
+                ) from ve
             preset = None
             for _preset in self.client.preset_list.presets:
                 if _preset.preset_id == preset_id:
                     preset = _preset
             if not preset:
-                raise ValueError(f"Missing preset for media_id: {media_id}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_preset",
+                    translation_placeholders={"preset_id": media_id},
+                )
             await self.client.recall_preset(preset.preset_id)
 
         if media_type == CAMBRIDGE_MEDIA_TYPE_AIRABLE:
