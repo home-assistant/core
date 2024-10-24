@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import ConfigEntryAuth
 from .const import (
+    APPLIANCES_WITH_PROGRAMS,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
     BSH_CHILD_LOCK_STATE,
@@ -29,18 +30,6 @@ from .const import (
 from .entity import HomeConnectDevice, HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-APPLIANCES_WITH_PROGRAMS = (
-    "CleaningRobot",
-    "CoffeeMachine",
-    "Dishwasher",
-    "Dryer",
-    "Hood",
-    "Oven",
-    "WarmingDrawer",
-    "Washer",
-    "WasherDryer",
-)
 
 
 SWITCHES = (
