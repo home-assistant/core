@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from ttn_client import TTNSensorValue
+from ttn_client import TTNBinarySensorValue, TTNDeviceTrackerValue, TTNSensorValue
 
 from homeassistant.components.thethingsnetwork.const import (
     CONF_APP_ID,
@@ -20,43 +20,101 @@ API_KEY = "my_api_key"
 
 DEVICE_ID = "my_device"
 DEVICE_ID_2 = "my_device_2"
-DEVICE_FIELD = "a_field"
-DEVICE_FIELD_2 = "a_field_2"
-DEVICE_FIELD_VALUE = 42
+SENSOR_FIELD = "a_sensor"
+SENSOR_FIELD_2 = "a_sensor"
+SENSOR_FIELD_VALUE = 42
+BINARY_SENSOR_FIELD = "a_binary_sensor"
+BINARY_SENSOR_FIELD_2 = "a_binary_sensor"
+BINARY_SENSOR_FIELD_VALUE = True
+TRACKER_FIELD = "gps"
+TRACKER_FIELD_2 = "gps"
+TRACKER_FIELD_VALUE = {
+    "longitude": 1.23,
+    "latitude": 4.56,
+    "altitude": 7.89,
+}
 
 DATA = {
     DEVICE_ID: {
-        DEVICE_FIELD: TTNSensorValue(
+        SENSOR_FIELD: TTNSensorValue(
             {
                 "end_device_ids": {"device_id": DEVICE_ID},
                 "received_at": "2024-03-11T08:49:11.153738893Z",
             },
-            DEVICE_FIELD,
-            DEVICE_FIELD_VALUE,
-        )
+            SENSOR_FIELD,
+            SENSOR_FIELD_VALUE,
+        ),
+        BINARY_SENSOR_FIELD: TTNBinarySensorValue(
+            {
+                "end_device_ids": {"device_id": DEVICE_ID},
+                "received_at": "2024-03-11T08:49:11.153738893Z",
+            },
+            BINARY_SENSOR_FIELD,
+            BINARY_SENSOR_FIELD_VALUE,
+        ),
+        TRACKER_FIELD: TTNDeviceTrackerValue(
+            {
+                "end_device_ids": {"device_id": DEVICE_ID},
+                "received_at": "2024-03-11T08:49:11.153738893Z",
+            },
+            TRACKER_FIELD,
+            TRACKER_FIELD_VALUE,
+        ),
     }
 }
 
 DATA_UPDATE = {
     DEVICE_ID: {
-        DEVICE_FIELD: TTNSensorValue(
+        SENSOR_FIELD: TTNSensorValue(
             {
                 "end_device_ids": {"device_id": DEVICE_ID},
                 "received_at": "2024-03-12T08:49:11.153738893Z",
             },
-            DEVICE_FIELD,
-            DEVICE_FIELD_VALUE,
-        )
+            SENSOR_FIELD,
+            SENSOR_FIELD_VALUE,
+        ),
+        BINARY_SENSOR_FIELD: TTNBinarySensorValue(
+            {
+                "end_device_ids": {"device_id": DEVICE_ID},
+                "received_at": "2024-03-11T08:49:11.153738893Z",
+            },
+            BINARY_SENSOR_FIELD,
+            BINARY_SENSOR_FIELD_VALUE,
+        ),
+        TRACKER_FIELD: TTNDeviceTrackerValue(
+            {
+                "end_device_ids": {"device_id": DEVICE_ID},
+                "received_at": "2024-03-11T08:49:11.153738893Z",
+            },
+            TRACKER_FIELD,
+            TRACKER_FIELD_VALUE,
+        ),
     },
     DEVICE_ID_2: {
-        DEVICE_FIELD_2: TTNSensorValue(
+        SENSOR_FIELD_2: TTNSensorValue(
             {
                 "end_device_ids": {"device_id": DEVICE_ID_2},
                 "received_at": "2024-03-12T08:49:11.153738893Z",
             },
-            DEVICE_FIELD_2,
-            DEVICE_FIELD_VALUE,
-        )
+            SENSOR_FIELD_2,
+            SENSOR_FIELD_VALUE,
+        ),
+        BINARY_SENSOR_FIELD_2: TTNBinarySensorValue(
+            {
+                "end_device_ids": {"device_id": DEVICE_ID_2},
+                "received_at": "2024-03-11T08:49:11.153738893Z",
+            },
+            BINARY_SENSOR_FIELD_2,
+            BINARY_SENSOR_FIELD_VALUE,
+        ),
+        TRACKER_FIELD_2: TTNDeviceTrackerValue(
+            {
+                "end_device_ids": {"device_id": DEVICE_ID_2},
+                "received_at": "2024-03-11T08:49:11.153738893Z",
+            },
+            TRACKER_FIELD_2,
+            TRACKER_FIELD_VALUE,
+        ),
     },
 }
 
