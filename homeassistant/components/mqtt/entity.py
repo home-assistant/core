@@ -76,6 +76,7 @@ from .const import (
     CONF_CONNECTIONS,
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
+    CONF_ENTITY_PICTURE,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
     CONF_JSON_ATTRS_TEMPLATE,
@@ -1211,6 +1212,7 @@ class MqttEntity(
             config.get(CONF_ENABLED_BY_DEFAULT)
         )
         self._attr_icon = config.get(CONF_ICON)
+        self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)
         # Set the entity name if needed
         self._set_entity_name(config)
 
