@@ -138,7 +138,14 @@ async def setup_evohome(
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
         patch("evohomeasync2.broker.Broker.get", mock_get_factory(install)),
     ):
-        mock_client.side_effect = EvohomeClient
+        evo: EvohomeClient | None = None
+
+        def evohome_client(*args, **kwargs) -> EvohomeClient:
+            nonlocal evo
+            evo = EvohomeClient(*args, **kwargs)
+            return evo
+
+        mock_client.side_effect = evohome_client
 
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
@@ -150,6 +157,19 @@ async def setup_evohome(
 
         assert isinstance(mock_client.call_args.kwargs["session"], ClientSession)
 
-        assert mock_client.account_info is not None
+        assert evo and evo.account_info is not None
 
+        mock_client.return_value = evo
+        yield mock_client
+
+
+@pytest.fixture
+async def evohome(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+) -> AsyncGenerator[MagicMock]:
+    """Return the mocked evohome client for this install fixture."""
+
+    async for mock_client in setup_evohome(hass, config, install=install):
         yield mock_client
