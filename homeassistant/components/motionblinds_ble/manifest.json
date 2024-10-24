@@ -14,5 +14,6 @@
   "integration_type": "device",
   "iot_class": "assumed_state",
   "loggers": ["motionblindsble"],
+  "quality_scale": "platinum",
   "requirements": ["motionblindsble==0.1.2"]
 }
