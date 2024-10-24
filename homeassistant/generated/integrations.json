@@ -1515,6 +1515,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "eheimdigital": {
+      "name": "EHEIM Digital",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "electrasmart": {
       "name": "Electra Smart",
       "integration_type": "hub",
