@@ -14,6 +14,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.util import dt as dt_util
 
 from . import api
 from .const import DOMAIN
@@ -48,7 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         aiohttp_client.async_get_clientsession(hass),
         session,
     )
-    automower_api = AutomowerSession(api_api)
+    time_zone_str = str(dt_util.DEFAULT_TIME_ZONE)
+    automower_api = AutomowerSession(
+        api_api,
+        await dt_util.async_get_time_zone(time_zone_str),
+    )
     try:
         await api_api.async_get_access_token()
     except ClientResponseError as err:
