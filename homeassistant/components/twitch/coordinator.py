@@ -82,23 +82,23 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             self.session.token["refresh_token"],
             False,
         )
-        data = {}
-        streams: list[Stream] = [
-            s
+        data: dict[str, TwitchUpdate] = {}
+        streams: dict[str, Stream] = {
+            s.user_id: s
             async for s in self.twitch.get_followed_streams(
                 user_id=self.current_user.id, first=100
             )
-        ]
-        follows: list[FollowedChannel] = [
-            f
+        }
+        follows: dict[str, FollowedChannel] = {
+            f.broadcaster_id: f
             async for f in await self.twitch.get_followed_channels(
                 user_id=self.current_user.id, first=100
             )
-        ]
+        }
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
-            stream = next((s for s in streams if s.user_id == channel.id), None)
-            follow = next((f for f in follows if f.broadcaster_id == channel.id), None)
+            stream = streams[channel.id]
+            follow = follows[channel.id]
             sub: UserSubscription | None = None
             try:
                 sub = await self.twitch.check_user_subscription(
