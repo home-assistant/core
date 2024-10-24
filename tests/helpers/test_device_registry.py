@@ -308,12 +308,12 @@ async def test_loading_from_storage(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
-async def test_migration_1_1_to_1_7(
+async def test_migration_from_1_1(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.1 to 1.7."""
+    """Test migration from version 1.1."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -332,7 +332,7 @@ async def test_migration_1_1_to_1_7(
                 },
                 # Invalid entry type
                 {
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "connections": [],
                     "entry_type": "INVALID_VALUE",
                     "id": "invalid-entry-type",
@@ -412,7 +412,7 @@ async def test_migration_1_1_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -451,12 +451,12 @@ async def test_migration_1_1_to_1_7(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
-async def test_migration_1_2_to_1_7(
+async def test_migration_from_1_2(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.2 to 1.7."""
+    """Test migration from version 1.2."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 2,
@@ -482,7 +482,7 @@ async def test_migration_1_2_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -556,7 +556,7 @@ async def test_migration_1_2_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -585,12 +585,12 @@ async def test_migration_1_2_to_1_7(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
-async def test_migration_1_3_to_1_7(
+async def test_migration_fom_1_3(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.3 to 1.7."""
+    """Test migration from version 1.3."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 3,
@@ -616,7 +616,7 @@ async def test_migration_1_3_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -690,7 +690,7 @@ async def test_migration_1_3_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -719,12 +719,12 @@ async def test_migration_1_3_to_1_7(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
-async def test_migration_1_4_to_1_7(
+async def test_migration_from_1_4(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.4 to 1.7."""
+    """Test migration from version 1.4."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 4,
@@ -751,7 +751,7 @@ async def test_migration_1_4_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -826,7 +826,7 @@ async def test_migration_1_4_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -855,12 +855,12 @@ async def test_migration_1_4_to_1_7(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
-async def test_migration_1_5_to_1_7(
+async def test_migration_from_1_5(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.5 to 1.7."""
+    """Test migration from version 1.5."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 5,
@@ -888,7 +888,7 @@ async def test_migration_1_5_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -964,7 +964,7 @@ async def test_migration_1_5_to_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -993,12 +993,12 @@ async def test_migration_1_5_to_1_7(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
-async def test_migration_1_6_to_1_8(
+async def test_migration_from_1_6(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.6 to 1.8."""
+    """Test migration from version 1.6."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 6,
@@ -1027,7 +1027,7 @@ async def test_migration_1_6_to_1_8(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -1104,7 +1104,7 @@ async def test_migration_1_6_to_1_8(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1133,12 +1133,12 @@ async def test_migration_1_6_to_1_8(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
-async def test_migration_1_7_to_1_8(
+async def test_migration_from_1_7(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.7 to 1.8."""
+    """Test migration from version 1.7."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 7,
@@ -1168,7 +1168,7 @@ async def test_migration_1_7_to_1_8(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -1246,7 +1246,7 @@ async def test_migration_1_7_to_1_8(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",

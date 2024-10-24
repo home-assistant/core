@@ -14,6 +14,7 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     ATTR_FRIENDLY_NAME,
@@ -88,7 +89,9 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors={"base": _exception_map[type(error)]},
                 )
 
-            self._client = MozartClient(self._host)
+            self._client = MozartClient(
+                host=self._host, ssl_context=get_default_context()
+            )
 
             # Try to get information from Beolink self method.
             async with self._client:
@@ -137,7 +140,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ipv6_address")
 
         # Check connection to ensure valid address is received
-        self._client = MozartClient(self._host)
+        self._client = MozartClient(self._host, ssl_context=get_default_context())
 
         async with self._client:
             try:

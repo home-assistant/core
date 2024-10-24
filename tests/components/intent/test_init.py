@@ -34,11 +34,11 @@ async def test_http_handle_intent(
             assert intent_obj.context.user_id == hass_admin_user.id
             response = intent_obj.create_response()
             response.async_set_speech(
-                "I've ordered a {}!".format(intent_obj.slots["type"]["value"])
+                f"I've ordered a {intent_obj.slots['type']['value']}!"
             )
             response.async_set_card(
                 "Beer ordered",
-                "You chose a {}.".format(intent_obj.slots["type"]["value"]),
+                f"You chose a {intent_obj.slots['type']['value']}.",
             )
             return response
 

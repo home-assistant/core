@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .models import DetectionResult, WakeWord
@@ -35,6 +36,7 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[WakeWordDetectionEntity]] = HassKey(DOMAIN)
 
 TIMEOUT_FETCH_WAKE_WORDS = 10
 
@@ -50,16 +52,16 @@ def async_get_wake_word_detection_entity(
     hass: HomeAssistant, entity_id: str
 ) -> WakeWordDetectionEntity | None:
     """Return wake word entity."""
-    component: EntityComponent[WakeWordDetectionEntity] = hass.data[DOMAIN]
-
-    return component.get_entity(entity_id)
+    return hass.data[DATA_COMPONENT].get_entity(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up wake word."""
     websocket_api.async_register_command(hass, websocket_entity_info)
 
-    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = hass.data[DATA_COMPONENT] = EntityComponent[WakeWordDetectionEntity](
+        _LOGGER, DOMAIN, hass
+    )
     component.register_shutdown()
 
     return True
@@ -67,14 +69,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class WakeWordDetectionEntity(RestoreEntity):
@@ -137,13 +137,11 @@ class WakeWordDetectionEntity(RestoreEntity):
     }
 )
 @websocket_api.async_response
-@callback
 async def websocket_entity_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get info about wake word entity."""
-    component: EntityComponent[WakeWordDetectionEntity] = hass.data[DOMAIN]
-    entity = component.get_entity(msg["entity_id"])
+    entity = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if entity is None:
         connection.send_error(

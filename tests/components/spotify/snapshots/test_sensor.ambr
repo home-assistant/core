@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_entities[sensor.spotify_spotify_1_song_tempo-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spotify_spotify_1_song_tempo',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Song tempo',
+    'platform': 'spotify',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'song_tempo',
+    'unique_id': '1112264111_bpm',
+    'unit_of_measurement': 'bpm',
+  })
+# ---
+# name: test_entities[sensor.spotify_spotify_1_song_tempo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Spotify spotify_1 Song tempo',
+      'unit_of_measurement': 'bpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spotify_spotify_1_song_tempo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '114.944',
+  })
+# ---

@@ -290,40 +290,34 @@ async def test_temperature_features_is_valid(
     await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            "entity_id": "climate.test_temp",
-            "temperature": 20,
-        },
-        blocking=True,
-    )
-    assert (
-        "MockClimateTempEntity set_temperature action was used "
-        "with temperature but the entity does not "
-        "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. "
-        "This will stop working in 2025.4 and raise an error instead. "
-        "Please"
-    ) in caplog.text
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature parameter but the entity does not support it",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test_temp",
+                "temperature": 20,
+            },
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            "entity_id": "climate.test_range",
-            "target_temp_low": 20,
-            "target_temp_high": 25,
-        },
-        blocking=True,
-    )
-    assert (
-        "MockClimateTempRangeEntity set_temperature action was used with "
-        "target_temp_low but the entity does not "
-        "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. "
-        "This will stop working in 2025.4 and raise an error instead. "
-        "Please"
-    ) in caplog.text
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test_range",
+                "target_temp_low": 20,
+                "target_temp_high": 25,
+            },
+            blocking=True,
+        )
 
 
 async def test_mode_validation(
@@ -1224,3 +1218,66 @@ async def test_temperature_validation(
     state = hass.states.get("climate.test")
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 10
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25
+
+
+async def test_target_temp_high_higher_than_low(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test that target high is higher than target low."""
+
+    class MockClimateEntityTemp(MockClimateEntity):
+        """Mock climate class with mocked aux heater."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+        _attr_current_temperature = 15
+        _attr_target_temperature = 15
+        _attr_target_temperature_high = 18
+        _attr_target_temperature_low = 10
+        _attr_target_temperature_step = PRECISION_WHOLE
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+            if ATTR_TARGET_TEMP_HIGH in kwargs:
+                self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+                self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+
+    test_climate = MockClimateEntityTemp(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 15
+    assert state.attributes.get(ATTR_MIN_TEMP) == 7
+    assert state.attributes.get(ATTR_MAX_TEMP) == 35
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Target temperature low can not be higher than Target temperature high",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                ATTR_TARGET_TEMP_HIGH: "15",
+                ATTR_TARGET_TEMP_LOW: "20",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Target temperature low can not be higher than Target temperature high"
+    )
+    assert exc.value.translation_key == "low_temp_higher_than_high_temp"

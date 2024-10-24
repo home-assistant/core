@@ -248,22 +248,39 @@ async def test_component_not_found(
     hass: HomeAssistant, issue_registry: IssueRegistry
 ) -> None:
     """setup_component should raise a repair issue if component doesn't exist."""
+    MockConfigEntry(domain="non_existing").add_to_hass(hass)
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
     assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, "integration_not_found.non_existing"
-    )
-    assert issue
-    assert issue.translation_key == "integration_not_found"
+    assert (
+        HOMEASSISTANT_DOMAIN,
+        "integration_not_found.non_existing",
+    ) in issue_registry.issues
+
+
+async def test_yaml_component_not_found(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
+    """setup_component should only raise an exception for missing config entry integrations."""
+    assert await setup.async_setup_component(hass, "non_existing", {}) is False
+    assert len(issue_registry.issues) == 0
+    assert (
+        HOMEASSISTANT_DOMAIN,
+        "integration_not_found.non_existing",
+    ) not in issue_registry.issues
 
 
 async def test_component_missing_not_raising_in_safe_mode(
     hass: HomeAssistant, issue_registry: IssueRegistry
 ) -> None:
     """setup_component should not raise an issue if component doesn't exist in safe."""
+    MockConfigEntry(domain="non_existing").add_to_hass(hass)
     hass.config.safe_mode = True
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
     assert len(issue_registry.issues) == 0
+    assert (
+        HOMEASSISTANT_DOMAIN,
+        "integration_not_found.non_existing",
+    ) not in issue_registry.issues
 
 
 async def test_component_not_double_initialized(hass: HomeAssistant) -> None:

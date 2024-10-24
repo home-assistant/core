@@ -38,6 +38,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'devolo_home_control',
       'entry_id': '123456',
       'minor_version': 1,

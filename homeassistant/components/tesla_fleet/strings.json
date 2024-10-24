@@ -8,7 +8,9 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -64,6 +66,9 @@
       "state": {
         "name": "Status"
       },
+      "storm_mode_active": {
+        "name": "Storm watch active"
+      },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
       },
@@ -107,6 +112,26 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
     "climate": {
       "climate_state_cabin_overheat_protection": {
         "name": "Cabin overheat protection"
@@ -125,12 +150,42 @@
         }
       }
     },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "vehicle_state_ft": {
+        "name": "Frunk"
+      },
+      "vehicle_state_rt": {
+        "name": "Trunk"
+      },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
     "device_tracker": {
       "location": {
         "name": "Location"
       },
       "route": {
         "name": "Route"
+      }
+    },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
+      },
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
       }
     },
     "number": {
@@ -359,6 +414,16 @@
       "vehicle_state_odometer": {
         "name": "Odometer"
       },
+      "island_status": {
+        "name": "Grid Status",
+        "state": {
+          "island_status_unknown": "Unknown",
+          "on_grid": "Connected",
+          "off_grid": "Disconnected",
+          "off_grid_unintentional": "Disconnected unintentionally",
+          "off_grid_intentional": "Disconnected intentionally"
+        }
+      },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
       },
@@ -421,6 +486,9 @@
     }
   },
   "exceptions": {
+    "no_cable": {
+      "message": "Charge cable will lock automatically when connected"
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },

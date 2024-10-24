@@ -28,6 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+from homeassistant.util.webrtc import WebRTCClientConfiguration
 
 from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
@@ -210,3 +211,7 @@ class NestCamera(Camera):
         except ApiException as err:
             raise HomeAssistantError(f"Nest API error: {err}") from err
         return stream.answer_sdp
+
+    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration adjustable per integration."""
+        return WebRTCClientConfiguration(data_channel="dataSendChannel")

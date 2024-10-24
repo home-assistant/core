@@ -38,16 +38,29 @@
         "name": "Dynamic limit"
       }
     },
+    "select": {
+      "load_balancing_mode": {
+        "name": "Load balancing mode",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "power": "Power",
+          "hybrid": "Hybrid",
+          "green": "Green"
+        }
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",
         "state": {
           "available": "Available",
+          "charging": "Charging",
           "connected": "Connected",
+          "error": "Error",
+          "locked": "Locked",
           "need_auth": "Waiting for authentication",
           "paused": "Paused",
-          "charging": "Charging",
-          "error": "Error",
+          "paused_by_scheduler": "Paused by scheduler",
           "updating_firmware": "Updating firmware"
         }
       },
@@ -70,7 +83,10 @@
           "schedule": "Schedule",
           "em_offline": "EM offline",
           "em": "EM",
-          "ocpp": "OCPP"
+          "ocpp": "OCPP",
+          "overtemperature": "Overtemperature",
+          "switching_phases": "Switching phases",
+          "1p_charging_disabled": "1p charging disabled"
         }
       },
       "breaker_current": {
@@ -111,6 +127,17 @@
       },
       "pf_l3": {
         "name": "Power factor L3"
+      }
+    },
+    "switch": {
+      "authentication": {
+        "name": "Authentication"
+      },
+      "force_single_phase": {
+        "name": "Force single phase"
+      },
+      "lock": {
+        "name": "Lock"
       }
     }
   }

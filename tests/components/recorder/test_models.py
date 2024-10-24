@@ -21,6 +21,7 @@ from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 
 def test_from_event_to_db_event() -> None:
@@ -39,6 +40,18 @@ def test_from_event_to_db_event() -> None:
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
     db_event.event_type = event.event_type
     assert event.as_dict() == db_event.to_native().as_dict()
+
+
+def test_from_event_to_db_event_with_null() -> None:
+    """Test converting event to EventData with a null with PostgreSQL."""
+    event = ha.Event(
+        "test_event",
+        {"some_data": "withnull\0terminator"},
+    )
+    dialect = SupportedDialect.POSTGRESQL
+    event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    decoded = json_loads(event_data)
+    assert decoded["some_data"] == "withnull"
 
 
 def test_from_event_to_db_state() -> None:
@@ -76,6 +89,21 @@ def test_from_event_to_db_state_attributes() -> None:
         event, dialect
     )
     assert db_attrs.to_native() == attrs
+
+
+def test_from_event_to_db_state_attributes_with_null() -> None:
+    """Test converting a state to StateAttributes with a null with PostgreSQL."""
+    attrs = {"this_attr": "withnull\0terminator"}
+    state = ha.State("sensor.temperature", "18", attrs)
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+    )
+    dialect = SupportedDialect.POSTGRESQL
+    shared_attrs = StateAttributes.shared_attrs_bytes_from_event(event, dialect)
+    decoded = json_loads(shared_attrs)
+    assert decoded["this_attr"] == "withnull"
 
 
 def test_repr() -> None:

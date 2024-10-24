@@ -740,6 +740,7 @@ async def websocket_add_node(
             "status": node.status,
             "ready": node.ready,
             "low_security": event["result"].get("lowSecurity", False),
+            "low_security_reason": event["result"].get("lowSecurityReason"),
         }
         connection.send_message(
             websocket_api.event_message(
@@ -1713,6 +1714,7 @@ async def websocket_get_config_parameters(
                 "unit": metadata.unit,
                 "writeable": metadata.writeable,
                 "readable": metadata.readable,
+                "default": metadata.default,
             },
             "value": zwave_value.value,
         }

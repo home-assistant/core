@@ -83,6 +83,7 @@ class XiaomiDevice(Entity):
         if self._is_gateway:
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._device_id)},
+                connections={(dr.CONNECTION_NETWORK_MAC, self._device_id)},
                 model=self._model,
             )
         else:

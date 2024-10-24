@@ -120,6 +120,7 @@ async def mock_async_browse(
     """Mock the async_browse method of pysqueezebox.Player."""
     child_types = {
         "favorites": "favorites",
+        "new music": "album",
         "albums": "album",
         "album": "track",
         "genres": "genre",
@@ -221,6 +222,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.remote_title = None
         mock_player.title = None
         mock_player.image_url = None
+        mock_player.model = "SqueezeLite"
 
         return mock_player
 

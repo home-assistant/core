@@ -1400,7 +1400,12 @@
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
-        'colorloop',
+        <LightEffect.NONE: 'none'>,
+        <LightEffect.COLOR_LOOP: 'colorloop'>,
+        <LightEffect.CANDLE: 'candle'>,
+        <LightEffect.FIREPLACE: 'fireplace'>,
+        <LightEffect.PRISM: 'prism'>,
+        <LightEffect.SUNRISE: 'sunrise'>,
       ]),
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -1448,7 +1453,12 @@
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
-        'colorloop',
+        <LightEffect.NONE: 'none'>,
+        <LightEffect.COLOR_LOOP: 'colorloop'>,
+        <LightEffect.CANDLE: 'candle'>,
+        <LightEffect.FIREPLACE: 'fireplace'>,
+        <LightEffect.PRISM: 'prism'>,
+        <LightEffect.SUNRISE: 'sunrise'>,
       ]),
       'friendly_name': 'Gradient light',
       'hs_color': tuple(
