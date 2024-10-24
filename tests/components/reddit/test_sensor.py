@@ -37,6 +37,18 @@ VALID_CONFIG = {
     }
 }
 
+VALID_CONFIG_REDDITOR = {
+    "sensor": {
+        "platform": DOMAIN,
+        CONF_CLIENT_ID: "test_client_id",
+        CONF_CLIENT_SECRET: "test_client_secret",
+        CONF_USERNAME: "test_username",
+        CONF_PASSWORD: "test_password",
+        "subreddits": [],
+        "redditors": ["test_user"],
+    }
+}
+
 VALID_LIMITED_CONFIG = {
     "sensor": {
         "platform": DOMAIN,
@@ -58,6 +70,7 @@ INVALID_SORT_BY_CONFIG = {
         CONF_USERNAME: "test_username",
         CONF_PASSWORD: "test_password",
         "subreddits": ["worldnews", "news"],
+        "redditors": [],
         "sort_by": "invalid_sort_by",
     }
 }
@@ -175,6 +188,16 @@ async def test_setup_with_valid_config(hass: HomeAssistant) -> None:
     }
 
     assert state.attributes[CONF_SORT_BY] == "hot"
+
+
+@patch("praw.Reddit", new=MockPraw)
+async def test_setup_with_valid_config_redditor(hass: HomeAssistant) -> None:
+    """Test the platform setup with Reddit configuration."""
+    assert await async_setup_component(hass, "sensor", VALID_CONFIG_REDDITOR)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.reddit_user_test_user")
+    assert int(state.state) == 0
 
 
 @patch("praw.Reddit", new=MockPraw)
