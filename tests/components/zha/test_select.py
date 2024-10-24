@@ -83,13 +83,13 @@ async def test_select(
     assert state
     assert state.state == STATE_UNKNOWN
     assert state.attributes["options"] == [
-        "Stop",
-        "Burglar",
-        "Fire",
-        "Emergency",
-        "Police Panic",
-        "Fire Panic",
-        "Emergency Panic",
+        "stop",
+        "burglar",
+        "fire",
+        "emergency",
+        "police_panic",
+        "fire_panic",
+        "emergency_panic",
     ]
 
     entity_entry = entity_registry.async_get(entity_id)
@@ -102,14 +102,14 @@ async def test_select(
         "select_option",
         {
             "entity_id": entity_id,
-            "option": security.IasWd.Warning.WarningMode.Burglar.name,
+            "option": security.IasWd.Warning.WarningMode.Burglar.name.lower(),
         },
         blocking=True,
     )
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
+    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name.lower()
 
 
 @pytest.mark.parametrize(
