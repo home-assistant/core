@@ -1511,6 +1511,9 @@ pyefergy==22.5.0
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
 
+# homeassistant.components.onkyo
+pyeiscp==0.0.7
+
 # homeassistant.components.emoncms
 pyemoncms==0.0.7
 
