@@ -8,7 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -57,12 +57,12 @@ async def test_update(
 
 
 @pytest.mark.usefixtures("ble_device", "mock_pynecil")
-async def test_config_entry_not_ready(
+async def test_update_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_githubapi: AsyncMock,
 ) -> None:
-    """Test config entry not ready."""
+    """Test update entity unavailable on error."""
 
     mock_githubapi.repos.releases.latest.side_effect = GitHubException
 
@@ -70,4 +70,8 @@ async def test_config_entry_not_ready(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("update.pinecil_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

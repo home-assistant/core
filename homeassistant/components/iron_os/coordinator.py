@@ -21,24 +21,19 @@ SCAN_INTERVAL = timedelta(seconds=5)
 SCAN_INTERVAL_GITHUB = timedelta(hours=3)
 
 
-class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
-    """IronOS base coordinator."""
+class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
+    """IronOS live data coordinator."""
 
     device_info: DeviceInfoResponse
     config_entry: ConfigEntry
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        device: Pynecil,
-        update_interval: timedelta,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
         """Initialize IronOS coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=SCAN_INTERVAL,
         )
         self.device = device
 
@@ -46,14 +41,6 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         """Set up the coordinator."""
 
         self.device_info = await self.device.get_device_info()
-
-
-class IronOSLiveDataCoordinator(IronOSBaseCoordinator):
-    """IronOS live data coordinator."""
-
-    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
-        """Initialize IronOS coordinator."""
-        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
@@ -65,12 +52,17 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator):
             raise UpdateFailed("Cannot connect to device") from e
 
 
-class IronOSFirmwareUpdateCoordinator(IronOSBaseCoordinator):
+class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
     """IronOS coordinator for retrieving update information from github."""
 
-    def __init__(self, hass: HomeAssistant, device: Pynecil, github: GitHubAPI) -> None:
+    def __init__(self, hass: HomeAssistant, github: GitHubAPI) -> None:
         """Initialize IronOS coordinator."""
-        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL_GITHUB)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL_GITHUB,
+        )
         self.github = github
 
     async def _async_update_data(self) -> GitHubReleaseModel:
