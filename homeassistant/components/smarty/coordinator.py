@@ -18,7 +18,7 @@ type SmartyConfigEntry = ConfigEntry[SmartyCoordinator]
 class SmartyCoordinator(DataUpdateCoordinator[None]):
     """Smarty Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SmartyConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
