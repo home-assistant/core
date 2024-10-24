@@ -540,6 +540,7 @@ FLOWS = {
         "smart_meter_texas",
         "smartthings",
         "smarttub",
+        "smarty",
         "smhi",
         "smlight",
         "sms",

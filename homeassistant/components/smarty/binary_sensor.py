@@ -13,27 +13,25 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SIGNAL_UPDATE_SMARTY
+from . import SIGNAL_UPDATE_SMARTY, SmartyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: SmartyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Smarty Binary Sensor Platform."""
-    smarty: Smarty = hass.data[DOMAIN]["api"]
-    name: str = hass.data[DOMAIN]["name"]
+
+    smarty = entry.runtime_data
 
     sensors = [
-        AlarmSensor(name, smarty),
-        WarningSensor(name, smarty),
-        BoostSensor(name, smarty),
+        AlarmSensor(entry.title, smarty),
+        WarningSensor(entry.title, smarty),
+        BoostSensor(entry.title, smarty),
     ]
 
     async_add_entities(sensors, True)
