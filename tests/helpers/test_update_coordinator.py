@@ -865,25 +865,37 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     assert len(last_update_success_times) == 1
 
 
-async def test_config_entry(hass: HomeAssistant) -> None:
+async def test_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test behavior of coordinator.entry."""
     entry = MockConfigEntry()
+    caplog.clear()
+
+    deprecated_text = (
+        "Detected code that initialises coordinator test "
+        "without explicit config entry"
+    )
 
     # Default without context should be None
     crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
     assert crd.config_entry is None
+    assert deprecated_text in caplog.text
+    caplog.clear()
 
     # Explicit None is OK
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=None
     )
     assert crd.config_entry is None
+    assert deprecated_text not in caplog.text
 
     # Explicit entry is OK
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=entry
     )
     assert crd.config_entry is entry
+    assert deprecated_text not in caplog.text
 
     # set ContextVar
     config_entries.current_entry.set(entry)
@@ -891,6 +903,8 @@ async def test_config_entry(hass: HomeAssistant) -> None:
     # Default with ContextVar should match the ContextVar
     crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
     assert crd.config_entry is entry
+    assert deprecated_text in caplog.text
+    caplog.clear()
 
     # Explicit entry different from ContextVar not recommended, but should work
     another_entry = MockConfigEntry()
@@ -898,3 +912,4 @@ async def test_config_entry(hass: HomeAssistant) -> None:
         hass, _LOGGER, name="test", config_entry=another_entry
     )
     assert crd.config_entry is another_entry
+    assert deprecated_text not in caplog.text

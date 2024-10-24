@@ -70,7 +70,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
+        # TODO: set default to UNDEFINED once core integrations have been updated
+        config_entry: config_entries.ConfigEntry | None | UndefinedType,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -89,8 +90,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
             self.config_entry = config_entries.current_entry.get()
-            # This should be deprecated once all core integrations are updated
-            # to pass in the config entry explicitly.
+            report(
+                f"initialises coordinator {name} without explicit config entry, "
+                "which is deprecated and will stop working in "
+                "Home Assistant 2025.11, pass config entry explicitly instead",
+                error_if_core=True,
+                error_if_integration=True,
+            )
         else:
             self.config_entry = config_entry
         self.always_update = always_update
