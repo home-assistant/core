@@ -50,6 +50,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
+VALUES_NUMERIC_LINEAR = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 async def test_unique_id(
@@ -1701,3 +1702,62 @@ async def test_device_id(
     statistics_entity = entity_registry.async_get("sensor.statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
+
+
+async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Verify that updates happening before reloading from the database are handled correctly."""
+
+    current_time = dt_util.utcnow()
+
+    # enable and pre-fill the recorder
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    with (
+        freeze_time(current_time) as freezer,
+    ):
+        for value in VALUES_NUMERIC_LINEAR:
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+            )
+            await hass.async_block_till_done()
+            current_time += timedelta(seconds=1)
+            freezer.move_to(current_time)
+
+        await async_wait_recording_done(hass)
+        # create the statistics component, get filled from database
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "average_step",
+                        "max_age": {"seconds": 10},
+                    },
+                ]
+            },
+        )
+        # this value is probably going to be ignored, since loading from the database has
+        # most likely hasn't finished yet
+        # if this value would be added before loading the historic data
+        # it would mess up the order of the internal queue which is supposed to be sorted by time
+        hass.states.async_set(
+            "sensor.test_monitored",
+            "10",
+            {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+        )
+        await hass.async_block_till_done()
+
+    # depending on timing we will either end up with a buffer of [1 .. 9] or [1 .. 10]
+    # what may not happen is that the 10 will be added somewhere in between
+    # so we compute average_step for either 1 .. 9 or 1 .. 10
+    # this leads to 1+2+3+4+5+6+7+8/8 = 4.5
+    #            or 1+2+3+4+5+6+7+8+9/9 = 5
+    avg: float = float(hass.states.get("sensor.test").state)
+    assert avg == pytest.approx(4.5) or avg == pytest.approx(5.0)

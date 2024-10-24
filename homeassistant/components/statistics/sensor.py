@@ -50,7 +50,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -373,8 +372,7 @@ class StatisticsSensor(SensorEntity):
         self._update_listener: CALLBACK_TYPE | None = None
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
-    @callback
-    def async_start_preview(
+    async def async_start_preview(
         self,
         preview_callback: Callable[[str, Mapping[str, Any]], None],
     ) -> CALLBACK_TYPE:
@@ -392,7 +390,7 @@ class StatisticsSensor(SensorEntity):
 
         self._preview_callback = preview_callback
 
-        self._async_stats_sensor_startup(self.hass)
+        await self._async_stats_sensor_startup()
         return self._call_on_remove_callbacks
 
     @callback
@@ -413,10 +411,16 @@ class StatisticsSensor(SensorEntity):
         if not self._preview_callback:
             self.async_write_ha_state()
 
-    @callback
-    def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
-        """Add listener and get recorded state."""
+    async def _async_stats_sensor_startup(self) -> None:
+        """Add listener and get recorded state.
+
+        Historical data needs to be loaded from the database first before we
+        can start accepting new incoming changes.
+        This is needed to ensure that the buffer is properly sorted by time.
+        """
         _LOGGER.debug("Startup for %s", self.entity_id)
+        if "recorder" in self.hass.config.components:
+            await self._initialize_from_database()
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
@@ -424,14 +428,10 @@ class StatisticsSensor(SensorEntity):
                 self._async_stats_sensor_state_listener,
             )
         )
-        if "recorder" in self.hass.config.components:
-            self.hass.async_create_task(self._initialize_from_database())
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(
-            async_at_start(self.hass, self._async_stats_sensor_startup)
-        )
+        await self._async_stats_sensor_startup()
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
@@ -712,7 +712,9 @@ class StatisticsSensor(SensorEntity):
         """
 
         value = self._state_characteristic_fn()
-
+        _LOGGER.debug(
+            "Updating value: states: %s, ages: %s => %s", self.states, self.ages, value
+        )
         if self._state_characteristic not in STATS_NOT_A_NUMBER:
             with contextlib.suppress(TypeError):
                 value = round(cast(float, value), self._precision)
