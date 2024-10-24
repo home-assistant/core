@@ -187,7 +187,6 @@ async def zone_id(
 
     async for mock_client in setup_evohome(hass, config, install=install):
         evo: EvohomeClient = mock_client.return_value
-
         zone: Zone = list(evo._get_single_tcs().zones.values())[0]
 
         yield f"{Platform.CLIMATE}.{slugify(zone.name)}"
