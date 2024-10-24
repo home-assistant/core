@@ -1,0 +1,9 @@
+# serializer version: 1
+# name: test_set_operation_mode[default]
+  list([
+    tuple(
+    ),
+    tuple(
+    ),
+  ])
+# ---

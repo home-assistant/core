@@ -381,6 +381,13 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
     ),
     TeslaFleetSensorEntityDescription(
         key="island_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "on_grid",
+            "off_grid",
+            "off_grid_unintentional",
+            "off_grid_intentional",
+        ],
         entity_registry_enabled_default=True,
         value_fn=lambda value: None if value == "island_status_unknown" else value,
     ),

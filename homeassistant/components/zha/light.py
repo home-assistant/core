@@ -44,12 +44,7 @@ ZHA_TO_HA_COLOR_MODE = {
     ZhaColorMode.ONOFF: ColorMode.ONOFF,
     ZhaColorMode.BRIGHTNESS: ColorMode.BRIGHTNESS,
     ZhaColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
-    ZhaColorMode.HS: ColorMode.HS,
     ZhaColorMode.XY: ColorMode.XY,
-    ZhaColorMode.RGB: ColorMode.RGB,
-    ZhaColorMode.RGBW: ColorMode.RGBW,
-    ZhaColorMode.RGBWW: ColorMode.RGBWW,
-    ZhaColorMode.WHITE: ColorMode.WHITE,
 }
 
 HA_TO_ZHA_COLOR_MODE = {v: k for k, v in ZHA_TO_HA_COLOR_MODE.items()}

@@ -81,7 +81,7 @@ async def init_reconfigure_flow(
     result = await mock_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # original entry
     assert mock_entry.data["host"] == "192.168.100.50"

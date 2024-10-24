@@ -33,7 +33,10 @@ from homeassistant.components import (
     valve,
     water_heater,
 )
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
@@ -51,7 +54,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -63,9 +65,6 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -77,6 +76,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -187,12 +187,12 @@ async def test_onoff_group(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "group.bla"}
 
     off_calls = async_mock_service(hass, HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "group.bla"}
 
@@ -215,12 +215,12 @@ async def test_onoff_input_boolean(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, input_boolean.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "input_boolean.bla"}
 
     off_calls = async_mock_service(hass, input_boolean.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "input_boolean.bla"}
 
@@ -282,12 +282,12 @@ async def test_onoff_switch(hass: HomeAssistant) -> None:
     assert trt_assumed.sync_attributes() == {"commandOnlyOnOff": True}
 
     on_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "switch.bla"}
 
     off_calls = async_mock_service(hass, switch.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "switch.bla"}
 
@@ -307,12 +307,12 @@ async def test_onoff_fan(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, fan.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "fan.bla"}
 
     off_calls = async_mock_service(hass, fan.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "fan.bla"}
 
@@ -333,12 +333,12 @@ async def test_onoff_light(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "light.bla"}
 
     off_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_OFF)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "light.bla"}
 
@@ -359,13 +359,13 @@ async def test_onoff_media_player(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, media_player.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
 
     off_calls = async_mock_service(hass, media_player.DOMAIN, SERVICE_TURN_OFF)
 
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
 
@@ -386,13 +386,13 @@ async def test_onoff_humidifier(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
 
     off_calls = async_mock_service(hass, humidifier.DOMAIN, SERVICE_TURN_OFF)
 
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
 
@@ -415,13 +415,13 @@ async def test_onoff_water_heater(hass: HomeAssistant) -> None:
     assert trt_off.query_attributes() == {"on": False}
 
     on_calls = async_mock_service(hass, water_heater.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": True}, {})
     assert len(on_calls) == 1
     assert on_calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla"}
 
     off_calls = async_mock_service(hass, water_heater.DOMAIN, SERVICE_TURN_OFF)
 
-    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    await trt_on.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla"}
 
@@ -562,22 +562,22 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     assert trt.query_attributes() == {"isRunning": False, "isPaused": True}
 
     start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_START)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(start_calls) == 1
     assert start_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
     stop_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_STOP)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
     assert stop_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
     pause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_PAUSE)
-    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"pause": True}, {})
+    await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": True}, {})
     assert len(pause_calls) == 1
     assert pause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
     unpause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_START)
-    await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"pause": False}, {})
+    await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": False}, {})
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
@@ -665,7 +665,7 @@ async def test_startstop_cover_valve(
     open_calls = async_mock_service(hass, domain, service_open)
     close_calls = async_mock_service(hass, domain, service_close)
     toggle_calls = async_mock_service(hass, domain, service_toggle)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
     assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
@@ -681,18 +681,18 @@ async def test_startstop_cover_valve(
     with pytest.raises(
         SmartHomeError, match=f"{domain.capitalize()} is already stopped"
     ):
-        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+        await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
 
     # Start triggers toggle open
     state.state = state_closed
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(open_calls) == 0
     assert len(close_calls) == 0
     assert len(toggle_calls) == 1
     assert toggle_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
     # Second start triggers toggle close
     state.state = state_open
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(open_calls) == 0
     assert len(close_calls) == 0
     assert len(toggle_calls) == 2
@@ -703,7 +703,7 @@ async def test_startstop_cover_valve(
         SmartHomeError,
         match="Command action.devices.commands.PauseUnpause is not supported",
     ):
-        await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
+        await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"start": True}, {})
 
 
 @pytest.mark.parametrize(
@@ -779,13 +779,13 @@ async def test_startstop_cover_valve_assumed(
 
     stop_calls = async_mock_service(hass, domain, service_stop)
     toggle_calls = async_mock_service(hass, domain, service_toggle)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
     assert len(toggle_calls) == 0
     assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
     stop_calls.clear()
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+    await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(stop_calls) == 0
     assert len(toggle_calls) == 1
     assert toggle_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
@@ -984,13 +984,13 @@ async def test_light_modes(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"effect": "colorloop"}},
     )
 
     calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"effect": "colorloop"}},
         {},
@@ -1422,7 +1422,7 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
         "temperatureAmbientCelsius": 18,
     }
     with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+        await trt.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
@@ -1609,11 +1609,11 @@ async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {"isLocked": True}
 
-    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": True})
+    assert trt.can_execute(trait.COMMAND_LOCK_UNLOCK, {"lock": True})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
 
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": True}, {})
+    await trt.execute(trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": True}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
@@ -1652,11 +1652,11 @@ async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {"isJammed": True}
 
-    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": True})
+    assert trt.can_execute(trait.COMMAND_LOCK_UNLOCK, {"lock": True})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
 
-    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": True}, {})
+    await trt.execute(trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": True}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
@@ -1677,13 +1677,13 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {"isLocked": True}
 
-    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": False})
+    assert trt.can_execute(trait.COMMAND_LOCK_UNLOCK, {"lock": False})
 
     calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_UNLOCK)
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": False}, {})
+        await trt.execute(trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": False}, {})
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
@@ -1691,14 +1691,14 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": False}, {"pin": 9999}
+            trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": False}, {"pin": 9999}
         )
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
-        trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": False}, {"pin": "1234"}
+        trait.COMMAND_LOCK_UNLOCK, PIN_DATA, {"lock": False}, {"pin": "1234"}
     )
 
     assert len(calls) == 1
@@ -1710,7 +1710,7 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     )
 
     with pytest.raises(error.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
+        await trt.execute(trait.COMMAND_LOCK_UNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
 
@@ -1720,7 +1720,7 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
         "should_2fa",
         return_value=False,
     ):
-        await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
+        await trt.execute(trait.COMMAND_LOCK_UNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2
 
 
@@ -1734,7 +1734,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
@@ -1765,11 +1765,12 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {
         "isArmed": True,
-        "currentArmLevel": STATE_ALARM_ARMED_AWAY,
+        "currentArmLevel": AlarmControlPanelState.ARMED_AWAY,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_ARMDISARM, {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY}
+        trait.COMMAND_ARM_DISARM,
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
     )
 
     calls = async_mock_service(
@@ -1782,16 +1783,16 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         BASIC_CONFIG,
     )
     with pytest.raises(error.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             BASIC_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1801,7 +1802,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1809,9 +1810,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1821,9 +1822,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {"pin": 9999},
         )
     assert len(calls) == 0
@@ -1832,9 +1833,9 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     # correct pin
     await trt.execute(
-        trait.COMMAND_ARMDISARM,
+        trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {"pin": "1234"},
     )
 
@@ -1845,16 +1846,16 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
     )
     with pytest.raises(error.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 1
@@ -1865,22 +1866,22 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
     )
     await trt.execute(
-        trait.COMMAND_ARMDISARM,
+        trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {},
     )
     assert len(calls) == 2
 
     with pytest.raises(error.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM,
+            trait.COMMAND_ARM_DISARM,
             PIN_DATA,
             {"arm": True},
             {},
@@ -1897,7 +1898,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
@@ -1942,7 +1943,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         "isArmed": False,
     }
 
-    assert trt.can_execute(trait.COMMAND_ARMDISARM, {"arm": False})
+    assert trt.can_execute(trait.COMMAND_ARM_DISARM, {"arm": False})
 
     calls = async_mock_service(
         hass, alarm_control_panel.DOMAIN, alarm_control_panel.SERVICE_ALARM_DISARM
@@ -1953,13 +1954,13 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         BASIC_CONFIG,
     )
     with pytest.raises(error.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_ARMDISARM, BASIC_DATA, {"arm": False}, {})
+        await trt.execute(trait.COMMAND_ARM_DISARM, BASIC_DATA, {"arm": False}, {})
 
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
@@ -1968,7 +1969,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1976,7 +1977,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
+        await trt.execute(trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
@@ -1984,7 +1985,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {"pin": 9999}
+            trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {"pin": 9999}
         )
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
@@ -1992,7 +1993,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
 
     # correct pin
     await trt.execute(
-        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {"pin": "1234"}
+        trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {"pin": "1234"}
     )
 
     assert len(calls) == 1
@@ -2002,13 +2003,13 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
     )
     with pytest.raises(error.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
+        await trt.execute(trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_ALREADY_DISARMED
 
@@ -2016,7 +2017,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
@@ -2025,7 +2026,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     # Cancel arming after already armed will require pin
     with pytest.raises(error.SmartHomeError) as err:
         await trt.execute(
-            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+            trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
         )
     assert len(calls) == 1
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
@@ -2036,13 +2037,13 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_PENDING,
+            AlarmControlPanelState.PENDING,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
     )
     await trt.execute(
-        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+        trait.COMMAND_ARM_DISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
     )
     assert len(calls) == 2
 
@@ -2078,10 +2079,12 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
         "currentFanSpeedSetting": ANY,
     }
 
-    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedPercent": 10})
+    assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeedPercent": 10})
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
-    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeedPercent": 10}, {})
+    await trt.execute(
+        trait.COMMAND_SET_FAN_SPEED, BASIC_DATA, {"fanSpeedPercent": 10}, {}
+    )
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
@@ -2216,10 +2219,10 @@ async def test_fan_speed_ordered(
         "currentFanSpeedSetting": speed,
     }
 
-    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": speed})
+    assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeed": speed})
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
-    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": speed}, {})
+    await trt.execute(trait.COMMAND_SET_FAN_SPEED, BASIC_DATA, {"fanSpeed": speed}, {})
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -2328,10 +2331,12 @@ async def test_climate_fan_speed(hass: HomeAssistant) -> None:
         "currentFanSpeedSetting": "low",
     }
 
-    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
+    assert trt.can_execute(trait.COMMAND_SET_FAN_SPEED, params={"fanSpeed": "medium"})
 
     calls = async_mock_service(hass, climate.DOMAIN, climate.SERVICE_SET_FAN_MODE)
-    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": "medium"}, {})
+    await trt.execute(
+        trait.COMMAND_SET_FAN_SPEED, BASIC_DATA, {"fanSpeed": "medium"}, {}
+    )
 
     assert len(calls) == 1
     assert calls[0].data == {
@@ -2387,7 +2392,7 @@ async def test_inputselector(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_INPUT,
+        trait.COMMAND_SET_INPUT,
         params={"newInput": "media"},
     )
 
@@ -2395,7 +2400,7 @@ async def test_inputselector(hass: HomeAssistant) -> None:
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
     )
     await trt.execute(
-        trait.COMMAND_INPUT,
+        trait.COMMAND_SET_INPUT,
         BASIC_DATA,
         {"newInput": "media"},
         {},
@@ -2563,7 +2568,7 @@ async def test_modes_input_select(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"option": "xyz"}},
     )
 
@@ -2571,7 +2576,7 @@ async def test_modes_input_select(hass: HomeAssistant) -> None:
         hass, input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION
     )
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"option": "xyz"}},
         {},
@@ -2639,13 +2644,13 @@ async def test_modes_select(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"option": "xyz"}},
     )
 
     calls = async_mock_service(hass, select.DOMAIN, select.SERVICE_SELECT_OPTION)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"option": "xyz"}},
         {},
@@ -2716,12 +2721,12 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"mode": "away"}}
+        trait.COMMAND_SET_MODES, params={"updateModeSettings": {"mode": "away"}}
     )
 
     calls = async_mock_service(hass, humidifier.DOMAIN, humidifier.SERVICE_SET_MODE)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"mode": "away"}},
         {},
@@ -2792,14 +2797,15 @@ async def test_modes_water_heater(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES, params={"updateModeSettings": {"operation mode": "gas"}}
+        trait.COMMAND_SET_MODES,
+        params={"updateModeSettings": {"operation mode": "gas"}},
     )
 
     calls = async_mock_service(
         hass, water_heater.DOMAIN, water_heater.SERVICE_SET_OPERATION_MODE
     )
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"operation mode": "gas"}},
         {},
@@ -2868,7 +2874,7 @@ async def test_sound_modes(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
@@ -2876,7 +2882,7 @@ async def test_sound_modes(hass: HomeAssistant) -> None:
         hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOUND_MODE
     )
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"sound mode": "stereo"}},
         {},
@@ -2941,13 +2947,13 @@ async def test_preset_modes(hass: HomeAssistant) -> None:
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         params={"updateModeSettings": {"preset mode": "auto"}},
     )
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PRESET_MODE)
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {"preset mode": "auto"}},
         {},
@@ -2975,7 +2981,7 @@ async def test_traits_unknown_domains(
 
     assert trt.supported("not_supported_domain", False, None, None) is False
     await trt.execute(
-        trait.COMMAND_MODES,
+        trait.COMMAND_SET_MODES,
         BASIC_DATA,
         {"updateModeSettings": {}},
         {},
@@ -3049,9 +3055,9 @@ async def test_openclose_cover_valve(
     calls_open = async_mock_service(hass, domain, open_service)
     calls_close = async_mock_service(hass, domain, close_service)
 
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 50}, {})
     await trt.execute(
-        trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
+        trait.COMMAND_OPEN_CLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
     )
     assert len(calls_set) == 1
     assert calls_set[0].data == {
@@ -3066,9 +3072,9 @@ async def test_openclose_cover_valve(
 
     assert len(calls_close) == 0
 
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 0}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 0}, {})
     await trt.execute(
-        trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 0}, {}
+        trait.COMMAND_OPEN_CLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 0}, {}
     )
     assert len(calls_set) == 1
     assert len(calls_close) == 1
@@ -3123,7 +3129,7 @@ async def test_openclose_cover_valve_unknown_state(
         trt.query_attributes()
 
     calls = async_mock_service(hass, domain, open_service)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 100}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
@@ -3177,7 +3183,7 @@ async def test_openclose_cover_valve_assumed_state(
     assert trt.query_attributes() == {}
 
     calls = async_mock_service(hass, domain, set_position_service)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 40}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 40}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla", cover.ATTR_POSITION: 40}
 
@@ -3291,12 +3297,12 @@ async def test_openclose_cover_valve_no_position(
     assert trt.query_attributes() == {"openPercent": 0}
 
     calls = async_mock_service(hass, domain, close_service)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 0}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 0}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
     calls = async_mock_service(hass, domain, open_service)
-    await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 100}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 100}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
@@ -3304,14 +3310,14 @@ async def test_openclose_cover_valve_no_position(
         SmartHomeError, match=r"Current position not know for relative command"
     ):
         await trt.execute(
-            trait.COMMAND_OPENCLOSE_RELATIVE,
+            trait.COMMAND_OPEN_CLOSE_RELATIVE,
             BASIC_DATA,
             {"openRelativePercent": 100},
             {},
         )
 
     with pytest.raises(SmartHomeError, match=r"No support for partial open close"):
-        await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
+        await trt.execute(trait.COMMAND_OPEN_CLOSE, BASIC_DATA, {"openPercent": 50}, {})
 
 
 @pytest.mark.parametrize(
@@ -3354,7 +3360,7 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
-        await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 50}, {})
+        await trt.execute(trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 50}, {})
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
@@ -3362,20 +3368,20 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
     # invalid pin
     with pytest.raises(error.ChallengeNeeded) as err:
         await trt.execute(
-            trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "9999"}
+            trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "9999"}
         )
     assert len(calls) == 0
     assert err.value.code == const.ERR_CHALLENGE_NEEDED
     assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
 
     await trt.execute(
-        trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "1234"}
+        trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 50}, {"pin": "1234"}
     )
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
 
     # no challenge on close
-    await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 0}, {})
+    await trt.execute(trait.COMMAND_OPEN_CLOSE, PIN_DATA, {"openPercent": 0}, {})
     assert len(calls_close) == 1
     assert calls_close[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
@@ -3699,7 +3705,7 @@ async def test_humidity_setting_sensor_data(
         assert trt.query_attributes() == {}
 
     with pytest.raises(helpers.SmartHomeError) as err:
-        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+        await trt.execute(trait.COMMAND_ON_OFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
