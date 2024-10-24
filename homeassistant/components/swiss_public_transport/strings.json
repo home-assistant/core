@@ -50,6 +50,26 @@
       "line": {
         "name": "Line"
       }
+    },
+    "select": {
+      "departure_mode": {
+        "name": "Departure Mode",
+        "state": {
+          "now": "Now",
+          "relative": "Time offset from now",
+          "absolute": "Time of day"
+        }
+      }
+    },
+    "time": {
+      "departure_time": {
+        "name": "Departure Time"
+      }
+    },
+    "number": {
+      "departure_time_offset": {
+        "name": "Departure Time Offset in Minutes"
+      }
     }
   },
   "services": {
