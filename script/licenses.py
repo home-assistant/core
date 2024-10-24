@@ -36,7 +36,9 @@ class PackageDefinition:
     def from_dict(cls, data: PackageMetadata) -> PackageDefinition:
         """Create a package definition from PackageMetadata."""
         if not (license_str := "; ".join(data["license_classifier"])):
-            license_str = data["license_metadata"] or "UNKNOWN"
+            license_str = (
+                data["license_metadata"] or data["license_expression"] or "UNKNOWN"
+            )
         return cls(
             license=license_str,
             name=data["name"],
@@ -142,7 +144,6 @@ EXCEPTIONS = {
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
-    "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
@@ -173,14 +174,10 @@ EXCEPTIONS = {
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
-    "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
-    "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
-    # Using License-Expression (with hatchling)
-    "ftfy",  # Apache-2.0
 }
 
 TODO = {
