@@ -12,7 +12,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL
 from .coordinator import InvalidAuth, WallboxCoordinator
 
-PLATFORMS = [Platform.LOCK, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.CALENDAR,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
