@@ -101,6 +101,20 @@
         "name": "Door 3"
       }
     },
+    "event": {
+      "numbered_button": {
+        "name": "Button {button_number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "clicked",
+              "double_click": "double clicked",
+              "press": "long pressed"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "backlight": {
         "name": "Backlight"

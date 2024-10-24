@@ -1168,6 +1168,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
+    # Wireless Switch
+    # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
+    "wxkg": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)
