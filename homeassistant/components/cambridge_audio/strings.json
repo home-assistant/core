@@ -34,5 +34,16 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "unsupported_media_type": {
+      "message": "Unsupported media type for Cambridge Audio device: {media_type}"
+    },
+    "missing_preset": {
+      "message": "Missing preset for media_id: {preset_id}"
+    },
+    "preset_non_integer": {
+      "message": "Preset must be an integer, got: {preset_id}"
+    }
   }
 }
