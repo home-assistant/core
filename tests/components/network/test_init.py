@@ -886,3 +886,42 @@ async def test_async_get_announce_addresses_no_source_ip(hass: HomeAssistant) ->
         "172.16.1.5",
         "fe80::dead:beef:dead:beef",
     ]
+
+
+async def test_websocket_network_url(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the network/url websocket command."""
+    assert await async_setup_component(hass, "network", {})
+
+    client = await hass_ws_client(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.network._get_internal_url", return_value="internal"
+        ),
+        patch("homeassistant.helpers.network._get_cloud_url", return_value="cloud"),
+    ):
+        await client.send_json({"id": 1, "type": "network/url"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "internal": "internal",
+            "external": "cloud",
+            "cloud": "cloud",
+        }
+
+    # Test with no cloud URL
+    with (
+        patch(
+            "homeassistant.helpers.network._get_internal_url", return_value="internal"
+        ),
+    ):
+        await client.send_json({"id": 2, "type": "network/url"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "internal": "internal",
+            "external": None,
+            "cloud": None,
+        }
