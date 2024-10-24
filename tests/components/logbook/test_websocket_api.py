@@ -2985,8 +2985,8 @@ async def test_live_stream_with_changed_state_change(
         ]
     )
 
-    hass.states.async_set("binary_sensor.is_light", "ignored")
-    hass.states.async_set("binary_sensor.is_light", "init")
+    hass.states.async_set("binary_sensor.is_light", "unavailable")
+    hass.states.async_set("binary_sensor.is_light", "unknown")
     await async_wait_recording_done(hass)
 
     @callback
@@ -3023,7 +3023,7 @@ async def test_live_stream_with_changed_state_change(
 
     # Make sure we get rows back in order
     assert recieved_rows == [
-        {"entity_id": "binary_sensor.is_light", "state": "init", "when": ANY},
+        {"entity_id": "binary_sensor.is_light", "state": "unknown", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "on", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "off", "when": ANY},
     ]

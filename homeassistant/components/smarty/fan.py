@@ -6,21 +6,18 @@ import logging
 import math
 from typing import Any
 
-from pysmarty2 import Smarty
-
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import DOMAIN, SIGNAL_UPDATE_SMARTY
+from . import SIGNAL_UPDATE_SMARTY, SmartyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,17 +25,16 @@ DEFAULT_ON_PERCENTAGE = 66
 SPEED_RANGE = (1, 3)  # off is not included
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: SmartyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Smarty Fan Platform."""
-    smarty: Smarty = hass.data[DOMAIN]["api"]
-    name: str = hass.data[DOMAIN]["name"]
 
-    async_add_entities([SmartyFan(name, smarty)], True)
+    smarty = entry.runtime_data
+
+    async_add_entities([SmartyFan(entry.title, smarty, entry.entry_id)], True)
 
 
 class SmartyFan(FanEntity):
@@ -53,11 +49,12 @@ class SmartyFan(FanEntity):
     )
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, name, smarty):
+    def __init__(self, name, smarty, entry_id):
         """Initialize the entity."""
         self._attr_name = name
         self._smarty_fan_speed = 0
         self._smarty = smarty
+        self._attr_unique_id = entry_id
 
     @property
     def is_on(self) -> bool:
