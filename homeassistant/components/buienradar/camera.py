@@ -46,6 +46,10 @@ async def async_setup_entry(
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
+    if None in (latitude, longitude):
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
+        return
+
     async_add_entities([BuienradarCam(latitude, longitude, delta, country)])
 
 
