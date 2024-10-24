@@ -903,6 +903,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
+/homeassistant/components/meteoswiss/ @albertomontesg
+/tests/components/meteoswiss/ @albertomontesg
 /homeassistant/components/metoffice/ @MrHarcombe @avee87
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech

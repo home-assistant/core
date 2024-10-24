@@ -309,6 +309,7 @@ homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.met_eireann.*
+homeassistant.components.meteoswiss.*
 homeassistant.components.metoffice.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*

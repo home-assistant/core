@@ -359,6 +359,7 @@ FLOWS = {
         "met_eireann",
         "meteo_france",
         "meteoclimatic",
+        "meteoswiss",
         "metoffice",
         "microbees",
         "mikrotik",

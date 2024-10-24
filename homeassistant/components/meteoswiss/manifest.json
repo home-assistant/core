@@ -1,0 +1,13 @@
+{
+  "domain": "meteoswiss",
+  "name": "MeteoSwiss",
+  "codeowners": ["@albertomontesg"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/meteoswiss",
+  "iot_class": "cloud_polling",
+  "requirements": [
+    "meteoswiss-async @ git+https://github.com/albertomontesg/meteoswiss-async.git@main"
+  ],
+  "ssdp": [],
+  "zeroconf": []
+}

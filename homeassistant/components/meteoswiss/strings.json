@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "weather_forecast": {
+        "data": {
+          "location_name": "Location Name",
+          "postal_code": "Postal Code"
+        }
+      }
+    },
+    "error": {
+      "postal_code_not_found": "Postal code not found."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
