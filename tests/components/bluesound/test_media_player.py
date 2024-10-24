@@ -10,8 +10,8 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.bluesound import DOMAIN as BLUESOUND_DOMAIN
-from homeassistant.components.bluesound.const import (
-    ATTR_MASTER,
+from homeassistant.components.bluesound.const import ATTR_MASTER
+from homeassistant.components.bluesound.services import (
     SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
     SERVICE_SET_TIMER,
