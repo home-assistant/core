@@ -27,7 +27,7 @@ def mock_smarty() -> Generator[AsyncMock]:
     """Mock a Smarty client."""
     with (
         patch(
-            "homeassistant.components.smarty.Smarty",
+            "homeassistant.components.smarty.coordinator.Smarty",
             autospec=True,
         ) as mock_client,
         patch(
