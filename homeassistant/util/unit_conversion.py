@@ -163,7 +163,6 @@ class AreaConverter(BaseUnitConverter):
     """Utility to convert area values."""
 
     UNIT_CLASS = "area"
-    NORMALIZED_UNIT = UnitOfArea.SQUARE_METERS
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfArea.SQUARE_METERS: 1,
         UnitOfArea.SQUARE_CENTIMETERS: 1 / _CM2_TO_M2,

@@ -27,6 +27,7 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
     ConductivityConverter,
     DataRateConverter,
@@ -131,6 +132,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit: AreaConverter for unit in AreaConverter.VALID_UNITS},
     **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
     **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
     **{
