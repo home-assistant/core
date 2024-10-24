@@ -11,7 +11,7 @@ from webio_api.api_client import AuthError
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError
@@ -72,7 +72,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         name = webio_api.get_name()
     finally:
         nasweb_data.deinitialize(hass)
-    return {"title": name}
+    return {"title": name, CONF_UNIQUE_ID: webio_serial}
 
 
 class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -102,6 +102,8 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(info[CONF_UNIQUE_ID])
+                self._abort_if_unique_id_configured({CONF_HOST: user_input[CONF_HOST]})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

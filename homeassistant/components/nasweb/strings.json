@@ -35,6 +35,9 @@
     },
     "config_entry_error_missing_internal_url": {
       "message": "[%key:component::nasweb::config::error::missing_internal_url%]"
+    },
+    "serial_mismatch": {
+      "message": "Connected to different NASweb device (serial number mismatch)."
     }
   },
   "entity": {

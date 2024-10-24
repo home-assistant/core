@@ -62,7 +62,7 @@ async def async_setup_entry(
         async_add_entities(entities_to_add)
         entity_registry = er.async_get(hass)
         for index in removed:
-            unique_id = f"{DOMAIN}.{coordinator.webio_api.get_serial_number()}.relay_switch.{index}"
+            unique_id = f"{DOMAIN}.{config.unique_id}.relay_switch.{index}"
             if entity_id := entity_registry.async_get_entity_id(
                 DOMAIN_SWITCH, DOMAIN, unique_id
             ):
