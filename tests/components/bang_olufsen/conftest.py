@@ -15,6 +15,7 @@ from mozart_api.models import (
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
+    PlayQueueSettings,
     ProductState,
     RemoteMenuItem,
     RenderingState,
@@ -315,6 +316,12 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             href="",
             id=123,
         )
+        client.get_settings_queue = AsyncMock()
+        client.get_settings_queue.return_value = PlayQueueSettings(
+            repeat="none",
+            shuffle=False,
+        )
+
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()
@@ -336,6 +343,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.post_beolink_allstandby = AsyncMock()
         client.join_latest_beolink_experience = AsyncMock()
         client.activate_listening_mode = AsyncMock()
+        client.set_settings_queue = AsyncMock()
 
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()
