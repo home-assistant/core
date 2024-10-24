@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Concatenate, Generic, cast
+from typing import Any, Concatenate, Generic, Self, cast
 
 from ring_doorbell import (
     AuthenticationError,
@@ -47,10 +47,16 @@ class DeprecatedInfo:
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingEntityDescription(EntityDescription):
+class RingEntityDescription(EntityDescription, Generic[RingDeviceT]):
     """Base class for a ring entity description."""
 
     deprecated_info: DeprecatedInfo | None = None
+    exists_fn: Callable[[RingDeviceT], bool]
+    dynamic_exists_fn: Callable[[RingDeviceT], bool] | None = None
+    unique_id_fn: Callable[[Self, RingDeviceT], str] = (
+        lambda self, device: f"{device.device_api_id}-{self.key}"
+    )
+    dynamic_setting_description: str = "other settings"
 
 
 def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
@@ -145,6 +151,46 @@ def async_check_create_deprecated(
             },
         )
     return True
+
+
+def async_check_exists(
+    hass: HomeAssistant,
+    platform: str,
+    entity_description: RingEntityDescription[RingDeviceT],
+    device: RingDeviceT,
+) -> bool:
+    """Return true if the entity should be created based on the exists_fn.
+
+    If it should not be created and previously existed it will be removed.
+    """
+    # First check the non-dynamic exists function. They are separate functions
+    # to avoid checking the entity registry for all possible entities.
+    if not entity_description.exists_fn(device):
+        return False
+
+    # There's either no dynamic_exists_fn or it's returning true to return True
+    if not entity_description.dynamic_exists_fn or entity_description.dynamic_exists_fn(
+        device
+    ):
+        return True
+
+    # dynamic_exists_fn is false so check whether have previously created the entity.
+    unique_id = entity_description.unique_id_fn(entity_description, device)
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        platform,
+        DOMAIN,
+        unique_id,
+    )
+    # Not previously created so return
+    if not entity_id:
+        return False
+
+    entity_entry = ent_reg.async_get(entity_id)
+    assert entity_entry
+
+    ent_reg.async_remove(entity_id)
+    return False
 
 
 class RingBaseEntity(

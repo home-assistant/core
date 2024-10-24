@@ -22,6 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, setup_platform
+from .device_mocks import FRONT_DOOR_DEVICE_ID
 
 from tests.common import snapshot_platform
 
@@ -169,3 +170,43 @@ async def test_switch_errors_when_turned_on(
         )
         == reauth_expected
     )
+
+
+async def test_switch_dynamic_exists(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ring_client: Mock,
+    mock_ring_devices: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests the switch turns on and off correctly."""
+
+    mock_config_entry.add_to_hass(hass)
+    entity_id = "switch.front_door_in_home_chime"
+
+    # Create the switch as it's present
+    front_door_mock = mock_ring_devices.get_device(FRONT_DOOR_DEVICE_ID)
+    front_door_mock.configure_mock(existing_doorbell_type="Mechanical")
+    await setup_platform(hass, Platform.SWITCH)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    state = hass.states.get(entity_id)
+    assert state
+
+    # Not present will result in the exists check returning false.
+    front_door_mock.configure_mock(existing_doorbell_type="Not Present")
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is None
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    # Another reload should keep the same state
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is None
+    state = hass.states.get(entity_id)
+    assert state is None

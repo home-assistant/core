@@ -16,6 +16,7 @@ from ring_doorbell import (
 )
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -39,6 +40,7 @@ from .entity import (
     RingEntity,
     RingEntityDescription,
     async_check_create_deprecated,
+    async_check_exists,
 )
 
 
@@ -55,11 +57,11 @@ async def async_setup_entry(
         RingSensor(device, devices_coordinator, description)
         for description in SENSOR_TYPES
         for device in ring_data.devices.all_devices
-        if description.exists_fn(device)
+        if async_check_exists(hass, SENSOR_DOMAIN, description, device)
         and async_check_create_deprecated(
             hass,
             Platform.SENSOR,
-            f"{device.id}-{description.key}",
+            description.unique_id_fn(description, device),
             description,
         )
     ]
@@ -81,7 +83,7 @@ class RingSensor(RingEntity[RingDeviceT], SensorEntity):
         """Initialize a sensor for Ring device."""
         super().__init__(device, coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
+        self._attr_unique_id = description.unique_id_fn(description, device)
         self._attr_entity_registry_enabled_default = (
             description.entity_registry_enabled_default
         )
