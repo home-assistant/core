@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+# from collections.abc import Mapping
 from contextlib import suppress
 import logging
 import os
-from typing import Any
 
+# from typing import Any
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
@@ -15,14 +15,23 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
 )
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 
+from . import api
 from .const import (
     DEFAULT_CACHE_DURATION,
     DEVICE_LIST,
@@ -31,15 +40,25 @@ from .const import (
     UNSUPPORTED_DEVICES,
 )
 from .types import ViCareDevice
-from .utils import get_device, get_device_serial
+from .utils import deserialize_token, get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
 
+type ViCareConfigEntry = ConfigEntry[api.ConfigEntryAuth]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up from config entry."""
+
+async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+    """Set up Viessmann ViCare from a config entry."""
     _LOGGER.debug("Setting up ViCare component")
+
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    entry.runtime_data = api.ConfigEntryAuth(hass, session)
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {}
@@ -59,25 +78,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def vicare_login(
-    hass: HomeAssistant,
-    entry_data: Mapping[str, Any],
+    entry: ViCareConfigEntry,
     cache_duration=DEFAULT_CACHE_DURATION,
 ) -> PyViCare:
     """Login via PyVicare API."""
     vicare_api = PyViCare()
     vicare_api.setCacheDuration(cache_duration)
-    vicare_api.initWithCredentials(
-        entry_data[CONF_USERNAME],
-        entry_data[CONF_PASSWORD],
-        entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
-    )
+    vicare_api.initWithExternalOAuth(entry.runtime_data)
     return vicare_api
 
 
-def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
     """Set up PyVicare API."""
-    vicare_api = vicare_login(hass, entry.data)
+    vicare_api = vicare_login(entry)
 
     device_config_list = get_supported_devices(vicare_api.devices)
     if (number_of_devices := len(device_config_list)) > 1:
@@ -87,7 +100,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             number_of_devices,
             cache_duration,
         )
-        vicare_api = vicare_login(hass, entry.data, cache_duration)
+        vicare_api = vicare_login(entry, cache_duration)
         device_config_list = get_supported_devices(vicare_api.devices)
 
     for device in device_config_list:
@@ -101,22 +114,17 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     ]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Unload ViCare config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    with suppress(FileNotFoundError):
-        await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
-        )
-
     return unload_ok
 
 
 async def async_migrate_devices_and_entities(
-    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
+    hass: HomeAssistant, entry: ViCareConfigEntry, device: ViCareDevice
 ) -> None:
     """Migrate old entry."""
     device_registry = dr.async_get(hass)
@@ -181,6 +189,60 @@ async def async_migrate_devices_and_entities(
                 entity_registry.async_update_entity(
                     entity_id=entity_entry.entity_id, new_unique_id=entity_new_unique_id
                 )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        if entry.minor_version == 1:
+            _LOGGER.debug(
+                "Migrating from version %s.%s", entry.version, entry.minor_version
+            )
+
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    entry.data[CONF_CLIENT_ID],
+                    "",
+                    entry.data[CONF_USERNAME],
+                ),
+            )
+
+            token_data = deserialize_token(
+                hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+            )
+            with suppress(FileNotFoundError):
+                await hass.async_add_executor_job(
+                    os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+                )
+            if token_data is None:
+                return False
+
+            hass.config_entries.async_update_entry(
+                entry,
+                minor_version=2,
+                data={
+                    "auth_implementation": DOMAIN,
+                    CONF_TOKEN: token_data,
+                    # {
+                    # "status": 0,
+                    # "userid": str(USER_ID),
+                    # "access_token": "mock-access-token",
+                    # "refresh_token": "mock-refresh-token",
+                    # "expires_at": expires_at,
+                    # "scope": ",".join(scopes),
+                    # },
+                },
+            )
+
+            _LOGGER.debug(
+                "Migration to version %s.%s successful",
+                entry.version,
+                entry.minor_version,
+            )
+            raise ConfigEntryAuthFailed
+    return True
 
 
 def get_supported_devices(
