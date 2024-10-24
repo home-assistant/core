@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import Platform
@@ -40,4 +41,30 @@ async def test_sensors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    assert_entities_alt(hass, normal_config_entry.entry_id, entity_registry, snapshot)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_restore(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Tests that the sensor entities are correct."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    # Setup platform to get some history data
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+    assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Break everything
+    mock_vehicle_data.side_effect = VehicleOffline
+
+    # Setup the platform and allow restore entities to happen
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
     assert_entities_alt(hass, normal_config_entry.entry_id, entity_registry, snapshot)
