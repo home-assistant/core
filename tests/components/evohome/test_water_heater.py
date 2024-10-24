@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -34,6 +35,7 @@ DHW_ENTITY_ID = "water_heater.domestic_hot_water"
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
     hass: HomeAssistant,
+    evohome: EvohomeClient,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -94,7 +96,7 @@ async def test_set_operation_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_set_away_mode(hass: HomeAssistant) -> None:
+async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> None:
     """Test SERVICE_SET_AWAY_MODE of a evohome HotWater entity."""
 
     # set_away_mode: off
@@ -131,7 +133,7 @@ async def test_set_away_mode(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_off(hass: HomeAssistant) -> None:
+async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
     """Test SERVICE_TURN_OFF of a evohome HotWater entity."""
 
     # Entity water_heater.domestic_hot_water does not support this service
@@ -147,7 +149,7 @@ async def test_turn_off(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_on(hass: HomeAssistant) -> None:
+async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
     """Test SERVICE_TURN_ON of a evohome HotWater entity."""
 
     # Entity water_heater.domestic_hot_water does not support this service
