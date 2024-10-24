@@ -1,0 +1,24 @@
+{
+  "config": {
+    "flow_title": "Controller {serial}",
+    "step": {
+      "discovery_confirm": {
+        "title": "Add controller",
+        "description": "Add controller {serial}?"
+      }
+    },
+    "abort": {
+      "already_configured": "Controller already configured",
+      "not_supported": "Configuration for QBUS is through MQTT discovery"
+    },
+    "error": {
+      "no_controller": "No controllers were found"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {}
+    },
+    "error": {}
+  }
+}
