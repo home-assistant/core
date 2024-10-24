@@ -82,9 +82,17 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def humidity(self) -> float | None:
         """Return the humidity."""
         try:
-            return float(self.coordinator.data[self.station_id]["RFAM"]["data"])
+            if (
+                value := self.coordinator.data[self.station_id]["RFAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["RF"]["data"]
+            ) is not None:
+                return float(value)
         except (KeyError, ValueError, TypeError):
             return None
+        return None
 
     @property
     def native_wind_speed(self) -> float | None:
@@ -92,6 +100,10 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         try:
             if (
                 value := self.coordinator.data[self.station_id]["FFAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["FF"]["data"]
             ) is not None:
                 return float(value)
             if (
