@@ -105,12 +105,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
                             data=user_input,
                         )
                     self.user_input = user_input
-                    return self.async_show_form(
-                        step_id="advanced",
-                        data_schema=self.build_advanced_schema(user_input),
-                        errors=errors,
-                        description_placeholders=PLACEHOLDERS,
-                    )
+                    return await self.async_step_advanced()
 
         return self.async_show_form(
             step_id="user",
@@ -154,7 +149,9 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="advanced",
-            data_schema=self.build_advanced_schema(self.user_input),
+            data_schema=vol.Schema(ADVANCED_TIME_DATA_SCHEMA)
+            if self.user_input[CONF_TIME_MODE] == "fixed"
+            else vol.Schema(ADVANCED_TIME_OFFSET_DATA_SCHEMA),
             errors=errors,
             description_placeholders=PLACEHOLDERS,
         )
@@ -171,9 +168,3 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unknown error")
             return "unknown"
         return None
-
-    def build_advanced_schema(self, user_input: dict[str, Any]) -> vol.Schema:
-        """Build the advanced schema."""
-        if user_input[CONF_TIME_MODE] == "fixed":
-            return vol.Schema(ADVANCED_TIME_DATA_SCHEMA)
-        return vol.Schema(ADVANCED_TIME_OFFSET_DATA_SCHEMA)
