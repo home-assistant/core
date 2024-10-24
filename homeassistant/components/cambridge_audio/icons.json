@@ -9,6 +9,17 @@
           "off": "mdi:brightness-3"
         }
       }
+    },
+    "switch": {
+      "pre_amp": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-low"
+        }
+      },
+      "early_update": {
+        "default": "mdi:update"
+      }
     }
   }
 }
