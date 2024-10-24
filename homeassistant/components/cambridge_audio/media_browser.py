@@ -52,14 +52,6 @@ async def _root_payload(
             )
         )
 
-    if len(children) == 1:
-        return await async_browse_media(
-            hass,
-            client,
-            children[0].media_content_id,
-            children[0].media_content_type,
-        )
-
     return BrowseMedia(
         title="Cambridge Audio",
         media_class=MediaClass.DIRECTORY,

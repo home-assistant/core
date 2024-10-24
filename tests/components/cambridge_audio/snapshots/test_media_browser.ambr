@@ -5,6 +5,20 @@
       'can_expand': True,
       'can_play': False,
       'children_media_class': None,
+      'media_class': 'directory',
+      'media_content_id': '',
+      'media_content_type': 'presets',
+      'thumbnail': 'https://brands.home-assistant.io/_/cambridge_audio/logo.png',
+      'title': 'Presets',
+    }),
+  ])
+# ---
+# name: test_browse_presets
+  list([
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'children_media_class': None,
       'media_class': 'channel',
       'media_content_id': 'radio',
       'media_content_type': 'presets_folder',

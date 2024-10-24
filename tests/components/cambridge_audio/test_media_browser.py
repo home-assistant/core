@@ -20,7 +20,7 @@ async def test_browse_media_root(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the async_browse_media method."""
+    """Test the root browse page."""
     await setup_integration(hass, mock_config_entry)
 
     client = await hass_ws_client()
@@ -36,6 +36,31 @@ async def test_browse_media_root(
     assert response["result"]["children"] == snapshot
 
 
+async def test_browse_presets(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the presets browse page."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "presets",
+            "media_content_id": "",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+
+
 async def test_browse_presets_folder(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
@@ -43,7 +68,7 @@ async def test_browse_presets_folder(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the async_browse_media method."""
+    """Test the presets folder browse page."""
     await setup_integration(hass, mock_config_entry)
 
     client = await hass_ws_client()
