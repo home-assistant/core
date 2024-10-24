@@ -35,10 +35,6 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reauth": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]"
-      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",

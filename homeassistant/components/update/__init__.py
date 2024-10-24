@@ -197,6 +197,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "release_url",
     "supported_features",
     "title",
+    "update_percentage",
 }
 
 
@@ -227,6 +228,7 @@ class UpdateEntity(
     _attr_state: None = None
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
+    _attr_update_percentage: int | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
 
@@ -284,8 +286,7 @@ class UpdateEntity(
 
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
-        Can either return a boolean (True if in progress, False if not)
-        or an integer to indicate the progress in from 0 to 100%.
+        Should return a boolean (True if in progress, False if not).
         """
         return self._attr_in_progress
 
@@ -334,6 +335,16 @@ class UpdateEntity(
             self._report_deprecated_supported_features_values(new_features)
             return new_features
         return features
+
+    @cached_property
+    def update_percentage(self) -> int | None:
+        """Update installation progress.
+
+        Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
+
+        Can either return an integer to indicate the progress from 0 to 100% or None.
+        """
+        return self._attr_update_percentage
 
     @final
     async def async_skip(self) -> None:
@@ -424,17 +435,17 @@ class UpdateEntity(
         if (release_summary := self.release_summary) is not None:
             release_summary = release_summary[:255]
 
-        update_percentage = None
-
         # If entity supports progress, return the in_progress value.
         # Otherwise, we use the internal progress value.
         if UpdateEntityFeature.PROGRESS in self.supported_features_compat:
             in_progress = self.in_progress
+            update_percentage = self.update_percentage
+            if type(in_progress) is not bool and isinstance(in_progress, int):
+                update_percentage = in_progress
+                in_progress = True
         else:
             in_progress = self.__in_progress
-        if type(in_progress) is not bool and isinstance(in_progress, int):
-            update_percentage = in_progress
-            in_progress = True
+            update_percentage = None
 
         installed_version = self.installed_version
         latest_version = self.latest_version
