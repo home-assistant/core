@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "api_unavailable": "The API is currently unavailable."
+    },
+    "error": {},
+    "step": {
+      "user": {
+        "data": {
+          "station_from": "Departure station",
+          "station_to": "Arrival station",
+          "exclude_vias": "Direct connections only",
+          "show_on_map": "Display on map"
+        },
+        "data_description": {
+          "station_from": "Station where the train departs",
+          "station_to": "Station where the train arrives",
+          "exclude_vias": "Exclude connections with transfers",
+          "show_on_map": "Show the station on the map"
+        }
+      }
+    }
+  }
+}
