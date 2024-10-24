@@ -159,6 +159,11 @@ CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
             translation_key="priority",
             device_class=SensorDeviceClass.ENUM,
         ),
+        "50095": SensorEntityDescription(
+            key="status",
+            translation_key="status",
+            device_class=SensorDeviceClass.ENUM,
+        ),
     },
     "NIBEF": {
         "43108": SensorEntityDescription(

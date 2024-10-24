@@ -49,4 +49,63 @@ def skip_entity(model: str, device_point: DevicePoint) -> bool:
         ):
             return False
         return True
+    if "F730" in model:
+        if any(
+            d in device_point.parameter_name.lower()
+            for d in (
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+            )
+        ):
+            return True
+        if device_point.parameter_id in [
+            "40940",
+            "47007",
+            "47015",
+            "47020",
+            "47021",
+            "47022",
+            "47023",
+            "47024",
+            "47025",
+            "47026",
+            "47027",
+            "47028",
+            "47032",
+            "47050",
+            "47051",
+            "47206",
+            "47209",
+            "47271",
+            "47272",
+            "47273",
+            "47274",
+            "47375",
+            "47376",
+            "47538",
+            "47539",
+            "47635",
+            "47669",
+            "47703",
+            "47737",
+            "47771",
+            "47772",
+            "47805",
+            "47806",
+            "47839",
+            "47840",
+            "47907",
+            "47941",
+            "47975",
+            "48009",
+            "48042",
+            "48072",
+            "50113",
+        ]:
+            return True
     return False
