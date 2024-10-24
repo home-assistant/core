@@ -168,10 +168,8 @@ async def evohome(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
-) -> AsyncGenerator[EvohomeClient]:
-    """Return the evohome client for this install fixture."""
+) -> AsyncGenerator[MagicMock]:
+    """Return the mocked evohome client for this install fixture."""
 
     async for mock_client in setup_evohome(hass, config, install=install):
-        evo: EvohomeClient = mock_client.return_value
-
-        yield evo
+        yield mock_client
