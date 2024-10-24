@@ -1,6 +1,7 @@
 """Teslemetry integration."""
 
 import asyncio
+from collections.abc import Callable
 from typing import Final
 
 from tesla_fleet_api import EnergySpecific, Teslemetry, VehicleSpecific
@@ -239,7 +240,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-def create_handle_vehicle_stream(vin: str, coordinator):
+def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None]:
     """Create a handle vehicle stream function."""
 
     def handle_vehicle_stream(data: dict) -> None:
