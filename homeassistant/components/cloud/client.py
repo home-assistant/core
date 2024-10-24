@@ -21,7 +21,7 @@ from homeassistant.components.alexa import (
 )
 from homeassistant.components.camera.webrtc import (
     RTCIceServer as RTCIceServerOld,
-    register_ice_server,
+    async_register_ice_servers,
 )
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.const import __version__ as HA_VERSION
@@ -196,18 +196,21 @@ class CloudClient(Interface):
 
         async def setup_cloud_ice_servers(_: datetime) -> None:
             async def register_cloud_ice_server(
-                ice_server: RTCIceServer,
+                ice_servers: list[RTCIceServer],
             ) -> Callable[[], None]:
                 """Register cloud ice server."""
 
-                async def get_ice_server() -> RTCIceServerOld:
-                    return RTCIceServerOld(
-                        urls=ice_server.urls,
-                        username=ice_server.username,
-                        credential=ice_server.credential,
-                    )
+                def get_ice_servers() -> list[RTCIceServerOld]:
+                    return [
+                        RTCIceServerOld(
+                            urls=ice_server.urls,
+                            username=ice_server.username,
+                            credential=ice_server.credential,
+                        )
+                        for ice_server in ice_servers
+                    ]
 
-                return register_ice_server(self._hass, get_ice_server)
+                return async_register_ice_servers(self._hass, get_ice_servers)
 
             async def async_register_cloud_ice_servers_listener(
                 prefs: CloudPreferences,
