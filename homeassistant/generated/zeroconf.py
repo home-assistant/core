@@ -633,6 +633,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_mass._tcp.local.": [
+        {
+            "domain": "music_assistant",
+        },
+    ],
     "_matter._tcp.local.": [
         {
             "domain": "matter",
