@@ -1754,10 +1754,10 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
         )
         await hass.async_block_till_done()
 
-    avg: float = float(hass.states.get("sensor.test").state)
     # depending on timing we will either end up with a buffer of [1 .. 9] or [1 .. 10]
     # what may not happen is that the 10 will be added somewhere in between
     # so we compute average_step for either 1 .. 9 or 1 .. 10
     # this leads to 1+2+3+4+5+6+7+8/8 = 4.5
     #            or 1+2+3+4+5+6+7+8+9/9 = 5
-    assert (4.49 < avg < 4.51) or (4.99 < avg < 5.01)
+    avg: float = float(hass.states.get("sensor.test").state)
+    assert avg == pytest.approx(4.5) or avg == pytest.approx(5.0)
