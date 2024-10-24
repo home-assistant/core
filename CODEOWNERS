@@ -1350,6 +1350,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smarttub/ @mdz
 /tests/components/smarttub/ @mdz
 /homeassistant/components/smarty/ @z0mbieprocess
+/tests/components/smarty/ @z0mbieprocess
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl

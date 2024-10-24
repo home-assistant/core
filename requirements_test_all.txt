@@ -1804,6 +1804,9 @@ pysmartapp==0.3.5
 # homeassistant.components.smartthings
 pysmartthings==0.7.8
 
+# homeassistant.components.smarty
+pysmarty2==0.10.1
+
 # homeassistant.components.edl21
 pysml==0.0.12
 
