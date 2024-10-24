@@ -62,7 +62,7 @@ async def test_sensors_restore(
     assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Break everything
+    # Set the vehicle offline
     mock_vehicle_data.side_effect = VehicleOffline
 
     # Setup the platform and allow restore entities to happen
