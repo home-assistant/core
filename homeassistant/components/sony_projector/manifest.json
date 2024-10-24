@@ -1,9 +1,10 @@
 {
-  "domain": "sony_projector",
-  "name": "Sony Projector",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/sony_projector",
-  "iot_class": "local_polling",
-  "loggers": ["pysdcp"],
-  "requirements": ["pySDCP==1"]
+    "domain": "sony_projector",
+    "name": "Sony Projector",
+    "codeowners": [],
+    "documentation": "https://www.home-assistant.io/integrations/sony_projector",
+    "iot_class": "local_polling",
+    "loggers": ["pysdcp"],
+    "requirements": ["pySDCP==1"],
+    "version": "1.01"
 }
