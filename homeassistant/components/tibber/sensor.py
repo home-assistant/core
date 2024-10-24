@@ -369,7 +369,7 @@ class TibberSensorElPrice(TibberSensor):
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
         self._last_updated: datetime.datetime | None = None
-        self._spread_load_constant = randrange(5000)
+        self._spread_load_constant = randrange(20 * 60)
 
         self._attr_available = False
         self._attr_extra_state_attributes = {
@@ -397,7 +397,7 @@ class TibberSensorElPrice(TibberSensor):
         if (
             not self._tibber_home.last_data_timestamp
             or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 5 * 3600 + self._spread_load_constant
+            < 11 * 3600 + self._spread_load_constant
             or not self.available
         ):
             _LOGGER.debug("Asking for new data")
