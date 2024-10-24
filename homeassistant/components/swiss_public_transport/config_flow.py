@@ -38,11 +38,7 @@ from .const import (
     PLACEHOLDERS,
     TIME_MODE_OPTIONS,
 )
-from .helper import (
-    dict_duration_to_str_duration,
-    offset_opendata,
-    unique_id_from_config,
-)
+from .helper import offset_opendata, unique_id_from_config
 
 USER_DATA_SCHEMA = vol.Schema(
     {
@@ -137,14 +133,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             session = async_get_clientsession(self.hass)
-            time_offset_dict: dict[str, int] | None = advanced_input.get(
-                CONF_TIME_OFFSET
-            )
-            time_offset = (
-                dict_duration_to_str_duration(time_offset_dict)
-                if CONF_TIME_OFFSET in advanced_input and time_offset_dict is not None
-                else None
-            )
+            time_offset: dict[str, int] | None = advanced_input.get(CONF_TIME_OFFSET)
             opendata = OpendataTransport(
                 self.user_input[CONF_START],
                 self.user_input[CONF_DESTINATION],

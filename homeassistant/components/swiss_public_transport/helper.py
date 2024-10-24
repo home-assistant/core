@@ -1,5 +1,6 @@
 """Helper functions for swiss_public_transport."""
 
+from datetime import timedelta
 from types import MappingProxyType
 from typing import Any
 
@@ -18,10 +19,10 @@ from .const import (
 )
 
 
-def offset_opendata(opendata: OpendataTransport, offset: str) -> None:
+def offset_opendata(opendata: OpendataTransport, offset: dict[str, int]) -> None:
     """In place offset the opendata connector."""
 
-    duration = dt_util.parse_duration(offset)
+    duration = timedelta(**offset)
     if duration:
         now_offset = dt_util.as_local(dt_util.now() + duration)
         opendata.date = now_offset.date()

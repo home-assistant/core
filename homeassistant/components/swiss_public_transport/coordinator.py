@@ -59,7 +59,10 @@ class SwissPublicTransportDataUpdateCoordinator(
     config_entry: SwissPublicTransportConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, opendata: OpendataTransport, time_offset: str | None
+        self,
+        hass: HomeAssistant,
+        opendata: OpendataTransport,
+        time_offset: dict[str, int] | None,
     ) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
         super().__init__(

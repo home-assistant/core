@@ -33,11 +33,7 @@ from .coordinator import (
     SwissPublicTransportConfigEntry,
     SwissPublicTransportDataUpdateCoordinator,
 )
-from .helper import (
-    dict_duration_to_str_duration,
-    offset_opendata,
-    unique_id_from_config,
-)
+from .helper import offset_opendata, unique_id_from_config
 from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,12 +59,7 @@ async def async_setup_entry(
     start = config[CONF_START]
     destination = config[CONF_DESTINATION]
 
-    time_offset_dict: dict[str, int] | None = config.get(CONF_TIME_OFFSET)
-    time_offset = (
-        dict_duration_to_str_duration(time_offset_dict)
-        if CONF_TIME_OFFSET in config and time_offset_dict is not None
-        else None
-    )
+    time_offset: dict[str, int] | None = config.get(CONF_TIME_OFFSET)
 
     session = async_get_clientsession(hass)
     opendata = OpendataTransport(
