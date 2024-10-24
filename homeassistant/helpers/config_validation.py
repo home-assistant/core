@@ -1585,6 +1585,40 @@ TIME_CONDITION_SCHEMA = vol.All(
     has_at_least_one_key("before", "after", "weekday"),
 )
 
+DATE_CONDITION_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            vol.Required(CONF_CONDITION): "date",
+            vol.Optional("before"): vol.Any(
+                date, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("after"): vol.Any(
+                date, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("weekday"): weekdays,
+        }
+    ),
+    has_at_least_one_key("before", "after", "weekday"),
+)
+
+DATETIME_CONDITION_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            vol.Required(CONF_CONDITION): "datetime",
+            vol.Optional("before"): vol.Any(
+                datetime, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("after"): vol.Any(
+                datetime, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("weekday"): weekdays,
+        }
+    ),
+    has_at_least_one_key("before", "after", "weekday"),
+)
+
 TRIGGER_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1722,6 +1756,8 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                     "sun": SUN_CONDITION_SCHEMA,
                     "template": TEMPLATE_CONDITION_SCHEMA,
                     "time": TIME_CONDITION_SCHEMA,
+                    "date": DATETIME_CONDITION_SCHEMA,
+                    "datetime": DATETIME_CONDITION_SCHEMA,
                     "trigger": TRIGGER_CONDITION_SCHEMA,
                     "zone": ZONE_CONDITION_SCHEMA,
                 },
