@@ -8,7 +8,6 @@ from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
-import aiozoneinfo
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -18,6 +17,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
 
@@ -45,7 +45,7 @@ def mock_scope() -> str:
 @pytest.fixture(name="mower_time_zone")
 async def mock_time_zone(hass: HomeAssistant) -> dict[str, MowerAttributes]:
     """Fixture to set correct scope for the token."""
-    return await aiozoneinfo.async_get_time_zone("Europe/Berlin")
+    return await dt_util.async_get_time_zone("Europe/Berlin")
 
 
 @pytest.fixture(name="values")
