@@ -412,14 +412,14 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
         exists_fn=lambda data: data.progress is not None,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: data.progress,
+        value_fn=attrgetter("progress"),
     ),
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
         translation_key_fn=_work_area_translation_key,
         exists_fn=lambda data: data.last_time_completed is not None,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.last_time_completed,
+        value_fn=attrgetter("last_time_completed"),
     ),
 )
 
