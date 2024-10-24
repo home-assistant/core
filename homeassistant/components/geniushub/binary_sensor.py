@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GeniusHubConfigEntry
+from . import GeniusHubConfigEntry, GeniusHubCoordinator
 from .entity import GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
@@ -20,11 +20,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub binary sensor entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusBinarySensor(broker, d, GH_STATE_ATTR)
-        for d in broker.client.device_objs
+        GeniusBinarySensor(coordinator, d, GH_STATE_ATTR)
+        for d in coordinator.client.device_objs
         if GH_TYPE in d.data["type"]
     )
 
@@ -32,9 +32,9 @@ async def async_setup_entry(
 class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
     """Representation of a Genius Hub binary_sensor."""
 
-    def __init__(self, broker, device, state_attr) -> None:
+    def __init__(self, coordinator: GeniusHubCoordinator, device, state_attr) -> None:
         """Initialize the binary sensor."""
-        super().__init__(broker, device)
+        super().__init__(coordinator, device)
 
         self._state_attr = state_attr
 

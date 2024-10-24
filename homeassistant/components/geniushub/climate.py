@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GeniusHubConfigEntry
+from . import GeniusHubConfigEntry, GeniusHubCoordinator
 from .entity import GeniusHeatingZone
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
@@ -33,11 +33,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub climate entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusClimateZone(broker, z)
-        for z in broker.client.zone_objs
+        GeniusClimateZone(coordinator, z)
+        for z in coordinator.client.zone_objs
         if z.data.get("type") in GH_ZONES
     )
 
@@ -53,9 +53,9 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
     )
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, broker, zone) -> None:
+    def __init__(self, coordinator: GeniusHubCoordinator, zone) -> None:
         """Initialize the climate device."""
-        super().__init__(broker, zone)
+        super().__init__(coordinator, zone)
 
         self._max_temp = 28.0
         self._min_temp = 4.0
