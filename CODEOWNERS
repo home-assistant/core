@@ -651,6 +651,8 @@ build.json @home-assistant/supervisor
 /tests/components/huawei_lte/ @scop @fphammerle
 /homeassistant/components/hue/ @balloob @marcelveldt
 /tests/components/hue/ @balloob @marcelveldt
+/homeassistant/components/hue_ble/ @flip-dots
+/tests/components/hue_ble/ @flip-dots
 /homeassistant/components/huisbaasje/ @dennisschroer
 /tests/components/huisbaasje/ @dennisschroer
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
