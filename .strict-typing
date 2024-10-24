@@ -92,6 +92,7 @@ homeassistant.components.aranet.*
 homeassistant.components.arcam_fmj.*
 homeassistant.components.arris_tg2492lg.*
 homeassistant.components.aruba.*
+homeassistant.components.aruba_instant_on.*
 homeassistant.components.arwn.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.assist_pipeline.*

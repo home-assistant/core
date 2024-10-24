@@ -1,0 +1,9 @@
+{
+  "domain": "aruba_instant_on",
+  "name": "Aruba Instant On",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/aruba_instant_on",
+  "iot_class": "local_polling",
+  "loggers": ["ion_client"],
+  "requirements": ["ion-client==1.0.0"]
+}
