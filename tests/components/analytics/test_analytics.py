@@ -932,6 +932,7 @@ async def test_devices_payload(
 ) -> None:
     """Test devices payload."""
     assert async_devices_payload(hass) == {
+        "version": "home-assistant:1",
         "no_model_id": [],
         "devices": [],
     }
@@ -998,6 +999,7 @@ async def test_devices_payload(
     )
 
     assert async_devices_payload(hass) == {
+        "version": "home-assistant:1",
         "no_model_id": ["no_model_id"],
         "devices": [
             {

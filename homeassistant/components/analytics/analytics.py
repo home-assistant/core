@@ -433,6 +433,7 @@ def async_devices_payload(hass: HomeAssistant) -> dict:
         devices[new_indexes[from_device]]["via_device"] = new_indexes[via_device]
 
     return {
+        "version": "home-assistant:1",
         "no_model_id": sorted(integrations_without_model_id),
         "devices": devices,
     }
