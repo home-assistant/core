@@ -1737,13 +1737,14 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "average_timeless",
+                        "state_characteristic": "average_step",
                         "max_age": {"seconds": 10},
                     },
                 ]
             },
         )
-        # this value is going to be ignored, since loading from the database hasn't finished yet
+        # this value is probably going to be ignored, since loading from the database has
+        # most likely hasn't finished yet
         # if this value would be added before loading the historic data
         # it would mess up the order of the internal queue which is supposed to be sorted by time
         hass.states.async_set(
@@ -1754,7 +1755,9 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
         await hass.async_block_till_done()
 
     avg: float = float(hass.states.get("sensor.test").state)
-    # this is the average of VALUES_NUMERIC_LINEAR without the ignored value
-    # so we compute the average of 1 .. 9 and not 1 .. 10
-    assert avg > 4.99
-    assert avg < 5.01
+    # depending on timing we will either end up with a buffer of [1 .. 9] or [1 .. 10]
+    # what may not happen is that the 10 will be added somewhere in between
+    # so we compute average_step for either 1 .. 9 or 1 .. 10
+    # this leads to 1+2+3+4+5+6+7+8/8 = 4.5
+    #            or 1+2+3+4+5+6+7+8+9/9 = 5
+    assert (4.49 < avg < 4.51) or (4.99 < avg < 5.01)
