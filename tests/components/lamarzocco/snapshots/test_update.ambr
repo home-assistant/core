@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
       'friendly_name': 'GS01234 Gateway firmware',
       'in_progress': False,
@@ -62,6 +63,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
       'friendly_name': 'GS01234 Machine firmware',
       'in_progress': False,
