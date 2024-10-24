@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     station_response = await hass.async_add_executor_job(api_client.get_stations)
     if station_response == -1:
         return False
-    hass.data[DOMAIN]["stations"] = station_response["station"]
+    hass.data[DOMAIN] = station_response["station"]
 
     return True
 
@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             next(
                 (
                     s
-                    for s in hass.data[DOMAIN]["stations"]
+                    for s in hass.data[DOMAIN]
                     if s["standardname"] == entry.data[station_type]
                     or s["name"] == entry.data[station_type]
                 ),

@@ -133,13 +133,12 @@ async def async_setup_entry(
     excl_vias = config_entry.data[CONF_EXCLUDE_VIAS]
 
     # setup the connection from station to station
-    async_add_entities(
-        [NMBSSensor(api_client, name, show_on_map, station_from, station_to, excl_vias)]
-    )
-
     # setup a disabled liveboard for both from and to station
     async_add_entities(
         [
+            NMBSSensor(
+                api_client, name, show_on_map, station_from, station_to, excl_vias
+            ),
             NMBSLiveBoard(api_client, station_from, station_from, station_to),
             NMBSLiveBoard(api_client, station_to, station_from, station_to),
         ]

@@ -32,7 +32,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.api_client = iRail()
         self.stations: list[dict[str, Any]] = []
 
-    async def _fetch_stations_choices(self) -> list[SelectOptionDict]:
+    async def _fetch_stations(self) -> list[dict[str, Any]]:
         """Fetch the stations."""
 
         stations_response = await self.hass.async_add_executor_job(
@@ -40,7 +40,13 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if stations_response == -1:
             raise ConfigEntryError("The API is currently unavailable.")
-        self.stations = stations_response["station"]
+        return stations_response["station"]
+
+    async def _fetch_stations_choices(self) -> list[SelectOptionDict]:
+        """Fetch the stations options."""
+
+        if len(self.stations) == 0:
+            self.stations = await self._fetch_stations()
 
         return [
             SelectOptionDict(
@@ -67,10 +73,9 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=user_input,
             )
 
-        choices = await self._fetch_stations_choices()
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
+        try:
+            choices = await self._fetch_stations_choices()
+            schema = vol.Schema(
                 {
                     vol.Required(CONF_STATION_FROM): SelectSelector(
                         SelectSelectorConfig(
@@ -87,9 +92,14 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_EXCLUDE_VIAS, default=False): BooleanSelector(),
                     vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
                 },
-            ),
-            errors=errors,
-        )
+            )
+            return self.async_show_form(
+                step_id="user",
+                data_schema=schema,
+                errors=errors,
+            )
+        except ConfigEntryError:
+            return self.async_abort(reason="api_unavailable")
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import configuration from yaml."""
