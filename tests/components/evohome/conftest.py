@@ -185,11 +185,9 @@ async def zone_id(
 ) -> AsyncGenerator[str]:
     """Return the entity_id of the evohome integration' first Climate zone."""
 
-    zone: Zone
-
     async for mock_client in setup_evohome(hass, config, install=install):
         evo: EvohomeClient = mock_client.return_value
 
-        zone = list(evo._get_single_tcs().zones.values())[0]
+        zone: Zone = list(evo._get_single_tcs().zones.values())[0]
 
         yield f"{Platform.CLIMATE}.{slugify(zone.name)}"
