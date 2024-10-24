@@ -130,6 +130,10 @@
     {
       "type": "_czc._tcp.local.",
       "name": "czc*"
+    },
+    {
+      "type": "_zigbee-gateway._tcp.local.",
+      "name": "*"
     }
   ]
 }
