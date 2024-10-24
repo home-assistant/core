@@ -1234,10 +1234,8 @@ async def test_preset_mode(
     device.raw_ui_data["StatusHeat"] = MODE_TEMPORARY_HOLD
     device.raw_ui_data["StatusCool"] = MODE_TEMPORARY_HOLD
 
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLD
@@ -1245,10 +1243,8 @@ async def test_preset_mode(
     device.raw_ui_data["StatusHeat"] = MODE_PERMANENT_HOLD
     device.raw_ui_data["StatusCool"] = MODE_PERMANENT_HOLD
 
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLD
@@ -1265,10 +1261,8 @@ async def test_preset_mode(
 
     device.raw_ui_data["StatusHeat"] = 3
     device.raw_ui_data["StatusCool"] = 3
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
