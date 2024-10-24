@@ -187,47 +187,10 @@ class AssistSatelliteEntity(entity.Entity):
         """
         await self._cancel_running_pipeline()
 
-        media_id_source: Literal["url", "media_id", "tts"] | None = None
-
         if message is None:
             message = ""
 
-        if not media_id:
-            media_id_source = "tts"
-            # Synthesize audio and get URL
-            pipeline_id = self._resolve_pipeline()
-            pipeline = async_get_pipeline(self.hass, pipeline_id)
-
-            tts_options: dict[str, Any] = {}
-            if pipeline.tts_voice is not None:
-                tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
-
-            if self.tts_options is not None:
-                tts_options.update(self.tts_options)
-
-            media_id = tts_generate_media_source_id(
-                self.hass,
-                message,
-                engine=pipeline.tts_engine,
-                language=pipeline.tts_language,
-                options=tts_options,
-            )
-
-        if media_source.is_media_source_id(media_id):
-            if not media_id_source:
-                media_id_source = "media_id"
-            media = await media_source.async_resolve_media(
-                self.hass,
-                media_id,
-                None,
-            )
-            media_id = media.url
-
-        if not media_id_source:
-            media_id_source = "url"
-
-        # Resolve to full URL
-        media_id = async_process_play_media_url(self.hass, media_id)
+        announcement = await self._resolve_media_id(message, media_id)
 
         if self._is_announcing:
             raise SatelliteBusyError
@@ -237,9 +200,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         try:
             # Block until announcement is finished
-            await self.async_announce(
-                AssistSatelliteAnnouncement(message, media_id, media_id_source)
-            )
+            await self.async_announce(announcement)
         finally:
             self._is_announcing = False
             self._set_state(AssistSatelliteState.IDLE)
@@ -249,6 +210,44 @@ class AssistSatelliteEntity(entity.Entity):
 
         Should block until the announcement is done playing.
         """
+        raise NotImplementedError
+
+    async def async_internal_start_conversation(
+        self,
+        start_message: str | None = None,
+        start_media_id: str | None = None,
+    ) -> None:
+        """Start a conversation from the satellite.
+
+        If start_media_id is not provided, message is synthesized to
+        audio with the selected pipeline.
+
+        If start_media_id is provided, it is played directly. It is possible
+        to omit the message and the satellite will not show any text.
+
+        Calls async_start_conversation.
+        """
+        await self._cancel_running_pipeline()
+
+        if start_message is None:
+            start_message = ""
+
+        announcement = await self._resolve_media_id(start_message, start_media_id)
+
+        if self._is_announcing:
+            raise SatelliteBusyError
+
+        self._is_announcing = True
+
+        try:
+            await self.async_start_conversation(announcement)
+        finally:
+            self._is_announcing = False
+
+    async def async_start_conversation(
+        self, start_announcement: AssistSatelliteAnnouncement
+    ) -> None:
+        """Start a conversation from the satellite."""
         raise NotImplementedError
 
     async def async_accept_pipeline_from_satellite(
@@ -428,3 +427,48 @@ class AssistSatelliteEntity(entity.Entity):
             vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
 
         return vad.VadSensitivity.to_seconds(vad_sensitivity)
+
+    async def _resolve_media_id(
+        self, message: str, media_id: str | None
+    ) -> AssistSatelliteAnnouncement:
+        """Resolve the media ID."""
+        media_id_source: Literal["url", "media_id", "tts"] | None = None
+
+        if not media_id:
+            media_id_source = "tts"
+            # Synthesize audio and get URL
+            pipeline_id = self._resolve_pipeline()
+            pipeline = async_get_pipeline(self.hass, pipeline_id)
+
+            tts_options: dict[str, Any] = {}
+            if pipeline.tts_voice is not None:
+                tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
+
+            if self.tts_options is not None:
+                tts_options.update(self.tts_options)
+
+            media_id = tts_generate_media_source_id(
+                self.hass,
+                message,
+                engine=pipeline.tts_engine,
+                language=pipeline.tts_language,
+                options=tts_options,
+            )
+
+        if media_source.is_media_source_id(media_id):
+            if not media_id_source:
+                media_id_source = "media_id"
+            media = await media_source.async_resolve_media(
+                self.hass,
+                media_id,
+                None,
+            )
+            media_id = media.url
+
+        if not media_id_source:
+            media_id_source = "url"
+
+        # Resolve to full URL
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        return AssistSatelliteAnnouncement(message, media_id, media_id_source)

@@ -39,7 +39,11 @@ class MockAssistSatellite(AssistSatelliteEntity):
     """Mock Assist Satellite Entity."""
 
     _attr_name = "Test Entity"
-    _attr_supported_features = AssistSatelliteEntityFeature.ANNOUNCE
+    _attr_supported_features = (
+        AssistSatelliteEntityFeature.ANNOUNCE
+        | AssistSatelliteEntityFeature.START_CONVERSATION
+    )
+    _attr_tts_options = {"test-option": "test-value"}
 
     def __init__(self) -> None:
         """Initialize the mock entity."""
@@ -59,6 +63,7 @@ class MockAssistSatellite(AssistSatelliteEntity):
             active_wake_words=["1234"],
             max_active_wake_words=1,
         )
+        self.start_conversations = []
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
@@ -78,6 +83,12 @@ class MockAssistSatellite(AssistSatelliteEntity):
     ) -> None:
         """Set the current satellite configuration."""
         self.config = config
+
+    async def async_start_conversation(
+        self, start_announcement: AssistSatelliteConfiguration
+    ) -> None:
+        """Start a conversation from the satellite."""
+        self.start_conversations.append(start_announcement)
 
 
 @pytest.fixture
