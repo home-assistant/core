@@ -80,6 +80,7 @@ class TriggerBaseEntity(Entity):
     domain: str
     extra_template_keys: tuple[str, ...] | None = None
     extra_template_keys_complex: tuple[str, ...] | None = None
+    extra_parse_result_keys: tuple[str, ...] | None = None
     _unique_id: str | None
 
     def __init__(
@@ -121,6 +122,9 @@ class TriggerBaseEntity(Entity):
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+
+        if self.extra_parse_result_keys is not None:
+            self._parse_result |= set(self.extra_parse_result_keys)
 
     @property
     def name(self) -> str | None:
