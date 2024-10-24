@@ -204,9 +204,11 @@ class GoogleGenerativeAIConversationEntity(
         """Process a sentence."""
         result = conversation.ConversationResult(
             response=intent.IntentResponse(language=user_input.language),
-            conversation_id=user_input.conversation_id
-            if user_input.conversation_id in self.history
-            else ulid.ulid_now(),
+            conversation_id=(
+                user_input.conversation_id
+                if user_input.conversation_id in self.history
+                else ulid.ulid_now()
+            ),
         )
         assert result.conversation_id
 
@@ -234,6 +236,11 @@ class GoogleGenerativeAIConversationEntity(
                     f"Error preparing LLM API: {err}",
                 )
                 return result
+
+            if external_result := await llm_api.api.async_handle_externally(user_input):
+                # Handled externally
+                return external_result
+
             tools = [
                 _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
             ]
@@ -297,9 +304,9 @@ class GoogleGenerativeAIConversationEntity(
             trace.ConversationTraceEventType.AGENT_DETAIL,
             {
                 # Make a copy to attach it to the trace event.
-                "messages": messages[:]
-                if supports_system_instruction
-                else messages[2:],
+                "messages": (
+                    messages[:] if supports_system_instruction else messages[2:]
+                ),
                 "prompt": prompt,
                 "tools": [*llm_api.tools] if llm_api else None,
             },

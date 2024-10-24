@@ -506,6 +506,73 @@ async def test_assist_api_tools_conversion(
     assert tools
 
 
+async def test_assist_api_handled_externally(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that the Assist API handles sentence triggers and registered intents."""
+    agent_id = mock_config_entry_with_assist.entry_id
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["my trigger"],
+                },
+                "action": {
+                    "set_conversation_response": "my response",
+                },
+            }
+        },
+    )
+
+    # Handled by sentence trigger instead of LLM
+    result = await conversation.async_converse(
+        hass,
+        "my trigger",
+        None,
+        context,
+        agent_id=agent_id,
+    )
+    assert result is not None
+    assert result.response.speech["plain"]["speech"] == "my response"
+
+    # Reuse custom sentences in test config to trigger default agent.
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.was_handled = False
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            self.was_handled = True
+            return intent_obj.create_response()
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    # Handled by registered intent instead of LLM
+    result = await conversation.async_converse(
+        hass,
+        "I'd like to order a stout",
+        None,
+        context,
+        agent_id=agent_id,
+    )
+    assert result is not None
+    assert result.response.intent is not None
+    assert result.response.intent.intent_type == handler.intent_type
+    assert handler.was_handled
+
+
 async def test_unknown_hass_api(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -16,8 +16,12 @@ from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.climate import INTENT_GET_TEMPERATURE
 from homeassistant.components.conversation import (
+    ConversationInput,
+    ConversationResult,
     ConversationTraceEventType,
     async_conversation_trace_append,
+    async_handle_intents,
+    async_handle_sentence_triggers,
 )
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
@@ -198,6 +202,15 @@ class API(ABC):
         """Return the instance of the API."""
         raise NotImplementedError
 
+    async def async_handle_externally(
+        self, user_input: ConversationInput
+    ) -> ConversationResult | None:
+        """Try to handle the input using an external system or agent.
+
+        Returns None if the input could not be handled externally.
+        """
+        return None
+
 
 class IntentTool(Tool):
     """LLM Tool representing an Intent."""
@@ -313,6 +326,22 @@ class AssistAPI(API):
             tools=self._async_get_tools(llm_context, exposed_entities),
             custom_serializer=_selector_serializer,
         )
+
+    async def async_handle_externally(
+        self, user_input: ConversationInput
+    ) -> ConversationResult | None:
+        """Try to handle the input using sentence triggers."""
+        if trigger_response := await async_handle_sentence_triggers(
+            self.hass, user_input
+        ):
+            response = intent.IntentResponse(user_input.language)
+            response.async_set_speech(trigger_response)
+            return ConversationResult(response)
+
+        if intent_response := await async_handle_intents(self.hass, user_input):
+            return ConversationResult(intent_response)
+
+        return None
 
     @callback
     def _async_get_api_prompt(
@@ -499,9 +528,11 @@ def _get_exposed_entities(
             info["areas"] = ", ".join(area_names)
 
         if attributes := {
-            attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal, int))
-            else attr_value
+            attr_name: (
+                str(attr_value)
+                if isinstance(attr_value, (Enum, Decimal, int))
+                else attr_value
+            )
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
         }:

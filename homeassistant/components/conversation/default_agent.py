@@ -258,45 +258,12 @@ class DefaultAgent(ConversationEntity):
 
         # Check if a trigger matched
         if isinstance(result, SentenceTriggerResult):
-            # Gather callback responses in parallel
-            trigger_callbacks = [
-                self._trigger_sentences[trigger_id].callback(
-                    result.sentence, trigger_result, user_input.device_id
-                )
-                for trigger_id, trigger_result in result.matched_triggers.items()
-            ]
-
-            # Use first non-empty result as response.
-            #
-            # There may be multiple copies of a trigger running when editing in
-            # the UI, so it's critical that we filter out empty responses here.
-            response_text: str | None = None
-            response_set_by_trigger = False
-            for trigger_future in asyncio.as_completed(trigger_callbacks):
-                trigger_response = await trigger_future
-                if trigger_response is None:
-                    continue
-
-                response_text = trigger_response
-                response_set_by_trigger = True
-                break
+            # Process callbacks and get response
+            response_text = await self._handle_trigger_result(result, user_input)
 
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
             response.response_type = intent.IntentResponseType.ACTION_DONE
-
-            if response_set_by_trigger:
-                # Response was explicitly set to empty
-                response_text = response_text or ""
-            elif not response_text:
-                # Use translated acknowledgment for pipeline language
-                translations = await translation.async_get_translations(
-                    self.hass, language, DOMAIN, [DOMAIN]
-                )
-                response_text = translations.get(
-                    f"component.{DOMAIN}.agent.done", "Done"
-                )
-
             response.async_set_speech(response_text)
 
             return ConversationResult(response=response)
@@ -439,7 +406,7 @@ class DefaultAgent(ConversationEntity):
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
         strict_result = self._recognize_strict(
-            user_input, lang_intents, slot_lists, intent_context, language
+            user_input.text, lang_intents, slot_lists, intent_context, language
         )
 
         if strict_result is not None:
@@ -483,7 +450,7 @@ class DefaultAgent(ConversationEntity):
         }
 
         strict_result = self._recognize_strict(
-            user_input,
+            user_input.text,
             lang_intents,
             slot_lists,
             intent_context,
@@ -555,7 +522,7 @@ class DefaultAgent(ConversationEntity):
 
     def _recognize_strict(
         self,
-        user_input: ConversationInput,
+        sentence: str,
         lang_intents: LanguageIntents,
         slot_lists: dict[str, SlotList],
         intent_context: dict[str, Any] | None,
@@ -568,7 +535,7 @@ class DefaultAgent(ConversationEntity):
         best_name_quality: int | None = None
         best_text_chunks_matched: int | None = None
         for result in recognize_all(
-            user_input.text,
+            sentence,
             lang_intents.intents,
             slot_lists=slot_lists,
             intent_context=intent_context,
@@ -1144,6 +1111,175 @@ class DefaultAgent(ConversationEntity):
 
         return SentenceTriggerResult(sentence, matched_template, matched_triggers)
 
+    async def _handle_trigger_result(
+        self, result: SentenceTriggerResult, user_input: ConversationInput
+    ) -> str:
+        """Run sentence trigger callbacks and return response text."""
+
+        # Gather callback responses in parallel
+        trigger_callbacks = [
+            self._trigger_sentences[trigger_id].callback(
+                user_input.text, trigger_result, user_input.device_id
+            )
+            for trigger_id, trigger_result in result.matched_triggers.items()
+        ]
+
+        # Use first non-empty result as response.
+        #
+        # There may be multiple copies of a trigger running when editing in
+        # the UI, so it's critical that we filter out empty responses here.
+        response_text = ""
+        response_set_by_trigger = False
+        for trigger_future in asyncio.as_completed(trigger_callbacks):
+            trigger_response = await trigger_future
+            if trigger_response is None:
+                continue
+
+            response_text = trigger_response
+            response_set_by_trigger = True
+            break
+
+        if response_set_by_trigger:
+            # Response was explicitly set to empty
+            response_text = response_text or ""
+        elif not response_text:
+            # Use translated acknowledgment for pipeline language
+            language = user_input.language or self.hass.config.language
+            translations = await translation.async_get_translations(
+                self.hass, language, DOMAIN, [DOMAIN]
+            )
+            response_text = translations.get(f"component.{DOMAIN}.agent.done", "Done")
+
+        return response_text
+
+    async def async_handle_sentence_triggers(
+        self, user_input: ConversationInput
+    ) -> str | None:
+        """Try to input sentence against sentence triggers and return response text.
+
+        Returns None if no match occurred.
+        """
+        if trigger_result := await self._match_triggers(user_input.text):
+            return await self._handle_trigger_result(trigger_result, user_input)
+
+        return None
+
+    async def async_handle_intents(
+        self,
+        user_input: ConversationInput,
+    ) -> intent.IntentResponse | None:
+        """Try to match sentence against registered intents and return response.
+
+        Only performs strict matching with exposed entities and exact wording.
+        Returns None if no match occurred.
+        """
+        language = user_input.language or self.hass.config.language
+        if language == MATCH_ALL:
+            language = self.hass.config.language
+
+        lang_intents = await self.async_get_or_load_intents(language)
+        if lang_intents is None:
+            return None
+
+        slot_lists = self._make_slot_lists()
+        intent_context = self._make_intent_context(user_input)
+
+        result = await self.hass.async_add_executor_job(
+            self._recognize_strict,
+            user_input.text,
+            lang_intents,
+            slot_lists,
+            intent_context,
+            language,
+        )
+        if result is None:
+            return None
+
+        # Slot values to pass to the intent
+        slots: dict[str, Any] = {
+            entity.name: {
+                "value": entity.value,
+                "text": entity.text or entity.value,
+            }
+            for entity in result.entities_list
+        }
+        device_area = self._get_device_area(user_input.device_id)
+        if device_area:
+            slots["preferred_area_id"] = {"value": device_area.id}
+
+        # Trace
+        async_conversation_trace_append(
+            ConversationTraceEventType.TOOL_CALL,
+            {
+                "intent_name": result.intent.name,
+                "slots": {
+                    entity.name: entity.value or entity.text
+                    for entity in result.entities_list
+                },
+            },
+        )
+
+        try:
+            intent_response = await intent.async_handle(
+                self.hass,
+                DOMAIN,
+                result.intent.name,
+                slots,
+                user_input.text,
+                None,
+                language,
+                assistant=DOMAIN,
+                device_id=user_input.device_id,
+            )
+        except intent.MatchFailedError as match_error:
+            # Intent was valid, but no entities matched the constraints.
+            error_response_type, error_response_args = _get_match_error_response(
+                self.hass, match_error
+            )
+            return _make_error_response(
+                language,
+                intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+                self._get_error_text(
+                    error_response_type, lang_intents, **error_response_args
+                ),
+            )
+        except intent.IntentHandleError as err:
+            # Intent was valid and entities matched constraints, but an error
+            # occurred during handling.
+            _LOGGER.exception("Intent handling error")
+            return _make_error_response(
+                language,
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                self._get_error_text(
+                    err.response_key or ErrorKey.HANDLE_ERROR, lang_intents
+                ),
+            )
+        except intent.IntentUnexpectedError:
+            _LOGGER.exception("Unexpected intent error")
+            return _make_error_response(
+                language,
+                intent.IntentResponseErrorCode.UNKNOWN,
+                self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
+            )
+
+        if (
+            (not intent_response.speech)
+            and (intent_response.intent is not None)
+            and (response_key := result.response)
+        ):
+            # Use response template, if available
+            response_template_str = lang_intents.intent_responses.get(
+                result.intent.name, {}
+            ).get(response_key)
+            if response_template_str:
+                response_template = template.Template(response_template_str, self.hass)
+                speech = await self._build_speech(
+                    language, response_template, intent_response, result
+                )
+                intent_response.async_set_speech(speech)
+
+        return intent_response
+
 
 def _make_error_result(
     language: str,
@@ -1152,10 +1288,19 @@ def _make_error_result(
     conversation_id: str | None = None,
 ) -> ConversationResult:
     """Create conversation result with error code and text."""
+    response = _make_error_response(language, error_code, response_text)
+    return ConversationResult(response, conversation_id)
+
+
+def _make_error_response(
+    language: str,
+    error_code: intent.IntentResponseErrorCode,
+    response_text: str,
+) -> intent.IntentResponse:
+    """Create conversation result with error code and text."""
     response = intent.IntentResponse(language=language)
     response.async_set_error(error_code, response_text)
-
-    return ConversationResult(response, conversation_id)
+    return response
 
 
 def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str, Any]]:
