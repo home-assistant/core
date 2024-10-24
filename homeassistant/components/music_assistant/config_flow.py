@@ -71,7 +71,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             except MusicAssistantClientException:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            return self.async_show_form(  # type: ignore[no-any-return]
+            return self.async_show_form(
                 step_id="manual",
                 data_schema=get_manual_schema(user_input),
                 errors=errors,
@@ -88,7 +88,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         # abort if discovery info is not what we expect
         if "server_id" not in discovery_info.properties:
-            return self.async_abort(reason="missing_server_id")  # type: ignore[no-any-return]
+            return self.async_abort(reason="missing_server_id")
         # abort if we already have exactly this server_id
         # reload the integration if the host got updated
         server_id = discovery_info.properties["server_id"]
@@ -112,9 +112,9 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await get_server_info(self.hass, self.server_info.base_url)
             except CannotConnect:
-                return self.async_abort(reason="cannot_connect")  # type: ignore[no-any-return]
+                return self.async_abort(reason="cannot_connect")
             return await self._async_create_entry_or_abort()
-        return self.async_show_form(  # type: ignore[no-any-return]
+        return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"url": self.server_info.base_url},
         )
@@ -141,7 +141,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
-        return self.async_create_entry(  # type: ignore[no-any-return]
+        return self.async_create_entry(
             title=DEFAULT_TITLE,
             data={
                 CONF_URL: self.server_info.base_url,

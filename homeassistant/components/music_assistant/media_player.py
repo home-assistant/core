@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
 from contextlib import suppress
 import functools
 import os
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from music_assistant.common.helpers.datetime import from_utc_timestamp
 from music_assistant.common.models.enums import (
@@ -106,19 +106,15 @@ ATTR_ANNOUNCE_VOLUME = "announce_volume"
 ATTR_SOURCE_PLAYER = "source_player"
 ATTR_AUTO_PLAY = "auto_play"
 
-_MassPlayerT = TypeVar("_MassPlayerT", bound="MusicAssistantPlayer")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
-
-def catch_musicassistant_error(
-    func: Callable[Concatenate[_MassPlayerT, _P], Awaitable[_R]],
-) -> Callable[Concatenate[_MassPlayerT, _P], Coroutine[Any, Any, _R | None]]:
+def catch_musicassistant_error[_R, **P](
+    func: Callable[..., Awaitable[_R]],
+) -> Callable[..., Coroutine[Any, Any, _R | None]]:
     """Check and log commands to players."""
 
     @functools.wraps(func)
     async def wrapper(
-        self: _MassPlayerT, *args: _P.args, **kwargs: _P.kwargs
+        self: MusicAssistantPlayer, *args: P.args, **kwargs: P.kwargs
     ) -> _R | None:
         """Catch Music Assistant errors and convert to Home Assistant error."""
         try:
@@ -551,7 +547,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(  # type: ignore[no-any-return]
+        return await media_source.async_browse_media(
             self.hass,
             media_content_id,
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
