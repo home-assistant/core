@@ -1624,6 +1624,8 @@ build.json @home-assistant/supervisor
 /tests/components/wallbox/ @hesselonline
 /homeassistant/components/waqi/ @joostlek
 /tests/components/waqi/ @joostlek
+/homeassistant/components/watchyourlan/ @drwahl
+/tests/components/watchyourlan/ @drwahl
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
 /homeassistant/components/watson_tts/ @rutkai
