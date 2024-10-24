@@ -415,10 +415,10 @@
       "island_status": {
         "name": "Grid Status",
         "state": {
-          "island_status_unknown": "Unknown",
-          "on_grid": "Connected",
-          "off_grid": "Disconnected",
-          "off_grid_intentional": "Disconnected intentionally"
+          "on_grid": "[%key:common::state::connected%]",
+          "off_grid": "[%key:common::state::disconnected%]",
+          "off_grid_intentional": "Disconnected intentionally",
+          "off_grid_unintentional": "Disconnected unintentionally"
         }
       },
       "storm_mode_active": {
