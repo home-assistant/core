@@ -329,7 +329,7 @@ async def test_play_media_preset_item_id(
     assert mock_stream_magic_client.recall_preset.call_count == 1
     assert mock_stream_magic_client.recall_preset.call_args_list[0].args[0] == 1
 
-    with pytest.raises(ServiceValidationError) as sve:
+    with pytest.raises(ServiceValidationError, match="Missing preset for media_id: 10"):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -340,9 +340,10 @@ async def test_play_media_preset_item_id(
             },
             blocking=True,
         )
-    assert "10" in str(sve.value)
 
-    with pytest.raises(ServiceValidationError) as sve:
+    with pytest.raises(
+        ServiceValidationError, match="Preset must be an integer, got: UNKNOWN_PRESET"
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -353,7 +354,6 @@ async def test_play_media_preset_item_id(
             },
             blocking=True,
         )
-    assert "UNKNOWN_PRESET" in str(sve.value)
 
 
 async def test_play_media_airable_radio_id(
@@ -412,7 +412,10 @@ async def test_play_media_unknown_type(
     """Test playing media with an unsupported content type."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Unsupported media type for Cambridge Audio device: unsupported_content_type",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -423,4 +426,3 @@ async def test_play_media_unknown_type(
             },
             blocking=True,
         )
-    assert "Unsupported media type" in str(err.value)
