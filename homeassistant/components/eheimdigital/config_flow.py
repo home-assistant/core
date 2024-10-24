@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 CONFIG_SCHEMA = vol.Schema(
     {vol.Required(CONF_HOST, default="eheimdigital.local"): selector.TextSelector()}
@@ -58,12 +58,12 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     # At this point the main device is always set
                     assert isinstance(hub.main, EheimDigitalDevice)
-                await self.async_set_unique_id(hub.main.mac_address)
                 await hub.close()
         except (ClientError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001
             return self.async_abort(reason="unknown")
+        await self.async_set_unique_id(hub.main.mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         return await self.async_step_discovery_confirm()
 
@@ -108,12 +108,15 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     # At this point the main device is always set
                     assert isinstance(hub.main, EheimDigitalDevice)
-                await self.async_set_unique_id(hub.main.mac_address)
+                await self.async_set_unique_id(
+                    hub.main.mac_address, raise_on_progress=False
+                )
                 await hub.close()
         except (ClientError, TimeoutError):
             errors["base"] = "cannot_connect"
         except Exception:  # noqa: BLE001
             errors["base"] = "unknown"
+            LOGGER.exception("Unknown exception occurred")
         else:
             self._abort_if_unique_id_configured()
             return self.async_create_entry(data=user_input, title=user_input[CONF_HOST])

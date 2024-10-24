@@ -1,6 +1,6 @@
 """Base entity for EHEIM Digital."""
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from eheimdigital.device import EheimDigitalDevice
@@ -15,13 +15,11 @@ from .coordinator import EheimDigitalUpdateCoordinator
 
 
 class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
-    CoordinatorEntity[EheimDigitalUpdateCoordinator]
+    CoordinatorEntity[EheimDigitalUpdateCoordinator], ABC
 ):
     """Represent a EHEIM Digital entity."""
 
     _attr_has_entity_name = True
-    _device: _DeviceT
-    _device_address: str
 
     def __init__(
         self, coordinator: EheimDigitalUpdateCoordinator, device: _DeviceT
