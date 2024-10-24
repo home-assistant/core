@@ -1464,3 +1464,64 @@ async def test_device_id(
     template_entity = entity_registry.async_get("binary_sensor.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    ("state_template", "expected_result"),
+    [
+        ("{{ None }}", STATE_OFF),  # Would be nice if this mapped to STATE_UNKNOWN
+        ("{{ True }}", STATE_ON),
+        ("{{ False }}", STATE_OFF),
+        ("{{ 1 }}", STATE_ON),
+        (
+            "{% if states('binary_sensor.other') in ('unknown','unavailable') %}"
+            "{{ None }}"
+            "{% else %}"
+            "{{ states('binary_sensor.other') == 'off' }}"
+            "{% endif %}",
+            STATE_OFF,  # Would be nice if this mapped to STATE_UNKNOWN
+        ),
+        (
+            "{% if states('binary_sensor.other') in ('unknown','unavailable') %}"
+            "{{ none_sentinel() }}"
+            "{% else %}"
+            "{{ states('binary_sensor.other') == 'off' }}"
+            "{% endif %}",
+            STATE_UNKNOWN,
+        ),
+        (
+            "{% if states('binary_sensor.other') in ('unknown','unavailable') %}"
+            "{{ 0 / 0 }}"
+            "{% else %}"
+            "{{ states('binary_sensor.other') == 'off' }}"
+            "{% endif %}",
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_state(
+    hass: HomeAssistant,
+    state_template: str,
+    expected_result: str,
+) -> None:
+    """Test the config flow."""
+    hass.states.async_set("binary_sensor.other", "unknown")
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": state_template,
+            "template_type": binary_sensor.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.my_template")
+    assert state is not None
+    assert state.state == expected_result
