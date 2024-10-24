@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "sync_mode": "Synchronization mode :"
         },
         "data_description": {
           "url": "Server url starting with the protocol (http or https)",
@@ -15,6 +16,14 @@
         "data": {
           "include_only_feed_id": "Choose feeds to include"
         }
+      }
+    }
+  },
+  "selector": {
+    "sync_mode": {
+      "options": {
+        "auto": "synchronize all available feeds automatically",
+        "manual": "choose manually the feeds to synchronize"
       }
     }
   },
