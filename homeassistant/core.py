@@ -119,6 +119,7 @@ from .util.unit_system import (
     UnitSystem,
     get_unit_system,
 )
+from .util.webrtc import RTCConfiguration
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -2966,6 +2967,8 @@ class Config:
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False
 
+        self.webrtc = RTCConfiguration()
+
     def async_initialize(self) -> None:
         """Finish initializing a config object.
 
@@ -3142,7 +3145,7 @@ class Config:
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
         # pylint: disable-next=import-outside-toplevel
-        from .config import (
+        from .core_config import (
             _raise_issue_if_historic_currency,
             _raise_issue_if_no_country,
         )

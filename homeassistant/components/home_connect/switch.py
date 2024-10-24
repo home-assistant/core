@@ -53,10 +53,6 @@ SWITCHES = (
         translation_key="cup_warmer",
     ),
     SwitchEntityDescription(
-        key=REFRIGERATION_SUPERMODEREFRIGERATOR,
-        translation_key="cup_warmer",
-    ),
-    SwitchEntityDescription(
         key=REFRIGERATION_SUPERMODEFREEZER,
         translation_key="freezer_super_mode",
     ),
