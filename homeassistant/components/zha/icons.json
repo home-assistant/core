@@ -45,6 +45,15 @@
       "maximum_level": {
         "default": "mdi:brightness-percent"
       },
+      "default_level_local": {
+        "default": "mdi:brightness-percent"
+      },
+      "default_level_remote": {
+        "default": "mdi:brightness-percent"
+      },
+      "state_after_power_restored": {
+        "default": "mdi:brightness-percent"
+      },
       "auto_off_timer": {
         "default": "mdi:timer"
       },
