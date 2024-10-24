@@ -1,23 +1,20 @@
 """Support to control a Salda Smarty XP/XV ventilation unit."""
 
-from datetime import timedelta
 import ipaddress
 import logging
 
-from pysmarty2 import Smarty
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_UPDATE_SMARTY
+from .const import DOMAIN
+from .coordinator import SmartyConfigEntry, SmartyCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SENSOR]
-
-type SmartyConfigEntry = ConfigEntry[Smarty]
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
@@ -89,27 +84,11 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bool:
     """Set up the Smarty environment from a config entry."""
 
-    def _setup_smarty() -> Smarty:
-        smarty = Smarty(host=entry.data[CONF_HOST])
-        smarty.update()
-        return smarty
+    coordinator = SmartyCoordinator(hass)
 
-    smarty = await hass.async_add_executor_job(_setup_smarty)
+    await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = smarty
-
-    async def poll_device_update(event_time) -> None:
-        """Update Smarty device."""
-        _LOGGER.debug("Updating Smarty device")
-        if await hass.async_add_executor_job(smarty.update):
-            _LOGGER.debug("Update success")
-            async_dispatcher_send(hass, SIGNAL_UPDATE_SMARTY)
-        else:
-            _LOGGER.debug("Update failed")
-
-    entry.async_on_unload(
-        async_track_time_interval(hass, poll_device_update, timedelta(seconds=30))
-    )
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
