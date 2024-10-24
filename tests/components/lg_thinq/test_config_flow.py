@@ -14,7 +14,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_config_flow(
-    hass: HomeAssistant, mock_thinq_api: AsyncMock, mock_uuid: AsyncMock
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_uuid: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that an thinq entry is normally created."""
     result = await hass.config_entries.flow.async_init(
