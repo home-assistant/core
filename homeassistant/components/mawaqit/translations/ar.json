@@ -1,0 +1,77 @@
+{
+  "config": {
+    "abort": {
+      "no_mosque": "عذرا، لا يوجد مسجد مواقيت في الحي.",
+      "one_instance_allowed": "يجب أن يكون هناك إدخال واحد لـ MAWAQIT فقط. إذا كنت تريد إعادة تهيئة مسجدك، يمكنك النقر على \"تهيئة\" بجانب الإدخال الحالي.",
+      "configuration_kept": "لقد اخترت الاحتفاظ بالتهيئة الحالية."
+    },
+    "error": {
+      "cannot_connect_to_server": "لا يمكن الاتصال بالخادم، يرجى المحاولة لاحقاً.",
+      "wrong_credential": "اسم المستخدم أو كلمة المرور غير صحيحة، يرجى المحاولة مرة أخرى.",
+      "no_mosque_found_keyword": "لم يتم العثور على مسجد بهذا الكلمة المفتاحية."
+    },
+    "step": {
+      "user": {
+        "description": "سجّل على https://mawaqit.net/ وقم بالاتصال أدناه. سيتم اختيار أقرب مسجد إلى منزلك ولكن يمكنك تغييره لاحقًا في معلمات الإضافة.",
+        "data": {
+          "username": "البريد الإلكتروني",
+          "password": "كلمة المرور",
+          "server": "الخادم"
+        },
+        "title": "تثبيت أوقات الصلاة مواقيت"
+      },
+      "keep_or_reset": {
+        "title": "تم إعداد نسخة أخرى من MAWAQIT بالفعل",
+        "data": {
+          "choice": "يمكنك اختيار الاحتفاظ بالإعدادات الحالية أو إعادة ضبطها:",
+          "keep": "احتفظ بالإعدادات الحالية",
+          "reset": "إعادة الضبط لإعداد مسجد جديد"
+        }
+      },
+      "keyword_search": {
+        "title": "ابحث عن مسجدك",
+        "description": "ابحث عن مسجد بإدخال كلمة مفتاحية:",
+        "data": {
+          "Keyword": "بحث"
+        }
+      },
+      "search_method": {
+        "title": "اختر طريقة البحث عن مسجدك",
+        "data": {
+          "search_method_choice": "اختر طريقة البحث:"
+        }
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "يوجد عدة مساجد حولك، اختر واحدًا:",
+          "uuid": "مسجد"
+        },
+        "title": "مسجدك المفضل"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calculation_method": "تغيير مسجدك المفضل"
+        }
+      }
+    }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "ابحث عن أقرب المساجد إلى موقعك",
+        "search_method_keyword": "ابحث عن مسجد بكلمة مفتاحية"
+      }
+    },
+    "choice_translation_key": {
+      "options": {
+        "keep": "احتفظ بالتكوين الحالي",
+        "reset": "إعادة تعيين لتكوين مسجد جديد"
+      }
+    }
+  },
+  "title": "مواقيت"
+}
