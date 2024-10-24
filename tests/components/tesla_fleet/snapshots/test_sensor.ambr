@@ -1709,7 +1709,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Grid Status',
+    'original_name': 'Grid status',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1722,7 +1722,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Energy Site Grid Status',
+      'friendly_name': 'Energy Site Grid status',
       'options': list([
         'on_grid',
         'off_grid',
@@ -1742,7 +1742,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Energy Site Grid Status',
+      'friendly_name': 'Energy Site Grid status',
       'options': list([
         'on_grid',
         'off_grid',
