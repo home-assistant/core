@@ -41,7 +41,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
         (
             "homeassistant/device/0AFFD2/config",
             '{ "device":{"identifiers":["0AFFD2"]},'
-            '  "o": {"name": "foobar"}, "cmp": '
+            '  "o": {"name": "foobar"}, "cmps": '
             '{ "bla": {'
             '  "automation_type":"trigger", '
             '  "payload": "short_press",'

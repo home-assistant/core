@@ -748,7 +748,9 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         )
         new_discovery_topic = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
 
-        # Abort early if there is no normal update
+        # Abort early if an update is not received via the registered discovery topic.
+        # This can happen if a device and single component discovery payload
+        # share the same discovery ID.
         if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
             # Prevent illegal updates
             _LOGGER.warning(

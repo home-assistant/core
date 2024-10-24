@@ -97,7 +97,7 @@ TEST_SINGLE_CONFIGS = [
 TEST_DEVICE_CONFIG = {
     "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
     "o": {"name": "foobar"},
-    "cmp": {
+    "cmps": {
         "bla1": {
             "platform": "device_automation",
             "automation_type": "trigger",
@@ -275,7 +275,7 @@ async def test_invalid_device_discovery_config(
     async_fire_mqtt_message(
         hass,
         "homeassistant/device/bla/config",
-        '{ "o": {"name": "foobar"}, "cmp": '
+        '{ "o": {"name": "foobar"}, "cmps": '
         '{ "acp1": {"name": "abc", "state_topic": "home/alarm", '
         '"unique_id": "very_unique",'
         '"command_topic": "home/alarm/set", '
@@ -292,7 +292,7 @@ async def test_invalid_device_discovery_config(
         hass,
         "homeassistant/device/bla/config",
         '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, '
-        '"cmp": { "acp1": {"name": "abc", "state_topic": "home/alarm", '
+        '"cmps": { "acp1": {"name": "abc", "state_topic": "home/alarm", '
         '"command_topic": "home/alarm/set" }}}',
     )
     await hass.async_block_till_done()
@@ -300,6 +300,18 @@ async def test_invalid_device_discovery_config(
         "Invalid MQTT device discovery payload for bla, "
         "required key not provided @ data['components']['acp1']['platform']"
         in caplog.text
+    )
+
+    caplog.clear()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device/bla/config",
+        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, ' '"cmps": ""}',
+    )
+    await hass.async_block_till_done()
+    assert (
+        "Invalid MQTT device discovery payload for bla, "
+        "expected a dictionary for dictionary value @ data['components']" in caplog.text
     )
 
 
@@ -366,12 +378,12 @@ async def test_correct_config_discovery(
         (
             "homeassistant/device/bla/config",
             (
-                '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+                '{"cmps":{"bin_sens1":{"platform":"binary_sensor",'
                 '"unique_id": "very_unique1",'
                 '"name":"Beer","state_topic": "test-topic"}},'
                 '"o":{"name":"bla2mqtt","sw":"1.0"},'
                 '"dev":{"identifiers":["bla"],"name": "bla"}}',
-                '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+                '{"cmps":{"bin_sens1":{"platform":"binary_sensor",'
                 '"unique_id": "very_unique1",'
                 '"name":"Milk","state_topic": "test-topic"}},'
                 '"o":{"name":"bla2mqtt","sw":"1.1",'
@@ -792,7 +804,7 @@ async def test_discovery_migration_to_single_base(
         ),
         (
             "homeassistant/device/bla/config",
-            '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+            '{"cmps":{"bin_sens1":{"platform":"binary_sensor",'
             '"name":"bla","unique_id":"very_unique1",'
             '"state_topic": "test-topic"}},'
             '"avty": {"topic": "avty-topic"},'
@@ -847,7 +859,7 @@ async def test_discovery_availability(
     [
         (
             "homeassistant/device/bla/config",
-            '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+            '{"cmps":{"bin_sens1":{"platform":"binary_sensor",'
             '"unique_id":"very_unique",'
             '"avty": {"topic": "avty-topic-component"},'
             '"name":"Beer","state_topic": "test-topic"}},'
@@ -856,7 +868,7 @@ async def test_discovery_availability(
         ),
         (
             "homeassistant/device/bla/config",
-            '{"cmp":{"bin_sens1":{"platform":"binary_sensor",'
+            '{"cmps":{"bin_sens1":{"platform":"binary_sensor",'
             '"unique_id":"very_unique",'
             '"availability_topic": "avty-topic-component",'
             '"name":"Beer","state_topic": "test-topic"}},'
@@ -945,7 +957,7 @@ async def test_discovery_component_availability_overridden(
         ),
         (
             "homeassistant/device/bla/config",
-            '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
+            '{"dev":{"identifiers":["bs1"]},"cmps":{"bs1":'
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": "bla2mqtt"}',
             "Invalid MQTT device discovery payload for bla, "
@@ -953,7 +965,7 @@ async def test_discovery_component_availability_overridden(
         ),
         (
             "homeassistant/device/bla/config",
-            '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
+            '{"dev":{"identifiers":["bs1"]},"cmps":{"bs1":'
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": 2.0}',
             "Invalid MQTT device discovery payload for bla, "
@@ -961,7 +973,7 @@ async def test_discovery_component_availability_overridden(
         ),
         (
             "homeassistant/device/bla/config",
-            '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
+            '{"dev":{"identifiers":["bs1"]},"cmps":{"bs1":'
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": null}',
             "Invalid MQTT device discovery payload for bla, "
@@ -969,7 +981,7 @@ async def test_discovery_component_availability_overridden(
         ),
         (
             "homeassistant/device/bla/config",
-            '{"dev":{"identifiers":["bs1"]},"cmp":{"bs1":'
+            '{"dev":{"identifiers":["bs1"]},"cmps":{"bs1":'
             '{"platform":"binary_sensor","name":"Beer","unique_id": "very_unique",'
             '"state_topic":"test-topic"}},"o": {"sw": "bla2mqtt"}}',
             "Invalid MQTT device discovery payload for bla, "
@@ -1537,7 +1549,7 @@ async def test_duplicate_removal(
                 "homeassistant/device/bla/config": "{"
                 '"device":{"identifiers":["0AFFD2"]},'
                 '"o": {"name": "foobar"},'
-                '"cmp": {"sens1": {'
+                '"cmps": {"sens1": {'
                 '"platform": "sensor",'
                 '"name": "sensor1",'
                 '"state_topic": "foobar/sensor1",'
@@ -1627,7 +1639,7 @@ async def test_cleanup_device_manual(
             "homeassistant/device/bla/config",
             '{ "device":{"identifiers":["0AFFD2"]},'
             '  "o": {"name": "foobar"},'
-            '  "cmp": {"sens1": {'
+            '  "cmps": {"sens1": {'
             '  "platform": "sensor",'
             '  "name": "sensor1",'
             '  "state_topic": "foobar/sensor1",'
@@ -1734,13 +1746,13 @@ async def test_cleanup_device_mqtt_device_discovery(
     discovery_payload = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "o": {"name": "foobar"},'
-        '  "cmp": {"sens1": {'
-        '  "platform": "sensor",'
+        '  "cmps": {"sens1": {'
+        '  "p": "sensor",'
         '  "name": "sensor1",'
         '  "state_topic": "foobar/sensor1",'
         '  "unique_id": "unique1"'
         ' },"sens2": {'
-        '  "platform": "sensor",'
+        '  "p": "sensor",'
         '  "name": "sensor2",'
         '  "state_topic": "foobar/sensor2",'
         '  "unique_id": "unique2"'
@@ -1764,13 +1776,13 @@ async def test_cleanup_device_mqtt_device_discovery(
     discovery_payload_update1 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "o": {"name": "foobar"},'
-        '  "cmp": {"sens1": {'
-        '  "platform": "sensor",'
+        '  "cmps": {"sens1": {'
+        '  "p": "sensor",'
         '  "name": "sensor1",'
         '  "state_topic": "foobar/sensor1",'
         '  "unique_id": "unique1"'
         ' },"sens2": {'
-        '  "platform": "sensor"'
+        '  "p": "sensor"'
         "}}}"
     )
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload_update1)
@@ -1792,10 +1804,10 @@ async def test_cleanup_device_mqtt_device_discovery(
     discovery_payload_update2 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "o": {"name": "foobar"},'
-        '  "cmp": {"sens1": {'
-        '  "platform": "sensor"'
+        '  "cmps": {"sens1": {'
+        '  "p": "sensor"'
         ' },"sens2": {'
-        '  "platform": "sensor"'
+        '  "p": "sensor"'
         "}}}"
     )
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload_update2)
@@ -2775,7 +2787,7 @@ async def test_discovery_dispatcher_signal_type_messages(
             '{ "device":{"identifiers":["0AFFD2"]},'
             '  "o": {"name": "foobar"},'
             '  "state_topic": "foobar/sensor-shared",'
-            '  "cmp": {"sens1": {'
+            '  "cmps": {"sens1": {'
             '  "platform": "sensor",'
             '  "name": "sensor1",'
             '  "unique_id": "unique1"'

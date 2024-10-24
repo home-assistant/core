@@ -153,10 +153,19 @@ def _replace_abbreviations(
 
 
 @callback
-def _replace_all_abbreviations(discovery_payload: dict[str, Any]) -> None:
+def _replace_all_abbreviations(
+    discovery_payload: dict[str, Any], component_only: bool = False
+) -> None:
     """Replace all abbreviations in an MQTT discovery payload."""
 
     _replace_abbreviations(discovery_payload, ABBREVIATIONS, ABBREVIATIONS_SET)
+
+    if CONF_AVAILABILITY in discovery_payload:
+        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
+            _replace_abbreviations(availability_conf, ABBREVIATIONS, ABBREVIATIONS_SET)
+
+    if component_only:
+        return
 
     if CONF_ORIGIN in discovery_payload:
         _replace_abbreviations(
@@ -172,9 +181,11 @@ def _replace_all_abbreviations(discovery_payload: dict[str, Any]) -> None:
             DEVICE_ABBREVIATIONS_SET,
         )
 
-    if CONF_AVAILABILITY in discovery_payload:
-        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
-            _replace_abbreviations(availability_conf, ABBREVIATIONS, ABBREVIATIONS_SET)
+    if CONF_COMPONENTS in discovery_payload:
+        if not isinstance(discovery_payload[CONF_COMPONENTS], dict):
+            return
+        for comp_conf in discovery_payload[CONF_COMPONENTS].values():
+            _replace_all_abbreviations(comp_conf, component_only=True)
 
 
 @callback
@@ -289,10 +300,10 @@ def _valid_origin_info(discovery_payload: MQTTDiscoveryPayload) -> bool:
 
 
 @callback
-def _merge_common_options(
+def _merge_common_device_options(
     component_config: MQTTDiscoveryPayload, device_config: dict[str, Any]
 ) -> None:
-    """Merge common options with the component config options.
+    """Merge common device options with the component config options.
 
     Common options are:
         CONF_AVAILABILITY,
@@ -395,7 +406,6 @@ async def async_start(  # noqa: C901
                 component_object_id = (
                     f"{node_id} {component_id}" if node_id else component_id
                 )
-                _replace_all_abbreviations(config)
                 # We add wrapper to the discovery payload with the discovery data.
                 # If the dict is empty after removing the platform, the payload is
                 # assumed to remove the existing config and we do not want to add
@@ -405,7 +415,9 @@ async def async_start(  # noqa: C901
                     discovery_payload[CONF_ORIGIN] = origin_config
                     # Only assign shared config options
                     # when they are not set at entity level
-                    _merge_common_options(discovery_payload, device_discovery_payload)
+                    _merge_common_device_options(
+                        discovery_payload, device_discovery_payload
+                    )
                 discovery_payload.device_discovery = True
                 discovery_payload.migrate_discovery = (
                     device_discovery_payload.migrate_discovery

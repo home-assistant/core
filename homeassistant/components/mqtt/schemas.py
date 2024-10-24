@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -60,8 +59,6 @@ from .const import (
 )
 from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 
-_LOGGER = logging.getLogger(__name__)
-
 # Device discovery options that are also available at entity component level
 SHARED_OPTIONS = [
     CONF_AVAILABILITY,
@@ -84,7 +81,7 @@ MQTT_ORIGIN_INFO_SCHEMA = vol.All(
     ),
 )
 
-MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
+_MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
@@ -97,7 +94,7 @@ MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     }
 )
 
-MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
+_MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST): vol.All(
             cv.string, vol.In(AVAILABILITY_MODES)
@@ -121,8 +118,8 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     }
 )
 
-MQTT_AVAILABILITY_SCHEMA = MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
-    MQTT_AVAILABILITY_LIST_SCHEMA.schema
+_MQTT_AVAILABILITY_SCHEMA = _MQTT_AVAILABILITY_SINGLE_SCHEMA.extend(
+    _MQTT_AVAILABILITY_LIST_SCHEMA.schema
 )
 
 
@@ -172,7 +169,7 @@ MQTT_ORIGIN_INFO_SCHEMA = vol.All(
     ),
 )
 
-MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
+MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
@@ -186,7 +183,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     }
 )
 
-UNIQUE_ID_SCHEMA = vol.Schema(
+_UNIQUE_ID_SCHEMA = vol.Schema(
     {vol.Required(CONF_UNIQUE_ID): cv.string},
 ).extend({}, extra=True)
 
@@ -195,21 +192,21 @@ def check_unique_id(config: dict[str, Any]) -> dict[str, Any]:
     """Check if a unique ID is set in case an entity platform is configured."""
     platform = config[CONF_PLATFORM]
     if platform in ENTITY_PLATFORMS and len(config.keys()) > 1:
-        UNIQUE_ID_SCHEMA(config)
+        _UNIQUE_ID_SCHEMA(config)
     return config
 
 
-COMPONENT_CONFIG_SCHEMA = vol.All(
+_COMPONENT_CONFIG_SCHEMA = vol.All(
     vol.Schema(
         {vol.Required(CONF_PLATFORM): vol.In(SUPPORTED_COMPONENTS)},
     ).extend({}, extra=True),
     check_unique_id,
 )
 
-DEVICE_DISCOVERY_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
+DEVICE_DISCOVERY_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Required(CONF_COMPONENTS): vol.Schema({str: COMPONENT_CONFIG_SCHEMA}),
+        vol.Required(CONF_COMPONENTS): vol.Schema({str: _COMPONENT_CONFIG_SCHEMA}),
         vol.Required(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
