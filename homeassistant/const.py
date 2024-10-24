@@ -1177,6 +1177,21 @@ _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = DeprecatedConstantEn
 AREA_SQUARE_METERS: Final = "m²"
 
 
+class UnitOfArea(StrEnum):
+    """Area units."""
+
+    SQUARE_METERS = "m²"
+    SQUARE_CENTIMETERS = "cm²"
+    SQUARE_KILOMETERS = "km²"
+    SQUARE_MILLIMETERS = "mm²"
+    SQUARE_INCHES = "in²"
+    SQUARE_FEET = "ft²"
+    SQUARE_YARDS = "yd²"
+    SQUARE_MILES = "mi²"
+    ACRES = "ac"
+    HECTARES = "ha"
+
+
 # Mass units
 class UnitOfMass(StrEnum):
     """Mass units."""
@@ -1691,6 +1706,7 @@ RESTART_EXIT_CODE: Final = 100
 UNIT_NOT_RECOGNIZED_TEMPLATE: Final = "{} is not a recognized {} unit."
 
 LENGTH: Final = "length"
+AREA: Final = "area"
 MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
