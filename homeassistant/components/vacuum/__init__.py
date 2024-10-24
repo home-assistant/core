@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from enum import IntFlag
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, final
 
 from propcache import cached_property
 import voluptuous as vol
@@ -18,11 +19,9 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_IDLE,
     STATE_ON,
-    STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
@@ -32,12 +31,21 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, STATE_CLEANING, STATE_DOCKED, STATE_ERROR, STATE_RETURNING
+from .const import (  # noqa: F401
+    _DEPRECATED_STATE_CLEANING,
+    _DEPRECATED_STATE_DOCKED,
+    _DEPRECATED_STATE_ERROR,
+    _DEPRECATED_STATE_RETURNING,
+    DOMAIN,
+    STATES,
+    VacuumState,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,10 +72,12 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
 
-
-STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
-
 DEFAULT_NAME = "Vacuum cleaner robot"
+
+# These STATE_* constants are deprecated as of Home Assistant 2024.11.
+# Please use the VacuumState enum instead.
+_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumState.IDLE, "2025.11")
+_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumState.PAUSED, "2025.11")
 
 
 class VacuumEntityFeature(IntFlag):
@@ -216,7 +226,7 @@ STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "battery_icon",
     "fan_speed",
     "fan_speed_list",
-    "state",
+    "vacuum_state",
 }
 
 
@@ -233,8 +243,63 @@ class StateVacuumEntity(
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
-    _attr_state: str | None = None
+    _attr_vacuum_state: VacuumState | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
+
+    __vacuum_legacy_state: bool = False
+    __vacuum_legacy_state_reported: bool = False
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if any(method in cls.__dict__ for method in ("_attr_state", "state")):
+            # Integrations should use the 'vacuum_state' property instead of
+            # setting the state directly.
+            cls.__vacuum_legacy_state = True
+
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        """Set attribute.
+
+        Deprecation warning if setting '_attr_state' directly
+        unless already reported.
+        """
+        if __name == "_attr_state":
+            if self.__vacuum_legacy_state_reported is not True:
+                self._report_deprecated_vacuum_state_handling()
+            self.__vacuum_legacy_state_reported = True
+        return super().__setattr__(__name, __value)
+
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+        if self.__vacuum_legacy_state and not self.__vacuum_legacy_state_reported:
+            self._report_deprecated_vacuum_state_handling()
+
+    @callback
+    def _report_deprecated_vacuum_state_handling(self) -> None:
+        """Report on deprecated handling of vacuum state.
+
+        Integrations should implement vacuum_state instead of using state directly.
+        """
+        self.__vacuum_legacy_state_reported = True
+        if "custom_components" in type(self).__module__:
+            # Do not report on core integrations as they have been fixed.
+            report_issue = "report it to the custom integration author."
+            _LOGGER.warning(
+                "Entity %s (%s) is setting state directly"
+                " which will stop working in HA Core 2025.11."
+                " Entities should implement the 'vacuum_state' property and"
+                " return its state using the VacuumState enum, please %s",
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
 
     @cached_property
     def battery_level(self) -> int | None:
@@ -244,7 +309,7 @@ class StateVacuumEntity(
     @property
     def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner."""
-        charging = bool(self.state == STATE_DOCKED)
+        charging = bool(self.vacuum_state == VacuumState.DOCKED)
 
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
@@ -282,10 +347,22 @@ class StateVacuumEntity(
 
         return data
 
-    @cached_property
+    @final
+    @property
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
-        return self._attr_state
+        if (vacuum_state := self.vacuum_state) is None:
+            return None
+        return vacuum_state
+
+    @cached_property
+    def vacuum_state(self) -> VacuumState | None:
+        """Return the current vacuum state.
+
+        Integrations should overwrite this or use the '_attr_vacuum_state'
+        attribute to set the vacuum status using the 'VacuumState' enum.
+        """
+        return self._attr_vacuum_state
 
     @cached_property
     def supported_features(self) -> VacuumEntityFeature:
