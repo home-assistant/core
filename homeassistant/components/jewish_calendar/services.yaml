@@ -1,0 +1,3 @@
+# Deliberately empty; all services are registered in code
+# to generate selectors using data from the config entry.
+# See https://github.com/home-assistant/core/pull/111986.
