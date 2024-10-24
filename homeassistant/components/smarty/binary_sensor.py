@@ -10,9 +10,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import SmartyConfigEntry, SmartyCoordinator
+from .entity import SmartyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class SmartyBinarySensor(CoordinatorEntity[SmartyCoordinator], BinarySensorEntity):
+class SmartyBinarySensor(SmartyEntity, BinarySensorEntity):
     """Representation of a Smarty Binary Sensor."""
 
     def __init__(
