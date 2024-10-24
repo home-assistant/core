@@ -120,7 +120,37 @@ class HassEnforceClassModule(BaseChecker):
             "hass-enforce-class-module",
             "Used when derived class should be placed in its own module.",
         ),
+        "C7462": (
+            "Type %s is recommended to be placed in the '%s' module",
+            "hass-enforce-type-module",
+            "Used when custom types should be placed in separate module.",
+        ),
     }
+
+    def visit_typealias(self, node: nodes.TypeAlias) -> None:
+        """Check for sorted PLATFORMS const without type annotations."""
+        root_name = node.root().name
+
+        # we only want to check components
+        if not root_name.startswith("homeassistant.components."):
+            return
+
+        if (
+            isinstance(subscript_node := node.value, nodes.Subscript)
+            and isinstance(name_node := subscript_node.value, nodes.Name)
+            and name_node.name == "ConfigEntry"
+            and (
+                # Check __init__.py
+                len(split_root_name := root_name.split(".")) == 3
+                # Check other.py
+                or (len(split_root_name) > 3 and split_root_name[3] != "types")
+            )
+        ):
+            self.add_message(
+                "hass-enforce-type-module",
+                node=node,
+                args=(node.name.name, "types"),
+            )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Check if derived class is placed in its own module."""

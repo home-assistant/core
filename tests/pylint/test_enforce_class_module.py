@@ -284,3 +284,62 @@ def test_enforce_entity_bad(
         ),
     ):
         walker.walk(root_node)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "homeassistant.components.pylint_test.types",
+    ],
+)
+def test_enforce_type_good(
+    linter: UnittestLinter,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
+) -> None:
+    """Good test cases."""
+    code = """
+    type PylintTestConfigEntry = ConfigEntry[PylintTestUpdateCoordinator]
+    """
+    root_node = astroid.parse(code, path)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_class_module_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.coordinator",
+    ],
+)
+def test_enforce_type_bad(
+    linter: UnittestLinter,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
+) -> None:
+    """Good test cases."""
+    code = """
+    type PylintTestConfigEntry = ConfigEntry[PylintTestUpdateCoordinator]
+    """
+    root_node = astroid.parse(code, path)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_class_module_checker)
+
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="hass-enforce-type-module",
+            line=2,
+            node=root_node.body[0],
+            args=("PylintTestConfigEntry", "types"),
+            confidence=UNDEFINED,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=69,
+        ),
+    ):
+        walker.walk(root_node)
