@@ -19,7 +19,13 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 
 from .const import TEST_INSTALLS
@@ -31,11 +37,11 @@ async def test_zone_set_hvac_mode(
     zone_id: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test climate methods of a evohome-compatible zone."""
+    """Test SERVICE_SET_HVAC_MODE of an evohome zone Climate entity."""
 
     results = []
 
-    # SERVICE_SET_HVAC_MODE(HVACMode.HEAT)
+    # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
     with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
@@ -51,7 +57,7 @@ async def test_zone_set_hvac_mode(
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
 
-    # SERVICE_SET_HVAC_MODE(HVACMode.OFF)
+    # SERVICE_SET_HVAC_MODE: HVACMode.OFF
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
@@ -64,9 +70,10 @@ async def test_zone_set_hvac_mode(
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # minimum target temp
+        assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
-        results.append(mock_fcn.await_args.kwargs)
 
     assert results == snapshot
 
@@ -78,12 +85,12 @@ async def test_zone_set_preset_mode(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test climate methods of a evohome-compatible zone."""
+    """Test SERVICE_SET_PRESET_MODE of an evohome zone Climate entity."""
 
     freezer.move_to("2024-07-10T12:00:00Z")
     results = []
 
-    # SERVICE_SET_PRESET_MODE(none)
+    # SERVICE_SET_PRESET_MODE: none
     with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
@@ -99,7 +106,7 @@ async def test_zone_set_preset_mode(
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
 
-    # SERVICE_SET_PRESET_MODE(permanent)
+    # SERVICE_SET_PRESET_MODE: permanent
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
@@ -112,11 +119,12 @@ async def test_zone_set_preset_mode(
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # current target temp
+        assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
-        results.append(mock_fcn.await_args.kwargs)
 
-    # SERVICE_SET_PRESET_MODE(temporary)
+    # SERVICE_SET_PRESET_MODE: temporary
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
@@ -129,6 +137,8 @@ async def test_zone_set_preset_mode(
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # current target temp
+        assert mock_fcn.await_args.kwargs != {}  # next setpoint dtm
 
         results.append(mock_fcn.await_args.args)
         results.append(mock_fcn.await_args.kwargs)
@@ -143,12 +153,12 @@ async def test_zone_set_temperature(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test climate methods of a evohome-compatible zone."""
+    """Test SERVICE_SET_TEMPERATURE of an evohome zone Climate entity."""
 
     freezer.move_to("2024-07-10T12:00:00Z")
     results = []
 
-    # SERVICE_SET_TEMPERATURE(temp)
+    # SERVICE_SET_TEMPERATURE: temperature
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
@@ -161,8 +171,62 @@ async def test_zone_set_temperature(
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args == (19.1,)
+        assert mock_fcn.await_args.kwargs != {}  # next setpoint dtm
 
-        results.append(mock_fcn.await_args.args)
         results.append(mock_fcn.await_args.kwargs)
 
     assert results == snapshot
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_zone_turn_off(
+    hass: HomeAssistant,
+    zone_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test SERVICE_TURN_OFF of a evohome zone Climate entity."""
+
+    results = []
+
+    # SERVICE_TURN_OFF
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: zone_id,
+            },
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # minimum target temp
+        assert mock_fcn.await_args.kwargs == {"until": None}
+
+        results.append(mock_fcn.await_args.args)
+
+    assert results == snapshot
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_zone_turn_on(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test SERVICE_TURN_ON of a evohome zone Climate entity."""
+
+    # SERVICE_TURN_ON
+    with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: zone_id,
+            },
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args == ()
+        assert mock_fcn.await_args.kwargs == {}
