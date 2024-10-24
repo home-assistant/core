@@ -396,7 +396,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Grid status',
+    'original_name': 'Grid Status',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -409,7 +409,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Energy Site Grid status',
+      'friendly_name': 'Energy Site Grid Status',
       'options': list([
         'island_status_unknown',
         'on_grid',
@@ -430,7 +430,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Energy Site Grid status',
+      'friendly_name': 'Energy Site Grid Status',
       'options': list([
         'island_status_unknown',
         'on_grid',
@@ -760,7 +760,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Version',
+    'original_name': 'version',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -772,7 +772,7 @@
 # name: test_sensors[sensor.energy_site_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Version',
+      'friendly_name': 'Energy Site version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_version',
@@ -785,7 +785,7 @@
 # name: test_sensors[sensor.energy_site_version-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Version',
+      'friendly_name': 'Energy Site version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_version',
@@ -3528,7 +3528,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Energy Site Grid status',
+      'friendly_name': 'Energy Site Grid Status',
       'options': list([
         'island_status_unknown',
         'on_grid',
@@ -3612,7 +3612,7 @@
 # name: test_sensors_restore[sensor.energy_site_version-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Version',
+      'friendly_name': 'Energy Site version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_version',
