@@ -96,8 +96,8 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         }
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
-            stream = streams[channel.id]
-            follow = follows[channel.id]
+            stream = streams.get(channel.id, None)
+            follow = follows.get(channel.id, None)
             sub: UserSubscription | None = None
             try:
                 sub = await self.twitch.check_user_subscription(
