@@ -12,31 +12,28 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, SIGNAL_UPDATE_SMARTY
+from . import SIGNAL_UPDATE_SMARTY, SmartyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: SmartyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Smarty Sensor Platform."""
-    smarty: Smarty = hass.data[DOMAIN]["api"]
-    name: str = hass.data[DOMAIN]["name"]
 
+    smarty = entry.runtime_data
     sensors = [
-        SupplyAirTemperatureSensor(name, smarty),
-        ExtractAirTemperatureSensor(name, smarty),
-        OutdoorAirTemperatureSensor(name, smarty),
-        SupplyFanSpeedSensor(name, smarty),
-        ExtractFanSpeedSensor(name, smarty),
-        FilterDaysLeftSensor(name, smarty),
+        SupplyAirTemperatureSensor(entry.title, smarty),
+        ExtractAirTemperatureSensor(entry.title, smarty),
+        OutdoorAirTemperatureSensor(entry.title, smarty),
+        SupplyFanSpeedSensor(entry.title, smarty),
+        ExtractFanSpeedSensor(entry.title, smarty),
+        FilterDaysLeftSensor(entry.title, smarty),
     ]
 
     async_add_entities(sensors, True)
