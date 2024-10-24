@@ -209,8 +209,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> 
                 ),
             )
 
-            token_data = deserialize_token(
-                hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+            token_data = await hass.async_add_executor_job(
+                deserialize_token,
+                hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
             )
             with suppress(FileNotFoundError):
                 await hass.async_add_executor_job(
