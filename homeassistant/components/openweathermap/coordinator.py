@@ -7,6 +7,7 @@ from pyopenweathermap import (
     CurrentWeather,
     DailyWeatherForecast,
     HourlyWeatherForecast,
+    MinutelyWeatherForecast,
     OWMClient,
     RequestError,
     WeatherReport,
@@ -27,10 +28,14 @@ from .const import (
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
     ATTR_API_DAILY_FORECAST,
+    ATTR_API_DATETIME,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST,
     ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
+    ATTR_API_MINUTE_FORECAST,
+    ATTR_API_PRECIPITATION,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -94,6 +99,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return {
             ATTR_API_CURRENT: current_weather,
+            ATTR_API_MINUTE_FORECAST: (
+                self._get_minute_weather_data(weather_report.minutely_forecast)
+                if weather_report.minutely_forecast is not None
+                else {}
+            ),
             ATTR_API_HOURLY_FORECAST: [
                 self._get_hourly_forecast_weather_data(item)
                 for item in weather_report.hourly_forecast
@@ -102,6 +112,17 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 self._get_daily_forecast_weather_data(item)
                 for item in weather_report.daily_forecast
             ],
+        }
+
+    def _get_minute_weather_data(self, minute_forecast: list[MinutelyWeatherForecast]):
+        return {
+            ATTR_API_FORECAST: [
+                {
+                    ATTR_API_DATETIME: item.date_time,
+                    ATTR_API_PRECIPITATION: round(item.precipitation, 2),
+                }
+                for item in minute_forecast
+            ]
         }
 
     def _get_current_weather_data(self, current_weather: CurrentWeather):
