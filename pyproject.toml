@@ -56,7 +56,7 @@ dependencies    = [
     "Pillow==10.4.0",
     "propcache==0.2.0",
     "pyOpenSSL==24.2.1",
-    "orjson==3.10.9",
+    "orjson==3.10.10",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
@@ -464,14 +464,14 @@ filterwarnings = [
     # Ignore custom pytest marks
     "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
     "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
-    # https://github.com/rokam/sunweg/blob/3.0.2/sunweg/plant.py#L96 - v3.0.2 - 2024-07-10
+    # https://github.com/rokam/sunweg/blob/3.1.0/sunweg/plant.py#L96 - v3.1.0 - 2024-10-02
     "ignore:The '(kwh_per_kwp|performance_rate)' property is deprecated and will return 0:DeprecationWarning:tests.components.sunweg.test_init",
 
     # -- design choice 3rd party
-    # https://github.com/gwww/elkm1/blob/2.2.7/elkm1_lib/util.py#L8-L19
+    # https://github.com/gwww/elkm1/blob/2.2.10/elkm1_lib/util.py#L8-L19
     "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
     # https://github.com/allenporter/ical/pull/215
-    # https://github.com/allenporter/ical/blob/8.1.1/ical/util.py#L21-L23
+    # https://github.com/allenporter/ical/blob/8.2.0/ical/util.py#L21-L23
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:ical.util",
     # https://github.com/bachya/regenmaschine/blob/2024.03.0/regenmaschine/client.py#L52
     "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
@@ -523,8 +523,6 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
-    # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1
-    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:zeep.utils",
 
     # -- fixed for Python 3.13
     # https://github.com/rhasspy/wyoming/commit/e34af30d455b6f2bb9e5cfb25fad8d276914bc54 - >=1.4.2
@@ -532,8 +530,9 @@ filterwarnings = [
 
     # -- other
     # Locale changes might take some time to resolve upstream
+    # https://github.com/Squachen/micloud/blob/v_0.6/micloud/micloud.py#L35 - v0.6 - 2022-12-08
     "ignore:'locale.getdefaultlocale' is deprecated and slated for removal in Python 3.15:DeprecationWarning:micloud.micloud",
-    # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1
+    # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1 - 2023-10-09
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
     # https://github.com/lidatong/dataclasses-json/issues/328
     # https://github.com/lidatong/dataclasses-json/pull/351
@@ -541,14 +540,19 @@ filterwarnings = [
     # https://pypi.org/project/emulated-roku/ - v0.3.0 - 2023-12-19
     # https://github.com/martonperei/emulated_roku
     "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
-    # https://github.com/thecynic/pylutron - v0.2.15
+    # https://github.com/w1ll1am23/pyeconet/blob/v0.1.23/src/pyeconet/api.py#L38 - v0.1.23 - 2024-10-08
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:pyeconet.api",
+    # https://github.com/thecynic/pylutron - v0.2.16 - 2024-10-22
     "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
-    # https://github.com/pschmitt/pynuki/blob/1.6.3/pynuki/utils.py#L21 - v1.6.3
+    # https://github.com/pschmitt/pynuki/blob/1.6.3/pynuki/utils.py#L21 - v1.6.3 - 2024-02-24
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pynuki.utils",
+    # https://github.com/lextudio/pysnmp/blob/v7.1.8/pysnmp/smi/compiler.py#L23-L31 - v7.1.8 - 2024-10-15
+    "ignore:smiV1Relaxed is deprecated. Please use smi_v1_relaxed instead:DeprecationWarning:pysnmp.smi.compiler",
+    "ignore:getReadersFromUrls is deprecated. Please use get_readers_from_urls instead:DeprecationWarning:pysmi.reader.url",  # wrong stacklevel
     # https://github.com/briis/pyweatherflowudp/blob/v1.4.5/pyweatherflowudp/const.py#L20 - v1.4.5 - 2023-10-10
     "ignore:This function will be removed in future versions of pint:DeprecationWarning:pyweatherflowudp.const",
     # Wrong stacklevel
-    # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
+    # https://bugs.launchpad.net/beautifulsoup/+bug/2034451 fixed in >4.12.3
     "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:html.parser",
     # New in aiohttp - v3.9.0
     "ignore:It is recommended to use web.AppKey instances for keys:UserWarning:(homeassistant|tests|aiohttp_cors)",
@@ -569,9 +573,6 @@ filterwarnings = [
     "ignore:invalid escape sequence:SyntaxWarning:.*sanix",
     # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
     "ignore:invalid escape sequence:SyntaxWarning:.*sleekxmppfs.thirdparty.mini_dateutil",  # codespell:ignore thirdparty
-    # https://pypi.org/project/vobject/ - v0.9.7 - 2024-03-25
-    # https://github.com/py-vobject/vobject
-    "ignore:invalid escape sequence:SyntaxWarning:.*vobject.base",
     # - pkg_resources
     # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:aiomusiccast",
@@ -600,8 +601,8 @@ filterwarnings = [
     # https://github.com/nextcord/nextcord/issues/1174
     # https://github.com/nextcord/nextcord/blob/v2.6.1/nextcord/player.py#L5
     "ignore:'audioop' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nextcord.player",
-    # https://pypi.org/project/SpeechRecognition/ - v3.10.4 - 2024-05-05
-    # https://github.com/Uberi/speech_recognition/blob/3.10.4/speech_recognition/__init__.py#L7
+    # https://pypi.org/project/SpeechRecognition/ - v3.11.0 - 2024-05-05
+    # https://github.com/Uberi/speech_recognition/blob/3.11.0/speech_recognition/__init__.py#L7
     "ignore:'aifc' is deprecated and slated for removal in Python 3.13:DeprecationWarning:speech_recognition",
     # https://pypi.org/project/voip-utils/ - v0.2.0 - 2024-09-06
     # https://github.com/home-assistant-libs/voip-utils/blob/v0.2.0/voip_utils/rtp_audio.py#L3
@@ -626,7 +627,7 @@ filterwarnings = [
     # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
-    # https://pypi.org/project/foobot_async/ - v1.0.0 - 2020-11-24
+    # https://pypi.org/project/foobot_async/ - v1.0.1 - 2024-08-16
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
     # https://pypi.org/project/httpsig/ - v1.3.0 - 2018-11-28
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:httpsig",

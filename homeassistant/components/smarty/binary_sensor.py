@@ -13,27 +13,25 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SIGNAL_UPDATE_SMARTY
+from . import SIGNAL_UPDATE_SMARTY, SmartyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: SmartyConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Smarty Binary Sensor Platform."""
-    smarty: Smarty = hass.data[DOMAIN]["api"]
-    name: str = hass.data[DOMAIN]["name"]
 
+    smarty = entry.runtime_data
+    entry_id = entry.entry_id
     sensors = [
-        AlarmSensor(name, smarty),
-        WarningSensor(name, smarty),
-        BoostSensor(name, smarty),
+        AlarmSensor(entry.title, smarty, entry_id),
+        WarningSensor(entry.title, smarty, entry_id),
+        BoostSensor(entry.title, smarty, entry_id),
     ]
 
     async_add_entities(sensors, True)
@@ -68,9 +66,10 @@ class SmartyBinarySensor(BinarySensorEntity):
 class BoostSensor(SmartyBinarySensor):
     """Boost State Binary Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Alarm Sensor Init."""
         super().__init__(name=f"{name} Boost State", device_class=None, smarty=smarty)
+        self._attr_unique_id = f"{entry_id}_boost"
 
     def update(self) -> None:
         """Update state."""
@@ -81,13 +80,14 @@ class BoostSensor(SmartyBinarySensor):
 class AlarmSensor(SmartyBinarySensor):
     """Alarm Binary Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Alarm Sensor Init."""
         super().__init__(
             name=f"{name} Alarm",
             device_class=BinarySensorDeviceClass.PROBLEM,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_alarm"
 
     def update(self) -> None:
         """Update state."""
@@ -98,13 +98,14 @@ class AlarmSensor(SmartyBinarySensor):
 class WarningSensor(SmartyBinarySensor):
     """Warning Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Warning Sensor Init."""
         super().__init__(
             name=f"{name} Warning",
             device_class=BinarySensorDeviceClass.PROBLEM,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_warning"
 
     def update(self) -> None:
         """Update state."""

@@ -32,14 +32,14 @@ habluetooth==3.6.0
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20241002.3
+home-assistant-frontend==20241002.4
 home-assistant-intents==2024.10.2
 httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.10.9
+orjson==3.10.10
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.4.0

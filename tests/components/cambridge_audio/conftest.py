@@ -8,6 +8,7 @@ from aiostreammagic.models import (
     Info,
     NowPlaying,
     PlayState,
+    PresetList,
     Source,
     State,
     Update,
@@ -60,6 +61,9 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         )
         client.display = Display.from_json(load_fixture("get_display.json", DOMAIN))
         client.update = Update.from_json(load_fixture("get_update.json", DOMAIN))
+        client.preset_list = PresetList.from_json(
+            load_fixture("get_presets_list.json", DOMAIN)
+        )
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position
         client.unregister_state_update_callbacks = AsyncMock(return_value=True)

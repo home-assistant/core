@@ -38,10 +38,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E076D0*",
     },
     {
-        "domain": "awair",
-        "macaddress": "70886B1*",
-    },
-    {
         "domain": "axis",
         "registered_devices": True,
     },
