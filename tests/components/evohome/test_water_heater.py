@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import TEST_INSTALLS_WITH_DHW
 
-DHW_ID = "water_heater.domestic_hot_water"
+DHW_ENTITY_ID = "water_heater.domestic_hot_water"
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
@@ -48,7 +48,7 @@ async def test_set_operation_mode(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ID,
+                ATTR_ENTITY_ID: DHW_ENTITY_ID,
                 ATTR_OPERATION_MODE: "auto",
             },
             blocking=True,
@@ -64,7 +64,7 @@ async def test_set_operation_mode(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ID,
+                ATTR_ENTITY_ID: DHW_ENTITY_ID,
                 ATTR_OPERATION_MODE: "off",
             },
             blocking=True,
@@ -80,7 +80,7 @@ async def test_set_operation_mode(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ID,
+                ATTR_ENTITY_ID: DHW_ENTITY_ID,
                 ATTR_OPERATION_MODE: "on",
             },
             blocking=True,
@@ -103,7 +103,7 @@ async def test_set_away_mode(hass: HomeAssistant) -> None:
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ID,
+                ATTR_ENTITY_ID: DHW_ENTITY_ID,
                 ATTR_AWAY_MODE: "off",
             },
             blocking=True,
@@ -119,7 +119,7 @@ async def test_set_away_mode(hass: HomeAssistant) -> None:
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: DHW_ID,
+                ATTR_ENTITY_ID: DHW_ENTITY_ID,
                 ATTR_AWAY_MODE: "on",
             },
             blocking=True,
@@ -140,7 +140,7 @@ async def test_turn_off(hass: HomeAssistant) -> None:
             Platform.WATER_HEATER,
             SERVICE_TURN_OFF,
             {
-                ATTR_ENTITY_ID: DHW_ID,
+                ATTR_ENTITY_ID: DHW_ENTITY_ID,
             },
             blocking=True,
         )
@@ -156,7 +156,7 @@ async def test_turn_on(hass: HomeAssistant) -> None:
             Platform.WATER_HEATER,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: DHW_ID,
+                ATTR_ENTITY_ID: DHW_ENTITY_ID,
             },
             blocking=True,
         )
