@@ -49,9 +49,8 @@ from tests.common import MockConfigEntry
 
 async def mock_state_update(client: AsyncMock) -> None:
     """Trigger a callback in the media player."""
-    await client.register_state_update_callbacks.call_args[0][0](
-        client, CallbackType.STATE
-    )
+    for callback in client.register_state_update_callbacks.call_args_list:
+        await callback[0][0](client, CallbackType.STATE)
 
 
 async def test_entity_supported_features(
