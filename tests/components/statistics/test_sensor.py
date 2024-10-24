@@ -1713,10 +1713,6 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    # enable and pre-fill the recorder
-    await hass.async_block_till_done()
-    await async_wait_recording_done(hass)
-
     with (
         freeze_time(current_time) as freezer,
     ):
