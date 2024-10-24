@@ -2,189 +2,180 @@
 # name: test_zone_set_hvac_mode[default]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 5.0,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      5.0,
     ),
+    dict({
+      'until': None,
+    }),
   ])
 # ---
 # name: test_zone_set_hvac_mode[h032585]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 4.5,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      4.5,
     ),
+    dict({
+      'until': None,
+    }),
   ])
 # ---
 # name: test_zone_set_hvac_mode[h099625]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 5.0,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      5.0,
     ),
+    dict({
+      'until': None,
+    }),
   ])
 # ---
 # name: test_zone_set_hvac_mode[minimal]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 5.0,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      5.0,
     ),
+    dict({
+      'until': None,
+    }),
   ])
 # ---
 # name: test_zone_set_hvac_mode[sys_004]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 5.0,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      5.0,
     ),
+    dict({
+      'until': None,
+    }),
   ])
 # ---
 # name: test_zone_set_preset_mode[default]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 17.0,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      17.0,
     ),
+    dict({
+      'until': None,
+    }),
     tuple(
-      dict({
-        'HeatSetpointValue': 17.0,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T21:10:00Z',
-      }),
+      17.0,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_preset_mode[h032585]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 21.5,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      21.5,
     ),
+    dict({
+      'until': None,
+    }),
     tuple(
-      dict({
-        'HeatSetpointValue': 21.5,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T21:10:00Z',
-      }),
+      21.5,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_preset_mode[h099625]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 21.5,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      21.5,
     ),
+    dict({
+      'until': None,
+    }),
     tuple(
-      dict({
-        'HeatSetpointValue': 21.5,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T19:10:00Z',
-      }),
+      21.5,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_preset_mode[minimal]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 17.0,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      17.0,
     ),
+    dict({
+      'until': None,
+    }),
     tuple(
-      dict({
-        'HeatSetpointValue': 17.0,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T21:10:00Z',
-      }),
+      17.0,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_preset_mode[sys_004]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 15.0,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      15.0,
     ),
+    dict({
+      'until': None,
+    }),
     tuple(
-      dict({
-        'HeatSetpointValue': 15.0,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T20:10:00Z',
-      }),
+      15.0,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_temperature[default]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 19.1,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T21:10:00Z',
-      }),
+      19.1,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_temperature[h032585]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 19.1,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T21:10:00Z',
-      }),
+      19.1,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_temperature[h099625]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 19.1,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T19:10:00Z',
-      }),
+      19.1,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_temperature[minimal]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 19.1,
-        'setpointMode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'timeUntil': '2024-07-10T21:10:00Z',
-      }),
+      19.1,
     ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
 # name: test_zone_set_temperature[sys_004]
   list([
     tuple(
-      dict({
-        'HeatSetpointValue': 19.1,
-        'setpointMode': <ZoneMode.PERMANENT_OVERRIDE: 'PermanentOverride'>,
-      }),
+      19.1,
     ),
+    dict({
+      'until': None,
+    }),
   ])
 # ---
