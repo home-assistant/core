@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+
+from pysmarty2 import Smarty
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,6 +22,34 @@ from .coordinator import SmartyConfigEntry, SmartyCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
+class SmartyBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Smarty binary sensor entities."""
+
+    value_fn: Callable[[Smarty], bool]
+
+
+ENTITIES: tuple[SmartyBinarySensorEntityDescription, ...] = (
+    SmartyBinarySensorEntityDescription(
+        key="alarm",
+        name="Alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda smarty: smarty.alarm,
+    ),
+    SmartyBinarySensorEntityDescription(
+        key="warning",
+        name="Warning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda smarty: smarty.warning,
+    ),
+    SmartyBinarySensorEntityDescription(
+        key="boost",
+        name="Boost State",
+        value_fn=lambda smarty: smarty.boost,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartyConfigEntry,
@@ -25,75 +58,31 @@ async def async_setup_entry(
     """Set up the Smarty Binary Sensor Platform."""
 
     coordinator = entry.runtime_data
-    sensors = [
-        AlarmSensor(coordinator),
-        WarningSensor(coordinator),
-        BoostSensor(coordinator),
-    ]
 
-    async_add_entities(sensors)
+    async_add_entities(
+        SmartyBinarySensor(coordinator, description) for description in ENTITIES
+    )
 
 
 class SmartyBinarySensor(CoordinatorEntity[SmartyCoordinator], BinarySensorEntity):
     """Representation of a Smarty Binary Sensor."""
 
+    entity_description: SmartyBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: SmartyCoordinator,
-        name: str,
-        device_class: BinarySensorDeviceClass | None,
+        entity_description: SmartyBinarySensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_name = f"{coordinator.config_entry.title} {name}"
-        self._attr_device_class = device_class
-
-
-class BoostSensor(SmartyBinarySensor):
-    """Boost State Binary Sensor."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Alarm Sensor Init."""
-        super().__init__(coordinator, name="Boost State", device_class=None)
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_boost"
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self.coordinator.client.boost
-
-
-class AlarmSensor(SmartyBinarySensor):
-    """Alarm Binary Sensor."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Alarm Sensor Init."""
-        super().__init__(
-            coordinator,
-            name="Alarm",
-            device_class=BinarySensorDeviceClass.PROBLEM,
+        self.entity_description = entity_description
+        self._attr_name = f"{coordinator.config_entry.title} {entity_description.name}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_alarm"
 
     @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self.coordinator.client.alarm
-
-
-class WarningSensor(SmartyBinarySensor):
-    """Warning Sensor."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Warning Sensor Init."""
-        super().__init__(
-            coordinator,
-            name="Warning",
-            device_class=BinarySensorDeviceClass.PROBLEM,
-        )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_warning"
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self.coordinator.client.warning
+    def is_on(self) -> bool:
+        """Return the state of the binary sensor."""
+        return self.entity_description.value_fn(self.coordinator.client)
