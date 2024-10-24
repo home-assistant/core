@@ -16,6 +16,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
+from webrtc_models import RTCConfiguration, RTCIceServer
 import yaml
 
 from homeassistant import loader
@@ -48,7 +49,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
-from homeassistant.util import webrtc as webrtc_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -987,8 +987,8 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
     assert hass.config.radius == 150
-    assert hass.config.webrtc == webrtc_util.RTCConfiguration(
-        [webrtc_util.RTCIceServer(urls=["stun:custom_stun_server:3478"])]
+    assert hass.config.webrtc == RTCConfiguration(
+        [RTCIceServer(urls=["stun:custom_stun_server:3478"])]
     )
 
 

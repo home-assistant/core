@@ -22,6 +22,7 @@ from urllib.parse import urlparse
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import MAX_VALIDATION_ERROR_ITEM_LENGTH
+from webrtc_models import RTCIceServer
 from yaml.error import MarkedYAMLError
 
 from . import auth
@@ -75,7 +76,6 @@ from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
-from .util.webrtc import RTCIceServer
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
 from .util.yaml.objects import NodeStrClass
 
