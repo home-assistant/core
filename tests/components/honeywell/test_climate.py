@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
 import aiosomecomfort
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -1215,6 +1216,7 @@ async def test_preset_mode(
     hass: HomeAssistant,
     device: MagicMock,
     config_entry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test mode settings properly reflected."""
     await init_integration(hass, config_entry)
@@ -1223,10 +1225,8 @@ async def test_preset_mode(
     device.raw_ui_data["StatusHeat"] = 3
     device.raw_ui_data["StatusCool"] = 3
 
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
