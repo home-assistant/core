@@ -34,7 +34,7 @@ async def async_setup_entry(
 
     smarty = entry.runtime_data
 
-    async_add_entities([SmartyFan(entry.title, smarty)], True)
+    async_add_entities([SmartyFan(entry.title, smarty, entry.entry_id)], True)
 
 
 class SmartyFan(FanEntity):
@@ -49,11 +49,12 @@ class SmartyFan(FanEntity):
     )
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, name, smarty):
+    def __init__(self, name, smarty, entry_id):
         """Initialize the entity."""
         self._attr_name = name
         self._smarty_fan_speed = 0
         self._smarty = smarty
+        self._attr_unique_id = entry_id
 
     @property
     def is_on(self) -> bool:

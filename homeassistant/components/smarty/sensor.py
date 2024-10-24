@@ -27,13 +27,14 @@ async def async_setup_entry(
     """Set up the Smarty Sensor Platform."""
 
     smarty = entry.runtime_data
+    entry_id = entry.entry_id
     sensors = [
-        SupplyAirTemperatureSensor(entry.title, smarty),
-        ExtractAirTemperatureSensor(entry.title, smarty),
-        OutdoorAirTemperatureSensor(entry.title, smarty),
-        SupplyFanSpeedSensor(entry.title, smarty),
-        ExtractFanSpeedSensor(entry.title, smarty),
-        FilterDaysLeftSensor(entry.title, smarty),
+        SupplyAirTemperatureSensor(entry.title, smarty, entry_id),
+        ExtractAirTemperatureSensor(entry.title, smarty, entry_id),
+        OutdoorAirTemperatureSensor(entry.title, smarty, entry_id),
+        SupplyFanSpeedSensor(entry.title, smarty, entry_id),
+        ExtractFanSpeedSensor(entry.title, smarty, entry_id),
+        FilterDaysLeftSensor(entry.title, smarty, entry_id),
     ]
 
     async_add_entities(sensors, True)
@@ -71,7 +72,7 @@ class SmartySensor(SensorEntity):
 class SupplyAirTemperatureSensor(SmartySensor):
     """Supply Air Temperature Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Supply Air Temperature Init."""
         super().__init__(
             name=f"{name} Supply Air Temperature",
@@ -79,6 +80,7 @@ class SupplyAirTemperatureSensor(SmartySensor):
             unit_of_measurement=UnitOfTemperature.CELSIUS,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_supply_air_temperature"
 
     def update(self) -> None:
         """Update state."""
@@ -89,7 +91,7 @@ class SupplyAirTemperatureSensor(SmartySensor):
 class ExtractAirTemperatureSensor(SmartySensor):
     """Extract Air Temperature Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Supply Air Temperature Init."""
         super().__init__(
             name=f"{name} Extract Air Temperature",
@@ -97,6 +99,7 @@ class ExtractAirTemperatureSensor(SmartySensor):
             unit_of_measurement=UnitOfTemperature.CELSIUS,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_extract_air_temperature"
 
     def update(self) -> None:
         """Update state."""
@@ -107,7 +110,7 @@ class ExtractAirTemperatureSensor(SmartySensor):
 class OutdoorAirTemperatureSensor(SmartySensor):
     """Extract Air Temperature Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Outdoor Air Temperature Init."""
         super().__init__(
             name=f"{name} Outdoor Air Temperature",
@@ -115,6 +118,7 @@ class OutdoorAirTemperatureSensor(SmartySensor):
             unit_of_measurement=UnitOfTemperature.CELSIUS,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_outdoor_air_temperature"
 
     def update(self) -> None:
         """Update state."""
@@ -125,7 +129,7 @@ class OutdoorAirTemperatureSensor(SmartySensor):
 class SupplyFanSpeedSensor(SmartySensor):
     """Supply Fan Speed RPM."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Supply Fan Speed RPM Init."""
         super().__init__(
             name=f"{name} Supply Fan Speed",
@@ -133,6 +137,7 @@ class SupplyFanSpeedSensor(SmartySensor):
             unit_of_measurement=None,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_supply_fan_speed"
 
     def update(self) -> None:
         """Update state."""
@@ -143,7 +148,7 @@ class SupplyFanSpeedSensor(SmartySensor):
 class ExtractFanSpeedSensor(SmartySensor):
     """Extract Fan Speed RPM."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Extract Fan Speed RPM Init."""
         super().__init__(
             name=f"{name} Extract Fan Speed",
@@ -151,6 +156,7 @@ class ExtractFanSpeedSensor(SmartySensor):
             unit_of_measurement=None,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_extract_fan_speed"
 
     def update(self) -> None:
         """Update state."""
@@ -161,7 +167,7 @@ class ExtractFanSpeedSensor(SmartySensor):
 class FilterDaysLeftSensor(SmartySensor):
     """Filter Days Left."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Filter Days Left Init."""
         super().__init__(
             name=f"{name} Filter Days Left",
@@ -170,6 +176,7 @@ class FilterDaysLeftSensor(SmartySensor):
             smarty=smarty,
         )
         self._days_left = 91
+        self._attr_unique_id = f"{entry_id}_filter_days_left"
 
     def update(self) -> None:
         """Update state."""

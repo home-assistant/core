@@ -27,11 +27,11 @@ async def async_setup_entry(
     """Set up the Smarty Binary Sensor Platform."""
 
     smarty = entry.runtime_data
-
+    entry_id = entry.entry_id
     sensors = [
-        AlarmSensor(entry.title, smarty),
-        WarningSensor(entry.title, smarty),
-        BoostSensor(entry.title, smarty),
+        AlarmSensor(entry.title, smarty, entry_id),
+        WarningSensor(entry.title, smarty, entry_id),
+        BoostSensor(entry.title, smarty, entry_id),
     ]
 
     async_add_entities(sensors, True)
@@ -66,9 +66,10 @@ class SmartyBinarySensor(BinarySensorEntity):
 class BoostSensor(SmartyBinarySensor):
     """Boost State Binary Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Alarm Sensor Init."""
         super().__init__(name=f"{name} Boost State", device_class=None, smarty=smarty)
+        self._attr_unique_id = f"{entry_id}_boost"
 
     def update(self) -> None:
         """Update state."""
@@ -79,13 +80,14 @@ class BoostSensor(SmartyBinarySensor):
 class AlarmSensor(SmartyBinarySensor):
     """Alarm Binary Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Alarm Sensor Init."""
         super().__init__(
             name=f"{name} Alarm",
             device_class=BinarySensorDeviceClass.PROBLEM,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_alarm"
 
     def update(self) -> None:
         """Update state."""
@@ -96,13 +98,14 @@ class AlarmSensor(SmartyBinarySensor):
 class WarningSensor(SmartyBinarySensor):
     """Warning Sensor."""
 
-    def __init__(self, name: str, smarty: Smarty) -> None:
+    def __init__(self, name: str, smarty: Smarty, entry_id: str) -> None:
         """Warning Sensor Init."""
         super().__init__(
             name=f"{name} Warning",
             device_class=BinarySensorDeviceClass.PROBLEM,
             smarty=smarty,
         )
+        self._attr_unique_id = f"{entry_id}_warning"
 
     def update(self) -> None:
         """Update state."""
