@@ -159,6 +159,9 @@
       "device_time": {
         "name": "Device time"
       },
+      "water_alert_timestamp": {
+        "name": "Last water leak alert"
+      },
       "auto_off_at": {
         "name": "Auto off at"
       },
