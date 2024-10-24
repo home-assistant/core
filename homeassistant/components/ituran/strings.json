@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "id_or_passport": "ID or passport number",
+          "phone_number": "Mobile phone number",
+          "mobile_id": "Mobile ID (leave empty if unknown)"
+        }
+      },
+      "otp": {
+        "data": {
+          "otp": "OTP"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_otp": "Wrong OTP",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  }
+}
