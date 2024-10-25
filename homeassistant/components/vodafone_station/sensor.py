@@ -23,25 +23,42 @@ from .const import _LOGGER, DOMAIN, LINE_TYPES
 from .coordinator import VodafoneStationRouter
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
+UPTIME_DEVIATION = 30
 
 
 @dataclass(frozen=True, kw_only=True)
 class VodafoneStationEntityDescription(SensorEntityDescription):
     """Vodafone Station entity description."""
 
-    value: Callable[[Any, Any], Any] = (
-        lambda coordinator, key: coordinator.data.sensors[key]
+    value: Callable[[Any, Any, Any], Any] = (
+        lambda coordinator, last_value, key: coordinator.data.sensors[key]
     )
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
-def _calculate_uptime(coordinator: VodafoneStationRouter, key: str) -> datetime:
+def _calculate_uptime(
+    coordinator: VodafoneStationRouter,
+    last_value: datetime | None,
+    key: str,
+) -> datetime:
     """Calculate device uptime."""
 
-    return coordinator.api.convert_uptime(coordinator.data.sensors[key])
+    delta_uptime = coordinator.api.convert_uptime(coordinator.data.sensors[key])
+
+    if (
+        not last_value
+        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
+    ):
+        return delta_uptime
+
+    return last_value
 
 
-def _line_connection(coordinator: VodafoneStationRouter, key: str) -> str | None:
+def _line_connection(
+    coordinator: VodafoneStationRouter,
+    last_value: str | None,
+    key: str,
+) -> str | None:
     """Identify line type."""
 
     value = coordinator.data.sensors
@@ -126,14 +143,18 @@ SENSOR_TYPES: Final = (
         translation_key="sys_cpu_usage",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
+        value=lambda coordinator, last_value, key: float(
+            coordinator.data.sensors[key][:-1]
+        ),
     ),
     VodafoneStationEntityDescription(
         key="sys_memory_usage",
         translation_key="sys_memory_usage",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
+        value=lambda coordinator, last_value, key: float(
+            coordinator.data.sensors[key][:-1]
+        ),
     ),
     VodafoneStationEntityDescription(
         key="sys_reboot_cause",
@@ -178,10 +199,12 @@ class VodafoneStationSensorEntity(
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        self._old_state = None
 
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        return self.entity_description.value(
-            self.coordinator, self.entity_description.key
+        self._old_state = self.entity_description.value(
+            self.coordinator, self._old_state, self.entity_description.key
         )
+        return self._old_state
