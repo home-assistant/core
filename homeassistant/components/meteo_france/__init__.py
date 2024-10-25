@@ -85,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator_rain.async_config_entry_first_refresh()
 
-
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
         "Department corresponding to %s is %s",
