@@ -53,7 +53,10 @@ _SUPPORTED_STREAMS = frozenset(
 )
 
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {vol.Optional(CONF_URL): cv.url}})
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Optional(CONF_URL): cv.url})},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
