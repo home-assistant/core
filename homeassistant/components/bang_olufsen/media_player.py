@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
+from datetime import timedelta
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp import ClientConnectorError
 from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
@@ -22,6 +25,7 @@ from mozart_api.models import (
     PlaybackProgress,
     PlayQueueItem,
     PlayQueueItemType,
+    PlayQueueSettings,
     RenderingState,
     SceneProperties,
     SoftwareUpdateState,
@@ -44,6 +48,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -58,6 +63,8 @@ from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenConfigEntry
 from .const import (
+    BANG_OLUFSEN_REPEAT_FROM_HA,
+    BANG_OLUFSEN_REPEAT_TO_HA,
     BANG_OLUFSEN_STATES,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
@@ -72,6 +79,8 @@ from .const import (
 from .entity import BangOlufsenEntity
 from .util import get_serial_number_from_jid
 
+SCAN_INTERVAL = timedelta(seconds=30)
+
 _LOGGER = logging.getLogger(__name__)
 
 BANG_OLUFSEN_FEATURES = (
@@ -84,6 +93,7 @@ BANG_OLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.SEEK
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.STOP
@@ -131,6 +141,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             serial_number=self._unique_id,
         )
         self._attr_unique_id = self._unique_id
+        self._attr_should_poll = True
 
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
@@ -219,6 +230,16 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         await self._async_update_sources()
 
         await self._async_update_sound_modes()
+
+    async def async_update(self) -> None:
+        """Update queue settings."""
+        # The WebSocket event listener is the main handler for connection state.
+        # The polling updates do therefore not set the device as available or unavailable
+        with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
+            queue_settings = await self._client.get_settings_queue(_request_timeout=5)
+
+            if queue_settings.repeat is not None:
+                self._attr_repeat = BANG_OLUFSEN_REPEAT_TO_HA[queue_settings.repeat]
 
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
@@ -629,6 +650,14 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     async def async_clear_playlist(self) -> None:
         """Clear the current playback queue."""
         await self._client.post_clear_queue()
+
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set playback queues to repeat."""
+        await self._client.set_settings_queue(
+            play_queue_settings=PlayQueueSettings(
+                repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
+            )
+        )
 
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""

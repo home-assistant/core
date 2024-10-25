@@ -11,6 +11,7 @@ from aiostreammagic.models import (
     PresetList,
     Source,
     State,
+    Update,
 )
 import pytest
 
@@ -59,6 +60,7 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
             load_fixture("get_now_playing.json", DOMAIN)
         )
         client.display = Display.from_json(load_fixture("get_display.json", DOMAIN))
+        client.update = Update.from_json(load_fixture("get_update.json", DOMAIN))
         client.preset_list = PresetList.from_json(
             load_fixture("get_presets_list.json", DOMAIN)
         )
