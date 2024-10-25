@@ -22,6 +22,10 @@ from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type SwissPublicTransportConfigEntry = ConfigEntry[
+    SwissPublicTransportDataUpdateCoordinator
+]
+
 
 class DataConnection(TypedDict):
     """A connection data class."""
@@ -51,7 +55,7 @@ class SwissPublicTransportDataUpdateCoordinator(
 ):
     """A SwissPublicTransport Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwissPublicTransportConfigEntry
 
     def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
@@ -69,13 +73,6 @@ class SwissPublicTransportDataUpdateCoordinator(
 
         if departure_datetime:
             return departure_datetime - dt_util.as_local(dt_util.utcnow())
-        return None
-
-    def nth_departure_time(self, i: int) -> datetime | None:
-        """Get nth departure time."""
-        connections = self._opendata.connections
-        if len(connections) > i and connections[i] is not None:
-            return dt_util.parse_datetime(connections[i]["departure"])
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
@@ -97,7 +94,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         connections = self._opendata.connections
         return [
             DataConnection(
-                departure=self.nth_departure_time(i),
+                departure=dt_util.parse_datetime(connections[i]["departure"]),
                 train_number=connections[i]["number"],
                 platform=connections[i]["platform"],
                 transfers=connections[i]["transfers"],

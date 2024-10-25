@@ -1,0 +1,58 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "menu_options": {
+          "manual": "Manual entry",
+          "eiscp_discovery": "Onkyo discovery"
+        }
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "eiscp_discovery": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "configure_receiver": {
+        "description": "Configure {name}",
+        "data": {
+          "volume_resolution": "Number of steps it takes for the receiver to go from the lowest to the highest possible volume",
+          "input_sources": "List of input sources supported by the receiver"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "empty_input_source_list": "Input source list cannot be empty",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "max_volume": "Maximum volume limit (%)"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_no_discover": {
+      "title": "The Onkyo YAML configuration import failed",
+      "description": "Configuring Onkyo using YAML is being removed but no receivers were discovered when importing your YAML configuration.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Onkyo YAML configuration import failed",
+      "description": "Configuring Onkyo using YAML is being removed but there was a connection error when importing your YAML configuration for host {host}.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  }
+}
