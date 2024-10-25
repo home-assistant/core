@@ -71,7 +71,7 @@ class OAuth2WithPKCEImplementation(config_entry_oauth2_flow.LocalOAuth2Implement
         self._name = credential.name
         # Init PKCE
         self.code_verifier, self.code_challenge = self._generateCodeChallengePair()
-        self.code_challenge_method = CodeChallengeMethod.s265
+        self.code_challenge_method = CodeChallengeMethod.s265.value
 
     @property
     def name(self) -> str:
