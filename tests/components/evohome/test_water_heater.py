@@ -39,7 +39,7 @@ async def test_set_operation_mode(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_SET_OPERATION_MODE of a evohome HotWater entity."""
+    """Test SERVICE_SET_OPERATION_MODE of an evohome HotWater entity."""
 
     freezer.move_to("2024-07-10T11:55:00Z")
     results = []
@@ -74,7 +74,9 @@ async def test_set_operation_mode(
 
         assert mock_fcn.await_count == 1
         assert mock_fcn.await_args.args == ()
-        results.append(mock_fcn.await_args.args)
+        assert mock_fcn.await_args.kwargs != {}
+
+        results.append(mock_fcn.await_args.kwargs)
 
     # SERVICE_SET_OPERATION_MODE: on (until next scheduled setpoint)
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
@@ -90,14 +92,16 @@ async def test_set_operation_mode(
 
         assert mock_fcn.await_count == 1
         assert mock_fcn.await_args.args == ()
-        results.append(mock_fcn.await_args.args)
+        assert mock_fcn.await_args.kwargs != {}
+
+        results.append(mock_fcn.await_args.kwargs)
 
     assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> None:
-    """Test SERVICE_SET_AWAY_MODE of a evohome HotWater entity."""
+    """Test SERVICE_SET_AWAY_MODE of an evohome HotWater entity."""
 
     # set_away_mode: off
     with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
@@ -134,7 +138,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
-    """Test SERVICE_TURN_OFF of a evohome HotWater entity."""
+    """Test SERVICE_TURN_OFF of an evohome HotWater entity."""
 
     # Entity water_heater.domestic_hot_water does not support this service
     with pytest.raises(HomeAssistantError):
@@ -150,7 +154,7 @@ async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
-    """Test SERVICE_TURN_ON of a evohome HotWater entity."""
+    """Test SERVICE_TURN_ON of an evohome HotWater entity."""
 
     # Entity water_heater.domestic_hot_water does not support this service
     with pytest.raises(HomeAssistantError):
