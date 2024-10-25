@@ -98,12 +98,11 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.url, self.api_key, session=async_get_clientsession(self.hass)
                 )
                 emoncms_unique_id = await emoncms_client.async_get_uuid()
-                if (
-                    emoncms_unique_id
-                    and self.hass.config_entries.async_entry_for_domain_unique_id(
-                        DOMAIN, emoncms_unique_id
-                    )
+                if existing_entry := await self.async_set_unique_id(
+                    unique_id=emoncms_unique_id
                 ):
+                    message = f"there is an existing entry with the same unique id : {existing_entry}"
+                    LOGGER.debug(message)
                     return self.async_abort(reason="already_configured")
                 options = get_options(result[CONF_MESSAGE])
                 self.dropdown = {
