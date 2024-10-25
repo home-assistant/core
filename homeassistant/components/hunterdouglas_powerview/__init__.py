@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
     """Set up Hunter Douglas PowerView from a config entry."""
     config = entry.data
     hub_address: str = config[CONF_HOST]
-    api_version: int | None = config.get(CONF_API_VERSION, None)
+    api_version: int | None = config.get(CONF_API_VERSION)
     _LOGGER.debug("Connecting %s at %s with v%s api", DOMAIN, hub_address, api_version)
 
     # default 15 second timeout for each call in upstream
