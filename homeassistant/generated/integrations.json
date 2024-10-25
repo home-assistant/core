@@ -2678,11 +2678,22 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
-    "husqvarna_automower": {
-      "name": "Husqvarna Automower",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
+    "husqvarna": {
+      "name": "Husqvarna",
+      "integrations": {
+        "husqvarna_automower": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Husqvarna Automower"
+        },
+        "husqvarna_automower_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Husqvarna Automower BLE"
+        }
+      }
     },
     "huum": {
       "name": "Huum",
