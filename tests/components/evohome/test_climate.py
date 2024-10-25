@@ -73,7 +73,7 @@ async def test_ctl_set_hvac_mode(
         )
 
         assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
+        assert mock_fcn.await_args.args != ()  # 'Auto' or 'Heat'
         assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
