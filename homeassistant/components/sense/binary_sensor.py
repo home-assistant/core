@@ -1,6 +1,7 @@
 """Support for monitoring a Sense energy sensor device."""
 
 import logging
+from typing import Any
 
 from sense_energy.sense_api import SenseDevice
 
@@ -8,13 +9,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import SenseConfigEntry
-from .const import ATTRIBUTION, DOMAIN, MDI_ICONS, SENSE_DEVICE_UPDATE
+from .const import ATTRIBUTION, DOMAIN, MDI_ICONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +30,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sense binary sensor."""
     sense_monitor_id = config_entry.runtime_data.data.sense_monitor_id
+    realtime_coordinator = config_entry.runtime_data.rt
+
     devices = [
-        SenseBinarySensor(device, sense_monitor_id)
+        SenseBinarySensor(device, sense_monitor_id, realtime_coordinator)
         for device in config_entry.runtime_data.data.devices
     ]
 
@@ -41,19 +47,23 @@ def sense_to_mdi(sense_icon: str) -> str:
     return f"mdi:{MDI_ICONS.get(sense_icon, "power-plug")}"
 
 
-class SenseBinarySensor(BinarySensorEntity):
+class SenseBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Implementation of a Sense energy device binary sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
-    _attr_available = False
     _attr_device_class = BinarySensorDeviceClass.POWER
 
-    def __init__(self, device: SenseDevice, sense_monitor_id: str) -> None:
+    def __init__(
+        self,
+        device: SenseDevice,
+        sense_monitor_id: str,
+        coordinator: DataUpdateCoordinator[Any],
+    ) -> None:
         """Initialize the Sense binary sensor."""
+        super().__init__(coordinator)
         self._attr_name = device.name
         self._id = device.id
-        self._sense_monitor_id = sense_monitor_id
         self._attr_unique_id = f"{sense_monitor_id}-{self._id}"
         self._attr_icon = sense_to_mdi(device.icon)
         self._device = device
@@ -63,25 +73,10 @@ class SenseBinarySensor(BinarySensorEntity):
         """Return the old not so unique id of the binary sensor."""
         return self._id
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}",
-                self._async_update_from_data,
-            )
-        )
-
-    @callback
-    def _async_update_from_data(self) -> None:
-        """Get the latest data, update state. Must not do I/O."""
-        new_state = self._device.is_on
-        if self._attr_available and self._attr_is_on == new_state:
-            return
-        self._attr_available = True
-        self._attr_is_on = new_state
-        self.async_write_ha_state()
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.is_on
 
 
 async def _migrate_old_unique_ids(
