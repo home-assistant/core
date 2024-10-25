@@ -83,10 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=_async_update_data_rain,
         update_interval=SCAN_INTERVAL_RAIN,
     )
-    await coordinator_rain.async_refresh()
+    await coordinator_rain.async_config_entry_first_refresh()
 
-    if not coordinator_rain.last_update_success:
-        raise ConfigEntryNotReady
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
