@@ -100,12 +100,6 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
 
     def _async_add_remove_devices(self, data: SolarlogData) -> None:
         """Add new devices, remove non-existing devices."""
-        if not self._devices_last_update:
-            self._devices_last_update = {
-                (k, self.solarlog.device_name(k)) for k in data.inverter_data
-            }
-            return
-
         if (
             current_devices := {
                 (k, self.solarlog.device_name(k)) for k in data.inverter_data
