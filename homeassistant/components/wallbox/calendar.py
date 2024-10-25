@@ -20,7 +20,7 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
-from .coordinator import WallboxCoordinator, WallboxEvent
+from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
 CALENDAR_TYPE = CalendarEntityDescription(
@@ -62,16 +62,26 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
             description=self.coordinator.data[CHARGER_LAST_EVENT].description,
         )
 
-    # pylint: disable-next=hass-return-type
-    async def async_get_events(  # type: ignore[override]
+    async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
-    ) -> list[WallboxEvent]:
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        return await self.coordinator.async_get_sessions(
-            self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
-            start_date,
-            end_date,
-        )
+        events: list[CalendarEvent] = [
+            CalendarEvent(
+                summary=session.summary,
+                start=session.start,
+                end=session.end,
+                description=session.description,
+                location=session.location,
+            )
+            for session in await self.coordinator.async_get_sessions(
+                self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
+                start_date,
+                end_date,
+            )
+        ]
+
+        return events
 
     @callback
     def async_write_ha_state(self) -> None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any, Concatenate
@@ -135,7 +135,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=datetime.timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
     def authenticate(self) -> None:
@@ -188,7 +188,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         events = self._get_sessions(
             self._station,
-            dt_util.now() - datetime.timedelta(days=30),
+            dt_util.now() - timedelta(days=30),
             dt_util.now(),
         )
         data[CHARGER_LAST_EVENT] = events[0] if len(events) > 0 else None
@@ -219,8 +219,8 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _get_sessions(
         self,
         charger_id: str,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: datetime,
+        end_date: datetime,
     ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
         data = self._wallbox.getSessionList(charger_id, start_date, end_date)
@@ -237,15 +237,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0
                 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY],
                 session_cost=event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY],
-                start=datetime.datetime.fromtimestamp(
+                start=datetime.fromtimestamp(
                     event[CHARGER_ATTRIBUTES_KEY][CHARGER_START_KEY], tzone
                 ),
-                end=datetime.datetime.fromtimestamp(
-                    event[CHARGER_ATTRIBUTES_KEY]["end"], tzone
-                ),
+                end=datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY]["end"], tzone),
                 summary=f"Charging session {event["id"]}: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh",
                 location=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_NAME_KEY],
-                description=f"Session ID: {event["id"]}\nSerial number: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY]}\nUsername: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY]}\nTime: {datetime.datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY]) - datetime.datetime.fromtimestamp(0)}\nEnergy: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh\nSession cost: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY]}{event[CHARGER_ATTRIBUTES_KEY]["currency"]["code"]}\n",
+                description=f"Session ID: {event["id"]}\nSerial number: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY]}\nUsername: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY]}\nTime: {datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY]) - datetime.fromtimestamp(0)}\nEnergy: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh\nSession cost: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY]}{event[CHARGER_ATTRIBUTES_KEY]["currency"]["code"]}\n",
             )
             for event in data[CHARGER_SESSION_DATA_KEY]
             if event[CHARGER_TYPE_KEY] == "charger_log_session"
@@ -256,8 +254,8 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_get_sessions(
         self,
         charger_id: str,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: datetime,
+        end_date: datetime,
     ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
         return await self.hass.async_add_executor_job(
