@@ -486,11 +486,12 @@ async def async_setup_entry(
                     ThinQSensorEntity(coordinator, description, property_id)
                     for property_id in coordinator.api.get_active_idx(
                         description.key,
-                        (
-                            ActiveMode.READABLE
-                            if coordinator.api.device.device_type == DeviceType.COOKTOP
-                            else ActiveMode.READ_ONLY
-                        ),
+                        ActiveMode.READABLE
+                        if (
+                            coordinator.api.device.device_type == DeviceType.COOKTOP
+                            or isinstance(description.key, TimerProperty)
+                        )
+                        else ActiveMode.READ_ONLY,
                     )
                 )
 
