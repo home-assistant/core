@@ -41,7 +41,7 @@
     },
     "migrate_database": {
       "title": "Upgrade your emoncms version",
-      "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\n Please upgrade to at least version 11.5.7 and migrate your emoncms database.\n\n More info on [emoncms documentation](https://docs.openenergymonitor.org/emoncms/update.html#upgrading-to-a-version-producing-a-unique-identifier)"
+      "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\n Please upgrade to at least version 11.5.7 and migrate your emoncms database.\n\n More info on [emoncms documentation]({doc_url})"
     }
   }
 }

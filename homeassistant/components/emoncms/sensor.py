@@ -38,6 +38,7 @@ from .const import (
     CONF_EXCLUDE_FEEDID,
     CONF_ONLY_INCLUDE_FEEDID,
     DOMAIN,
+    EMONCMS_UUID_DOC_URL,
     FEED_ID,
     FEED_NAME,
     FEED_TAG,
@@ -163,7 +164,7 @@ async def async_setup_entry(
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="migrate_database",
-            translation_placeholders={"url": url},
+            translation_placeholders={"url": url, "doc_url": EMONCMS_UUID_DOC_URL},
         )
     else:
         hass.config_entries.async_update_entry(entry, unique_id=emoncms_unique_id)
