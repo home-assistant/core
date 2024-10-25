@@ -266,7 +266,11 @@ def get_package_metadata(dist: metadata.Distribution) -> PackageMetadata:
 
 
 def extract_license_classifier(classifiers: list[str] | None) -> list[str]:
-    """Extract license from list of classifiers."""
+    """Extract license from list of classifiers.
+
+    E.g. 'License :: OSI Approved :: MIT License' -> 'MIT License'.
+    Filter out bare 'License :: OSI Approved'.
+    """
     return [
         license_classifier
         for classifier in classifiers or ()
