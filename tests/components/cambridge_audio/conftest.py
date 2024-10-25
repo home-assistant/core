@@ -3,7 +3,16 @@
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 
-from aiostreammagic.models import Info, NowPlaying, PlayState, Source, State
+from aiostreammagic.models import (
+    Display,
+    Info,
+    NowPlaying,
+    PlayState,
+    PresetList,
+    Source,
+    State,
+    Update,
+)
 import pytest
 
 from homeassistant.components.cambridge_audio.const import DOMAIN
@@ -49,6 +58,11 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         )
         client.now_playing = NowPlaying.from_json(
             load_fixture("get_now_playing.json", DOMAIN)
+        )
+        client.display = Display.from_json(load_fixture("get_display.json", DOMAIN))
+        client.update = Update.from_json(load_fixture("get_update.json", DOMAIN))
+        client.preset_list = PresetList.from_json(
+            load_fixture("get_presets_list.json", DOMAIN)
         )
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position

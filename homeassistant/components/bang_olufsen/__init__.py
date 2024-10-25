@@ -31,10 +31,12 @@ class BangOlufsenData:
     client: MozartClient
 
 
+type BangOlufsenConfigEntry = ConfigEntry[BangOlufsenData]
+
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) -> bool:
     """Set up from a config entry."""
 
     # Remove casts to str
@@ -67,10 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websocket = BangOlufsenWebsocket(hass, entry, client)
 
     # Add the websocket and API client
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BangOlufsenData(
-        websocket,
-        client,
-    )
+    entry.runtime_data = BangOlufsenData(websocket, client)
 
     # Start WebSocket connection
     await client.connect_notifications(remote_control=True, reconnect=True)
@@ -80,15 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: BangOlufsenConfigEntry
+) -> bool:
     """Unload a config entry."""
     # Close the API client and WebSocket notification listener
-    hass.data[DOMAIN][entry.entry_id].client.disconnect_notifications()
-    await hass.data[DOMAIN][entry.entry_id].client.close_api_client()
+    entry.runtime_data.client.disconnect_notifications()
+    await entry.runtime_data.client.close_api_client()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

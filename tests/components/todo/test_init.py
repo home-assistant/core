@@ -1,9 +1,7 @@
 """Tests for the todo integration."""
 
-from collections.abc import Generator
 import datetime
 from typing import Any
-from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
@@ -26,25 +24,17 @@ from homeassistant.components.todo import (
     TodoServices,
     intent as todo_intent,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import intent
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
+from . import MockTodoListEntity, create_mock_platform
+
 from tests.typing import WebSocketGenerator
 
-TEST_DOMAIN = "test"
 ITEM_1 = {
     "uid": "1",
     "summary": "Item #1",
@@ -57,130 +47,6 @@ ITEM_2 = {
 }
 TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
 TEST_OFFSET = "-06:00"
-
-
-class MockFlow(ConfigFlow):
-    """Test flow."""
-
-
-class MockTodoListEntity(TodoListEntity):
-    """Test todo list entity."""
-
-    def __init__(self, items: list[TodoItem] | None = None) -> None:
-        """Initialize entity."""
-        self._attr_todo_items = items or []
-
-    @property
-    def items(self) -> list[TodoItem]:
-        """Return the items in the To-do list."""
-        return self._attr_todo_items
-
-    async def async_create_todo_item(self, item: TodoItem) -> None:
-        """Add an item to the To-do list."""
-        self._attr_todo_items.append(item)
-
-    async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Delete an item in the To-do list."""
-        self._attr_todo_items = [item for item in self.items if item.uid not in uids]
-
-
-@pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
-    """Mock config flow."""
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-
-    with mock_config_flow(TEST_DOMAIN, MockFlow):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def mock_setup_integration(hass: HomeAssistant) -> None:
-    """Fixture to set up a mock integration."""
-
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_unload_entry_init(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-    ) -> bool:
-        await hass.config_entries.async_unload_platforms(config_entry, [Platform.TODO])
-        return True
-
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    mock_integration(
-        hass,
-        MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-            async_unload_entry=async_unload_entry_init,
-        ),
-    )
-
-
-@pytest.fixture(autouse=True)
-async def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests that keesp UTC-6 all year round."""
-    await hass.config.async_set_time_zone("America/Regina")
-
-
-async def create_mock_platform(
-    hass: HomeAssistant,
-    entities: list[TodoListEntity],
-) -> MockConfigEntry:
-    """Create a todo platform with the specified entities."""
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test event platform via config entry."""
-        async_add_entities(entities)
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
-
-
-@pytest.fixture(name="test_entity_items")
-def mock_test_entity_items() -> list[TodoItem]:
-    """Fixture that creates the items returned by the test entity."""
-    return [
-        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
-        TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
-    ]
-
-
-@pytest.fixture(name="test_entity")
-def mock_test_entity(test_entity_items: list[TodoItem]) -> TodoListEntity:
-    """Fixture that creates a test TodoList entity with mock service calls."""
-    entity1 = MockTodoListEntity(test_entity_items)
-    entity1.entity_id = "todo.entity1"
-    entity1._attr_supported_features = (
-        TodoListEntityFeature.CREATE_TODO_ITEM
-        | TodoListEntityFeature.UPDATE_TODO_ITEM
-        | TodoListEntityFeature.DELETE_TODO_ITEM
-        | TodoListEntityFeature.MOVE_TODO_ITEM
-    )
-    entity1.async_create_todo_item = AsyncMock(wraps=entity1.async_create_todo_item)
-    entity1.async_update_todo_item = AsyncMock()
-    entity1.async_delete_todo_items = AsyncMock(wraps=entity1.async_delete_todo_items)
-    entity1.async_move_todo_item = AsyncMock()
-    return entity1
 
 
 async def test_unload_entry(
@@ -1141,14 +1007,17 @@ async def test_add_item_intent(
         hass,
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": "beer"}, "name": {"value": "list 1"}},
+        {ATTR_ITEM: {"value": " beer "}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.success_results[0].name == "list 1"
+    assert response.success_results[0].type == intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].id == entity1.entity_id
 
     assert len(entity1.items) == 1
     assert len(entity2.items) == 0
-    assert entity1.items[0].summary == "beer"
+    assert entity1.items[0].summary == "beer"  # summary is trimmed
     assert entity1.items[0].status == TodoItemStatus.NEEDS_ACTION
     entity1.items.clear()
 

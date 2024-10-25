@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
-from mashumaro import field_options
-from mashumaro.config import BaseConfig
-from mashumaro.mixins.dict import DataClassDictMixin
 import voluptuous as vol
+from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -27,57 +25,29 @@ if TYPE_CHECKING:
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_web_rtc_providers"
 )
-DATA_ICE_SERVERS: HassKey[list[Callable[[], Coroutine[Any, Any, RTCIceServer]]]] = (
-    HassKey("camera_web_rtc_ice_servers")
+DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
+    "camera_web_rtc_ice_servers"
 )
 
 
-class _RTCBaseModel(DataClassDictMixin):
-    """Base class for RTC models."""
-
-    class Config(BaseConfig):
-        """Mashumaro config."""
-
-        # Serialize to spec conform names and omit default values
-        omit_default = True
-        serialize_by_alias = True
-
-
-@dataclass
-class RTCIceServer(_RTCBaseModel):
-    """RTC Ice Server.
-
-    See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
-    """
-
-    urls: list[str] | str
-    username: str | None = None
-    credential: str | None = None
-
-
-@dataclass
-class RTCConfiguration(_RTCBaseModel):
-    """RTC Configuration.
-
-    See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
-    """
-
-    ice_servers: list[RTCIceServer] = field(
-        metadata=field_options(alias="iceServers"), default_factory=list
-    )
-
-
 @dataclass(kw_only=True)
-class WebRTCClientConfiguration(_RTCBaseModel):
+class WebRTCClientConfiguration:
     """WebRTC configuration for the client.
 
     Not part of the spec, but required to configure client.
     """
 
     configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
-    data_channel: str | None = field(
-        metadata=field_options(alias="dataChannel"), default=None
-    )
+    data_channel: str | None = None
+
+    def to_frontend_dict(self) -> dict[str, Any]:
+        """Return a dict that can be used by the frontend."""
+        data: dict[str, Any] = {
+            "configuration": self.configuration.to_dict(),
+        }
+        if self.data_channel is not None:
+            data["dataChannel"] = self.data_channel
+        return data
 
 
 class CameraWebRTCProvider(Protocol):
@@ -153,7 +123,7 @@ async def ws_get_client_config(
         )
         return
 
-    config = (await camera.async_get_webrtc_client_configuration()).to_dict()
+    config = (await camera.async_get_webrtc_client_configuration()).to_frontend_dict()
     connection.send_result(
         msg["id"],
         config,
@@ -176,9 +146,9 @@ async def async_get_supported_providers(
 
 
 @callback
-def register_ice_server(
+def async_register_ice_servers(
     hass: HomeAssistant,
-    get_ice_server_fn: Callable[[], Coroutine[Any, Any, RTCIceServer]],
+    get_ice_server_fn: Callable[[], Iterable[RTCIceServer]],
 ) -> Callable[[], None]:
     """Register a ICE server.
 

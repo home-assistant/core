@@ -13,8 +13,10 @@ from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
     ExclusionStrategy,
+    InclusionState,
     InclusionStrategy,
     LogLevel,
+    NodeStatus,
     Protocols,
     ProvisioningEntryStatus,
     QRCodeVersion,
@@ -694,6 +696,30 @@ async def websocket_add_node(
         )
 
     @callback
+    def forward_node_added(
+        node: Node, low_security: bool, low_security_reason: str | None
+    ) -> None:
+        interview_unsubs = [
+            node.on("interview started", forward_event),
+            node.on("interview completed", forward_event),
+            node.on("interview stage completed", forward_stage),
+            node.on("interview failed", forward_event),
+        ]
+        unsubs.extend(interview_unsubs)
+        node_details = {
+            "node_id": node.node_id,
+            "status": node.status,
+            "ready": node.ready,
+            "low_security": low_security,
+            "low_security_reason": low_security_reason,
+        }
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": "node added", "node": node_details}
+            )
+        )
+
+    @callback
     def forward_requested_grant(event: dict) -> None:
         connection.send_message(
             websocket_api.event_message(
@@ -727,24 +753,10 @@ async def websocket_add_node(
 
     @callback
     def node_added(event: dict) -> None:
-        node = event["node"]
-        interview_unsubs = [
-            node.on("interview started", forward_event),
-            node.on("interview completed", forward_event),
-            node.on("interview stage completed", forward_stage),
-            node.on("interview failed", forward_event),
-        ]
-        unsubs.extend(interview_unsubs)
-        node_details = {
-            "node_id": node.node_id,
-            "status": node.status,
-            "ready": node.ready,
-            "low_security": event["result"].get("lowSecurity", False),
-        }
-        connection.send_message(
-            websocket_api.event_message(
-                msg[ID], {"event": "node added", "node": node_details}
-            )
+        forward_node_added(
+            event["node"],
+            event["result"].get("lowSecurity", False),
+            event["result"].get("lowSecurityReason"),
         )
 
     @callback
@@ -776,25 +788,39 @@ async def websocket_add_node(
     ]
     msg[DATA_UNSUBSCRIBE] = unsubs
 
-    try:
-        result = await controller.async_begin_inclusion(
-            INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
-            force_security=force_security,
-            provisioning=provisioning,
-            dsk=dsk,
-        )
-    except ValueError as err:
-        connection.send_error(
+    if controller.inclusion_state == InclusionState.INCLUDING:
+        connection.send_result(
             msg[ID],
-            ERR_INVALID_FORMAT,
-            err.args[0],
+            True,  # Inclusion is already in progress
         )
-        return
+        # Check for nodes that have been added but not fully included
+        for node in controller.nodes.values():
+            if node.status != NodeStatus.DEAD and not node.ready:
+                forward_node_added(
+                    node,
+                    not node.is_secure,
+                    None,
+                )
+    else:
+        try:
+            result = await controller.async_begin_inclusion(
+                INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
+                force_security=force_security,
+                provisioning=provisioning,
+                dsk=dsk,
+            )
+        except ValueError as err:
+            connection.send_error(
+                msg[ID],
+                ERR_INVALID_FORMAT,
+                err.args[0],
+            )
+            return
 
-    connection.send_result(
-        msg[ID],
-        result,
-    )
+        connection.send_result(
+            msg[ID],
+            result,
+        )
 
 
 @websocket_api.require_admin

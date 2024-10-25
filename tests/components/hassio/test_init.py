@@ -5,6 +5,7 @@ import os
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiohasupervisor.models import AddonsStats
 import pytest
 from voluptuous import Invalid
 
@@ -52,7 +53,12 @@ def os_info(extra_os_info):
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker, os_info, store_info, addon_info
+    aioclient_mock: AiohttpClientMocker,
+    os_info: AsyncMock,
+    store_info: AsyncMock,
+    addon_info: AsyncMock,
+    addon_stats: AsyncMock,
+    addon_changelog: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -156,64 +162,38 @@ def mock_all(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.8,
-                "memory_usage": 51941376,
-                "memory_limit": 3977146368,
-                "memory_percent": 1.31,
-                "network_rx": 31338284,
-                "network_tx": 15692900,
-                "blk_read": 740077568,
-                "blk_write": 6004736,
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test3/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.8,
-                "memory_usage": 51941376,
-                "memory_limit": 3977146368,
-                "memory_percent": 1.31,
-                "network_rx": 31338284,
-                "network_tx": 15692900,
-                "blk_read": 740077568,
-                "blk_write": 6004736,
-            },
-        },
-    )
-    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={"result": "ok", "data": {"auto_update": True}},
-    )
-    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={"result": "ok", "data": {"auto_update": False}},
-    )
+
+    async def mock_addon_stats(addon: str) -> AddonsStats:
+        """Mock addon stats for test and test2."""
+        if addon in {"test2", "test3"}:
+            return AddonsStats(
+                cpu_percent=0.8,
+                memory_usage=51941376,
+                memory_limit=3977146368,
+                memory_percent=1.31,
+                network_rx=31338284,
+                network_tx=15692900,
+                blk_read=740077568,
+                blk_write=6004736,
+            )
+        return AddonsStats(
+            cpu_percent=0.99,
+            memory_usage=182611968,
+            memory_limit=3977146368,
+            memory_percent=4.59,
+            network_rx=362570232,
+            network_tx=82374138,
+            blk_read=46010945536,
+            blk_write=15051526144,
+        )
+
+    addon_stats.side_effect = mock_addon_stats
+
+    def mock_addon_info(slug: str):
+        addon_info.return_value.auto_update = slug == "test"
+        return addon_info.return_value
+
+    addon_info.side_effect = mock_addon_info
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )

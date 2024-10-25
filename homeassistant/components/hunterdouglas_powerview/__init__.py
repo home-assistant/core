@@ -1,6 +1,7 @@
 """The Hunter Douglas PowerView integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
@@ -13,6 +14,7 @@ from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.entity_registry as er
 
 from .const import DOMAIN, HUB_EXCEPTIONS
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -126,3 +128,45 @@ async def async_get_device_info(hub: Hub) -> PowerviewDeviceInfo:
 async def async_unload_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+    """Migrate entry."""
+
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
+
+    if entry.version == 1:
+        # 1 -> 2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            await _migrate_unique_ids(hass, entry)
+            hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    _LOGGER.debug("Migrated to version %s.%s", entry.version, entry.minor_version)
+
+    return True
+
+
+async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
+    """Migrate int based unique ids to str."""
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+    if TYPE_CHECKING:
+        assert entry.unique_id
+    for reg_entry in registry_entries:
+        if isinstance(reg_entry.unique_id, int) or (
+            isinstance(reg_entry.unique_id, str)
+            and not reg_entry.unique_id.startswith(entry.unique_id)
+        ):
+            _LOGGER.debug(
+                "Migrating %s: %s to %s_%s",
+                reg_entry.entity_id,
+                reg_entry.unique_id,
+                entry.unique_id,
+                reg_entry.unique_id,
+            )
+            entity_registry.async_update_entity(
+                reg_entry.entity_id,
+                new_unique_id=f"{entry.unique_id}_{reg_entry.unique_id}",
+            )

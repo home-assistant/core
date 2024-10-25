@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 HAP_SUFFIX = "._hap._tcp.local."
 POWERVIEW_G2_SUFFIX = "._powerview._tcp.local."
-POWERVIEW_G3_SUFFIX = "._powerview-g3._tcp.local."
+POWERVIEW_G3_SUFFIX = "._PowerView-G3._tcp.local."
 
 
 async def validate_input(hass: HomeAssistant, hub_address: str) -> dict[str, str]:
@@ -63,6 +63,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hunter Douglas PowerView."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the powerview config flow."""

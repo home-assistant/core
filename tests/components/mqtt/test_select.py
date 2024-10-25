@@ -610,7 +610,7 @@ def _test_options_attributes_options_config(
 
 @pytest.mark.parametrize(
     ("hass_config", "options"),
-    _test_options_attributes_options_config((["milk", "beer"], ["milk"], [])),
+    _test_options_attributes_options_config((["milk", "beer"], ["milk"], [])),  # type:ignore[arg-type]
 )
 async def test_options_attributes(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, options: list[str]
