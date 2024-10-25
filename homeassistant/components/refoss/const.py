@@ -20,6 +20,9 @@ COORDINATOR = "coordinator"
 
 MAX_ERRORS = 2
 
+# Energy monitoring
+SENSOR_EM = "em"
+
 CHANNEL_DISPLAY_NAME: dict[str, dict[int, str]] = {
     "em06": {
         1: "A1",
