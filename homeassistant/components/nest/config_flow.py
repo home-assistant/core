@@ -334,7 +334,6 @@ class NestFlowHandler(
                         topic_name,
                         subscription_name,
                     )
-                    _LOGGER.debug("Created?")
                 except ApiException as err:
                     _LOGGER.error("Error creatingPub/Sub subscription: %s", err)
                     errors["base"] = "pubsub_api_error"
