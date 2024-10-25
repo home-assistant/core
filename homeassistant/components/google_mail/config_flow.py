@@ -10,7 +10,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DEFAULT_ACCESS, DOMAIN
@@ -49,7 +49,10 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+            )
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
