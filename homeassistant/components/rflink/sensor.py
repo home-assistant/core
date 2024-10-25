@@ -74,6 +74,9 @@ SENSOR_TYPES = (
         key="battery",
         name="Battery",
         icon="mdi:battery",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="co2_air_quality",
