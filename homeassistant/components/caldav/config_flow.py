@@ -120,7 +120,7 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={
-                CONF_NAME: self._get_reauth_entry().title,
+                CONF_NAME: reauth_entry.title,
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
             },
             errors=errors,

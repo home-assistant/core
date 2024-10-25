@@ -108,7 +108,7 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             description_placeholders={
-                CONF_NAME: self._get_reauth_entry().title,
+                CONF_NAME: reauth_entry.title,
                 "username": reauth_entry.data[CONF_USERNAME],
             },
             errors=errors,

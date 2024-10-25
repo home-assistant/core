@@ -85,7 +85,7 @@ class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 description_placeholders={
-                    CONF_NAME: self._get_reauth_entry().title,
+                    CONF_NAME: reauth_entry.title,
                     CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
                 },
             )

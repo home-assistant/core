@@ -107,7 +107,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             description_placeholders={
                 CONF_NAME: self._get_reauth_entry().title,
-                "username": self._reauth_username,
+                CONF_USERNAME: self._reauth_username,
             },
             data_schema=vol.Schema(
                 {

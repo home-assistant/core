@@ -155,7 +155,6 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_cloud()
-
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={CONF_NAME: self._get_reauth_entry().title},

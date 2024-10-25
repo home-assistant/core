@@ -103,7 +103,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
-            description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+            description_placeholders={CONF_NAME: reauth_entry.title},
             errors=errors,
         )
 
