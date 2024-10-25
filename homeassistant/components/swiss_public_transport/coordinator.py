@@ -33,7 +33,7 @@ class DataConnection(TypedDict):
     departure: datetime | None
     duration: int | None
     platform: str
-    remaining_time: str
+    remaining_time: str | None
     start: str
     destination: str
     train_number: str
@@ -67,12 +67,15 @@ class SwissPublicTransportDataUpdateCoordinator(
         )
         self._opendata = opendata
 
-    def remaining_time(self, departure) -> timedelta | None:
+    def remaining_time(self, departure) -> str | None:
         """Calculate the remaining time for the departure."""
         departure_datetime = dt_util.parse_datetime(departure)
 
         if departure_datetime:
-            return departure_datetime - dt_util.as_local(dt_util.utcnow())
+            try:
+                return dt_util.get_time_remaining(departure_datetime, 2)
+            except ValueError:
+                return "-" + dt_util.get_age(departure_datetime)
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
@@ -101,7 +104,7 @@ class SwissPublicTransportDataUpdateCoordinator(
                 duration=calculate_duration_in_seconds(connections[i]["duration"]),
                 start=self._opendata.from_name,
                 destination=self._opendata.to_name,
-                remaining_time=str(self.remaining_time(connections[i]["departure"])),
+                remaining_time=self.remaining_time(connections[i]["departure"]),
                 delay=connections[i]["delay"],
                 line=connections[i]["line"],
             )

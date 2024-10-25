@@ -1,5 +1,6 @@
 """Test the swiss_public_transport service."""
 
+from datetime import datetime
 import json
 import logging
 from unittest.mock import AsyncMock, patch
@@ -222,3 +223,60 @@ async def test_service_call_load_unload(
                 blocking=True,
                 return_response=True,
             )
+
+
+@pytest.mark.parametrize(
+    ("index", "expected"),
+    [
+        (0, {"remaining_time": "-40 seconds", "line": "T10"}),
+        (1, {"remaining_time": "20 seconds", "line": None}),
+        (2, {"remaining_time": "1 minute 20 seconds", "line": "T10"}),
+    ],
+)
+async def test_service_call_fetch_connections_mapping(
+    hass: HomeAssistant, index, expected
+) -> None:
+    """Test the fetch_connections service mappings."""
+    config_data = MOCK_DATA_STEP_BASE
+
+    unique_id = unique_id_from_config(config_data)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        title="Service test call",
+        unique_id=unique_id,
+        entry_id=f"entry_{unique_id}",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.swiss_public_transport.OpendataTransport",
+            return_value=AsyncMock(),
+        ) as mock,
+        patch(
+            "homeassistant.util.dt.now",
+            return_value=datetime.fromisoformat("2024-01-06T18:03:40+0100"),
+        ),
+    ):
+        mock().connections = json.loads(load_fixture("connections.json", DOMAIN))
+
+        await setup_integration(hass, config_entry)
+
+        assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
+        response = await hass.services.async_call(
+            domain=DOMAIN,
+            service=SERVICE_FETCH_CONNECTIONS,
+            service_data={
+                ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
+                ATTR_LIMIT: index + 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+        assert response["connections"] is not None
+        assert len(response["connections"]) == index + 1
+        actual = response["connections"][index]
+        for key, value in expected.items():
+            assert actual[key] == value
