@@ -47,6 +47,7 @@ from urllib.parse import urlparse
 from propcache import cached_property, under_cached_property
 from typing_extensions import TypeVar
 import voluptuous as vol
+from webrtc_models import RTCConfiguration
 import yarl
 
 from . import util
@@ -119,7 +120,6 @@ from .util.unit_system import (
     UnitSystem,
     get_unit_system,
 )
-from .util.webrtc import RTCConfiguration
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -3145,7 +3145,7 @@ class Config:
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
         # pylint: disable-next=import-outside-toplevel
-        from .config import (
+        from .core_config import (
             _raise_issue_if_historic_currency,
             _raise_issue_if_no_country,
         )

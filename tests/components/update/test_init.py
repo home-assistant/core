@@ -18,6 +18,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.components.update.const import (
     ATTR_AUTO_UPDATE,
+    ATTR_DISPLAY_PRECISION,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -92,6 +93,7 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.state == STATE_ON
     assert update.state_attributes == {
         ATTR_AUTO_UPDATE: False,
+        ATTR_DISPLAY_PRECISION: 0,
         ATTR_INSTALLED_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,
         ATTR_LATEST_VERSION: "1.0.1",
@@ -546,10 +548,20 @@ async def test_entity_with_backup_support(
     assert "Installed update with version: 0.9.8" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "expected_display_precision", "expected_update_percentage"),
+    [
+        ("update.update_already_in_progress", 0, 50),
+        ("update.update_already_in_progress_float", 2, 0.25),
+    ],
+)
 async def test_entity_already_in_progress(
     hass: HomeAssistant,
     mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
+    entity_id: str,
+    expected_display_precision: int,
+    expected_update_percentage: float,
 ) -> None:
     """Test update install already in progress."""
     setup_test_component_platform(hass, DOMAIN, mock_update_entities)
@@ -557,13 +569,14 @@ async def test_entity_already_in_progress(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get("update.update_already_in_progress")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_DISPLAY_PRECISION] == expected_display_precision
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_IN_PROGRESS] is True
-    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == expected_update_percentage
 
     with pytest.raises(
         HomeAssistantError,
@@ -572,7 +585,7 @@ async def test_entity_already_in_progress(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.update_already_in_progress"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -1056,6 +1069,7 @@ async def test_update_percentage_backwards_compatibility(
 
     expected_attributes = {
         ATTR_AUTO_UPDATE: False,
+        ATTR_DISPLAY_PRECISION: 0,
         ATTR_ENTITY_PICTURE: "https://brands.home-assistant.io/_/test/icon.png",
         ATTR_FRIENDLY_NAME: "legacy",
         ATTR_INSTALLED_VERSION: "1.0.0",
