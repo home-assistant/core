@@ -56,7 +56,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import BangOlufsenData
+from . import BangOlufsenConfigEntry
 from .const import (
     BANG_OLUFSEN_STATES,
     CONF_BEOLINK_JID,
@@ -96,14 +96,16 @@ BANG_OLUFSEN_FEATURES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-
     # Add MediaPlayer entity
-    async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
+    async_add_entities(
+        new_entities=[
+            BangOlufsenMediaPlayer(config_entry, config_entry.runtime_data.client)
+        ]
+    )
 
 
 class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):

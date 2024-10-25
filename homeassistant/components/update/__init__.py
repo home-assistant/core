@@ -27,6 +27,7 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
+    ATTR_DISPLAY_PRECISION,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
@@ -178,6 +179,7 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes update entities."""
 
     device_class: UpdateDeviceClass | None = None
+    display_precision: int = 0
     entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
@@ -191,6 +193,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "auto_update",
     "installed_version",
     "device_class",
+    "display_precision",
     "in_progress",
     "latest_version",
     "release_summary",
@@ -210,6 +213,7 @@ class UpdateEntity(
 
     _entity_component_unrecorded_attributes = frozenset(
         {
+            ATTR_DISPLAY_PRECISION,
             ATTR_ENTITY_PICTURE,
             ATTR_IN_PROGRESS,
             ATTR_RELEASE_SUMMARY,
@@ -221,6 +225,7 @@ class UpdateEntity(
     _attr_auto_update: bool = False
     _attr_installed_version: str | None = None
     _attr_device_class: UpdateDeviceClass | None
+    _attr_display_precision: int
     _attr_in_progress: bool | int = False
     _attr_latest_version: str | None = None
     _attr_release_summary: str | None = None
@@ -228,7 +233,7 @@ class UpdateEntity(
     _attr_state: None = None
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
-    _attr_update_percentage: int | None = None
+    _attr_update_percentage: int | float | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
 
@@ -257,6 +262,15 @@ class UpdateEntity(
         if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
+
+    @cached_property
+    def display_precision(self) -> int:
+        """Return number of decimal digits for display of update progress."""
+        if hasattr(self, "_attr_display_precision"):
+            return self._attr_display_precision
+        if hasattr(self, "entity_description"):
+            return self.entity_description.display_precision
+        return 0
 
     @property
     def entity_category(self) -> EntityCategory | None:
@@ -337,12 +351,12 @@ class UpdateEntity(
         return features
 
     @cached_property
-    def update_percentage(self) -> int | None:
+    def update_percentage(self) -> int | float | None:
         """Update installation progress.
 
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
-        Can either return an integer to indicate the progress from 0 to 100% or None.
+        Can either return a number to indicate the progress from 0 to 100% or None.
         """
         return self._attr_update_percentage
 
@@ -460,6 +474,7 @@ class UpdateEntity(
 
         return {
             ATTR_AUTO_UPDATE: self.auto_update,
+            ATTR_DISPLAY_PRECISION: self.display_precision,
             ATTR_INSTALLED_VERSION: installed_version,
             ATTR_IN_PROGRESS: in_progress,
             ATTR_LATEST_VERSION: latest_version,

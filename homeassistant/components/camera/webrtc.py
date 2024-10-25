@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from functools import cache, partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
+from homeassistant.util.webrtc import RTCIceServer
 
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 from .helper import get_camera_from_entity_id
@@ -36,72 +37,6 @@ DATA_WEBRTC_LEGACY_PROVIDERS: HassKey[set[CameraWebRTCLegacyProvider]] = HassKey
 DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
     "camera_webrtc_ice_servers"
 )
-
-
-@dataclass
-class RTCIceServer:
-    """RTC Ice Server.
-
-    See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
-    """
-
-    urls: list[str] | str
-    username: str | None = None
-    credential: str | None = None
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-
-        data = {
-            "urls": self.urls,
-        }
-        if self.username is not None:
-            data["username"] = self.username
-        if self.credential is not None:
-            data["credential"] = self.credential
-        return data
-
-
-@dataclass
-class RTCConfiguration:
-    """RTC Configuration.
-
-    See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
-    """
-
-    ice_servers: list[RTCIceServer] = field(default_factory=list)
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        data = {}
-        if self.ice_servers:
-            data["iceServers"] = [
-                server.to_frontend_dict() for server in self.ice_servers
-            ]
-
-        return data
-
-
-@dataclass(kw_only=True)
-class WebRTCClientConfiguration:
-    """WebRTC configuration for the client.
-
-    Not part of the spec, but required to configure client.
-    """
-
-    configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
-    data_channel: str | None = None
-    get_candidates_upfront: bool = False
-
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        data: dict[str, Any] = {
-            "configuration": self.configuration.to_frontend_dict(),
-            "getCandidatesUpfront": self.get_candidates_upfront,
-        }
-        if self.data_channel is not None:
-            data["dataChannel"] = self.data_channel
-        return data
 
 
 _WEBRTC = "WebRTC"

@@ -198,7 +198,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.10.0
+aioautomower==2024.10.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -262,7 +262,7 @@ aioharmony==0.2.10
 aiohasupervisor==0.2.0b0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.3
+aiohomekit==3.2.5
 
 # homeassistant.components.hue
 aiohue==4.7.3
@@ -1121,7 +1121,7 @@ hole==0.8.0
 holidays==0.59
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.3
+home-assistant-frontend==20241002.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.2
@@ -1714,7 +1714,7 @@ pyCEC==0.5.2
 pyControl4==1.2.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.10.0
+pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
@@ -2275,7 +2275,7 @@ pysqueezebox==0.10.0
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuez==0.2.0
+pysuezV2==0.2.1
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2299,7 +2299,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.6.2
+python-bsblan==0.6.4
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
@@ -2626,7 +2626,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.2
+sensorpush-ble==1.7.0
 
 # homeassistant.components.sensoterra
 sensoterra==2.0.1
@@ -3039,7 +3039,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.10.07
+yt-dlp==2024.10.22
 
 # homeassistant.components.zamg
 zamg==0.3.6

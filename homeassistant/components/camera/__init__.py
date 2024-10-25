@@ -63,6 +63,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
+from homeassistant.util.webrtc import RTCIceServer, WebRTCClientConfiguration
 
 from .const import (  # noqa: F401
     _DEPRECATED_STREAM_TYPE_HLS,
@@ -87,10 +88,8 @@ from .webrtc import (
     DATA_ICE_SERVERS,
     CameraWebRTCLegacyProvider,
     CameraWebRTCProvider,
-    RTCIceServer,
     WebRTCAnswer,
     WebRTCCandidate,  # noqa: F401
-    WebRTCClientConfiguration,
     WebRTCError,
     WebRTCMessage,  # noqa: F401
     WebRTCSendMessage,
@@ -410,6 +409,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     @callback
     def get_ice_servers() -> list[RTCIceServer]:
+        if hass.config.webrtc.ice_servers:
+            return hass.config.webrtc.ice_servers
         return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
 
     async_register_ice_servers(hass, get_ice_servers)
