@@ -20,10 +20,10 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HabiticaConfigEntry
 from .const import ASSETS_URL, DOMAIN, HEALER, MAGE, ROGUE, WARRIOR
 from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
+from .types import HabiticaConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -74,6 +74,7 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
             lambda data: data.user["stats"]["gp"] >= 25
             and data.user["stats"]["hp"] < 50
         ),
+        entity_picture="shop_potion.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,

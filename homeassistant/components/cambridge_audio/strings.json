@@ -30,8 +30,16 @@
         "state": {
           "bright": "Bright",
           "dim": "Dim",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
+      }
+    },
+    "switch": {
+      "pre_amp": {
+        "name": "Pre-Amp"
+      },
+      "early_update": {
+        "name": "Early update"
       }
     }
   },

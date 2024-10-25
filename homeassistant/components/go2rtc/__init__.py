@@ -1,6 +1,7 @@
 """The go2rtc component."""
 
 import logging
+import shutil
 
 from go2rtc_client import Go2RtcRestClient
 from go2rtc_client.ws import (
@@ -11,6 +12,7 @@ from go2rtc_client.ws import (
     WebRTCOffer,
     WsError,
 )
+import voluptuous as vol
 
 from homeassistant.components.camera import (
     Camera,
@@ -22,12 +24,14 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
     async_register_webrtc_provider,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.package import is_docker_env
 
-from .const import CONF_BINARY
+from .const import DOMAIN
 from .server import Server
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,18 +67,50 @@ _SUPPORTED_STREAMS = frozenset(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up WebRTC from a config entry."""
-    if binary := entry.data.get(CONF_BINARY):
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Optional(CONF_URL): cv.url})},
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up WebRTC."""
+    url: str | None = None
+    if not (url := config[DOMAIN].get(CONF_URL)):
+        if not is_docker_env():
+            _LOGGER.warning("Go2rtc URL required in non-docker installs")
+            return False
+        if not (binary := await _get_binary(hass)):
+            _LOGGER.error("Could not find go2rtc docker binary")
+            return False
+
         # HA will manage the binary
         server = Server(hass, binary)
-
-        entry.async_on_unload(server.stop)
         await server.start()
 
-    provider = WebRTCProvider(hass, entry.data[CONF_URL])
-    entry.async_on_unload(async_register_webrtc_provider(hass, provider))
+        async def on_stop(event: Event) -> None:
+            await server.stop()
+
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
+
+        url = "http://localhost:1984/"
+
+    # Validate the server URL
+    try:
+        client = Go2RtcRestClient(async_get_clientsession(hass), url)
+        await client.streams.list()
+    except Exception:  # noqa: BLE001
+        _LOGGER.warning("Could not connect to go2rtc instance on %s", url)
+        return False
+
+    provider = WebRTCProvider(hass, url)
+    async_register_webrtc_provider(hass, provider)
     return True
+
+
+async def _get_binary(hass: HomeAssistant) -> str | None:
+    """Return the binary path if found."""
+    return await hass.async_add_executor_job(shutil.which, "go2rtc")
 
 
 class WebRTCProvider(CameraWebRTCProvider):
@@ -148,8 +184,3 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Close the session."""
         ws_client = self._sessions.pop(session_id)
         self._hass.async_create_task(ws_client.close())
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    return True

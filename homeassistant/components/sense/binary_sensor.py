@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SenseConfigEntry
+from . import SenseConfigEntry, SenseDevicesData
 from .const import ATTRIBUTION, DOMAIN, MDI_ICONS, SENSE_DEVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,23 +38,7 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-async def _migrate_old_unique_ids(hass, devices):
-    registry = er.async_get(hass)
-    for device in devices:
-        # Migration of old not so unique ids
-        old_entity_id = registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, device.old_unique_id
-        )
-        if old_entity_id is not None:
-            _LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                device.old_unique_id,
-                device.unique_id,
-            )
-            registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
-
-
-def sense_to_mdi(sense_icon):
+def sense_to_mdi(sense_icon: str) -> str:
     """Convert sense icon to mdi icon."""
     return f"mdi:{MDI_ICONS.get(sense_icon, "power-plug")}"
 
@@ -67,7 +51,9 @@ class SenseDevice(BinarySensorEntity):
     _attr_available = False
     _attr_device_class = BinarySensorDeviceClass.POWER
 
-    def __init__(self, sense_devices_data, device, sense_monitor_id):
+    def __init__(
+        self, sense_devices_data: SenseDevicesData, device: dict, sense_monitor_id: str
+    ) -> None:
         """Initialize the Sense binary sensor."""
         self._attr_name = device["name"]
         self._id = device["id"]
@@ -77,7 +63,7 @@ class SenseDevice(BinarySensorEntity):
         self._sense_devices_data = sense_devices_data
 
     @property
-    def old_unique_id(self):
+    def old_unique_id(self) -> str:
         """Return the old not so unique id of the binary sensor."""
         return self._id
 
@@ -92,7 +78,7 @@ class SenseDevice(BinarySensorEntity):
         )
 
     @callback
-    def _async_update_from_data(self):
+    def _async_update_from_data(self) -> None:
         """Get the latest data, update state. Must not do I/O."""
         new_state = bool(self._sense_devices_data.get_device_by_id(self._id))
         if self._attr_available and self._attr_is_on == new_state:
@@ -100,3 +86,22 @@ class SenseDevice(BinarySensorEntity):
         self._attr_available = True
         self._attr_is_on = new_state
         self.async_write_ha_state()
+
+
+async def _migrate_old_unique_ids(
+    hass: HomeAssistant, devices: list[SenseDevice]
+) -> None:
+    registry = er.async_get(hass)
+    for device in devices:
+        # Migration of old not so unique ids
+        old_entity_id = registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, device.old_unique_id
+        )
+        updated_id = device.unique_id
+        if old_entity_id is not None and updated_id is not None:
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                device.old_unique_id,
+                device.unique_id,
+            )
+            registry.async_update_entity(old_entity_id, new_unique_id=updated_id)
