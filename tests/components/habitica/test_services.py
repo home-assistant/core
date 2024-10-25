@@ -1518,6 +1518,7 @@ async def test_handle_quests_exceptions(
         "clear_reminders",
     ],
 )
+@pytest.mark.freeze_time("2024-10-14 00:00:00")
 async def test_update_daily(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
