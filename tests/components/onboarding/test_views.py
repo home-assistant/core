@@ -69,7 +69,7 @@ async def no_rpi_fixture(
 
 @pytest.fixture(name="mock_supervisor")
 async def mock_supervisor_fixture(
-    aioclient_mock: AiohttpClientMocker,
+    aioclient_mock: AiohttpClientMocker, store_info
 ) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -109,10 +109,6 @@ async def mock_supervisor_fixture(
         ),
         patch(
             "homeassistant.components.hassio.HassIO.get_host_info",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_store",
             return_value={},
         ),
         patch(

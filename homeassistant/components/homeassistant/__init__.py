@@ -8,9 +8,9 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
-import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_ELEVATION,
     ATTR_ENTITY_ID,
@@ -269,7 +269,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             return
 
         # auth only processed during startup
-        await conf_util.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
+        await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config

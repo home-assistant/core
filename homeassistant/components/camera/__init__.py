@@ -20,6 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache import cached_property
 import voluptuous as vol
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -49,7 +50,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -86,11 +87,10 @@ from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 from .webrtc import (
     DATA_ICE_SERVERS,
     CameraWebRTCProvider,
-    RTCIceServer,
     WebRTCClientConfiguration,
     async_get_supported_providers,
+    async_register_ice_servers,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
-    register_ice_server,
     ws_get_client_config,
 )
 
@@ -401,12 +401,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
     )
 
-    async def get_ice_server() -> RTCIceServer:
-        # The following servers will replaced before the next stable release with
-        # STUN server provided by Home Assistant. Used Google ones for testing purposes.
-        return RTCIceServer(urls="stun:stun.l.google.com:19302")
+    @callback
+    def get_ice_servers() -> list[RTCIceServer]:
+        if hass.config.webrtc.ice_servers:
+            return hass.config.webrtc.ice_servers
+        return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
 
-    register_ice_server(hass, get_ice_server)
+    async_register_ice_servers(hass, get_ice_servers)
     return True
 
 
@@ -743,9 +744,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
         config = await self._async_get_webrtc_client_configuration()
 
-        ice_servers = await asyncio.gather(
-            *[server() for server in self.hass.data.get(DATA_ICE_SERVERS, [])]
-        )
+        ice_servers = [
+            server
+            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
+            for server in servers()
+        ]
         config.configuration.ice_servers.extend(ice_servers)
 
         return config
@@ -959,6 +962,46 @@ async def websocket_update_prefs(
         connection.send_result(msg["id"], entity_prefs)
 
 
+class _TemplateCameraEntity:
+    """Class to warn when the `entity_id` template variable is accessed.
+
+    Can be removed in HA Core 2025.6.
+    """
+
+    def __init__(self, camera: Camera, service: str) -> None:
+        """Initialize."""
+        self._camera = camera
+        self._entity_id = camera.entity_id
+        self._hass = camera.hass
+        self._service = service
+
+    def _report_issue(self) -> None:
+        """Create a repair issue."""
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            f"deprecated_filename_template_{self._entity_id}_{self._service}",
+            breaks_in_ha_version="2025.6.0",
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_filename_template",
+            translation_placeholders={
+                "entity_id": self._entity_id,
+                "service": f"{DOMAIN}.{self._service}",
+            },
+        )
+
+    def __getattr__(self, name: str) -> Any:
+        """Forward to the camera entity."""
+        self._report_issue()
+        return getattr(self._camera, name)
+
+    def __str__(self) -> str:
+        """Forward to the camera entity."""
+        self._report_issue()
+        return str(self._camera)
+
+
 async def async_handle_snapshot_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
@@ -966,7 +1009,9 @@ async def async_handle_snapshot_service(
     hass = camera.hass
     filename: Template = service_call.data[ATTR_FILENAME]
 
-    snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    snapshot_file = filename.async_render(
+        variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_SNAPSHOT)}
+    )
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
@@ -1042,7 +1087,9 @@ async def async_handle_record_service(
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
     filename = service_call.data[CONF_FILENAME]
-    video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    video_path = filename.async_render(
+        variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_RECORD)}
+    )
 
     await stream.async_record(
         video_path,
