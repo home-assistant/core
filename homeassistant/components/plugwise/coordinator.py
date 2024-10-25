@@ -63,8 +63,8 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
         version = await self.api.connect()
-        self._connected = isinstance(version, Version)
-        self.api.get_all_devices()
+        if (self._connected := isinstance(version, Version)):
+            self.api.get_all_devices()
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
