@@ -314,7 +314,7 @@ class SenseDeviceEnergySensor(SenseBaseSensor):
         self,
         device: SenseDevice,
         scale: Scale,
-        trends_coordinator: DataUpdateCoordinator[Any],
+        trends_coordinator: SenseTrendCoordinator,
         sense_monitor_id: str,
     ) -> None:
         """Initialize the Sense sensor."""
