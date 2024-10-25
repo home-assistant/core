@@ -74,6 +74,7 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
             lambda data: data.user["stats"]["gp"] >= 25
             and data.user["stats"]["hp"] < 50
         ),
+        entity_picture="shop_potion.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,
