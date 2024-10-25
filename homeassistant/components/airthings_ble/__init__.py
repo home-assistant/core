@@ -2,38 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
-from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MAX_RETRIES_AFTER_STARTUP
+from .const import MAX_RETRIES_AFTER_STARTUP
+from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
-
-AirthingsBLEDataUpdateCoordinator = DataUpdateCoordinator[AirthingsDevice]
-AirthingsBLEConfigEntry = ConfigEntry[AirthingsBLEDataUpdateCoordinator]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AirthingsBLEConfigEntry
 ) -> bool:
     """Set up Airthings BLE device from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     address = entry.unique_id
 
-    is_metric = hass.config.units is METRIC_SYSTEM
     assert address is not None
 
     await close_stale_connections_by_address(address)
@@ -45,24 +32,7 @@ async def async_setup_entry(
             f"Could not find Airthings device with address {address}"
         )
 
-    airthings = AirthingsBluetoothDeviceData(_LOGGER, is_metric)
-
-    async def _async_update_method() -> AirthingsDevice:
-        """Get data from Airthings BLE."""
-        try:
-            data = await airthings.update_device(ble_device)
-        except Exception as err:
-            raise UpdateFailed(f"Unable to fetch data: {err}") from err
-
-        return data
-
-    coordinator: AirthingsBLEDataUpdateCoordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=_async_update_method,
-        update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-    )
+    coordinator = AirthingsBLEDataUpdateCoordinator(hass, ble_device)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -70,7 +40,7 @@ async def async_setup_entry(
     # the startup of Home Assistant, we can set the max attempts
     # to a higher value. If the first connection attempt fails,
     # Home Assistant's built-in retry logic will take over.
-    airthings.set_max_attempts(MAX_RETRIES_AFTER_STARTUP)
+    coordinator.airthings.set_max_attempts(MAX_RETRIES_AFTER_STARTUP)
 
     entry.runtime_data = coordinator
 
