@@ -8,7 +8,7 @@ from homeassistant.helpers.redact import async_redact_data
 
 from . import CambridgeAudioConfigEntry
 
-TO_REDACT = {CONF_HOST}
+TO_REDACT = {CONF_HOST, "udn", "unit_id"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -19,11 +19,11 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "display": client.display.to_dict(),
-            "info": client.display.to_dict(),
+            "info": client.info.to_dict(),
             "now_playing": client.now_playing.to_dict(),
             "play_state": client.play_state.to_dict(),
             "presets_list": client.preset_list.to_dict(),
-            "sources": {k: v.to_dict() for k, v in client.sources},
+            "sources": [s.to_dict() for s in client.sources],
             "update": client.update.to_dict(),
         },
         TO_REDACT,
