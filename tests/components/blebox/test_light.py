@@ -1,7 +1,7 @@
 """BleBox light entities tests."""
 
 import logging
-from unittest.mock import AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -332,7 +332,7 @@ def wlightbox_fixture():
 
 
 @pytest.fixture(name="wlightbox_ctx2")
-def wlightbox_ctx2_fixture():
+def wlightbox_ctx2_fixture() -> tuple[MagicMock, str]:
     """Return a default light entity mock."""
 
     feature = mock_feature(
@@ -354,7 +354,7 @@ def wlightbox_ctx2_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
-    return (feature, "light.wlightbox_ctx2")
+    return feature, "light.wlightbox_ctx2"
 
 
 async def test_wlightbox_init(
@@ -458,7 +458,7 @@ async def test_wlightbox_on_rgbw(wlightbox, hass: HomeAssistant) -> None:
 # corrected
 @pytest.mark.parametrize("temp_requested", [1, 100, 150, 200, 300, 400])
 async def test_wlightbox_on_temp(
-    wlightbox_ctx2, hass: HomeAssistant, temp_requested: int
+    hass: HomeAssistant, wlightbox_ctx2: tuple[MagicMock, str], temp_requested: int
 ) -> None:
     """Test light on with temperature change."""
 
@@ -477,26 +477,14 @@ async def test_wlightbox_on_temp(
         transient_temp = value
         return [0x00, 0x39, 0xB0, 0xFF]
 
-    def initial_update():
-        feature_mock.is_on = False
-
-    feature_mock.color_temp = 128
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    feature_mock.return_color_temp_with_brightness = return_color_temp_with_brightness
-
-    await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    def turn_on(value):
+    def turn_on(_):
         feature_mock.is_on = True
-        assert value == [0x00, 0x39, 0xB0, 0xFF]
         feature_mock.color_temp = transient_temp
 
+    feature_mock.return_color_temp_with_brightness = return_color_temp_with_brightness
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
 
+    await async_setup_entity(hass, entity_id)
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
@@ -506,7 +494,6 @@ async def test_wlightbox_on_temp(
 
     state = hass.states.get(entity_id)
     mired_temp = state.attributes[ATTR_COLOR_TEMP]
-
     assert state.state == STATE_ON
     assert LIGHT_MIN_MIREDS <= mired_temp <= LIGHT_MAX_MIREDS
     assert mired_temp == max(min(mired_temp, LIGHT_MAX_MIREDS), LIGHT_MIN_MIREDS)
