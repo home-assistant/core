@@ -49,8 +49,7 @@
     "button": {
       "dsl_reconnect": { "name": "DSL reconnect" },
       "fiber_reconnect": { "name": "Fiber reconnect" },
-      "internet_key_reconnect": { "name": "Internet key reconnect" },
-      "cleanup": { "name": "Device cleanup" }
+      "internet_key_reconnect": { "name": "Internet key reconnect" }
     },
     "sensor": {
       "external_ipv4": { "name": "WAN IPv4 address" },

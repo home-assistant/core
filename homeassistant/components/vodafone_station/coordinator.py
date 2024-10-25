@@ -122,6 +122,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             await self.api.close()
             raise
 
+        await self._cleanup_device_tracker_entities()
+
         utc_point_in_time = dt_util.utcnow()
         data_devices = {
             dev_info.mac: VodafoneStationDeviceInfo(
@@ -134,8 +136,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         }
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
-    async def cleanup_device_tracker_entities(self) -> None:
-        """Clean old device trackers entities."""
+    async def _cleanup_device_tracker_entities(self) -> None:
+        """123."""
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
 
         ha_entity_reg_list: list[er.RegistryEntry] = er.async_entries_for_config_entry(
@@ -193,6 +195,11 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_update_device(
                     device_entry.id, remove_config_entry_id=self.config_entry.entry_id
                 )
+
+    async def async_setup(self) -> None:
+        """Set up the coordinator."""
+        await self.async_config_entry_first_refresh()
+        await self._cleanup_device_tracker_entities()
 
     @property
     def signal_device_new(self) -> str:
