@@ -40,7 +40,7 @@ from .const import (
     UNSUPPORTED_DEVICES,
 )
 from .types import ViCareDevice
-from .utils import deserialize_token, get_device, get_device_serial
+from .utils import get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
@@ -48,9 +48,48 @@ _TOKEN_FILENAME = "vicare_token.save"
 type ViCareConfigEntry = ConfigEntry[api.ConfigEntryAuth]
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        if entry.minor_version == 1:
+            _LOGGER.debug(
+                "Migrating from version %s.%s", entry.version, entry.minor_version
+            )
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    entry.data[CONF_CLIENT_ID],
+                    "",
+                    entry.data[CONF_USERNAME],
+                ),
+            )
+            with suppress(FileNotFoundError):
+                await hass.async_add_executor_job(
+                    os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+                )
+            hass.config_entries.async_update_entry(
+                entry,
+                minor_version=2,
+                data={
+                    "auth_implementation": DOMAIN,
+                    CONF_TOKEN: None,
+                },
+            )
+            _LOGGER.debug(
+                "Migration to version %s.%s successful",
+                entry.version,
+                entry.minor_version,
+            )
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Set up Viessmann ViCare from a config entry."""
     _LOGGER.debug("Setting up ViCare component")
+    # entry was just migrated and refresh token is unknown
+    if entry.data[CONF_TOKEN] is None:
+        raise ConfigEntryAuthFailed
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -189,61 +228,6 @@ async def async_migrate_devices_and_entities(
                 entity_registry.async_update_entity(
                     entity_id=entity_entry.entity_id, new_unique_id=entity_new_unique_id
                 )
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
-    """Migrate old entry."""
-    if entry.version == 1:
-        if entry.minor_version == 1:
-            _LOGGER.debug(
-                "Migrating from version %s.%s", entry.version, entry.minor_version
-            )
-
-            await async_import_client_credential(
-                hass,
-                DOMAIN,
-                ClientCredential(
-                    entry.data[CONF_CLIENT_ID],
-                    "",
-                    entry.data[CONF_USERNAME],
-                ),
-            )
-
-            token_data = await hass.async_add_executor_job(
-                deserialize_token,
-                hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
-            )
-            with suppress(FileNotFoundError):
-                await hass.async_add_executor_job(
-                    os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
-                )
-            if token_data is None:
-                return False
-
-            hass.config_entries.async_update_entry(
-                entry,
-                minor_version=2,
-                data={
-                    "auth_implementation": DOMAIN,
-                    CONF_TOKEN: token_data,
-                    # {
-                    # "status": 0,
-                    # "userid": str(USER_ID),
-                    # "access_token": "mock-access-token",
-                    # "refresh_token": "mock-refresh-token",
-                    # "expires_at": expires_at,
-                    # "scope": ",".join(scopes),
-                    # },
-                },
-            )
-
-            _LOGGER.debug(
-                "Migration to version %s.%s successful",
-                entry.version,
-                entry.minor_version,
-            )
-            raise ConfigEntryAuthFailed
-    return True
 
 
 def get_supported_devices(
