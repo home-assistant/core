@@ -41,7 +41,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         )
 
         self.new_device_callbacks: list[Callable[[int], None]] = []
-        self._devices_last_update: dict[int, str] = {}
+        self._devices_last_update: set[tuple[int, str]] = set()
 
         host_entry = entry.data[CONF_HOST]
         password = entry.data.get("password", "")
@@ -102,34 +102,33 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         """Add new devices, remove non-existing devices."""
         if not self._devices_last_update:
             self._devices_last_update = {
-                k: self.solarlog.device_name(k) for k in data.inverter_data
+                (k, self.solarlog.device_name(k)) for k in data.inverter_data
             }
             return
 
         if (
             current_devices := {
-                k: self.solarlog.device_name(k) for k in data.inverter_data
+                (k, self.solarlog.device_name(k)) for k in data.inverter_data
             }
         ) == self._devices_last_update:
             return
 
         # remove old devices
-        if removed_devices := {
-            k: v
-            for k, v in self._devices_last_update.items()
-            if k not in current_devices
-        }:
-            _LOGGER.debug(
-                "Removed device(s): %s", ", ".join(map(str, removed_devices.values()))
-            )
+        if removed_devices := self._devices_last_update - current_devices:
+            _LOGGER.debug("Removed device(s): %s", ", ".join(map(str, removed_devices)))
             device_registry = dr.async_get(self.hass)
 
-            for device_id in removed_devices:
+            for removed_device in removed_devices:
+                device_name = ""
+                for did, dn in self._devices_last_update:
+                    if did == removed_device[0]:
+                        device_name = dn
+                        break
                 if device := device_registry.async_get_device(
                     identifiers={
                         (
                             DOMAIN,
-                            f"{self.unique_id}_{slugify(self._devices_last_update[device_id])}",
+                            f"{self.unique_id}_{slugify(device_name)}",
                         )
                     }
                 ):
@@ -140,49 +139,11 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
                     _LOGGER.debug("Device removed from device registry: %s", device.id)
 
         # add new devices
-        if new_devices := {
-            k: v
-            for k, v in current_devices.items()
-            if k not in self._devices_last_update
-        }:
-            _LOGGER.debug(
-                "New device(s) found: %s", ", ".join(map(str, new_devices.values()))
-            )
+        if new_devices := current_devices - self._devices_last_update:
+            _LOGGER.debug("New device(s) found: %s", ", ".join(map(str, new_devices)))
             for device_id in new_devices:
                 for callback in self.new_device_callbacks:
-                    callback(device_id)
-
-        # devices with new names
-        if renamed_devices := {
-            k: v
-            for k, v in current_devices.items()
-            if k in self._devices_last_update
-            and current_devices[k] != self._devices_last_update.get(k)
-        }:
-            _LOGGER.info(
-                "Renamed device(s) found: %s",
-                ", ".join(map(str, renamed_devices.values())),
-            )
-            device_registry = dr.async_get(self.hass)
-
-            for device_id in renamed_devices:
-                if device := device_registry.async_get_device(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"{self.unique_id}_{slugify(self._devices_last_update[device_id])}",
-                        )
-                    }
-                ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        name=current_devices[device_id],
-                    )
-                    _LOGGER.debug(
-                        "Device in device registry renamed: %s -> %s",
-                        self._devices_last_update[device_id],
-                        current_devices[device_id],
-                    )
+                    callback(device_id[0])
 
         self._devices_last_update = current_devices
 

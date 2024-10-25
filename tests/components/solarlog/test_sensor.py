@@ -12,7 +12,6 @@ from solarlog_cli.solarlog_exceptions import (
 from solarlog_cli.solarlog_models import InverterData
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.solarlog.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -73,16 +72,8 @@ async def test_add_remove_entities(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={
-            (
-                DOMAIN,
-                f"{mock_config_entry.entry_id}_inverter_1",
-            )
-        },
-    )
-    assert device.name == "Inv 1"
+    assert hass.states.get("sensor.inverter_1_consumption_year") is None
+    assert hass.states.get("sensor.inv_1_consumption_year").state == "354.687"
     assert hass.states.get("sensor.inverter_2_consumption_year") is None
     assert hass.states.get("sensor.inverter_3_consumption_year").state == "0.454"
 
