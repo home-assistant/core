@@ -659,6 +659,8 @@ build.json @home-assistant/supervisor
 /tests/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
 /homeassistant/components/husqvarna_automower/ @Thomas55555
 /tests/components/husqvarna_automower/ @Thomas55555
+/homeassistant/components/husqvarna_automower_ble/ @alistair23
+/tests/components/husqvarna_automower_ble/ @alistair23
 /homeassistant/components/huum/ @frwickst
 /tests/components/huum/ @frwickst
 /homeassistant/components/hvv_departures/ @vigonotion
