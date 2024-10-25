@@ -6,7 +6,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "vicare"
 
-
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
