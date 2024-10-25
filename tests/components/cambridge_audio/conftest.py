@@ -66,7 +66,7 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         )
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position
-        client.unregister_state_update_callbacks = AsyncMock(return_value=True)
+        client.unregister_state_update_callbacks.return_value = True
 
         yield client
 
