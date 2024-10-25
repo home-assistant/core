@@ -9,18 +9,21 @@ from aiohttp import ClientError
 from nice_go import ApiError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    KNOWN_UNSUPPORTED_DEVICE_TYPES,
+    SUPPORTED_DEVICE_TYPES,
+    UNSUPPORTED_DEVICE_WARNING,
+)
 from .entity import NiceGOEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORTED_DEVICE_TYPES = ["WallStation"]
-KNOWN_UNSUPPORTED_DEVICE_TYPES = ["Mms100"]
 
 
 async def async_setup_entry(
@@ -34,14 +37,15 @@ async def async_setup_entry(
     entities = []
 
     for device_id, device_data in coordinator.data.items():
-        if device_data.type in SUPPORTED_DEVICE_TYPES:
+        if device_data.type in SUPPORTED_DEVICE_TYPES[Platform.SWITCH]:
             entities.append(
                 NiceGOSwitchEntity(coordinator, device_id, device_data.name)
             )
-        elif device_data.type not in KNOWN_UNSUPPORTED_DEVICE_TYPES:
+        elif device_data.type not in KNOWN_UNSUPPORTED_DEVICE_TYPES[Platform.SWITCH]:
             _LOGGER.warning(
-                "Device '%s' has unknown device type '%s', which is not supported by the switch platform. This device type is unknown, so please create an issue even if your device does not have vacation mode",
+                UNSUPPORTED_DEVICE_WARNING,
                 device_data.name,
+                device_data.type,
                 device_data.type,
             )
 

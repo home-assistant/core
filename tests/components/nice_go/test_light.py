@@ -151,9 +151,12 @@ async def test_unsupported_device_type(
         "Device 'Test Garage 4' has unknown device type 'unknown-device-type'"
         in caplog.text
     )
-    assert "which is not supported by the light platform" in caplog.text
-    assert "This device type is unknown" in caplog.text
+    assert "which is not supported by this integration" in caplog.text
     assert (
-        "so please create an issue even if your device does not have a light"
+        "We try to support it with a cover and event entity, but nothing else."
+        in caplog.text
+    )
+    assert (
+        "Please create an issue with your device model in additional info"
         in caplog.text
     )
