@@ -142,7 +142,6 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
