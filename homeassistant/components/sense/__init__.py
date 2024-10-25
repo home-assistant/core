@@ -47,7 +47,7 @@ class SenseDevicesData:
         """Create."""
         self._data_by_device: dict[str, str] = {}
 
-    def set_devices_data(self, devices: dict):
+    def set_devices_data(self, devices: dict[str, str]) -> None:
         """Store a device update."""
         self._data_by_device = {device["id"]: device for device in devices}
 
