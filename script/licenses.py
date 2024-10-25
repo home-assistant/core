@@ -257,10 +257,10 @@ def get_package_metadata(dist: metadata.Distribution) -> PackageMetadata:
     return {
         "name": dist.name,
         "version": dist.version,
-        "license_expression": dist.metadata.get("license-expression"),
-        "license_metadata": dist.metadata.get("license"),
+        "license_expression": dist.metadata.get("License-Expression"),
+        "license_metadata": dist.metadata.get("License"),
         "license_classifier": extract_license_classifier(
-            dist.metadata.get_all("classifier")
+            dist.metadata.get_all("Classifier")
         ),
     }
 
