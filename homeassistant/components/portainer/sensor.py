@@ -1,10 +1,9 @@
 """Creates the sensor entities for the node."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
 
 from aiotainer.model import Container, NodeData, Snapshot, State
 
@@ -56,11 +55,7 @@ class ContainerSensorEntityDescription(SensorEntityDescription):
     """Describes Portainer sensor entity."""
 
     exists_fn: Callable[[NodeData], bool] = lambda _: True
-    extra_state_attributes_fn: Callable[[NodeData], Mapping[str, Any] | None] = (
-        lambda _: None
-    )
-    option_fn: Callable[[NodeData], list[str] | None] = lambda _: None
-    value_fn: Callable[[Container], StateType | datetime]
+    value_fn: Callable[[Container], str]
 
 
 CONTAINER_SENSOR_TYPES: tuple[ContainerSensorEntityDescription, ...] = (
@@ -68,8 +63,8 @@ CONTAINER_SENSOR_TYPES: tuple[ContainerSensorEntityDescription, ...] = (
         key="container_state",
         translation_key="container_state",
         device_class=SensorDeviceClass.ENUM,
-        options=list(State),
-        value_fn=lambda data: data.state.name.lower(),
+        options=[state.value for state in State],
+        value_fn=lambda data: data.state.value,
     ),
 )
 
@@ -145,7 +140,7 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
         """Set up PortainerSensors."""
         super().__init__(coordinator, node_id, snapshot, container)
         self.entity_description = description
-        _LOGGER.debug("container.names %s %s", container.names, container.id)
+        _LOGGER.debug("container.states %s %s", container.names, container.state.value)
         self._attr_unique_id = f"{node_id}-{container.id}-{description.key}"
         # _LOGGER.debug("self.node_attributes %s", self.node_attributes)
         self.container = container
@@ -154,10 +149,4 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        # _LOGGER.debug("self.container_attributes %s", self.container_attributes)
-        return self.entity_description.value_fn(self.container_attributes)
-
-    @property
-    def options(self) -> list[str] | None:
-        """Return the option of the sensor."""
-        return self.entity_description.option_fn(self.container_attributes)
+        return self.container.state.value
