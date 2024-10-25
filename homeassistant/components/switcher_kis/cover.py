@@ -67,7 +67,7 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id: int | None = None,
+        cover_id: int = 0,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
