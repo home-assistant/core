@@ -104,17 +104,6 @@ def mock_get_factory(install: str) -> Callable:
     return mock_get
 
 
-def extract_ctl_from_locations_config(
-    config: dict[str, str],
-    install: str,
-) -> dict[str, Any]:
-    """Return the chosen controller from the config JSON of an installation."""
-
-    idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
-    loc: dict = user_locations_config_fixture(install)[idx]  # type: ignore[assignment]
-    return loc["gateways"][0]["temperatureControlSystems"][0]
-
-
 @pytest.fixture
 def config() -> dict[str, str]:
     "Return a default/minimal configuration."
