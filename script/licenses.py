@@ -172,7 +172,6 @@ EXCEPTIONS = {
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
-    "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5

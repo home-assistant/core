@@ -2490,7 +2490,7 @@ pywmspro==0.2.1
 pyws66i==1.1
 
 # homeassistant.components.xeoma
-pyxeoma==1.4.1
+pyxeoma==1.4.2
 
 # homeassistant.components.yardian
 pyyardian==1.1.1
