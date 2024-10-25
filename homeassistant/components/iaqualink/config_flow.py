@@ -27,11 +27,6 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        # Supporting a single account.
-        entries = self._async_current_entries()
-        if entries:
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:

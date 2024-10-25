@@ -66,7 +66,7 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id: int | None = None,
+        cover_id: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -85,10 +85,14 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     def _update_data(self) -> None:
         """Update data from device."""
         data = cast(SwitcherShutter, self.coordinator.data)
-        self._attr_current_cover_position = data.position
-        self._attr_is_closed = data.position == 0
-        self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
-        self._attr_is_opening = data.direction == ShutterDirection.SHUTTER_UP
+        self._attr_current_cover_position = data.position[self._cover_id]
+        self._attr_is_closed = data.position[self._cover_id] == 0
+        self._attr_is_closing = (
+            data.direction[self._cover_id] == ShutterDirection.SHUTTER_DOWN
+        )
+        self._attr_is_opening = (
+            data.direction[self._cover_id] == ShutterDirection.SHUTTER_UP
+        )
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
