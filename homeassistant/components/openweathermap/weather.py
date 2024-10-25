@@ -115,7 +115,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         elif mode == OWM_MODE_FREE_FORECAST:
             self._attr_supported_features = WeatherEntityFeature.FORECAST_HOURLY
 
-    async def async_get_minute_forecast(self) -> None:
+    async def async_get_minute_forecast(self) -> dict[str, list[dict]] | dict:
         """Return Minute forecast."""
 
         if self.mode == OWM_MODE_V30:
