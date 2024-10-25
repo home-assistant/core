@@ -1117,7 +1117,7 @@ hole==0.8.0
 holidays==0.58
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.3
+home-assistant-frontend==20241002.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.2
@@ -1484,7 +1484,7 @@ numato-gpio==0.13.0
 numpy==1.26.4
 
 # homeassistant.components.nyt_games
-nyt_games==0.4.3
+nyt_games==0.4.4
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1710,7 +1710,7 @@ pyCEC==0.5.2
 pyControl4==1.2.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.10.0
+pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
@@ -1728,7 +1728,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.30.2
+pyTibber==0.30.3
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2543,7 +2543,7 @@ rfk101py==0.0.1
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.6
+ring-doorbell==0.9.8
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -3032,7 +3032,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.10.07
+yt-dlp==2024.10.22
 
 # homeassistant.components.zamg
 zamg==0.3.6
