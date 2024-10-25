@@ -392,6 +392,6 @@ class EnumWithDeprecatedMembers(EnumType):
                 "enum member",
                 "used",
                 deprecated[name][1],
-                log_when_no_integration_is_found=True,
+                log_when_no_integration_is_found=False,
             )
         return super().__getattribute__(name)
