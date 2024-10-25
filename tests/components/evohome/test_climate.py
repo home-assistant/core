@@ -82,39 +82,6 @@ async def test_ctl_set_hvac_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
-async def _test_ctl_set_preset_mode(
-    hass: HomeAssistant,
-    ctl_id: str,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test SERVICE_SET_PRESET_MODE of an evohome controller."""
-
-    results = []
-
-    # [Reset, eco, away, home, Custom]
-    # [eco, away]
-    # []
-
-    # SERVICE_SET_PRESET_MODE: xxx
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            Platform.CLIMATE,
-            SERVICE_SET_PRESET_MODE,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-                ATTR_PRESET_MODE: "eco",
-            },
-            blocking=True,
-        )
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
-
-    assert results == snapshot
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_ctl_set_temperature(
     hass: HomeAssistant,
     ctl_id: str,
