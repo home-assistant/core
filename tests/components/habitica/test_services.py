@@ -1555,6 +1555,83 @@ async def test_update_daily(
 
 
 @pytest.mark.parametrize(
+    ("service_data"),
+    [
+        (
+            {
+                ATTR_FREQUENCY: "monthly",
+                ATTR_REPEAT: ["su", "t", "th", "s"],
+            }
+        ),
+        (
+            {
+                ATTR_FREQUENCY: "weekly",
+                ATTR_REPEAT_MONTHLY: "day_of_month",
+            }
+        ),
+    ],
+    ids=["frequency_not_weekly", "frequency_not_monthly"],
+)
+@pytest.mark.freeze_time("2024-10-14 00:00:00")
+@pytest.mark.usefixtures("mock_habitica")
+async def test_update_daily_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    service_data: dict[str, Any],
+) -> None:
+    """Test Habitica update_daily action exceptions."""
+    task_id = "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_DAILY,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: task_id,
+                **service_data,
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("status", "exception"),
+    [
+        (HTTPStatus.TOO_MANY_REQUESTS, ServiceValidationError),
+        (HTTPStatus.BAD_GATEWAY, HomeAssistantError),
+    ],
+)
+@pytest.mark.usefixtures("mock_habitica")
+async def test_update_task_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+    status: HTTPStatus,
+    exception: Exception,
+) -> None:
+    """Test Habitica task action exceptions."""
+    task_id = "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
+
+    mock_habitica.put(
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+        status=status,
+    )
+    with pytest.raises(exception):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_DAILY,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: task_id,
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
     ("service_data", "expected"),
     [
         (
@@ -1752,6 +1829,95 @@ async def test_tags(
         "20409521-c096-447f-9a90-23e8da615710",
         "8515e4ae-2f4b-455a-b4a4-8939e04b1bfd",
     }
+
+
+async def test_create_new_tag(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+) -> None:
+    """Test adding a non-existent tag and create it as new."""
+    task_id = "88de7cd9-af2b-49ce-9afd-bf941d87336b"
+    mock_habitica.put(
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+        json={"success": True, "data": {}},
+    )
+    mock_habitica.post(
+        f"{DEFAULT_URL}/api/v3/tags",
+        json={
+            "success": True,
+            "data": {
+                "name": "Home Assistant",
+                "id": "8bc0afbf-ab8e-49a4-982d-67a40557ed1a",
+            },
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_TODO,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            ATTR_TAG: ["Home Assistant"],
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    mock_call = mock_called_with(
+        mock_habitica,
+        "POST",
+        f"{DEFAULT_URL}/api/v3/tags",
+    )
+    assert mock_call
+    assert mock_call[2] == '{"name": "Home Assistant"}'
+
+    mock_call = mock_called_with(
+        mock_habitica,
+        "PUT",
+        f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
+    )
+    assert mock_call
+    assert (tags := json.loads(mock_call[2]).get("tags"))
+    assert len(tags) == 3
+
+    assert set(tags) == {
+        "8bc0afbf-ab8e-49a4-982d-67a40557ed1a",
+        "20409521-c096-447f-9a90-23e8da615710",
+        "8515e4ae-2f4b-455a-b4a4-8939e04b1bfd",
+    }
+
+
+@pytest.mark.parametrize(
+    ("status", "exception"),
+    [
+        (HTTPStatus.TOO_MANY_REQUESTS, ServiceValidationError),
+        (HTTPStatus.BAD_GATEWAY, HomeAssistantError),
+    ],
+)
+async def test_create_new_tag_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+    status: HTTPStatus,
+    exception: Exception,
+) -> None:
+    """Test create new tag exception."""
+    task_id = "88de7cd9-af2b-49ce-9afd-bf941d87336b"
+    mock_habitica.post(f"{DEFAULT_URL}/api/v3/tags", status=status)
+    with pytest.raises(exception):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_TODO,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: task_id,
+                ATTR_TAG: ["Home Assistant"],
+            },
+            return_response=True,
+            blocking=True,
+        )
 
 
 async def test_remove_tags(
