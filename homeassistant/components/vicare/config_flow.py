@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -16,6 +17,7 @@ from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlowResult
 
 # from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.device_registry import format_mac
 
@@ -99,3 +101,21 @@ class OAuth2FlowHandler(
         #     )
 
         return await super().async_step_user(user_input)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+            )
+
+        return await self.async_step_user()
