@@ -62,12 +62,11 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
     )
-    _cover_id: int
 
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id: int = 0,
+        cover_id: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

@@ -31,10 +31,10 @@ ENTITY_ID2 = f"{LIGHT_DOMAIN}.{slugify(DEVICE.name)}_light_2"
 
 
 @pytest.mark.parametrize(
-    ("device", "entity_id", "light_id", "device_state"),
+    ("entity_id", "light_id", "device_state"),
     [
-        (DEVICE, ENTITY_ID, 0, [DeviceState.OFF, DeviceState.ON]),
-        (DEVICE, ENTITY_ID2, 1, [DeviceState.ON, DeviceState.OFF]),
+        (ENTITY_ID, 0, [DeviceState.OFF, DeviceState.ON]),
+        (ENTITY_ID2, 1, [DeviceState.ON, DeviceState.OFF]),
     ],
 )
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
@@ -43,7 +43,6 @@ async def test_light(
     mock_bridge,
     mock_api,
     monkeypatch: pytest.MonkeyPatch,
-    device,
     entity_id: str,
     light_id: int,
     device_state: list[DeviceState],
@@ -57,8 +56,8 @@ async def test_light(
     assert state.state == STATE_ON
 
     # Test state change on --> off for light
-    monkeypatch.setattr(device, "light", device_state)
-    mock_bridge.mock_callbacks([device])
+    monkeypatch.setattr(DEVICE, "light", device_state)
+    mock_bridge.mock_callbacks([DEVICE])
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -92,10 +91,10 @@ async def test_light(
 
 
 @pytest.mark.parametrize(
-    ("device", "entity_id", "light_id", "device_state"),
+    ("entity_id", "light_id", "device_state"),
     [
-        (DEVICE, ENTITY_ID, 0, [DeviceState.OFF, DeviceState.ON]),
-        (DEVICE, ENTITY_ID2, 1, [DeviceState.ON, DeviceState.OFF]),
+        (ENTITY_ID, 0, [DeviceState.OFF, DeviceState.ON]),
+        (ENTITY_ID2, 1, [DeviceState.ON, DeviceState.OFF]),
     ],
 )
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
@@ -105,7 +104,6 @@ async def test_light_control_fail(
     mock_api,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
-    device,
     entity_id: str,
     light_id: int,
     device_state: list[DeviceState],
@@ -115,8 +113,8 @@ async def test_light_control_fail(
     assert mock_bridge
 
     # Test initial state - light off
-    monkeypatch.setattr(device, "light", device_state)
-    mock_bridge.mock_callbacks([device])
+    monkeypatch.setattr(DEVICE, "light", device_state)
+    mock_bridge.mock_callbacks([DEVICE])
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -141,7 +139,7 @@ async def test_light_control_fail(
         assert state.state == STATE_UNAVAILABLE
 
     # Make device available again
-    mock_bridge.mock_callbacks([device])
+    mock_bridge.mock_callbacks([DEVICE])
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

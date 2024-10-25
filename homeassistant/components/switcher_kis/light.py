@@ -57,8 +57,6 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_translation_key = "light"
 
-    _light_id: int
-
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, light_id: int
     ) -> None:

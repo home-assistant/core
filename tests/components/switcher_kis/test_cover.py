@@ -34,37 +34,10 @@ ENTITY_ID2 = f"{COVER_DOMAIN}.{slugify(DEVICE2.name)}"
 
 
 @pytest.mark.parametrize(
-    (
-        "device",
-        "entity_id",
-        "cover_id",
-        "position_open",
-        "position_close",
-        "direction_open",
-        "direction_close",
-        "direction_stop",
-    ),
+    ("device", "entity_id"),
     [
-        (
-            DEVICE,
-            ENTITY_ID,
-            0,
-            [77],
-            [0],
-            [ShutterDirection.SHUTTER_UP],
-            [ShutterDirection.SHUTTER_DOWN],
-            [ShutterDirection.SHUTTER_STOP],
-        ),
-        (
-            DEVICE2,
-            ENTITY_ID2,
-            0,
-            [77],
-            [0],
-            [ShutterDirection.SHUTTER_UP],
-            [ShutterDirection.SHUTTER_DOWN],
-            [ShutterDirection.SHUTTER_STOP],
-        ),
+        (DEVICE, ENTITY_ID),
+        (DEVICE2, ENTITY_ID2),
     ],
 )
 @pytest.mark.parametrize("mock_bridge", [[DEVICE, DEVICE2]], indirect=True)
@@ -75,12 +48,6 @@ async def test_cover(
     monkeypatch: pytest.MonkeyPatch,
     device,
     entity_id: str,
-    cover_id: int,
-    position_open: list[int],
-    position_close: list[int],
-    direction_open: list[ShutterDirection],
-    direction_close: list[ShutterDirection],
-    direction_stop: list[ShutterDirection],
 ) -> None:
     """Test cover services."""
     await init_integration(hass, USERNAME, TOKEN)
@@ -101,12 +68,12 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "position", position_open)
+        monkeypatch.setattr(device, "position", [77])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(77, cover_id)
+        mock_control_device.assert_called_once_with(77, 0)
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 77
@@ -122,12 +89,12 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "direction", direction_open)
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_UP])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(100, cover_id)
+        mock_control_device.assert_called_once_with(100, 0)
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPENING
 
@@ -142,12 +109,12 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "direction", direction_close)
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_DOWN])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 6
-        mock_control_device.assert_called_once_with(0, cover_id)
+        mock_control_device.assert_called_once_with(0, 0)
         state = hass.states.get(entity_id)
         assert state.state == CoverState.CLOSING
 
@@ -162,17 +129,17 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "direction", direction_stop)
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_STOP])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 8
-        mock_control_device.assert_called_once_with(cover_id)
+        mock_control_device.assert_called_once_with(0)
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
 
     # Test closed on position == 0
-    monkeypatch.setattr(device, "position", position_close)
+    monkeypatch.setattr(device, "position", [0])
     mock_bridge.mock_callbacks([device])
     await hass.async_block_till_done()
 
@@ -182,10 +149,10 @@ async def test_cover(
 
 
 @pytest.mark.parametrize(
-    ("device", "entity_id", "cover_id"),
+    ("device", "entity_id"),
     [
-        (DEVICE, ENTITY_ID, 0),
-        (DEVICE2, ENTITY_ID2, 0),
+        (DEVICE, ENTITY_ID),
+        (DEVICE2, ENTITY_ID2),
     ],
 )
 @pytest.mark.parametrize("mock_bridge", [[DEVICE, DEVICE2]], indirect=True)
@@ -195,7 +162,6 @@ async def test_cover_control_fail(
     mock_api,
     device,
     entity_id: str,
-    cover_id: int,
 ) -> None:
     """Test cover control fail."""
     await init_integration(hass, USERNAME, TOKEN)
@@ -219,7 +185,7 @@ async def test_cover_control_fail(
             )
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(44, cover_id)
+        mock_control_device.assert_called_once_with(44, 0)
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
 
@@ -244,7 +210,7 @@ async def test_cover_control_fail(
             )
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(27, cover_id)
+        mock_control_device.assert_called_once_with(27, 0)
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
 
