@@ -33,15 +33,15 @@ def mock_hunterdouglas_hub(
     """Return a mocked Powerview Hub with all data populated."""
     with (
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_raw_data",
             return_value=load_json_object_fixture(device_json, DOMAIN),
         ),
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_home_data",
             return_value=load_json_object_fixture(home_json, DOMAIN),
         ),
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_raw_firmware",
             return_value=load_json_object_fixture(firmware_json, DOMAIN),
         ),
         patch(
