@@ -71,6 +71,8 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
+        # Rflink devices reports ok/low so devise class can’t be used
+        # and low battery is not no battery so it can't be migrated to binary sensor
         key="battery",
         name="Battery",
         icon="mdi:battery",
