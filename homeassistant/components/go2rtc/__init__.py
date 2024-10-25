@@ -76,7 +76,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-    if url is None:
         url = "http://localhost:1984/"
 
     # Validate the server URL
