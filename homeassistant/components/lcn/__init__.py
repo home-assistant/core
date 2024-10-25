@@ -159,7 +159,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if config_entry.minor_version < 2:
             new_data[CONF_ACKNOWLEDGE] = False
 
-        # update to 2.0  (fix transitions for lights and switches)
+        # update to 2.1  (fix transitions for lights and switches)
         new_entities_data = [*new_data[CONF_ENTITIES]]
         for entity in new_entities_data:
             if entity[CONF_DOMAIN] in [Platform.LIGHT, Platform.SCENE]:
@@ -169,7 +169,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new_data[CONF_ENTITIES] = new_entities_data
 
     hass.config_entries.async_update_entry(
-        config_entry, data=new_data, minor_version=0, version=2
+        config_entry, data=new_data, minor_version=1, version=2
     )
 
     _LOGGER.debug(

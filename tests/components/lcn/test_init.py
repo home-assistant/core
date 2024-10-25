@@ -140,7 +140,7 @@ async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
     entry_migrated = hass.config_entries.async_get_entry(entry_v1_1.entry_id)
     assert entry_migrated.state is ConfigEntryState.LOADED
     assert entry_migrated.version == 2
-    assert entry_migrated.minor_version == 0
+    assert entry_migrated.minor_version == 1
     assert entry_migrated.data == entry.data
 
 
@@ -156,5 +156,5 @@ async def test_migrate_1_2(hass: HomeAssistant, entry) -> None:
     entry_migrated = hass.config_entries.async_get_entry(entry_v1_2.entry_id)
     assert entry_migrated.state is ConfigEntryState.LOADED
     assert entry_migrated.version == 2
-    assert entry_migrated.minor_version == 0
+    assert entry_migrated.minor_version == 1
     assert entry_migrated.data == entry.data

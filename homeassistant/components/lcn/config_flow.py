@@ -111,7 +111,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
     VERSION = 2
-    MINOR_VERSION = 0
+    MINOR_VERSION = 1
 
     _context_entry: ConfigEntry
 
