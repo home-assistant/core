@@ -617,7 +617,7 @@ build.json @home-assistant/supervisor
 /tests/components/hlk_sw16/ @jameshilliard
 /homeassistant/components/holiday/ @jrieger @gjohansson-ST
 /tests/components/holiday/ @jrieger @gjohansson-ST
-/homeassistant/components/home_connect/ @DavidMStraub
+/homeassistant/components/home_connect/ @DavidMStraub @Diegorro98
 /tests/components/home_connect/ @DavidMStraub
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
