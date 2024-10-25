@@ -73,7 +73,7 @@ TREND_SENSOR_VARIANTS = [
 ]
 
 
-def sense_to_mdi(sense_icon):
+def sense_to_mdi(sense_icon: str) -> str:
     """Convert sense icon to mdi icon."""
     return f"mdi:{MDI_ICONS.get(sense_icon, 'power-plug')}"
 
@@ -165,7 +165,7 @@ class SensePowerSensor(SensorEntity):
         )
 
     @callback
-    def _async_update_from_data(self):
+    def _async_update_from_data(self) -> None:
         """Update the sensor from the data. Must not do I/O."""
         new_state = round(
             self._data.active_solar_power

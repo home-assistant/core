@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_all_entities[fan.mock_title-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': None,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.mock_title',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:air-conditioner',
+    'original_name': 'Mock Title',
+    'platform': 'smarty',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[fan.mock_title-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title',
+      'icon': 'mdi:air-conditioner',
+      'percentage': 0,
+      'percentage_step': 33.333333333333336,
+      'preset_mode': None,
+      'preset_modes': None,
+      'supported_features': <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.mock_title',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

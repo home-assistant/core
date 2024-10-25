@@ -1047,6 +1047,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz
+/tests/components/onkyo/ @arturpragacz
 /homeassistant/components/onvif/ @hunterjm
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
@@ -1349,6 +1350,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smarttub/ @mdz
 /tests/components/smarttub/ @mdz
 /homeassistant/components/smarty/ @z0mbieprocess
+/tests/components/smarty/ @z0mbieprocess
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl
@@ -1412,8 +1414,8 @@ build.json @home-assistant/supervisor
 /tests/components/stt/ @home-assistant/core
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
-/homeassistant/components/suez_water/ @ooii
-/tests/components/suez_water/ @ooii
+/homeassistant/components/suez_water/ @ooii @jb101010-2
+/tests/components/suez_water/ @ooii @jb101010-2
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
 /homeassistant/components/sunweg/ @rokam

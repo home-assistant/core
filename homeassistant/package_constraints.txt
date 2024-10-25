@@ -32,7 +32,7 @@ habluetooth==3.6.0
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20241002.3
+home-assistant-frontend==20241002.4
 home-assistant-intents==2024.10.2
 httpx==0.27.2
 ifaddr==0.2.0
@@ -64,6 +64,7 @@ uv==0.4.22
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
+webrtc-models==0.0.0b2
 yarl==1.16.0
 zeroconf==0.135.0
 
