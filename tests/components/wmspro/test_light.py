@@ -1,4 +1,4 @@
-"""Test the wmspro cover support."""
+"""Test the wmspro light support."""
 
 from unittest.mock import AsyncMock, patch
 
