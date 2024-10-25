@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from music_assistant.client import MusicAssistantClient
@@ -23,10 +24,11 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import DOMAIN, LOGGER
-from .helpers import MassEntryData
 
 if TYPE_CHECKING:
     from music_assistant.common.models.event import MassEvent
+
+type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -34,7 +36,17 @@ CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class MusicAssistantEntryData:
+    """Hold Mass data for the config entry."""
+
+    mass: MusicAssistantClient
+    listen_task: asyncio.Task
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MusicAssistantConfigEntry
+) -> bool:
     """Set up from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
@@ -85,10 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listen_task.cancel()
         raise ConfigEntryNotReady("Music Assistant client not ready") from err
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
-    hass.data[DOMAIN][entry.entry_id] = MassEntryData(mass, listen_task)
+    entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
     # initialize platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -96,7 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        hass.data[DOMAIN].pop(entry.entry_id)
         try:
             await mass.disconnect()
         finally:
@@ -147,7 +155,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        mass_entry_data: MassEntryData = hass.data[DOMAIN].pop(entry.entry_id)
+        mass_entry_data: MusicAssistantEntryData = entry.runtime_data
         mass_entry_data.listen_task.cancel()
         await mass_entry_data.mass.disconnect()
 

@@ -56,9 +56,7 @@ class MusicAssistantEntity(Entity):
     @property
     def player(self) -> Player:
         """Return the Mass Player attached to this HA entity."""
-        player = self.mass.players.get(self.player_id)
-        assert player is not None
-        return player
+        return self.mass.players[self.player_id]
 
     @property
     def unique_id(self) -> str | None:

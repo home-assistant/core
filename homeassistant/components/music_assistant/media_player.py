@@ -35,12 +35,13 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import MusicAssistantConfigEntry
 from .const import (
     ATTR_ACTIVE_GROUP,
     ATTR_ACTIVE_QUEUE,
@@ -53,7 +54,6 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .helpers import get_mass
 
 if TYPE_CHECKING:
     from music_assistant.client import MusicAssistantClient
@@ -127,11 +127,11 @@ def catch_musicassistant_error[_R, **P](
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: MusicAssistantConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Music Assistant MediaPlayer(s) from Config Entry."""
-    mass = get_mass(hass, config_entry.entry_id)
+    mass = entry.runtime_data.mass
     added_ids = set()
     if TYPE_CHECKING:
         assert mass is not None
@@ -146,9 +146,7 @@ async def async_setup_entry(
         async_add_entities([MusicAssistantPlayer(mass, event.object_id)])
 
     # register listener for new players
-    config_entry.async_on_unload(
-        mass.subscribe(handle_player_added, EventType.PLAYER_ADDED)
-    )
+    entry.async_on_unload(mass.subscribe(handle_player_added, EventType.PLAYER_ADDED))
     mass_players = []
     # add all current players
     for player in mass.players:
