@@ -298,7 +298,7 @@ aionut==4.3.3
 aiooncue==0.3.7
 
 # homeassistant.components.openexchangerates
-aioopenexchangerates==0.6.2
+aioopenexchangerates==0.6.8
 
 # homeassistant.components.nmap_tracker
 aiooui==0.1.6
@@ -363,7 +363,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.8.1
+aiostreammagic==2.8.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.2.0
@@ -477,6 +477,9 @@ aurorapy==0.2.7
 
 # homeassistant.components.autarco
 autarco==3.0.0
+
+# homeassistant.components.husqvarna_automower_ble
+automower-ble==0.1.35
 
 # homeassistant.components.axis
 axis==63
@@ -2437,7 +2440,7 @@ zamg==0.3.6
 zeroconf==0.135.0
 
 # homeassistant.components.zeversolar
-zeversolar==0.3.1
+zeversolar==0.3.2
 
 # homeassistant.components.zha
 zha==0.0.35

@@ -44,6 +44,7 @@ async def test_device_power_sensors(
     device_1.power_w = 0
     device_2.power_w = 0
     await setup_platform(hass, config_entry, SENSOR_DOMAIN)
+    device_1, device_2 = mock_sense.devices
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_{CONSUMPTION_ID}")
     assert state.state == "0"

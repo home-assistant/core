@@ -142,7 +142,6 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
@@ -172,12 +171,10 @@ EXCEPTIONS = {
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
-    "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "vincenty",  # Public domain
-    "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
 
 TODO = {
