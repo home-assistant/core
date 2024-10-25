@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Final
+from typing import Final
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, LINE_TYPES
@@ -30,18 +29,21 @@ UPTIME_DEVIATION = 30
 class VodafoneStationEntityDescription(SensorEntityDescription):
     """Vodafone Station entity description."""
 
-    value: Callable[[Any, Any, Any], Any] = (
-        lambda coordinator, last_value, key: coordinator.data.sensors[key]
-    )
+    value: Callable[
+        [VodafoneStationRouter, str | datetime | float | None, str],
+        str | datetime | float | None,
+    ] = lambda coordinator, last_value, key: coordinator.data.sensors[key]
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
 def _calculate_uptime(
     coordinator: VodafoneStationRouter,
-    last_value: datetime | None,
+    last_value: str | datetime | float | None,
     key: str,
 ) -> datetime:
     """Calculate device uptime."""
+
+    assert isinstance(last_value, datetime)
 
     delta_uptime = coordinator.api.convert_uptime(coordinator.data.sensors[key])
 
@@ -56,7 +58,7 @@ def _calculate_uptime(
 
 def _line_connection(
     coordinator: VodafoneStationRouter,
-    last_value: str | None,
+    last_value: str | datetime | float | None,
     key: str,
 ) -> str | None:
     """Identify line type."""
@@ -199,10 +201,10 @@ class VodafoneStationSensorEntity(
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
-        self._old_state = None
+        self._old_state: str | datetime | float | None = None
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | datetime | float | None:
         """Sensor value."""
         self._old_state = self.entity_description.value(
             self.coordinator, self._old_state, self.entity_description.key
