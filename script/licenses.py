@@ -142,7 +142,6 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "chacha20poly1305",  # LGPL
     "chacha20poly1305-reuseable",  # Apache 2.0 or BSD 3-Clause
