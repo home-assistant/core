@@ -263,7 +263,6 @@ ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
     ("config", "go2rtc_binary", "is_docker_env"),
     [
         ({}, None, False),
-        ({}, None, True),
     ],
 )
 @pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "mock_server")
@@ -280,6 +279,7 @@ async def test_non_user_setup_with_error(
 @pytest.mark.parametrize(
     ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
     [
+        ({}, None, True, ERR_BINARY_NOT_FOUND),
         ({}, "/usr/bin/go2rtc", True, ERR_CONNECT),
         ({DOMAIN: {}}, None, False, ERR_URL_REQUIRED),
         ({DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),

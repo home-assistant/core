@@ -71,8 +71,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.warning("Go2rtc URL required in non-docker installs")
             return False
         if not (binary := await _get_binary(hass)):
-            if not configured_by_user:
-                return True
             _LOGGER.error("Could not find go2rtc docker binary")
             return False
 
