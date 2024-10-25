@@ -501,6 +501,8 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfLength.KILOMETERS,
         UnitOfLength.METERS,
         UnitOfLength.MILLIMETERS,
+        UnitOfLength.ASTRONOMICAL_UNIT,
+        UnitOfLength.PARSEC,
     ),
     SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
     SensorDeviceClass.PRECIPITATION: (
@@ -728,6 +730,8 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.MILES,
         UnitOfLength.YARDS,
+        UnitOfLength.ASTRONOMICAL_UNIT,
+        UnitOfLength.PARSEC,
     ),
     SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
     SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
