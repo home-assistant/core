@@ -141,10 +141,10 @@ class SensePowerSensor(SensorEntity):
 
     def __init__(
         self,
-        data,
-        sense_monitor_id,
-        variant_id,
-        variant_name,
+        data: ASyncSenseable,
+        sense_monitor_id: str,
+        variant_id: str,
+        variant_name: str,
     ) -> None:
         """Initialize the Sense sensor."""
         self._attr_name = f"{ACTIVE_NAME} {variant_name}"
@@ -214,7 +214,7 @@ class SenseVoltageSensor(SensorEntity):
         )
 
     @callback
-    def _async_update_from_data(self):
+    def _async_update_from_data(self) -> None:
         """Update the sensor from the data. Must not do I/O."""
         new_state = round(self._data.active_voltage[self._voltage_index], 1)
         if self._attr_available and self._attr_native_value == new_state:
@@ -255,9 +255,9 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
             self._attr_state_class = None
             self._attr_device_class = None
         else:
-            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-            self._attr_state_class = SensorStateClass.TOTAL
             self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL
+            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_device_info = DeviceInfo(
             name=f"Sense {sense_monitor_id}",
             identifiers={(DOMAIN, sense_monitor_id)},
@@ -309,7 +309,7 @@ class SenseDevicePowerSensor(SensorEntity):
         )
 
     @callback
-    def _async_update_from_data(self):
+    def _async_update_from_data(self) -> None:
         """Get the latest data, update state. Must not do I/O."""
         new_state = self._device.power_w
         if self._attr_available and self._attr_native_value == new_state:

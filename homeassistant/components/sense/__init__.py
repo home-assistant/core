@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
-    async def _async_update_trend():
+    async def _async_update_trend() -> None:
         """Update the trend data."""
         try:
             await gateway.update_trend_data()
@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def async_sense_update(_):
+    async def async_sense_update(_) -> None:
         """Retrieve latest state."""
         try:
             await gateway.update_realtime()

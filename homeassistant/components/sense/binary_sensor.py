@@ -36,23 +36,7 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-async def _migrate_old_unique_ids(hass, devices):
-    registry = er.async_get(hass)
-    for device in devices:
-        # Migration of old not so unique ids
-        old_entity_id = registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, device.old_unique_id
-        )
-        if old_entity_id is not None:
-            _LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                device.old_unique_id,
-                device.unique_id,
-            )
-            registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
-
-
-def sense_to_mdi(sense_icon):
+def sense_to_mdi(sense_icon: str) -> str:
     """Convert sense icon to mdi icon."""
     return f"mdi:{MDI_ICONS.get(sense_icon, "power-plug")}"
 
@@ -90,7 +74,7 @@ class SenseBinarySensor(BinarySensorEntity):
         )
 
     @callback
-    def _async_update_from_data(self):
+    def _async_update_from_data(self) -> None:
         """Get the latest data, update state. Must not do I/O."""
         new_state = self._device.is_on
         if self._attr_available and self._attr_is_on == new_state:
@@ -98,3 +82,22 @@ class SenseBinarySensor(BinarySensorEntity):
         self._attr_available = True
         self._attr_is_on = new_state
         self.async_write_ha_state()
+
+
+async def _migrate_old_unique_ids(
+    hass: HomeAssistant, devices: list[SenseBinarySensor]
+) -> None:
+    registry = er.async_get(hass)
+    for device in devices:
+        # Migration of old not so unique ids
+        old_entity_id = registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, device.old_unique_id
+        )
+        updated_id = device.unique_id
+        if old_entity_id is not None and updated_id is not None:
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                device.old_unique_id,
+                device.unique_id,
+            )
+            registry.async_update_entity(old_entity_id, new_unique_id=updated_id)
