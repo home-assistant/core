@@ -87,8 +87,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.warning("Could not connect to go2rtc instance on %s", url)
         return False
 
-    client = Go2RtcClient(async_get_clientsession(hass), url)
-
     provider = WebRTCProvider(client)
     async_register_webrtc_provider(hass, provider)
     return True
