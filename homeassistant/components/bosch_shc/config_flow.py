@@ -18,7 +18,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -108,6 +108,7 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=HOST_SCHEMA,
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
             )
         self.host = user_input[CONF_HOST]
         self.info = await self._get_info(self.host)

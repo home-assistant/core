@@ -15,7 +15,7 @@ from laundrify_aio.exceptions import (
 from voluptuous import Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -92,5 +92,6 @@ class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=Schema({}),
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
             )
         return await self.async_step_init()

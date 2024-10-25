@@ -26,6 +26,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -384,6 +385,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=data_schema,
+            description_placeholders={CONF_NAME: self._get_reauth_entry().title},
             errors=errors,
         )
 

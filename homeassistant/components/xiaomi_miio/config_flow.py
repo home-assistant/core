@@ -19,7 +19,14 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
@@ -148,7 +155,11 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_cloud()
-        return self.async_show_form(step_id="reauth_confirm")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

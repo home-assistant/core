@@ -9,7 +9,7 @@ from renault_api.const import AVAILABLE_LOCALES
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN
 from .renault_hub import RenaultHub
@@ -139,6 +139,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors or {},
             description_placeholders={
-                CONF_USERNAME: self._original_data[CONF_USERNAME]
+                CONF_NAME: self._get_reauth_entry().title,
+                CONF_USERNAME: self._original_data[CONF_USERNAME],
             },
         )
