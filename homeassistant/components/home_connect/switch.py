@@ -188,6 +188,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             )
         super().__init__(device, SwitchEntityDescription(key=program_name))
         self._attr_name = f"{device.appliance.name} {desc}"
+        self._attr_unique_id = f"{device.appliance.haId}-{desc}"
         self._attr_has_entity_name = False
         self.program_name = program_name
 
