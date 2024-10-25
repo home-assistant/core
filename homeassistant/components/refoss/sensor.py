@@ -50,7 +50,7 @@ DEVICETYPE_SENSOR: dict[str, str] = {
 }
 
 SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
-    "em06": (
+    SENSOR_EM: (
         RefossSensorEntityDescription(
             key="power",
             translation_key="power",
