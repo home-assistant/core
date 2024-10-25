@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock
 
 import pytest
+from sense_energy import Scale
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE, CONSUMPTION_ID
@@ -40,6 +41,7 @@ async def test_device_power_sensors(
 ) -> None:
     """Test the Sense device power sensors."""
     await setup_platform(hass, config_entry, SENSOR_DOMAIN)
+    device_1, device_2 = mock_sense.devices
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_{CONSUMPTION_ID}")
     assert state.state == STATE_UNAVAILABLE
@@ -47,6 +49,8 @@ async def test_device_power_sensors(
     state = hass.states.get(f"sensor.{DEVICE_2_NAME.lower()}_{CONSUMPTION_ID}")
     assert state.state == STATE_UNAVAILABLE
 
+    device_1.power_w = 0
+    device_2.power_w = 0
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
     await hass.async_block_till_done()
 
@@ -56,23 +60,26 @@ async def test_device_power_sensors(
     state = hass.states.get(f"sensor.{DEVICE_2_NAME.lower()}_{CONSUMPTION_ID}")
     assert state.state == "0"
 
+    device_1.power_w = DEVICE_1_POWER
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
     await hass.async_block_till_done()
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_{CONSUMPTION_ID}")
-    assert state.state == f"{DEVICE_1_POWER:.0f}"
+    assert state.state == f"{DEVICE_1_POWER:.1f}"
 
     state = hass.states.get(f"sensor.{DEVICE_2_NAME.lower()}_{CONSUMPTION_ID}")
     assert state.state == "0"
 
+    device_1.power_w = 0
+    device_2.power_w = DEVICE_2_POWER
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
     await hass.async_block_till_done()
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_{CONSUMPTION_ID}")
-    assert state.state == f"{DEVICE_1_POWER:.0f}"
+    assert state.state == "0"
 
     state = hass.states.get(f"sensor.{DEVICE_2_NAME.lower()}_{CONSUMPTION_ID}")
-    assert state.state == f"{DEVICE_2_POWER:.0f}"
+    assert state.state == f"{DEVICE_2_POWER:.1f}"
 
 
 async def test_voltage_sensors(
@@ -160,14 +167,14 @@ async def test_trend_energy_sensors(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test the Sense power sensors."""
-    mock_sense.get_trend.side_effect = lambda sensor_type, variant: {
-        ("DAY", "usage"): 100,
-        ("DAY", "production"): 200,
-        ("DAY", "from_grid"): 300,
-        ("DAY", "to_grid"): 400,
-        ("DAY", "net_production"): 500,
-        ("DAY", "production_pct"): 600,
-        ("DAY", "solar_powered"): 700,
+    mock_sense.get_stat.side_effect = lambda sensor_type, variant: {
+        (Scale.DAY, "usage"): 100,
+        (Scale.DAY, "production"): 200,
+        (Scale.DAY, "from_grid"): 300,
+        (Scale.DAY, "to_grid"): 400,
+        (Scale.DAY, "net_production"): 500,
+        (Scale.DAY, "production_pct"): 600,
+        (Scale.DAY, "solar_powered"): 700,
     }.get((sensor_type, variant), 0)
 
     await setup_platform(hass, config_entry, SENSOR_DOMAIN)
@@ -187,14 +194,14 @@ async def test_trend_energy_sensors(
     state = hass.states.get("sensor.daily_net_production")
     assert state.state == "500"
 
-    mock_sense.get_trend.side_effect = lambda sensor_type, variant: {
-        ("DAY", "usage"): 1000,
-        ("DAY", "production"): 2000,
-        ("DAY", "from_grid"): 3000,
-        ("DAY", "to_grid"): 4000,
-        ("DAY", "net_production"): 5000,
-        ("DAY", "production_pct"): 6000,
-        ("DAY", "solar_powered"): 7000,
+    mock_sense.get_stat.side_effect = lambda sensor_type, variant: {
+        (Scale.DAY, "usage"): 1000,
+        (Scale.DAY, "production"): 2000,
+        (Scale.DAY, "from_grid"): 3000,
+        (Scale.DAY, "to_grid"): 4000,
+        (Scale.DAY, "net_production"): 5000,
+        (Scale.DAY, "production_pct"): 6000,
+        (Scale.DAY, "solar_powered"): 7000,
     }.get((sensor_type, variant), 0)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=600))
     await hass.async_block_till_done()
