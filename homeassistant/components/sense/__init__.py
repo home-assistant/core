@@ -175,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     )
 
     @callback
-    def _remove_update_callback_at_stop(event):
+    def _remove_update_callback_at_stop(event) -> None:
         remove_update_callback()
 
     entry.async_on_unload(remove_update_callback)

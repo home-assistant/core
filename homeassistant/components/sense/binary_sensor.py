@@ -63,7 +63,7 @@ class SenseDevice(BinarySensorEntity):
         self._sense_devices_data = sense_devices_data
 
     @property
-    def old_unique_id(self):
+    def old_unique_id(self) -> str:
         """Return the old not so unique id of the binary sensor."""
         return self._id
 
