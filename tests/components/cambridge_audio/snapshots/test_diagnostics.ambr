@@ -10,8 +10,8 @@
       'model': 'CXNv2',
       'name': 'Cambridge Audio CXNv2',
       'timezone': 'America/Chicago',
-      'udn': '**REDACTED**',
-      'unit_id': '**REDACTED**',
+      'udn': '02680b5c-1320-4d54-9f7c-3cfe915ad4c3',
+      'unit_id': '0020c2d8',
     }),
     'now_playing': dict({
       'controls': list([
