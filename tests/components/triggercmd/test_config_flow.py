@@ -140,7 +140,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         )
 
     assert result["errors"] == {
-        "base": "connection_error",
+        "base": "cannot_connect",
     }
     assert result["type"] is FlowResultType.FORM
 

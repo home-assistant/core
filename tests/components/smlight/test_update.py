@@ -14,6 +14,7 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as PLATFORM,
     SERVICE_INSTALL,
 )
@@ -114,7 +115,8 @@ async def test_update_firmware(
 
     event_function(MOCK_FIRMWARE_PROGRESS)
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_IN_PROGRESS] == 50
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
 
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
 
@@ -211,6 +213,7 @@ async def test_update_firmware_failed(
         await _call_event_function(MOCK_FIRMWARE_FAIL)
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
 async def test_update_release_notes(
