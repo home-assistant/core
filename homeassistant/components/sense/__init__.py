@@ -51,7 +51,7 @@ class SenseDevicesData:
         """Store a device update."""
         self._data_by_device = {device["id"]: device for device in devices}
 
-    def get_device_by_id(self, sense_device_id: str):
+    def get_device_by_id(self, sense_device_id: str) -> str:
         """Get the latest device data."""
         return self._data_by_device.get(sense_device_id)
 
