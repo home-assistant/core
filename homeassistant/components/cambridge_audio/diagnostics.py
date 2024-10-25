@@ -17,5 +17,14 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for the provided config entry."""
     client = entry.runtime_data
     return async_redact_data(
-        {"info": client.info, "sources": client.sources}, TO_REDACT
+        {
+            "display": client.display.to_dict(),
+            "info": client.display.to_dict(),
+            "now_playing": client.now_playing.to_dict(),
+            "play_state": client.play_state.to_dict(),
+            "presets_list": client.preset_list.to_dict(),
+            "sources": {k: v.to_dict() for k, v in client.sources},
+            "update": client.update.to_dict(),
+        },
+        TO_REDACT,
     )
