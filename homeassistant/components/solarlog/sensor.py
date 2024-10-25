@@ -247,7 +247,9 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda inverter: inverter.current_power,
+        value_fn=(
+            lambda inverter: None if inverter is None else inverter.current_power
+        ),
     ),
     SolarLogInverterSensorEntityDescription(
         key="consumption_year",
@@ -256,7 +258,9 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=3,
-        value_fn=lambda inverter: inverter.consumption_year,
+        value_fn=(
+            lambda inverter: None if inverter is None else inverter.consumption_year
+        ),
     ),
 )
 
