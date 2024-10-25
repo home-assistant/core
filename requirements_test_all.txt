@@ -186,7 +186,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.10.0
+aioautomower==2024.10.3
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -247,7 +247,7 @@ aioharmony==0.2.10
 aiohasupervisor==0.2.0b0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.3
+aiohomekit==3.2.5
 
 # homeassistant.components.hue
 aiohue==4.7.3
@@ -366,7 +366,7 @@ aiosteamist==1.0.0
 aiostreammagic==2.8.1
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.0.3
+aioswitcher==4.2.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -947,7 +947,7 @@ hole==0.8.0
 holidays==0.59
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.3
+home-assistant-frontend==20241002.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.2
@@ -1511,6 +1511,9 @@ pyefergy==22.5.0
 # homeassistant.components.energenie_power_sockets
 pyegps==0.2.5
 
+# homeassistant.components.onkyo
+pyeiscp==0.0.7
+
 # homeassistant.components.emoncms
 pyemoncms==0.1.1
 
@@ -1801,6 +1804,9 @@ pysmartapp==0.3.5
 # homeassistant.components.smartthings
 pysmartthings==0.7.8
 
+# homeassistant.components.smarty
+pysmarty2==0.10.1
+
 # homeassistant.components.edl21
 pysml==0.0.12
 
@@ -1826,7 +1832,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.10.0
 
 # homeassistant.components.suez_water
-pysuez==0.2.0
+pysuezV2==0.2.1
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2221,6 +2227,9 @@ tesla-powerwall==0.5.2
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
+
+# homeassistant.components.teslemetry
+teslemetry-stream==0.4.2
 
 # homeassistant.components.tessie
 tessie-api==0.1.1

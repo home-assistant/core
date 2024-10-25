@@ -13,8 +13,8 @@ from homeassistant.components.camera.webrtc import (
     async_register_webrtc_provider,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator

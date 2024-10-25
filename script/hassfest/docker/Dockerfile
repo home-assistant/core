@@ -22,7 +22,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.4.22,source=/uv,target=/bin/uv \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        stdlib-list==0.10.0 pipdeptree==2.23.4 tqdm==4.66.5 ruff==0.7.0 \
+        stdlib-list==0.10.0 pipdeptree==2.23.4 tqdm==4.66.5 ruff==0.7.1 \
         PyTurboJPEG==1.7.5 ha-ffmpeg==3.2.1 hassil==1.7.4 home-assistant-intents==2024.10.2 mutagen==1.47.0 pymicro-vad==1.0.1 pyspeex-noise==1.0.2
 
 LABEL "name"="hassfest"

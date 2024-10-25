@@ -6,21 +6,9 @@ from unittest.mock import AsyncMock, Mock, patch
 from go2rtc_client.client import _StreamClient, _WebRTCClient
 import pytest
 
-from homeassistant.components.go2rtc.const import CONF_BINARY, DOMAIN
 from homeassistant.components.go2rtc.server import Server
-from homeassistant.const import CONF_URL
 
-from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.go2rtc.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+GO2RTC_PATH = "homeassistant.components.go2rtc"
 
 
 @pytest.fixture
@@ -30,10 +18,6 @@ def mock_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.go2rtc.Go2RtcClient",
         ) as mock_client,
-        patch(
-            "homeassistant.components.go2rtc.config_flow.Go2RtcClient",
-            new=mock_client,
-        ),
     ):
         client = mock_client.return_value
         client.streams = Mock(spec_set=_StreamClient)
@@ -42,19 +26,33 @@ def mock_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_server() -> Generator[AsyncMock]:
-    """Mock a go2rtc server."""
-    with patch(
-        "homeassistant.components.go2rtc.Server", spec_set=Server
-    ) as mock_server:
-        yield mock_server
+def mock_server_start() -> Generator[AsyncMock]:
+    """Mock start of a go2rtc server."""
+    with (
+        patch(f"{GO2RTC_PATH}.server.asyncio.create_subprocess_exec") as mock_subproc,
+        patch(
+            f"{GO2RTC_PATH}.server.Server.start", wraps=Server.start, autospec=True
+        ) as mock_server_start,
+    ):
+        subproc = AsyncMock()
+        subproc.terminate = Mock()
+        mock_subproc.return_value = subproc
+        yield mock_server_start
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Mock a config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title=DOMAIN,
-        data={CONF_URL: "http://localhost:1984/", CONF_BINARY: "/usr/bin/go2rtc"},
-    )
+def mock_server_stop() -> Generator[AsyncMock]:
+    """Mock stop of a go2rtc server."""
+    with (
+        patch(
+            f"{GO2RTC_PATH}.server.Server.stop", wraps=Server.stop, autospec=True
+        ) as mock_server_stop,
+    ):
+        yield mock_server_stop
+
+
+@pytest.fixture
+def mock_server(mock_server_start, mock_server_stop) -> Generator[AsyncMock]:
+    """Mock a go2rtc server."""
+    with patch(f"{GO2RTC_PATH}.Server", wraps=Server) as mock_server:
+        yield mock_server
