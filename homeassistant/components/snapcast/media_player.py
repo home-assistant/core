@@ -95,43 +95,27 @@ async def async_setup_entry(
     def _check_entities() -> None:
         nonlocal _known_group_ids, _known_client_ids
 
-        def _update_known_ids(known_ids, ids) -> tuple[str, str]:
+        def _update_known_ids(known_ids, ids) -> tuple[set[str], set[str]]:
             ids_to_add = ids - known_ids
             ids_to_remove = known_ids - ids
 
             # Update known IDs
-            known_ids -= ids_to_remove
-            known_ids |= ids_to_add
+            known_ids.difference_update(ids_to_remove)
+            known_ids.update(ids_to_add)
 
             return ids_to_add, ids_to_remove
 
-        new_entities: list[SnapcastBaseDevice] = []
-
         group_ids = {g.identifier for g in coordinator.server.groups}
         groups_to_add, groups_to_remove = _update_known_ids(_known_group_ids, group_ids)
-
-        new_entities.extend(
-            [
-                SnapcastGroupDevice(
-                    coordinator, coordinator.server.group(group_id), host_id
-                )
-                for group_id in groups_to_add
-            ]
-        )
 
         client_ids = {c.identifier for c in coordinator.server.clients}
         clients_to_add, clients_to_remove = _update_known_ids(
             _known_client_ids, client_ids
         )
 
-        new_entities.extend(
-            [
-                SnapcastClientDevice(
-                    coordinator, coordinator.server.client(client_id), host_id
-                )
-                for client_id in clients_to_add
-            ]
-        )
+        # Exit early if no changes
+        if not (groups_to_add | groups_to_remove | clients_to_add | clients_to_remove):
+            return
 
         _LOGGER.debug(
             "New clients: %s",
@@ -151,7 +135,20 @@ async def async_setup_entry(
         )
 
         # Add new entities
-        async_add_entities(new_entities)
+        async_add_entities(
+            [
+                SnapcastGroupDevice(
+                    coordinator, coordinator.server.group(group_id), host_id
+                )
+                for group_id in groups_to_add
+            ]
+            + [
+                SnapcastClientDevice(
+                    coordinator, coordinator.server.client(client_id), host_id
+                )
+                for client_id in clients_to_add
+            ]
+        )
 
         # Remove stale entities
         entity_registry = er.async_get(hass)
