@@ -83,8 +83,8 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors = {}
 
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            reauth_entry = self._get_reauth_entry()
             host = reauth_entry.data[CONF_HOST]
             port = reauth_entry.data[CONF_PORT]
             password = user_input[CONF_PASSWORD]

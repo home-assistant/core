@@ -115,8 +115,8 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
 
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            reauth_entry = self._get_reauth_entry()
             new_input = reauth_entry.data | user_input
 
             if self.client_device_id is None:
