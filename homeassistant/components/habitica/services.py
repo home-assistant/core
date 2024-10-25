@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientResponseError
 import voluptuous as vol
@@ -28,17 +28,23 @@ from .const import (
     ATTR_DATA,
     ATTR_DIRECTION,
     ATTR_ITEM,
+    ATTR_KEYWORD,
     ATTR_PATH,
+    ATTR_PRIORITY,
     ATTR_SKILL,
     ATTR_TARGET,
+    ATTR_TAG,
     ATTR_TASK,
+    ATTR_TYPE,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
+    PRIORITIES,
     SERVICE_ABORT_QUEST,
     SERVICE_ACCEPT_QUEST,
     SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
     SERVICE_SCORE_HABIT,
@@ -85,6 +91,21 @@ SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Required(ATTR_ITEM): cv.string,
         vol.Required(ATTR_TARGET): cv.string,
+    }
+)
+
+SERVICE_GET_TASKS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Optional(ATTR_TYPE): vol.All(
+            cv.ensure_list, [vol.In({"habit", "daily", "reward", "todo"})]
+        ),
+        vol.Optional(ATTR_PRIORITY): vol.All(
+            cv.ensure_list, [vol.In(set(PRIORITIES.keys()))]
+        ),
+        vol.Optional(ATTR_TASK): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_KEYWORD): str,
     }
 )
 
@@ -382,13 +403,73 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         else:
             return response
 
+    async def get_tasks(call: ServiceCall) -> ServiceResponse:
+        """Get tasks action."""
+
+        entry: HabiticaConfigEntry = get_config_entry(
+            hass, call.data[ATTR_CONFIG_ENTRY]
+        )
+        coordinator = entry.runtime_data
+        response = coordinator.data.tasks
+
+        if types := call.data.get(ATTR_TYPE):
+            response = [task for task in response if task["type"] in types]
+
+        if priority := call.data.get(ATTR_PRIORITY):
+            priority = [PRIORITIES[k] for k in priority]
+            response = [
+                task
+                for task in response
+                if task.get("priority") is None or task.get("priority") in priority
+            ]
+
+        if tasks := call.data.get(ATTR_TASK):
+            response = [
+                task
+                for task in response
+                if task["id"] in tasks
+                or task.get("alias") in tasks
+                or task["text"] in tasks
+            ]
+
+        if tags := call.data.get(ATTR_TAG):
+            tag_ids = {
+                tag["id"]
+                for tag in coordinator.data.user.get("tags", [])
+                if tag["name"].lower()
+                in (tag.lower() for tag in tags)  # Case-insensitive matching
+            }
+
+            response = [
+                task
+                for task in response
+                if any(tag_id in task.get("tags", []) for tag_id in tag_ids)
+            ]
+        if keyword := call.data.get(ATTR_KEYWORD):
+            keyword = keyword.lower()
+            response = [
+                task
+                for task in response
+                if keyword in task["text"].lower()
+                or keyword in task["notes"].lower()
+                or any(
+                    keyword in item["text"].lower()
+                    for item in task.get("checklist", [])
+                )
+            ]
+        return cast(
+            ServiceResponse,
+            {
+                "tasks": response,
+            },
+        )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_API_CALL,
         handle_api_call,
         schema=SERVICE_API_CALL_SCHEMA,
     )
-
     hass.services.async_register(
         DOMAIN,
         SERVICE_CAST_SKILL,
@@ -417,5 +498,12 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         SERVICE_TRANSFORMATION,
         transformation,
         schema=SERVICE_TRANSFORMATION_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_TASKS,
+        get_tasks,
+        schema=SERVICE_GET_TASKS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
