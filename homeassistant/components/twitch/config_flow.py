@@ -10,7 +10,7 @@ from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 
@@ -109,5 +109,8 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+            )
         return await self.async_step_user()

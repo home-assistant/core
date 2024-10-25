@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import DOMAIN
@@ -37,7 +37,10 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+            )
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
