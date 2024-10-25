@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from voluptuous import Invalid, MultipleInvalid
+from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -28,7 +29,6 @@ from homeassistant.core_config import (
 )
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import webrtc as webrtc_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -423,8 +423,8 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
     assert hass.config.radius == 150
-    assert hass.config.webrtc == webrtc_util.RTCConfiguration(
-        [webrtc_util.RTCIceServer(urls=["stun:custom_stun_server:3478"])]
+    assert hass.config.webrtc == RTCConfiguration(
+        [RTCIceServer(urls=["stun:custom_stun_server:3478"])]
     )
 
 

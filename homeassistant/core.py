@@ -47,6 +47,7 @@ from urllib.parse import urlparse
 from propcache import cached_property, under_cached_property
 from typing_extensions import TypeVar
 import voluptuous as vol
+from webrtc_models import RTCConfiguration
 import yarl
 
 from . import util
@@ -119,7 +120,6 @@ from .util.unit_system import (
     UnitSystem,
     get_unit_system,
 )
-from .util.webrtc import RTCConfiguration
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
