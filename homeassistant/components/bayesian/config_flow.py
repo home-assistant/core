@@ -3,11 +3,10 @@
 from collections.abc import Mapping
 from enum import StrEnum
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -16,20 +15,17 @@ from homeassistant.components.input_boolean import DOMAIN as INPUT_BOLEAN_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.template import sensor
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
-    CONF_ID,
     CONF_NAME,
     CONF_STATE,
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -38,7 +34,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
 )
-from homeassistant.helpers.template import result_as_boolean
 
 from .const import (
     CONF_INDEX,
@@ -328,7 +323,7 @@ async def _get_flow_step_for_editing(
 async def _get_state_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return the state schema, without an add_another box if editing or using the schema for previews."""
+    """Return the state schema, without an add_another box if editing."""
 
     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
@@ -339,7 +334,7 @@ async def _get_state_schema(
 async def _get_numeric_state_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return the numeric_state schema, without an add_another box if editing or using the schema for previews."""
+    """Return the numeric_state schema, without an add_another box if editing."""
 
     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
@@ -350,7 +345,7 @@ async def _get_numeric_state_schema(
 async def _get_template_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return the template schema, without an add_another box if editing or using the schema for previews."""
+    """Return the template schema, without an add_another box if editing."""
 
     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
         return TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
@@ -474,7 +469,6 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
         _get_template_schema,
         next_step=_add_more_or_end,
-        preview=str(ObservationTypes.TEMPLATE),
         validate_user_input=_validate_observation_setup,
         suggested_values=_get_observation_values_if_editing,
     ),
@@ -518,126 +512,3 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Return config entry title."""
         name: str = options[CONF_NAME]
         return name
-
-    @staticmethod
-    async def async_setup_preview(hass: HomeAssistant) -> None:
-        """Set up preview WS API."""
-        websocket_api.async_register_command(hass, ws_start_preview)
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "template/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
-    }
-)
-@websocket_api.async_response
-async def ws_start_preview(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Generate a preview of a template observation."""
-
-    def _validate(schema: vol.Schema, user_input: dict[str, Any]) -> dict:
-        """Run schema validation on the user input."""
-        errors = {}
-        key: vol.Marker
-        for key, validator in schema.schema.items():
-            if key.schema not in user_input:
-                continue
-            try:
-                validator(user_input[key.schema])
-            except vol.Invalid as ex:
-                errors[key.schema] = str(ex.msg)
-        try:
-            _validate_probabilities_given(user_input)
-        except SchemaFlowError as ex:
-            errors[CONF_P_GIVEN_T] = str(ex)
-        return errors
-
-    user_input: dict[str, Any] = msg["user_input"]
-
-    entity_registry_entry: er.RegistryEntry | None = None
-    if msg["flow_type"] == "config_flow":
-        flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
-        handler = flow_status["handler"]
-        form_step = cast(
-            SchemaFlowFormStep, CONFIG_FLOW[str(ObservationTypes.TEMPLATE)]
-        )
-    else:
-        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
-        handler = flow_status["handler"]
-        form_step = cast(
-            SchemaFlowFormStep, OPTIONS_FLOW[str(ObservationTypes.TEMPLATE)]
-        )
-        entity_registry = er.async_get(hass)
-        entries = er.async_entries_for_config_entry(entity_registry, handler)
-        if entries:
-            entity_registry_entry = entries[0]
-
-    # the form step will always be either a vol.Schema or an Awaitable that returns a vol.Schema
-    assert form_step.schema is not None
-
-    schema = (
-        form_step.schema
-        if type(form_step.schema) is vol.Schema
-        else cast(vol.Schema, await form_step.schema(handler))
-    )
-
-    errors = _validate(schema, user_input)
-
-    @callback
-    def async_preview_updated(
-        state: str | None,
-        attributes: Mapping[str, Any] | None,
-        listeners: dict[str, bool | set[str]] | None,
-        error: str | None,
-    ) -> None:
-        """Forward config entry state events to websocket."""
-
-        if error is not None:
-            connection.send_message(
-                websocket_api.event_message(
-                    msg[CONF_ID],
-                    {"error": error},
-                )
-            )
-            return
-        connection.send_message(
-            websocket_api.event_message(
-                msg[CONF_ID],
-                {
-                    "attributes": attributes,
-                    "listeners": listeners,
-                    "state": result_as_boolean(state),
-                },
-            )
-        )
-
-    if errors:
-        connection.send_message(
-            {
-                "id": msg[CONF_ID],
-                "type": websocket_api.TYPE_RESULT,
-                "success": False,
-                "error": {"code": "invalid_user_input", "message": errors},
-            }
-        )
-        return
-
-    template_config = {
-        CONF_STATE: user_input[CONF_VALUE_TEMPLATE],
-    }
-    preview_entity = sensor.async_create_preview_sensor(
-        hass, "Observation", template_config
-    )
-    preview_entity.hass = hass
-    preview_entity.registry_entry = entity_registry_entry
-
-    connection.send_result(msg[CONF_ID])
-    connection.subscriptions[msg[CONF_ID]] = preview_entity.async_start_preview(
-        async_preview_updated
-    )
