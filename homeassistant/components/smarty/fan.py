@@ -41,7 +41,8 @@ async def async_setup_entry(
 class SmartyFan(SmartyEntity, FanEntity):
     """Representation of a Smarty Fan."""
 
-    _attr_icon = "mdi:air-conditioner"
+    _attr_name = None
+    _attr_translation_key = "fan"
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.TURN_OFF
@@ -52,7 +53,6 @@ class SmartyFan(SmartyEntity, FanEntity):
     def __init__(self, coordinator: SmartyCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.config_entry.title
         self._smarty_fan_speed = 0
         self._smarty = coordinator.client
         self._attr_unique_id = coordinator.config_entry.entry_id
