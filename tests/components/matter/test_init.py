@@ -389,7 +389,7 @@ async def test_addon_info_failure(
             True,
             1,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             None,
             ServerVersionTooOld("Invalid version"),
         ),

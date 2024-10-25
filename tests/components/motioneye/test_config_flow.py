@@ -7,7 +7,6 @@ from motioneye_client.client import (
     MotionEyeClientInvalidAuthError,
     MotionEyeClientRequestError,
 )
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
@@ -391,10 +390,6 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.motioneye.config.abort.already_in_progress"],
-)
 async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
     """Test Supervisor discovered flow aborts if user flow in progress."""
     result = await hass.config_entries.flow.async_init(

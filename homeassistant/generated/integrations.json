@@ -698,12 +698,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "bloomsky": {
-      "name": "BloomSky",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "blue_current": {
       "name": "Blue Current",
       "integration_type": "hub",
@@ -4325,8 +4319,8 @@
     },
     "onkyo": {
       "name": "Onkyo",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "onvif": {
@@ -4554,11 +4548,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "panel_iframe": {
-      "name": "iframe Panel",
-      "integration_type": "hub",
-      "config_flow": false
     },
     "pcs_lighting": {
       "name": "PCS Lighting",
@@ -5674,7 +5663,7 @@
     "smarty": {
       "name": "Salda Smarty",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "smhi": {
@@ -7353,13 +7342,11 @@
       "iot_class": "calculated"
     },
     "mold_indicator": {
-      "name": "Mold Indicator",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "random": {
-      "name": "Random",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7390,7 +7377,6 @@
       "iot_class": "local_polling"
     },
     "timer": {
-      "name": "Timer",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -7400,7 +7386,6 @@
       "iot_class": "calculated"
     },
     "trend": {
-      "name": "Trend",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7446,11 +7431,13 @@
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
+    "mold_indicator",
     "moon",
     "nextbus",
     "nmap_tracker",
     "plant",
     "proximity",
+    "random",
     "rpi_power",
     "schedule",
     "season",
@@ -7460,7 +7447,9 @@
     "switch_as_x",
     "threshold",
     "time_date",
+    "timer",
     "tod",
+    "trend",
     "uptime",
     "utility_meter",
     "version",

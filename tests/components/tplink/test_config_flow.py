@@ -1348,10 +1348,6 @@ async def test_reauth_errors(
     assert result3["reason"] == "reauth_successful"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.tplink.config.abort.cannot_connect"],
-)
 @pytest.mark.parametrize(
     ("error_type", "expected_flow"),
     [
