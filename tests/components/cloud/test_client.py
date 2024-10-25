@@ -19,7 +19,6 @@ from homeassistant.components.cloud.const import (
     DATA_CLOUD,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
-    PREF_ENABLE_CLOUD_ICE_SERVERS,
     PREF_ENABLE_GOOGLE,
 )
 from homeassistant.components.cloud.prefs import CloudPreferences
@@ -184,38 +183,46 @@ async def test_handler_google_actions_disabled(
     assert resp["payload"] == response_payload
 
 
-async def test_handler_ice_servers(
-    hass: HomeAssistant, mock_cloud_fixture: CloudPreferences
-) -> None:
+async def test_handler_ice_servers(hass: HomeAssistant) -> None:
     """Test handler ICE servers."""
-    mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
-    mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
-    mock_cloud_fixture.async_set_username = AsyncMock(return_value=None)
-    mock_cloud_fixture._prefs[PREF_ENABLE_CLOUD_ICE_SERVERS] = True
-
-    client = CloudClient(hass, mock_cloud_fixture, None, {}, {})
-    client.cloud = Mock(is_logged_in=True, subscription_expired=False)
-    client.cloud.ice_servers = Mock(
-        async_register_ice_servers_listener=AsyncMock(return_value="mock-unregister")
+    prefs = MagicMock(
+        alexa_enabled=False,
+        google_enabled=False,
+        async_set_username=AsyncMock(return_value=None),
+        cloud_ice_servers_enabled=True,
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = Mock(
+        is_logged_in=True,
+        subscription_expired=False,
+        ice_servers=Mock(
+            async_register_ice_servers_listener=AsyncMock(
+                return_value="mock-unregister"
+            )
+        ),
     )
 
     await client.cloud_connected()
     assert client._cloud_ice_servers_listener == "mock-unregister"
 
 
-async def test_handler_ice_servers_disabled(
-    hass: HomeAssistant, mock_cloud_fixture: CloudPreferences
-) -> None:
+async def test_handler_ice_servers_disabled(hass: HomeAssistant) -> None:
     """Test handler ICE servers when user has disabled it."""
-    mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
-    mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
-    mock_cloud_fixture.async_set_username = AsyncMock(return_value=None)
-    mock_cloud_fixture._prefs[PREF_ENABLE_CLOUD_ICE_SERVERS] = False
-
-    client = CloudClient(hass, mock_cloud_fixture, None, {}, {})
-    client.cloud = Mock(is_logged_in=True, subscription_expired=False)
-    client.cloud.ice_servers = Mock(
-        async_register_ice_servers_listener=AsyncMock(return_value="mock-unregister")
+    prefs = MagicMock(
+        alexa_enabled=False,
+        google_enabled=False,
+        async_set_username=AsyncMock(return_value=None),
+        cloud_ice_servers_enabled=False,
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = Mock(
+        is_logged_in=True,
+        subscription_expired=False,
+        ice_servers=Mock(
+            async_register_ice_servers_listener=AsyncMock(
+                return_value="mock-unregister"
+            )
+        ),
     )
 
     await client.cloud_connected()
