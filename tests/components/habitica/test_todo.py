@@ -1,6 +1,7 @@
 """Tests for Habitica todo platform."""
 
 from collections.abc import Generator
+from datetime import datetime
 from http import HTTPStatus
 import json
 import re
@@ -622,3 +623,73 @@ async def test_move_todo_item_exception(
     await client.send_json_auto_id(data)
     resp = await client.receive_json()
     assert resp.get("success") is False
+
+
+@pytest.mark.parametrize(
+    ("fixture", "calculated_due_date"),
+    [
+        ("duedate_fixture_1.json", (2024, 9, 23)),
+        ("duedate_fixture_2.json", (2024, 9, 24)),
+        ("duedate_fixture_3.json", (2024, 10, 23)),
+        ("duedate_fixture_4.json", (2024, 10, 23)),
+        ("duedate_fixture_5.json", (2024, 9, 28)),
+        ("duedate_fixture_6.json", (2024, 10, 21)),
+        ("duedate_fixture_7.json", None),
+        ("duedate_fixture_8.json", None),
+    ],
+    ids=[
+        "default",
+        "daily starts on startdate",
+        "monthly starts on startdate",
+        "yearly starts on startdate",
+        "weekly",
+        "monthly starts on fixed day",
+        "grey daily",
+        "empty nextDue",
+    ],
+)
+@pytest.mark.usefixtures("set_tz")
+async def test_next_due_date(
+    hass: HomeAssistant,
+    fixture: str,
+    calculated_due_date: tuple | None,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test next_due_date calculation."""
+
+    dailies_entity = "todo.test_user_dailies"
+
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user", json=load_json_object_fixture("user.json", DOMAIN)
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        params={"type": "completedTodos"},
+        json={"data": []},
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        json=load_json_object_fixture(fixture, DOMAIN),
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {},
+        target={ATTR_ENTITY_ID: dailies_entity},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert (
+        result[dailies_entity]["items"][0].get("due") is None
+        if not calculated_due_date
+        else datetime(*calculated_due_date).date()
+    )

@@ -7,6 +7,7 @@ from yarl import URL
 
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -72,3 +73,9 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="00000000-0000-0000-0000-000000000000",
     )
+
+
+@pytest.fixture
+async def set_tz(hass: HomeAssistant) -> None:
+    """Fixture to set timezone."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
