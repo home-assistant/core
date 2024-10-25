@@ -1,7 +1,6 @@
 """Support for monitoring a Sense energy sensor."""
 
 from datetime import datetime
-from typing import Any
 
 from sense_energy import ASyncSenseable, Scale
 from sense_energy.sense_api import SenseDevice
@@ -20,10 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SenseConfigEntry
 from .const import (
@@ -46,6 +42,11 @@ from .const import (
     SOLAR_POWERED_NAME,
     TO_GRID_ID,
     TO_GRID_NAME,
+)
+from .coordinator import (
+    SenseCoordinator,
+    SenseRealtimeCoordinator,
+    SenseTrendCoordinator,
 )
 
 # Sensor types/ranges
@@ -125,7 +126,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SenseBaseSensor(CoordinatorEntity, SensorEntity):
+class SenseBaseSensor(CoordinatorEntity[SenseCoordinator], SensorEntity):
     """Base implementation of a Sense sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -133,7 +134,7 @@ class SenseBaseSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: SenseCoordinator,
         sense_monitor_id: str,
         unique_id: str,
     ) -> None:
@@ -155,7 +156,7 @@ class SensePowerSensor(SenseBaseSensor):
         sense_monitor_id: str,
         variant_id: str,
         variant_name: str,
-        realtime_coordinator: DataUpdateCoordinator[Any],
+        realtime_coordinator: SenseRealtimeCoordinator,
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(
@@ -187,7 +188,7 @@ class SenseVoltageSensor(SenseBaseSensor):
         data: ASyncSenseable,
         index: int,
         sense_monitor_id: str,
-        realtime_coordinator: DataUpdateCoordinator[Any],
+        realtime_coordinator: SenseRealtimeCoordinator,
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(realtime_coordinator, sense_monitor_id, f"L{index + 1}")
@@ -210,7 +211,7 @@ class SenseTrendsSensor(SenseBaseSensor):
         scale: Scale,
         variant_id: str,
         variant_name: str,
-        trends_coordinator: DataUpdateCoordinator[Any],
+        trends_coordinator: SenseTrendCoordinator,
         sense_monitor_id: str,
     ) -> None:
         """Initialize the Sense sensor."""
@@ -265,7 +266,7 @@ class SenseDevicePowerSensor(SenseBaseSensor):
         self,
         device: SenseDevice,
         sense_monitor_id: str,
-        realtime_coordinator: DataUpdateCoordinator[Any],
+        realtime_coordinator: SenseRealtimeCoordinator,
     ) -> None:
         """Initialize the Sense binary sensor."""
         super().__init__(
