@@ -145,7 +145,6 @@ EXCEPTIONS = {
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
-    "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
     "chacha20poly1305-reuseable",  # Apache 2.0 or BSD 3-Clause
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
