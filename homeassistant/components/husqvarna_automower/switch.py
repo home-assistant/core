@@ -100,7 +100,7 @@ async def async_setup_entry(
                     if new_stay_out_zones:
                         current_stay_out_zones[mower_id].update(new_stay_out_zones)
                         async_add_entities(
-                            AutomowerStayOutZoneSwitchEntity(
+                            StayOutZoneSwitchEntity(
                                 coordinator, mower_id, stay_out_zone_uid
                             )
                             for stay_out_zone_uid in new_stay_out_zones

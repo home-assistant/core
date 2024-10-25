@@ -156,7 +156,7 @@ async def async_setup_entry(
                     if new_work_areas:
                         current_work_areas[mower_id].update(new_work_areas)
                         async_add_entities(
-                            AutomowerWorkAreaNumberEntity(
+                            WorkAreaNumberEntity(
                                 mower_id, coordinator, description, work_area_id
                             )
                             for description in WORK_AREA_NUMBER_TYPES

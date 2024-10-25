@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import zoneinfo
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerAttributes, MowerModes
+from aioautomower.model import MowerAttributes, MowerModes, Zone
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -180,6 +180,7 @@ async def test_work_area_switch_commands(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     mower_time_zone: zoneinfo.ZoneInfo,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test switch commands."""
     entity_id = "switch.test_mower_1_my_lawn"
@@ -234,10 +235,6 @@ async def test_add_stay_out_zone(
     current_entites = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
-
     values[TEST_MOWER_ID].stay_out_zones.zones.update(
         {
             TEST_VARIABLE_ZONE_ID: Zone(
