@@ -194,7 +194,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         host_id: str,
     ) -> None:
         """Initialize the base device."""
-        SnapcastCoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
 
         self._device = device
         self._attr_unique_id = self.get_unique_id(host_id, device.identifier)
@@ -287,15 +287,6 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
 
     _device: Snapgroup
 
-    def __init__(
-        self,
-        coordinator: SnapcastUpdateCoordinator,
-        group: Snapgroup,
-        host_id: str,
-    ) -> None:
-        """Initialize the Snapcast group device."""
-        super().__init__(coordinator, group, host_id)
-
     @classmethod
     def get_unique_id(cls, host, id) -> str:
         """Get a unique ID for a group."""
@@ -335,15 +326,6 @@ class SnapcastClientDevice(SnapcastBaseDevice):
     """Representation of a Snapcast client device."""
 
     _device: Snapclient
-
-    def __init__(
-        self,
-        coordinator: SnapcastUpdateCoordinator,
-        client: Snapclient,
-        host_id: str,
-    ) -> None:
-        """Initialize the Snapcast client device."""
-        super().__init__(coordinator, client, host_id)
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
