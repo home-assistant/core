@@ -11,16 +11,13 @@ from unittest.mock import MagicMock, patch
 from aiohttp import ClientSession
 from evohomeasync2 import EvohomeClient
 from evohomeasync2.broker import Broker
+from evohomeasync2.controlsystem import ControlSystem
 from evohomeasync2.zone import Zone
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
-from homeassistant.components.evohome.climate import EvoController
-from homeassistant.components.evohome.coordinator import EvoBroker
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -192,18 +189,19 @@ async def evohome(
         yield mock_client
 
 
-def get_ctl_entity(hass: HomeAssistant) -> EvoController:
-    """Return the controller entity of the evohome system."""
+@pytest.fixture
+async def ctl_id(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: MagicMock,
+) -> AsyncGenerator[str]:
+    """Return the entity_id of the evohome integration's controller."""
 
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
+    async for mock_client in setup_evohome(hass, config, install=install):
+        evo: EvohomeClient = mock_client.return_value
+        ctl: ControlSystem = evo._get_single_tcs()
 
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.CLIMATE, DOMAIN, broker.tcs._id
-    )
-
-    component: EntityComponent = hass.data.get(Platform.CLIMATE)  # type: ignore[assignment]
-    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
+        yield f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
 
 
 @pytest.fixture
@@ -212,7 +210,7 @@ async def zone_id(
     config: dict[str, str],
     install: MagicMock,
 ) -> AsyncGenerator[str]:
-    """Return the entity_id of the evohome integration' first Climate zone."""
+    """Return the entity_id of the evohome integration's first zone."""
 
     async for mock_client in setup_evohome(hass, config, install=install):
         evo: EvohomeClient = mock_client.return_value

@@ -1,4 +1,124 @@
 # serializer version: 1
+# name: test_ctl_set_hvac_mode[default]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[h032585]
+  list([
+    tuple(
+      'Off',
+    ),
+    tuple(
+      'Heat',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[h099625]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[minimal]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[sys_004]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[default]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[h032585]
+  list([
+    tuple(
+      'Off',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[h099625]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[minimal]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[sys_004]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[default]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[h032585]
+  list([
+    tuple(
+      'Heat',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[h099625]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[minimal]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[sys_004]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
 # name: test_zone_set_hvac_mode[default]
   list([
     tuple(
