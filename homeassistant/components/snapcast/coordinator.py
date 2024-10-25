@@ -25,7 +25,7 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
         self._server = Snapserver(hass.loop, host, port, True)
-        self._available = False
+        self.last_update_success = False
 
         self._server.set_on_update_callback(self._on_update)
         self._server.set_new_client_callback(self._on_update)
@@ -35,18 +35,17 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
     def _on_update(self) -> None:
         """Snapserver on_update callback."""
         # Assume availability if an update is received.
-        self._available = True
-        self.async_set_updated_data(None)
+        self.last_update_success = True
+        self.async_update_listeners()
 
     def _on_connect(self) -> None:
         """Snapserver on_connect callback."""
-        self._available = True
-        self.async_set_updated_data(None)
+        self.last_update_success = True
+        self.async_update_listeners()
 
     def _on_disconnect(self, ex):
         """Snapsever on_disconnect callback."""
-        self._available = False
-        self.async_set_updated_data(None)
+        self.async_set_update_error(ex)
 
     async def _async_setup(self) -> None:
         """Perform async setup for the coordinator."""
@@ -63,11 +62,6 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
         self._server.set_on_disconnect_callback(None)
         self._server.set_new_client_callback(None)
         self._server.stop()
-
-    @property
-    def available(self) -> bool:
-        """Get availability of the server."""
-        return self._available
 
     @property
     def server(self) -> Snapserver:

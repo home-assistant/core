@@ -13,8 +13,3 @@ class SnapcastCoordinatorEntity(CoordinatorEntity[SnapcastUpdateCoordinator]):
     def __init__(self, coordinator: SnapcastUpdateCoordinator) -> None:
         """Create a Snapcast entity with an update coordinator."""
         super().__init__(coordinator)
-
-    @property
-    def available(self) -> bool:
-        """Check device availability."""
-        return self.coordinator.available
