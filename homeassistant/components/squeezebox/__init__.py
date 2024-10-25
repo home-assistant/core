@@ -145,6 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         async def _discovered_player(player: Player) -> None:
             """Handle a (re)discovered player."""
             if player.player_id in known_players:
+                await player.async_update()
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_REDISCOVERED, player.player_id, player.connected
                 )

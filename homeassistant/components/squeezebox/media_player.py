@@ -183,7 +183,6 @@ class SqueezeBoxMediaPlayerEntity(
     _attr_has_entity_name = True
     _attr_name = None
     _last_update: datetime | None = None
-    _attr_available = True
 
     def __init__(
         self,
@@ -222,13 +221,12 @@ class SqueezeBoxMediaPlayerEntity(
         if self._previous_media_position != self.media_position:
             self._previous_media_position = self.media_position
             self._last_update = utcnow()
-        self._attr_available = self.coordinator.available
         self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._attr_available and super().available
+        return self.coordinator.available and super().available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
