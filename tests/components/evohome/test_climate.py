@@ -33,6 +33,168 @@ from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_ctl_set_hvac_mode(
+    hass: HomeAssistant,
+    ctl_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test SERVICE_SET_HVAC_MODE of an evohome controller."""
+
+    results = []
+
+    # SERVICE_SET_HVAC_MODE: HVACMode.OFF
+    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+                ATTR_HVAC_MODE: HVACMode.OFF,
+            },
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
+        assert mock_fcn.await_args.kwargs == {"until": None}
+
+        results.append(mock_fcn.await_args.args)
+
+    # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
+    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
+        assert mock_fcn.await_args.kwargs == {"until": None}
+
+        results.append(mock_fcn.await_args.args)
+
+    assert results == snapshot
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def _test_ctl_set_preset_mode(
+    hass: HomeAssistant,
+    ctl_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test SERVICE_SET_PRESET_MODE of an evohome controller."""
+
+    results = []
+
+    # [Reset, eco, away, home, Custom]
+    # [eco, away]
+    # []
+
+    # SERVICE_SET_PRESET_MODE: xxx
+    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+                ATTR_PRESET_MODE: "eco",
+            },
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args == ()
+        assert mock_fcn.await_args.kwargs == {}
+
+    assert results == snapshot
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_ctl_set_temperature(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test SERVICE_SET_TEMPERATURE of an evohome controller."""
+
+    # Entity climate.xxx does not support this service
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+                ATTR_TEMPERATURE: 19.1,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_ctl_turn_off(
+    hass: HomeAssistant,
+    ctl_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test SERVICE_TURN_OFF of a evohome controller."""
+
+    results = []
+
+    # SERVICE_TURN_OFF
+    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+            },
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
+        assert mock_fcn.await_args.kwargs == {"until": None}
+
+        results.append(mock_fcn.await_args.args)
+
+    assert results == snapshot
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+async def test_ctl_turn_on(
+    hass: HomeAssistant,
+    ctl_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test SERVICE_TURN_ON of a evohome controller."""
+
+    results = []
+
+    # SERVICE_TURN_ON
+    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            Platform.CLIMATE,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+            },
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args != ()  # 'Auto' or 'Heat'
+        assert mock_fcn.await_args.kwargs == {"until": None}
+
+        results.append(mock_fcn.await_args.args)
+
+    assert results == snapshot
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_zone_set_hvac_mode(
     hass: HomeAssistant,
     zone_id: str,
@@ -231,165 +393,3 @@ async def test_zone_turn_on(
         assert mock_fcn.await_count == 1
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_ctl_set_hvac_mode(
-    hass: HomeAssistant,
-    ctl_id: str,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test SERVICE_SET_HVAC_MODE of an evohome controller."""
-
-    results = []
-
-    # SERVICE_SET_HVAC_MODE: HVACMode.OFF
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            Platform.CLIMATE,
-            SERVICE_SET_HVAC_MODE,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-                ATTR_HVAC_MODE: HVACMode.OFF,
-            },
-            blocking=True,
-        )
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
-        assert mock_fcn.await_args.kwargs == {"until": None}
-
-        results.append(mock_fcn.await_args.args)
-
-    # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            Platform.CLIMATE,
-            SERVICE_SET_HVAC_MODE,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-                ATTR_HVAC_MODE: HVACMode.HEAT,
-            },
-            blocking=True,
-        )
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
-        assert mock_fcn.await_args.kwargs == {"until": None}
-
-        results.append(mock_fcn.await_args.args)
-
-    assert results == snapshot
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS)
-async def _test_ctl_set_preset_mode(
-    hass: HomeAssistant,
-    ctl_id: str,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test SERVICE_SET_PRESET_MODE of an evohome controller."""
-
-    results = []
-
-    # [Reset, eco, away, home, Custom]
-    # [eco, away]
-    # []
-
-    # SERVICE_SET_PRESET_MODE: xxx
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            Platform.CLIMATE,
-            SERVICE_SET_PRESET_MODE,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-                ATTR_PRESET_MODE: "eco",
-            },
-            blocking=True,
-        )
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
-
-    assert results == snapshot
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_ctl_set_temperature(
-    hass: HomeAssistant,
-    ctl_id: str,
-) -> None:
-    """Test SERVICE_SET_TEMPERATURE of an evohome controller."""
-
-    # Entity climate.xxx does not support this service
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            Platform.CLIMATE,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-                ATTR_TEMPERATURE: 19.1,
-            },
-            blocking=True,
-        )
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_ctl_turn_off(
-    hass: HomeAssistant,
-    ctl_id: str,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test SERVICE_TURN_OFF of a evohome controller."""
-
-    results = []
-
-    # SERVICE_TURN_OFF
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            Platform.CLIMATE,
-            SERVICE_TURN_OFF,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-            },
-            blocking=True,
-        )
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
-        assert mock_fcn.await_args.kwargs == {"until": None}
-
-        results.append(mock_fcn.await_args.args)
-
-    assert results == snapshot
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_ctl_turn_on(
-    hass: HomeAssistant,
-    ctl_id: str,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test SERVICE_TURN_ON of a evohome controller."""
-
-    results = []
-
-    # SERVICE_TURN_ON
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            Platform.CLIMATE,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: ctl_id,
-            },
-            blocking=True,
-        )
-
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args != ()  # 'Auto' or 'Heat'
-        assert mock_fcn.await_args.kwargs == {"until": None}
-
-        results.append(mock_fcn.await_args.args)
-
-    assert results == snapshot
