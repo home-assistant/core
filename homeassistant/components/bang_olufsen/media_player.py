@@ -94,7 +94,6 @@ BANG_OLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.REPEAT_SET
-    | MediaPlayerEntityFeature.SEEK
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.TURN_OFF
@@ -124,7 +123,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     _attr_icon = "mdi:speaker-wireless"
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    _attr_supported_features = BANG_OLUFSEN_FEATURES
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the media player."""
@@ -486,6 +484,17 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = BANG_OLUFSEN_FEATURES
+
+        # Add seeking if supported by the current source
+        if self._source_change.is_seekable is True:
+            features |= MediaPlayerEntityFeature.SEEK
+
+        return features
+
+    @property
     def state(self) -> MediaPlayerState:
         """Return the current state of the media player."""
         return BANG_OLUFSEN_STATES[self._state]
@@ -631,17 +640,12 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
-        if self._source_change.id == BangOlufsenSource.DEEZER.id:
-            await self._client.seek_to_position(position_ms=int(position * 1000))
-            # Try to prevent the playback progress from bouncing in the UI.
-            self._attr_media_position_updated_at = utcnow()
-            self._playback_progress = PlaybackProgress(progress=int(position))
+        await self._client.seek_to_position(position_ms=int(position * 1000))
+        # Try to prevent the playback progress from bouncing in the UI.
+        self._attr_media_position_updated_at = utcnow()
+        self._playback_progress = PlaybackProgress(progress=int(position))
 
-            self.async_write_ha_state()
-        else:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="non_deezer_seeking"
-            )
+        self.async_write_ha_state()
 
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
