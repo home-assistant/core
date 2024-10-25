@@ -1515,7 +1515,7 @@ pyegps==0.2.5
 pyeiscp==0.0.7
 
 # homeassistant.components.emoncms
-pyemoncms==0.0.7
+pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
 pyenphase==1.22.0
