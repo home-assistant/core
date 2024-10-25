@@ -30,6 +30,7 @@ CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 5
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.CLIMATE,
     Platform.FAN,
     Platform.LIGHT,
