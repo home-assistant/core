@@ -17,10 +17,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .coordinator import SmartyConfigEntry, SmartyCoordinator
+from .entity import SmartyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ async def async_setup_entry(
     )
 
 
-class SmartySensor(CoordinatorEntity[SmartyCoordinator], SensorEntity):
+class SmartySensor(SmartyEntity, SensorEntity):
     """Representation of a Smarty Sensor."""
 
     entity_description: SmartySensorDescription
