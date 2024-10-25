@@ -17,14 +17,46 @@ from homeassistant.components.media_player import (
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
-    BLUETOOTH: Final[Source] = Source(name="Bluetooth", id="bluetooth")
-    CHROMECAST: Final[Source] = Source(name="Chromecast built-in", id="chromeCast")
-    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
-    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
-    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
-    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
-    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
+    URI_STREAMER: Final[Source] = Source(
+        name="Audio Streamer",
+        id="uriStreamer",
+        is_seekable=False,
+    )
+    BLUETOOTH: Final[Source] = Source(
+        name="Bluetooth",
+        id="bluetooth",
+        is_seekable=False,
+    )
+    CHROMECAST: Final[Source] = Source(
+        name="Chromecast built-in",
+        id="chromeCast",
+        is_seekable=False,
+    )
+    LINE_IN: Final[Source] = Source(
+        name="Line-In",
+        id="lineIn",
+        is_seekable=False,
+    )
+    SPDIF: Final[Source] = Source(
+        name="Optical",
+        id="spdif",
+        is_seekable=False,
+    )
+    NET_RADIO: Final[Source] = Source(
+        name="B&O Radio",
+        id="netRadio",
+        is_seekable=False,
+    )
+    DEEZER: Final[Source] = Source(
+        name="Deezer",
+        id="deezer",
+        is_seekable=True,
+    )
+    TIDAL: Final[Source] = Source(
+        name="Tidal",
+        id="tidal",
+        is_seekable=True,
+    )
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -162,6 +194,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=False,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
+            is_seekable=False,
         ),
         Source(
             id="bluetooth",
@@ -169,6 +202,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=False,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
+            is_seekable=False,
         ),
         Source(
             id="spotify",
@@ -176,6 +210,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=False,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
+            is_seekable=True,
         ),
         Source(
             id="lineIn",
@@ -183,6 +218,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Line-In",
             type=SourceTypeEnum(value="lineIn"),
+            is_seekable=False,
         ),
         Source(
             id="spdif",
@@ -190,6 +226,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Optical",
             type=SourceTypeEnum(value="spdif"),
+            is_seekable=False,
         ),
         Source(
             id="netRadio",
@@ -197,6 +234,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="B&O Radio",
             type=SourceTypeEnum(value="netRadio"),
+            is_seekable=False,
         ),
         Source(
             id="deezer",
@@ -204,6 +242,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Deezer",
             type=SourceTypeEnum(value="deezer"),
+            is_seekable=True,
         ),
         Source(
             id="tidalConnect",
@@ -211,6 +250,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Tidal Connect",
             type=SourceTypeEnum(value="tidalConnect"),
+            is_seekable=True,
         ),
     ]
 )

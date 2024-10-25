@@ -673,10 +673,12 @@ async def test_async_media_next_track(
 @pytest.mark.parametrize(
     ("source", "expected_result", "seek_called_times"),
     [
-        # Deezer source, seek expected
+        # Seekable source, seek expected
         (BangOlufsenSource.DEEZER, does_not_raise(), 1),
-        # Non deezer source, seek shouldn't work
-        (BangOlufsenSource.TIDAL, pytest.raises(HomeAssistantError), 0),
+        # Non seekable source, seek shouldn't work
+        (BangOlufsenSource.LINE_IN, pytest.raises(HomeAssistantError), 0),
+        # Malformed source, seek shouldn't work
+        (Source(), pytest.raises(HomeAssistantError), 0),
     ],
 )
 async def test_async_media_seek(
