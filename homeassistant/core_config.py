@@ -10,6 +10,7 @@ from typing import Any, Final
 from urllib.parse import urlparse
 
 import voluptuous as vol
+from webrtc_models import RTCIceServer
 
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
@@ -54,7 +55,6 @@ from .helpers.entity_values import EntityValues
 from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
-from .util.webrtc import RTCIceServer
 
 _LOGGER = logging.getLogger(__name__)
 
