@@ -33,6 +33,10 @@ SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
         key=ThinQProperty.CURRENT_JOB_MODE,
         translation_key=ThinQProperty.CURRENT_JOB_MODE,
     ),
+    ThinQProperty.FRESH_AIR_FILTER: SelectEntityDescription(
+        key=ThinQProperty.FRESH_AIR_FILTER,
+        translation_key=ThinQProperty.FRESH_AIR_FILTER,
+    ),
 }
 AIR_FLOW_SELECT_DESC: dict[ThinQProperty, SelectEntityDescription] = {
     ThinQProperty.WIND_STRENGTH: SelectEntityDescription(
@@ -109,6 +113,7 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
         SELECT_DESC[ThinQProperty.COOK_MODE],
         OPERATION_SELECT_DESC[ThinQProperty.OVEN_OPERATION_MODE],
     ),
+    DeviceType.REFRIGERATOR: (SELECT_DESC[ThinQProperty.FRESH_AIR_FILTER],),
     DeviceType.STYLER: (OPERATION_SELECT_DESC[ThinQProperty.STYLER_OPERATION_MODE],),
     DeviceType.WASHCOMBO_MAIN: (
         OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
