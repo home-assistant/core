@@ -396,12 +396,6 @@
       "light_start_for_location": {
         "default": "mdi:clock-time-three-outline"
       },
-      "light_end": {
-        "default": "mdi:clock-time-three-outline"
-      },
-      "light_end_for_location": {
-        "default": "mdi:clock-time-three-outline"
-      },
       "power_level": {
         "default": "mdi:radiator"
       },
