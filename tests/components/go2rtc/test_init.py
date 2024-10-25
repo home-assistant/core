@@ -253,8 +253,10 @@ async def test_setup_go(
     mock_server.assert_not_called()
 
 
+ERR_BINARY_NOT_FOUND = "Could not find go2rtc docker binary"
 ERR_CONNECT = "Could not connect to go2rtc instance"
-ERR_URL = "Invalid config for 'go2rtc': invalid url"
+ERR_INVALID_URL = "Invalid config for 'go2rtc': invalid url"
+ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
 
 
 @pytest.mark.parametrize(
@@ -262,8 +264,10 @@ ERR_URL = "Invalid config for 'go2rtc': invalid url"
     [
         ({}, None, False, "KeyError: 'go2rtc'"),
         ({}, None, True, "KeyError: 'go2rtc'"),
+        ({DOMAIN: {}}, None, False, ERR_URL_REQUIRED),
+        ({DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
         ({DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
-        ({DOMAIN: {CONF_URL: "invalid"}}, None, True, ERR_URL),
+        ({DOMAIN: {CONF_URL: "invalid"}}, None, True, ERR_INVALID_URL),
         ({DOMAIN: {CONF_URL: "http://localhost:1984/"}}, None, True, ERR_CONNECT),
     ],
 )
