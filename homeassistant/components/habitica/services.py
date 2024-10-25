@@ -164,48 +164,6 @@ SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
-        vol.Required(ATTR_TASK): cv.string,
-        vol.Optional(ATTR_RENAME): cv.string,
-        vol.Optional(ATTR_DESCRIPTION): cv.string,
-        vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_REMOVE_TAG): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_ALIAS): vol.All(
-            cv.string, cv.matches_regex("^[a-zA-Z0-9-_]+$")
-        ),
-        vol.Optional(ATTR_PRIORITY): vol.All(cv.string, vol.In(set(PRIORITIES.keys()))),
-        vol.Optional(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_CLEAR_DATE): cv.boolean,
-        vol.Optional(ATTR_REMINDER): vol.All(cv.ensure_list, [cv.datetime]),
-        vol.Optional(ATTR_REMINDER_TIME): vol.All(cv.ensure_list, [cv.time]),
-        vol.Optional(ATTR_REMOVE_REMINDER): vol.All(cv.ensure_list, [cv.datetime]),
-        vol.Optional(ATTR_REMOVE_REMINDER_TIME): vol.All(cv.ensure_list, [cv.time]),
-        vol.Optional(ATTR_CLEAR_REMINDER): cv.boolean,
-        vol.Optional(ATTR_COST): vol.All(int, float),
-        vol.Optional(ATTR_ADD_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_REMOVE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_SCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_UP_DOWN): vol.All(
-            cv.ensure_list, [vol.In({"positive", "negative"})]
-        ),
-        vol.Optional(ATTR_START_DATE): cv.date,
-        vol.Optional(ATTR_FREQUENCY): vol.All(
-            cv.string, vol.In({"daily", "weekly", "monthly", "yearly"})
-        ),
-        vol.Optional(ATTR_INTERVAL): int,
-        vol.Optional(ATTR_REPEAT): vol.All(cv.ensure_list, [vol.In(WEEK_DAYS)]),
-        vol.Optional(ATTR_REPEAT_MONTHLY): vol.All(
-            cv.string, vol.In({"day_of_month", "day_of_week"})
-        ),
-        vol.Optional(ATTR_COUNTER_UP): int,
-        vol.Optional(ATTR_COUNTER_DOWN): int,
-        vol.Optional(ATTR_STREAK): int,
-    }
-)
-
 
 def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
     """Return config entry or raise if not found or not loaded."""
