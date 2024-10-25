@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE, CONSUMPTION_ID
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -40,19 +40,11 @@ async def test_device_power_sensors(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test the Sense device power sensors."""
-    await setup_platform(hass, config_entry, SENSOR_DOMAIN)
     device_1, device_2 = mock_sense.devices
-
-    state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_{CONSUMPTION_ID}")
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get(f"sensor.{DEVICE_2_NAME.lower()}_{CONSUMPTION_ID}")
-    assert state.state == STATE_UNAVAILABLE
-
     device_1.power_w = 0
     device_2.power_w = 0
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
-    await hass.async_block_till_done()
+    await setup_platform(hass, config_entry, SENSOR_DOMAIN)
+    device_1, device_2 = mock_sense.devices
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_{CONSUMPTION_ID}")
     assert state.state == "0"
@@ -90,19 +82,9 @@ async def test_voltage_sensors(
 ) -> None:
     """Test the Sense voltage sensors."""
 
-    type(mock_sense).active_voltage = PropertyMock(return_value=[0, 0])
+    type(mock_sense).active_voltage = PropertyMock(return_value=[120, 121])
 
     await setup_platform(hass, config_entry, SENSOR_DOMAIN)
-
-    state = hass.states.get("sensor.l1_voltage")
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.l2_voltage")
-    assert state.state == STATE_UNAVAILABLE
-
-    type(mock_sense).active_voltage = PropertyMock(return_value=[120, 121])
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.l1_voltage")
     assert state.state == "120"
@@ -129,18 +111,10 @@ async def test_active_power_sensors(
 ) -> None:
     """Test the Sense power sensors."""
 
-    await setup_platform(hass, config_entry, SENSOR_DOMAIN)
-
-    state = hass.states.get("sensor.energy_usage")
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.energy_production")
-    assert state.state == STATE_UNAVAILABLE
-
     type(mock_sense).active_power = PropertyMock(return_value=400)
     type(mock_sense).active_solar_power = PropertyMock(return_value=500)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
-    await hass.async_block_till_done()
+
+    await setup_platform(hass, config_entry, SENSOR_DOMAIN)
 
     state = hass.states.get("sensor.energy_usage")
     assert state.state == "400"
