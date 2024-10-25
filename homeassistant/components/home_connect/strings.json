@@ -209,6 +209,14 @@
           "aborting": "Aborting"
         }
       },
+      "door": {
+        "name": "Door",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "locked": "[%key:common::state::locked%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
       "coffee_counter": {
         "name": "Coffees"
       },
