@@ -63,7 +63,7 @@ class CloudClient(Interface):
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
         self._relayer_region: str | None = None
-        self._cloud_ice_servers_listener: Callable | None = None
+        self._cloud_ice_servers_listener: Callable[[], None] | None = None
 
     @property
     def base_path(self) -> Path:
