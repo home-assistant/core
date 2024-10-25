@@ -4,6 +4,7 @@ import struct
 
 import pytest
 
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -32,11 +33,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_COUNT,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
@@ -45,7 +48,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -1395,12 +1398,18 @@ async def test_service_sensor_update(hass: HomeAssistant, mock_modbus_ha) -> Non
     """Run test for service homeassistant.update_entity."""
     mock_modbus_ha.read_input_registers.return_value = ReadResult([27])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == "27"
     mock_modbus_ha.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == "32"
 
@@ -1413,7 +1422,7 @@ async def test_no_discovery_info_sensor(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": MODBUS_DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components
