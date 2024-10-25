@@ -75,7 +75,7 @@ class SwissPublicTransportDataUpdateCoordinator(
             try:
                 return dt_util.get_time_remaining(departure_datetime, 2)
             except ValueError:
-                return "-" + dt_util.get_age(departure_datetime)
+                return "-" + dt_util.get_age(departure_datetime, 2)
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
