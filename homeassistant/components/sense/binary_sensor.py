@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -66,6 +67,14 @@ class SenseBinarySensor(
         self._attr_unique_id = f"{sense_monitor_id}-{self._id}"
         self._attr_icon = sense_to_mdi(device.icon)
         self._device = device
+        self._attr_device_info = DeviceInfo(
+            name=f"Sense {sense_monitor_id} - {device.name}",
+            identifiers={(DOMAIN, f"{sense_monitor_id}:{device.id}")},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+            via_device=(DOMAIN, f"{sense_monitor_id}"),
+        )
 
     @property
     def old_unique_id(self) -> str:

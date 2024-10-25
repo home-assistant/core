@@ -93,16 +93,10 @@ async def async_setup_entry(
 
     sense_monitor_id = data.sense_monitor_id
 
-    entities: list[SensorEntity] = []
-
-    for device in config_entry.runtime_data.data.devices:
-        entities.append(
-            SenseDevicePowerSensor(device, sense_monitor_id, realtime_coordinator)
-        )
-        entities += [
-            SenseDeviceEnergySensor(device, scale, trends_coordinator, sense_monitor_id)
-            for scale in Scale
-        ]
+    entities: list[SensorEntity] = [
+        SenseDevicePowerSensor(device, sense_monitor_id, realtime_coordinator)
+        for device in config_entry.runtime_data.data.devices
+    ]
 
     for variant_id, variant_name in SENSOR_VARIANTS:
         entities.append(
@@ -295,48 +289,10 @@ class SenseDevicePowerSensor(SenseBaseSensor):
             model="Sense",
             manufacturer="Sense Labs, Inc.",
             configuration_url="https://home.sense.com",
+            via_device=(DOMAIN, f"{sense_monitor_id}"),
         )
 
     @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._device.power_w
-
-
-class SenseDeviceEnergySensor(SenseBaseSensor):
-    """Implementation of a Sense device energy sensor."""
-
-    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_device_class = SensorDeviceClass.ENERGY
-
-    def __init__(
-        self,
-        device: SenseDevice,
-        scale: Scale,
-        trends_coordinator: SenseTrendCoordinator,
-        sense_monitor_id: str,
-    ) -> None:
-        """Initialize the Sense sensor."""
-        super().__init__(
-            trends_coordinator,
-            sense_monitor_id,
-            f"{device.id}-{TRENDS_SENSOR_TYPES[scale].lower()}",
-        )
-        self._attr_name = f"{device.name} {TRENDS_SENSOR_TYPES[scale]} Energy"
-        self._scale = scale
-        self._had_any_update = False
-        self._attr_icon = sense_to_mdi(device.icon)
-        self._device = device
-        self._attr_device_info = DeviceInfo(
-            name=f"Sense - {device.name}",
-            identifiers={(DOMAIN, f"{sense_monitor_id}:{device.id}")},
-            model="Sense",
-            manufacturer="Sense Labs, Inc.",
-            configuration_url="https://home.sense.com",
-        )
-
-    @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
-        return round(self._device.energy_kwh[self._scale], 2)
