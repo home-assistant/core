@@ -1052,7 +1052,7 @@ knx-frontend==2024.9.10.221729
 konnected==1.2.0
 
 # homeassistant.components.kraken
-krakenex==2.1.0
+krakenex==2.2.2
 
 # homeassistant.components.lacrosse_view
 lacrosse-view==1.0.2

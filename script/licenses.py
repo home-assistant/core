@@ -157,7 +157,6 @@ EXCEPTIONS = {
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
-    "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
