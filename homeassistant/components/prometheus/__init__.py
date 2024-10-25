@@ -89,6 +89,7 @@ CONF_OVERRIDE_METRIC = "override_metric"
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
     {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
+ALLOWED_METRIC_CHARS = set(string.ascii_letters + string.digits + "_:")
 
 DEFAULT_NAMESPACE = "homeassistant"
 
@@ -325,12 +326,7 @@ class PrometheusMetrics:
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
         return "".join(
-            [
-                c
-                if c in string.ascii_letters + string.digits + "_:"
-                else f"u{hex(ord(c))}"
-                for c in metric
-            ]
+            [c if c in ALLOWED_METRIC_CHARS else f"u{hex(ord(c))}" for c in metric]
         )
 
     @staticmethod
