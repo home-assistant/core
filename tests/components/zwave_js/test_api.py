@@ -949,7 +949,7 @@ async def test_add_node(
     node_data["values"] = {}
     node_data["endpoints"] = {}
     node = Node(client, node_data)
-    client.driver.controller.nodes[1] = node
+    client.driver.controller.nodes[node.node_id] = node
 
     await ws_client.send_json(
         {

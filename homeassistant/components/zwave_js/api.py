@@ -788,38 +788,39 @@ async def websocket_add_node(
     ]
     msg[DATA_UNSUBSCRIBE] = unsubs
 
-    try:
-        if controller.inclusion_state == InclusionState.INCLUDING:
-            connection.send_result(
-                msg[ID],
-                True,  # Inclusion is already in progress
-            )
-            # Check for nodes that have been added but not fully included
-            for node in controller.nodes.values():
-                if node.status != NodeStatus.DEAD and not node.ready:
-                    forward_node_added(
-                        node,
-                        not node.is_secure,
-                        None,
-                    )
-        else:
+    if controller.inclusion_state == InclusionState.INCLUDING:
+        connection.send_result(
+            msg[ID],
+            True,  # Inclusion is already in progress
+        )
+        # Check for nodes that have been added but not fully included
+        for node in controller.nodes.values():
+            if node.status != NodeStatus.DEAD and not node.ready:
+                forward_node_added(
+                    node,
+                    not node.is_secure,
+                    None,
+                )
+    else:
+        try:
             result = await controller.async_begin_inclusion(
                 INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
                 force_security=force_security,
                 provisioning=provisioning,
                 dsk=dsk,
             )
-            connection.send_result(
+        except ValueError as err:
+            connection.send_error(
                 msg[ID],
-                result,
+                ERR_INVALID_FORMAT,
+                err.args[0],
             )
-    except ValueError as err:
-        connection.send_error(
+            return
+
+        connection.send_result(
             msg[ID],
-            ERR_INVALID_FORMAT,
-            err.args[0],
+            result,
         )
-        return
 
 
 @websocket_api.require_admin
