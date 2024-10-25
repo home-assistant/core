@@ -71,8 +71,11 @@ from .issues import raise_mirrored_entries, raise_no_prob_given_false
 _LOGGER = logging.getLogger(__name__)
 
 
-def _above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
-    if config[CONF_PLATFORM] == CONF_NUMERIC_STATE:
+def above_greater_than_below(
+    config: dict[str, Any], type_key: str = CONF_PLATFORM
+) -> dict[str, Any]:
+    """If the observation is of type/platform NUMERIC_STATE then ensure that the value give for 'above' is not greater than that for 'below'. Also check that at least one of the two is specified."""
+    if config[type_key] == CONF_NUMERIC_STATE:
         above = config.get(CONF_ABOVE)
         below = config.get(CONF_BELOW)
         if above is None and below is None:
@@ -106,13 +109,14 @@ NUMERIC_STATE_SCHEMA = vol.All(
         },
         required=True,
     ),
-    _above_greater_than_below,
+    above_greater_than_below,
 )
 
 
-def _no_overlapping(configs: list[dict]) -> list[dict]:
+def no_overlapping(configs: list[dict], type_key: str = CONF_PLATFORM) -> list[dict]:
+    "For a list of observations ensure that there are no overlapping intervals for NUMERIC_STATE observations for the same entity."
     numeric_configs = [
-        config for config in configs if config[CONF_PLATFORM] == CONF_NUMERIC_STATE
+        config for config in configs if config[type_key] == CONF_NUMERIC_STATE
     ]
     if len(numeric_configs) < 2:
         return configs
@@ -169,7 +173,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
             vol.All(
                 cv.ensure_list,
                 [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
-                _no_overlapping,
+                no_overlapping,
             )
         ),
         vol.Required(CONF_PRIOR): vol.Coerce(float),

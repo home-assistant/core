@@ -35,6 +35,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
+from .binary_sensor import above_greater_than_below, no_overlapping
 from .const import (
     CONF_INDEX,
     CONF_OBSERVATIONS,
@@ -228,6 +229,7 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     },
 ).extend(OBSERVATION_BOILERPLATE.schema)
 
+
 TEMPLATE_SUBSCHEMA = vol.Schema(
     {
         vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
@@ -413,9 +415,14 @@ async def _validate_observation_setup(
     observations: list[dict[str, Any]] = handler.options.setdefault(
         CONF_OBSERVATIONS, []
     )
+
     if idx := handler.options.get(CONF_INDEX):
         # if there is an index, that means we are in observation editing mode and we want to overwrite not append
         user_input[CONF_TYPE] = observations[int(idx)][CONF_TYPE]
+        if user_input[CONF_TYPE] == ObservationTypes.NUMERIC_STATE:
+            above_greater_than_below(user_input, type_key=CONF_TYPE)
+            no_overlapping([*observations, user_input], type_key=CONF_TYPE)
+
         observations[int(idx)] = user_input
 
         # remove the index so it can not be saved
@@ -423,7 +430,12 @@ async def _validate_observation_setup(
     elif handler.parent_handler.cur_step is not None:
         # if we are in adding mode we need to record the platform from the step id
         user_input[CONF_TYPE] = handler.parent_handler.cur_step["step_id"]
+        if user_input[CONF_TYPE] == ObservationTypes.NUMERIC_STATE:
+            above_greater_than_below(user_input, type_key=CONF_TYPE)
+            no_overlapping([*observations, user_input], type_key=CONF_TYPE)
+
         observations.append(user_input)
+
     _LOGGER.debug("Added observation with settings: %s", user_input)
     return {"add_another": True} if add_another else {}
 

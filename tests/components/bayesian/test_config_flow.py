@@ -323,6 +323,138 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
+    """Test a Bayesian sensor with just more than one numeric_state observation added.
+
+    Technically a subset of the tests in test_config_flow() but may help to
+    narrow down errors more quickly.
+    """
+
+    with patch(
+        "homeassistant.components.bayesian.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result0 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result0["step_id"] == str(ConfigFlowSteps.USER)
+        assert result0["type"] is FlowResultType.FORM
+
+        result1 = await hass.config_entries.flow.async_configure(
+            result0["flow_id"],
+            {
+                CONF_NAME: "Nice day",
+                CONF_PROBABILITY_THRESHOLD: 51,
+                CONF_PRIOR: 20,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result1["type"] is FlowResultType.MENU
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
+        )
+        await hass.async_block_till_done()
+
+        assert result2["step_id"] == str(ObservationTypes.NUMERIC_STATE)
+        assert result2["type"] is FlowResultType.FORM
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.outside_temperature",
+                CONF_ABOVE: 20,
+                CONF_BELOW: 35,
+                CONF_P_GIVEN_T: 95,
+                CONF_P_GIVEN_F: 8,
+                CONF_NAME: "20 - 35 outside",
+                "add_another": True,
+            },
+        )
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
+        )
+        await hass.async_block_till_done()
+
+        # This should fail as overlapping ranges for the same entity are not allowed
+        with pytest.raises(vol.Invalid) as excinfo:
+            await hass.config_entries.flow.async_configure(
+                result4["flow_id"],
+                {
+                    CONF_ENTITY_ID: "sensor.outside_temperature",
+                    CONF_ABOVE: 30,
+                    CONF_BELOW: 40,
+                    CONF_P_GIVEN_T: 95,
+                    CONF_P_GIVEN_F: 8,
+                    CONF_NAME: "30 - 40 outside",
+                    "add_another": False,
+                },
+            )
+        assert (
+            excinfo.value.error_message
+            == "Ranges for bayesian numeric state entities must not overlap, but sensor.outside_temperature has overlapping ranges, above:20.0, below:35.0 overlaps with above:30.0, below:40.0."
+        )
+
+        # This should fail as above should always be less than below
+        with pytest.raises(vol.Invalid) as excinfo:
+            await hass.config_entries.flow.async_configure(
+                result4["flow_id"],
+                {
+                    CONF_ENTITY_ID: "sensor.outside_temperature",
+                    CONF_ABOVE: 40,
+                    CONF_BELOW: 35,
+                    CONF_P_GIVEN_T: 95,
+                    CONF_P_GIVEN_F: 8,
+                    CONF_NAME: "35 - 40 outside",
+                    "add_another": False,
+                },
+            )
+        assert excinfo.value.error_message == "'above' is greater than 'below'"
+
+        # This should work
+        result5 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.outside_temperature",
+                CONF_ABOVE: 35,
+                CONF_BELOW: 40,
+                CONF_P_GIVEN_T: 70,
+                CONF_P_GIVEN_F: 20,
+                CONF_NAME: "35 - 40 outside",
+                "add_another": False,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result5["version"] == 1
+        assert result5["options"] == {
+            CONF_NAME: "Nice day",
+            CONF_PROBABILITY_THRESHOLD: 0.51,
+            CONF_PRIOR: 0.2,
+            CONF_OBSERVATIONS: [
+                {
+                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_ENTITY_ID: "sensor.outside_temperature",
+                    CONF_ABOVE: 20.0,
+                    CONF_BELOW: 35.0,
+                    CONF_P_GIVEN_T: 0.95,
+                    CONF_P_GIVEN_F: 0.08,
+                    CONF_NAME: "20 - 35 outside",
+                },
+                {
+                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_ENTITY_ID: "sensor.outside_temperature",
+                    CONF_ABOVE: 35.0,
+                    CONF_BELOW: 40.0,
+                    CONF_P_GIVEN_T: 0.7,
+                    CONF_P_GIVEN_F: 0.2,
+                    CONF_NAME: "35 - 40 outside",
+                },
+            ],
+        }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_single_template_observation(hass: HomeAssistant) -> None:
     """Test a Bayesian sensor with just one template observation added.
 
