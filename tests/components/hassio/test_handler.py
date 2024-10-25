@@ -150,26 +150,6 @@ async def test_api_core_info_error(
     assert aioclient_mock.call_count == 1
 
 
-async def test_api_homeassistant_stop(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Home Assistant stop."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/stop", json={"result": "ok"})
-
-    assert await hassio_handler.stop_homeassistant()
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_homeassistant_restart(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Home Assistant restart."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/restart", json={"result": "ok"})
-
-    assert await hassio_handler.restart_homeassistant()
-    assert aioclient_mock.call_count == 1
-
-
 async def test_api_core_stats(
     hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -229,7 +209,6 @@ async def test_api_ingress_panels(
     ("api_call", "method", "payload"),
     [
         ("get_resolution_info", "GET", None),
-        ("refresh_updates", "POST", None),
         ("update_diagnostics", "POST", True),
     ],
 )

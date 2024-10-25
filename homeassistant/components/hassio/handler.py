@@ -245,30 +245,6 @@ class HassIO:
         """
         return self.send_command("/ingress/panels", method="get")
 
-    @_api_bool
-    def restart_homeassistant(self) -> Coroutine:
-        """Restart Home-Assistant container.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/homeassistant/restart")
-
-    @_api_bool
-    def stop_homeassistant(self) -> Coroutine:
-        """Stop Home-Assistant container.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/homeassistant/stop")
-
-    @_api_bool
-    def refresh_updates(self) -> Coroutine:
-        """Refresh available updates.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/refresh_updates", timeout=300)
-
     @api_data
     def get_resolution_info(self) -> Coroutine:
         """Return data for Supervisor resolution center.

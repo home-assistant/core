@@ -74,9 +74,6 @@ def hassio_stubs(
         patch(
             "homeassistant.components.hassio.issues.SupervisorIssues.setup",
         ),
-        patch(
-            "homeassistant.components.hassio.HassIO.refresh_updates",
-        ),
     ):
         hass.set_state(CoreState.starting)
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
@@ -140,7 +137,6 @@ def all_setup_requests(
     )
 
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -221,7 +217,6 @@ def all_setup_requests(
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
     addon_installed.return_value.update_available = False
     addon_installed.return_value.version = "1.0.0"

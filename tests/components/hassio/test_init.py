@@ -22,7 +22,6 @@ from homeassistant.components.hassio import (
     is_hassio,
 )
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -63,7 +62,6 @@ def mock_all(
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -198,7 +196,6 @@ def mock_all(
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/resolution/info",
         json={
@@ -911,129 +908,108 @@ async def test_device_registry_calls(
 
 @pytest.mark.usefixtures("addon_installed")
 async def test_coordinator_updates(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, supervisor_client: AsyncMock
 ) -> None:
     """Test coordinator updates."""
     await async_setup_component(hass, "homeassistant", {})
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.HassIO.refresh_updates"
-        ) as refresh_updates_mock,
-    ):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Initial refresh, no update refresh call
-        assert refresh_updates_mock.call_count == 0
+        supervisor_client.refresh_updates.assert_not_called()
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
-    ) as refresh_updates_mock:
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
-        await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    await hass.async_block_till_done()
 
-        # Scheduled refresh, no update refresh call
-        assert refresh_updates_mock.call_count == 0
+    # Scheduled refresh, no update refresh call
+    supervisor_client.refresh_updates.assert_not_called()
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
-    ) as refresh_updates_mock:
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {
-                "entity_id": [
-                    "update.home_assistant_core_update",
-                    "update.home_assistant_supervisor_update",
-                ]
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {
+            "entity_id": [
+                "update.home_assistant_core_update",
+                "update.home_assistant_supervisor_update",
+            ]
+        },
+        blocking=True,
+    )
 
-        # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
-        assert refresh_updates_mock.call_count == 0
-        async_fire_time_changed(
-            hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
-        )
-        await hass.async_block_till_done()
-        assert refresh_updates_mock.call_count == 1
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    supervisor_client.refresh_updates.assert_not_called()
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+    supervisor_client.refresh_updates.assert_called_once()
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
-        side_effect=HassioAPIError("Unknown"),
-    ) as refresh_updates_mock:
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {
-                "entity_id": [
-                    "update.home_assistant_core_update",
-                    "update.home_assistant_supervisor_update",
-                ]
-            },
-            blocking=True,
-        )
-        # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
-        async_fire_time_changed(
-            hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
-        )
-        await hass.async_block_till_done()
-        assert refresh_updates_mock.call_count == 1
-        assert "Error on Supervisor API: Unknown" in caplog.text
+    supervisor_client.refresh_updates.reset_mock()
+    supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {
+            "entity_id": [
+                "update.home_assistant_core_update",
+                "update.home_assistant_supervisor_update",
+            ]
+        },
+        blocking=True,
+    )
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+    supervisor_client.refresh_updates.assert_called_once()
+    assert "Error on Supervisor API: Unknown" in caplog.text
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "addon_installed")
 async def test_coordinator_updates_stats_entities_enabled(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    supervisor_client: AsyncMock,
 ) -> None:
     """Test coordinator updates with stats entities enabled."""
     await async_setup_component(hass, "homeassistant", {})
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.HassIO.refresh_updates"
-        ) as refresh_updates_mock,
-    ):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         # Initial refresh without stats
-        assert refresh_updates_mock.call_count == 0
+        supervisor_client.refresh_updates.assert_not_called()
 
         # Refresh with stats once we know which ones are needed
         async_fire_time_changed(
             hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
         )
         await hass.async_block_till_done()
-        assert refresh_updates_mock.call_count == 1
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
-    ) as refresh_updates_mock:
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
-        await hass.async_block_till_done()
-        assert refresh_updates_mock.call_count == 0
+        supervisor_client.refresh_updates.assert_called_once()
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
-    ) as refresh_updates_mock:
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {
-                "entity_id": [
-                    "update.home_assistant_core_update",
-                    "update.home_assistant_supervisor_update",
-                ]
-            },
-            blocking=True,
-        )
-        assert refresh_updates_mock.call_count == 0
+    supervisor_client.refresh_updates.reset_mock()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    await hass.async_block_till_done()
+    supervisor_client.refresh_updates.assert_not_called()
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {
+            "entity_id": [
+                "update.home_assistant_core_update",
+                "update.home_assistant_supervisor_update",
+            ]
+        },
+        blocking=True,
+    )
+    supervisor_client.refresh_updates.assert_not_called()
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
@@ -1041,28 +1017,26 @@ async def test_coordinator_updates_stats_entities_enabled(
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.refresh_updates",
-        side_effect=HassioAPIError("Unknown"),
-    ) as refresh_updates_mock:
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {
-                "entity_id": [
-                    "update.home_assistant_core_update",
-                    "update.home_assistant_supervisor_update",
-                ]
-            },
-            blocking=True,
-        )
-        # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
-        async_fire_time_changed(
-            hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
-        )
-        await hass.async_block_till_done()
-        assert refresh_updates_mock.call_count == 1
-        assert "Error on Supervisor API: Unknown" in caplog.text
+    supervisor_client.refresh_updates.reset_mock()
+    supervisor_client.refresh_updates.side_effect = SupervisorError("Unknown")
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {
+            "entity_id": [
+                "update.home_assistant_core_update",
+                "update.home_assistant_supervisor_update",
+            ]
+        },
+        blocking=True,
+    )
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+    supervisor_client.refresh_updates.assert_called_once()
+    assert "Error on Supervisor API: Unknown" in caplog.text
 
 
 @pytest.mark.parametrize(

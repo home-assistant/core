@@ -468,9 +468,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
         """Stop or restart home assistant."""
         if restart:
-            await hassio.restart_homeassistant()
+            await supervisor_client.homeassistant.restart()
         else:
-            await hassio.stop_homeassistant()
+            await supervisor_client.homeassistant.stop()
 
     # Set a custom handler for the homeassistant.restart and homeassistant.stop services
     async_set_stop_handler(hass, _async_stop)
