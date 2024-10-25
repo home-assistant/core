@@ -128,7 +128,7 @@ async def async_setup_entry(
         if not isinstance(device, ElectricityXMix):
             return
 
-        sensor_type = DEVICETYPE_SENSOR.get(device.device_type)
+        sensor_type = DEVICETYPE_SENSOR.get(device.device_type, "")
 
         descriptions: tuple[RefossSensorEntityDescription, ...] = SENSORS.get(
             sensor_type, ()
