@@ -604,11 +604,6 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 )
 
             current_start_date = start_date or to_date(current_task["startDate"])
-            if not current_start_date:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="frequency_not_monthly",
-                )
 
             if TYPE_CHECKING:
                 assert isinstance(current_start_date, date)
