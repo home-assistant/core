@@ -7,7 +7,7 @@ import logging
 from snapcast.control.server import Snapserver
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,10 @@ class SnapcastUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_setup(self) -> None:
         """Perform async setup for the coordinator."""
         # Start the server
-        await self._server.start()
+        try:
+            await self._server.start()
+        except OSError as ex:
+            raise UpdateFailed from ex
 
     async def _async_update_data(self) -> None:
         """Empty update method since data is pushed."""
