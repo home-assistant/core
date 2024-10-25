@@ -10,6 +10,7 @@ import os
 import re
 from typing import Any, NamedTuple
 
+from aiohasupervisor import SupervisorError
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -306,8 +307,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
+    supervisor_client = get_supervisor_client(hass)
 
-    if not await hassio.is_connected():
+    try:
+        await supervisor_client.supervisor.ping()
+    except SupervisorError:
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
     store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)

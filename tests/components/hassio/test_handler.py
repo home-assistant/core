@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-import aiohttp
 from aiohttp import hdrs, web
 import pytest
 
@@ -14,36 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_api_ping(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping."""
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
-
-    assert await hassio_handler.is_connected()
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_ping_error(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping error."""
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "error"})
-
-    assert not (await hassio_handler.is_connected())
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_ping_exeption(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping exception."""
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", exc=aiohttp.ClientError())
-
-    assert not (await hassio_handler.is_connected())
-    assert aioclient_mock.call_count == 1
 
 
 async def test_api_info(

@@ -173,14 +173,6 @@ class HassIO:
         """Return base url for Supervisor."""
         return self._base_url
 
-    @_api_bool
-    def is_connected(self) -> Coroutine:
-        """Return true if it connected to Hass.io supervisor.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/supervisor/ping", method="get", timeout=15)
-
     @api_data
     def get_info(self) -> Coroutine:
         """Return generic Supervisor information.

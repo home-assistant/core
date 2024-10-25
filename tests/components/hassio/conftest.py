@@ -32,14 +32,10 @@ def disable_security_filter() -> Generator[None]:
 
 
 @pytest.fixture
-def hassio_env() -> Generator[None]:
+def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
     """Fixture to inject hassio env."""
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch(
-            "homeassistant.components.hassio.HassIO.is_connected",
-            return_value={"result": "ok", "data": {}},
-        ),
         patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
         patch(
             "homeassistant.components.hassio.HassIO.get_info",

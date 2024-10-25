@@ -464,6 +464,13 @@ def addon_changelog_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.store.addon_changelog
 
 
+@pytest.fixture(name="supervisor_is_connected")
+def supervisor_is_connected_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock supervisor is connected."""
+    supervisor_client.supervisor.ping.return_value = None
+    return supervisor_client.supervisor.ping
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
