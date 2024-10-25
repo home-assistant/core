@@ -260,10 +260,27 @@ ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
 
 
 @pytest.mark.parametrize(
+    ("config", "go2rtc_binary", "is_docker_env"),
+    [
+        ({}, None, False),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "mock_server")
+async def test_non_user_setup_with_error(
+    hass: HomeAssistant,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup integration does not fail if not setup by user."""
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+
+@pytest.mark.parametrize(
     ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
     [
-        ({}, None, False, "KeyError: 'go2rtc'"),
-        ({}, None, True, "KeyError: 'go2rtc'"),
+        ({}, None, True, ERR_BINARY_NOT_FOUND),
+        ({}, "/usr/bin/go2rtc", True, ERR_CONNECT),
         ({DOMAIN: {}}, None, False, ERR_URL_REQUIRED),
         ({DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
         ({DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
