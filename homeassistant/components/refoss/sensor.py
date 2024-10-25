@@ -31,6 +31,7 @@ from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
+    SENSOR_EM,
 )
 from .entity import RefossEntity
 
