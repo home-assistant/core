@@ -138,7 +138,7 @@ async def _async_add_missing_entry_unique_id(
 ) -> None:
     """Add the unique id if its missing."""
     address: str = entry.data[CONF_HOST]
-    api_version: int | None = entry.data.get(CONF_API_VERSION, None)
+    api_version: int | None = entry.data.get(CONF_API_VERSION)
     api = await async_connect_hub(hass, address, api_version)
     hass.config_entries.async_update_entry(
         entry, unique_id=api.device_info.serial_number
