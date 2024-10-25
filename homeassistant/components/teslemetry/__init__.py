@@ -76,15 +76,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             teslemetry.metadata(),
             teslemetry.products(),
         )
-        scopes = calls[0]["scopes"]
-        region = calls[0]["region"]
-        products = calls[1]["response"]
     except InvalidToken as e:
         raise ConfigEntryAuthFailed from e
     except SubscriptionRequired as e:
         raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
+
+    scopes = calls[0]["scopes"]
+    region = calls[0]["region"]
+    products = calls[1]["response"]
 
     device_registry = dr.async_get(hass)
 
