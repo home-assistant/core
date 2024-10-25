@@ -316,7 +316,7 @@ aionut==4.3.3
 aiooncue==0.3.7
 
 # homeassistant.components.openexchangerates
-aioopenexchangerates==0.6.2
+aioopenexchangerates==0.6.8
 
 # homeassistant.components.nmap_tracker
 aiooui==0.1.6
