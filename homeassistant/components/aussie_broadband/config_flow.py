@@ -11,7 +11,7 @@ from aussiebb.const import FETCH_TYPES
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERVICES, DOMAIN
@@ -105,7 +105,10 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={"username": self._reauth_username},
+            description_placeholders={
+                CONF_NAME: self._get_reauth_entry().title,
+                "username": self._reauth_username,
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): str,
