@@ -20,6 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache import cached_property
 import voluptuous as vol
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -63,7 +64,6 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
-from homeassistant.util.webrtc import RTCIceServer, WebRTCClientConfiguration
 
 from .const import (  # noqa: F401
     _DEPRECATED_STREAM_TYPE_HLS,
@@ -90,6 +90,7 @@ from .webrtc import (
     CameraWebRTCProvider,
     WebRTCAnswer,
     WebRTCCandidate,  # noqa: F401
+    WebRTCClientConfiguration,
     WebRTCError,
     WebRTCMessage,  # noqa: F401
     WebRTCSendMessage,
