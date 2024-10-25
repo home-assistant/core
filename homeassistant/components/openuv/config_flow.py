@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_NAME,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -153,6 +154,7 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_SCHEMA,
                 description_placeholders={
+                    CONF_NAME: self._get_reauth_entry().title,
                     CONF_LATITUDE: self._reauth_data[CONF_LATITUDE],
                     CONF_LONGITUDE: self._reauth_data[CONF_LONGITUDE],
                 },

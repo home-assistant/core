@@ -121,6 +121,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
+            description_placeholders={CONF_NAME: self._get_reauth_entry().title},
             errors=errors or {},
         )
 

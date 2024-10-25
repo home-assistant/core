@@ -13,7 +13,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -39,7 +39,10 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="reauth_confirm")
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

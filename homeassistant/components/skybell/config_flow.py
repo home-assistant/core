@@ -9,7 +9,7 @@ from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -44,7 +44,10 @@ class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
-            description_placeholders={CONF_EMAIL: self.reauth_email},
+            description_placeholders={
+                CONF_EMAIL: self.reauth_email,
+                CONF_NAME: self._get_reauth_entry().title,
+            },
             errors=errors,
         )
 

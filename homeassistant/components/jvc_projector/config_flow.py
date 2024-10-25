@@ -10,7 +10,7 @@ from jvcprojector.projector import DEFAULT_PORT
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_host_valid
 
@@ -103,6 +103,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
+            description_placeholders={CONF_NAME: self._get_reauth_entry().title},
             errors=errors,
         )
 
