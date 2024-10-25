@@ -10,7 +10,7 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN, LOGGER
@@ -85,7 +85,8 @@ class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 description_placeholders={
-                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME]
+                    CONF_NAME: self._get_reauth_entry().title,
+                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
                 },
             )
 

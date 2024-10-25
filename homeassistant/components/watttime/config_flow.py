@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_SHOW_ON_MAP,
     CONF_USERNAME,
@@ -209,7 +210,10 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_CONFIRM_DATA_SCHEMA,
-                description_placeholders={CONF_USERNAME: self._data[CONF_USERNAME]},
+                description_placeholders={
+                    CONF_NAME: self._get_reauth_entry().title,
+                    CONF_USERNAME: self._data[CONF_USERNAME],
+                },
             )
 
         self._data[CONF_PASSWORD] = user_input[CONF_PASSWORD]

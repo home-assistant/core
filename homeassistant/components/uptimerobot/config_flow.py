@@ -16,7 +16,7 @@ from pyuptimerobot import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import API_ATTR_OK, DOMAIN, LOGGER
@@ -97,7 +97,9 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
             )
         errors, account = await self._validate_input(user_input)
         if account:

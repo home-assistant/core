@@ -112,7 +112,10 @@ class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         if user_input is None:
-            return self._async_show_user_form("reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+            )
 
         self.data.update(user_input)
         conf_result = await self.hass.async_add_executor_job(

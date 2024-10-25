@@ -10,7 +10,7 @@ from aioridwell.errors import InvalidCredentialsError, RidwellError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -96,7 +96,10 @@ class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_CONFIRM_DATA_SCHEMA,
-                description_placeholders={CONF_USERNAME: self._username},
+                description_placeholders={
+                    CONF_NAME: self._get_reauth_entry().title,
+                    CONF_USERNAME: self._username,
+                },
             )
 
         self._password = user_input[CONF_PASSWORD]

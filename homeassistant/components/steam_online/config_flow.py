@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
@@ -109,7 +109,11 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         return self.async_show_form(
-            step_id="reauth_confirm", description_placeholders=PLACEHOLDERS
+            step_id="reauth_confirm",
+            description_placeholders={
+                CONF_NAME: self._get_reauth_entry().title,
+                **PLACEHOLDERS,
+            },
         )
 
 

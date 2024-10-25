@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.util.uuid import random_uuid_hex
 
@@ -136,7 +136,10 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(reauth_entry, data=new_input)
 
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=REAUTH_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm",
+            data_schema=REAUTH_DATA_SCHEMA,
+            description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+            errors=errors,
         )
 
     @staticmethod
