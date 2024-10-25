@@ -102,14 +102,13 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """Call the given api and handle exception."""
         try:
             await target
-        except (ThinQAPIException, ValueError) as exc:
+        except ThinQAPIException as exc:
             if on_fail_method:
                 on_fail_method()
-
             raise ServiceValidationError(
-                exc.message if isinstance(exc, ThinQAPIException) else str(exc),
-                translation_domain=DOMAIN,
-                translation_key=(
-                    exc.code if isinstance(exc, ThinQAPIException) else None
-                ),
+                exc.message, translation_domain=DOMAIN, translation_key=exc.code
             ) from exc
+        except ValueError as exc:
+            if on_fail_method:
+                on_fail_method()
+            raise ServiceValidationError(exc) from exc
