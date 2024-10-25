@@ -45,13 +45,13 @@ class SenseDevicesData:
 
     def __init__(self) -> None:
         """Create."""
-        self._data_by_device: dict[str, str] = {}
+        self._data_by_device: dict[str, dict[str, Any]] = {}
 
-    def set_devices_data(self, devices: dict[str, str]) -> None:
+    def set_devices_data(self, devices: list[dict[str, Any]]) -> None:
         """Store a device update."""
         self._data_by_device = {device["id"]: device for device in devices}
 
-    def get_device_by_id(self, sense_device_id: str) -> str:
+    def get_device_by_id(self, sense_device_id: str) -> dict[str, Any] | None:
         """Get the latest device data."""
         return self._data_by_device.get(sense_device_id)
 
