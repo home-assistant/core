@@ -43,15 +43,15 @@ type SenseConfigEntry = ConfigEntry[SenseData]
 class SenseDevicesData:
     """Data for each sense device."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create."""
-        self._data_by_device = {}
+        self._data_by_device: dict[str, str] = {}
 
-    def set_devices_data(self, devices):
+    def set_devices_data(self, devices: dict):
         """Store a device update."""
         self._data_by_device = {device["id"]: device for device in devices}
 
-    def get_device_by_id(self, sense_device_id):
+    def get_device_by_id(self, sense_device_id: str):
         """Get the latest device data."""
         return self._data_by_device.get(sense_device_id)
 
@@ -117,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
-    async def _async_update_trend():
+    async def _async_update_trend() -> None:
         """Update the trend data."""
         try:
             await gateway.update_trend_data()
@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def async_sense_update(_):
+    async def async_sense_update(_) -> None:
         """Retrieve latest state."""
         try:
             await gateway.update_realtime()
