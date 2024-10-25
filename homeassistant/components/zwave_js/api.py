@@ -790,12 +790,13 @@ async def websocket_add_node(
 
     try:
         if controller.inclusion_state == InclusionState.INCLUDING:
-            result = True  # Inclusion is already in progress
+            connection.send_result(
+                msg[ID],
+                True,  # Inclusion is already in progress
+            )
             # Check for nodes that have been added but not fully included
             for node in controller.nodes.values():
-                if node.node_id == 3 or (
-                    node.status != NodeStatus.DEAD and not node.ready
-                ):
+                if node.status != NodeStatus.DEAD and not node.ready:
                     forward_node_added(
                         node,
                         not node.is_secure,
@@ -808,6 +809,10 @@ async def websocket_add_node(
                 provisioning=provisioning,
                 dsk=dsk,
             )
+            connection.send_result(
+                msg[ID],
+                result,
+            )
     except ValueError as err:
         connection.send_error(
             msg[ID],
@@ -815,11 +820,6 @@ async def websocket_add_node(
             err.args[0],
         )
         return
-
-    connection.send_result(
-        msg[ID],
-        result,
-    )
 
 
 @websocket_api.require_admin
