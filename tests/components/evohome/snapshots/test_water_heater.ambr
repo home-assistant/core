@@ -2,18 +2,8 @@
 # name: test_set_operation_mode[default]
   list([
     tuple(
-      dict({
-        'mode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'state': <DhwState.OFF: 'Off'>,
-        'untilTime': '2024-07-10T12:00:00Z',
-      }),
     ),
     tuple(
-      dict({
-        'mode': <ZoneMode.TEMPORARY_OVERRIDE: 'TemporaryOverride'>,
-        'state': <DhwState.ON: 'On'>,
-        'untilTime': '2024-07-10T12:00:00Z',
-      }),
     ),
   ])
 # ---

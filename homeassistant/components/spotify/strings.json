@@ -30,5 +30,12 @@
     "info": {
       "api_endpoint_reachable": "Spotify API endpoint reachable"
     }
+  },
+  "entity": {
+    "sensor": {
+      "song_tempo": {
+        "name": "Song tempo"
+      }
+    }
   }
 }

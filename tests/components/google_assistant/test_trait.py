@@ -33,7 +33,10 @@ from homeassistant.components import (
     valve,
     water_heater,
 )
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
@@ -51,7 +54,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -63,9 +65,6 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -77,6 +76,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -1734,7 +1734,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
@@ -1765,11 +1765,12 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {
         "isArmed": True,
-        "currentArmLevel": STATE_ALARM_ARMED_AWAY,
+        "currentArmLevel": AlarmControlPanelState.ARMED_AWAY,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_ARM_DISARM, {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY}
+        trait.COMMAND_ARM_DISARM,
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
     )
 
     calls = async_mock_service(
@@ -1782,7 +1783,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         BASIC_CONFIG,
@@ -1791,7 +1792,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             BASIC_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1801,7 +1802,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1811,7 +1812,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1823,7 +1824,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {"pin": 9999},
         )
     assert len(calls) == 0
@@ -1834,7 +1835,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     await trt.execute(
         trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {"pin": "1234"},
     )
 
@@ -1845,7 +1846,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1854,7 +1855,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 1
@@ -1865,7 +1866,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
@@ -1873,7 +1874,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     await trt.execute(
         trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {},
     )
     assert len(calls) == 2
@@ -1897,7 +1898,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
@@ -1953,7 +1954,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         BASIC_CONFIG,
@@ -1968,7 +1969,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -2002,7 +2003,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -2016,7 +2017,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
@@ -2036,7 +2037,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_PENDING,
+            AlarmControlPanelState.PENDING,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
