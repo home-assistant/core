@@ -94,6 +94,17 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.include_only_feeds = user_input.get(CONF_ONLY_INCLUDE_FEEDID)
                 self.url = user_input[CONF_URL]
                 self.api_key = user_input[CONF_API_KEY]
+                emoncms_client = EmoncmsClient(
+                    self.url, self.api_key, session=async_get_clientsession(self.hass)
+                )
+                emoncms_unique_id = await emoncms_client.async_get_uuid()
+                if (
+                    emoncms_unique_id
+                    and self.hass.config_entries.async_entry_for_domain_unique_id(
+                        DOMAIN, emoncms_unique_id
+                    )
+                ):
+                    return self.async_abort(reason="already_configured")
                 options = get_options(result[CONF_MESSAGE])
                 self.dropdown = {
                     "options": options,

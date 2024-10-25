@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -19,11 +20,13 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
+    Platform,
     UnitOfPower,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import template
+from homeassistant.helpers import entity_registry as er, template
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -38,6 +41,7 @@ from .const import (
     FEED_ID,
     FEED_NAME,
     FEED_TAG,
+    LOGGER,
 )
 from .coordinator import EmoncmsCoordinator
 
@@ -139,6 +143,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the emoncms sensors."""
     config = entry.options if entry.options else entry.data
+    url = config[CONF_URL]
+    apikey = config[CONF_API_KEY]
     name = sensor_name(config[CONF_URL])
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
@@ -146,20 +152,44 @@ async def async_setup_entry(
     if exclude_feeds is None and include_only_feeds is None:
         return
 
+    emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
+    emoncms_unique_id = await emoncms_client.async_get_uuid()
+    if emoncms_unique_id is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "migrate database",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="migrate_database",
+            translation_placeholders={"url": url},
+        )
+    else:
+        hass.config_entries.async_update_entry(entry, unique_id=emoncms_unique_id)
+
     coordinator = entry.runtime_data
     elems = coordinator.data
     if not elems:
         return
-
+    ent_reg = er.async_get(hass)
     sensors: list[EmonCmsSensor] = []
 
     for idx, elem in enumerate(elems):
         if include_only_feeds is not None and elem[FEED_ID] not in include_only_feeds:
             continue
-
+        entity_id = ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{entry.entry_id}-{elem[FEED_ID]}"
+        )
+        if entity_id is not None and emoncms_unique_id is not None:
+            LOGGER.debug(f"{entity_id} exists and needs to be migrated")
+            ent_reg.async_update_entity(
+                entity_id, new_unique_id=f"{emoncms_unique_id}-{elem[FEED_ID]}"
+            )
         sensors.append(
             EmonCmsSensor(
                 coordinator,
+                emoncms_unique_id,
                 entry.entry_id,
                 elem["unit"],
                 name,
@@ -175,6 +205,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: EmoncmsCoordinator,
+        emoncms_unique_id: str,
         entry_id: str,
         unit_of_measurement: str | None,
         name: str,
@@ -188,7 +219,10 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             elem = self.coordinator.data[self.idx]
         self._attr_name = f"{name} {elem[FEED_NAME]}"
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_unique_id = f"{entry_id}-{elem[FEED_ID]}"
+        if emoncms_unique_id:
+            self._attr_unique_id = f"{emoncms_unique_id}-{elem[FEED_ID]}"
+        else:
+            self._attr_unique_id = f"{entry_id}-{elem[FEED_ID]}"
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
