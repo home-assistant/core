@@ -268,11 +268,7 @@ class NestFlowHandler(
                 if not eligible_topics.topic_names:
                     errors["base"] = "no_pubsub_topics"
             if not errors:
-                self._data.update(
-                    {
-                        CONF_CLOUD_PROJECT_ID: cloud_project_id,
-                    }
-                )
+                self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
                 self._eligible_topics = eligible_topics
                 return await self.async_step_pubsub_topic()
 
@@ -312,7 +308,6 @@ class NestFlowHandler(
                 "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
                 "more_info_url": MORE_INFO_URL,
             },
-            errors={},
         )
 
     async def async_step_pubsub_subscription(
