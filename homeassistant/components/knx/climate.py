@@ -136,6 +136,9 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
             ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS
         ),
         fan_speed_mode=config[ClimateSchema.CONF_FAN_SPEED_MODE],
+        group_address_humidity_state=config.get(
+            ClimateSchema.CONF_HUMIDITY_STATE_ADDRESS
+        ),
     )
 
 
@@ -396,6 +399,11 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             return
 
         await self._device.set_fan_speed(self._fan_modes_percentages[fan_mode_index])
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        return self._device.humidity.value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

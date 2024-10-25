@@ -93,7 +93,6 @@ from .coordinator import (
     get_info,  # noqa: F401
     get_issues_info,  # noqa: F401
     get_os_info,
-    get_store,  # noqa: F401
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
 )
@@ -103,15 +102,11 @@ from .handler import (  # noqa: F401
     HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
-    async_get_addon_store_info,
     async_get_green_settings,
     async_get_yellow_settings,
-    async_install_addon,
     async_reboot_host,
-    async_set_addon_options,
     async_set_green_settings,
     async_set_yellow_settings,
-    async_update_addon,
     async_update_core,
     async_update_diagnostics,
     async_update_os,
@@ -435,12 +430,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""
+        supervisor_client = get_supervisor_client(hass)
 
         try:
             (
                 hass.data[DATA_INFO],
                 hass.data[DATA_HOST_INFO],
-                hass.data[DATA_STORE],
+                store_info,
                 hass.data[DATA_CORE_INFO],
                 hass.data[DATA_SUPERVISOR_INFO],
                 hass.data[DATA_OS_INFO],
@@ -448,7 +444,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ) = await asyncio.gather(
                 create_eager_task(hassio.get_info()),
                 create_eager_task(hassio.get_host_info()),
-                create_eager_task(hassio.get_store()),
+                create_eager_task(supervisor_client.store.info()),
                 create_eager_task(hassio.get_core_info()),
                 create_eager_task(hassio.get_supervisor_info()),
                 create_eager_task(hassio.get_os_info()),
@@ -457,6 +453,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         except HassioAPIError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
+        else:
+            hass.data[DATA_STORE] = store_info.to_dict()
 
         async_call_later(
             hass,

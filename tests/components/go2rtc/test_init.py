@@ -1,7 +1,7 @@
 """The tests for the go2rtc component."""
 
-from collections.abc import Callable
-from unittest.mock import AsyncMock, Mock
+from collections.abc import Callable, Generator
+from unittest.mock import AsyncMock, Mock, patch
 
 from go2rtc_client import Stream, WebRTCSdpAnswer, WebRTCSdpOffer
 from go2rtc_client.models import Producer
@@ -16,12 +16,12 @@ from homeassistant.components.camera.const import StreamType
 from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import CONF_HOST
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from . import setup_integration
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -78,6 +78,38 @@ def integration_config_entry(hass: HomeAssistant) -> ConfigEntry:
     return entry
 
 
+@pytest.fixture(name="go2rtc_binary")
+def go2rtc_binary_fixture() -> str:
+    """Fixture to provide go2rtc binary name."""
+    return "/usr/bin/go2rtc"
+
+
+@pytest.fixture
+def mock_get_binary(go2rtc_binary) -> Generator[Mock]:
+    """Mock _get_binary."""
+    with patch(
+        "homeassistant.components.go2rtc.shutil.which",
+        return_value=go2rtc_binary,
+    ) as mock_which:
+        yield mock_which
+
+
+@pytest.fixture(name="is_docker_env")
+def is_docker_env_fixture() -> bool:
+    """Fixture to provide is_docker_env return value."""
+    return True
+
+
+@pytest.fixture
+def mock_is_docker_env(is_docker_env) -> Generator[Mock]:
+    """Mock is_docker_env."""
+    with patch(
+        "homeassistant.components.go2rtc.is_docker_env",
+        return_value=is_docker_env,
+    ) as mock_is_docker_env:
+        yield mock_is_docker_env
+
+
 @pytest.fixture
 async def init_test_integration(
     hass: HomeAssistant,
@@ -124,11 +156,10 @@ async def init_test_integration(
     return integration_config_entry
 
 
-@pytest.mark.usefixtures("init_test_integration")
 async def _test_setup(
     hass: HomeAssistant,
     mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    config: ConfigType,
     after_setup_fn: Callable[[], None],
 ) -> None:
     """Test the go2rtc config entry."""
@@ -136,7 +167,8 @@ async def _test_setup(
     camera = get_camera_from_entity_id(hass, entity_id)
     assert camera.frontend_stream_type == StreamType.HLS
 
-    await setup_integration(hass, mock_config_entry)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
     after_setup_fn()
 
     mock_client.webrtc.forward_whep_sdp_offer.return_value = WebRTCSdpAnswer(ANSWER_SDP)
@@ -170,50 +202,83 @@ async def _test_setup(
     ):
         await camera.async_handle_web_rtc_offer(OFFER_SDP)
 
-    # Remove go2rtc config entry
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_remove(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    assert camera._webrtc_providers == []
-    assert camera.frontend_stream_type == StreamType.HLS
-
-
-@pytest.mark.usefixtures("init_test_integration")
+@pytest.mark.usefixtures(
+    "init_test_integration", "mock_get_binary", "mock_is_docker_env"
+)
 async def test_setup_go_binary(
     hass: HomeAssistant,
     mock_client: AsyncMock,
-    mock_server: Mock,
-    mock_config_entry: MockConfigEntry,
+    mock_server: AsyncMock,
+    mock_server_start: Mock,
+    mock_server_stop: Mock,
 ) -> None:
     """Test the go2rtc config entry with binary."""
 
     def after_setup() -> None:
-        mock_server.assert_called_once_with("/usr/bin/go2rtc")
-        mock_server.return_value.start.assert_called_once()
+        mock_server.assert_called_once_with(hass, "/usr/bin/go2rtc")
+        mock_server_start.assert_called_once()
 
-    await _test_setup(hass, mock_client, mock_config_entry, after_setup)
+    await _test_setup(hass, mock_client, {DOMAIN: {}}, after_setup)
 
-    mock_server.return_value.stop.assert_called_once()
+    await hass.async_stop()
+    mock_server_stop.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("go2rtc_binary", "is_docker_env"),
+    [
+        ("/usr/bin/go2rtc", True),
+        (None, False),
+    ],
+)
 @pytest.mark.usefixtures("init_test_integration")
 async def test_setup_go(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_server: Mock,
+    mock_get_binary: Mock,
+    mock_is_docker_env: Mock,
 ) -> None:
     """Test the go2rtc config entry without binary."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DOMAIN,
-        data={CONF_HOST: "http://localhost:1984/"},
-    )
+    config = {DOMAIN: {CONF_URL: "http://localhost:1984/"}}
 
     def after_setup() -> None:
         mock_server.assert_not_called()
 
-    await _test_setup(hass, mock_client, config_entry, after_setup)
+    await _test_setup(hass, mock_client, config, after_setup)
 
+    mock_get_binary.assert_not_called()
+    mock_get_binary.assert_not_called()
     mock_server.assert_not_called()
+
+
+ERR_BINARY_NOT_FOUND = "Could not find go2rtc docker binary"
+ERR_CONNECT = "Could not connect to go2rtc instance"
+ERR_INVALID_URL = "Invalid config for 'go2rtc': invalid url"
+ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
+
+
+@pytest.mark.parametrize(
+    ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
+    [
+        ({}, None, False, "KeyError: 'go2rtc'"),
+        ({}, None, True, "KeyError: 'go2rtc'"),
+        ({DOMAIN: {}}, None, False, ERR_URL_REQUIRED),
+        ({DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
+        ({DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
+        ({DOMAIN: {CONF_URL: "invalid"}}, None, True, ERR_INVALID_URL),
+        ({DOMAIN: {CONF_URL: "http://localhost:1984/"}}, None, True, ERR_CONNECT),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "mock_server")
+async def test_setup_with_error(
+    hass: HomeAssistant,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+    expected_log_message: str,
+) -> None:
+    """Test setup integration fails."""
+
+    assert not await async_setup_component(hass, DOMAIN, config)
+    assert expected_log_message in caplog.text

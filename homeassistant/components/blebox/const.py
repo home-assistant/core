@@ -1,7 +1,6 @@
 """Constants for the BleBox devices integration."""
 
 DOMAIN = "blebox"
-PRODUCT = "product"
 
 DEFAULT_SETUP_TIMEOUT = 10
 

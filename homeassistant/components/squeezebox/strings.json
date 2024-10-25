@@ -60,20 +60,6 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
-    },
-    "sync": {
-      "name": "Sync",
-      "description": "Adds another player to this player's sync group. If the other player is already in a sync group, it will leave it.\n.",
-      "fields": {
-        "other_player": {
-          "name": "Other player",
-          "description": "Name of the other Squeezebox player to link."
-        }
-      }
-    },
-    "unsync": {
-      "name": "Unsync",
-      "description": "Removes this player from its sync group."
     }
   },
   "entity": {

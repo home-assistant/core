@@ -69,7 +69,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = CONF_CONFIG_ENTRY_MINOR_VERSION
 
     host: str | None = None
-    reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -372,8 +371,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reload any in progress config flow that now have credentials."""
         _config_entries = self.hass.config_entries
 
-        if reauth_entry := self.reauth_entry:
-            await _config_entries.async_reload(reauth_entry.entry_id)
+        if self.source == SOURCE_REAUTH:
+            await _config_entries.async_reload(self._get_reauth_entry().entry_id)
 
         for flow in _config_entries.flow.async_progress_by_handler(
             DOMAIN, include_uninitialized=True
@@ -473,9 +472,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Start the reauthentication flow if the device needs updated credentials."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -484,8 +480,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
-        reauth_entry = self.reauth_entry
-        assert reauth_entry is not None
+        reauth_entry = self._get_reauth_entry()
         entry_data = reauth_entry.data
         host = entry_data[CONF_HOST]
 
