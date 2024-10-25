@@ -242,15 +242,14 @@ def check_licenses(args: CheckArgs) -> int:
     return exit_code
 
 
-def extract_license_classifier(classifiers: list[str] | None) -> list[str]:
-    """Extract license from list of classifiers."""
-    return [
-        license_classifier
-        for classifier in classifiers or ()
-        if classifier.startswith("License")
-        and (license_classifier := classifier.rpartition(" :: ")[2])
-        and license_classifier != "OSI Approved"
-    ]
+def extract_licenses(args: ExtractArgs) -> int:
+    """Extract license data for installed packages."""
+    licenses = sorted(
+        [get_package_metadata(dist) for dist in list(metadata.distributions())],
+        key=lambda dist: dist["name"],
+    )
+    Path(args.output_file).write_text(json.dumps(licenses, indent=2))
+    return 0
 
 
 def get_package_metadata(dist: metadata.Distribution) -> PackageMetadata:
@@ -266,14 +265,15 @@ def get_package_metadata(dist: metadata.Distribution) -> PackageMetadata:
     }
 
 
-def extract_licenses(args: ExtractArgs) -> int:
-    """Extract license data for installed packages."""
-    licenses = sorted(
-        [get_package_metadata(dist) for dist in list(metadata.distributions())],
-        key=lambda dist: dist["name"],
-    )
-    Path(args.output_file).write_text(json.dumps(licenses, indent=2))
-    return 0
+def extract_license_classifier(classifiers: list[str] | None) -> list[str]:
+    """Extract license from list of classifiers."""
+    return [
+        license_classifier
+        for classifier in classifiers or ()
+        if classifier.startswith("License")
+        and (license_classifier := classifier.rpartition(" :: ")[2])
+        and license_classifier != "OSI Approved"
+    ]
 
 
 class ExtractArgs(Namespace):
