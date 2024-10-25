@@ -942,6 +942,8 @@ class UnitOfLength(StrEnum):
     YARDS = "yd"
     MILES = "mi"
     NAUTICAL_MILES = "nmi"
+    ASTRONOMICAL_UNIT = "au"
+    PARSEC = "pc"
 
 
 _DEPRECATED_LENGTH_MILLIMETERS: Final = DeprecatedConstantEnum(

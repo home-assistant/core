@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+from math import pi
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -40,6 +41,9 @@ _YARD_TO_M = _FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
 _MILE_TO_M = _YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
 
 _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
+_AU_TO_M = 149_597_870_700  # per IAU 2009
+_PARSEC_TO_M = 648_000 * _AU_TO_M / pi  # 1 parsec ≈ 3.0857 * 10^16 m
 
 # Duration conversion constants
 _MIN_TO_SEC = 60  # 1 min = 60 seconds
@@ -159,6 +163,8 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.YARDS: 1 / _YARD_TO_M,
         UnitOfLength.MILES: 1 / _MILE_TO_M,
         UnitOfLength.NAUTICAL_MILES: 1 / _NAUTICAL_MILE_TO_M,
+        UnitOfLength.ASTRONOMICAL_UNIT: 1 / _AU_TO_M,
+        UnitOfLength.PARSEC: 1 / _PARSEC_TO_M,
     }
     VALID_UNITS = {
         UnitOfLength.KILOMETERS,
@@ -170,6 +176,8 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.MILLIMETERS,
         UnitOfLength.INCHES,
         UnitOfLength.YARDS,
+        UnitOfLength.ASTRONOMICAL_UNIT,
+        UnitOfLength.PARSEC,
     }
 
 

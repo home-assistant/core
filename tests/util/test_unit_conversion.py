@@ -301,6 +301,10 @@ _CONVERTED_VALUE: dict[
         (5000000, UnitOfLength.MILLIMETERS, 5468.066, UnitOfLength.YARDS),
         (5000000, UnitOfLength.MILLIMETERS, 16404.2, UnitOfLength.FEET),
         (5000000, UnitOfLength.MILLIMETERS, 196850.5, UnitOfLength.INCHES),
+        (1, UnitOfLength.ASTRONOMICAL_UNIT, 149_597_870_700, UnitOfLength.METERS),
+        (1, UnitOfLength.PARSEC, 206_265, UnitOfLength.ASTRONOMICAL_UNIT),
+        (1, UnitOfLength.PARSEC, 3.08567758 * 10**16, UnitOfLength.METERS),
+        (20, UnitOfLength.PARSEC, 6.17135516 * 10**17, UnitOfLength.METERS),
     ],
     DurationConverter: [
         (5, UnitOfTime.MICROSECONDS, 0.005, UnitOfTime.MILLISECONDS),
