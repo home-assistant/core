@@ -1,10 +1,8 @@
 """Support for monitoring a Sense energy sensor."""
 
 from dataclasses import dataclass
-from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any
 
 from sense_energy import (
     ASyncSenseable,
@@ -13,19 +11,18 @@ from sense_energy import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_TIMEOUT, Platform
+from homeassistant.const import CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ACTIVE_UPDATE_RATE,
     SENSE_CONNECT_EXCEPTIONS,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_WEBSOCKET_EXCEPTIONS,
-    TREND_UPDATE_RATE,
 )
+from .coordinator import SenseRealtimeCoordinator, SenseTrendCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,15 +35,14 @@ class SenseData:
     """Sense data type."""
 
     data: ASyncSenseable
-    trends: DataUpdateCoordinator[Any]
-    rt: DataUpdateCoordinator[Any]
+    trends: SenseTrendCoordinator
+    rt: SenseRealtimeCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> bool:
     """Set up Sense from a config entry."""
 
     entry_data = entry.data
-    email = entry_data[CONF_EMAIL]
     timeout = entry_data[CONF_TIMEOUT]
 
     access_token = entry_data.get("access_token", "")
@@ -93,43 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
-    async def _async_update_trend() -> None:
-        """Update the trend data."""
-        try:
-            await gateway.update_trend_data()
-        except (SenseAuthenticationException, SenseMFARequiredException) as err:
-            _LOGGER.warning("Sense authentication expired")
-            raise ConfigEntryAuthFailed(err) from err
-        except SENSE_CONNECT_EXCEPTIONS as err:
-            raise UpdateFailed(err) from err
-
-    async def _async_update_realtime() -> None:
-        """Retrieve latest state."""
-        try:
-            await gateway.update_realtime()
-        except SENSE_TIMEOUT_EXCEPTIONS as ex:
-            _LOGGER.error("Timeout retrieving data: %s", ex)
-        except SENSE_WEBSOCKET_EXCEPTIONS as ex:
-            _LOGGER.error("Failed to update data: %s", ex)
-
-    trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Sense Trends {email}",
-        update_method=_async_update_trend,
-        update_interval=timedelta(seconds=TREND_UPDATE_RATE),
-    )
-    realtime_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Sense Realtime {email}",
-        update_method=_async_update_realtime,
-        update_interval=timedelta(seconds=ACTIVE_UPDATE_RATE),
-    )
-    # Start out as unavailable so we do not report 0 data
-    # until the update happens
-    trends_coordinator.last_update_success = False
-    realtime_coordinator.last_update_success = False
+    trends_coordinator = SenseTrendCoordinator(hass, gateway)
+    realtime_coordinator = SenseRealtimeCoordinator(hass, gateway)
 
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was

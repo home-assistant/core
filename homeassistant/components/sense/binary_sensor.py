@@ -1,7 +1,6 @@
 """Support for monitoring a Sense energy sensor device."""
 
 import logging
-from typing import Any
 
 from sense_energy.sense_api import SenseDevice
 
@@ -12,13 +11,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SenseConfigEntry
 from .const import ATTRIBUTION, DOMAIN, MDI_ICONS
+from .coordinator import SenseRealtimeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +44,9 @@ def sense_to_mdi(sense_icon: str) -> str:
     return f"mdi:{MDI_ICONS.get(sense_icon, "power-plug")}"
 
 
-class SenseBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class SenseBinarySensor(
+    CoordinatorEntity[SenseRealtimeCoordinator], BinarySensorEntity
+):
     """Implementation of a Sense energy device binary sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -58,7 +57,7 @@ class SenseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self,
         device: SenseDevice,
         sense_monitor_id: str,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: SenseRealtimeCoordinator,
     ) -> None:
         """Initialize the Sense binary sensor."""
         super().__init__(coordinator)
