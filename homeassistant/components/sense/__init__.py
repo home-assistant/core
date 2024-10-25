@@ -13,25 +13,18 @@ from sense_energy import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_TIMEOUT,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_EMAIL, CONF_TIMEOUT, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ACTIVE_UPDATE_RATE,
     SENSE_CONNECT_EXCEPTIONS,
-    SENSE_DEVICE_UPDATE,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_WEBSOCKET_EXCEPTIONS,
+    TREND_UPDATE_RATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +39,7 @@ class SenseData:
 
     data: ASyncSenseable
     trends: DataUpdateCoordinator[Any]
+    rt: DataUpdateCoordinator[Any]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> bool:
@@ -99,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
-    async def _async_update_trend():
+    async def _async_update_trend() -> None:
         """Update the trend data."""
         try:
             await gateway.update_trend_data()
@@ -109,16 +103,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         except SENSE_CONNECT_EXCEPTIONS as err:
             raise UpdateFailed(err) from err
 
+    async def _async_update_realtime() -> None:
+        """Retrieve latest state."""
+        try:
+            await gateway.update_realtime()
+        except SENSE_TIMEOUT_EXCEPTIONS as ex:
+            _LOGGER.error("Timeout retrieving data: %s", ex)
+        except SENSE_WEBSOCKET_EXCEPTIONS as ex:
+            _LOGGER.error("Failed to update data: %s", ex)
+
     trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"Sense Trends {email}",
         update_method=_async_update_trend,
-        update_interval=timedelta(seconds=300),
+        update_interval=timedelta(seconds=TREND_UPDATE_RATE),
+    )
+    realtime_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"Sense Realtime {email}",
+        update_method=_async_update_realtime,
+        update_interval=timedelta(seconds=ACTIVE_UPDATE_RATE),
     )
     # Start out as unavailable so we do not report 0 data
     # until the update happens
     trends_coordinator.last_update_success = False
+    realtime_coordinator.last_update_success = False
 
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was
@@ -128,41 +139,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         trends_coordinator.async_request_refresh(),
         "sense.trends-coordinator-refresh",
     )
+    entry.async_create_background_task(
+        hass,
+        realtime_coordinator.async_request_refresh(),
+        "sense.realtime-coordinator-refresh",
+    )
 
     entry.runtime_data = SenseData(
         data=gateway,
         trends=trends_coordinator,
+        rt=realtime_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    async_dispatcher_send(hass, f"{SENSE_DEVICE_UPDATE}-{gateway.sense_monitor_id}")
-
-    async def async_sense_update(_):
-        """Retrieve latest state."""
-        try:
-            await gateway.update_realtime()
-        except SENSE_TIMEOUT_EXCEPTIONS as ex:
-            _LOGGER.error("Timeout retrieving data: %s", ex)
-        except SENSE_WEBSOCKET_EXCEPTIONS as ex:
-            _LOGGER.error("Failed to update data: %s", ex)
-
-        async_dispatcher_send(hass, f"{SENSE_DEVICE_UPDATE}-{gateway.sense_monitor_id}")
-
-    remove_update_callback = async_track_time_interval(
-        hass, async_sense_update, timedelta(seconds=ACTIVE_UPDATE_RATE)
-    )
-
-    @callback
-    def _remove_update_callback_at_stop(event):
-        remove_update_callback()
-
-    entry.async_on_unload(remove_update_callback)
-    entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _remove_update_callback_at_stop
-        )
-    )
-
     return True
 
 

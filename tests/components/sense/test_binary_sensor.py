@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -26,7 +26,7 @@ async def test_binary_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Sensor."""
-    await setup_platform(hass, config_entry, BINARY_SENSOR_DOMAIN)
+    await setup_platform(hass, config_entry, Platform.BINARY_SENSOR)
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
