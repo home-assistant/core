@@ -167,7 +167,7 @@ async def test_zone_set_hvac_mode(
     zone_id: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_SET_HVAC_MODE of an evohome zone."""
+    """Test SERVICE_SET_HVAC_MODE of an evohome heating zone."""
 
     results = []
 
@@ -215,7 +215,7 @@ async def test_zone_set_preset_mode(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_SET_PRESET_MODE of an evohome zone."""
+    """Test SERVICE_SET_PRESET_MODE of an evohome heating zone."""
 
     freezer.move_to("2024-07-10T12:00:00Z")
     results = []
@@ -283,7 +283,7 @@ async def test_zone_set_temperature(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_SET_TEMPERATURE of an evohome zone."""
+    """Test SERVICE_SET_TEMPERATURE of an evohome heating zone."""
 
     freezer.move_to("2024-07-10T12:00:00Z")
     results = []
@@ -315,7 +315,7 @@ async def test_zone_turn_off(
     zone_id: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_TURN_OFF of an evohome zone."""
+    """Test SERVICE_TURN_OFF of an evohome heating zone."""
 
     results = []
 
@@ -344,7 +344,7 @@ async def test_zone_turn_on(
     hass: HomeAssistant,
     zone_id: str,
 ) -> None:
-    """Test SERVICE_TURN_ON of an evohome zone."""
+    """Test SERVICE_TURN_ON of an evohome heating zone."""
 
     # SERVICE_TURN_ON
     with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
