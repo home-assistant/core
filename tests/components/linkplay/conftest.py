@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientSession
-from linkplay.bridge import LinkPlayBridge, LinkPlayDevice
+from linkplay.bridge import LinkPlayBridge, LinkPlayDevice, LinkPlayMultiroom
 from linkplay.endpoint import LinkPlayApiEndpoint
 import pytest
 
@@ -32,6 +32,8 @@ def mock_linkplay_factory_bridge_init() -> Generator[AsyncMock]:
             "homeassistant.components.linkplay.linkplay_factory_httpapi_bridge",
             return_value=AsyncMock(spec=ClientSession),
         ) as init_factory,
+        patch.object(LinkPlayDevice, "update_status", return_value=None),
+        patch.object(LinkPlayMultiroom, "update_status", return_value=None),
     ):
         bridge = LinkPlayBridge(
             endpoint=LinkPlayApiEndpoint(protocol="http", endpoint=HOST, session=None)
