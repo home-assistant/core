@@ -7,11 +7,12 @@ from unittest.mock import patch
 
 from music_assistant.client.exceptions import CannotConnect, InvalidServerVersion
 
-# pylint: disable=wrong-import-order
-from homeassistant.components import zeroconf
 from homeassistant.components.music_assistant import config_flow
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DOMAIN
+
+# pylint: disable=wrong-import-order
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -25,7 +26,7 @@ VALID_OPTIONS_CONFIG = {
     CONF_URL: "http://localhost:8095",
 }
 
-ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
@@ -85,7 +86,7 @@ async def test_flow_user_init_manual_schema(hass: HomeAssistant) -> None:
         "errors": None,
         "flow_id": mock.ANY,
         "handler": "music_assistant",
-        "step_id": "manual",
+        "step_id": "user",
         "last_step": None,
         "preview": None,
         "type": "form",

@@ -1,19 +1,18 @@
 """Music Assistant test fixtures."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
 
-
-@pytest.fixture(autouse=True)
-def use_mocked_zeroconf(mock_async_zeroconf: MagicMock):
-    """Mock zeroconf in all tests."""
+from tests.components.smhi.common import AsyncMock
 
 
-@pytest.fixture(autouse=True)
-def mock_setup_entry():
-    """Mock setting up a config entry."""
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.music_assistant.async_setup_entry", return_value=True
-    ):
-        yield
+        "homeassistant.components.music_assistant.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
