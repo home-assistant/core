@@ -179,10 +179,7 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     @property
     def shuffle(self) -> bool | None:
         """Current shuffle configuration."""
-        mode_shuffle = self.client.play_state.mode_shuffle
-        if not mode_shuffle:
-            return False
-        return mode_shuffle != ShuffleMode.OFF
+        return self.client.play_state.mode_shuffle != ShuffleMode.OFF
 
     @property
     def repeat(self) -> RepeatMode | None:
