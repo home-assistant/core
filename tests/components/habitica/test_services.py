@@ -1844,6 +1844,7 @@ async def test_create_new_tag(
     )
     mock_habitica.post(
         f"{DEFAULT_URL}/api/v3/tags",
+        status=201,
         json={
             "success": True,
             "data": {
