@@ -119,7 +119,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered server."""
         if TYPE_CHECKING:
             assert self.server_info is not None
-        self._set_confirm_only()
         if user_input is not None:
             return self.async_create_entry(
                 title=DEFAULT_TITLE,
