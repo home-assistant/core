@@ -8,13 +8,16 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
+from homeassistant.components.sense.binary_sensor import SenseDevice
 from homeassistant.components.sense.const import DOMAIN
 
 from .const import (
-    DEVICE_1_DATA,
+    DEVICE_1_ID,
     DEVICE_1_NAME,
-    DEVICE_2_DATA,
+    DEVICE_1_POWER,
+    DEVICE_2_ID,
     DEVICE_2_NAME,
+    DEVICE_2_POWER,
     MOCK_CONFIG,
     MONITOR_ID,
 )
@@ -46,25 +49,31 @@ def mock_sense() -> Generator[MagicMock]:
     """Mock an ASyncSenseable object with a split foundation."""
     with patch("homeassistant.components.sense.ASyncSenseable", autospec=True) as mock:
         gateway = mock.return_value
-        gateway._devices = [DEVICE_1_NAME, DEVICE_2_NAME]
         gateway.sense_monitor_id = MONITOR_ID
         gateway.get_monitor_data.return_value = None
-        gateway.get_discovered_device_data.return_value = [DEVICE_1_DATA, DEVICE_2_DATA]
         gateway.update_realtime.return_value = None
+        gateway.fetch_devices.return_value = None
+        gateway.update_trend_data.return_value = None
+
         type(gateway).active_power = PropertyMock(return_value=100)
         type(gateway).active_solar_power = PropertyMock(return_value=500)
         type(gateway).active_voltage = PropertyMock(return_value=[120, 240])
-        gateway.get_trend.return_value = 15
+        gateway.get_stat.return_value = 15
         gateway.trend_start.return_value = datetime.datetime.fromisoformat(
             "2024-01-01 01:01:00+00:00"
         )
 
-        def get_realtime():
-            yield {"devices": []}
-            yield {"devices": [DEVICE_1_DATA]}
-            while True:
-                yield {"devices": [DEVICE_1_DATA, DEVICE_2_DATA]}
+        device_1 = SenseDevice(DEVICE_1_ID)
+        device_1.name = DEVICE_1_NAME
+        device_1.icon = "car"
+        device_1.is_on = False
+        device_1.power_w = DEVICE_1_POWER
 
-        gateway.get_realtime.side_effect = get_realtime()
+        device_2 = SenseDevice(DEVICE_2_ID)
+        device_2.name = DEVICE_2_NAME
+        device_2.icon = "stove"
+        device_2.is_on = False
+        device_2.power_w = DEVICE_2_POWER
+        type(gateway).devices = PropertyMock(return_value=[device_1, device_2])
 
         yield gateway

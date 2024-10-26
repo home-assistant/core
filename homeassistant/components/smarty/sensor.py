@@ -2,19 +2,82 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from pysmarty2 import Smarty
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .coordinator import SmartyConfigEntry, SmartyCoordinator
+from .entity import SmartyEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_filter_days_left(smarty: Smarty) -> datetime | None:
+    """Return the date when the filter needs to be replaced."""
+    if (days_left := smarty.filter_timer) is not None:
+        return dt_util.now() + timedelta(days=days_left)
+    return None
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartySensorDescription(SensorEntityDescription):
+    """Class describing Smarty sensor."""
+
+    value_fn: Callable[[Smarty], float | datetime | None]
+
+
+ENTITIES: tuple[SmartySensorDescription, ...] = (
+    SmartySensorDescription(
+        key="supply_air_temperature",
+        translation_key="supply_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda smarty: smarty.supply_air_temperature,
+    ),
+    SmartySensorDescription(
+        key="extract_air_temperature",
+        translation_key="extract_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda smarty: smarty.extract_air_temperature,
+    ),
+    SmartySensorDescription(
+        key="outdoor_air_temperature",
+        translation_key="outdoor_air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda smarty: smarty.outdoor_air_temperature,
+    ),
+    SmartySensorDescription(
+        key="supply_fan_speed",
+        translation_key="supply_fan_speed",
+        value_fn=lambda smarty: smarty.supply_fan_speed,
+    ),
+    SmartySensorDescription(
+        key="extract_fan_speed",
+        translation_key="extract_fan_speed",
+        value_fn=lambda smarty: smarty.extract_fan_speed,
+    ),
+    SmartySensorDescription(
+        key="filter_days_left",
+        translation_key="filter_days_left",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=get_filter_days_left,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -25,152 +88,30 @@ async def async_setup_entry(
     """Set up the Smarty Sensor Platform."""
 
     coordinator = entry.runtime_data
-    sensors = [
-        SupplyAirTemperatureSensor(coordinator),
-        ExtractAirTemperatureSensor(coordinator),
-        OutdoorAirTemperatureSensor(coordinator),
-        SupplyFanSpeedSensor(coordinator),
-        ExtractFanSpeedSensor(coordinator),
-        FilterDaysLeftSensor(coordinator),
-    ]
 
-    async_add_entities(sensors)
+    async_add_entities(
+        SmartySensor(coordinator, description) for description in ENTITIES
+    )
 
 
-class SmartySensor(CoordinatorEntity[SmartyCoordinator], SensorEntity):
+class SmartySensor(SmartyEntity, SensorEntity):
     """Representation of a Smarty Sensor."""
+
+    entity_description: SmartySensorDescription
 
     def __init__(
         self,
         coordinator: SmartyCoordinator,
-        name: str,
-        key: str,
-        device_class: SensorDeviceClass | None,
-        unit_of_measurement: str | None,
+        entity_description: SmartySensorDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_name = f"{coordinator.config_entry.title} {name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{key}"
-        self._attr_native_value = None
-        self._attr_device_class = device_class
-        self._attr_native_unit_of_measurement = unit_of_measurement
-
-
-class SupplyAirTemperatureSensor(SmartySensor):
-    """Supply Air Temperature Sensor."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Supply Air Temperature Init."""
-        super().__init__(
-            coordinator,
-            name="Supply Air Temperature",
-            key="supply_air_temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            unit_of_measurement=UnitOfTemperature.CELSIUS,
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
-        return self.coordinator.client.supply_air_temperature
-
-
-class ExtractAirTemperatureSensor(SmartySensor):
-    """Extract Air Temperature Sensor."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Supply Air Temperature Init."""
-        super().__init__(
-            coordinator,
-            name="Extract Air Temperature",
-            key="extract_air_temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            unit_of_measurement=UnitOfTemperature.CELSIUS,
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        return self.coordinator.client.extract_air_temperature
-
-
-class OutdoorAirTemperatureSensor(SmartySensor):
-    """Extract Air Temperature Sensor."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Outdoor Air Temperature Init."""
-        super().__init__(
-            coordinator,
-            name="Outdoor Air Temperature",
-            key="outdoor_air_temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            unit_of_measurement=UnitOfTemperature.CELSIUS,
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        return self.coordinator.client.outdoor_air_temperature
-
-
-class SupplyFanSpeedSensor(SmartySensor):
-    """Supply Fan Speed RPM."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Supply Fan Speed RPM Init."""
-        super().__init__(
-            coordinator,
-            name="Supply Fan Speed",
-            key="supply_fan_speed",
-            device_class=None,
-            unit_of_measurement=None,
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        return self.coordinator.client.supply_fan_speed
-
-
-class ExtractFanSpeedSensor(SmartySensor):
-    """Extract Fan Speed RPM."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Extract Fan Speed RPM Init."""
-        super().__init__(
-            coordinator,
-            name="Extract Fan Speed",
-            key="extract_fan_speed",
-            device_class=None,
-            unit_of_measurement=None,
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        return self.coordinator.client.extract_fan_speed
-
-
-class FilterDaysLeftSensor(SmartySensor):
-    """Filter Days Left."""
-
-    def __init__(self, coordinator: SmartyCoordinator) -> None:
-        """Filter Days Left Init."""
-        super().__init__(
-            coordinator,
-            name="Filter Days Left",
-            key="filter_days_left",
-            device_class=SensorDeviceClass.TIMESTAMP,
-            unit_of_measurement=None,
-        )
-        self._days_left = 91
-
-    @property
-    def native_value(self) -> datetime | None:
-        """Return the state of the sensor."""
-        days_left = self.coordinator.client.filter_timer
-        if days_left is not None and days_left != self._days_left:
-            self._days_left = days_left
-            return dt_util.now() + timedelta(days=days_left)
-        return None
+        return self.entity_description.value_fn(self.coordinator.client)
