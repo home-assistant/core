@@ -1226,9 +1226,9 @@ class UnitOfConductivity(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
     },
 ):
     """Conductivity units."""
