@@ -127,6 +127,7 @@ tests: &tests
   - tests/*.py
   - tests/auth/**
   - tests/backports/**
+  - tests/components/conftest.py
   - tests/components/diagnostics/**
   - tests/components/history/**
   - tests/components/logbook/**
