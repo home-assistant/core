@@ -236,9 +236,12 @@ class SenseDevicePowerSensor(SenseDeviceEntity, SensorEntity):
     ) -> None:
         """Initialize the Sense device sensor."""
         super().__init__(
-            coordinator, sense_monitor_id, f"{device.id}-{CONSUMPTION_ID}", device
+            coordinator,
+            sense_monitor_id,
+            f"{device.id}-{CONSUMPTION_ID}",
+            CONSUMPTION_NAME,
+            device,
         )
-        self._attr_name = f"{device.name} {CONSUMPTION_NAME}"
 
     @property
     def native_value(self) -> float:

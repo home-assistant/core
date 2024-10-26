@@ -51,8 +51,7 @@ class SenseBinarySensor(SenseDeviceEntity, BinarySensorEntity):
         coordinator: SenseRealtimeCoordinator,
     ) -> None:
         """Initialize the Sense binary sensor."""
-        super().__init__(coordinator, sense_monitor_id, device.id, device)
-        self._attr_name = device.name
+        super().__init__(coordinator, sense_monitor_id, device.id, "", device)
         self._id = device.id
 
     @property
