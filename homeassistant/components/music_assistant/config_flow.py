@@ -17,7 +17,6 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, LOGGER
@@ -55,15 +54,19 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self.server_info: ServerInfoMessage | None = None
 
-    async def async_step_manual(
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a manual configuration."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            errors = {}
-            self.server_info = await get_server_info(self.hass, user_input[CONF_URL])
             try:
-                await self.async_set_unique_id(self.server_info.server_id)
+                self.server_info = await get_server_info(
+                    self.hass, user_input[CONF_URL]
+                )
+                await self.async_set_unique_id(
+                    self.server_info.server_id, raise_on_progress=False
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidServerVersion:
@@ -71,12 +74,19 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             except MusicAssistantClientException:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=DEFAULT_TITLE,
+                    data={
+                        CONF_URL: self.server_info.base_url,
+                    },
+                )
+
             return self.async_show_form(
-                step_id="manual",
-                data_schema=get_manual_schema(user_input),
-                errors=errors,
+                step_id="user", data_schema=get_manual_schema(user_input), errors=errors
             )
-        return await self._async_create_entry_or_abort()
+
+        return self.async_show_form(step_id="user", data_schema=get_manual_schema({}))
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -91,14 +101,16 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="missing_server_id")
         # abort if we already have exactly this server_id
         # reload the integration if the host got updated
-        server_id = discovery_info.properties["server_id"]
-        base_url = discovery_info.properties["base_url"]
-        await self.async_set_unique_id(server_id)
+        self.server_info = ServerInfoMessage.from_dict(discovery_info.properties)
+        await self.async_set_unique_id(self.server_info.server_id)
         self._abort_if_unique_id_configured(
-            updates={CONF_URL: base_url},
+            updates={CONF_URL: self.server_info.base_url},
             reload_on_update=True,
         )
-        self.server_info = ServerInfoMessage.from_dict(discovery_info.properties)
+        try:
+            await get_server_info(self.hass, self.server_info.base_url)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -107,43 +119,16 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered server."""
         if TYPE_CHECKING:
             assert self.server_info is not None
+        self._set_confirm_only()
         if user_input is not None:
-            # Check that we can connect to the address.
-            try:
-                await get_server_info(self.hass, self.server_info.base_url)
-            except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
-            return await self._async_create_entry_or_abort()
+            return self.async_create_entry(
+                title=DEFAULT_TITLE,
+                data={
+                    CONF_URL: self.server_info.base_url,
+                },
+            )
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"url": self.server_info.base_url},
-        )
-
-    async def _async_create_entry_or_abort(self) -> ConfigFlowResult:
-        """Return a config entry for the flow or abort if already configured."""
-        assert self.server_info is not None
-
-        for config_entry in self._async_current_entries():
-            if config_entry.unique_id != self.server_info.server_id:
-                continue
-            self.hass.config_entries.async_update_entry(
-                config_entry,
-                data={
-                    **config_entry.data,
-                    CONF_URL: self.server_info.base_url,
-                },
-                title=DEFAULT_TITLE,
-            )
-            await self.hass.config_entries.async_reload(config_entry.entry_id)
-            raise AbortFlow("reconfiguration_successful")
-
-        # Abort any other flows that may be in progress
-        for progress in self._async_in_progress():
-            self.hass.config_entries.flow.async_abort(progress["flow_id"])
-
-        return self.async_create_entry(
-            title=DEFAULT_TITLE,
-            data={
-                CONF_URL: self.server_info.base_url,
-            },
         )
