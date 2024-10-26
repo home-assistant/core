@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from typing import Final
 
 from fyta_cli.fyta_models import Plant
@@ -29,8 +28,6 @@ from homeassistant.helpers.typing import StateType
 from . import FytaConfigEntry
 from .coordinator import FytaCoordinator
 from .entity import FytaPlantEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
