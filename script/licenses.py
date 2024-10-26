@@ -135,6 +135,7 @@ OSI_APPROVED_LICENSES = {
     "Apache-2",
     "GPLv2",
     "Python-2.0.1",
+    "LGPL-2.1-or-later",
 }
 
 EXCEPTIONS = {
