@@ -125,9 +125,11 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
                 targetId=coordinator.config_entry.unique_id
             )
         ),
+        # chilling frost can only be cast once per day (streaks buff is false)
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 40
+            and not data.user["stats"]["buffs"]["streaks"]
         ),
         class_needed=MAGE,
         entity_picture="shop_frost.png",
@@ -198,9 +200,21 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
                 targetId=coordinator.config_entry.unique_id
             )
         ),
+        # Stealth buffs stack and it can only be cast if the amount of
+        # unfinished dailies is smaller than the amount of buffs
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 45
+            and data.user["stats"]["buffs"]["stealth"]
+            < len(
+                [
+                    r
+                    for r in data.tasks
+                    if r.get("type") == "daily"
+                    and r.get("isDue") is True
+                    and r.get("completed") is False
+                ]
+            )
         ),
         class_needed=ROGUE,
         entity_picture="shop_stealth.png",
