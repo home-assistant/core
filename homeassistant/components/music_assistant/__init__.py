@@ -99,9 +99,6 @@ async def async_setup_entry(
 
     entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
-    # initialize platforms
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -109,6 +106,9 @@ async def async_setup_entry(
             await mass.disconnect()
         finally:
             raise ConfigEntryNotReady(listen_error) from listen_error
+
+    # initialize platforms
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # register listener for removed players
     async def handle_player_removed(event: MassEvent) -> None:
