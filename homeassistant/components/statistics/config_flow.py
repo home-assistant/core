@@ -169,8 +169,8 @@ class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         vol.Required("user_input"): dict,
     }
 )
-@callback
-def ws_start_preview(
+@websocket_api.async_response
+async def ws_start_preview(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -234,6 +234,6 @@ def ws_start_preview(
     preview_entity.hass = hass
 
     connection.send_result(msg["id"])
-    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+    connection.subscriptions[msg["id"]] = await preview_entity.async_start_preview(
         async_preview_updated
     )

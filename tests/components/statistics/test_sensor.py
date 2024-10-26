@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from asyncio import Event as AsyncioEvent
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
+from threading import Event
 from typing import Any
 from unittest.mock import patch
 
@@ -12,7 +14,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import Recorder, history
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -50,6 +52,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
+VALUES_NUMERIC_LINEAR = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 async def test_unique_id(
@@ -1701,3 +1704,76 @@ async def test_device_id(
     statistics_entity = entity_registry.async_get("sensor.statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
+
+
+async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Verify that updates happening before reloading from the database are handled correctly."""
+
+    current_time = dt_util.utcnow()
+
+    # enable and pre-fill the recorder
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    with (
+        freeze_time(current_time) as freezer,
+    ):
+        for value in VALUES_NUMERIC_LINEAR:
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+            )
+            await hass.async_block_till_done()
+            current_time += timedelta(seconds=1)
+            freezer.move_to(current_time)
+
+        await async_wait_recording_done(hass)
+
+        # some synchronisation is needed to prevent that loading from the database finishes too soon
+        # we want this to take long enough to be able to try to add a value BEFORE loading is done
+        state_changes_during_period_called_evt = AsyncioEvent()
+        state_changes_during_period_stall_evt = Event()
+        real_state_changes_during_period = history.state_changes_during_period
+
+        def mock_state_changes_during_period(*args, **kwargs):
+            states = real_state_changes_during_period(*args, **kwargs)
+            hass.loop.call_soon_threadsafe(state_changes_during_period_called_evt.set)
+            state_changes_during_period_stall_evt.wait()
+            return states
+
+        # create the statistics component, get filled from database
+        with patch(
+            "homeassistant.components.statistics.sensor.history.state_changes_during_period",
+            mock_state_changes_during_period,
+        ):
+            assert await async_setup_component(
+                hass,
+                "sensor",
+                {
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "state_characteristic": "average_step",
+                            "max_age": {"seconds": 10},
+                        },
+                    ]
+                },
+            )
+            # adding this value is going to be ignored, since loading from the database hasn't finished yet
+            # if this value would be added before loading from the database is done
+            # it would mess up the order of the internal queue which is supposed to be sorted by time
+            await state_changes_during_period_called_evt.wait()
+            hass.states.async_set(
+                "sensor.test_monitored",
+                "10",
+                {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+            )
+            state_changes_during_period_stall_evt.set()
+            await hass.async_block_till_done()
+
+    # we will end up with a buffer of [1 .. 9] (10 wasn't added)
+    # so the computed average_step is 1+2+3+4+5+6+7+8/8 = 4.5
+    assert float(hass.states.get("sensor.test").state) == pytest.approx(4.5)

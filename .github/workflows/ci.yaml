@@ -615,6 +615,10 @@ jobs:
         && github.event.inputs.mypy-only != 'true'
         || github.event.inputs.audit-licenses-only == 'true')
       && needs.info.outputs.requirements == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
@@ -633,19 +637,19 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Run pip-licenses
+      - name: Extract license data
         run: |
           . venv/bin/activate
-          pip-licenses --format=json --output-file=licenses.json
+          python -m script.licenses extract --output-file=licenses-${{ matrix.python-version }}.json
       - name: Upload licenses
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: licenses
-          path: licenses.json
-      - name: Process licenses
+          name: licenses-${{ github.run_number }}-${{ matrix.python-version }}
+          path: licenses-${{ matrix.python-version }}.json
+      - name: Check licenses
         run: |
           . venv/bin/activate
-          python -m script.licenses licenses.json
+          python -m script.licenses check licenses-${{ matrix.python-version }}.json
 
   pylint:
     name: Check pylint
@@ -945,6 +949,7 @@ jobs:
             --timeout=9 \
             --durations=10 \
             --numprocesses auto \
+            --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -1067,6 +1072,7 @@ jobs:
             -qq \
             --timeout=20 \
             --numprocesses 1 \
+            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=10 \
@@ -1193,6 +1199,7 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses 1 \
+            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
@@ -1339,6 +1346,7 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses auto \
+            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
