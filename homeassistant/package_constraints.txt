@@ -67,7 +67,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.0.0b2
 yarl==1.16.0
-zeroconf==0.135.0
+zeroconf==0.136.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -102,7 +102,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.0
+anyio==4.6.2.post1
 h11==0.14.0
 httpcore==1.0.5
 

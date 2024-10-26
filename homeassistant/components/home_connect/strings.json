@@ -188,6 +188,35 @@
         "name": "Internal light"
       }
     },
+    "number": {
+      "refrigerator_setpoint_temperature": {
+        "name": "Refrigerator temperature"
+      },
+      "freezer_setpoint_temperature": {
+        "name": "Freezer temperature"
+      },
+      "bottle_cooler_setpoint_temperature": {
+        "name": "Bottle cooler temperature"
+      },
+      "chiller_left_setpoint_temperature": {
+        "name": "Chiller left temperature"
+      },
+      "chiller_setpoint_temperature": {
+        "name": "Chiller temperature"
+      },
+      "chiller_right_setpoint_temperature": {
+        "name": "Chiller right temperature"
+      },
+      "wine_compartment_setpoint_temperature": {
+        "name": "Wine compartment temperature"
+      },
+      "wine_compartment_2_setpoint_temperature": {
+        "name": "Wine compartment 2 temperature"
+      },
+      "wine_compartment_3_setpoint_temperature": {
+        "name": "Wine compartment 3 temperature"
+      }
+    },
     "sensor": {
       "program_progress": {
         "name": "Program progress"
@@ -356,6 +385,11 @@
       },
       "door_assistant_freezer": {
         "name": "Freezer door assistant"
+      }
+    },
+    "time": {
+      "alarm_clock": {
+        "name": "Alarm clock"
       }
     }
   }
