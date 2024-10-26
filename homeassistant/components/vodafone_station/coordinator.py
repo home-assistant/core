@@ -148,12 +148,14 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 "Found %s stale devices: %s", len(stale_devices), stale_devices
             )
             device_registry = dr.async_get(self.hass)
-            for device_id in stale_devices:
+            for stale_mac in stale_devices:
                 device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+                    connections={("mac", stale_mac)}
                 )
                 if device:
-                    _LOGGER.info("Removing stale device: %s", device.name)
+                    _LOGGER.info(
+                        "Removing stale device: %s [%s]", device.name, stale_mac
+                    )
                     device_registry.async_update_device(
                         device_id=device.id,
                         remove_config_entry_id=self.config_entry.entry_id,
