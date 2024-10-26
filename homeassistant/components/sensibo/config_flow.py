@@ -8,7 +8,7 @@ from typing import Any
 from pysensibo.exceptions import AuthenticationError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.selector import TextSelector
 
@@ -27,14 +27,10 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    entry: ConfigEntry | None
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with Sensibo."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -56,13 +52,11 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             except NoUsernameError:
                 errors["base"] = "no_username"
             else:
-                assert self.entry is not None
-
-                if username == self.entry.unique_id:
+                reauth_entry = self._get_reauth_entry()
+                if username == reauth_entry.unique_id:
                     return self.async_update_reload_and_abort(
-                        self.entry,
-                        data={
-                            **self.entry.data,
+                        reauth_entry,
+                        data_updates={
                             CONF_API_KEY: api_key,
                         },
                     )

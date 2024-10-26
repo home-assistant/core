@@ -14,6 +14,9 @@
       "init": {
         "title": "Configure new eQ-3 device"
       }
+    },
+    "error": {
+      "invalid_mac_address": "Invalid MAC address"
     }
   }
 }

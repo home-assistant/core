@@ -2,90 +2,120 @@
 
 import asyncio
 from collections.abc import Generator
+import logging
 import subprocess
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from homeassistant.components.go2rtc.server import Server
+from homeassistant.core import HomeAssistant
 
 TEST_BINARY = "/bin/go2rtc"
 
 
 @pytest.fixture
-def server() -> Server:
+def server(hass: HomeAssistant) -> Server:
     """Fixture to initialize the Server."""
-    return Server(binary=TEST_BINARY)
+    return Server(hass, binary=TEST_BINARY)
 
 
 @pytest.fixture
-def mock_tempfile() -> Generator[MagicMock]:
+def mock_tempfile() -> Generator[Mock]:
     """Fixture to mock NamedTemporaryFile."""
     with patch(
-        "homeassistant.components.go2rtc.server.NamedTemporaryFile"
+        "homeassistant.components.go2rtc.server.NamedTemporaryFile", autospec=True
     ) as mock_tempfile:
-        mock_tempfile.return_value.__enter__.return_value.name = "test.yaml"
-        yield mock_tempfile
+        file = mock_tempfile.return_value.__enter__.return_value
+        file.name = "test.yaml"
+        yield file
 
 
 @pytest.fixture
-def mock_popen() -> Generator[MagicMock]:
+def mock_process() -> Generator[MagicMock]:
     """Fixture to mock subprocess.Popen."""
-    with patch("homeassistant.components.go2rtc.server.subprocess.Popen") as mock_popen:
+    with patch(
+        "homeassistant.components.go2rtc.server.asyncio.create_subprocess_exec"
+    ) as mock_popen:
+        mock_popen.return_value.terminate = MagicMock()
+        mock_popen.return_value.kill = MagicMock()
+        mock_popen.return_value.returncode = None
         yield mock_popen
 
 
-@pytest.mark.usefixtures("mock_tempfile")
-async def test_server_run_success(mock_popen: MagicMock, server: Server) -> None:
+async def test_server_run_success(
+    mock_process: MagicMock,
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+    mock_tempfile: Mock,
+) -> None:
     """Test that the server runs successfully."""
-    mock_process = MagicMock()
-    mock_process.poll.return_value = None  # Simulate process running
     # Simulate process output
-    mock_process.stdout.readline.side_effect = [
-        b"log line 1\n",
-        b"log line 2\n",
-        b"",
-    ]
-    mock_popen.return_value.__enter__.return_value = mock_process
-
-    server.start()
-    await asyncio.sleep(0)
-
-    # Check that Popen was called with the right arguments
-    mock_popen.assert_called_once_with(
-        [TEST_BINARY, "-c", "webrtc.ice_servers=[]", "-c", "test.yaml"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+    mock_process.return_value.stdout.__aiter__.return_value = iter(
+        [
+            b"log line 1\n",
+            b"log line 2\n",
+        ]
     )
 
-    # Check that server read the log lines
-    assert mock_process.stdout.readline.call_count == 3
+    await server.start()
 
-    server.stop()
-    mock_process.terminate.assert_called_once()
-    assert not server.is_alive()
+    # Check that Popen was called with the right arguments
+    mock_process.assert_called_once_with(
+        TEST_BINARY,
+        "-c",
+        "test.yaml",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=False,
+    )
+
+    # Verify that the config file was written
+    mock_tempfile.write.assert_called_once_with(b"""
+api:
+  listen: "127.0.0.1:1984"
+
+rtsp:
+  listen: ""
+
+webrtc:
+  ice_servers: []
+""")
+
+    # Check that server read the log lines
+    for entry in ("log line 1", "log line 2"):
+        assert (
+            "homeassistant.components.go2rtc.server",
+            logging.DEBUG,
+            entry,
+        ) in caplog.record_tuples
+
+    await server.stop()
+    mock_process.return_value.terminate.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_tempfile")
-def test_server_run_process_timeout(mock_popen: MagicMock, server: Server) -> None:
+async def test_server_run_process_timeout(
+    mock_process: MagicMock, server: Server
+) -> None:
     """Test server run where the process takes too long to terminate."""
+    mock_process.return_value.stdout.__aiter__.return_value = iter(
+        [
+            b"log line 1\n",
+        ]
+    )
 
-    mock_process = MagicMock()
-    mock_process.poll.return_value = None  # Simulate process running
-    # Simulate process output
-    mock_process.stdout.readline.side_effect = [
-        b"log line 1\n",
-        b"",
-    ]
+    async def sleep() -> None:
+        await asyncio.sleep(1)
+
     # Simulate timeout
-    mock_process.wait.side_effect = subprocess.TimeoutExpired(cmd="go2rtc", timeout=5)
-    mock_popen.return_value.__enter__.return_value = mock_process
+    mock_process.return_value.wait.side_effect = sleep
 
-    # Start server thread
-    server.start()
-    server.stop()
+    with patch("homeassistant.components.go2rtc.server._TERMINATE_TIMEOUT", new=0.1):
+        # Start server thread
+        await server.start()
+        await server.stop()
 
     # Ensure terminate and kill were called due to timeout
-    mock_process.terminate.assert_called_once()
-    mock_process.kill.assert_called_once()
-    assert not server.is_alive()
+    mock_process.return_value.terminate.assert_called_once()
+    mock_process.return_value.kill.assert_called_once()

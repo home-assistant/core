@@ -7,7 +7,7 @@ OAUTH2_TOKEN = "https://api.home-connect.com/security/oauth/token"
 
 APPLIANCES_WITH_PROGRAMS = (
     "CleaningRobot",
-    "CoffeeMachine",
+    "CoffeeMaker",
     "Dishwasher",
     "Dryer",
     "Hood",
@@ -108,14 +108,17 @@ SERVICE_SELECT_PROGRAM = "select_program"
 SERVICE_SETTING = "change_setting"
 SERVICE_START_PROGRAM = "start_program"
 
+ATTR_ALLOWED_VALUES = "allowedvalues"
 ATTR_AMBIENT = "ambient"
 ATTR_BSH_KEY = "bsh_key"
+ATTR_CONSTRAINTS = "constraints"
 ATTR_DESC = "desc"
 ATTR_DEVICE = "device"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
+ATTR_STEPSIZE = "stepsize"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
