@@ -132,9 +132,9 @@ async def test_setup(
     evohome: EvohomeClient,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test services after setup of a Honeywell TCC-compatible system.
+    """Test services after setup of evohome.
 
-    Registered services will vary by the type of system.
+    Registered services vary by the type of system.
     """
 
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
