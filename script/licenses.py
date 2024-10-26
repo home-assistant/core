@@ -135,6 +135,7 @@ OSI_APPROVED_LICENSES = {
     "Apache-2",
     "GPLv2",
     "Python-2.0.1",
+    "LGPL-2.1-or-later",
 }
 
 EXCEPTIONS = {
@@ -142,10 +143,6 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
-    "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
-    "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
-    "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
     "chacha20poly1305-reuseable",  # Apache 2.0 or BSD 3-Clause
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
@@ -155,13 +152,10 @@ EXCEPTIONS = {
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
-    "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
-    "heatmiserV3",  # https://github.com/andylockran/heatmiserV3/pull/94
     "huum",  # https://github.com/frwickst/pyhuum/pull/8
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
-    "krakenex",  # https://github.com/veox/python3-krakenex/pull/145
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
@@ -172,12 +166,10 @@ EXCEPTIONS = {
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
-    "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "vincenty",  # Public domain
-    "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
 
 TODO = {
@@ -186,60 +178,75 @@ TODO = {
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
 }
 
+EXCEPTIONS_AND_TODOS = EXCEPTIONS.union(TODO)
+
 
 def check_licenses(args: CheckArgs) -> int:
     """Check licenses are OSI approved."""
     exit_code = 0
     raw_licenses = json.loads(Path(args.path).read_text())
-    package_definitions = [PackageDefinition.from_dict(data) for data in raw_licenses]
-    for package in package_definitions:
-        previous_unapproved_version = TODO.get(package.name)
-        approved = False
-        for approved_license in OSI_APPROVED_LICENSES:
-            if approved_license in package.license:
-                approved = True
-                break
-        if previous_unapproved_version is not None:
-            if previous_unapproved_version < package.version:
-                if approved:
-                    print(
-                        "Approved license detected for "
-                        f"{package.name}@{package.version}: {package.license}"
-                    )
-                    print("Please remove the package from the TODO list.")
-                    print()
-                else:
-                    print(
-                        "We could not detect an OSI-approved license for "
-                        f"{package.name}@{package.version}: {package.license}"
-                    )
-                    print()
-                exit_code = 1
-        elif not approved and package.name not in EXCEPTIONS:
+    license_status = {
+        pkg.name: (pkg, check_license_status(pkg))
+        for data in raw_licenses
+        if (pkg := PackageDefinition.from_dict(data))
+    }
+
+    for name, version in TODO.items():
+        pkg, status = license_status.get(name, (None, None))
+        if pkg is None or not (version < pkg.version):
+            continue
+        assert status is not None
+
+        if status is True:
+            print(
+                f"Approved license detected for "
+                f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
+                "Please remove the package from the TODO list.\n"
+            )
+        else:
             print(
                 "We could not detect an OSI-approved license for "
-                f"{package.name}@{package.version}: {package.license}"
+                f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
+                "Please update the package version on the TODO list.\n"
             )
-            print()
-            exit_code = 1
-        elif approved and package.name in EXCEPTIONS:
+        exit_code = 1
+
+    for pkg, status in license_status.values():
+        if status is False and pkg.name not in EXCEPTIONS_AND_TODOS:
             print(
-                "Approved license detected for "
-                f"{package.name}@{package.version}: {package.license}"
+                "We could not detect an OSI-approved license for "
+                f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
             )
-            print(f"Please remove the package from the EXCEPTIONS list: {package.name}")
-            print()
             exit_code = 1
-    current_packages = {package.name for package in package_definitions}
-    for package in [*TODO.keys(), *EXCEPTIONS]:
-        if package not in current_packages:
+        if status is True and pkg.name in EXCEPTIONS:
             print(
-                f"Package {package} is tracked, but not used. Please remove from the licenses.py"
-                "file."
+                f"Approved license detected for "
+                f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
+                f"Please remove the package from the EXCEPTIONS list.\n"
             )
-            print()
             exit_code = 1
+
+    for name in EXCEPTIONS_AND_TODOS.difference(license_status):
+        print(
+            f"Package {name} is tracked, but not used. "
+            "Please remove it from the licenses.py file.\n"
+        )
+        exit_code = 1
+
     return exit_code
+
+
+def check_license_status(package: PackageDefinition) -> bool:
+    """Check if package licenses is OSI approved."""
+    for approved_license in OSI_APPROVED_LICENSES:
+        if approved_license in package.license:
+            return True
+    return False
+
+
+def get_license_str(package: PackageDefinition) -> str:
+    """Return license string."""
+    return f"{package.license}"
 
 
 def extract_licenses(args: ExtractArgs) -> int:

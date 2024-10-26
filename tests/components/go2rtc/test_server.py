@@ -67,6 +67,7 @@ async def test_server_run_success(
         "test.yaml",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        close_fds=False,
     )
 
     # Verify that the config file was written
