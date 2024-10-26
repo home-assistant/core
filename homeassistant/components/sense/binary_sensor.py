@@ -10,13 +10,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SenseConfigEntry
-from .const import ATTRIBUTION, DOMAIN, MDI_ICONS
+from .const import DOMAIN
 from .coordinator import SenseRealtimeCoordinator
+from .entity import SenseDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,18 +39,9 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-def sense_to_mdi(sense_icon: str) -> str:
-    """Convert sense icon to mdi icon."""
-    return f"mdi:{MDI_ICONS.get(sense_icon, "power-plug")}"
-
-
-class SenseBinarySensor(
-    CoordinatorEntity[SenseRealtimeCoordinator], BinarySensorEntity
-):
+class SenseBinarySensor(SenseDeviceEntity, BinarySensorEntity):
     """Implementation of a Sense energy device binary sensor."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     def __init__(
@@ -61,20 +51,9 @@ class SenseBinarySensor(
         coordinator: SenseRealtimeCoordinator,
     ) -> None:
         """Initialize the Sense binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, sense_monitor_id, device.id, device)
         self._attr_name = device.name
         self._id = device.id
-        self._attr_unique_id = f"{sense_monitor_id}-{self._id}"
-        self._attr_icon = sense_to_mdi(device.icon)
-        self._device = device
-        self._attr_device_info = DeviceInfo(
-            name=f"Sense {sense_monitor_id} - {device.name}",
-            identifiers={(DOMAIN, f"{sense_monitor_id}:{device.id}")},
-            model="Sense",
-            manufacturer="Sense Labs, Inc.",
-            configuration_url="https://home.sense.com",
-            via_device=(DOMAIN, f"{sense_monitor_id}"),
-        )
 
     @property
     def old_unique_id(self) -> str:
