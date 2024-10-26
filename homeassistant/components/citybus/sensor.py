@@ -18,6 +18,7 @@ from .coordinator import CityBusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
@@ -45,9 +46,12 @@ async def async_setup_entry(
         ),
     )
 
-class CityBusNextBusSensor(CoordinatorEntity[CityBusDataUpdateCoordinator], SensorEntity):
+
+class CityBusNextBusSensor(
+    CoordinatorEntity[CityBusDataUpdateCoordinator], SensorEntity
+):
     """Sensor class that displays upcoming CityBus times.
-    
+
     To function, this requires knowing the key or code for the route, direction, and stop."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
@@ -74,17 +78,17 @@ class CityBusNextBusSensor(CoordinatorEntity[CityBusDataUpdateCoordinator], Sens
         }
         self._attr_unique_id = unique_id
         self._attr_name = name
-    
+
     def _log_debug(self, message, *args):
         """Log debug message with prefix."""
         msg = f"{self.route_key}:{self.direction_key}:{self.stop_code}:{message}"
         _LOGGER.debug(msg, *args)
-    
+
     def _log_err(self, message, *args):
         """Log error message with prefix."""
         msg = f"{self.route_key}:{self.direction_key}:{self.stop_code}:{message}"
         _LOGGER.error(msg, *args)
-    
+
     async def async_added_to_hass(self) -> None:
         """Read data from coordinator after adding to hass."""
         self._handle_coordinator_update()
@@ -93,7 +97,9 @@ class CityBusNextBusSensor(CoordinatorEntity[CityBusDataUpdateCoordinator], Sens
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update sensor with new estimate times."""
-        results = self.coordinator.get_estimate_data(self.route_key, self.direction_key, self.stop_code)
+        results = self.coordinator.get_estimate_data(
+            self.route_key, self.direction_key, self.stop_code
+        )
 
         self._log_debug("Estimate results: %s", results)
 
@@ -101,8 +107,6 @@ class CityBusNextBusSensor(CoordinatorEntity[CityBusDataUpdateCoordinator], Sens
             self._log_err("Error getting estimates: %s", str(results))
             self._attr_native_value = None
             return
-        
-
 
         estimates = results
 
@@ -117,6 +121,8 @@ class CityBusNextBusSensor(CoordinatorEntity[CityBusDataUpdateCoordinator], Sens
             )
 
             first_bus = estimates[0]
-            self._attr_native_value = datetime.fromisoformat(first_bus["estimatedDepartTimeUtc"])
-        
+            self._attr_native_value = datetime.fromisoformat(
+                first_bus["estimatedDepartTimeUtc"]
+            )
+
         self.async_write_ha_state()

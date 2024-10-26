@@ -19,6 +19,7 @@ from .const import CONF_DIRECTION, CONF_ROUTE, CONF_STOP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def _dict_to_select_selector(options: dict[str, str]) -> SelectSelector:
     return SelectSelector(
         SelectSelectorConfig(
@@ -37,14 +38,21 @@ def _dict_to_select_selector(options: dict[str, str]) -> SelectSelector:
 def _get_routes(citybussin: Citybussin) -> dict[str, str]:
     return {a["key"]: a["shortName"] for a in citybussin.get_bus_routes()}
 
+
 def _get_directions(citybussin: Citybussin, route_key: str) -> dict[str, str]:
-    return {a["direction"]["key"]: a["destination"] for a in citybussin.get_route_directions(route_key)}
+    return {
+        a["direction"]["key"]: a["destination"]
+        for a in citybussin.get_route_directions(route_key)
+    }
+
 
 def _get_stops(citybussin: Citybussin, route_key: str) -> dict[str, str]:
     return {a["stopCode"]: a["name"] for a in citybussin.get_route_stops(route_key)}
 
+
 def _unique_id_from_data(data: dict[str, str]) -> str:
     return f"{data[CONF_ROUTE]}_{data[CONF_DIRECTION]}_{data[CONF_STOP]}"
+
 
 class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle CityBus configuration."""
@@ -66,7 +74,7 @@ class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_route(user_input)
-    
+
     async def async_step_route(
         self,
         user_input: dict[str, str] | None = None,
@@ -84,14 +92,10 @@ class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="route",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ROUTE): _dict_to_select_selector(
-                        self._routes
-                    )
-                }
+                {vol.Required(CONF_ROUTE): _dict_to_select_selector(self._routes)}
             ),
         )
-    
+
     async def async_step_direction(
         self,
         user_input: dict[str, str] | None = None,
@@ -116,7 +120,7 @@ class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
-    
+
     async def async_step_stop(
         self,
         user_input: dict[str, str] | None = None,
@@ -148,10 +152,6 @@ class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="stop",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_STOP): _dict_to_select_selector(
-                        self._stops
-                    )
-                }
+                {vol.Required(CONF_STOP): _dict_to_select_selector(self._stops)}
             ),
         )
