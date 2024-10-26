@@ -235,7 +235,7 @@ def check_licenses(args: CheckArgs) -> int:
 
         if status is True:
             print(
-                f"Approved license detected for "
+                "Approved license detected for "
                 f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
                 "Please remove the package from the TODO list.\n"
             )
@@ -256,9 +256,9 @@ def check_licenses(args: CheckArgs) -> int:
             exit_code = 1
         if status is True and pkg.name in EXCEPTIONS:
             print(
-                f"Approved license detected for "
+                "Approved license detected for "
                 f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
-                f"Please remove the package from the EXCEPTIONS list.\n"
+                "Please remove the package from the EXCEPTIONS list.\n"
             )
             exit_code = 1
 
