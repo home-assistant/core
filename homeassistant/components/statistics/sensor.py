@@ -37,6 +37,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
     EventStateChangedData,
+    EventStateReportedData,
     HomeAssistant,
     State,
     callback,
@@ -48,6 +49,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
+    async_track_state_report_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -393,13 +395,12 @@ class StatisticsSensor(SensorEntity):
         await self._async_stats_sensor_startup()
         return self._call_on_remove_callbacks
 
-    @callback
-    def _async_stats_sensor_state_listener(
+    def _async_handle_new_state(
         self,
-        event: Event[EventStateChangedData],
+        reported_state: Any,
     ) -> None:
         """Handle the sensor state changes."""
-        if (new_state := event.data["new_state"]) is None:
+        if (new_state := reported_state) is None:
             return
         self._add_state_to_queue(new_state)
         self._async_purge_update_and_schedule()
@@ -410,6 +411,20 @@ class StatisticsSensor(SensorEntity):
         # only write state to the state machine if we are not in preview mode
         if not self._preview_callback:
             self.async_write_ha_state()
+
+    @callback
+    def _async_stats_sensor_state_change_listener(
+        self,
+        event: Event[EventStateChangedData],
+    ) -> None:
+        self._async_handle_new_state(event.data["new_state"])
+
+    @callback
+    def _async_stats_sensor_state_report_listener(
+        self,
+        event: Event[EventStateReportedData],
+    ) -> None:
+        self._async_handle_new_state(event.data["new_state"])
 
     async def _async_stats_sensor_startup(self) -> None:
         """Add listener and get recorded state.
@@ -425,7 +440,14 @@ class StatisticsSensor(SensorEntity):
             async_track_state_change_event(
                 self.hass,
                 [self._source_entity_id],
-                self._async_stats_sensor_state_listener,
+                self._async_stats_sensor_state_change_listener,
+            )
+        )
+        self.async_on_remove(
+            async_track_state_report_event(
+                self.hass,
+                [self._source_entity_id],
+                self._async_stats_sensor_state_report_listener,
             )
         )
 
@@ -449,7 +471,7 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state == "on")
             else:
                 self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_updated)
+            self.ages.append(new_state.last_reported)
             self.attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
             self.attributes[STAT_SOURCE_VALUE_VALID] = False

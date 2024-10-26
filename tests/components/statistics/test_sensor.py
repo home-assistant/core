@@ -251,7 +251,14 @@ async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
 
 
 async def test_sensor_source_with_force_update(hass: HomeAssistant) -> None:
-    """Test the behavior of the sensor when the source sensor force-updates with same value."""
+    """Test the behavior of the sensor when the source sensor force-updates with same value.
+
+    Forced updates no longer make a difference, since the statistics are now reacting not
+    only to state change events but also to state report events. This means repeating values
+    will be added to the buffer repeatedly in both cases.
+    This fixes problems with time based averages and some other functions that behave
+    differently when repeating values are reported.
+    """
     repeating_values = [18, 0, 0, 0, 0, 0, 0, 0, 9]
     assert await async_setup_component(
         hass,
@@ -294,9 +301,9 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant) -> None:
     state_normal = hass.states.get("sensor.test_normal")
     state_force = hass.states.get("sensor.test_force")
     assert state_normal and state_force
-    assert state_normal.state == str(round(sum(repeating_values) / 3, 2))
+    assert state_normal.state == str(round(sum(repeating_values) / 9, 2))
     assert state_force.state == str(round(sum(repeating_values) / 9, 2))
-    assert state_normal.attributes.get("buffer_usage_ratio") == round(3 / 20, 2)
+    assert state_normal.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state_force.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
 
