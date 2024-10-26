@@ -21,6 +21,12 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "issues": {
+    "deprecated_binary_common_door_sensor": {
+      "title": "Deprecated Binary door sensor detected in {info}",
+      "description": "The binary door sensor `{entity}` is being used in `{info}`. A sensor entity with additional possible states is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
+    }
+  },
   "services": {
     "start_program": {
       "name": "Start program",
