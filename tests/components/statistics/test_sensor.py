@@ -1744,7 +1744,7 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
             },
         )
         # this value is probably going to be ignored, since loading from the database has
-        # most likely hasn't finished yet
+        # most likely not finished yet
         # if this value would be added before loading the historic data
         # it would mess up the order of the internal queue which is supposed to be sorted by time
         hass.states.async_set(
