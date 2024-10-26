@@ -91,7 +91,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.address = discovery_info.address
         self.devices = {discovery_info.address: _get_name(discovery_info)}
-        await self.async_set_unique_id(self.address)
+        await self.async_set_unique_id(str(self.address))
         self._abort_if_unique_id_configured()
         return await self.async_step_confirm()
 
