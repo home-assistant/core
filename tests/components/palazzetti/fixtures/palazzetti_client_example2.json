@@ -1,0 +1,19 @@
+{
+  "mac": "22:33:44:55:66:77",
+  "name": "Stove2",
+  "sw_version": "0.0.0",
+  "hw_version": "1.1.1",
+  "fan_speed_min": 1,
+  "fan_speed_max": 5,
+  "has_fan_silent": true,
+  "has_fan_high": false,
+  "has_fan_auto": true,
+  "has_on_off_switch": true,
+  "connected": true,
+  "is_heating": true,
+  "room_temperature": 22,
+  "target_temperature": 21,
+  "target_temperature_min": 5,
+  "target_temperature_max": 50,
+  "fan_speed": 5
+}

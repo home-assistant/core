@@ -49,8 +49,21 @@ def mock_palazzetti_client():
             new=mock_client,
         ),
     ):
-        for k, v in json.loads(load_fixture("palazzetti_client.json", DOMAIN)).items():
+        data = json.loads(load_fixture("palazzetti_client_example1.json", DOMAIN))
+        for k, v in data.items():
             setattr(mock_client, k, v)
         mock_client.connect = AsyncMock(return_value=True)
         mock_client.update_state = AsyncMock(return_value=True)
         yield mock_client
+
+
+@pytest.fixture(params=["example1", "example2"])
+def palazzetti_devices(
+    mock_palazzetti_client: AsyncMock, request: pytest.FixtureRequest
+) -> Generator[AsyncMock]:
+    """Return a list of AirGradient devices."""
+    data = json.loads(load_fixture(f"palazzetti_client_{request.param}.json", DOMAIN))
+    for k, v in data.items():
+        setattr(mock_palazzetti_client, k, v)
+
+    return mock_palazzetti_client
