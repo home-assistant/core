@@ -4549,7 +4549,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     hass.states.async_set("cover.office_window", "closed")
     hass.states.async_set("cover.office_skylight", "open")
     hass.states.async_set("cover.x_skylight", "open")
-    hass.states.async_set("binary_sensor.door", "open")
+    hass.states.async_set("binary_sensor.door", "on")
     await hass.async_block_till_done()
 
     info = render_to_info(hass, template_complex_str)
@@ -4559,7 +4559,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     assert info.all_states is True
     assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
-    hass.states.async_set("binary_sensor.door", "closed")
+    hass.states.async_set("binary_sensor.door", "off")
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains

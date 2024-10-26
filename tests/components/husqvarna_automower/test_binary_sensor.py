@@ -2,12 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioautomower.model import MowerActivities
-from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aioautomower.model import MowerActivities, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -16,12 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_binary_sensor_states(
@@ -29,11 +22,9 @@ async def test_binary_sensor_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test binary sensor states."""
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("binary_sensor.test_mower_1_charging")
     assert state is not None
