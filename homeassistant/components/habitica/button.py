@@ -230,6 +230,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 11
             and data.user["stats"]["mp"] >= 15
+            and data.user["stats"]["hp"] < 50
         ),
         class_needed=HEALER,
         entity_picture="shop_heal.png",
