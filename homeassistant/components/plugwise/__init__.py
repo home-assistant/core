@@ -4,12 +4,21 @@ from __future__ import annotations
 
 from typing import Any
 
+from plugwise import Smile
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TIMEOUT, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DEFAULT_TIMEOUT, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .util import get_timeout_for_version
 
@@ -22,10 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     coordinator = PlugwiseDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
-    await async_migrate_sensor_entities(hass, coordinator)
-    await async_migrate_plugwise_entry(hass, coordinator, entry)
-
     entry.runtime_data = coordinator
+
+    await async_migrate_sensor_entities(hass, coordinator)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -101,23 +109,32 @@ async def async_migrate_sensor_entities(
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
-async def async_migrate_plugwise_entry(
-    hass: HomeAssistant,
-    coordinator: PlugwiseDataUpdateCoordinator,
-    entry: ConfigEntry,
-) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate to new config entry."""
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.version == 1 and entry.minor_version < 2:
+        api = Smile(
+            host=entry.data[CONF_HOST],
+            password=entry.data[CONF_PASSWORD],
+            port=entry.data[CONF_PORT],
+            timeout=DEFAULT_TIMEOUT,
+            username=entry.data[CONF_USERNAME],
+            websession=async_get_clientsession(hass, verify_ssl=False),
+        )
+        version = await api.connect()
         new_data = {**entry.data}
-        new_data[CONF_TIMEOUT] = get_timeout_for_version(coordinator.api.smile_version)
+        new_data[CONF_TIMEOUT] = get_timeout_for_version(str(version))
         hass.config_entries.async_update_entry(
             entry, data=new_data, minor_version=2, version=1
         )
-        LOGGER.debug(
-            "Migration to version %s.%s successful",
-            entry.version,
-            entry.minor_version,
-        )
-        return True
 
-    return False
+    LOGGER.debug(
+        "Migration to version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
