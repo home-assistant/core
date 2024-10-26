@@ -107,7 +107,7 @@ async def test_ctl_turn_off(
     ctl_id: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_TURN_OFF of a evohome controller."""
+    """Test SERVICE_TURN_OFF of an evohome controller."""
 
     results = []
 
@@ -137,7 +137,7 @@ async def test_ctl_turn_on(
     ctl_id: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_TURN_ON of a evohome controller."""
+    """Test SERVICE_TURN_ON of an evohome controller."""
 
     results = []
 
