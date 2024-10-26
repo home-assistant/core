@@ -16,34 +16,20 @@
 # name: test_browse_presets
   list([
     dict({
-      'can_expand': True,
-      'can_play': False,
+      'can_expand': False,
+      'can_play': True,
       'children_media_class': None,
-      'media_class': 'channel',
-      'media_content_id': 'radio',
-      'media_content_type': 'presets_folder',
-      'thumbnail': None,
-      'title': 'Radio',
+      'media_class': 'music',
+      'media_content_id': '1',
+      'media_content_type': 'preset',
+      'thumbnail': 'https://static.airable.io/43/68/432868.png',
+      'title': 'Chicago House Radio',
     }),
-    dict({
-      'can_expand': True,
-      'can_play': False,
-      'children_media_class': None,
-      'media_class': 'track',
-      'media_content_id': 'tracks',
-      'media_content_type': 'presets_folder',
-      'thumbnail': None,
-      'title': 'Tracks',
-    }),
-  ])
-# ---
-# name: test_browse_presets_folder
-  list([
     dict({
       'can_expand': False,
       'can_play': True,
       'children_media_class': None,
-      'media_class': 'track',
+      'media_class': 'music',
       'media_content_id': '2',
       'media_content_type': 'preset',
       'thumbnail': 'https://i.scdn.co/image/ab67616d0000b27325a5a1ed28871e8e53e62d59',
