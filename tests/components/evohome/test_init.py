@@ -38,10 +38,11 @@ async def test_entities(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-        # async_setup()
+        # in async_setup():
         # -> hass.async_create_task(async_load_platform() x 1-2
 
-        # async_load_platform() -> async_add_entities(entities, update_before_add=True)
+        # in async_load_platform(), which calls async_add_entities():
+        # -> ep._async_schedule_add_entities(entities, update_before_add=True)
         # -> hass.async_create_task_internal(async_add_entities(
 
     assert hass.states.async_all() == snapshot
