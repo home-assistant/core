@@ -42,17 +42,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import (
-    ATTR_ACTIVE_GROUP,
-    ATTR_ACTIVE_QUEUE,
-    ATTR_GROUP_LEADER,
-    ATTR_MASS_PLAYER_ID,
-    ATTR_MASS_PLAYER_TYPE,
-    ATTR_QUEUE_INDEX,
-    ATTR_QUEUE_ITEMS,
-    ATTR_STREAM_TITLE,
-    DOMAIN,
-)
+from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, ATTR_STREAM_TITLE, DOMAIN
 from .entity import MusicAssistantEntity
 
 if TYPE_CHECKING:
@@ -215,13 +205,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             assert player.active_source is not None
         queue = self.mass.player_queues.get(player.active_source)
         attrs = {
-            ATTR_MASS_PLAYER_ID: self.player_id,
             ATTR_MASS_PLAYER_TYPE: player.type.value,
-            ATTR_GROUP_LEADER: player.synced_to,
             ATTR_ACTIVE_QUEUE: queue.queue_id if queue else None,
-            ATTR_ACTIVE_GROUP: player.active_group,
-            ATTR_QUEUE_ITEMS: queue.items if queue else None,
-            ATTR_QUEUE_INDEX: queue.current_index if queue else None,
         }
         # add optional stream_title for radio streams
         if (
