@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[botched][climate.bathroom_dn-state]
+# name: test_setups[botched][climate.bathroom_dn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.0,
@@ -46,7 +46,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][climate.dead_zone-state]
+# name: test_setups[botched][climate.dead_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
@@ -92,7 +92,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][climate.front_room-state]
+# name: test_setups[botched][climate.front_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -144,7 +144,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][climate.kids_room-state]
+# name: test_setups[botched][climate.kids_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.5,
@@ -191,7 +191,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][climate.kitchen-state]
+# name: test_setups[botched][climate.kitchen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.0,
@@ -238,7 +238,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][climate.main_bedroom-state]
+# name: test_setups[botched][climate.main_bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.0,
@@ -285,7 +285,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][climate.main_room-state]
+# name: test_setups[botched][climate.main_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -336,7 +336,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][climate.my_home-state]
+# name: test_setups[botched][climate.my_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.7,
@@ -375,7 +375,10 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[botched][water_heater.domestic_hot_water-state]
+# name: test_setups[botched][services]
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setups[botched][water_heater.domestic_hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'away_mode': 'on',
@@ -422,7 +425,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[default][climate.bathroom_dn-state]
+# name: test_setups[default][climate.bathroom_dn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.0,
@@ -469,7 +472,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.dead_zone-state]
+# name: test_setups[default][climate.dead_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
@@ -515,7 +518,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.front_room-state]
+# name: test_setups[default][climate.front_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -563,7 +566,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.kids_room-state]
+# name: test_setups[default][climate.kids_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.5,
@@ -610,7 +613,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.kitchen-state]
+# name: test_setups[default][climate.kitchen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.0,
@@ -657,7 +660,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.main_bedroom-state]
+# name: test_setups[default][climate.main_bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.0,
@@ -704,7 +707,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.main_room-state]
+# name: test_setups[default][climate.main_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -751,7 +754,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.my_home-state]
+# name: test_setups[default][climate.my_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.7,
@@ -790,7 +793,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][climate.spare_room-state]
+# name: test_setups[default][climate.spare_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.5,
@@ -837,7 +840,10 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[default][water_heater.domestic_hot_water-state]
+# name: test_setups[default][services]
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setups[default][water_heater.domestic_hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'away_mode': 'on',
@@ -884,7 +890,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[h032585][climate.my_home-state]
+# name: test_setups[h032585][climate.my_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
@@ -915,7 +921,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[h032585][climate.thermostat-state]
+# name: test_setups[h032585][climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
@@ -962,7 +968,10 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[h099625][climate.my_home-state]
+# name: test_setups[h032585][services]
+  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setups[h099625][climate.my_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
@@ -998,7 +1007,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[h099625][climate.thermostat-state]
+# name: test_setups[h099625][climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
@@ -1045,7 +1054,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[h099625][climate.thermostat_2-state]
+# name: test_setups[h099625][climate.thermostat_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.5,
@@ -1092,7 +1101,10 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[minimal][climate.main_room-state]
+# name: test_setups[h099625][services]
+  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setups[minimal][climate.main_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -1139,7 +1151,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[minimal][climate.my_home-state]
+# name: test_setups[minimal][climate.my_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -1178,7 +1190,10 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[sys_004][climate.living_room-state]
+# name: test_setups[minimal][services]
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setups[sys_004][climate.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.5,
@@ -1214,7 +1229,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_entities[sys_004][climate.thermostat-state]
+# name: test_setups[sys_004][climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.5,
@@ -1260,4 +1275,7 @@
     'last_updated': <ANY>,
     'state': 'heat',
   })
+# ---
+# name: test_setups[sys_004][services]
+  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
 # ---

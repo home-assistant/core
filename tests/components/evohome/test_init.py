@@ -21,14 +21,14 @@ from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
-async def test_entities(
+async def test_setups(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entities and state after setup of a Honeywell TCC-compatible system."""
+    """Test entity state & domain services after setup of evohome."""
 
     # Cannot use the evohome fixture, as need to set dtm first
     #  - some extended state attrs are relative the current time
@@ -47,6 +47,10 @@ async def test_entities(
 
     for x in hass.states.async_all():
         assert x == snapshot(name=f"{x.entity_id}-state")
+
+    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot(
+        name="services"
+    )
 
 
 SETUP_FAILED_ANTICIPATED = (
