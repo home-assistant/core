@@ -1,4 +1,4 @@
-"""The tests for climate entities of evohome.
+"""The tests for the climate platform of evohome.
 
 All evohome systems have controllers and at least one zone.
 """
@@ -28,7 +28,29 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import setup_evohome
 from .const import TEST_INSTALLS
+
+
+@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
+async def test_setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entities and their states after setup of evohome."""
+
+    # Cannot use the evohome fixture, as need to set dtm first
+    #  - some extended state attrs are relative the current time
+    freezer.move_to("2024-07-10T12:00:00Z")
+
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
+
+    for x in hass.states.async_all(Platform.CLIMATE):
+        assert x == snapshot(name=f"{x.entity_id}-state")
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
