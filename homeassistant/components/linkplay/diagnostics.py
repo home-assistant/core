@@ -18,9 +18,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data = entry.runtime_data
     return async_redact_data(
-        {
-            "device_info": data.bridge.to_dict(),
-            "config_entry_data": entry.data,
-        },
+        {"device_info": data.bridge.to_dict()},
         TO_REDACT,
     )
