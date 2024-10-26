@@ -410,7 +410,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '100.0',
   })
 # ---
 # name: test_sensors[sensor.daily_from_grid-entry]
@@ -823,7 +823,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '500',
   })
 # ---
 # name: test_sensors[sensor.energy_usage-entry]
@@ -875,7 +875,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '100',
   })
 # ---
 # name: test_sensors[sensor.l1_voltage-entry]
@@ -927,7 +927,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '120',
   })
 # ---
 # name: test_sensors[sensor.l2_voltage-entry]
@@ -979,7 +979,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '240',
   })
 # ---
 # name: test_sensors[sensor.monthly_from_grid-entry]
@@ -1393,7 +1393,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[sensor.weekly_from_grid-entry]

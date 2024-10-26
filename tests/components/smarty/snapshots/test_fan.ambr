@@ -14,7 +14,7 @@
     'domain': 'fan',
     'entity_category': None,
     'entity_id': 'fan.mock_title',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,12 +24,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
-    'original_name': 'Mock Title',
+    'original_icon': None,
+    'original_name': None,
     'platform': 'smarty',
     'previous_unique_id': None,
     'supported_features': <FanEntityFeature: 49>,
-    'translation_key': None,
+    'translation_key': 'fan',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H',
     'unit_of_measurement': None,
   })
@@ -38,7 +38,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title',
-      'icon': 'mdi:air-conditioner',
       'percentage': 0,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,

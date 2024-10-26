@@ -164,7 +164,7 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.8
+aioairzone-cloud==0.6.9
 
 # homeassistant.components.airzone
 aioairzone==0.9.5
@@ -301,7 +301,7 @@ aiooncue==0.3.7
 aioopenexchangerates==0.6.8
 
 # homeassistant.components.nmap_tracker
-aiooui==0.1.6
+aiooui==0.1.7
 
 # homeassistant.components.pegel_online
 aiopegelonline==0.0.10
@@ -438,7 +438,7 @@ anthemav==1.4.1
 anthropic==0.31.2
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.1.2
+apple_weatherkit==1.1.3
 
 # homeassistant.components.apprise
 apprise==1.9.0
@@ -790,13 +790,13 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
-fyta_cli==0.6.7
+fyta_cli==0.6.10
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.3
+gardena-bluetooth==1.4.4
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -1052,16 +1052,16 @@ knx-frontend==2024.9.10.221729
 konnected==1.2.0
 
 # homeassistant.components.kraken
-krakenex==2.1.0
+krakenex==2.2.2
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.0.2
+lacrosse-view==1.0.3
 
 # homeassistant.components.laundrify
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.1.6
+lcn-frontend==0.2.0
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1323,7 +1323,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.4.3
+plugwise==1.4.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1473,7 +1473,7 @@ pycomfoconnect==0.5.1
 pycoolmasternet-async==0.2.2
 
 # homeassistant.components.radio_browser
-pycountry==23.12.11
+pycountry==24.6.1
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
@@ -1835,7 +1835,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.10.0
 
 # homeassistant.components.suez_water
-pysuezV2==0.2.1
+pysuezV2==0.2.2
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2014,7 +2014,7 @@ qingping-ble==0.10.0
 qnapstats==0.4.0
 
 # homeassistant.components.radio_browser
-radios==0.3.1
+radios==0.3.2
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -2437,7 +2437,7 @@ yt-dlp==2024.10.22
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.135.0
+zeroconf==0.136.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

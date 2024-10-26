@@ -1,9 +1,11 @@
 # serializer version: 1
 # name: test_set_operation_mode[default]
   list([
-    tuple(
-    ),
-    tuple(
-    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+    }),
   ])
 # ---
