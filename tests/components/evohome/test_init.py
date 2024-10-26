@@ -17,21 +17,6 @@ from homeassistant.setup import async_setup_component
 
 from .const import TEST_INSTALLS
 
-
-@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
-async def test_setup(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test services after setup of a Honeywell TCC-compatible system.
-
-    Registered services will vary by the type of system.
-    """
-
-    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
-
-
 SETUP_FAILED_ANTICIPATED = (
     "homeassistant.setup",
     logging.ERROR,
@@ -139,3 +124,17 @@ async def test_client_request_failure_v2(
     assert caplog.record_tuples == REQUEST_FAILED_LOOKUP.get(
         status, [SETUP_FAILED_UNEXPECTED]
     )
+
+
+@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
+async def test_setup(
+    hass: HomeAssistant,
+    evohome: EvohomeClient,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test services after setup of a Honeywell TCC-compatible system.
+
+    Registered services will vary by the type of system.
+    """
+
+    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
