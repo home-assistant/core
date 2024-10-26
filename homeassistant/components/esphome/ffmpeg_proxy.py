@@ -1,10 +1,12 @@
 """HTTP view that converts audio from a URL to a preferred format."""
 
 import asyncio
+from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
 import secrets
+from typing import Final
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter, BaseRequest
@@ -16,6 +18,8 @@ from homeassistant.core import HomeAssistant
 from .const import DATA_FFMPEG_PROXY
 
 _LOGGER = logging.getLogger(__name__)
+
+_MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
 
 
 def async_create_proxy_url(
@@ -59,13 +63,18 @@ class FFmpegConversionInfo:
     proc: asyncio.subprocess.Process | None = None
     """Subprocess doing ffmpeg conversion."""
 
+    is_finished: bool = False
+    """True if conversion has finished."""
+
 
 @dataclass
 class FFmpegProxyData:
     """Data for ffmpeg proxy conversion."""
 
-    # device_id -> info
-    conversions: dict[str, FFmpegConversionInfo] = field(default_factory=dict)
+    # device_id -> [info]
+    conversions: dict[str, list[FFmpegConversionInfo]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
 
     def async_create_proxy_url(
         self,
@@ -77,8 +86,15 @@ class FFmpegProxyData:
         width: int | None,
     ) -> str:
         """Create a one-time use proxy URL that automatically converts the media."""
-        if (convert_info := self.conversions.pop(device_id, None)) is not None:
-            # Stop existing conversion before overwriting info
+
+        # Remove completed conversions
+        device_conversions = [
+            info for info in self.conversions[device_id] if not info.is_finished
+        ]
+
+        while len(device_conversions) >= _MAX_CONVERSIONS_PER_DEVICE:
+            # Stop oldest conversion before adding a new one
+            convert_info = device_conversions[0]
             if (convert_info.proc is not None) and (
                 convert_info.proc.returncode is None
             ):
@@ -87,11 +103,17 @@ class FFmpegProxyData:
                 )
                 convert_info.proc.kill()
 
+            device_conversions = device_conversions[1:]
+
         convert_id = secrets.token_urlsafe(16)
-        self.conversions[device_id] = FFmpegConversionInfo(
-            convert_id, media_url, media_format, rate, channels, width
+        device_conversions.append(
+            FFmpegConversionInfo(
+                convert_id, media_url, media_format, rate, channels, width
+            )
         )
         _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
+
+        self.conversions[device_id] = device_conversions
 
         return f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
 
@@ -167,6 +189,7 @@ class FFmpegConvertResponse(web.StreamResponse):
             *command_args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            close_fds=False,  # use posix_spawn in CPython < 3.13
         )
 
         # Only one conversion process per device is allowed
@@ -199,6 +222,9 @@ class FFmpegConvertResponse(web.StreamResponse):
 
             raise
         finally:
+            # Allow conversion info to be removed
+            self.convert_info.is_finished = True
+
             # Terminate hangs, so kill is used
             if proc.returncode is None:
                 proc.kill()
@@ -225,7 +251,8 @@ class FFmpegProxyView(HomeAssistantView):
         self, request: web.Request, device_id: str, filename: str
     ) -> web.StreamResponse:
         """Start a get request."""
-        if (convert_info := self.proxy_data.conversions.get(device_id)) is None:
+        device_conversions = self.proxy_data.conversions[device_id]
+        if not device_conversions:
             return web.Response(
                 body="No proxy URL for device", status=HTTPStatus.NOT_FOUND
             )
@@ -233,9 +260,16 @@ class FFmpegProxyView(HomeAssistantView):
         # {id}.mp3 -> id, mp3
         convert_id, media_format = filename.rsplit(".")
 
-        if (convert_info.convert_id != convert_id) or (
-            convert_info.media_format != media_format
-        ):
+        # Look up conversion info
+        convert_info: FFmpegConversionInfo | None = None
+        for maybe_convert_info in device_conversions:
+            if (maybe_convert_info.convert_id == convert_id) and (
+                maybe_convert_info.media_format == media_format
+            ):
+                convert_info = maybe_convert_info
+                break
+
+        if convert_info is None:
             return web.Response(body="Invalid proxy URL", status=HTTPStatus.BAD_REQUEST)
 
         # Stop previous process if the URL is being reused.
