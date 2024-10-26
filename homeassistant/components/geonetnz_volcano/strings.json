@@ -6,7 +6,7 @@
         "data": { "radius": "Radius" }
       }
     },
-    "abort": {
+    "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }

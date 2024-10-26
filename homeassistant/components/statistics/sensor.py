@@ -50,7 +50,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -373,8 +372,7 @@ class StatisticsSensor(SensorEntity):
         self._update_listener: CALLBACK_TYPE | None = None
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
-    @callback
-    def async_start_preview(
+    async def async_start_preview(
         self,
         preview_callback: Callable[[str, Mapping[str, Any]], None],
     ) -> CALLBACK_TYPE:
@@ -392,7 +390,7 @@ class StatisticsSensor(SensorEntity):
 
         self._preview_callback = preview_callback
 
-        self._async_stats_sensor_startup(self.hass)
+        await self._async_stats_sensor_startup()
         return self._call_on_remove_callbacks
 
     @callback
@@ -413,10 +411,16 @@ class StatisticsSensor(SensorEntity):
         if not self._preview_callback:
             self.async_write_ha_state()
 
-    @callback
-    def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
-        """Add listener and get recorded state."""
+    async def _async_stats_sensor_startup(self) -> None:
+        """Add listener and get recorded state.
+
+        Historical data needs to be loaded from the database first before we
+        can start accepting new incoming changes.
+        This is needed to ensure that the buffer is properly sorted by time.
+        """
         _LOGGER.debug("Startup for %s", self.entity_id)
+        if "recorder" in self.hass.config.components:
+            await self._initialize_from_database()
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
@@ -424,14 +428,10 @@ class StatisticsSensor(SensorEntity):
                 self._async_stats_sensor_state_listener,
             )
         )
-        if "recorder" in self.hass.config.components:
-            self.hass.async_create_task(self._initialize_from_database())
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(
-            async_at_start(self.hass, self._async_stats_sensor_startup)
-        )
+        await self._async_stats_sensor_startup()
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
@@ -712,7 +712,9 @@ class StatisticsSensor(SensorEntity):
         """
 
         value = self._state_characteristic_fn()
-
+        _LOGGER.debug(
+            "Updating value: states: %s, ages: %s => %s", self.states, self.ages, value
+        )
         if self._state_characteristic not in STATS_NOT_A_NUMBER:
             with contextlib.suppress(TypeError):
                 value = round(cast(float, value), self._precision)
@@ -735,6 +737,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for numeric sensor
 
     def _stat_average_linear(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -748,6 +752,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -803,12 +809,12 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 1.96 * cast(float, self._stat_standard_deviation())
         return None
 
     def _stat_distance_99_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 2.58 * cast(float, self._stat_standard_deviation())
         return None
 
@@ -835,17 +841,23 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_noisiness(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
     def _stat_percentile(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
             return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.stdev(self.states)
         return None
@@ -856,6 +868,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 abs(j - i)
@@ -864,6 +878,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences_nonnegative(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 (j - i if j >= i else j - 0)
@@ -885,6 +901,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_variance(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.variance(self.states)
         return None
@@ -892,6 +910,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for binary sensor
 
     def _stat_binary_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return 100.0 * int(self.states[0] is True)
         if len(self.states) >= 2:
             on_seconds: float = 0
             for i in range(1, len(self.states)):

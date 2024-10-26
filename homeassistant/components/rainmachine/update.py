@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -10,6 +11,7 @@ from regenmaschine.errors import RequestError
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
+    UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -42,7 +44,14 @@ UPDATE_STATE_MAP = {
 }
 
 
-UPDATE_DESCRIPTION = RainMachineEntityDescription(
+@dataclass(frozen=True, kw_only=True)
+class RainMachineUpdateEntityDescription(
+    UpdateEntityDescription, RainMachineEntityDescription
+):
+    """Describe a RainMachine update."""
+
+
+UPDATE_DESCRIPTION = RainMachineUpdateEntityDescription(
     key="update",
     api_category=DATA_MACHINE_FIRMWARE_UPDATE_STATUS,
 )

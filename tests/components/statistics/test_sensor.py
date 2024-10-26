@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from asyncio import Event as AsyncioEvent
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
+from threading import Event
 from typing import Any
 from unittest.mock import patch
 
@@ -12,7 +14,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import Recorder, history
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -50,6 +52,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
+VALUES_NUMERIC_LINEAR = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 async def test_unique_id(
@@ -1013,7 +1016,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "average_linear",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 6.0,
             "value_9": 10.68,
             "unit": "°C",
         },
@@ -1021,7 +1024,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "average_step",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 6.0,
             "value_9": 11.36,
             "unit": "°C",
         },
@@ -1113,7 +1116,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "distance_95_percent_of_values",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 0.0,
             "value_9": float(round(2 * 1.96 * statistics.stdev(VALUES_NUMERIC), 2)),
             "unit": "°C",
         },
@@ -1121,7 +1124,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "distance_99_percent_of_values",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 0.0,
             "value_9": float(round(2 * 2.58 * statistics.stdev(VALUES_NUMERIC), 2)),
             "unit": "°C",
         },
@@ -1161,7 +1164,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "noisiness",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 0.0,
             "value_9": float(round(sum([3, 4.8, 10.2, 1.2, 5.4, 2.5, 7.3, 8]) / 8, 2)),
             "unit": "°C",
         },
@@ -1169,7 +1172,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "percentile",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 6.0,
             "value_9": 9.2,
             "unit": "°C",
         },
@@ -1177,7 +1180,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "standard_deviation",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 0.0,
             "value_9": float(round(statistics.stdev(VALUES_NUMERIC), 2)),
             "unit": "°C",
         },
@@ -1193,7 +1196,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "sum_differences",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 0.0,
             "value_9": float(
                 sum(
                     [
@@ -1214,7 +1217,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "sum_differences_nonnegative",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 0.0,
             "value_9": float(
                 sum(
                     [
@@ -1259,7 +1262,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "sensor",
             "name": "variance",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 0.0,
             "value_9": float(round(statistics.variance(VALUES_NUMERIC), 2)),
             "unit": "°C²",
         },
@@ -1267,7 +1270,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "source_sensor_domain": "binary_sensor",
             "name": "average_step",
             "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
+            "value_1": 100.0,
             "value_9": 50.0,
             "unit": "%",
         },
@@ -1701,3 +1704,76 @@ async def test_device_id(
     statistics_entity = entity_registry.async_get("sensor.statistics")
     assert statistics_entity is not None
     assert statistics_entity.device_id == source_entity.device_id
+
+
+async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Verify that updates happening before reloading from the database are handled correctly."""
+
+    current_time = dt_util.utcnow()
+
+    # enable and pre-fill the recorder
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    with (
+        freeze_time(current_time) as freezer,
+    ):
+        for value in VALUES_NUMERIC_LINEAR:
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+            )
+            await hass.async_block_till_done()
+            current_time += timedelta(seconds=1)
+            freezer.move_to(current_time)
+
+        await async_wait_recording_done(hass)
+
+        # some synchronisation is needed to prevent that loading from the database finishes too soon
+        # we want this to take long enough to be able to try to add a value BEFORE loading is done
+        state_changes_during_period_called_evt = AsyncioEvent()
+        state_changes_during_period_stall_evt = Event()
+        real_state_changes_during_period = history.state_changes_during_period
+
+        def mock_state_changes_during_period(*args, **kwargs):
+            states = real_state_changes_during_period(*args, **kwargs)
+            hass.loop.call_soon_threadsafe(state_changes_during_period_called_evt.set)
+            state_changes_during_period_stall_evt.wait()
+            return states
+
+        # create the statistics component, get filled from database
+        with patch(
+            "homeassistant.components.statistics.sensor.history.state_changes_during_period",
+            mock_state_changes_during_period,
+        ):
+            assert await async_setup_component(
+                hass,
+                "sensor",
+                {
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "state_characteristic": "average_step",
+                            "max_age": {"seconds": 10},
+                        },
+                    ]
+                },
+            )
+            # adding this value is going to be ignored, since loading from the database hasn't finished yet
+            # if this value would be added before loading from the database is done
+            # it would mess up the order of the internal queue which is supposed to be sorted by time
+            await state_changes_during_period_called_evt.wait()
+            hass.states.async_set(
+                "sensor.test_monitored",
+                "10",
+                {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+            )
+            state_changes_during_period_stall_evt.set()
+            await hass.async_block_till_done()
+
+    # we will end up with a buffer of [1 .. 9] (10 wasn't added)
+    # so the computed average_step is 1+2+3+4+5+6+7+8/8 = 4.5
+    assert float(hass.states.get("sensor.test").state) == pytest.approx(4.5)

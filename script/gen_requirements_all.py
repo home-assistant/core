@@ -118,7 +118,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.0
+anyio==4.6.2.post1
 h11==0.14.0
 httpcore==1.0.5
 
@@ -139,6 +139,9 @@ backoff>=2.0
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
 pydantic==1.10.18
+
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130

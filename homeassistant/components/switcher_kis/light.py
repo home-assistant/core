@@ -6,11 +6,7 @@ import logging
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.device import (
-    DeviceCategory,
-    DeviceState,
-    SwitcherSingleShutterDualLight,
-)
+from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -87,8 +83,8 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
         if self.control_result is not None:
             return self.control_result
 
-        data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
-        return bool(data.lights[self._light_id] == DeviceState.ON)
+        data = cast(SwitcherLight, self.coordinator.data)
+        return bool(data.light[self._light_id] == DeviceState.ON)
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
