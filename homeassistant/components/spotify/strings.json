@@ -58,6 +58,9 @@
       "instrumentalness": {
         "name": "Song instrumentalness"
       },
+      "valence": {
+        "name": "Song valence"
+      },
       "liveness": {
         "name": "Song liveness"
       },

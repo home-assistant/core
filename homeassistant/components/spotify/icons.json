@@ -27,6 +27,9 @@
       "instrumentalness": {
         "default": "mdi:guitar-electric"
       },
+      "valence": {
+        "default": "mdi:emoticon-happy"
+      },
       "liveness": {
         "default": "mdi:music-note"
       },
