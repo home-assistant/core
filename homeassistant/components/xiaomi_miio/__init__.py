@@ -56,6 +56,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -118,6 +119,7 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P9: FanMiot,
     MODEL_FAN_P10: FanMiot,
     MODEL_FAN_P11: FanMiot,
+    MODEL_FAN_P18: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }

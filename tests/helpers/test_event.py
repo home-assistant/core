@@ -1892,10 +1892,10 @@ async def test_track_template_result_complex(hass: HomeAssistant) -> None:
         "time": False,
     }
 
-    hass.states.async_set("binary_sensor.single", "binary_sensor_on")
+    hass.states.async_set("binary_sensor.single", "on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 9
-    assert specific_runs[8] == "binary_sensor_on"
+    assert specific_runs[8] == "on"
     assert info.listeners == {
         "all": False,
         "domains": set(),

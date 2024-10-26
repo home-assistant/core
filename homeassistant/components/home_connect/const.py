@@ -36,6 +36,11 @@ COFFEE_EVENT_BEAN_CONTAINER_EMPTY = (
 COFFEE_EVENT_WATER_TANK_EMPTY = "ConsumerProducts.CoffeeMaker.Event.WaterTankEmpty"
 COFFEE_EVENT_DRIP_TRAY_FULL = "ConsumerProducts.CoffeeMaker.Event.DripTrayFull"
 
+DISHWASHER_EVENT_SALT_NEARLY_EMPTY = "Dishcare.Dishwasher.Event.SaltNearlyEmpty"
+DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY = (
+    "Dishcare.Dishwasher.Event.RinseAidNearlyEmpty"
+)
+
 REFRIGERATION_INTERNAL_LIGHT_POWER = "Refrigeration.Common.Setting.Light.Internal.Power"
 REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS = (
     "Refrigeration.Common.Setting.Light.Internal.Brightness"
@@ -95,14 +100,17 @@ SERVICE_SELECT_PROGRAM = "select_program"
 SERVICE_SETTING = "change_setting"
 SERVICE_START_PROGRAM = "start_program"
 
+ATTR_ALLOWED_VALUES = "allowedvalues"
 ATTR_AMBIENT = "ambient"
 ATTR_BSH_KEY = "bsh_key"
+ATTR_CONSTRAINTS = "constraints"
 ATTR_DESC = "desc"
 ATTR_DEVICE = "device"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
+ATTR_STEPSIZE = "stepsize"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 

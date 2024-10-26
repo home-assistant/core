@@ -54,6 +54,9 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
     async def _async_update_data(self) -> BSBLanCoordinatorData:
         """Get state and sensor data from BSB-Lan device."""
         try:
+            # initialize the client, this is cached and will only be called once
+            await self.client.initialize()
+
             state = await self.client.state()
             sensor = await self.client.sensor()
         except BSBLANConnectionError as err:

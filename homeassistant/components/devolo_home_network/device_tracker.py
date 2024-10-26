@@ -51,7 +51,7 @@ async def async_setup_entry(
                 )
             )
             tracked.add(station.mac_address)
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     @callback
     def restore_entities() -> None:

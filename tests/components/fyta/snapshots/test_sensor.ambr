@@ -386,7 +386,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'no_sensor',
+    'state': 'doing_great',
   })
 # ---
 # name: test_all_entities[sensor.gummibaum_salinity-entry]
@@ -1052,7 +1052,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'no_sensor',
+    'state': 'doing_great',
   })
 # ---
 # name: test_all_entities[sensor.kakaobaum_salinity-entry]

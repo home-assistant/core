@@ -166,6 +166,10 @@ async def test_options_reconfigure(
     )
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.jewish_calendar.config.abort.reconfigure_successful"],
+)
 async def test_reconfigure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
