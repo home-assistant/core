@@ -8,19 +8,17 @@ from bsblan import BSBLANError
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
-    STATE_ELECTRIC,
     STATE_OFF,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BSBLanData
+from . import BSBLanConfigEntry, BSBLanData
 from .const import DOMAIN
 from .entity import BSBLanEntity
 
@@ -28,10 +26,9 @@ PARALLEL_UPDATES = 1
 
 # Mapping between BSBLan and HA operation modes
 OPERATION_MODES = {
-    "auto": STATE_ELECTRIC,  # Normal automatic operation
-    "reduced": STATE_ECO,  # Energy saving mode
-    "off": STATE_OFF,  # Protection mode
-    "on": STATE_ON,  # Continuous comfort mode
+    "Eco": STATE_ECO,  # Energy saving mode
+    "Off": STATE_OFF,  # Protection mode
+    "On": STATE_ON,  # Continuous comfort mode
 }
 
 OPERATION_MODES_REVERSE = {v: k for k, v in OPERATION_MODES.items()}
@@ -39,11 +36,11 @@ OPERATION_MODES_REVERSE = {v: k for k, v in OPERATION_MODES.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BSBLanConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSBLAN water heater based on a config entry."""
-    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities([BSBLANWaterHeater(data)])
 
 
@@ -71,12 +68,13 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation."""
-        current_mode = self.coordinator.data.dhw.operating_mode.value
+        current_mode = self.coordinator.data.dhw.operating_mode.desc
         return OPERATION_MODES.get(current_mode)
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        # need to implement the current temp in bsblan lib
         if self.coordinator.data.dhw.nominal_setpoint.value == "---":
             return None
         return float(self.coordinator.data.dhw.nominal_setpoint.value)
