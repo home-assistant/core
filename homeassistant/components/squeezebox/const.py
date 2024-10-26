@@ -26,4 +26,9 @@ STATUS_QUERY_LIBRARYNAME = "libraryname"
 STATUS_QUERY_MAC = "mac"
 STATUS_QUERY_UUID = "uuid"
 STATUS_QUERY_VERSION = "version"
-SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")
+SQUEEZEBOX_SOURCE_STRINGS = (
+    "source:",
+    "wavin:",
+    "spotify:",
+    "loop:",
+)
