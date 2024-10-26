@@ -1,54 +1,4 @@
 # serializer version: 1
-# name: test_entities[sensor.spotify_spotify_1_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.spotify_spotify_1_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'spotify',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'valence',
-    'unique_id': '1112264111_valence',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_entities[sensor.spotify_spotify_1_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Spotify spotify_1 None',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.spotify_spotify_1_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '62.5',
-  })
-# ---
 # name: test_entities[sensor.spotify_spotify_1_song_acousticness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -591,5 +541,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4/4',
+  })
+# ---
+# name: test_entities[sensor.spotify_spotify_1_song_valence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.spotify_spotify_1_song_valence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Song valence',
+    'platform': 'spotify',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'valence',
+    'unique_id': '1112264111_valence',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entities[sensor.spotify_spotify_1_song_valence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Spotify spotify_1 Song valence',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.spotify_spotify_1_song_valence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '62.5',
   })
 # ---
