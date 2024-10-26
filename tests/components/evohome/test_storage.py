@@ -55,20 +55,17 @@ ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(h
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
 
+_TEST_STORAGE_BASE: Final[_TokenStoreT] = {
+    SZ_USERNAME: USERNAME_SAME,
+    SZ_REFRESH_TOKEN: REFRESH_TOKEN,
+    SZ_ACCESS_TOKEN: ACCESS_TOKEN,
+    SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
+}
+
 TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
-    "sans_session_id": {
-        SZ_USERNAME: USERNAME_SAME,
-        SZ_REFRESH_TOKEN: REFRESH_TOKEN,
-        SZ_ACCESS_TOKEN: ACCESS_TOKEN,
-        SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
-    },
-    "with_session_id": {
-        SZ_USERNAME: USERNAME_SAME,
-        SZ_REFRESH_TOKEN: REFRESH_TOKEN,
-        SZ_ACCESS_TOKEN: ACCESS_TOKEN,
-        SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
-        SZ_USER_DATA: {"sessionId": SESSION_ID},
-    },
+    "sans_session_id": _TEST_STORAGE_BASE,
+    "null_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: None},  # type: ignore[dict-item]
+    "with_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: {"sessionId": SESSION_ID}},
 }
 
 TEST_STORAGE_NULL: Final[dict[str, _EmptyStoreT | None]] = {
