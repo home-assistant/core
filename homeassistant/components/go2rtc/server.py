@@ -62,6 +62,7 @@ class Server:
             config_file,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
+            close_fds=False,  # required for posix_spawn on cPython < 3.13
         )
 
         self._hass.async_create_background_task(
