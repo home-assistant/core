@@ -124,6 +124,7 @@ homeassistant.components.bryant_evolution.*
 homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
+homeassistant.components.cambridge_audio.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cert_expiry.*
@@ -302,7 +303,6 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
-homeassistant.components.map.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
@@ -425,6 +425,7 @@ homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
+homeassistant.components.spotify.*
 homeassistant.components.sql.*
 homeassistant.components.squeezebox.*
 homeassistant.components.ssdp.*

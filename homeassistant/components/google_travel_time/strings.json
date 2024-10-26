@@ -11,7 +11,7 @@
           "destination": "Destination"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "[%key:component::google_travel_time::config::step::user::description%]",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",

@@ -47,7 +47,7 @@ async def test_cover(
     mock_api,
     monkeypatch: pytest.MonkeyPatch,
     device,
-    entity_id,
+    entity_id: str,
 ) -> None:
     """Test cover services."""
     await init_integration(hass, USERNAME, TOKEN)
@@ -68,7 +68,7 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "position", 77)
+        monkeypatch.setattr(device, "position", [77])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
@@ -89,7 +89,7 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "direction", ShutterDirection.SHUTTER_UP)
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_UP])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
@@ -109,7 +109,7 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "direction", ShutterDirection.SHUTTER_DOWN)
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_DOWN])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
@@ -129,7 +129,7 @@ async def test_cover(
             blocking=True,
         )
 
-        monkeypatch.setattr(device, "direction", ShutterDirection.SHUTTER_STOP)
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_STOP])
         mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
@@ -139,7 +139,7 @@ async def test_cover(
         assert state.state == CoverState.OPEN
 
     # Test closed on position == 0
-    monkeypatch.setattr(device, "position", 0)
+    monkeypatch.setattr(device, "position", [0])
     mock_bridge.mock_callbacks([device])
     await hass.async_block_till_done()
 
@@ -161,7 +161,7 @@ async def test_cover_control_fail(
     mock_bridge,
     mock_api,
     device,
-    entity_id,
+    entity_id: str,
 ) -> None:
     """Test cover control fail."""
     await init_integration(hass, USERNAME, TOKEN)
