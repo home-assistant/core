@@ -65,8 +65,16 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
+        device_reg = dr.async_get(self.hass)
+        device_list = dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        )
 
-        self.previous_devices: set[str] = set({})
+        mac_list: list[str] = []
+        for x in device_list:
+            mac_list.extend(y[1].upper() for y in x.connections if y[0] == "mac")
+
+        self.previous_devices: set[str] = set(mac_list)
 
     def _calculate_update_time_and_consider_home(
         self, device: VodafoneStationDevice, utc_point_in_time: datetime
@@ -132,13 +140,20 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             for dev_info in (raw_data_devices).values()
         }
         current_devices = set(data_devices)
+        _LOGGER.debug(
+            "Loaded current %s devices: %s", len(current_devices), current_devices
+        )
         if stale_devices := self.previous_devices - current_devices:
+            _LOGGER.debug(
+                "Found %s stale devices: %s", len(stale_devices), stale_devices
+            )
             device_registry = dr.async_get(self.hass)
             for device_id in stale_devices:
                 device = device_registry.async_get_device(
                     identifiers={(DOMAIN, device_id)}
                 )
                 if device:
+                    _LOGGER.info("Removing stale device: %s", device.name)
                     device_registry.async_update_device(
                         device_id=device.id,
                         remove_config_entry_id=self.config_entry.entry_id,
