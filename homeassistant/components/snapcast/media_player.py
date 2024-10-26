@@ -338,11 +338,6 @@ class SnapcastClientDevice(SnapcastBaseDevice):
         return self._device.group
 
     @property
-    def available(self) -> bool:
-        """Check device availability."""
-        return super().available and self._device.connected
-
-    @property
     def name(self) -> str:
         """Return the name of the device."""
         return f"{self._device.friendly_name} {CLIENT_SUFFIX}"
