@@ -209,6 +209,14 @@
           "aborting": "Aborting"
         }
       },
+      "door": {
+        "name": "Door",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "locked": "[%key:common::state::locked%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
       "coffee_counter": {
         "name": "Coffees"
       },
@@ -348,6 +356,11 @@
       },
       "door_assistant_freezer": {
         "name": "Freezer door assistant"
+      }
+    },
+    "time": {
+      "alarm_clock": {
+        "name": "Alarm clock"
       }
     }
   }

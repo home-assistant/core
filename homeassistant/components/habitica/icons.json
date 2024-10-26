@@ -20,6 +20,42 @@
       },
       "revive": {
         "default": "mdi:grave-stone"
+      },
+      "mpheal": {
+        "default": "mdi:broadcast"
+      },
+      "earth": {
+        "default": "mdi:landslide"
+      },
+      "frost": {
+        "default": "mdi:snowflake"
+      },
+      "defensive_stance": {
+        "default": "mdi:shield-sword"
+      },
+      "valorous_presence": {
+        "default": "mdi:shield-sun"
+      },
+      "intimidate": {
+        "default": "mdi:emoticon-angry"
+      },
+      "tools_of_trade": {
+        "default": "mdi:domino-mask"
+      },
+      "stealth": {
+        "default": "mdi:ninja"
+      },
+      "heal": {
+        "default": "mdi:aurora"
+      },
+      "brightness": {
+        "default": "mdi:flare"
+      },
+      "protect_aura": {
+        "default": "mdi:shimmer"
+      },
+      "heal_all": {
+        "default": "mdi:hand-heart-outline"
       }
     },
     "sensor": {

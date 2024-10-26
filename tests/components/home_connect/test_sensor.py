@@ -8,6 +8,10 @@ from homeconnect.api import HomeConnectAPI
 import pytest
 
 from homeassistant.components.home_connect.const import (
+    BSH_DOOR_STATE,
+    BSH_DOOR_STATE_CLOSED,
+    BSH_DOOR_STATE_LOCKED,
+    BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
@@ -224,6 +228,27 @@ async def test_remaining_prog_time_edge_cases(
 @pytest.mark.parametrize(
     ("entity_id", "status_key", "event_value_update", "expected", "appliance"),
     [
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_LOCKED,
+            "locked",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_CLOSED,
+            "closed",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_OPEN,
+            "open",
+            "Dishwasher",
+        ),
         (
             "sensor.fridgefreezer_freezer_door_alarm",
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",

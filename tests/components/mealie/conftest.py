@@ -1,7 +1,7 @@
 """Mealie tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiomealie import (
     About,
@@ -20,7 +20,6 @@ from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.components.smhi.common import AsyncMock
 
 SHOPPING_LIST_ID = "list-id-1"
 SHOPPING_ITEM_NOTE = "Shopping Item 1"
