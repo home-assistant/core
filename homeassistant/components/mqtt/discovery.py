@@ -19,7 +19,6 @@ from homeassistant.config_entries import (
     ConfigEntry,
     signal_discovered_config_entry_removed,
 )
-
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
@@ -114,7 +113,7 @@ def _async_process_discovery_migration(payload: MQTTDiscoveryPayload) -> bool:
         return True
     return False
 
-  
+
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry from already discovered list."""
     hass.data[DATA_MQTT].discovery_already_discovered.discard(discovery_hash)
