@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/suez_water",
   "iot_class": "cloud_polling",
   "loggers": ["pysuez", "regex"],
-  "requirements": ["pysuezV2==0.2.1"]
+  "requirements": ["pysuezV2==0.2.2"]
 }
