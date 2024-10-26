@@ -45,7 +45,8 @@ async def test_entities(
         # -> ep._async_schedule_add_entities(entities, update_before_add=True)
         # -> hass.async_create_task_internal(async_add_entities(
 
-    assert hass.states.async_all() == snapshot
+    for x in hass.states.async_all():
+        assert x == snapshot(name=f"{x.entity_id}-state")
 
 
 SETUP_FAILED_ANTICIPATED = (
