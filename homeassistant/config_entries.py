@@ -2838,7 +2838,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if self.source == SOURCE_REAUTH:
             # If the integration does not provide a name for the reauth title,
             # we append it to the description placeholders.
-            entry_title: str = self.context["title_placeholders"][CONF_NAME]
+            entry_title: str = self._get_reauth_entry().title
             description_placeholders = dict(description_placeholders or {})
             if (
                 description_placeholders
