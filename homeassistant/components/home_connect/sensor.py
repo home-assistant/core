@@ -223,12 +223,18 @@ EVENT_SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
-        desc="Salt Nearly Empty",
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="salt_nearly_empty",
         appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(
         key=DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
-        desc="Rinse Aid Nearly Empty",
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="rinse_aid_nearly_empty",
         appliance_types=("Dishwasher",),
     ),
 )

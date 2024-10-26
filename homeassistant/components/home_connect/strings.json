@@ -306,6 +306,22 @@
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
+      },
+      "salt_nearly_empty": {
+        "name": "Salt nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "Rinse aid nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
       }
     },
     "switch": {
