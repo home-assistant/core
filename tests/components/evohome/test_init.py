@@ -6,9 +6,8 @@ from http import HTTPStatus
 import logging
 from unittest.mock import patch
 
-from evohomeasync2 import exceptions as exc
+from evohomeasync2 import EvohomeClient, exceptions as exc
 from evohomeasync2.broker import _ERR_MSG_LOOKUP_AUTH, _ERR_MSG_LOOKUP_BASE
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -16,27 +15,21 @@ from homeassistant.components.evohome import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import setup_evohome
 from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
-async def test_entities(
+async def test_setup(
     hass: HomeAssistant,
-    config: dict[str, str],
-    install: str,
+    evohome: EvohomeClient,
     snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entities and state after setup of a Honeywell TCC-compatible system."""
+    """Test services after setup of a Honeywell TCC-compatible system.
 
-    # some extended state attrs are relative the current time
-    freezer.move_to("2024-07-10T12:00:00Z")
+    Registered services will vary by the type of system.
+    """
 
-    async for _ in setup_evohome(hass, config, install=install):
-        pass
-
-    assert hass.states.async_all() == snapshot
+    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
 
 
 SETUP_FAILED_ANTICIPATED = (
