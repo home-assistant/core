@@ -943,7 +943,7 @@ fyta_cli==0.6.7
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.3
+gardena-bluetooth==1.4.4
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -2278,7 +2278,7 @@ pysqueezebox==0.10.0
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuezV2==0.2.1
+pysuezV2==0.2.2
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -3054,7 +3054,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.135.0
+zeroconf==0.136.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
