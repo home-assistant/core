@@ -82,6 +82,7 @@ SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
