@@ -1168,6 +1168,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
+    # Pet Water Feeder
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
+    "cwysj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_LEVEL,
+            translation_key="water_level",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
