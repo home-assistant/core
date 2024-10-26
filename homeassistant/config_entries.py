@@ -2845,8 +2845,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 and description_placeholders.get(CONF_NAME) is None
             ):
                 description_placeholders[CONF_NAME] = entry_title
-            else:
-                description_placeholders = {CONF_NAME: entry_title}
+
         return super().async_show_form(
             step_id=step_id,
             data_schema=data_schema,
