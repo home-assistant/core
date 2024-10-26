@@ -98,7 +98,7 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"deprecated_regulatorlock_sensor_{self.entity_id}_{item}",
+                f"deprecated_binary_sensor_{self.entity_id}_{item}",
                 breaks_in_ha_version="2025.2.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
@@ -187,7 +187,7 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"deprecated_keylock_sensor_{self.entity_id}_{item}",
+                f"deprecated_binary_sensor_{self.entity_id}_{item}",
                 breaks_in_ha_version="2025.2.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
