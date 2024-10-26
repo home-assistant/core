@@ -232,6 +232,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 15
         ),
         class_needed=HEALER,
+        entity_picture="shop_heal.png",
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.BRIGHTNESS,
