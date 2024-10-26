@@ -1,10 +1,6 @@
 """ViCare helpers functions."""
 
-from contextlib import suppress
 import logging
-import os
-import pickle
-from pickle import UnpicklingError
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -105,20 +101,3 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     except AttributeError as error:
         _LOGGER.debug("No compressors found: %s", error)
     return []
-
-
-def deserialize_token(token_file):
-    """Deserializes a token from a token file."""
-    if token_file is None or not os.path.isfile(token_file):
-        _LOGGER.debug("Token file argument not provided or file does not exist")
-        return None
-    _LOGGER.debug("Token file exists")
-    with (
-        suppress(UnpicklingError),
-        open(token_file, mode="rb") as binary_file,
-    ):
-        s_token = pickle.load(binary_file)
-        _LOGGER.debug("Token restored from file")
-        return s_token
-    _LOGGER.debug("Could not restore token")
-    return None
