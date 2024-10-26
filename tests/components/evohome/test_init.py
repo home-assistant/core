@@ -176,7 +176,7 @@ async def test_service_reset_system(
 ) -> None:
     """Test EvoService.RESET_SYSTEM of an evohome system."""
 
-    # EvoService.RESET_SYSTEM (iff SZ_AUTO_WITH_RESET in modes)
+    # EvoService.RESET_SYSTEM (if SZ_AUTO_WITH_RESET in modes)
     with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
