@@ -1,11 +1,11 @@
-"""Support for the Microsoft Azure Speech-to-Text service."""
+"""Support for the Microsoft Speech-to-Text service."""
 
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
 import logging
 
-import azure.cognitiveservices.speech as speechsdk
+import aiohttp
 
 from homeassistant.components.stt import (
     AudioBitRates,
@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_SPEECH_CONFIG, DOMAIN, SUPPORTED_LANGUAGES
+from .const import DOMAIN, STT_ENDPOINT, SUPPORTED_LANGUAGES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,13 +38,13 @@ async def async_setup_entry(
 
 
 class MicrosoftSpeechToTextEntity(SpeechToTextEntity):
-    """Microsoft Speech To Text."""
+    """Microsoft Speech To Text using REST API."""
 
     def __init__(
         self,
         entry: ConfigEntry,
     ) -> None:
-        """Initialize Microsoft Azure STT entity."""
+        """Initialize Microsoft Speech To Text entity."""
         self._attr_unique_id = f"{entry.entry_id}"
         self._attr_name = entry.title
         self._attr_device_info = dr.DeviceInfo(
@@ -53,8 +53,8 @@ class MicrosoftSpeechToTextEntity(SpeechToTextEntity):
             model="Azure Speech Service",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        self._entry = entry
-        self._speech_config = entry.runtime_data[DATA_SPEECH_CONFIG]
+        # self._entry = entry
+        self._speech_config = entry.data
 
     @property
     def supported_languages(self) -> list[str]:
@@ -94,58 +94,71 @@ class MicrosoftSpeechToTextEntity(SpeechToTextEntity):
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
-        """Process an audio stream to STT service."""
+        """Process an audio stream to STT service via REST API."""
 
-        self._speech_config.speech_recognition_language = metadata.language
-
-        audio_format = speechsdk.audio.AudioStreamFormat(
-            samples_per_second=metadata.sample_rate.value,
-            bits_per_sample=metadata.bit_rate.value,
-            channels=metadata.channel.value,
-        )
-
-        push_stream = speechsdk.audio.PushAudioInputStream(audio_format)
-        audio_config = speechsdk.audio.AudioConfig(stream=push_stream)
-        speech_recognizer = speechsdk.SpeechRecognizer(
-            speech_config=self._speech_config, audio_config=audio_config
-        )
-
-        try:
-            total_bytes = 0
-            async for chunk in stream:
-                if chunk:
-                    push_stream.write(chunk)
-                    total_bytes += len(chunk)
-
-            push_stream.close()
-
-            result_future = speech_recognizer.recognize_once_async()
-            result = await self.hass.async_add_executor_job(result_future.get)
-        except Exception:
-            _LOGGER.exception("Exception during speech recognition")
+        api_key = self._speech_config.get("api_key")
+        if api_key is None:
+            _LOGGER.error("API key is missing in configuration")
             return SpeechResult(None, SpeechResultState.ERROR)
 
-        _LOGGER.debug("Recognition result: %s", result)
-        _LOGGER.debug("Endpoint id: %s", speech_recognizer.endpoint_id)
+        region = self._speech_config.get("region")
+        stt_endpoint = STT_ENDPOINT.format(region=region)
+        language = metadata.language
 
-        match result.reason:
-            case speechsdk.ResultReason.RecognizedSpeech:
-                _LOGGER.debug("Recognized speech: %s", result.text)
-                return SpeechResult(result.text, SpeechResultState.SUCCESS)
-            case speechsdk.ResultReason.NoMatch:
-                _LOGGER.debug("Speech could not be recognized")
-                return SpeechResult(None, SpeechResultState.ERROR)
-            case speechsdk.ResultReason.Canceled:
-                cancellation_details = result.cancellation_details
-                _LOGGER.debug(
-                    "Speech Recognition canceled: %s", cancellation_details.reason
-                )
-                if cancellation_details.reason == speechsdk.CancellationReason.Error:
+        headers = {
+            "Ocp-Apim-Subscription-Key": api_key,
+            "Content-Type": f"audio/wav; codec=audio/pcm; samplerate={metadata.sample_rate.value}",
+            "Accept": "application/json",
+        }
+
+        params = {
+            "language": language,
+        }
+
+        try:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
+                    stt_endpoint,
+                    headers=headers,
+                    params=params,
+                    data=self._audio_stream_generator(stream),
+                ) as response,
+            ):
+                if response.status == 200:
+                    response_json = await response.json()
+                    _LOGGER.debug("STT API Response: %s", response_json)
+                    if response_json.get("DisplayText"):
+                        return SpeechResult(
+                            response_json["DisplayText"], SpeechResultState.SUCCESS
+                        )
+                    _LOGGER.debug("No speech was recognized")
+                    return SpeechResult(None, SpeechResultState.ERROR)
+                if response.status == 400:
+                    _LOGGER.error("Bad request: %s", response.reason)
+                elif response.status == 401:
+                    _LOGGER.error("Unauthorized: %s", response.reason)
+                elif response.status == 429:
+                    _LOGGER.error("Too many requests: %s", response.reason)
+                elif response.status == 502:
+                    _LOGGER.error("Bad gateway: %s", response.reason)
+                else:
                     _LOGGER.error(
-                        "Error details: %s", cancellation_details.error_details
+                        "Failed to connect to Microsoft Speech API: %s",
+                        response.reason,
                     )
                 return SpeechResult(None, SpeechResultState.ERROR)
-            case _:
-                _LOGGER.debug("Unhandled result reason: %s", result.reason)
+        except aiohttp.ClientError:
+            _LOGGER.error("Connection error while processing audio stream")
+            return SpeechResult(None, SpeechResultState.ERROR)
+        except Exception:
+            _LOGGER.exception("Unexpected error during speech recognition")
+            return SpeechResult(None, SpeechResultState.ERROR)
 
-        return SpeechResult("", SpeechResultState.ERROR)
+    async def _audio_stream_generator(
+        self, stream: AsyncIterable[bytes]
+    ) -> AsyncIterable[bytes]:
+        """Generate stream audio chunks."""
+        async for chunk in stream:
+            if chunk:
+                yield chunk

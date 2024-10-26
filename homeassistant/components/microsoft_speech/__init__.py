@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import azure.cognitiveservices.speech as speechsdk
+import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_REGION, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -13,40 +13,34 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 
-from .const import DATA_SPEECH_CONFIG
+from .const import DOMAIN
+from .helper import CannotConnect, InvalidAuth, TooManyRequests, validate_input
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.STT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Microsoft Speech from a config entry."""
-    speech_config = speechsdk.SpeechConfig(
-        subscription=entry.data[CONF_API_KEY],
-        region=entry.data[CONF_REGION],
-        speech_recognition_language=entry.data[CONF_LANGUAGE],
-    )
 
-    synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
-    voices_future = await hass.async_add_executor_job(synthesizer.get_voices_async)
-    voices_result = await hass.async_add_executor_job(voices_future.get)
+    try:
+        await validate_input(hass, dict(entry.data))
+    except CannotConnect as err:
+        _LOGGER.error("Failed to connect to Microsoft Speech API")
+        raise ConfigEntryError from err
+    except InvalidAuth as err:
+        _LOGGER.error("Invalid API key or region provided")
+        raise ConfigEntryAuthFailed from err
+    except TooManyRequests as err:
+        _LOGGER.error("Too many requests made to Microsoft Speech API")
+        raise ConfigEntryNotReady from err
 
-    if voices_result.reason == speechsdk.ResultReason.VoicesListRetrieved:
-        entry.runtime_data = {}
-        entry.runtime_data[DATA_SPEECH_CONFIG] = speech_config
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        return True
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = entry.data
 
-    if voices_result.reason == speechsdk.ResultReason.Canceled:
-        if hasattr(voices_result, "error_details"):
-            if "Authentication error" in voices_result.error_details:
-                raise ConfigEntryAuthFailed("Invalid API key or region")
-            if "HTTPAPI_OPEN_REQUEST_FAILED" in voices_result.error_details:
-                raise ConfigEntryNotReady(
-                    "Timed out while connecting to Microsoft Azure"
-                )
-        raise ConfigEntryError("Unknown error while connecting to Microsoft Azure")
-
-    return False
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:

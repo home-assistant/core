@@ -264,6 +264,9 @@ aiohasupervisor==0.2.0b0
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.5
 
+# homeassistant.components.microsoft_speech
+aiohttp==3.10.9
+
 # homeassistant.components.hue
 aiohue==4.7.3
 
@@ -537,9 +540,6 @@ axis==63
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.2
-
-# homeassistant.components.microsoft_speech
-azure-cognitiveservices-speech==1.41.1
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1

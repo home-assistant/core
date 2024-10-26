@@ -3,7 +3,13 @@
 from typing import Final
 
 DOMAIN = "microsoft_speech"
-DATA_SPEECH_CONFIG = "speech_config"
+
+# REST API endpoint templates
+VOICES_ENDPOINT = (
+    "https://{region}.tts.speech.microsoft.com/cognitiveservices/voices/list"
+)
+STT_ENDPOINT = "https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+
 SUPPORTED_LANGUAGES: Final[list[str]] = [
     "ar-AE",
     "ar-BH",
@@ -68,6 +74,7 @@ SUPPORTED_LANGUAGES: Final[list[str]] = [
     "zh-HK",
     "zh-TW",
 ]
+
 SUPPORTED_REGIONS = [
     "australiacentral",
     "australiacentral2",

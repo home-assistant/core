@@ -8,7 +8,7 @@
   "homekit": {},
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "requirements": ["azure-cognitiveservices-speech==1.41.1"],
+  "requirements": ["aiohttp==3.10.9"],
   "ssdp": [],
   "zeroconf": []
 }
