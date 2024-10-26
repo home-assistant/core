@@ -33,8 +33,15 @@ async def test_entities(
     # some extended state attrs are relative the current time
     freezer.move_to("2024-07-10T12:00:00Z")
 
+    # includes await hass.async_block_till_done(), but is not enough!
     async for _ in setup_evohome(hass, config, install=install):
         pass
+
+        # async_setup()
+        # -> hass.async_create_task(async_load_platform() x 1-2
+
+        # async_load_platform() -> async_add_entities(entities, update_before_add=True)
+        # -> hass.async_create_task_internal(async_add_entities(
 
     assert hass.states.async_all() == snapshot
 
