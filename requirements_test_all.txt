@@ -164,7 +164,7 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.8
+aioairzone-cloud==0.6.9
 
 # homeassistant.components.airzone
 aioairzone==0.9.5
@@ -790,7 +790,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
-fyta_cli==0.6.7
+fyta_cli==0.6.10
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -876,7 +876,7 @@ gotailwind==0.2.4
 govee-ble==0.40.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.5.2
+govee-local-api==1.5.3
 
 # homeassistant.components.gpsd
 gps3==0.33.3

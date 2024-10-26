@@ -176,7 +176,7 @@ class EvoSession:
         ):
             app_storage[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
 
-        user_data: dict[str, str] = app_storage.pop(USER_DATA, {})
+        user_data: dict[str, str] = app_storage.pop(USER_DATA, {}) or {}
 
         self.session_id = user_data.get(SZ_SESSION_ID)
         self._tokens = app_storage
