@@ -16,10 +16,10 @@ async def test_climate(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_palazzetti: AsyncMock,
+    mock_palazzetti_client: AsyncMock,
 ) -> None:
     """Test the creation and values of Palazzetti climate device."""
-    patch("pypalazzetti.client.PalazzettiClient", mock_palazzetti)
+    patch("pypalazzetti.client.PalazzettiClient", mock_palazzetti_client)
 
     mock_config_entry.add_to_hass(hass)
 

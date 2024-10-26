@@ -39,7 +39,12 @@ class PalazzettiClimateEntity(
     _attr_name = None
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_translation_key = DOMAIN
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
 
     def __init__(self, *kargs, **kwargs) -> None:
         """Initialize Palazzetti climate."""
@@ -55,13 +60,7 @@ class PalazzettiClimateEntity(
             sw_version=client.sw_version,
             hw_version=client.hw_version,
         )
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.TURN_ON
-            | ClimateEntityFeature.TURN_OFF
-        )
-        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
         self._attr_min_temp = client.target_temperature_min
         self._attr_max_temp = client.target_temperature_max
         self._attr_fan_modes = list(
@@ -115,7 +114,9 @@ class PalazzettiClimateEntity(
         try:
             await self.coordinator.client.set_target_temperature(temperature)
         except CommunicationError as err:
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
         except ValidationError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -144,7 +145,9 @@ class PalazzettiClimateEntity(
             else:
                 await self.coordinator.client.set_fan_speed(FAN_MODES.index(fan_mode))
         except CommunicationError as err:
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
         except ValidationError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
