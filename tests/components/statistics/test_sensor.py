@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from asyncio import Event as AsyncioEvent
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
+from threading import Event
 from typing import Any
 from unittest.mock import patch
 
@@ -12,7 +14,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import Recorder, history
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -1727,37 +1729,51 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
             freezer.move_to(current_time)
 
         await async_wait_recording_done(hass)
-        # create the statistics component, get filled from database
-        assert await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": [
-                    {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "average_step",
-                        "max_age": {"seconds": 10},
-                    },
-                ]
-            },
-        )
-        # this value is probably going to be ignored, since loading from the database has
-        # most likely not finished yet
-        # if this value would be added before loading the historic data
-        # it would mess up the order of the internal queue which is supposed to be sorted by time
-        hass.states.async_set(
-            "sensor.test_monitored",
-            "10",
-            {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
-        )
-        await hass.async_block_till_done()
 
-    # depending on timing we will either end up with a buffer of [1 .. 9] or [1 .. 10]
-    # what may not happen is that the 10 will be added somewhere in between
-    # so we compute average_step for either 1 .. 9 or 1 .. 10
-    # this leads to 1+2+3+4+5+6+7+8/8 = 4.5
-    #            or 1+2+3+4+5+6+7+8+9/9 = 5
-    avg: float = float(hass.states.get("sensor.test").state)
-    assert avg == pytest.approx(4.5) or avg == pytest.approx(5.0)
+        # some synchronisation is needed to prevent that loading from the database finishes too soon
+        # we want this to take long enough to be able to try to add a value BEFORE loading is done
+        state_changes_during_period_called_evt = AsyncioEvent()
+        state_changes_during_period_stall_evt = Event()
+        real_state_changes_during_period = history.state_changes_during_period
+
+        def mock_state_changes_during_period(*args, **kwargs):
+            states = real_state_changes_during_period(*args, **kwargs)
+            hass.loop.call_soon_threadsafe(state_changes_during_period_called_evt.set)
+            state_changes_during_period_stall_evt.wait()
+            return states
+
+        # create the statistics component, get filled from database
+        with patch(
+            "homeassistant.components.statistics.sensor.history.state_changes_during_period",
+            mock_state_changes_during_period,
+        ):
+            assert await async_setup_component(
+                hass,
+                "sensor",
+                {
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "state_characteristic": "average_step",
+                            "max_age": {"seconds": 10},
+                        },
+                    ]
+                },
+            )
+            # adding this value is going to be ignored, since loading from the database hasn't finished yet
+            # if this value would be added before loading from the database is done
+            # it would mess up the order of the internal queue which is supposed to be sorted by time
+            await state_changes_during_period_called_evt.wait()
+            hass.states.async_set(
+                "sensor.test_monitored",
+                "10",
+                {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+            )
+            state_changes_during_period_stall_evt.set()
+            await hass.async_block_till_done()
+
+    # we will end up with a buffer of [1 .. 9] (10 wasn't added)
+    # so the computed average_step is 1+2+3+4+5+6+7+8/8 = 4.5
+    assert float(hass.states.get("sensor.test").state) == pytest.approx(4.5)
