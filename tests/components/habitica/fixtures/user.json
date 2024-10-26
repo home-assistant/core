@@ -16,7 +16,11 @@
     },
     "preferences": {
       "sleep": false,
-      "automaticAllocation": true
+      "automaticAllocation": true,
+      "disableClasses": false
+    },
+    "flags": {
+      "classSelected": true
     },
     "needsCron": true,
     "lastCron": "2024-09-21T22:01:55.586Z"
