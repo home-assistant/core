@@ -1,0 +1,33 @@
+{
+    "title": "Citybus",
+    "config": {
+        "step": {
+            "route": {
+                "title": "Select route",
+                "data": {
+                    "route": "Route"
+                }
+            },
+            "direction": {
+                "title": "Select direction",
+                "data": {
+                    "direction": "Direction"
+                }
+            },
+            "stop": {
+                "title": "Select stop",
+                "data": {
+                    "stop": "Stop"
+                }
+            }
+        },
+        "error": {
+            "invalid_route": "The route value selected is not valid",
+            "invalid_direction": "The direction value selected is not valid",
+            "invalid_stop": "The stop value selected is not valid"
+        },
+        "abort": {
+          "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+        }
+    }
+}
