@@ -27,10 +27,16 @@ from typing import TYPE_CHECKING, Any, Generic, Self, cast
 from async_interrupt import interrupt
 from propcache import cached_property
 from typing_extensions import TypeVar
+import voluptuous as vol
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
-from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
+from .const import (
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from .core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -2813,6 +2819,42 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
         return self.async_abort(reason=reason)
+
+    @callback
+    def async_show_form(
+        self,
+        *,
+        step_id: str | None = None,
+        data_schema: vol.Schema | None = None,
+        errors: dict[str, str] | None = None,
+        description_placeholders: Mapping[str, str | None] | None = None,
+        last_step: bool | None = None,
+        preview: str | None = None,
+    ) -> ConfigFlowResult:
+        """Return the definition of a form to gather user input.
+
+        The step_id parameter is deprecated and will be removed in a future release.
+        """
+        if self.source == SOURCE_REAUTH:
+            # If the integration does not provide a name for the reauth title,
+            # we append it to the description placeholders.
+            entry_title: str = self.context["title_placeholders"][CONF_NAME]
+            description_placeholders = dict(description_placeholders or {})
+            if (
+                description_placeholders
+                and description_placeholders.get(CONF_NAME) is None
+            ):
+                description_placeholders[CONF_NAME] = entry_title
+            else:
+                description_placeholders = {CONF_NAME: entry_title}
+        return super().async_show_form(
+            step_id=step_id,
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+            last_step=last_step,
+            preview=preview,
+        )
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
