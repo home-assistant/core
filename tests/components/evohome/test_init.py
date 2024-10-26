@@ -30,7 +30,8 @@ async def test_entities(
 ) -> None:
     """Test entities and state after setup of a Honeywell TCC-compatible system."""
 
-    # some extended state attrs are relative the current time
+    # Cannot use the evohome fixture, as need to set dtm first
+    #  - some extended state attrs are relative the current time
     freezer.move_to("2024-07-10T12:00:00Z")
 
     # includes await hass.async_block_till_done(), but is not enough!
