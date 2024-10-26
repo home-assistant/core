@@ -1054,3 +1054,54 @@ async def test_availability_in_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == STATE_UNAVAILABLE
+
+
+@respx.mock
+async def test_json_response_with_availability(hass: HomeAssistant) -> None:
+    """Test availability with complex json."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={"heartbeatList": {"1": [{"status": 1, "ping": 21.4}]}},
+    )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "resource": "http://localhost",
+                    "sensor": [
+                        {
+                            "unique_id": "complex_json",
+                            "name": "complex_json",
+                            "value_template": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.ping }}',
+                            "availability": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.status == 1 and is_number(v.ping) }}',
+                            "unit_of_measurement": "ms",
+                            "state_class": "measurement",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+
+    state = hass.states.get("sensor.complex_json")
+    assert state.state == "21.4"
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={"heartbeatList": {"1": [{"status": 0, "ping": None}]}},
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.complex_json"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.complex_json")
+    assert state.state == STATE_UNAVAILABLE
