@@ -151,7 +151,6 @@ EXCEPTIONS = {
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
-    "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
     "huum",  # https://github.com/frwickst/pyhuum/pull/8
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
