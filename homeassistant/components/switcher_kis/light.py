@@ -40,22 +40,22 @@ async def async_setup_entry(
         ):
             async_add_entities(
                 [
-                    SwitcherLightEntity(coordinator, 0),
-                    SwitcherLightEntity(coordinator, 1),
+                    SwitcherDualLightEntity(coordinator, 0),
+                    SwitcherDualLightEntity(coordinator, 1),
                 ]
             )
         if (
             coordinator.data.device_type.category
             == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
         ):
-            async_add_entities([SwitcherLightEntity(coordinator, 0)])
+            async_add_entities([SwitcherSingleLightEntity(coordinator, 0)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_light)
     )
 
 
-class SwitcherLightEntity(SwitcherEntity, LightEntity):
+class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
     """Representation of a Switcher light entity."""
 
     _attr_color_mode = ColorMode.ONOFF
@@ -63,7 +63,9 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
     _attr_translation_key = "light"
 
     def __init__(
-        self, coordinator: SwitcherDataUpdateCoordinator, light_id: int
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        light_id: int = 0,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -128,3 +130,20 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
         await self._async_call_api(API_SET_LIGHT, DeviceState.OFF, self._light_id)
         self.control_result = False
         self.async_write_ha_state()
+
+
+class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
+    """Representation of a Switcher single light entity."""
+
+
+class SwitcherDualLightEntity(SwitcherBaseLightEntity):
+    """Representation of a Switcher dual light entity."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        if self.control_result is not None:
+            return self.control_result
+
+        data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
+        return bool(data.lights[self._light_id] == DeviceState.ON)
