@@ -97,26 +97,32 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
 
-        return [
-            CalendarEvent(
-                start=start.date(),
-                end=end.date(),
-                summary=task["text"],
-                description=task["notes"],
-                uid=task["id"],
-            )
-            for task in self.coordinator.data.tasks
-            if task["type"] == HabiticaTaskType.TODO
-            and not task["completed"]
-            and task.get("date")
-            and (
-                start := dt_util.start_of_local_day(
-                    datetime.fromisoformat(task["date"])
+        return sorted(
+            [
+                CalendarEvent(
+                    start=start.date(),
+                    end=end.date(),
+                    summary=task["text"],
+                    description=task["notes"],
+                    uid=task["id"],
                 )
-            )
-            and start < end_date
-            and (end := start + timedelta(days=1)) > start_date
-        ]
+                for task in self.coordinator.data.tasks
+                if task["type"] == HabiticaTaskType.TODO
+                and not task["completed"]
+                and task.get("date")
+                and (
+                    start := dt_util.start_of_local_day(
+                        datetime.fromisoformat(task["date"])
+                    )
+                )
+                and start < end_date
+                and (end := start + timedelta(days=1)) > start_date
+            ],
+            key=lambda event: (
+                event.start,
+                self.coordinator.data.user["tasksOrder"]["todos"].index(event.uid),
+            ),
+        )
 
 
 class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
