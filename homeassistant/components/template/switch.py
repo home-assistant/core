@@ -38,11 +38,12 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import CONF_OBJECT_ID, CONF_PICTURE, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
@@ -54,15 +55,23 @@ LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
+DEFAULT_NAME = "Template Switch"
 
-SWITCH_SCHEMA = vol.All(
+
+SWITCH_SCHEMA = (
     vol.Schema(
         {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
             vol.Optional(CONF_STATE): cv.template,
             vol.Required(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
             vol.Required(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_PICTURE): cv.template,
         }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
 )
 
 LEGACY_SWITCH_SCHEMA = vol.All(
@@ -294,7 +303,6 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     """Switch entity based on trigger data."""
 
     domain = SWITCH_DOMAIN
-    extra_template_keys = (CONF_STATE,)
 
     def __init__(
         self,
@@ -304,19 +312,22 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        friendly_name = self._attr_name
-        self._on_script = (
-            Script(hass, config.get(CONF_TURN_ON), friendly_name, DOMAIN)
-            if config.get(CONF_TURN_ON) is not None
-            else None
+        friendly_name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+        self._on_script = Script(hass, config.get(CONF_TURN_ON), friendly_name, DOMAIN)
+        self._off_script = Script(
+            hass, config.get(CONF_TURN_OFF), friendly_name, DOMAIN
         )
-        self._off_script = (
-            Script(hass, config.get(CONF_TURN_OFF), friendly_name, DOMAIN)
-            if config.get(CONF_TURN_OFF) is not None
-            else None
-        )
-        self._state: bool | None = False
-        self._attr_assumed_state = config.get(CONF_STATE) is None
+
+        self._state: bool | None = None
+        if (tmpl := config.get(CONF_STATE)) is not None and isinstance(
+            tmpl, template.Template
+        ):
+            self._to_render_simple.append(CONF_STATE)
+            self._parse_result.add(CONF_STATE)
+            self._attr_assumed_state = False
+        else:
+            self._attr_assumed_state = True
+
         self._attr_device_info = async_device_info_to_link_from_device_id(
             hass,
             config.get(CONF_DEVICE_ID),
@@ -350,6 +361,10 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
 
             self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()
+        elif self._attr_assumed_state and len(self._rendered) > 0:
+            # Incase name, icon, or friendly name have a template but
+            # states does not.
+            self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
@@ -359,7 +374,7 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
         if self._on_script:
-            await self._on_script.async_run({}, context=self._context)
+            await self.async_run_script(self._on_script, context=self._context)
         if self._attr_assumed_state:
             self._state = True
             self.async_write_ha_state()
@@ -367,7 +382,7 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
         if self._off_script:
-            await self._off_script.async_run({}, context=self._context)
+            await self.async_run_script(self._off_script, context=self._context)
         if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()

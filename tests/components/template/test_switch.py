@@ -13,8 +13,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
+from homeassistant.core import Context, CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -23,11 +24,12 @@ from tests.common import (
     assert_setup_component,
     mock_component,
     mock_restore_cache,
+    mock_restore_cache_with_extra_data,
 )
 
 TEST_OBJECT_ID = "test_template_switch"
 TEST_ENTITY_ID = f"switch.{TEST_OBJECT_ID}"
-OPTIMISTIC_SWITCH_ACTIONS = {
+SWITCH_ACTIONS = {
     "turn_on": {
         "service": "test.automation",
         "data_template": {
@@ -43,8 +45,8 @@ OPTIMISTIC_SWITCH_ACTIONS = {
         },
     },
 }
-OPTIMISTIC_SWITCH_CONFIG = {
-    **OPTIMISTIC_SWITCH_ACTIONS,
+NAMED_SWITCH_ACTIONS = {
+    **SWITCH_ACTIONS,
     "name": TEST_OBJECT_ID,
 }
 
@@ -57,7 +59,7 @@ OPTIMISTIC_SWITCH_CONFIG = {
             {
                 "template": {
                     "switch": {
-                        **OPTIMISTIC_SWITCH_CONFIG,
+                        **NAMED_SWITCH_ACTIONS,
                         "state": "{{ True }}",
                     }
                 },
@@ -70,7 +72,7 @@ OPTIMISTIC_SWITCH_CONFIG = {
                     "platform": "template",
                     "switches": {
                         TEST_OBJECT_ID: {
-                            **OPTIMISTIC_SWITCH_ACTIONS,
+                            **SWITCH_ACTIONS,
                             "value_template": "{{ True }}",
                         }
                     },
@@ -130,7 +132,7 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
             {
                 "template": {
                     "switch": {
-                        **OPTIMISTIC_SWITCH_CONFIG,
+                        **NAMED_SWITCH_ACTIONS,
                         "state": "{{ states.switch.test_state.state }}",
                     }
                 }
@@ -172,7 +174,7 @@ async def test_template_state_boolean(
             {
                 "template": {
                     "switch": {
-                        **OPTIMISTIC_SWITCH_CONFIG,
+                        **NAMED_SWITCH_ACTIONS,
                         "state": template,
                     },
                 }
@@ -213,7 +215,7 @@ async def test_icon_and_picture_template(
             {
                 "template": {
                     "switch": {
-                        **OPTIMISTIC_SWITCH_CONFIG,
+                        **NAMED_SWITCH_ACTIONS,
                         "state": "{{ states.switch.test_state.state }}",
                         field: (
                             "{% if states.switch.test_state.state %}"
@@ -248,7 +250,7 @@ async def test_template_syntax_error(hass: HomeAssistant) -> None:
             {
                 "template": {
                     "switch": {
-                        **OPTIMISTIC_SWITCH_CONFIG,
+                        **NAMED_SWITCH_ACTIONS,
                         "state": "{% if rubbish %}",
                     }
                 }
@@ -273,7 +275,7 @@ async def test_invalid_name_does_not_create(hass: HomeAssistant) -> None:
                     "platform": "template",
                     "switches": {
                         "test INVALID switch": {
-                            **OPTIMISTIC_SWITCH_CONFIG,
+                            **NAMED_SWITCH_ACTIONS,
                             "value_template": "{{ rubbish }",
                         }
                     },
@@ -399,7 +401,7 @@ async def test_on_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                 "platform": "template",
                 "switches": {
                     TEST_OBJECT_ID: {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                         "value_template": "{{ states.switch.test_state.state }}",
                     }
                 },
@@ -441,7 +443,7 @@ async def test_on_action_optimistic(
                 "platform": "template",
                 "switches": {
                     TEST_OBJECT_ID: {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                     }
                 },
             }
@@ -482,7 +484,7 @@ async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None
                 "platform": "template",
                 "switches": {
                     TEST_OBJECT_ID: {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                         "value_template": "{{ states.switch.test_state.state }}",
                     }
                 },
@@ -524,7 +526,7 @@ async def test_off_action_optimistic(
                 "platform": "template",
                 "switches": {
                     TEST_OBJECT_ID: {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                     }
                 },
             }
@@ -576,10 +578,10 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                 "platform": "template",
                 "switches": {
                     "s1": {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                     },
                     "s2": {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                     },
                 },
             }
@@ -606,7 +608,7 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
                 "platform": "template",
                 "switches": {
                     TEST_OBJECT_ID: {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                         "value_template": "{{ 1 == 1 }}",
                         "availability_template": (
                             "{{ is_state('availability_state.state', 'on') }}"
@@ -644,7 +646,7 @@ async def test_invalid_availability_template_keeps_component_available(
                 "platform": "template",
                 "switches": {
                     TEST_OBJECT_ID: {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                         "value_template": "{{ true }}",
                         "availability_template": "{{ x - 12 }}",
                     }
@@ -671,12 +673,12 @@ async def test_unique_id(hass: HomeAssistant) -> None:
                 "platform": "template",
                 "switches": {
                     "test_template_switch_01": {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                         "unique_id": "not-so-unique-anymore",
                         "value_template": "{{ true }}",
                     },
                     "test_template_switch_02": {
-                        **OPTIMISTIC_SWITCH_ACTIONS,
+                        **SWITCH_ACTIONS,
                         "unique_id": "not-so-unique-anymore",
                         "value_template": "{{ false }}",
                     },
@@ -729,3 +731,307 @@ async def test_device_id(
     template_entity = entity_registry.async_get("switch.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {"invalid": "config"},
+                # Config after invalid should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "switches": {
+                        "hello": {
+                            **SWITCH_ACTIONS,
+                            "friendly_name": "Hello Name",
+                            "unique_id": "hello_name-id",
+                            "value_template": "{{ trigger.event.data.beer == 2 }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                        }
+                    },
+                    "switch": [
+                        {
+                            **SWITCH_ACTIONS,
+                            "name": "via list",
+                            "unique_id": "via_list-id",
+                            "state": "{{ trigger.event.data.beer == 2 }}",
+                            "picture": "{{ '/local/dogs2.png' if trigger.event.data.uno_mas is defined else '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                        },
+                    ],
+                },
+                {
+                    "trigger": [],
+                    "switches": {
+                        "bare_minimum": {**SWITCH_ACTIONS},
+                    },
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test trigger entity works."""
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("switch.via_list")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("switch.bare_minimum")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.hello_name")
+    assert state.state == STATE_ON
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.context is context
+
+    state = hass.states.get("switch.via_list")
+    assert state.state == STATE_ON
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.context is context
+
+    assert len(entity_registry.entities) == 2
+    assert (
+        entity_registry.entities["switch.hello_name"].unique_id
+        == "listening-test-event-hello_name-id"
+    )
+    assert (
+        entity_registry.entities["switch.via_list"].unique_id
+        == "listening-test-event-via_list-id"
+    )
+
+    # Even if state itself didn't change, attributes might have changed
+    hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.via_list")
+    assert state.attributes.get("entity_picture") == "/local/dogs2.png"
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "switch": [
+                        {
+                            **SWITCH_ACTIONS,
+                            "name": "via list",
+                            "unique_id": "via_list-id",
+                            "state": "{{ trigger.event.data.beer == 2 }}",
+                        },
+                        {
+                            **SWITCH_ACTIONS,
+                            "name": "optimistic",
+                            "unique_id": "optimistic-id",
+                            "picture": "{{ '/local/a.png' if trigger.event.data.beer == 2 else '/local/b.png' }}",
+                        },
+                        {
+                            **SWITCH_ACTIONS,
+                            "name": "unavailable",
+                            "unique_id": "unavailable-id",
+                            "state": "{{ trigger.event.data.beer == 2 }}",
+                            "availability": "{{ trigger.event.data.beer == 2 }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_optimistic_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
+) -> None:
+    """Test trigger entity works."""
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.via_list")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("switch.optimistic")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("switch.unavailable")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.via_list")
+    assert state.state == STATE_ON
+    assert state.context is context
+
+    # Even if an event triggered, an optimistic switch should not change
+    state = hass.states.get("switch.optimistic")
+    assert state is not None
+    # Templated attributes should change
+    assert state.attributes.get("entity_picture") == "/local/a.png"
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("switch.unavailable")
+    assert state.state == STATE_ON
+    assert state.context is context
+
+    assert len(entity_registry.entities) == 3
+    assert (
+        entity_registry.entities["switch.via_list"].unique_id
+        == "listening-test-event-via_list-id"
+    )
+    assert (
+        entity_registry.entities["switch.optimistic"].unique_id
+        == "listening-test-event-optimistic-id"
+    )
+    assert (
+        entity_registry.entities["switch.unavailable"].unique_id
+        == "listening-test-event-unavailable-id"
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.optimistic"},
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == "switch.optimistic"
+
+    state = hass.states.get("switch.optimistic")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.optimistic"},
+        blocking=True,
+    )
+    assert len(calls) == 2
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == "switch.optimistic"
+
+    state = hass.states.get("switch.optimistic")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 1}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.optimistic")
+    assert state is not None
+    assert state.attributes.get("entity_picture") == "/local/b.png"
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("switch.unavailable")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "switch": [
+                    {
+                        **SWITCH_ACTIONS,
+                        "name": "test",
+                        "unique_id": "test",
+                        "state": "{{ trigger.event.data.beer == 2 }}",
+                        "icon": "{{ 'mdi:a' if trigger.event.data.beer == 2 else 'mdi:b' }}",
+                        "picture": "{{ '/local/a.png' if trigger.event.data.beer == 2 else '/local/b.png' }}",
+                    },
+                ],
+            }
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("restored_state", "initial_state", "initial_attributes"),
+    [
+        (STATE_ON, STATE_ON, ["entity_picture", "icon"]),
+        (STATE_OFF, STATE_OFF, ["entity_picture", "icon", "plus_one"]),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN, []),
+        (STATE_UNKNOWN, STATE_UNKNOWN, []),
+    ],
+)
+async def test_trigger_entity_restore_state(
+    hass: HomeAssistant,
+    count,
+    domain,
+    config,
+    restored_state,
+    initial_state,
+    initial_attributes,
+) -> None:
+    """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "entity_picture": "/local/c.png",
+        "icon": "mdi:c",
+    }
+
+    fake_state = State(
+        "switch.test",
+        restored_state,
+        restored_attributes,
+    )
+    mock_restore_cache_with_extra_data(hass, ((fake_state, {}),))
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test")
+    assert state.state == initial_state
+    for attr, value in restored_attributes.items():
+        if attr in initial_attributes:
+            assert state.attributes[attr] == value
+        else:
+            assert attr not in state.attributes
+    assert "another" not in state.attributes
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_ON
+    assert state.attributes["icon"] == "mdi:a"
+    assert state.attributes["entity_picture"] == "/local/a.png"

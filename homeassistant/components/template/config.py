@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_NAME,
     CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VARIABLES,
 )
@@ -90,6 +91,9 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(SWITCH_DOMAIN): vol.All(
             cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+        ),
+        vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(
+            switch_platform.LEGACY_SWITCH_SCHEMA
         ),
     },
 )
@@ -188,6 +192,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                 CONF_BINARY_SENSORS,
                 BINARY_SENSOR_DOMAIN,
                 binary_sensor_platform.rewrite_legacy_to_modern_conf,
+            ),
+            (
+                CONF_SWITCHES,
+                SWITCH_DOMAIN,
+                switch_platform.rewrite_legacy_to_modern_conf,
             ),
         ):
             if old_key not in template_config:
