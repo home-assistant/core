@@ -2838,10 +2838,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if self.source == SOURCE_REAUTH:
             # If the integration does not provide a name for the reauth title,
             # we append it to the description placeholders.
-            entry_title: str = self._get_reauth_entry().title
             description_placeholders = dict(description_placeholders or {})
             if description_placeholders.get(CONF_NAME) is None:
-                description_placeholders[CONF_NAME] = entry_title
+                description_placeholders[CONF_NAME] = self._get_reauth_entry().title
         return super().async_show_form(
             step_id=step_id,
             data_schema=data_schema,
