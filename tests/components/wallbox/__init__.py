@@ -25,12 +25,10 @@ from homeassistant.components.wallbox.const import (
     CHARGER_GREEN_ENERGY_KEY,
     CHARGER_GROUP_KEY,
     CHARGER_ID_KEY,
-    CHARGER_LINKS_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
-    CHARGER_META_KEY,
     CHARGER_MID_ENERGY_KEY,
     CHARGER_NAME_KEY,
     CHARGER_PART_NUMBER_KEY,
@@ -96,10 +94,6 @@ test_response_bidir = {
 }
 
 test_response_sessions = {
-    CHARGER_META_KEY: {"count": 2},
-    CHARGER_LINKS_KEY: {
-        "self": "http://wallbox-api.prod.wall-box.com/v4/sessions/stats?charger=12345&end_date=1728589774.205203&start_date=1725997774.205194&limit=1000&offset=0"
-    },
     CHARGER_SESSION_DATA_KEY: [
         {
             CHARGER_TYPE_KEY: "charger_log_session",
@@ -117,31 +111,16 @@ test_response_sessions = {
                 CHARGER_TIME_KEY: 13577,
                 CHARGER_DISCHARGING_TIME_KEY: 0,
                 CHARGER_COST_KEY: 6.024,
-                "cost_savings": 0,
-                "cost_unit": "€",
                 CHARGER_CURRENCY_KEY: {
                     "id": 1,
                     "name": "Euro Member Countries",
                     "symbol": "€",
                     "code": "EUR",
                 },
-                "range": 125,
-                "group_name": "Family",
-                "base_group_name": "Family",
                 CHARGER_CHARGER_NAME_KEY: "Commander 2 SN 12345",
-                "user_subgroup": "Family",
                 CHARGER_USERNAME_KEY: "user",
                 CHARGER_USER_EMAIL_KEY: "test.test@test.com",
-                "user_rfid": None,
-                "user_is_rfid": 0,
-                "user_plate": None,
-                "user_extra_information": None,
                 "energy_unit": "kWh",
-                "amount": None,
-                "service_price": None,
-                "service_time": None,
-                "tax_rate": None,
-                "tax_sales": None,
             },
         },
         {
@@ -160,41 +139,22 @@ test_response_sessions = {
                 CHARGER_TIME_KEY: 14480,
                 CHARGER_DISCHARGING_TIME_KEY: 0,
                 CHARGER_COST_KEY: 6.4556,
-                "cost_savings": 0,
-                "cost_unit": "€",
-                "currency": {
+                CHARGER_CURRENCY_KEY: {
                     "id": 1,
                     "name": "Euro Member Countries",
                     "symbol": "€",
                     "code": "EUR",
                 },
-                "range": 134,
-                "group_name": "Family",
-                "base_group_name": "Family",
                 CHARGER_CHARGER_NAME_KEY: "Commander 2 SN 12345",
-                "user_subgroup": "Family",
                 CHARGER_USERNAME_KEY: "test",
                 CHARGER_USER_EMAIL_KEY: "test.test@test.com",
-                "user_rfid": None,
-                "user_is_rfid": 0,
-                "user_plate": None,
-                "user_extra_information": None,
                 "energy_unit": "kWh",
-                "amount": None,
-                "service_price": None,
-                "service_time": None,
-                "tax_rate": None,
-                "tax_sales": None,
             },
         },
     ],
 }
 
 test_response_sessions_empty = {
-    CHARGER_META_KEY: {"count": 0},
-    CHARGER_LINKS_KEY: {
-        "self": "http://wallbox-api.prod.wall-box.com/v4/sessions/stats?charger=12345&end_date=1728589774.205203&start_date=1725997774.205194&limit=1000&offset=0"
-    },
     CHARGER_SESSION_DATA_KEY: [],
 }
 

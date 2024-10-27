@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any, Concatenate
@@ -22,12 +22,15 @@ from .const import (
     CHARGER_ATTRIBUTES_KEY,
     CHARGER_CHARGER_KEY,
     CHARGER_CHARGER_NAME_KEY,
+    CHARGER_CODE_KEY,
     CHARGER_COST_KEY,
     CHARGER_CURRENCY_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_END_KEY,
     CHARGER_ENERGY_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
+    CHARGER_ID_KEY,
     CHARGER_LAST_EVENT,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
@@ -224,13 +227,14 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> list[WallboxEvent]:
         """Get charging sessions between timestamps for Wallbox."""
         data = self._wallbox.getSessionList(charger_id, start_date, end_date)
-        tzone = dt_util.get_default_time_zone()
-        events: list[WallboxEvent] = [
+        return [
             WallboxEvent(
                 charger_name=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_NAME_KEY],
                 username=event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY],
-                session_id=event["id"],
-                currency=event[CHARGER_ATTRIBUTES_KEY]["currency"]["code"],
+                session_id=event[CHARGER_ID_KEY],
+                currency=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CURRENCY_KEY][
+                    CHARGER_CODE_KEY
+                ],
                 serial_number=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY],
                 time=event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY],
                 energy=event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY]
@@ -238,18 +242,18 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY],
                 session_cost=event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY],
                 start=datetime.fromtimestamp(
-                    event[CHARGER_ATTRIBUTES_KEY][CHARGER_START_KEY], tzone
+                    event[CHARGER_ATTRIBUTES_KEY][CHARGER_START_KEY], UTC
                 ),
-                end=datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY]["end"], tzone),
-                summary=f"Charging session {event["id"]}: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh",
+                end=datetime.fromtimestamp(
+                    event[CHARGER_ATTRIBUTES_KEY][CHARGER_END_KEY], UTC
+                ),
+                summary=f"Charging session {event[CHARGER_ID_KEY]}: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh",
                 location=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_NAME_KEY],
-                description=f"Session ID: {event["id"]}\nSerial number: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY]}\nUsername: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY]}\nTime: {datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY]) - datetime.fromtimestamp(0)}\nEnergy: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh\nSession cost: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY]}{event[CHARGER_ATTRIBUTES_KEY]["currency"]["code"]}\n",
+                description=f"Session ID: {event[CHARGER_ID_KEY]}\nSerial number: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY]}\nUsername: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY]}\nTime: {datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY]) - datetime.fromtimestamp(0)}\nEnergy: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh\nSession cost: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY]}{event[CHARGER_ATTRIBUTES_KEY][CHARGER_CURRENCY_KEY][CHARGER_CODE_KEY]}\n",
             )
             for event in data[CHARGER_SESSION_DATA_KEY]
             if event[CHARGER_TYPE_KEY] == "charger_log_session"
         ]
-
-        return events
 
     async def async_get_sessions(
         self,

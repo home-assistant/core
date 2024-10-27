@@ -20,7 +20,7 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
-from .coordinator import WallboxCoordinator
+from .coordinator import WallboxCoordinator, WallboxEvent
 from .entity import WallboxEntity
 
 CALENDAR_TYPE = CalendarEntityDescription(
@@ -49,24 +49,18 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._event: WallboxEvent | None = None
 
     @property
-    def event(self) -> CalendarEvent | None:
+    def event(self) -> WallboxEvent | None:
         """Return the last event."""
-        if not self.coordinator.data[CHARGER_LAST_EVENT]:
-            return None
-        return CalendarEvent(
-            summary=self.coordinator.data[CHARGER_LAST_EVENT].summary,
-            start=self.coordinator.data[CHARGER_LAST_EVENT].start,
-            end=self.coordinator.data[CHARGER_LAST_EVENT].end,
-            description=self.coordinator.data[CHARGER_LAST_EVENT].description,
-        )
+        return self._event
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events: list[CalendarEvent] = [
+        return [
             CalendarEvent(
                 summary=session.summary,
                 start=session.start,
@@ -81,23 +75,25 @@ class WallboxCalendarEntity(WallboxEntity, CalendarEntity):
             )
         ]
 
-        return events
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._event = self.coordinator.data[CHARGER_LAST_EVENT]
+        super()._handle_coordinator_update()
 
     @callback
     def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
-        if self.coordinator.data[CHARGER_LAST_EVENT]:
+        if event := self.event:
             self._attr_extra_state_attributes = {
-                "charger_name": self.coordinator.data[CHARGER_LAST_EVENT].charger_name,
-                "username": self.coordinator.data[CHARGER_LAST_EVENT].username,
-                "session_id": self.coordinator.data[CHARGER_LAST_EVENT].session_id,
-                "currency": self.coordinator.data[CHARGER_LAST_EVENT].currency,
-                "serial_number": self.coordinator.data[
-                    CHARGER_LAST_EVENT
-                ].serial_number,
-                "energy": self.coordinator.data[CHARGER_LAST_EVENT].energy,
-                "time": self.coordinator.data[CHARGER_LAST_EVENT].time,
-                "session_cost": self.coordinator.data[CHARGER_LAST_EVENT].session_cost,
+                "charger_name": event.charger_name,
+                "username": event.username,
+                "session_id": event.session_id,
+                "currency": event.currency,
+                "serial_number": event.serial_number,
+                "energy": event.energy,
+                "time": event.time,
+                "session_cost": event.session_cost,
             }
         else:
             self._attr_extra_state_attributes = {}
