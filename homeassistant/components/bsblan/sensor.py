@@ -11,14 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BSBLanData
-from .const import DOMAIN
+from . import BSBLanConfigEntry, BSBLanData
 from .coordinator import BSBLanCoordinatorData
 from .entity import BSBLanEntity
 
@@ -52,11 +50,11 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BSBLanConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSB-Lan sensor based on a config entry."""
-    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(BSBLanSensor(data, description) for description in SENSOR_TYPES)
 
 
