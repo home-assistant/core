@@ -32,6 +32,18 @@
       "preLaunchTask": "Compile English translations"
     },
     {
+      "name": "Home Assistant (quick start)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "homeassistant",
+      "justMyCode": false,
+      "args": [
+        "--debug",
+        "-c",
+        "config"
+      ],
+    },
+    {
       "name": "Home Assistant: Changed tests",
       "type": "debugpy",
       "request": "launch",
