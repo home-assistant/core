@@ -46,7 +46,7 @@ async def test_calendar(
             "calendar",
             SERVICE_GET_EVENTS,
             {
-                ATTR_ENTITY_ID: ["calendar.wallbox_wallboxname"],
+                ATTR_ENTITY_ID: ["calendar.wallbox_wallboxname_calendar"],
                 EVENT_START_DATETIME: dt_util.now() - datetime.timedelta(days=30),
                 EVENT_END_DATETIME: dt_util.now(),
             },
@@ -76,7 +76,7 @@ async def test_calendar_empty(
             "calendar",
             SERVICE_GET_EVENTS,
             {
-                ATTR_ENTITY_ID: ["calendar.wallbox_wallboxname"],
+                ATTR_ENTITY_ID: ["calendar.wallbox_wallboxname_calendar"],
                 EVENT_START_DATETIME: dt_util.now() - datetime.timedelta(days=30),
                 EVENT_END_DATETIME: dt_util.now(),
             },
