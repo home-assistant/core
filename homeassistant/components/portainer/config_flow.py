@@ -9,7 +9,7 @@ from aiotainer.client import PortainerClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_VERIFY_SSL, CONF_PORT
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -25,8 +25,8 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
-    """Config flow for Apsystems local."""
+class PortainerFlow(ConfigFlow, domain=DOMAIN):
+    """Config flow for Portainer."""
 
     VERSION = 1
 
@@ -46,21 +46,25 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
                 ) -> None:
                     """Initialize aiotainer auth."""
                     super().__init__(
-                        websession, user_input[CONF_HOST], user_input[CONF_PORT]
+                        websession,
+                        user_input[CONF_HOST],  # type: ignore[index]
+                        user_input[CONF_PORT],  # type: ignore[index]
                     )
 
                 async def async_get_access_token(self) -> str:
                     """Return a valid access token."""
-                    return user_input[CONF_ACCESS_TOKEN]
+                    return user_input[CONF_ACCESS_TOKEN]  # type: ignore[index]
 
             websession = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             api = PortainerClient(AsyncTokenAuth(websession))
             try:
-                device_info = await api.get_status()
+                await api.get_status()
             except (TimeoutError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(user_input[CONF_HOST])
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
