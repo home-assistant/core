@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import TemplateStateFromEntityId
 from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -57,3 +59,21 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Handle updated data from the coordinator."""
         self._process_data()
         self.async_write_ha_state()
+
+    async def async_run_script(
+        self,
+        script: Script,
+        *,
+        run_variables: _VarsType | None = None,
+        context: Context | None = None,
+    ) -> None:
+        """Run an action script."""
+        if run_variables is None:
+            run_variables = {}
+        await script.async_run(
+            run_variables={
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                **run_variables,
+            },
+            context=context,
+        )
