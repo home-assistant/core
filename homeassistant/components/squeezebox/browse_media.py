@@ -18,6 +18,8 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
+from .const import UNPLAYABLE_TYPES
+
 LIBRARY = [
     "Favorites",
     "Artists",
@@ -163,8 +165,8 @@ async def build_item_response(
             if search_type in ["Apps", "Radios"]:
                 # item["cmd"] contains the name of the command to use with the cli for the app
                 # add the command to the dictionaries
-                if item["title"] == "Search":
-                    # Skip searches in apps as they'd need UI
+                if item["title"] == "Search" or item.get("type") in UNPLAYABLE_TYPES:
+                    # Skip searches in apps as they'd need UI or if the link isn't to audio
                     continue
                 _cmd = "app-" + item["cmd"]
                 MEDIA_TYPE_TO_SQUEEZEBOX.update({_cmd: _cmd})
@@ -188,18 +190,17 @@ async def build_item_response(
                 can_play = False
 
             if search_type in KNOWN_APPS:
-                if item["title"] == "Search":
+                if item.get("title") in ["Search", None] or item.get("type") in [
+                    "text",
+                    "actions",
+                ]:
                     # Skip searches in apps as they'd need UI
                     continue
 
                 child_item_type = search_type
                 child_media_class = CONTENT_TYPE_MEDIA_CLASS[search_type]
                 can_play = item["isaudio"] and item.get("url")
-
-                if item["hasitems"] and (not item.get("url") or not item["isaudio"]):
-                    can_expand = True
-                else:
-                    can_expand = False
+                can_expand = item["hasitems"]
 
             if artwork_track_id := item.get("artwork_track_id"):
                 if internal_request:

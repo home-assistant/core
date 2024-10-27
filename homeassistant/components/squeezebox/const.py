@@ -32,3 +32,4 @@ SQUEEZEBOX_SOURCE_STRINGS = (
     "spotify:",
     "loop:",
 )
+UNPLAYABLE_TYPES = ("text", "actions")
