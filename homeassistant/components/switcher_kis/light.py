@@ -135,15 +135,6 @@ class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
         # Entity class attributes
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        if self.control_result is not None:
-            return self.control_result
-
-        data = cast(SwitcherDualShutterSingleLight, self.coordinator.data)
-        return bool(data.lights == DeviceState.ON)
-
 
 class SwitcherDualLightEntity(SwitcherBaseLightEntity):
     """Representation of a Switcher dual light entity."""
@@ -165,12 +156,3 @@ class SwitcherDualLightEntity(SwitcherBaseLightEntity):
         self._attr_unique_id = (
             f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
         )
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        if self.control_result is not None:
-            return self.control_result
-
-        data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
-        return bool(data.lights[self._light_id] == DeviceState.ON)

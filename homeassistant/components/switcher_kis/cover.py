@@ -74,9 +74,6 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
     )
     _cover_id: int
 
-    def _update_data(self) -> None:
-        """Update data from device."""
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -158,14 +155,6 @@ class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
 
         self._update_data()
 
-    def _update_data(self) -> None:
-        """Update data from device."""
-        data = cast(SwitcherShutter, self.coordinator.data)
-        self._attr_current_cover_position = data.position
-        self._attr_is_closed = data.position == 0
-        self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
-        self._attr_is_opening = data.direction == ShutterDirection.SHUTTER_UP
-
 
 class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
     """Representation of a Switcher dual cover entity."""
@@ -187,15 +176,3 @@ class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
         )
 
         self._update_data()
-
-    def _update_data(self) -> None:
-        """Update data from device."""
-        data = cast(SwitcherDualShutterSingleLight, self.coordinator.data)
-        self._attr_current_cover_position = data.position[self._cover_id]
-        self._attr_is_closed = data.position[self._cover_id] == 0
-        self._attr_is_closing = (
-            data.direction[self._cover_id] == ShutterDirection.SHUTTER_DOWN
-        )
-        self._attr_is_opening = (
-            data.direction[self._cover_id] == ShutterDirection.SHUTTER_UP
-        )
