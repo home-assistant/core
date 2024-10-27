@@ -49,9 +49,6 @@
       }
     },
     "light": {
-      "single_light": {
-        "name": "Light"
-      },
       "light": {
         "name": "Light {light_id}"
       }

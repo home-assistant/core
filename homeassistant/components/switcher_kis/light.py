@@ -120,12 +120,12 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
 class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
     """Representation of a Switcher single light entity."""
 
-    _attr_translation_key = "single_light"
+    _attr_name = None
 
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        light_id: int = 0,
+        light_id,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -144,7 +144,7 @@ class SwitcherDualLightEntity(SwitcherBaseLightEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        light_id: int = 0,
+        light_id,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

@@ -140,7 +140,7 @@ class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id: int = 0,
+        cover_id,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -159,7 +159,7 @@ class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id: int = 0,
+        cover_id,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
