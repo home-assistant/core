@@ -12,6 +12,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -19,6 +20,7 @@ from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
+    CONF_LIGHTS,
     CONF_NAME,
     CONF_SENSORS,
     CONF_UNIQUE_ID,
@@ -35,6 +37,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     image as image_platform,
+    light as light_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -85,6 +88,12 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(WEATHER_DOMAIN): vol.All(
             cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
+        ),
+        vol.Optional(LIGHT_DOMAIN): vol.All(
+            cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
+        ),
+        vol.Optional(CONF_LIGHTS): cv.schema_with_slug_keys(
+            light_platform.LEGACY_LIGHT_SCHEMA
         ),
     },
 )
@@ -183,6 +192,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                 CONF_BINARY_SENSORS,
                 BINARY_SENSOR_DOMAIN,
                 binary_sensor_platform.rewrite_legacy_to_modern_conf,
+            ),
+            (
+                CONF_LIGHTS,
+                LIGHT_DOMAIN,
+                light_platform.rewrite_legacy_to_modern_conf,
             ),
         ):
             if old_key not in template_config:
