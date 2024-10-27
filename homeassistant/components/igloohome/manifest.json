@@ -1,0 +1,13 @@
+{
+  "domain": "igloohome",
+  "name": "igloohome",
+  "codeowners": ["@keithle888"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/igloohome",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
