@@ -84,13 +84,13 @@ class YaleDoorBatterySensor(YaleEntity, BinarySensorEntity):
         coordinator: YaleDataUpdateCoordinator,
         data: dict,
     ) -> None:
-        """Initiate Yale Problem Sensor."""
+        """Initiate Yale door battery Sensor."""
         super().__init__(coordinator, data)
         self._attr_unique_id = f"{data["address"]}-battery"
 
     @property
     def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
+        """Return true if the battery is low."""
         state: bool = self.coordinator.data["sensor_battery_map"][self._attr_unique_id]
         return state
 
