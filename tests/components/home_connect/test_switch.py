@@ -26,6 +26,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import get_all_appliances
 
@@ -227,9 +228,10 @@ async def test_switch_exception_handling(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
-    )
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
+        )
     assert getattr(problematic_appliance, mock_attr).call_count == 2
 
 
@@ -341,7 +343,8 @@ async def test_ent_desc_switch_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
-    await hass.services.async_call(
-        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
     assert getattr(problematic_appliance, mock_attr).call_count == 2

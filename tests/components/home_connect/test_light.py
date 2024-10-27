@@ -27,6 +27,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import get_all_appliances
 
@@ -333,5 +334,8 @@ async def test_switch_exception_handling(
 
     problematic_appliance.status.update(status)
     service_data["entity_id"] = entity_id
-    await hass.services.async_call(LIGHT_DOMAIN, service, service_data, blocking=True)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN, service, service_data, blocking=True
+        )
     assert getattr(problematic_appliance, mock_attr).call_count == len(attr_side_effect)
