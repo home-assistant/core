@@ -86,8 +86,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "MIT",
     "MPL-1.1",
     "MPL-2.0",
-    "PSF-2.0",  # not approved
-    "Python-2.0.1",  # not approved
+    "PSF-2.0",
     "Unlicense",
     "Zlib",
     "ZPL-2.1",
