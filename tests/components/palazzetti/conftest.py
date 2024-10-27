@@ -54,6 +54,12 @@ def mock_palazzetti_client():
             setattr(mock_client, k, v)
         mock_client.connect = AsyncMock(return_value=True)
         mock_client.update_state = AsyncMock(return_value=True)
+        mock_client.set_on = AsyncMock(return_value=True)
+        mock_client.set_target_temperature = AsyncMock(return_value=True)
+        mock_client.set_fan_speed = AsyncMock(return_value=True)
+        mock_client.set_fan_silent = AsyncMock(return_value=True)
+        mock_client.set_fan_high = AsyncMock(return_value=True)
+        mock_client.set_fan_auto = AsyncMock(return_value=True)
         yield mock_client
 
 

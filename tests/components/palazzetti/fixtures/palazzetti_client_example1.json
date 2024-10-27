@@ -5,7 +5,7 @@
   "hw_version": "1.1.1",
   "fan_speed_min": 1,
   "fan_speed_max": 5,
-  "has_fan_silent": false,
+  "has_fan_silent": true,
   "has_fan_high": true,
   "has_fan_auto": true,
   "has_on_off_switch": true,
