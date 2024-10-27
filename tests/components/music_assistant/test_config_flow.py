@@ -3,7 +3,6 @@
 from copy import deepcopy
 from ipaddress import ip_address
 from unittest import mock
-from unittest.mock import patch
 
 from music_assistant.client.exceptions import CannotConnect, InvalidServerVersion
 
@@ -13,7 +12,9 @@ from homeassistant.components.music_assistant.const import DOMAIN
 
 # pylint: disable=wrong-import-order
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -24,6 +25,15 @@ VALID_CONFIG = {
 }
 VALID_OPTIONS_CONFIG = {
     CONF_URL: "http://localhost:8095",
+}
+
+SERVER_INFO = {
+    "server_id": "1234",
+    "base_url": "http://localhost:8095",
+    "server_version": "0.0.0",
+    "schema_version": 23,
+    "min_supported_schema_version": 23,
+    "homeassistant_addon": True,
 }
 
 ZEROCONF_DATA = ZeroconfServiceInfo(
@@ -73,56 +83,64 @@ async def setup_music_assistant_integration(
     return config_entry
 
 
-async def test_flow_user_init_manual_schema(hass: HomeAssistant) -> None:
-    """Test the initialization of the form in the first step of the config flow."""
+async def test_full_flow(
+    hass: HomeAssistant,
+    mock_get_server_info,
+) -> None:
+    """Test full flow."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    user_input = {CONF_URL: "http://localhost:8095"}
-    expected = {
-        "data_schema": config_flow.get_manual_schema(user_input=user_input),
-        "description_placeholders": None,
-        "errors": None,
-        "flow_id": mock.ANY,
-        "handler": "music_assistant",
-        "step_id": "user",
-        "last_step": None,
-        "preview": None,
-        "type": "form",
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Music Assistant"
+    assert result["data"] == {
+        CONF_URL: "http://localhost:8095",
     }
-
-    assert result.get("step_id") == expected.get("step_id")
-    data_schema = result.get("data_schema")
-    assert data_schema is not None
-    assert data_schema.schema[CONF_URL] is str
+    assert result["result"].unique_id == "1234"
 
 
-async def test_flow_user_init_zeroconf_schema(hass: HomeAssistant) -> None:
-    """Test the initialization of the form in the first step of the config flow."""
+async def test_zeor_conf_flow(
+    hass: HomeAssistant,
+    mock_get_server_info,
+) -> None:
+    """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "zeroconf"}, data=ZEROCONF_DATA
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DATA,
     )
-    expected = {
-        "data_schema": None,
-        "description_placeholders": None,
-        "errors": None,
-        "flow_id": mock.ANY,
-        "handler": "music_assistant",
-        "step_id": "discovery_confirm",
-        "last_step": None,
-        "preview": None,
-        "type": "form",
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Music Assistant"
+    assert result["data"] == {
+        CONF_URL: "http://localhost:8095",
     }
-    assert result.get("step_id") == expected.get("step_id")
-    data_schema = result.get("data_schema")
-    assert data_schema is None
+    assert result["result"].unique_id == "1234"
 
 
-@patch("homeassistant.components.music_assistant.config_flow.get_server_info")
-async def test_flow_user_init_connect_issue(m_server_info, hass: HomeAssistant) -> None:
+async def test_flow_user_init_connect_issue(
+    mock_get_server_info, hass: HomeAssistant
+) -> None:
     """Test we advance to the next step when server url is invalid."""
-    m_server_info.side_effect = CannotConnect("cannot_connect")
+    mock_get_server_info.side_effect = CannotConnect("cannot_connect")
 
     _result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
@@ -133,12 +151,11 @@ async def test_flow_user_init_connect_issue(m_server_info, hass: HomeAssistant) 
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch("homeassistant.components.music_assistant.config_flow.get_server_info")
 async def test_flow_user_init_server_version_invalid(
-    m_server_info, hass: HomeAssistant
+    mock_get_server_info, hass: HomeAssistant
 ) -> None:
     """Test we advance to the next step when server url is invalid."""
-    m_server_info.side_effect = InvalidServerVersion("invalid_server_version")
+    mock_get_server_info.side_effect = InvalidServerVersion("invalid_server_version")
 
     _result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
@@ -149,9 +166,8 @@ async def test_flow_user_init_server_version_invalid(
     assert result["errors"] == {"base": "invalid_server_version"}
 
 
-@patch("homeassistant.components.music_assistant.config_flow.MusicAssistantClient")
 async def test_flow_discovery_confirm_creates_config_entry(
-    m_music_assistant, hass: HomeAssistant
+    mock_get_server_info, mock_music_assistant_client, hass: HomeAssistant
 ) -> None:
     """Test the config entry is successfully created."""
     config_flow.ConfigFlow.data = VALID_CONFIG
