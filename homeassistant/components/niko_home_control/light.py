@@ -24,7 +24,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -37,17 +37,37 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
-# delete after 2025.5.0
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
+async def async_setup_platform(
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create a smarty system."""
-    if config := hass_config.get(DOMAIN):
-        hass.async_create_task(_async_import(hass, config))
-    return True
+    _LOGGER.warning(
+        "Loading Niko Home Control via platform setup is deprecated; The configuration has been migrated to a config entry and can be safely removed"
+    )
+
+    _LOGGER.debug("Setting up Niko Home Control via platform setup")
+
+    _LOGGER.debug(hass_config.get(DOMAIN))
+    _LOGGER.debug(hass_config.get("platform"))
+
+    _LOGGER.debug(hass_config.get("platform"))
+
+    if hass_config.get("platform") == DOMAIN:
+        hass.async_create_task(_async_import(hass, hass_config))
 
 
 # delete after 2025.5.0
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up the smarty environment."""
+
+    _LOGGER.warning(
+        "Loading Niko Home Control via platform setup is deprecated; The configuration has been migrated to a config entry and can be safely removed"
+    )
+
+    _LOGGER.warning(hass.config_entries.async_entries(DOMAIN))
 
     if not hass.config_entries.async_entries(DOMAIN):
         # Start import flow

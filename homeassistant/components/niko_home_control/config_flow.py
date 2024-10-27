@@ -124,6 +124,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="optional", data_schema=DATA_SCHEMA_OPTIONAL
         )
 
+    async def async_step_import(self, import_info) -> ConfigFlowResult:
+        """Import a config entry."""
+        self._import_info = import_info
+        return await self.async_step_user(None)
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
