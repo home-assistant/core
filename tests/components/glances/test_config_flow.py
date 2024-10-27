@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import glances
+from homeassistant.const import CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -92,7 +93,10 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {"username": "username"}
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "username",
+    }
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -123,7 +127,10 @@ async def test_reauth_fails(
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {"username": "username"}
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "username",
+    }
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
