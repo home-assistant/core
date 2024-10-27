@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "calendar": {
+      "calendar": {
+        "name": "[%key:component::calendar::title%]"
+      }
+    },
     "lock": {
       "lock": {
         "name": "[%key:component::lock::title%]"

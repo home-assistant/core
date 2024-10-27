@@ -23,7 +23,9 @@ from .const import (
 from .coordinator import WallboxCoordinator, WallboxEvent
 from .entity import WallboxEntity
 
-CALENDAR_TYPE = CalendarEntityDescription(key=CHARGER_CALENDAR)
+CALENDAR_TYPE = CalendarEntityDescription(
+    key=CHARGER_CALENDAR, translation_key="calendar"
+)
 
 
 async def async_setup_entry(
