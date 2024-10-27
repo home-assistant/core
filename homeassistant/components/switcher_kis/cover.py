@@ -48,21 +48,21 @@ async def async_setup_entry(
         if coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
-            DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT,
         ):
-            async_add_entities([SwitcherCoverEntity(coordinator, 0)])
+            async_add_entities([SwitcherSingleCoverEntity(coordinator, 0)])
         if (
             coordinator.data.device_type.category
             == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
         ):
-            async_add_entities([SwitcherCoverEntity(coordinator, 1)])
+            async_add_entities([SwitcherDualCoverEntity(coordinator, 0)])
+            async_add_entities([SwitcherDualCoverEntity(coordinator, 1)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
     )
 
 
-class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
+class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
     """Representation of a Switcher cover entity."""
 
     _attr_name = None
@@ -156,3 +156,23 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_call_api(API_STOP, self._cover_id)
+
+
+class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
+    """Representation of a Switcher single cover entity."""
+
+
+class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
+    """Representation of a Switcher dual cover entity."""
+
+    def _update_data(self) -> None:
+        """Update data from device."""
+        data = cast(SwitcherDualShutterSingleLight, self.coordinator.data)
+        self._attr_current_cover_position = data.position[self._cover_id]
+        self._attr_is_closed = data.position[self._cover_id] == 0
+        self._attr_is_closing = (
+            data.direction[self._cover_id] == ShutterDirection.SHUTTER_DOWN
+        )
+        self._attr_is_opening = (
+            data.direction[self._cover_id] == ShutterDirection.SHUTTER_UP
+        )
