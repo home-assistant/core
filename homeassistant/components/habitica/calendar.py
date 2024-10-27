@@ -99,8 +99,8 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
 
         return [
             CalendarEvent(
-                start=start,
-                end=end,
+                start=start.date(),
+                end=end.date(),
                 summary=task["text"],
                 description=task["notes"],
                 uid=task["id"],
@@ -109,9 +109,13 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
             if task["type"] == HabiticaTaskType.TODO
             and not task["completed"]
             and task.get("date")
-            and (start := to_date(task["date"]))
-            and start < end_date.date()
-            and (end := start + timedelta(days=1)) > start_date.date()
+            and (
+                start := dt_util.start_of_local_day(
+                    datetime.fromisoformat(task["date"])
+                )
+            )
+            and start < end_date
+            and (end := start + timedelta(days=1)) > start_date
         ]
 
 
