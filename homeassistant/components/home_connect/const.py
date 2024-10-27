@@ -114,6 +114,8 @@ ATTR_STEPSIZE = "stepsize"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
+SVE_TRANSLATION_KEY_APPLIANCE_NAME = "appliance_name"
+
 OLD_NEW_UNIQUE_ID_SUFFIX_MAP = {
     "ChildLock": BSH_CHILD_LOCK_STATE,
     "Operation State": BSH_OPERATION_STATE,
