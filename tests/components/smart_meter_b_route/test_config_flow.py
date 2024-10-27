@@ -7,8 +7,9 @@ from momonga import MomongaSkJoinFailure, MomongaSkScanFailure
 import pytest
 from serial.tools.list_ports_linux import SysFS
 
-from homeassistant import config_entries
 from homeassistant.components.smart_meter_b_route.const import DOMAIN, ENTRY_TITLE
+from homeassistant.components.usb import UsbServiceInfo
+from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -47,7 +48,7 @@ def mock_momonga(exception=None) -> Generator[Mock]:
         yield MockMomonga
 
 
-async def test_form(
+async def test_step_user_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_comports: Mock,
@@ -55,7 +56,7 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -89,7 +90,7 @@ async def test_form(
         (Exception, "unknown"),
     ],
 )
-async def test_form_errors(
+async def test_step_user_form_errors(
     hass: HomeAssistant,
     error: Exception,
     message: str,
@@ -98,7 +99,7 @@ async def test_form_errors(
 ) -> None:
     """Test we handle error."""
     result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     with (
         patch.object(mock_momonga, "__init__", side_effect=error) as mock_momonga_init,
@@ -119,3 +120,23 @@ async def test_form_errors(
         )
 
         hass.config_entries.flow.async_abort(result_init["flow_id"])
+
+
+async def test_step_usb(
+    hass: HomeAssistant,
+) -> None:
+    """Test step usb."""
+    discovery_info = UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
