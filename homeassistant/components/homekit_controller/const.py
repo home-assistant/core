@@ -67,6 +67,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: "number",
     CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: "switch",
     CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: "switch",
+    CharacteristicsTypes.VENDOR_ECOBEE_ALERT_TEXT: "sensor",
     CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL: "number",
     CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT: "number",
     CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL: "number",

@@ -3630,6 +3630,46 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.homew_alerts',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HomeW Alerts',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_54',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HomeW Alerts',
+            }),
+            'entity_id': 'sensor.homew_alerts',
+            'state': 'The Hive is humming along. You have no pending alerts or reminders.',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -4405,6 +4445,46 @@
             }),
             'entity_id': 'select.homew_temperature_display_units',
             'state': 'fahrenheit',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.homew_alerts',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HomeW Alerts',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_54',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HomeW Alerts',
+            }),
+            'entity_id': 'sensor.homew_alerts',
+            'state': 'The Hive is humming along. You have no pending alerts or reminders.',
           }),
         }),
         dict({
@@ -5599,6 +5679,46 @@
             }),
             'entity_id': 'select.my_ecobee_temperature_display_units',
             'state': 'fahrenheit',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.my_ecobee_alerts',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'My ecobee Alerts',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_16_54',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'My ecobee Alerts',
+            }),
+            'entity_id': 'sensor.my_ecobee_alerts',
+            'state': 'The Hive is humming along. You have no pending alerts or reminders.',
           }),
         }),
         dict({

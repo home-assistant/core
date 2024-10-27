@@ -364,6 +364,10 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
+    CharacteristicsTypes.VENDOR_ECOBEE_ALERT_TEXT: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_ECOBEE_ALERT_TEXT,
+        name="Alerts",
+    ),
 }
 
 
