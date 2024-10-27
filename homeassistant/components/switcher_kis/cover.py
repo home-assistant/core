@@ -6,12 +6,7 @@ import logging
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.device import (
-    DeviceCategory,
-    ShutterDirection,
-    SwitcherDualShutterSingleLight,
-    SwitcherShutter,
-)
+from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
 
 from homeassistant.components.cover import (
     ATTR_POSITION,

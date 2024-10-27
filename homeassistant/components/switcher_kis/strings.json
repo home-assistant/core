@@ -45,7 +45,7 @@
     },
     "cover": {
       "cover": {
-        "name": "Runner {cover_id}"
+        "name": "Cover {cover_id}"
       }
     },
     "light": {
