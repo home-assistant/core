@@ -397,7 +397,7 @@ class StatisticsSensor(SensorEntity):
 
     def _async_handle_new_state(
         self,
-        reported_state: Any,
+        reported_state: State | None,
     ) -> None:
         """Handle the sensor state changes."""
         if (new_state := reported_state) is None:
@@ -457,6 +457,10 @@ class StatisticsSensor(SensorEntity):
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
+
+        # Attention: it is not safe to store the new_state object,
+        # since the "last_reported" value will be updated over time.
+        # Here we make a copy the current value, which is okay.
         self._available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
             self.attributes[STAT_SOURCE_VALUE_VALID] = None
