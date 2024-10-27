@@ -73,6 +73,10 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
     )
+    _cover_id: int
+
+    def _update_data(self) -> None:
+        """Update data from device."""
 
     @callback
     def _handle_coordinator_update(self) -> None:
