@@ -44,6 +44,11 @@ async def async_setup_entry(
                     SwitcherLightEntity(coordinator, 1),
                 ]
             )
+        if (
+            coordinator.data.device_type.category
+            == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
+        ):
+            async_add_entities([SwitcherLightEntity(coordinator, 0)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_light)

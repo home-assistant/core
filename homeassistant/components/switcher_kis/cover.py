@@ -6,7 +6,12 @@ import logging
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
+from aioswitcher.device import (
+    DeviceCategory,
+    ShutterDirection,
+    SwitcherDualShutterSingleLight,
+    SwitcherShutter,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -43,8 +48,14 @@ async def async_setup_entry(
         if coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
+            DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT,
         ):
             async_add_entities([SwitcherCoverEntity(coordinator, 0)])
+        if (
+            coordinator.data.device_type.category
+            == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
+        ):
+            async_add_entities([SwitcherCoverEntity(coordinator, 1)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
@@ -72,7 +83,15 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
         super().__init__(coordinator)
         self._cover_id = cover_id
 
-        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+        if (
+            self.coordinator.data.device_type.category
+            == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
+        ):
+            self._attr_unique_id = (
+                f"{coordinator.device_id}-{coordinator.mac_address}-{cover_id}"
+            )
+        else:
+            self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
 
         self._update_data()
 
