@@ -77,5 +77,4 @@ async def test_api_events(
         f"/api/calendars/{entity}?start=2024-08-29&end=2024-10-08"
     )
 
-    events = await response.json()
-    assert events == snapshot
+    assert await response.json() == snapshot
