@@ -108,7 +108,7 @@ SWITCH_CONFIG_SCHEMA = vol.Schema(
 def rewrite_legacy_to_modern_conf(
     hass: HomeAssistant, config: dict[str, dict]
 ) -> list[dict]:
-    """Rewrite legacy switch configuration defitions to modern ones."""
+    """Rewrite legacy switch configuration definitions to modern ones."""
     switches = []
 
     for object_id, entity_conf in config.items():
@@ -311,10 +311,8 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
         friendly_name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-        self._on_script = Script(hass, config.get(CONF_TURN_ON), friendly_name, DOMAIN)
-        self._off_script = Script(
-            hass, config.get(CONF_TURN_OFF), friendly_name, DOMAIN
-        )
+        self._on_script = Script(hass, config[CONF_TURN_ON], friendly_name, DOMAIN)
+        self._off_script = Script(hass, config[CONF_TURN_OFF], friendly_name, DOMAIN)
 
         self._state: bool | None = None
         if (tmpl := config.get(CONF_STATE)) is not None and isinstance(
@@ -360,8 +358,8 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
             self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()
         elif self._attr_assumed_state and len(self._rendered) > 0:
-            # Incase name, icon, or friendly name have a template but
-            # states does not.
+            # In case name, icon, or friendly name have a template but
+            # states does not
             self.async_write_ha_state()
 
     @property
