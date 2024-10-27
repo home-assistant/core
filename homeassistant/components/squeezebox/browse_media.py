@@ -99,7 +99,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     MediaType.APP: MediaType.TRACK,
 }
 
-KNOWN_APPS = set()
+KNOWN_APPS: set[str | None] = set()
 
 BROWSE_LIMIT = 1000
 
