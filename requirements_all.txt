@@ -1244,7 +1244,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.knocki
-knocki==0.3.5
+knocki==0.4.1
 
 # homeassistant.components.knx
 knx-frontend==2024.9.10.221729
