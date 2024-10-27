@@ -45,9 +45,11 @@ async def async_setup_entry(
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add switch entities if they did not exist."""
         for mower_id in coordinator.data:
-            mower_data = coordinator.data[mower_id]
-            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
-                received_work_areas = set(mower_data.work_areas.keys())
+            if (
+                coordinator.data[mower_id].capabilities.work_areas
+                and (_work_areas := coordinator.data[mower_id].work_areas) is not None
+            ):
+                received_work_areas = set(_work_areas.keys())
                 new_work_areas = received_work_areas - current_work_areas.get(
                     mower_id, set()
                 )
@@ -75,9 +77,12 @@ async def async_setup_entry(
     def _async_stay_out_zone_listener() -> None:
         """Listen for new stay-out zones and add/remove switch entities if they did not exist."""
         for mower_id in coordinator.data:
-            data = coordinator.data[mower_id]
-            if data.capabilities.stay_out_zones and data.stay_out_zones is not None:
-                received_stay_out_zones = set(data.stay_out_zones.zones)
+            if (
+                coordinator.data[mower_id].capabilities.stay_out_zones
+                and (_stay_out_zones := coordinator.data[mower_id].stay_out_zones)
+                is not None
+            ):
+                received_stay_out_zones = set(_stay_out_zones.zones)
                 current_stay_out_zones_set = current_stay_out_zones.get(mower_id, set())
                 new_stay_out_zones = (
                     received_stay_out_zones - current_stay_out_zones_set

@@ -460,24 +460,23 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     def _async_work_area_listener() -> None:
-        for mower_id, data in coordinator.data.items():
-            if data.capabilities.work_areas and data.work_areas:
-                _work_areas = data.work_areas
-                if _work_areas is not None:
-                    received_work_areas = set(_work_areas.keys())
-                    current_work_area_set = current_work_areas.setdefault(
-                        mower_id, set()
-                    )
-                    new_work_areas = received_work_areas - current_work_area_set
-                    if new_work_areas:
-                        current_work_area_set.update(new_work_areas)
-                        async_add_entities(
-                            WorkAreaSensorEntity(
-                                mower_id, coordinator, description, work_area_id
-                            )
-                            for description in WORK_AREA_SENSOR_TYPES
-                            for work_area_id in new_work_areas
+        for mower_id in coordinator.data:
+            if (
+                coordinator.data[mower_id].capabilities.work_areas
+                and (_work_areas := coordinator.data[mower_id].work_areas) is not None
+            ):
+                received_work_areas = set(_work_areas.keys())
+                current_work_area_set = current_work_areas.setdefault(mower_id, set())
+                new_work_areas = received_work_areas - current_work_area_set
+                if new_work_areas:
+                    current_work_area_set.update(new_work_areas)
+                    async_add_entities(
+                        WorkAreaSensorEntity(
+                            mower_id, coordinator, description, work_area_id
                         )
+                        for description in WORK_AREA_SENSOR_TYPES
+                        for work_area_id in new_work_areas
+                    )
 
     coordinator.async_add_listener(_async_work_area_listener)
     _async_work_area_listener()
