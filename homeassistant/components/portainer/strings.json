@@ -40,8 +40,12 @@
       "container_state": {
         "name": "{container}",
         "state": {
-          "running": "Running",
-          "exited": "Exited"
+          "created": "Created",
+          "dead": "Dead",
+          "exited": "Exited",
+          "paused": "Paused",
+          "restarting": "Restarting",
+          "running": "Running"
         }
       },
       "total_cpu": {
@@ -50,17 +54,6 @@
       "total_memory": {
         "name": "Total memory"
       }
-    }
-  },
-  "exceptions": {
-    "command_send_failed": {
-      "message": "Failed to send command: {exception}"
-    },
-    "work_areas_not_supported": {
-      "message": "This node does not support work areas."
-    },
-    "work_area_not_existing": {
-      "message": "The selected work area does not exist."
     }
   }
 }

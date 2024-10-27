@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     """Set up this integration using UI."""
     client_session = aiohttp_client.async_get_clientsession(hass, False)
     api_api = api.AsyncConfigEntryAuth(client_session, entry)
-    Portainer_api = PortainerClient(api_api)
+    portainer_api = PortainerClient(api_api)
     try:
         await api_api.async_get_access_token()
     except ClientResponseError as err:
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
 
-    coordinator = PortainerDataUpdateCoordinator(hass, Portainer_api, entry)
+    coordinator = PortainerDataUpdateCoordinator(hass, portainer_api, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

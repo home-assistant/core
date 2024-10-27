@@ -3,9 +3,8 @@
   "name": "Portainer",
   "codeowners": ["@Thomas55555"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/portainer",
-  "iot_class": "cloud_push",
+  "iot_class": "local_polling",
   "loggers": ["aiotainer"],
   "requirements": ["aiotainer==0.0.0"]
 }

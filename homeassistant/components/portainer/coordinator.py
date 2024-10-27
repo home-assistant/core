@@ -33,7 +33,6 @@ class PortainerDataUpdateCoordinator(DataUpdateCoordinator[dict[int, NodeData]])
             update_interval=SCAN_INTERVAL,
         )
         self.api = api
-        self.ws_connected: bool = False
 
     async def _async_update_data(self) -> dict[int, NodeData]:
         """Subscribe for websocket and poll data from the API."""
