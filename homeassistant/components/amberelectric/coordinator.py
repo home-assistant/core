@@ -1,4 +1,5 @@
 """Amber Electric Coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -30,19 +31,19 @@ def is_forecast(interval: ActualInterval | CurrentInterval | ForecastInterval) -
 
 def is_general(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is on the general channel."""
-    return interval.channel_type == ChannelType.GENERAL
+    return interval.channel_type == ChannelType.GENERAL  # type: ignore[no-any-return]
 
 
 def is_controlled_load(
     interval: ActualInterval | CurrentInterval | ForecastInterval,
 ) -> bool:
     """Return true if the supplied interval is on the controlled load channel."""
-    return interval.channel_type == ChannelType.CONTROLLED_LOAD
+    return interval.channel_type == ChannelType.CONTROLLED_LOAD  # type: ignore[no-any-return]
 
 
 def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is on the feed in channel."""
-    return interval.channel_type == ChannelType.FEED_IN
+    return interval.channel_type == ChannelType.FEED_IN  # type: ignore[no-any-return]
 
 
 def normalize_descriptor(descriptor: Descriptor) -> str | None:
@@ -110,6 +111,9 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         ]
         result["grid"]["renewables"] = round(general[0].renewables)
         result["grid"]["price_spike"] = general[0].spike_status.value
+        tariff_information = general[0].tariff_information
+        if tariff_information:
+            result["grid"]["demand_window"] = tariff_information.demand_window
 
         controlled_load = [
             interval for interval in current if is_controlled_load(interval)

@@ -1,19 +1,19 @@
 """Support for ecobee."""
+
 from datetime import timedelta
 
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
     _LOGGER,
-    ATTR_CONFIG_ENTRY_ID,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DATA_HASS_CONFIG,
@@ -72,16 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {CONF_NAME: entry.title, ATTR_CONFIG_ENTRY_ID: entry.entry_id},
-            hass.data[DATA_HASS_CONFIG],
-        )
-    )
-
     return True
 
 
@@ -96,7 +86,7 @@ class EcobeeData:
     ) -> None:
         """Initialize the Ecobee data object."""
         self._hass = hass
-        self._entry = entry
+        self.entry = entry
         self.ecobee = Ecobee(
             config={ECOBEE_API_KEY: api_key, ECOBEE_REFRESH_TOKEN: refresh_token}
         )
@@ -116,7 +106,7 @@ class EcobeeData:
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
         if await self._hass.async_add_executor_job(self.ecobee.refresh_tokens):
             self._hass.config_entries.async_update_entry(
-                self._entry,
+                self.entry,
                 data={
                     CONF_API_KEY: self.ecobee.config[ECOBEE_API_KEY],
                     CONF_REFRESH_TOKEN: self.ecobee.config[ECOBEE_REFRESH_TOKEN],

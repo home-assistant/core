@@ -1,6 +1,5 @@
 """Tests for the ATAG integration."""
 
-from homeassistant.components.atag import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -23,7 +22,7 @@ async def test_unload_config_entry(
 ) -> None:
     """Test the ATAG configuration entry unloading."""
     entry = await init_integration(hass, aioclient_mock)
-    assert hass.data[DOMAIN]
+    assert entry.runtime_data
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data.get(DOMAIN)
+    assert not hasattr(entry, "runtime_data")

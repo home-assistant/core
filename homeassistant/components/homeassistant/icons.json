@@ -1,0 +1,43 @@
+{
+  "services": {
+    "check_config": {
+      "service": "mdi:receipt-text-check"
+    },
+    "reload_core_config": {
+      "service": "mdi:receipt-text-send"
+    },
+    "restart": {
+      "service": "mdi:restart"
+    },
+    "set_location": {
+      "service": "mdi:map-marker"
+    },
+    "stop": {
+      "service": "mdi:stop"
+    },
+    "toggle": {
+      "service": "mdi:toggle-switch"
+    },
+    "turn_on": {
+      "service": "mdi:power-on"
+    },
+    "turn_off": {
+      "service": "mdi:power-off"
+    },
+    "update_entity": {
+      "service": "mdi:update"
+    },
+    "reload_custom_templates": {
+      "service": "mdi:palette-swatch"
+    },
+    "reload_config_entry": {
+      "service": "mdi:reload"
+    },
+    "save_persistent_states": {
+      "service": "mdi:content-save"
+    },
+    "reload_all": {
+      "service": "mdi:reload"
+    }
+  }
+}

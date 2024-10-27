@@ -1,17 +1,22 @@
 """Config flow for MyPermobil integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from mypermobil import MyPermobil, MyPermobilAPIException, MyPermobilClientException
+from mypermobil import (
+    MyPermobil,
+    MyPermobilAPIException,
+    MyPermobilClientException,
+    MyPermobilEulaException,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
 from homeassistant.core import HomeAssistant, async_get_hass
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +41,7 @@ GET_EMAIL_SCHEMA = vol.Schema(
 GET_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_CODE): cv.string})
 
 
-class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PermobilConfigFlow(ConfigFlow, domain=DOMAIN):
     """Permobil config flow."""
 
     VERSION = 1
@@ -51,7 +56,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
 
@@ -75,7 +80,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_region(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
         if not user_input:
@@ -125,7 +130,7 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_email_code(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Second step in config flow to enter the email code."""
         errors: dict[str, str] = {}
 
@@ -141,24 +146,32 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # or the backend returned an error when trying to validate the code
                 _LOGGER.exception("Error verifying code")
                 errors["base"] = "invalid_code"
+            except MyPermobilEulaException:
+                # The user has not accepted the EULA
+                errors["base"] = "unsigned_eula"
 
         if errors or not user_input:
             return self.async_show_form(
-                step_id="email_code", data_schema=GET_TOKEN_SCHEMA, errors=errors
+                step_id="email_code",
+                data_schema=GET_TOKEN_SCHEMA,
+                errors=errors,
+                description_placeholders={"app_name": "MyPermobil"},
+            )
+
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), title=self.data[CONF_EMAIL], data=self.data
             )
 
         return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert reauth_entry
-
         try:
-            email: str = reauth_entry.data[CONF_EMAIL]
-            region: str = reauth_entry.data[CONF_REGION]
+            email: str = entry_data[CONF_EMAIL]
+            region: str = entry_data[CONF_REGION]
             self.p_api.set_email(email)
             self.p_api.set_region(region)
             self.data = {

@@ -1,4 +1,10 @@
 {
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {}
+  },
   "issues": {
     "country_not_configured": {
       "title": "The country has not been configured",
@@ -11,6 +17,14 @@
     "historic_currency": {
       "title": "The configured currency is no longer in use",
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
+    },
+    "legacy_templates_false": {
+      "title": "legacy_templates config key is being removed",
+      "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "legacy_templates_true": {
+      "title": "The support for legacy templates is being removed",
+      "description": "Please do the following steps:\n- Adopt your configuration to support template rendering to native python types.\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file.\n- Restart Home Assistant to fix this issue."
     },
     "python_version": {
       "title": "Support for Python {current_python_version} is being removed",
@@ -26,15 +40,37 @@
     },
     "no_platform_setup": {
       "title": "Unused YAML configuration for the {platform} integration",
-      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}\n"
+      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
     },
     "storage_corruption": {
-      "title": "Storage corruption detected for `{storage_key}`",
+      "title": "Storage corruption detected for {storage_key}",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::homeassistant::issues::storage_corruption::title%]",
-            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nClick SUBMIT below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
+            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nSelect **Submit** below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
+          }
+        }
+      }
+    },
+    "config_entry_reauth": {
+      "title": "[%key:common::config_flow::title::reauth%]",
+      "description": "Reauthentication is needed"
+    },
+    "integration_not_found": {
+      "title": "Integration {domain} not found",
+      "fix_flow": {
+        "abort": {
+          "issue_ignored": "Not existing integration {domain} ignored."
+        },
+        "step": {
+          "init": {
+            "title": "[%key:component::homeassistant::issues::integration_not_found::title%]",
+            "description": "The integration `{domain}` could not be found. This happens when a (custom) integration was removed from Home Assistant, but there are still configurations for this `integration`. Please use the buttons below to either remove the previous configurations for `{domain}` or ignore this.",
+            "menu_options": {
+              "confirm": "Remove previous configurations",
+              "ignore": "Ignore"
+            }
           }
         }
       }
@@ -42,19 +78,19 @@
   },
   "system_health": {
     "info": {
-      "arch": "CPU Architecture",
-      "config_dir": "Configuration Directory",
+      "arch": "CPU architecture",
+      "config_dir": "Configuration directory",
       "dev": "Development",
       "docker": "Docker",
       "hassio": "Supervisor",
-      "installation_type": "Installation Type",
-      "os_name": "Operating System Family",
-      "os_version": "Operating System Version",
-      "python_version": "Python Version",
+      "installation_type": "Installation type",
+      "os_name": "Operating system family",
+      "os_version": "Operating system version",
+      "python_version": "Python version",
       "timezone": "Timezone",
       "user": "User",
       "version": "Version",
-      "virtualenv": "Virtual Environment"
+      "virtualenv": "Virtual environment"
     }
   },
   "services": {
@@ -100,19 +136,25 @@
     },
     "toggle": {
       "name": "Generic toggle",
-      "description": "Generic service to toggle devices on/off under any domain."
+      "description": "Generic action to toggle devices on/off under any domain."
     },
     "turn_on": {
       "name": "Generic turn on",
-      "description": "Generic service to turn devices on under any domain."
+      "description": "Generic action to turn devices on under any domain."
     },
     "turn_off": {
       "name": "Generic turn off",
-      "description": "Generic service to turn devices off under any domain."
+      "description": "Generic action to turn devices off under any domain."
     },
     "update_entity": {
       "name": "Update entity",
-      "description": "Forces one or more entities to update its data."
+      "description": "Forces one or more entities to update its data.",
+      "fields": {
+        "entity_id": {
+          "name": "Entities to update",
+          "description": "List of entities to force update."
+        }
+      }
     },
     "reload_custom_templates": {
       "name": "Reload custom Jinja2 templates",
@@ -145,31 +187,46 @@
       "message": "Error importing config platform {domain}: {error}"
     },
     "config_validation_err": {
-      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}. Check the logs for more information."
+      "message": "Invalid config for integration {domain} at {config_file}, line {line}: {error}."
     },
     "config_validator_unknown_err": {
-      "message": "Unknown error calling {domain} config validator. Check the logs for more information."
+      "message": "Unknown error calling {domain} config validator - {error}."
     },
     "config_schema_unknown_err": {
-      "message": "Unknown error calling {domain} CONFIG_SCHEMA. Check the logs for more information."
+      "message": "Unknown error calling {domain} CONFIG_SCHEMA - {error}."
     },
-    "integration_config_error": {
+    "multiple_integration_config_errors": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
+    "max_length_exceeded": {
+      "message": "Value {value} for property {property_name} has a maximum length of {max_length} characters."
+    },
     "platform_component_load_err": {
-      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+      "message": "Platform error: {domain} - {error}."
     },
     "platform_component_load_exc": {
-      "message": "Platform error: {domain} - {error}. Check the logs for more information."
+      "message": "[%key:component::homeassistant::exceptions::platform_component_load_err::message%]"
     },
     "platform_config_validation_err": {
       "message": "Invalid config for {domain} from integration {p_name} at file {config_file}, line {line}: {error}. Check the logs for more information."
     },
     "platform_schema_validator_err": {
-      "message": "Unknown error when validating config for {domain} from integration {p_name}"
+      "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
     },
     "service_not_found": {
-      "message": "Service {domain}.{service} not found."
+      "message": "Action {domain}.{service} not found."
+    },
+    "service_does_not_support_response": {
+      "message": "An action which does not return responses can't be called with {return_response}."
+    },
+    "service_lacks_response_request": {
+      "message": "The action requires responses and must be called with {return_response}."
+    },
+    "service_reponse_invalid": {
+      "message": "Failed to process the returned action response data, expected a dictionary, but got {response_data_type}."
+    },
+    "service_should_be_blocking": {
+      "message": "A non blocking action call with argument {non_blocking_argument} can't be used together with argument {return_response}."
     }
   }
 }

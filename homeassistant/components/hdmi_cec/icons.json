@@ -1,0 +1,22 @@
+{
+  "services": {
+    "power_on": {
+      "service": "mdi:power"
+    },
+    "select_device": {
+      "service": "mdi:television"
+    },
+    "send_command": {
+      "service": "mdi:console"
+    },
+    "standby": {
+      "service": "mdi:power-standby"
+    },
+    "update": {
+      "service": "mdi:update"
+    },
+    "volume": {
+      "service": "mdi:volume-high"
+    }
+  }
+}

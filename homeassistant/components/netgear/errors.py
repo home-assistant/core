@@ -1,4 +1,5 @@
 """Errors for the Netgear component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

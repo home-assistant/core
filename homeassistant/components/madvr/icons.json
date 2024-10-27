@@ -1,0 +1,113 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hdr_flag": {
+        "default": "mdi:hdr",
+        "state": {
+          "off": "mdi:hdr-off"
+        }
+      },
+      "outgoing_hdr_flag": {
+        "default": "mdi:hdr",
+        "state": {
+          "off": "mdi:hdr-off"
+        }
+      },
+      "power_state": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
+      },
+      "signal_state": {
+        "default": "mdi:signal",
+        "state": {
+          "off": "mdi:signal-off"
+        }
+      }
+    },
+    "sensor": {
+      "mac_address": {
+        "default": "mdi:ethernet"
+      },
+      "temp_gpu": {
+        "default": "mdi:thermometer"
+      },
+      "temp_hdmi": {
+        "default": "mdi:thermometer"
+      },
+      "temp_cpu": {
+        "default": "mdi:thermometer"
+      },
+      "temp_mainboard": {
+        "default": "mdi:thermometer"
+      },
+      "incoming_res": {
+        "default": "mdi:television"
+      },
+      "incoming_frame_rate": {
+        "default": "mdi:television"
+      },
+      "incoming_color_space": {
+        "default": "mdi:television"
+      },
+      "incoming_bit_depth": {
+        "default": "mdi:television"
+      },
+      "incoming_colorimetry": {
+        "default": "mdi:television"
+      },
+      "incoming_black_levels": {
+        "default": "mdi:television"
+      },
+      "incoming_aspect_ratio": {
+        "default": "mdi:aspect-ratio"
+      },
+      "outgoing_res": {
+        "default": "mdi:television"
+      },
+      "outgoing_frame_rate": {
+        "default": "mdi:television"
+      },
+      "outgoing_color_space": {
+        "default": "mdi:television"
+      },
+      "outgoing_bit_depth": {
+        "default": "mdi:television"
+      },
+      "outgoing_colorimetry": {
+        "default": "mdi:television"
+      },
+      "outgoing_black_levels": {
+        "default": "mdi:television"
+      },
+      "aspect_res": {
+        "default": "mdi:aspect-ratio"
+      },
+      "incoming_signal_type": {
+        "default": "mdi:video-image"
+      },
+      "outgoing_signal_type": {
+        "default": "mdi:video-image"
+      },
+      "aspect_dec": {
+        "default": "mdi:aspect-ratio"
+      },
+      "aspect_int": {
+        "default": "mdi:aspect-ratio"
+      },
+      "aspect_name": {
+        "default": "mdi:aspect-ratio"
+      },
+      "masking_res": {
+        "default": "mdi:television"
+      },
+      "masking_dec": {
+        "default": "mdi:television"
+      },
+      "masking_int": {
+        "default": "mdi:television"
+      }
+    }
+  }
+}

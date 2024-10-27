@@ -1,5 +1,6 @@
 """Support for the Locative platform."""
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,9 +24,9 @@ async def async_setup_entry(
 
         async_add_entities([LocativeEntity(device, location, location_name)])
 
-    hass.data[LT_DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[LT_DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
 
 class LocativeEntity(TrackerEntity):
@@ -34,34 +35,15 @@ class LocativeEntity(TrackerEntity):
     def __init__(self, device, location, location_name):
         """Set up Locative entity."""
         self._name = device
-        self._location = location
-        self._location_name = location_name
+        self._attr_latitude = location[0]
+        self._attr_longitude = location[1]
+        self._attr_location_name = location_name
         self._unsub_dispatcher = None
-
-    @property
-    def latitude(self):
-        """Return latitude value of the device."""
-        return self._location[0]
-
-    @property
-    def longitude(self):
-        """Return longitude value of the device."""
-        return self._location[1]
-
-    @property
-    def location_name(self):
-        """Return a location name for the current location of the device."""
-        return self._location_name
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
@@ -78,6 +60,7 @@ class LocativeEntity(TrackerEntity):
         """Update device data."""
         if device != self._name:
             return
-        self._location_name = location_name
-        self._location = location
+        self._attr_location_name = location_name
+        self._attr_latitude = location[0]
+        self._attr_longitude = location[1]
         self.async_write_ha_state()

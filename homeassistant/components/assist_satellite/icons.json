@@ -1,0 +1,12 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:account-voice"
+    }
+  },
+  "services": {
+    "announce": {
+      "service": "mdi:bullhorn"
+    }
+  }
+}

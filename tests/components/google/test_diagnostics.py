@@ -1,5 +1,7 @@
 """Tests for diagnostics platform of google calendar."""
+
 from collections.abc import Callable
+import time
 from typing import Any
 
 from aiohttp.test_utils import TestClient
@@ -9,20 +11,20 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_EVENT, ComponentSetup
+from .conftest import TEST_EVENT, ApiResult, ComponentSetup
 
 from tests.common import CLIENT_ID, MockConfigEntry, MockUser
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
 def mock_test_setup(
-    test_api_calendar,
-    mock_calendars_list,
-):
+    test_api_calendar: dict[str, Any],
+    mock_calendars_list: ApiResult,
+) -> None:
     """Fixture that sets up the default API responses during integration setup."""
     mock_calendars_list({"items": [test_api_calendar]})
 
@@ -52,13 +54,8 @@ def _get_test_client_generator(
     return auth_client
 
 
-@pytest.fixture(autouse=True)
-async def setup_diag(hass):
-    """Set up diagnostics platform."""
-    assert await async_setup_component(hass, "diagnostics", {})
-
-
 @freeze_time("2023-03-13 12:05:00-07:00")
+@pytest.mark.usefixtures("socket_enabled")
 async def test_diagnostics(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
@@ -67,10 +64,22 @@ async def test_diagnostics(
     hass_admin_credential: Credentials,
     config_entry: MockConfigEntry,
     aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
     snapshot: SnapshotAssertion,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test diagnostics for the calendar."""
+
+    expires_in = 86400
+    expires_at = time.time() + expires_in
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        json={
+            "refresh_token": "some-refresh-token",
+            "access_token": "some-updated-token",
+            "expires_at": expires_at,
+            "expires_in": expires_in,
+        },
+    )
     mock_events_list_items(
         [
             {

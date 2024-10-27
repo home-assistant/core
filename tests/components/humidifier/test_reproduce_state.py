@@ -1,4 +1,5 @@
 """The tests for reproduction of state."""
+
 import pytest
 
 from homeassistant.components.humidifier.const import (

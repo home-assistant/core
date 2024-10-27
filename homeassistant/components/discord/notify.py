@@ -1,4 +1,5 @@
 """Discord platform for notify component."""
+
 from __future__ import annotations
 
 from io import BytesIO
@@ -6,6 +7,7 @@ import logging
 import os.path
 from typing import Any, cast
 
+import aiohttp
 import nextcord
 from nextcord.abc import Messageable
 
@@ -80,7 +82,7 @@ class DiscordNotificationService(BaseNotificationService):
         async with session.get(
             url,
             ssl=verify_ssl,
-            timeout=30,
+            timeout=aiohttp.ClientTimeout(total=30),
             raise_for_status=True,
         ) as resp:
             content_length = resp.headers.get("Content-Length")
@@ -122,17 +124,17 @@ class DiscordNotificationService(BaseNotificationService):
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
-            return None
+            return
 
         data = kwargs.get(ATTR_DATA) or {}
 
         embeds: list[nextcord.Embed] = []
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
-            title = embedding.get(ATTR_EMBED_TITLE) or nextcord.Embed.Empty
-            description = embedding.get(ATTR_EMBED_DESCRIPTION) or nextcord.Embed.Empty
-            color = embedding.get(ATTR_EMBED_COLOR) or nextcord.Embed.Empty
-            url = embedding.get(ATTR_EMBED_URL) or nextcord.Embed.Empty
+            title = embedding.get(ATTR_EMBED_TITLE)
+            description = embedding.get(ATTR_EMBED_DESCRIPTION)
+            color = embedding.get(ATTR_EMBED_COLOR)
+            url = embedding.get(ATTR_EMBED_URL)
             fields = embedding.get(ATTR_EMBED_FIELDS) or []
 
             if embedding:

@@ -1,4 +1,5 @@
 """Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
+
 import logging
 
 from pycomfoconnect import Bridge, ComfoConnect
@@ -12,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -65,7 +66,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("Could not connect to ComfoConnect bridge on %s", host)
         return False
     bridge = bridges[0]
-    _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
+    _LOGGER.debug("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
     # Setup ComfoConnect Bridge
     ccb = ComfoConnectBridge(hass, bridge, name, token, user_agent, pin)
@@ -75,7 +76,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ccb.connect()
 
     # Schedule disconnect on shutdown
-    def _shutdown(_event):
+    def _shutdown(_event: Event) -> None:
         ccb.disconnect()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
@@ -89,7 +90,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ComfoConnectBridge:
     """Representation of a ComfoConnect bridge."""
 
-    def __init__(self, hass, bridge, name, token, friendly_name, pin):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        bridge: Bridge,
+        name: str,
+        token: str,
+        friendly_name: str,
+        pin: int,
+    ) -> None:
         """Initialize the ComfoConnect bridge."""
         self.name = name
         self.hass = hass
@@ -103,17 +112,17 @@ class ComfoConnectBridge:
         )
         self.comfoconnect.callback_sensor = self.sensor_callback
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect with the bridge."""
         _LOGGER.debug("Connecting with bridge")
         self.comfoconnect.connect(True)
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect from the bridge."""
         _LOGGER.debug("Disconnecting from bridge")
         self.comfoconnect.disconnect()
 
-    def sensor_callback(self, var, value):
+    def sensor_callback(self, var: str, value: str) -> None:
         """Notify listeners that we have received an update."""
         _LOGGER.debug("Received update for %s: %s", var, value)
         dispatcher_send(

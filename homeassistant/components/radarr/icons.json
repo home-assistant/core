@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "movies": {
+        "default": "mdi:television"
+      },
+      "queue": {
+        "default": "mdi:download"
+      }
+    }
+  }
+}

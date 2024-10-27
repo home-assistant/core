@@ -1,4 +1,5 @@
 """Test add-on panel."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -12,7 +13,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock):
+def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -23,8 +24,9 @@ def mock_all(aioclient_mock):
     )
 
 
+@pytest.mark.usefixtures("hassio_env")
 async def test_hassio_addon_panel_startup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_env
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test startup and panel setup after event."""
     aioclient_mock.get(
@@ -67,10 +69,10 @@ async def test_hassio_addon_panel_startup(
         )
 
 
+@pytest.mark.usefixtures("hassio_env")
 async def test_hassio_addon_panel_api(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hassio_env,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test panel api after event."""

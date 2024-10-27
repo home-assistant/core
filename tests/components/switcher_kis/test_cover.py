@@ -1,4 +1,5 @@
 """Test the Switcher cover platform."""
+
 from unittest.mock import patch
 
 from aioswitcher.api import SwitcherBaseResponse
@@ -13,10 +14,7 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -24,20 +22,40 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
 from . import init_integration
-from .consts import DUMMY_SHUTTER_DEVICE as DEVICE
+from .consts import (
+    DUMMY_SHUTTER_DEVICE as DEVICE,
+    DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE as DEVICE2,
+    DUMMY_TOKEN as TOKEN,
+    DUMMY_USERNAME as USERNAME,
+)
 
 ENTITY_ID = f"{COVER_DOMAIN}.{slugify(DEVICE.name)}"
+ENTITY_ID2 = f"{COVER_DOMAIN}.{slugify(DEVICE2.name)}"
 
 
-@pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_cover(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -> None:
+@pytest.mark.parametrize(
+    ("device", "entity_id"),
+    [
+        (DEVICE, ENTITY_ID),
+        (DEVICE2, ENTITY_ID2),
+    ],
+)
+@pytest.mark.parametrize("mock_bridge", [[DEVICE, DEVICE2]], indirect=True)
+async def test_cover(
+    hass: HomeAssistant,
+    mock_bridge,
+    mock_api,
+    monkeypatch: pytest.MonkeyPatch,
+    device,
+    entity_id: str,
+) -> None:
     """Test cover services."""
-    await init_integration(hass)
+    await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
     # Test initial state - open
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OPEN
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPEN
 
     # Test set position
     with patch(
@@ -46,18 +64,18 @@ async def test_cover(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) ->
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 77},
+            {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 77},
             blocking=True,
         )
 
-        monkeypatch.setattr(DEVICE, "position", 77)
-        mock_bridge.mock_callbacks([DEVICE])
+        monkeypatch.setattr(device, "position", [77])
+        mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(77)
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_OPEN
+        mock_control_device.assert_called_once_with(77, 0)
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 77
 
     # Test open
@@ -67,18 +85,18 @@ async def test_cover(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) ->
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-        monkeypatch.setattr(DEVICE, "direction", ShutterDirection.SHUTTER_UP)
-        mock_bridge.mock_callbacks([DEVICE])
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_UP])
+        mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(100)
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_OPENING
+        mock_control_device.assert_called_once_with(100, 0)
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.OPENING
 
     # Test close
     with patch(
@@ -87,58 +105,71 @@ async def test_cover(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) ->
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-        monkeypatch.setattr(DEVICE, "direction", ShutterDirection.SHUTTER_DOWN)
-        mock_bridge.mock_callbacks([DEVICE])
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_DOWN])
+        mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 6
-        mock_control_device.assert_called_once_with(0)
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_CLOSING
+        mock_control_device.assert_called_once_with(0, 0)
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.CLOSING
 
     # Test stop
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop"
+        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop_shutter"
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-        monkeypatch.setattr(DEVICE, "direction", ShutterDirection.SHUTTER_STOP)
-        mock_bridge.mock_callbacks([DEVICE])
+        monkeypatch.setattr(device, "direction", [ShutterDirection.SHUTTER_STOP])
+        mock_bridge.mock_callbacks([device])
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 8
-        mock_control_device.assert_called_once()
-        state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_OPEN
+        mock_control_device.assert_called_once_with(0)
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.OPEN
 
     # Test closed on position == 0
-    monkeypatch.setattr(DEVICE, "position", 0)
-    mock_bridge.mock_callbacks([DEVICE])
+    monkeypatch.setattr(device, "position", [0])
+    mock_bridge.mock_callbacks([device])
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_CLOSED
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
-@pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_cover_control_fail(hass: HomeAssistant, mock_bridge, mock_api) -> None:
+@pytest.mark.parametrize(
+    ("device", "entity_id"),
+    [
+        (DEVICE, ENTITY_ID),
+        (DEVICE2, ENTITY_ID2),
+    ],
+)
+@pytest.mark.parametrize("mock_bridge", [[DEVICE, DEVICE2]], indirect=True)
+async def test_cover_control_fail(
+    hass: HomeAssistant,
+    mock_bridge,
+    mock_api,
+    device,
+    entity_id: str,
+) -> None:
     """Test cover control fail."""
-    await init_integration(hass)
+    await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
     # Test initial state - open
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OPEN
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPEN
 
     # Test exception during set position
     with patch(
@@ -149,21 +180,21 @@ async def test_cover_control_fail(hass: HomeAssistant, mock_bridge, mock_api) ->
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_SET_COVER_POSITION,
-                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 44},
+                {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 44},
                 blocking=True,
             )
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(44)
-        state = hass.states.get(ENTITY_ID)
+        mock_control_device.assert_called_once_with(44, 0)
+        state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
 
     # Make device available again
-    mock_bridge.mock_callbacks([DEVICE])
+    mock_bridge.mock_callbacks([device])
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OPEN
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPEN
 
     # Test error response during set position
     with patch(
@@ -174,11 +205,22 @@ async def test_cover_control_fail(hass: HomeAssistant, mock_bridge, mock_api) ->
             await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_SET_COVER_POSITION,
-                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 27},
+                {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 27},
                 blocking=True,
             )
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(27)
-        state = hass.states.get(ENTITY_ID)
+        mock_control_device.assert_called_once_with(27, 0)
+        state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("mock_bridge", [[DEVICE2]], indirect=True)
+async def test_cover2_no_token(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test single cover dual light without token services."""
+    await init_integration(hass)
+    assert mock_bridge
+
+    assert mock_api.call_count == 0

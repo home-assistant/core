@@ -1,4 +1,5 @@
 """The Schlage integration."""
+
 from __future__ import annotations
 
 from pycognito.exceptions import WarrantException
@@ -15,6 +16,7 @@ from .coordinator import SchlageDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

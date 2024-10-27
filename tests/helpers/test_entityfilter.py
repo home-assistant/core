@@ -1,4 +1,5 @@
 """The tests for the EntityFilter component."""
+
 from homeassistant.helpers.entityfilter import (
     FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA,

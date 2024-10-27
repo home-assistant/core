@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "recording_ongoing": {
+        "default": "mdi:record-rec"
+      },
+      "recording_new": {
+        "default": "mdi:new-box"
+      }
+    },
+    "light": {
+      "ambilight": {
+        "default": "mdi:television-ambient-light"
+      }
+    },
+    "switch": {
+      "screen_state": {
+        "default": "mdi:television-shimmer"
+      },
+      "ambilight_hue": {
+        "default": "mdi:television-ambient-light"
+      }
+    }
+  }
+}

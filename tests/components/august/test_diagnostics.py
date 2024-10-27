@@ -1,4 +1,5 @@
 """Test august diagnostics."""
+
 from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant

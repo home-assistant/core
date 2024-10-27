@@ -1,4 +1,5 @@
 """Config flow to configure the LaMetric integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -28,9 +29,9 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.device_registry import format_mac
@@ -58,7 +59,6 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     discovered_host: str
     discovered_serial: str
     discovered: bool = False
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -72,11 +72,13 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
-    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by SSDP discovery."""
         url = URL(discovery_info.ssdp_location or "")
         if url.host is None or not (
@@ -106,16 +108,15 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.discovered_serial = serial
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with LaMetric."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
     async def async_step_choice_enter_manual_or_fetch_cloud(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user's choice.
 
         Either enter the manual credentials or fetch the cloud credentials.
@@ -127,14 +128,14 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_manual_entry(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user's choice of entering the device manually."""
         errors: dict[str, str] = {}
         if user_input is not None:
             if self.discovered:
                 host = self.discovered_host
-            elif self.reauth_entry:
-                host = self.reauth_entry.data[CONF_HOST]
+            elif self.source == SOURCE_REAUTH:
+                host = self._get_reauth_entry().data[CONF_HOST]
             else:
                 host = user_input[CONF_HOST]
 
@@ -142,12 +143,12 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self._async_step_create_entry(
                     host, user_input[CONF_API_KEY]
                 )
-            except AbortFlow as ex:
-                raise ex
+            except AbortFlow:
+                raise
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error occurred")
                 errors["base"] = "unknown"
 
@@ -157,7 +158,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         }
-        if not self.discovered and not self.reauth_entry:
+        if not self.discovered and self.source != SOURCE_REAUTH:
             schema = {vol.Required(CONF_HOST): TextSelector()} | schema
 
         return self.async_show_form(
@@ -166,7 +167,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_cloud_fetch_devices(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_cloud_fetch_devices(
+        self, data: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Fetch information about devices from the cloud."""
         lametric = LaMetricCloud(
             token=data["token"]["access_token"],
@@ -184,14 +187,15 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_cloud_select_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle device selection from devices offered by the cloud."""
         if self.discovered:
             user_input = {CONF_DEVICE: self.discovered_serial}
-        elif self.reauth_entry:
-            if self.reauth_entry.unique_id not in self.devices:
+        elif self.source == SOURCE_REAUTH:
+            reauth_unique_id = self._get_reauth_entry().unique_id
+            if reauth_unique_id not in self.devices:
                 return self.async_abort(reason="reauth_device_not_found")
-            user_input = {CONF_DEVICE: self.reauth_entry.unique_id}
+            user_input = {CONF_DEVICE: reauth_unique_id}
         elif len(self.devices) == 1:
             user_input = {CONF_DEVICE: list(self.devices.values())[0].serial_number}
 
@@ -202,12 +206,12 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self._async_step_create_entry(
                     str(device.ip), device.api_key
                 )
-            except AbortFlow as ex:
-                raise ex
+            except AbortFlow:
+                raise
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error occurred")
                 errors["base"] = "unknown"
 
@@ -232,7 +236,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_step_create_entry(self, host: str, api_key: str) -> FlowResult:
+    async def _async_step_create_entry(
+        self, host: str, api_key: str
+    ) -> ConfigFlowResult:
         """Create entry."""
         lametric = LaMetricDevice(
             host=host,
@@ -242,7 +248,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         device = await lametric.device()
 
-        if not self.reauth_entry:
+        if self.source != SOURCE_REAUTH:
             await self.async_set_unique_id(device.serial_number)
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
@@ -264,19 +270,14 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
         )
 
-        if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(
-                self.reauth_entry,
-                data={
-                    **self.reauth_entry.data,
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={
                     CONF_HOST: lametric.host,
                     CONF_API_KEY: lametric.api_key,
                 },
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
             title=device.name,
@@ -287,7 +288,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             },
         )
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery to update existing entries."""
         mac = format_mac(discovery_info.macaddress)
         for entry in self._async_current_entries():

@@ -1,4 +1,5 @@
 """Platform for switch integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -10,39 +11,33 @@ from devolo_plc_api.device_api import WifiGuestAccessGet
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
 from .entity import DevoloCoordinatorEntity
+
+PARALLEL_UPDATES = 1
 
 _DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
 
 
-@dataclass
-class DevoloSwitchRequiredKeysMixin(Generic[_DataT]):
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloSwitchEntityDescription(SwitchEntityDescription, Generic[_DataT]):
+    """Describes devolo switch entity."""
 
     is_on_func: Callable[[_DataT], bool]
     turn_on_func: Callable[[Device], Awaitable[bool]]
     turn_off_func: Callable[[Device], Awaitable[bool]]
 
 
-@dataclass
-class DevoloSwitchEntityDescription(
-    SwitchEntityDescription, DevoloSwitchRequiredKeysMixin[_DataT]
-):
-    """Describes devolo switch entity."""
-
-
 SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription[Any]] = {
     SWITCH_GUEST_WIFI: DevoloSwitchEntityDescription[WifiGuestAccessGet](
         key=SWITCH_GUEST_WIFI,
-        icon="mdi:wifi",
         is_on_func=lambda data: data.enabled is True,
         turn_on_func=lambda device: device.device.async_set_wifi_guest_access(True),  # type: ignore[union-attr]
         turn_off_func=lambda device: device.device.async_set_wifi_guest_access(False),  # type: ignore[union-attr]
@@ -50,7 +45,6 @@ SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription[Any]] = {
     SWITCH_LEDS: DevoloSwitchEntityDescription[bool](
         key=SWITCH_LEDS,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:led-off",
         is_on_func=bool,
         turn_on_func=lambda device: device.device.async_set_led_setting(True),  # type: ignore[union-attr]
         turn_off_func=lambda device: device.device.async_set_led_setting(False),  # type: ignore[union-attr]
@@ -59,13 +53,13 @@ SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription[Any]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinators"]
+    device = entry.runtime_data.device
+    coordinators = entry.runtime_data.coordinators
 
     entities: list[DevoloSwitchEntity[Any]] = []
     if device.device and "led" in device.device.features:
@@ -74,7 +68,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[SWITCH_LEDS],
                 SWITCH_TYPES[SWITCH_LEDS],
-                device,
             )
         )
     if device.device and "wifi1" in device.device.features:
@@ -83,7 +76,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[SWITCH_GUEST_WIFI],
                 SWITCH_TYPES[SWITCH_GUEST_WIFI],
-                device,
             )
         )
     async_add_entities(entities)
@@ -96,14 +88,13 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DevoloHomeNetworkConfigEntry,
         coordinator: DataUpdateCoordinator[_DataT],
         description: DevoloSwitchEntityDescription[_DataT],
-        device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
-        super().__init__(entry, coordinator, device)
+        super().__init__(entry, coordinator)
 
     @property
     def is_on(self) -> bool:
@@ -117,7 +108,9 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+                translation_domain=DOMAIN,
+                translation_key="password_protected",
+                translation_placeholders={"title": self.entry.title},
             ) from ex
         except DeviceUnavailable:
             pass  # The coordinator will handle this
@@ -130,7 +123,9 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+                translation_domain=DOMAIN,
+                translation_key="password_protected",
+                translation_placeholders={"title": self.entry.title},
             ) from ex
         except DeviceUnavailable:
             pass  # The coordinator will handle this

@@ -4,19 +4,210 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
+        "menu_options": {
+          "login": "Login to Habitica",
+          "advanced": "Login to other instances"
+        },
+        "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks."
+      },
+      "login": {
+        "data": {
+          "username": "Email or username (case-sensitive)",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "advanced": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "name": "Override for Habitica’s username. Will be used for service calls",
-          "api_user": "Habitica’s API user ID",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_user": "User ID",
+          "api_key": "API Token",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
-        "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks. Note that api_id and api_key must be gotten from https://habitica.com/user/settings/api"
+        "description": "You can retrieve your `User ID` and `API Token` from **Settings -> Site Data** on Habitica or the instance you want to connect to"
       }
+    }
+  },
+  "entity": {
+    "button": {
+      "run_cron": {
+        "name": "Start my day"
+      },
+      "buy_health_potion": {
+        "name": "Buy a health potion"
+      },
+      "allocate_all_stat_points": {
+        "name": "Allocate all stat points"
+      },
+      "revive": {
+        "name": "Revive from death"
+      },
+      "mpheal": {
+        "name": "Ethereal surge"
+      },
+      "earth": {
+        "name": "Earthquake"
+      },
+      "frost": {
+        "name": "Chilling frost"
+      },
+      "defensive_stance": {
+        "name": "Defensive stance"
+      },
+      "valorous_presence": {
+        "name": "Valorous presence"
+      },
+      "intimidate": {
+        "name": "Intimidating gaze"
+      },
+      "tools_of_trade": {
+        "name": "Tools of the trade"
+      },
+      "stealth": {
+        "name": "Stealth"
+      },
+      "heal": {
+        "name": "Healing light"
+      },
+      "brightness": {
+        "name": "Searing brightness"
+      },
+      "protect_aura": {
+        "name": "Protective aura"
+      },
+      "heal_all": {
+        "name": "Blessing"
+      }
+    },
+    "sensor": {
+      "display_name": {
+        "name": "Display name"
+      },
+      "health": {
+        "name": "Health"
+      },
+      "health_max": {
+        "name": "Max. health"
+      },
+      "mana": {
+        "name": "Mana"
+      },
+      "mana_max": {
+        "name": "Max. mana"
+      },
+      "experience": {
+        "name": "Experience"
+      },
+      "experience_max": {
+        "name": "Next level"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "gold": {
+        "name": "Gold"
+      },
+      "gems": {
+        "name": "Gems"
+      },
+      "trinkets": {
+        "name": "Mystic hourglasses"
+      },
+      "class": {
+        "name": "Class",
+        "state": {
+          "warrior": "Warrior",
+          "healer": "Healer",
+          "wizard": "Mage",
+          "rogue": "Rogue"
+        }
+      },
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
+      },
+      "habits": {
+        "name": "Habits"
+      },
+      "rewards": {
+        "name": "Rewards"
+      }
+    },
+    "switch": {
+      "sleep": {
+        "name": "Rest in the inn"
+      }
+    },
+    "todo": {
+      "todos": {
+        "name": "To-Do's"
+      },
+      "dailys": {
+        "name": "Dailies"
+      }
+    }
+  },
+  "exceptions": {
+    "delete_todos_failed": {
+      "message": "Unable to delete item from Habitica to-do list, please try again"
+    },
+    "delete_completed_todos_failed": {
+      "message": "Unable to delete completed to-do items from Habitica to-do list, please try again"
+    },
+    "move_todos_item_failed": {
+      "message": "Unable to move the Habitica to-do to position {pos}, please try again"
+    },
+    "move_dailys_item_failed": {
+      "message": "Unable to move the Habitica daily to position {pos}, please try again"
+    },
+    "update_todos_item_failed": {
+      "message": "Unable to update the Habitica to-do `{name}`, please try again"
+    },
+    "update_dailys_item_failed": {
+      "message": "Unable to update the Habitica daily `{name}`, please try again"
+    },
+    "score_todos_item_failed": {
+      "message": "Unable to update the score for your Habitica to-do `{name}`, please try again"
+    },
+    "score_dailys_item_failed": {
+      "message": "Unable to update the score for your Habitica daily `{name}`, please try again"
+    },
+    "create_todos_item_failed": {
+      "message": "Unable to create new to-do `{name}` for Habitica, please try again"
+    },
+    "setup_rate_limit_exception": {
+      "message": "Currently rate limited, try again later"
+    },
+    "service_call_unallowed": {
+      "message": "Unable to carry out this action, because the required conditions are not met"
+    },
+    "service_call_exception": {
+      "message": "Unable to connect to Habitica, try again later"
+    },
+    "not_enough_mana": {
+      "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."
+    },
+    "skill_not_found": {
+      "message": "Unable to cast skill, your character does not have the skill or spell {skill}."
+    },
+    "entry_not_found": {
+      "message": "The selected character is currently not configured or loaded in Home Assistant."
+    },
+    "task_not_found": {
+      "message": "Unable to cast skill, could not find the task {task}"
+    }
+  },
+  "issues": {
+    "deprecated_task_entity": {
+      "title": "The Habitica {task_name} sensor is deprecated",
+      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
     }
   },
   "services": {
@@ -36,6 +227,34 @@
           "name": "Args",
           "description": "Any additional JSON or URL parameter arguments. See apidoc mentioned for path. Example uses same API endpoint."
         }
+      }
+    },
+    "cast_skill": {
+      "name": "Cast a skill",
+      "description": "Use a skill or spell from your Habitica character on a specific task to affect its progress or status.",
+      "fields": {
+        "config_entry": {
+          "name": "Select character",
+          "description": "Choose the Habitica character to cast the skill."
+        },
+        "skill": {
+          "name": "Skill",
+          "description": "Select the skill or spell you want to cast on the task. Only skills corresponding to your character's class can be used."
+        },
+        "task": {
+          "name": "Task name",
+          "description": "The name (or task ID) of the task you want to target with the skill or spell."
+        }
+      }
+    }
+  },
+  "selector": {
+    "skill_select": {
+      "options": {
+        "fireball": "Mage: Burst of flames",
+        "pickpocket": "Rogue: Pickpocket",
+        "backstab": "Rogue: Backstab",
+        "smash": "Warrior: Brutal smash"
       }
     }
   }

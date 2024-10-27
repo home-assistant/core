@@ -1,4 +1,5 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -26,7 +27,10 @@ from zwave_js_server.const.command_class.lock import (
     DOOR_STATUS_PROPERTY,
     LOCKED_PROPERTY,
 )
-from zwave_js_server.const.command_class.meter import VALUE_PROPERTY
+from zwave_js_server.const.command_class.meter import (
+    RESET_PROPERTY as RESET_METER_PROPERTY,
+    VALUE_PROPERTY,
+)
 from zwave_js_server.const.command_class.protection import LOCAL_PROPERTY, RF_PROPERTY
 from zwave_js_server.const.command_class.sound_switch import (
     DEFAULT_TONE_ID_PROPERTY,
@@ -40,7 +44,6 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_SETPOINT_PROPERTY,
 )
 from zwave_js_server.exceptions import UnknownValueData
-from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -233,6 +236,12 @@ SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 
 SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_BINARY}, property={CURRENT_VALUE_PROPERTY}
+)
+
+COLOR_SWITCH_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_COLOR},
+    property={CURRENT_COLOR_PROPERTY},
+    property_key={None},
 )
 
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -447,6 +456,61 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
     ),
+    # Shelly Qubino Wave Shutter QNSH-001P10
+    # Combine both switch_multilevel endpoints into shutter_tilt
+    # if operating mode (71) is set to venetian blind (1)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter_tilt",
+        manufacturer_id={0x0460},
+        product_id={0x0082},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={1},
+            type={ValueType.NUMBER},
+        ),
+        data_template=CoverTiltDataTemplate(
+            current_tilt_value_id=ZwaveValueID(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_=TARGET_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={71},
+                endpoint={0},
+                value={1},
+            )
+        ],
+    ),
+    # Shelly Qubino Wave Shutter QNSH-001P10
+    # Disable endpoint 2 (slat),
+    # as these are either combined with endpoint one as shutter_tilt
+    # or it has no practical function.
+    # CC: Switch_Multilevel
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x0460},
+        product_id={0x0082},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
+    ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -520,6 +584,15 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.NUMBER},
         ),
         entity_registry_enabled_default=False,
+    ),
+    # ZVIDAR Z-CM-V01 (SmartWings/Deyi WM25L/V Z-Wave Motor for Roller Shade)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shade",
+        manufacturer_id={0x045A},
+        product_id={0x0507},
+        product_type={0x0904},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
@@ -695,33 +768,6 @@ DISCOVERY_SCHEMAS = [
             },
         ),
     ),
-    # HomeSeer HSM-200 v1
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x001E},
-        product_id={0x0001},
-        product_type={0x0004},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
-        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
-    ),
-    # Logic Group ZDB5100
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x0234},
-        product_id={0x0121},
-        product_type={0x0003},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
-    ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     # Door Lock CC
@@ -839,17 +885,6 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.BOOLEAN},
         ),
     ),
-    ZWaveDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        hint="notification",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-        ),
-        allow_multi=True,
-    ),
     # binary sensor for Indicator CC
     ZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -911,19 +946,6 @@ DISCOVERY_SCHEMAS = [
         ),
         data_template=NumericSensorDataTemplate(),
     ),
-    # special list sensors (Notification CC)
-    ZWaveDiscoverySchema(
-        platform=Platform.SENSOR,
-        hint="list_sensor",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-        ),
-        allow_multi=True,
-        entity_registry_enabled_default=False,
-    ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
         platform=Platform.NUMBER,
@@ -946,11 +968,6 @@ DISCOVERY_SCHEMAS = [
             writeable=True,
         ),
         entity_category=EntityCategory.CONFIG,
-    ),
-    # binary switches
-    ZWaveDiscoverySchema(
-        platform=Platform.SWITCH,
-        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
     ),
     # switch for Indicator CC
     ZWaveDiscoverySchema(
@@ -1039,16 +1056,52 @@ DISCOVERY_SCHEMAS = [
         device_class_generic={"Thermostat"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # lights
-    # primary value is the currentValue (brightness)
-    # catch any device with multilevel CC as light
-    # NOTE: keep this at the bottom of the discovery scheme,
-    # to handle all others that need the multilevel CC first
+    # Handle the different combinations of Binary Switch, Multilevel Switch and Color Switch
+    # to create switches and/or (colored) lights. The goal is to:
+    # - couple Color Switch CC with Multilevel Switch CC if possible
+    # - couple Color Switch CC with Binary Switch CC as the first fallback
+    # - use Color Switch CC standalone as the last fallback
+    #
+    # Multilevel Switch CC (+ Color Switch CC) -> Dimmable light with or without color support.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # light for Basic CC
+    # Binary Switch CC when Multilevel Switch and Color Switch CC exist ->
+    # On/Off switch, assign color to light entity instead
+    ZWaveDiscoverySchema(
+        platform=Platform.SWITCH,
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+            COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        ],
+    ),
+    # Binary Switch CC and Color Switch CC ->
+    # Colored light that uses Binary Switch CC for turning on/off.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="color_onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        required_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
+    ),
+    # Binary Switch CC without Color Switch CC -> On/Off switch
+    ZWaveDiscoverySchema(
+        platform=Platform.SWITCH,
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
+    ),
+    # Colored light (legacy device) that can only be controlled through Color Switch CC.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="color_onoff",
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+    ),
+    # light for Basic CC with target
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=ZWaveValueDiscoverySchema(
@@ -1058,9 +1111,24 @@ DISCOVERY_SCHEMAS = [
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
+                command_class={CommandClass.BASIC},
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
+    ),
+    # sensor for Basic CC without target
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        absent_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.BASIC},
                 type={ValueType.NUMBER},
                 property={TARGET_VALUE_PROPERTY},
             )
@@ -1115,6 +1183,7 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.NUMBER},
             any_available_states={(0, "idle")},
         ),
+        allow_multi=True,
     ),
     # event
     # stateful = False
@@ -1125,13 +1194,62 @@ DISCOVERY_SCHEMAS = [
             stateful=False,
         ),
     ),
+    # button
+    # Meter CC idle
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        hint="meter reset",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.METER},
+            property={RESET_METER_PROPERTY},
+            type={ValueType.BOOLEAN},
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        hint="notification",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+        ),
+        # set allow-multi to true because some of the notification sensors
+        # can not be mapped to a binary sensor and must be handled as a regular sensor
+        allow_multi=True,
+    ),
+    # alarmType, alarmLevel (Notification CC)
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="notification_alarm",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            property={"alarmType", "alarmLevel"},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    # fallback sensors within Notification CC
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="notification",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+        ),
+    ),
 ]
 
 
 @callback
 def async_discover_node_values(
     node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         # We don't need to rediscover an already processed value_id
@@ -1142,10 +1260,13 @@ def async_discover_node_values(
 @callback
 def async_discover_single_value(
     value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on a single ZWave value and return matching schema info."""
-    discovered_value_ids[device.id].add(value.value_id)
     for schema in DISCOVERY_SCHEMAS:
+        # abort if attribute(s) already discovered
+        if value.value_id in discovered_value_ids[device.id]:
+            continue
+
         # check manufacturer_id, product_id, product_type
         if (
             (
@@ -1179,14 +1300,22 @@ def async_discover_single_value(
             continue
 
         # check device_class_generic
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.generic, schema.device_class_generic
+        if schema.device_class_generic and (
+            not value.node.device_class
+            or not any(
+                value.node.device_class.generic.label == val
+                for val in schema.device_class_generic
+            )
         ):
             continue
 
         # check device_class_specific
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.specific, schema.device_class_specific
+        if schema.device_class_specific and (
+            not value.node.device_class
+            or not any(
+                value.node.device_class.specific.label == val
+                for val in schema.device_class_specific
+            )
         ):
             continue
 
@@ -1196,14 +1325,20 @@ def async_discover_single_value(
 
         # check additional required values
         if schema.required_values is not None and not all(
-            any(check_value(val, val_scheme) for val in value.node.values.values())
+            any(
+                check_value(val, val_scheme, primary_value=value)
+                for val in value.node.values.values()
+            )
             for val_scheme in schema.required_values
         ):
             continue
 
         # check for values that may not be present
         if schema.absent_values is not None and any(
-            any(check_value(val, val_scheme) for val in value.node.values.values())
+            any(
+                check_value(val, val_scheme, primary_value=value)
+                for val in value.node.values.values()
+            )
             for val_scheme in schema.absent_values
         ):
             continue
@@ -1241,10 +1376,12 @@ def async_discover_single_value(
             entity_category=schema.entity_category,
         )
 
+        # prevent re-discovery of the (primary) value if not allowed
         if not schema.allow_multi:
-            # return early since this value may not be discovered
-            # by other schemas/platforms
-            return
+            discovered_value_ids[device.id].add(value.value_id)
+
+    # prevent re-discovery of the (primary) value after all schemas have been checked
+    discovered_value_ids[device.id].add(value.value_id)
 
     if value.command_class == CommandClass.CONFIGURATION:
         yield from async_discover_single_configuration_value(
@@ -1255,7 +1392,7 @@ def async_discover_single_value(
 @callback
 def async_discover_single_configuration_value(
     value: ConfigurationValue,
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on single Z-Wave configuration value and return schema matches."""
     if value.metadata.writeable and value.metadata.readable:
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
@@ -1320,7 +1457,11 @@ def async_discover_single_configuration_value(
 
 
 @callback
-def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
+def check_value(
+    value: ZwaveValue,
+    schema: ZWaveValueDiscoverySchema,
+    primary_value: ZwaveValue | None = None,
+) -> bool:
     """Check if value matches scheme."""
     # check command_class
     if (
@@ -1330,6 +1471,14 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check endpoint
     if schema.endpoint is not None and value.endpoint not in schema.endpoint:
+        return False
+    # If the schema does not require an endpoint, make sure the value is on the
+    # same endpoint as the primary value
+    if (
+        schema.endpoint is None
+        and primary_value is not None
+        and value.endpoint != primary_value.endpoint
+    ):
         return False
     # check property
     if schema.property is not None and value.property_ not in schema.property:
@@ -1378,15 +1527,3 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if schema.stateful is not None and value.metadata.stateful != schema.stateful:
         return False
     return True
-
-
-@callback
-def check_device_class(
-    device_class: DeviceClassItem, required_value: set[str] | None
-) -> bool:
-    """Check if device class id or label matches."""
-    if required_value is None:
-        return True
-    if any(device_class.label == val for val in required_value):
-        return True
-    return False

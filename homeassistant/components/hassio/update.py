@@ -1,8 +1,11 @@
 """Update platform for Supervisor."""
+
 from __future__ import annotations
 
 from typing import Any
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import StoreAddonUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -16,14 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    ADDONS_COORDINATOR,
-    async_update_addon,
-    async_update_core,
-    async_update_os,
-    async_update_supervisor,
-)
 from .const import (
+    ADDONS_COORDINATOR,
     ATTR_AUTO_UPDATE,
     ATTR_CHANGELOG,
     ATTR_VERSION,
@@ -39,7 +36,12 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
-from .handler import HassioAPIError
+from .handler import (
+    HassioAPIError,
+    async_update_core,
+    async_update_os,
+    async_update_supervisor,
+)
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     name="Update",
@@ -66,14 +68,14 @@ async def async_setup_entry(
         ),
     ]
 
-    for addon in coordinator.data[DATA_KEY_ADDONS].values():
-        entities.append(
-            SupervisorAddonUpdateEntity(
-                addon=addon,
-                coordinator=coordinator,
-                entity_description=ENTITY_DESCRIPTION,
-            )
+    entities.extend(
+        SupervisorAddonUpdateEntity(
+            addon=addon,
+            coordinator=coordinator,
+            entity_description=ENTITY_DESCRIPTION,
         )
+        for addon in coordinator.data[DATA_KEY_ADDONS].values()
+    )
 
     if coordinator.is_hass_os:
         entities.append(
@@ -164,8 +166,10 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         try:
-            await async_update_addon(self.hass, slug=self._addon_slug, backup=backup)
-        except HassioAPIError as err:
+            await self.coordinator.supervisor_client.store.update_addon(
+                self._addon_slug, StoreAddonUpdate(backup=backup)
+            )
+        except SupervisorError as err:
             raise HomeAssistantError(f"Error updating {self.title}: {err}") from err
 
         await self.coordinator.force_info_update_supervisor()
@@ -303,5 +307,5 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
             await async_update_core(self.hass, version=version, backup=backup)
         except HassioAPIError as err:
             raise HomeAssistantError(
-                f"Error updating Home Assistant Core {err}"
+                f"Error updating Home Assistant Core: {err}"
             ) from err

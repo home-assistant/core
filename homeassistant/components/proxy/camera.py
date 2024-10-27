@@ -1,4 +1,5 @@
 """Proxy camera platform that enables image processing of camera data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,7 +11,7 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
     Camera,
     async_get_image,
     async_get_mjpeg_stream,
@@ -44,12 +45,12 @@ MODE_CROP = "crop"
 DEFAULT_BASENAME = "Camera Proxy"
 DEFAULT_QUALITY = 75
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_IMAGES, False): cv.boolean,
-        vol.Optional(CONF_FORCE_RESIZE, False): cv.boolean,
+        vol.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
+        vol.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
         vol.Optional(CONF_MODE, default=MODE_RESIZE): vol.In([MODE_RESIZE, MODE_CROP]),
         vol.Optional(CONF_IMAGE_QUALITY): int,
         vol.Optional(CONF_IMAGE_REFRESH_RATE): float,
@@ -77,16 +78,16 @@ async def async_setup_platform(
 def _precheck_image(image, opts):
     """Perform some pre-checks on the given image."""
     if not opts:
-        raise ValueError()
+        raise ValueError
     try:
         img = Image.open(io.BytesIO(image))
     except OSError as err:
         _LOGGER.warning("Failed to open image")
-        raise ValueError() from err
+        raise ValueError from err
     imgfmt = str(img.format)
     if imgfmt not in ("PNG", "JPEG"):
         _LOGGER.warning("Image is of unsupported type: %s", imgfmt)
-        raise ValueError()
+        raise ValueError
     if img.mode != "RGB":
         img = img.convert("RGB")
     return img
@@ -291,7 +292,7 @@ class ProxyCamera(Camera):
             if not image:
                 return None
         except HomeAssistantError as err:
-            raise asyncio.CancelledError() from err
+            raise asyncio.CancelledError from err
 
         if self._mode == MODE_RESIZE:
             job = _resize_image

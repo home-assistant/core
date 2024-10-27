@@ -17,6 +17,10 @@
       "is_armed_night": "{entity_name} is armed night",
       "is_armed_vacation": "{entity_name} is armed vacation"
     },
+    "extra_fields": {
+      "code": "Code",
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
     "trigger_type": {
       "triggered": "{entity_name} triggered",
       "disarmed": "{entity_name} disarmed",

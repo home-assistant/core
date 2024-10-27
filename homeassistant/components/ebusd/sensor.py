@@ -1,4 +1,5 @@
 """Support for Ebusd sensors."""
+
 from __future__ import annotations
 
 import datetime
@@ -37,13 +38,13 @@ def setup_platform(
     monitored_conditions = discovery_info["monitored_conditions"]
     name = discovery_info["client_name"]
 
-    dev = []
-    for condition in monitored_conditions:
-        dev.append(
+    add_entities(
+        (
             EbusdSensor(ebusd_api, discovery_info["sensor_types"][condition], name)
-        )
-
-    add_entities(dev, True)
+            for condition in monitored_conditions
+        ),
+        True,
+    )
 
 
 class EbusdSensor(SensorEntity):

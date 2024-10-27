@@ -1,4 +1,5 @@
 """Config flow for DialogFlow."""
+
 from homeassistant.helpers import config_entry_flow
 
 from .const import DOMAIN

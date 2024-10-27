@@ -1,4 +1,5 @@
 """Statistics duplication repairs."""
+
 from __future__ import annotations
 
 import json
@@ -246,12 +247,11 @@ def delete_statistics_meta_duplicates(instance: Recorder, session: Session) -> N
     """Identify and delete duplicated statistics_meta.
 
     This is used when migrating from schema version 28 to schema version 29.
+    Note: If this needs to be called during live schema migration it needs to
+    be modified to reload the statistics_meta_manager.
     """
     deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
     if deleted_statistics_rows:
-        statistics_meta_manager = instance.statistics_meta_manager
-        statistics_meta_manager.reset()
-        statistics_meta_manager.load(session)
         _LOGGER.info(
             "Deleted %s duplicated statistics_meta rows", deleted_statistics_rows
         )

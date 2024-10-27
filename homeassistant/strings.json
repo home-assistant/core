@@ -9,6 +9,14 @@
         "is_on": "{entity_name} is on",
         "is_off": "{entity_name} is off"
       },
+      "extra_fields": {
+        "above": "Above",
+        "below": "Below",
+        "for": "Duration",
+        "to": "To",
+        "value": "Value",
+        "zone": "Zone"
+      },
       "trigger_type": {
         "changed_states": "{entity_name} turned on or off",
         "turned_on": "{entity_name} turned on",
@@ -68,7 +76,7 @@
     "config_flow": {
       "title": {
         "oauth2_pick_implementation": "Pick authentication method",
-        "reauth": "Reauthenticate integration",
+        "reauth": "Authentication expired for {name}",
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {
@@ -88,6 +96,7 @@
         "access_token": "Access token",
         "api_key": "API key",
         "api_token": "API token",
+        "llm_hass_api": "Control Home Assistant",
         "ssl": "Uses an SSL certificate",
         "verify_ssl": "Verify SSL certificate",
         "elevation": "Elevation",
@@ -96,7 +105,8 @@
         "location": "Location",
         "pin": "PIN code",
         "mode": "Mode",
-        "path": "Path"
+        "path": "Path",
+        "language": "Language"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
@@ -129,6 +139,7 @@
         "oauth2_unauthorized": "OAuth authorization error while obtaining access token.",
         "oauth2_failed": "Error while obtaining access token.",
         "reauth_successful": "Re-authentication was successful",
+        "reconfigure_successful": "Re-configuration was successful",
         "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
         "cloud_not_connected": "Not connected to Home Assistant Cloud."
       }

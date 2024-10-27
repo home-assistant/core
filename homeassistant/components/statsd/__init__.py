@@ -1,4 +1,5 @@
 """Support for sending data to StatsD."""
+
 import logging
 
 import statsd
@@ -79,7 +80,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # Send attribute values
             for key, value in states.items():
                 if isinstance(value, (float, int)):
-                    stat = "{}.{}".format(state.entity_id, key.replace(" ", "_"))
+                    stat = f"{state.entity_id}.{key.replace(' ', '_')}"
                     statsd_client.gauge(stat, value, sample_rate)
 
         elif isinstance(_state, (float, int)):

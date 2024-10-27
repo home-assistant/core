@@ -1,4 +1,5 @@
 """Platform to control a Renson ventilation unit."""
+
 from __future__ import annotations
 
 import logging
@@ -26,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
     key="filter_change",
     translation_key="filter_change",
-    icon="mdi:filter",
     native_step=1,
     native_min_value=0,
     native_max_value=360,

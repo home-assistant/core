@@ -1,4 +1,5 @@
 """Support for Ombi."""
+
 import logging
 
 import pyombi
@@ -60,17 +61,19 @@ SUBMIT_TV_REQUEST_SERVICE_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Exclusive(CONF_API_KEY, "auth"): cv.string,
-                vol.Exclusive(CONF_PASSWORD, "auth"): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            },
-            cv.has_at_least_one_key("auth"),
+        DOMAIN: vol.All(
+            vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Exclusive(CONF_API_KEY, "auth"): cv.string,
+                    vol.Exclusive(CONF_PASSWORD, "auth"): cv.string,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+                }
+            ),
+            cv.has_at_least_one_key(CONF_API_KEY, CONF_PASSWORD),
         )
     },
     extra=vol.ALLOW_EXTRA,

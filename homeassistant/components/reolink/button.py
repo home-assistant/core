@@ -1,4 +1,5 @@
 """Component providing support for Reolink button entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,7 +16,6 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,20 +25,20 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 ATTR_SPEED = "speed"
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
+SERVICE_PTZ_MOVE = "ptz_move"
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkButtonEntityDescription(
     ButtonEntityDescription,
     ReolinkChannelEntityDescription,
@@ -50,7 +50,7 @@ class ReolinkButtonEntityDescription(
     ptz_cmd: str | None = None
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkHostButtonEntityDescription(
     ButtonEntityDescription,
     ReolinkHostEntityDescription,
@@ -64,7 +64,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_stop",
         translation_key="ptz_stop",
-        icon="mdi:pan",
         enabled_default=lambda api, ch: api.supported(ch, "pan_tilt"),
         supported=lambda api, ch: (
             api.supported(ch, "pan_tilt") or api.supported(ch, "zoom_basic")
@@ -74,7 +73,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_left",
         translation_key="ptz_left",
-        icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "pan"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.left.value),
         ptz_cmd=PtzEnum.left.value,
@@ -82,7 +80,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_right",
         translation_key="ptz_right",
-        icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "pan"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.right.value),
         ptz_cmd=PtzEnum.right.value,
@@ -90,7 +87,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_up",
         translation_key="ptz_up",
-        icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "tilt"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.up.value),
         ptz_cmd=PtzEnum.up.value,
@@ -98,7 +94,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_down",
         translation_key="ptz_down",
-        icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "tilt"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.down.value),
         ptz_cmd=PtzEnum.down.value,
@@ -106,7 +101,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_zoom_in",
         translation_key="ptz_zoom_in",
-        icon="mdi:magnify",
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "zoom_basic"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.zoomin.value),
@@ -115,7 +109,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_zoom_out",
         translation_key="ptz_zoom_out",
-        icon="mdi:magnify",
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "zoom_basic"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.zoomout.value),
@@ -124,7 +117,6 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_calibrate",
         translation_key="ptz_calibrate",
-        icon="mdi:pan",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_callibrate"),
         method=lambda api, ch: api.ptz_callibrate(ch),
@@ -132,14 +124,12 @@ BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="guard_go_to",
         translation_key="guard_go_to",
-        icon="mdi:crosshairs-gps",
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         method=lambda api, ch: api.set_ptz_guard(ch, command=GuardEnum.goto.value),
     ),
     ReolinkButtonEntityDescription(
         key="guard_set",
         translation_key="guard_set",
-        icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         method=lambda api, ch: api.set_ptz_guard(ch, command=GuardEnum.set.value),
@@ -160,11 +150,11 @@ HOST_BUTTON_ENTITIES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink button entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkButtonEntity | ReolinkHostButtonEntity] = [
         ReolinkButtonEntity(reolink_data, channel, entity_description)
@@ -173,17 +163,15 @@ async def async_setup_entry(
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkHostButtonEntity(reolink_data, entity_description)
-            for entity_description in HOST_BUTTON_ENTITIES
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkHostButtonEntity(reolink_data, entity_description)
+        for entity_description in HOST_BUTTON_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
     )
     async_add_entities(entities)
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
-        "ptz_move",
+        SERVICE_PTZ_MOVE,
         {vol.Required(ATTR_SPEED): cv.positive_int},
         "async_ptz_move",
         [SUPPORT_PTZ_SPEED],

@@ -1,5 +1,8 @@
 """The tests for deCONZ logbook."""
-from unittest.mock import patch
+
+from typing import Any
+
+import pytest
 
 from homeassistant.components.deconz.const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.deconz_event import (
@@ -13,58 +16,53 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_ID,
     CONF_UNIQUE_ID,
-    STATE_ALARM_ARMED_AWAY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
 from tests.components.logbook.common import MockRow, mock_humanify
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
+            "config": {
+                "armed": "disarmed",
+                "enrolled": 0,
+                "on": True,
+                "panel": "disarmed",
+                "pending": [],
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "3c4008d74035dfaa1f0bb30d24468b12",
+            "lastseen": "2021-04-02T13:07Z",
+            "manufacturername": "Universal Electronics Inc",
+            "modelid": "URC4450BC0-X-R",
+            "name": "Keypad",
+            "state": {
+                "action": "armed_away,1111,55",
+                "lastupdated": "2021-04-02T13:08:18.937",
+                "lowbattery": False,
+                "tampered": True,
+            },
+            "type": "ZHAAncillaryControl",
+            "uniqueid": "00:0d:6f:00:13:4f:61:39-01-0501",
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_humanifying_deconz_alarm_event(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     device_registry: dr.DeviceRegistry,
+    sensor_payload: dict[str, Any],
 ) -> None:
-    """Test humanifying deCONZ event."""
-    data = {
-        "sensors": {
-            "1": {
-                "config": {
-                    "armed": "disarmed",
-                    "enrolled": 0,
-                    "on": True,
-                    "panel": "disarmed",
-                    "pending": [],
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "3c4008d74035dfaa1f0bb30d24468b12",
-                "lastseen": "2021-04-02T13:07Z",
-                "manufacturername": "Universal Electronics Inc",
-                "modelid": "URC4450BC0-X-R",
-                "name": "Keypad",
-                "state": {
-                    "action": "armed_away,1111,55",
-                    "lastupdated": "2021-04-02T13:08:18.937",
-                    "lowbattery": False,
-                    "tampered": True,
-                },
-                "type": "ZHAAncillaryControl",
-                "uniqueid": "00:0d:6f:00:13:4f:61:39-01-0501",
-            }
-        }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
-    keypad_event_id = slugify(data["sensors"]["1"]["name"])
-    keypad_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
+    """Test humanifying deCONZ alarm event."""
+    keypad_event_id = slugify(sensor_payload["name"])
+    keypad_serial = serial_from_unique_id(sensor_payload["uniqueid"])
     keypad_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, keypad_serial)}
     )
@@ -74,6 +72,7 @@ async def test_humanifying_deconz_alarm_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -83,7 +82,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: keypad_entry.id,
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: keypad_event_id,
                     CONF_UNIQUE_ID: keypad_serial,
                 },
@@ -94,7 +93,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: "ff99ff99ff99ff99ff99ff99ff99ff99",
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: removed_device_event_id,
                     CONF_UNIQUE_ID: removed_device_serial,
                 },
@@ -111,14 +110,10 @@ async def test_humanifying_deconz_alarm_event(
     assert events[1]["message"] == "fired event 'armed_away'"
 
 
-async def test_humanifying_deconz_event(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test humanifying deCONZ event."""
-    data = {
-        "sensors": {
+@pytest.mark.parametrize(
+    "sensor_payload",
+    [
+        {
             "1": {
                 "name": "Switch 1",
                 "type": "ZHASwitch",
@@ -150,30 +145,35 @@ async def test_humanifying_deconz_event(
                 "uniqueid": "00:00:00:00:00:00:00:04-00",
             },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
-    switch_event_id = slugify(data["sensors"]["1"]["name"])
-    switch_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_humanifying_deconz_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    sensor_payload: dict[str, Any],
+) -> None:
+    """Test humanifying deCONZ event."""
+    switch_event_id = slugify(sensor_payload["1"]["name"])
+    switch_serial = serial_from_unique_id(sensor_payload["1"]["uniqueid"])
     switch_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, switch_serial)}
     )
 
-    hue_remote_event_id = slugify(data["sensors"]["2"]["name"])
-    hue_remote_serial = serial_from_unique_id(data["sensors"]["2"]["uniqueid"])
+    hue_remote_event_id = slugify(sensor_payload["2"]["name"])
+    hue_remote_serial = serial_from_unique_id(sensor_payload["2"]["uniqueid"])
     hue_remote_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, hue_remote_serial)}
     )
 
-    xiaomi_cube_event_id = slugify(data["sensors"]["3"]["name"])
-    xiaomi_cube_serial = serial_from_unique_id(data["sensors"]["3"]["uniqueid"])
+    xiaomi_cube_event_id = slugify(sensor_payload["3"]["name"])
+    xiaomi_cube_serial = serial_from_unique_id(sensor_payload["3"]["uniqueid"])
     xiaomi_cube_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, xiaomi_cube_serial)}
     )
 
-    faulty_event_id = slugify(data["sensors"]["4"]["name"])
-    faulty_serial = serial_from_unique_id(data["sensors"]["4"]["uniqueid"])
+    faulty_event_id = slugify(sensor_payload["4"]["name"])
+    faulty_serial = serial_from_unique_id(sensor_payload["4"]["uniqueid"])
     faulty_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, faulty_serial)}
     )
@@ -183,6 +183,7 @@ async def test_humanifying_deconz_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

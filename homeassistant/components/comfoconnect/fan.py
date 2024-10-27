@@ -1,4 +1,5 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
+
 from __future__ import annotations
 
 import logging
@@ -61,7 +62,13 @@ class ComfoConnectFan(FanEntity):
 
     _attr_icon = "mdi:air-conditioner"
     _attr_should_poll = False
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
     _attr_preset_modes = PRESET_MODES
     current_speed: float | None = None
 

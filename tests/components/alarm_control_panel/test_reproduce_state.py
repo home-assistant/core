@@ -1,6 +1,8 @@
 """Test reproduce state for Alarm control panel."""
+
 import pytest
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
@@ -9,13 +11,6 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
@@ -28,27 +23,37 @@ async def test_reproducing_states(
 ) -> None:
     """Test reproducing Alarm control panel states."""
     hass.states.async_set(
-        "alarm_control_panel.entity_armed_away", STATE_ALARM_ARMED_AWAY, {}
-    )
-    hass.states.async_set(
-        "alarm_control_panel.entity_armed_custom_bypass",
-        STATE_ALARM_ARMED_CUSTOM_BYPASS,
+        "alarm_control_panel.entity_armed_away",
+        AlarmControlPanelState.ARMED_AWAY,
         {},
     )
     hass.states.async_set(
-        "alarm_control_panel.entity_armed_home", STATE_ALARM_ARMED_HOME, {}
+        "alarm_control_panel.entity_armed_custom_bypass",
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        {},
     )
     hass.states.async_set(
-        "alarm_control_panel.entity_armed_night", STATE_ALARM_ARMED_NIGHT, {}
+        "alarm_control_panel.entity_armed_home",
+        AlarmControlPanelState.ARMED_HOME,
+        {},
     )
     hass.states.async_set(
-        "alarm_control_panel.entity_armed_vacation", STATE_ALARM_ARMED_VACATION, {}
+        "alarm_control_panel.entity_armed_night",
+        AlarmControlPanelState.ARMED_NIGHT,
+        {},
     )
     hass.states.async_set(
-        "alarm_control_panel.entity_disarmed", STATE_ALARM_DISARMED, {}
+        "alarm_control_panel.entity_armed_vacation",
+        AlarmControlPanelState.ARMED_VACATION,
+        {},
     )
     hass.states.async_set(
-        "alarm_control_panel.entity_triggered", STATE_ALARM_TRIGGERED, {}
+        "alarm_control_panel.entity_disarmed", AlarmControlPanelState.DISARMED, {}
+    )
+    hass.states.async_set(
+        "alarm_control_panel.entity_triggered",
+        AlarmControlPanelState.TRIGGERED,
+        {},
     )
 
     arm_away_calls = async_mock_service(
@@ -75,18 +80,34 @@ async def test_reproducing_states(
     await async_reproduce_state(
         hass,
         [
-            State("alarm_control_panel.entity_armed_away", STATE_ALARM_ARMED_AWAY),
+            State(
+                "alarm_control_panel.entity_armed_away",
+                AlarmControlPanelState.ARMED_AWAY,
+            ),
             State(
                 "alarm_control_panel.entity_armed_custom_bypass",
-                STATE_ALARM_ARMED_CUSTOM_BYPASS,
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
             ),
-            State("alarm_control_panel.entity_armed_home", STATE_ALARM_ARMED_HOME),
-            State("alarm_control_panel.entity_armed_night", STATE_ALARM_ARMED_NIGHT),
             State(
-                "alarm_control_panel.entity_armed_vacation", STATE_ALARM_ARMED_VACATION
+                "alarm_control_panel.entity_armed_home",
+                AlarmControlPanelState.ARMED_HOME,
             ),
-            State("alarm_control_panel.entity_disarmed", STATE_ALARM_DISARMED),
-            State("alarm_control_panel.entity_triggered", STATE_ALARM_TRIGGERED),
+            State(
+                "alarm_control_panel.entity_armed_night",
+                AlarmControlPanelState.ARMED_NIGHT,
+            ),
+            State(
+                "alarm_control_panel.entity_armed_vacation",
+                AlarmControlPanelState.ARMED_VACATION,
+            ),
+            State(
+                "alarm_control_panel.entity_disarmed",
+                AlarmControlPanelState.DISARMED,
+            ),
+            State(
+                "alarm_control_panel.entity_triggered",
+                AlarmControlPanelState.TRIGGERED,
+            ),
         ],
     )
 
@@ -116,17 +137,34 @@ async def test_reproducing_states(
     await async_reproduce_state(
         hass,
         [
-            State("alarm_control_panel.entity_armed_away", STATE_ALARM_TRIGGERED),
             State(
-                "alarm_control_panel.entity_armed_custom_bypass", STATE_ALARM_ARMED_AWAY
+                "alarm_control_panel.entity_armed_away",
+                AlarmControlPanelState.TRIGGERED,
             ),
             State(
-                "alarm_control_panel.entity_armed_home", STATE_ALARM_ARMED_CUSTOM_BYPASS
+                "alarm_control_panel.entity_armed_custom_bypass",
+                AlarmControlPanelState.ARMED_AWAY,
             ),
-            State("alarm_control_panel.entity_armed_night", STATE_ALARM_ARMED_HOME),
-            State("alarm_control_panel.entity_armed_vacation", STATE_ALARM_ARMED_NIGHT),
-            State("alarm_control_panel.entity_disarmed", STATE_ALARM_ARMED_VACATION),
-            State("alarm_control_panel.entity_triggered", STATE_ALARM_DISARMED),
+            State(
+                "alarm_control_panel.entity_armed_home",
+                AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            ),
+            State(
+                "alarm_control_panel.entity_armed_night",
+                AlarmControlPanelState.ARMED_HOME,
+            ),
+            State(
+                "alarm_control_panel.entity_armed_vacation",
+                AlarmControlPanelState.ARMED_NIGHT,
+            ),
+            State(
+                "alarm_control_panel.entity_disarmed",
+                AlarmControlPanelState.ARMED_VACATION,
+            ),
+            State(
+                "alarm_control_panel.entity_triggered",
+                AlarmControlPanelState.DISARMED,
+            ),
             # Should not raise
             State("alarm_control_panel.non_existing", "on"),
         ],

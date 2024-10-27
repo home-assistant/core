@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      }
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "number": {
+      "setpoint_temperature": {
+        "name": "Setpoint temperature"
+      }
+    },
+    "sensor": {
+      "live_temperature": {
+        "name": "Tip temperature"
+      },
+      "voltage": {
+        "name": "DC input voltage"
+      },
+      "handle_temperature": {
+        "name": "Handle temperature"
+      },
+      "power_pwm_level": {
+        "name": "Power level"
+      },
+      "power_source": {
+        "name": "Power source",
+        "state": {
+          "dc": "DC input",
+          "qc": "USB Quick Charge",
+          "pd_vbus": "USB PD VBUS",
+          "pd": "USB Power Delivery"
+        }
+      },
+      "tip_resistance": {
+        "name": "Tip resistance"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "movement_time": {
+        "name": "Last movement time"
+      },
+      "max_tip_temp_ability": {
+        "name": "Max tip temperature"
+      },
+      "tip_voltage": {
+        "name": "Raw tip voltage"
+      },
+      "hall_sensor": {
+        "name": "Hall effect strength"
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "soldering": "Soldering",
+          "sleeping": "Sleeping",
+          "settings": "Settings",
+          "debug": "Debug",
+          "boost": "Boost"
+        }
+      },
+      "estimated_power": {
+        "name": "Estimated power"
+      }
+    }
+  },
+  "exceptions": {
+    "setup_device_unavailable_exception": {
+      "message": "Device {name} is not reachable"
+    },
+    "setup_device_connection_error_exception": {
+      "message": "Connection to device {name} failed, try again later"
+    },
+    "submit_setting_failed": {
+      "message": "Failed to submit setting to device, try again later"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Tests for Sonos services."""
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,11 +28,12 @@ async def test_media_player_join(hass: HomeAssistant, async_autosetup_sonos) -> 
     mocked_speaker = Mock()
     mock_entity_id_mappings = {mocked_entity_id: mocked_speaker}
 
-    with patch.dict(
-        hass.data[DATA_SONOS].entity_id_mappings, mock_entity_id_mappings
-    ), patch(
-        "homeassistant.components.sonos.speaker.SonosSpeaker.join_multi"
-    ) as mock_join_multi:
+    with (
+        patch.dict(hass.data[DATA_SONOS].entity_id_mappings, mock_entity_id_mappings),
+        patch(
+            "homeassistant.components.sonos.speaker.SonosSpeaker.join_multi"
+        ) as mock_join_multi,
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_JOIN,

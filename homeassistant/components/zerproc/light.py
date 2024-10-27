@@ -1,4 +1,5 @@
 """Zerproc light platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -77,13 +78,13 @@ async def async_setup_entry(
 
 
 class ZerprocLight(LightEntity):
-    """Representation of an Zerproc Light."""
+    """Representation of a Zerproc Light."""
 
     _attr_color_mode = ColorMode.HS
-    _attr_icon = "mdi:string-lights"
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "light"
 
     def __init__(self, light) -> None:
         """Initialize a Zerproc light."""
@@ -146,7 +147,7 @@ class ZerprocLight(LightEntity):
             self._attr_available = False
             return
         if not self.available:
-            _LOGGER.info("Reconnected to %s", self._light.address)
+            _LOGGER.warning("Reconnected to %s", self._light.address)
             self._attr_available = True
         self._attr_is_on = state.is_on
         hsv = color_util.color_RGB_to_hsv(*state.color)

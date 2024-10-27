@@ -1,4 +1,5 @@
 """Provide animated GIF loops of Buienradar imagery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,13 +10,13 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import BuienRadarConfigEntry
 from .const import CONF_DELTA, DEFAULT_COUNTRY, DEFAULT_DELTA, DEFAULT_DIMENSION
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +29,9 @@ SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BuienRadarConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up buienradar radar-loop camera component."""
     config = entry.data
@@ -114,7 +117,9 @@ class BuienradarCam(Camera):
             headers = {}
 
         try:
-            async with session.get(url, timeout=5, headers=headers) as res:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=5), headers=headers
+            ) as res:
                 res.raise_for_status()
 
                 if res.status == 304:
@@ -128,7 +133,7 @@ class BuienradarCam(Camera):
                 _LOGGER.debug("HTTP 200 - Last-Modified: %s", last_modified)
 
                 return True
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 

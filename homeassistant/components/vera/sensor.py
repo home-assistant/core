@@ -1,4 +1,5 @@
 """Support for Vera sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -22,8 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -44,7 +45,7 @@ async def async_setup_entry(
     )
 
 
-class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
+class VeraSensor(VeraEntity[veraApi.VeraSensor], SensorEntity):
     """Representation of a Vera Sensor."""
 
     def __init__(
@@ -53,7 +54,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         """Initialize the sensor."""
         self._temperature_units: str | None = None
         self.last_changed_time = None
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -85,9 +86,10 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
             else:
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
-        elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            self._attr_native_value = self.vera_device.light
-        elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
+        elif self.vera_device.category in (
+            veraApi.CATEGORY_LIGHT_SENSOR,
+            veraApi.CATEGORY_UV_SENSOR,
+        ):
             self._attr_native_value = self.vera_device.light
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             self._attr_native_value = self.vera_device.humidity

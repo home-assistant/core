@@ -1,4 +1,5 @@
 """Support for Fibaro event entities."""
+
 from __future__ import annotations
 
 from pyfibaro.fibaro_device import DeviceModel, SceneEvent
@@ -14,8 +15,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 
 async def async_setup_entry(
@@ -26,16 +28,18 @@ async def async_setup_entry(
     """Set up the Fibaro event entities."""
     controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for device in controller.fibaro_devices[Platform.EVENT]:
-        for scene_event in device.central_scene_event:
-            # Each scene event represents a button on a device
-            entities.append(FibaroEventEntity(device, scene_event))
+    # Each scene event represents a button on a device
+    async_add_entities(
+        (
+            FibaroEventEntity(device, scene_event)
+            for device in controller.fibaro_devices[Platform.EVENT]
+            for scene_event in device.central_scene_event
+        ),
+        True,
+    )
 
-    async_add_entities(entities, True)
 
-
-class FibaroEventEntity(FibaroDevice, EventEntity):
+class FibaroEventEntity(FibaroEntity, EventEntity):
     """Representation of a Fibaro Event Entity."""
 
     def __init__(self, fibaro_device: DeviceModel, scene_event: SceneEvent) -> None:

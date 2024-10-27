@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "button": {
+      "connect": {
+        "default": "mdi:bluetooth-connect"
+      },
+      "disconnect": {
+        "default": "mdi:bluetooth-off"
+      }
+    },
+    "cover": {
+      "desk": {
+        "default": "mdi:desk"
+      }
+    },
+    "sensor": {
+      "height": {
+        "default": "mdi:arrow-up-down"
+      }
+    }
+  }
+}

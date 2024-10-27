@@ -1,15 +1,18 @@
 """Support for WLED."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, LOGGER
-from .coordinator import WLEDDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import WLEDDataUpdateCoordinator, WLEDReleasesDataUpdateCoordinator
 
 PLATFORMS = (
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
@@ -19,23 +22,28 @@ PLATFORMS = (
     Platform.UPDATE,
 )
 
+type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+WLED_KEY: HassKey[WLEDReleasesDataUpdateCoordinator] = HassKey(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the WLED integration.
+
+    We set up a single coordinator for fetching WLED releases, which
+    is used across all WLED devices (and config entries) to avoid
+    fetching the same data multiple times for each.
+    """
+    hass.data[WLED_KEY] = WLEDReleasesDataUpdateCoordinator(hass)
+    await hass.data[WLED_KEY].async_request_refresh()
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
     """Set up WLED from a config entry."""
-    coordinator = WLEDDataUpdateCoordinator(hass, entry=entry)
-    await coordinator.async_config_entry_first_refresh()
-
-    if coordinator.data.info.leds.cct:
-        LOGGER.error(
-            (
-                "WLED device '%s' has a CCT channel, which is not supported by "
-                "this integration"
-            ),
-            entry.title,
-        )
-        return False
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = WLEDDataUpdateCoordinator(hass, entry=entry)
+    await entry.runtime_data.async_config_entry_first_refresh()
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -46,17 +54,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
     """Unload WLED config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+        coordinator = entry.runtime_data
 
         # Ensure disconnected and cleanup stop sub
         await coordinator.wled.disconnect()
         if coordinator.unsub:
             coordinator.unsub()
-
-        del hass.data[DOMAIN][entry.entry_id]
 
     return unload_ok
 

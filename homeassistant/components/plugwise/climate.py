@@ -1,4 +1,5 @@
 """Plugwise Climate component for Home Assistant."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,12 +13,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import PlugwiseConfigEntry
 from .const import DOMAIN, MASTER_THERMOSTATS
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
@@ -26,16 +27,26 @@ from .util import plugwise_command
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PlugwiseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smile Thermostats from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        PlugwiseClimateEntity(coordinator, device_id)
-        for device_id, device in coordinator.data.devices.items()
-        if device["dev_class"] in MASTER_THERMOSTATS
-    )
+    coordinator = entry.runtime_data
+
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
+
+        async_add_entities(
+            PlugwiseClimateEntity(coordinator, device_id)
+            for device_id in coordinator.new_devices
+            if coordinator.data.devices[device_id]["dev_class"] in MASTER_THERMOSTATS
+        )
+
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
@@ -45,6 +56,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     _previous_mode: str = "heating"
 
@@ -68,6 +80,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+        if HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
         if presets := self.device.get("preset_modes"):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
@@ -138,7 +154,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if "regulation_modes" in self.gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
-        if self.device["available_schedules"] != ["None"]:
+        if "available_schedules" in self.device:
             hvac_modes.append(HVACMode.AUTO)
 
         if self.cdr_gateway["cooling_present"]:

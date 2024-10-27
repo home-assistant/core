@@ -1,4 +1,5 @@
 """The Elv integration."""
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE, Platform

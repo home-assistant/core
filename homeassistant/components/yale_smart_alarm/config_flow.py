@@ -1,4 +1,5 @@
 """Adds config flow for Yale Smart Alarm integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,10 +9,14 @@ import voluptuous as vol
 from yalesmartalarmclient.client import YaleSmartAlarmClient
 from yalesmartalarmclient.exceptions import AuthenticationError
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -35,7 +40,6 @@ DATA_SCHEMA = vol.Schema(
 
 DATA_SCHEMA_AUTH = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }
 )
@@ -46,27 +50,27 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    entry: ConfigEntry | None
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> YaleOptionsFlowHandler:
         """Get the options flow for this handler."""
         return YaleOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Yale."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors = {}
 
         if user_input is not None:
-            username = user_input[CONF_USERNAME]
+            reauth_entry = self._get_reauth_entry()
+            username = reauth_entry.data[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
             try:
@@ -81,18 +85,10 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
 
             if not errors:
-                existing_entry = await self.async_set_unique_id(username)
-                if existing_entry and self.entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry,
-                        data={
-                            **self.entry.data,
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        },
-                    )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: password},
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -102,7 +98,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -153,7 +149,7 @@ class YaleOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Yale options."""
         errors: dict[str, Any] = {}
 

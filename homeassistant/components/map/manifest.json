@@ -1,9 +1,0 @@
-{
-  "domain": "map",
-  "name": "Map",
-  "codeowners": [],
-  "dependencies": ["frontend"],
-  "documentation": "https://www.home-assistant.io/integrations/map",
-  "integration_type": "system",
-  "quality_scale": "internal"
-}

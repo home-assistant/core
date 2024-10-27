@@ -1,9 +1,11 @@
 """Interfaces with iAlarm control panels."""
+
 from __future__ import annotations
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,8 +13,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IAlarmDataUpdateCoordinator
 from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import IAlarmDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -36,6 +38,7 @@ class IAlarmPanel(
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, coordinator: IAlarmDataUpdateCoordinator) -> None:
         """Create the entity with a DataUpdateCoordinator."""
@@ -48,7 +51,7 @@ class IAlarmPanel(
         self._attr_unique_id = coordinator.mac
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return self.coordinator.state
 

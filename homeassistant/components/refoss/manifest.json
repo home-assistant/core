@@ -1,0 +1,9 @@
+{
+  "domain": "refoss",
+  "name": "Refoss",
+  "codeowners": ["@ashionky"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/refoss",
+  "iot_class": "local_polling",
+  "requirements": ["refoss-ha==1.2.4"]
+}

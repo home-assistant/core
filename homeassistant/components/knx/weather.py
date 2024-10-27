@@ -1,4 +1,5 @@
 """Support for KNX/IP weather station."""
+
 from __future__ import annotations
 
 from xknx import XKNX
@@ -18,8 +19,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN
-from .knx_entity import KnxEntity
+from . import KNXModule
+from .const import KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import WeatherSchema
 
 
@@ -29,10 +31,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch(es) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.WEATHER]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.WEATHER]
 
-    async_add_entities(KNXWeather(xknx, entity_config) for entity_config in config)
+    async_add_entities(
+        KNXWeather(knx_module, entity_config) for entity_config in config
+    )
 
 
 def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
@@ -71,7 +75,7 @@ def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
     )
 
 
-class KNXWeather(KnxEntity, WeatherEntity):
+class KNXWeather(KnxYamlEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
     _device: XknxWeather
@@ -79,10 +83,13 @@ class KNXWeather(KnxEntity, WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
-        super().__init__(_create_weather(xknx, config))
-        self._attr_unique_id = str(self._device._temperature.group_address_state)
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_weather(knx_module.xknx, config),
+        )
+        self._attr_unique_id = str(self._device._temperature.group_address_state)  # noqa: SLF001
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
     @property

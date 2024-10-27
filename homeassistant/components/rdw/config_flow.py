@@ -1,4 +1,5 @@
 """Config flow to configure the RDW integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,8 +7,7 @@ from typing import Any
 from vehicle import RDW, RDWError, RDWUnknownLicensePlateError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LICENSE_PLATE, DOMAIN
@@ -20,7 +20,7 @@ class RDWFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 

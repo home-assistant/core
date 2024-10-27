@@ -1,9 +1,14 @@
 """Config flow for syncthing integration."""
+
+from typing import Any
+
 import aiosyncthing
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
 
@@ -16,7 +21,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     try:
@@ -34,12 +39,14 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from error
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SyncThingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for syncthing."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -60,9 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

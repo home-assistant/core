@@ -1,0 +1,11 @@
+{
+  "domain": "webmin",
+  "name": "Webmin",
+  "codeowners": ["@autinerd"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/webmin",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["webmin"],
+  "requirements": ["webmin-xmlrpc==0.0.2"]
+}

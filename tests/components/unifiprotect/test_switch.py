@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Light, Permission, RecordingMode, VideoMode
+from uiprotect.data import Camera, Light, Permission, RecordingMode, VideoMode
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.switch import (
@@ -33,14 +33,23 @@ from .utils import (
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
-    if d.name != "Detections: Face"
-    and d.name != "Detections: Package"
-    and d.name != "Detections: License Plate"
-    and d.name != "Detections: Smoke/CO"
-    and d.name != "SSH Enabled"
+    if (
+        not d.name.startswith("Detections:")
+        and d.name
+        not in {"SSH enabled", "Color night vision", "Tracking: person", "HDR mode"}
+    )
+    or d.name
+    in {
+        "Detections: motion",
+        "Detections: person",
+        "Detections: vehicle",
+        "Detections: animal",
+    }
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
-    d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")
+    d
+    for d in CAMERA_SWITCHES_BASIC
+    if d.name not in ("High FPS", "Privacy mode", "HDR mode")
 ]
 
 
@@ -51,11 +60,11 @@ async def test_switch_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.SWITCH, 2, 2)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
 
 async def test_switch_light_remove(
@@ -116,6 +125,7 @@ async def test_switch_setup_no_perm(
 
 async def test_switch_setup_light(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     light: Light,
 ) -> None:
@@ -123,8 +133,6 @@ async def test_switch_setup_light(
 
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
-
-    entity_registry = er.async_get(hass)
 
     description = LIGHT_SWITCHES[1]
 
@@ -161,15 +169,14 @@ async def test_switch_setup_light(
 
 async def test_switch_setup_camera_all(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
 ) -> None:
     """Test switch entity setup for camera devices (all enabled feature flags)."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
-
-    entity_registry = er.async_get(hass)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     for description in CAMERA_SWITCHES_BASIC:
         unique_id, entity_id = ids_from_device_description(
@@ -208,6 +215,7 @@ async def test_switch_setup_camera_all(
 
 async def test_switch_setup_camera_none(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     camera: Camera,
 ) -> None:
@@ -215,8 +223,6 @@ async def test_switch_setup_camera_none(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.SWITCH, 8, 7)
-
-    entity_registry = er.async_get(hass)
 
     for description in CAMERA_SWITCHES_BASIC:
         if description.ufp_required_field is not None:
@@ -290,7 +296,7 @@ async def test_switch_camera_ssh(
     """Tests SSH switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = CAMERA_SWITCHES[0]
 
@@ -323,7 +329,7 @@ async def test_switch_camera_simple(
     """Tests all simple switches for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     assert description.ufp_set_method is not None
 
@@ -352,7 +358,7 @@ async def test_switch_camera_highfps(
     """Tests High FPS switch for cameras."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = CAMERA_SWITCHES[3]
 
@@ -383,7 +389,7 @@ async def test_switch_camera_privacy(
     previous_record = doorbell.recording_settings.mode = RecordingMode.DETECTIONS
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = PRIVACY_MODE_SWITCH
 
@@ -435,7 +441,7 @@ async def test_switch_camera_privacy_already_on(
 
     doorbell.add_privacy_zone()
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SWITCH, 15, 14)
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
     description = PRIVACY_MODE_SWITCH
 

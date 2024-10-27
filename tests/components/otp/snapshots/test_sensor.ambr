@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_setup
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OTP Sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.otp_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123456',
+  })
+# ---

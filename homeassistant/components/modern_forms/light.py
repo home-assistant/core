@@ -1,4 +1,5 @@
 """Support for Modern Forms Fan lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,11 +17,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -30,6 +27,8 @@ from .const import (
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
+from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 BRIGHTNESS_RANGE = (1, 255)
 
@@ -63,7 +62,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-        {},
+        None,
         "async_clear_light_sleep_timer",
     )
 
@@ -90,7 +89,6 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
-            icon=None,
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
 

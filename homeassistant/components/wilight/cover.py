@@ -1,4 +1,5 @@
 """Support for WiLight Cover."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -19,7 +20,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, WiLightDevice
+from .const import DOMAIN
+from .entity import WiLightDevice
 from .parent_device import WiLightParent
 
 

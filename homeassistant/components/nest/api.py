@@ -44,8 +44,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token for SDM API."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
         return cast(str, self._oauth_session.token["access_token"])
 
     async def async_get_creds(self) -> Credentials:
@@ -57,7 +56,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         # even when it is expired to fully hand off this responsibility and
         # know it is working at startup (then if not, fail loudly).
         token = self._oauth_session.token
-        creds = Credentials(
+        creds = Credentials(  # type: ignore[no-untyped-call]
             token=token["access_token"],
             refresh_token=token["refresh_token"],
             token_uri=OAUTH2_TOKEN,
@@ -92,7 +91,7 @@ class AccessTokenAuthImpl(AbstractAuth):
 
     async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential for Pub/Sub Subscriber."""
-        return Credentials(
+        return Credentials(  # type: ignore[no-untyped-call]
             token=self._access_token,
             token_uri=OAUTH2_TOKEN,
             scopes=SDM_SCOPES,

@@ -1,4 +1,5 @@
 """Support for the Xiaomi vacuum cleaner robot."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -40,7 +41,7 @@ from .const import (
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,13 +104,13 @@ async def async_setup_entry(
 
         platform.async_register_entity_service(
             SERVICE_START_REMOTE_CONTROL,
-            {},
+            None,
             MiroboVacuum.async_remote_control_start.__name__,
         )
 
         platform.async_register_entity_service(
             SERVICE_STOP_REMOTE_CONTROL,
-            {},
+            None,
             MiroboVacuum.async_remote_control_stop.__name__,
         )
 
@@ -280,10 +281,10 @@ class MiroboVacuum(
         try:
             await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
             await self.coordinator.async_refresh()
-            return True
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
             return False
+        return True
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""

@@ -1,4 +1,5 @@
 """Test the Light significant change platform."""
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,

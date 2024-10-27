@@ -1,15 +1,15 @@
 """Config flow for BSB-Lan integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANError
+from bsblan import BSBLAN, BSBLANConfig, BSBLANError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
@@ -30,7 +30,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -49,7 +49,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         return self._async_create_entry()
 
     @callback
-    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
+    def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -66,7 +66,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_entry(self) -> FlowResult:
+    def _async_create_entry(self) -> ConfigFlowResult:
         return self.async_create_entry(
             title=format_mac(self.mac),
             data={
@@ -80,15 +80,15 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _get_bsblan_info(self, raise_on_progress: bool = True) -> None:
         """Get device information from an BSBLAN device."""
-        session = async_get_clientsession(self.hass)
-        bsblan = BSBLAN(
+        config = BSBLANConfig(
             host=self.host,
-            username=self.username,
-            password=self.password,
             passkey=self.passkey,
             port=self.port,
-            session=session,
+            username=self.username,
+            password=self.password,
         )
+        session = async_get_clientsession(self.hass)
+        bsblan = BSBLAN(config, session)
         device = await bsblan.device()
         self.mac = device.MAC
 

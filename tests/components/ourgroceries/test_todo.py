@@ -1,5 +1,5 @@
 """Unit tests for the OurGroceries todo platform."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
+
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -7,14 +7,24 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.ourgroceries.coordinator import SCAN_INTERVAL
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.todo import (
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import items_to_shopping_list
 
 from tests.common import async_fire_time_changed
+
+
+def _mock_version_id(og: AsyncMock, version: int) -> None:
+    og.get_my_lists.return_value["shoppingLists"][0]["versionId"] = str(version)
 
 
 @pytest.mark.parametrize(
@@ -57,15 +67,17 @@ async def test_add_todo_list_item(
 
     ourgroceries.add_item_to_list = AsyncMock()
     # Fake API response when state is refreshed after create
+    _mock_version_id(ourgroceries, 2)
     ourgroceries.get_list_items.return_value = items_to_shopping_list(
-        [{"id": "12345", "name": "Soda"}]
+        [{"id": "12345", "name": "Soda"}],
+        version_id="2",
     )
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "Soda"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Soda"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
 
@@ -95,15 +107,16 @@ async def test_update_todo_item_status(
     ourgroceries.toggle_item_crossed_off = AsyncMock()
 
     # Fake API response when state is refreshed after crossing off
+    _mock_version_id(ourgroceries, 2)
     ourgroceries.get_list_items.return_value = items_to_shopping_list(
         [{"id": "12345", "name": "Soda", "crossedOffAt": 1699107501}]
     )
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "12345", "status": "completed"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.toggle_item_crossed_off.called
@@ -118,15 +131,16 @@ async def test_update_todo_item_status(
     assert state.state == "0"
 
     # Fake API response when state is refreshed after reopen
+    _mock_version_id(ourgroceries, 2)
     ourgroceries.get_list_items.return_value = items_to_shopping_list(
         [{"id": "12345", "name": "Soda"}]
     )
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "12345", "status": "needs_action"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_STATUS: "needs_action"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.toggle_item_crossed_off.called
@@ -166,15 +180,16 @@ async def test_update_todo_item_summary(
     ourgroceries.change_item_on_list = AsyncMock()
 
     # Fake API response when state is refreshed update
+    _mock_version_id(ourgroceries, 2)
     ourgroceries.get_list_items.return_value = items_to_shopping_list(
         [{"id": "12345", "name": "Milk"}]
     )
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "12345", "rename": "Milk"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_RENAME: "Milk"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.change_item_on_list
@@ -204,13 +219,14 @@ async def test_remove_todo_item(
 
     ourgroceries.remove_item_from_list = AsyncMock()
     # Fake API response when state is refreshed after remove
+    _mock_version_id(ourgroceries, 2)
     ourgroceries.get_list_items.return_value = items_to_shopping_list([])
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": ["12345", "54321"]},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: ["12345", "54321"]},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.remove_item_from_list.call_count == 2
@@ -224,11 +240,30 @@ async def test_remove_todo_item(
     assert state.state == "0"
 
 
+async def test_version_id_optimization(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_integration: None,
+    ourgroceries: AsyncMock,
+) -> None:
+    """Test that list items aren't being retrieved if version id stays the same."""
+    state = hass.states.get("todo.test_list")
+    assert state.state == "0"
+    assert ourgroceries.get_list_items.call_count == 1
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("todo.test_list")
+    assert state.state == "0"
+    assert ourgroceries.get_list_items.call_count == 1
+
+
 @pytest.mark.parametrize(
     ("exception"),
     [
         (ClientError),
-        (AsyncIOTimeoutError),
+        (TimeoutError),
     ],
 )
 async def test_coordinator_error(
@@ -242,10 +277,11 @@ async def test_coordinator_error(
     state = hass.states.get("todo.test_list")
     assert state.state == "0"
 
+    _mock_version_id(ourgroceries, 2)
     ourgroceries.get_list_items.side_effect = exception
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("todo.test_list")
     assert state.state == STATE_UNAVAILABLE

@@ -1,4 +1,5 @@
 """Support for Twilio."""
+
 from aiohttp import web
 from twilio.rest import Client
 import voluptuous as vol
@@ -45,7 +46,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle incoming webhook from Twilio for inbound messages and calls."""
     data = dict(await request.post())
     data["webhook_id"] = webhook_id

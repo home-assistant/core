@@ -1,4 +1,5 @@
 """Base class for SwitchBot via API entities."""
+
 from typing import Any
 
 from switchbot_api import Commands, Device, Remote, SwitchBotAPI
@@ -34,7 +35,7 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             model=device.device_type,
         )
 
-    async def send_command(
+    async def send_api_command(
         self,
         command: Commands,
         command_type: str = "command",

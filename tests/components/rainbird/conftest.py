@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from http import HTTPStatus
 import json
 from typing import Any
@@ -15,7 +16,7 @@ from homeassistant.components.rainbird.const import (
     ATTR_DURATION,
     DEFAULT_TRIGGER_TIME_MINUTES,
 )
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -155,10 +156,38 @@ def setup_platforms(
         yield
 
 
+@pytest.fixture(autouse=True)
+def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker]:
+    """Context manager to mock aiohttp client."""
+    mocker = AiohttpClientMocker()
+
+    def create_session():
+        session = mocker.create_session(hass.loop)
+
+        async def close_session(event):
+            """Close session."""
+            await session.close()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
+        return session
+
+    with (
+        patch(
+            "homeassistant.components.rainbird.async_create_clientsession",
+            side_effect=create_session,
+        ),
+        patch(
+            "homeassistant.components.rainbird.config_flow.async_create_clientsession",
+            side_effect=create_session,
+        ),
+    ):
+        yield mocker
+
+
 def rainbird_json_response(result: dict[str, str]) -> bytes:
     """Create a fake API response."""
     return encryption.encrypt(
-        '{"jsonrpc": "2.0", "result": %s, "id": 1} ' % json.dumps(result),
+        f'{{"jsonrpc": "2.0", "result": {json.dumps(result)}, "id": 1}} ',
         PASSWORD,
     )
 

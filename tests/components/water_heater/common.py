@@ -3,6 +3,7 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+
 from homeassistant.components.water_heater import (
     _LOGGER,
     ATTR_AWAY_MODE,
@@ -18,7 +19,9 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ENTITY_MATCH_A
 from homeassistant.core import HomeAssistant
 
 
-async def async_set_away_mode(hass, away_mode, entity_id=ENTITY_MATCH_ALL):
+async def async_set_away_mode(
+    hass: HomeAssistant, away_mode: bool, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Turn all or specified water_heater devices away mode on."""
     data = {ATTR_AWAY_MODE: away_mode}
 
@@ -29,16 +32,19 @@ async def async_set_away_mode(hass, away_mode, entity_id=ENTITY_MATCH_ALL):
 
 
 async def async_set_temperature(
-    hass, temperature=None, entity_id=ENTITY_MATCH_ALL, operation_mode=None
-):
+    hass: HomeAssistant,
+    temperature: float,
+    entity_id: str = ENTITY_MATCH_ALL,
+    operation_mode: str | None = None,
+) -> None:
     """Set new target temperature."""
     kwargs = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_TEMPERATURE, temperature),
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_OPERATION_MODE, operation_mode),
-        ]
+        )
         if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
@@ -47,7 +53,9 @@ async def async_set_temperature(
     )
 
 
-async def async_set_operation_mode(hass, operation_mode, entity_id=ENTITY_MATCH_ALL):
+async def async_set_operation_mode(
+    hass: HomeAssistant, operation_mode: str, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Set new target operation mode."""
     data = {ATTR_OPERATION_MODE: operation_mode}
 

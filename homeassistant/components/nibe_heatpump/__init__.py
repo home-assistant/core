@@ -1,4 +1,5 @@
 """The Nibe Heat Pump integration."""
+
 from __future__ import annotations
 
 from nibe.connection import Connection
@@ -29,7 +30,7 @@ from .const import (
     CONF_WORD_SWAP,
     DOMAIN,
 )
-from .coordinator import Coordinator
+from .coordinator import CoilCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -80,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
 
-    coordinator = Coordinator(hass, heatpump, connection)
+    coordinator = CoilCoordinator(hass, heatpump, connection)
 
     data = hass.data.setdefault(DOMAIN, {})
     data[entry.entry_id] = coordinator

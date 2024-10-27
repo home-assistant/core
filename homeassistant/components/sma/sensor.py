@@ -1,4 +1,5 @@
 """SMA Solar Webconnect interface."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -203,7 +204,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power": SensorEntityDescription(
         key="grid_reactive_power",
         name="Grid Reactive Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -211,7 +212,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power_l1": SensorEntityDescription(
         key="grid_reactive_power_l1",
         name="Grid Reactive Power L1",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -219,7 +220,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power_l2": SensorEntityDescription(
         key="grid_reactive_power_l2",
         name="Grid Reactive Power L2",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -227,7 +228,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "grid_reactive_power_l3": SensorEntityDescription(
         key="grid_reactive_power_l3",
         name="Grid Reactive Power L3",
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         entity_registry_enabled_default=False,
@@ -843,19 +844,16 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert config_entry.unique_id
 
-    entities = []
-    for sensor in used_sensors:
-        entities.append(
-            SMAsensor(
-                coordinator,
-                config_entry.unique_id,
-                SENSOR_ENTITIES.get(sensor.name),
-                device_info,
-                sensor,
-            )
+    async_add_entities(
+        SMAsensor(
+            coordinator,
+            config_entry.unique_id,
+            SENSOR_ENTITIES.get(sensor.name),
+            device_info,
+            sensor,
         )
-
-    async_add_entities(entities)
+        for sensor in used_sensors
+    )
 
 
 class SMAsensor(CoordinatorEntity, SensorEntity):

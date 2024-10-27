@@ -1,0 +1,171 @@
+# serializer version: 1
+# name: test_zone_set_hvac_mode[default]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[h032585]
+  list([
+    tuple(
+      4.5,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[h099625]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[minimal]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[sys_004]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_preset_mode[default]
+  list([
+    tuple(
+      17.0,
+    ),
+    tuple(
+      17.0,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[h032585]
+  list([
+    tuple(
+      21.5,
+    ),
+    tuple(
+      21.5,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[h099625]
+  list([
+    tuple(
+      21.5,
+    ),
+    tuple(
+      21.5,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[minimal]
+  list([
+    tuple(
+      17.0,
+    ),
+    tuple(
+      17.0,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[sys_004]
+  list([
+    tuple(
+      15.0,
+    ),
+    tuple(
+      15.0,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[default]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[h032585]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[h099625]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[minimal]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[sys_004]
+  list([
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
+# name: test_zone_turn_off[default]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[h032585]
+  list([
+    tuple(
+      4.5,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[h099625]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[minimal]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[sys_004]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---

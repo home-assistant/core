@@ -1,4 +1,5 @@
 """The lookin integration config_flow."""
+
 from __future__ import annotations
 
 import logging
@@ -8,10 +9,9 @@ import aiohttp
 from aiolookin import Device, LookInHttpProtocol, NoUsableService
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -19,7 +19,7 @@ from .const import DOMAIN
 LOGGER = logging.getLogger(__name__)
 
 
-class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for lookin."""
 
     def __init__(self) -> None:
@@ -29,7 +29,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Start a discovery flow from zeroconf."""
         uid: str = discovery_info.hostname.removesuffix(".local.")
         host: str = discovery_info.host
@@ -40,19 +40,22 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             device: Device = await self._validate_device(host=host)
         except (aiohttp.ClientError, NoUsableService):
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
         self._name = device.name
         self._host = host
         self._set_confirm_only()
-        self.context["title_placeholders"] = {"name": self._name, "host": host}
+        self.context["title_placeholders"] = {
+            "name": self._name or "LOOKin",
+            "host": host,
+        }
         return await self.async_step_discovery_confirm()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """User initiated discover flow."""
         errors: dict[str, str] = {}
 
@@ -62,7 +65,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await self._validate_device(host=host)
             except (aiohttp.ClientError, NoUsableService):
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -88,14 +91,10 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the discover flow."""
         assert self._host is not None
         if user_input is None:
-            self.context["title_placeholders"] = {
-                "name": self._name,
-                "host": self._host,
-            }
             return self.async_show_form(
                 step_id="discovery_confirm",
                 description_placeholders={"name": self._name, "host": self._host},

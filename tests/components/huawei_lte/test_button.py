@@ -1,4 +1,5 @@
 """Tests for the Huawei LTE switches."""
+
 from unittest.mock import MagicMock, patch
 
 from huawei_lte_api.enums.device import ControlModeEnum

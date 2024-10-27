@@ -1,4 +1,5 @@
 """The tests for the Landis+Gyr Heat Meter sensor platform."""
+
 import datetime
 from unittest.mock import patch
 

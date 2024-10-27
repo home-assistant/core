@@ -1,4 +1,5 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
+
 from __future__ import annotations
 
 import logging

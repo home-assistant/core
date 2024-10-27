@@ -1,4 +1,5 @@
 """OpenSky constants."""
+
 import logging
 
 from homeassistant.const import Platform

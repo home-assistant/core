@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 import json
 
 from homeassistant.components.media_player import (

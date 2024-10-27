@@ -1,4 +1,5 @@
 """Tests for the switch module."""
+
 import pytest
 import requests_mock
 from syrupy import SnapshotAssertion

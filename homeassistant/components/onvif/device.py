@@ -1,4 +1,5 @@
 """ONVIF device abstraction."""
+
 from __future__ import annotations
 
 import asyncio
@@ -217,12 +218,13 @@ class ONVIFDevice:
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
-                return
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
             except (IndexError, Fault):
                 if idx == timezone_max_idx:
                     raise
+            else:
+                return
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
@@ -249,13 +251,13 @@ class ONVIFDevice:
 
         LOGGER.debug("%s: Device time: %s", self.name, device_time)
 
-        tzone = dt_util.DEFAULT_TIME_ZONE
+        tzone = dt_util.get_default_time_zone()
         cdate = device_time.LocalDateTime
         if device_time.UTCDateTime:
             tzone = dt_util.UTC
             cdate = device_time.UTCDateTime
         elif device_time.TimeZone:
-            tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
+            tzone = await dt_util.async_get_time_zone(device_time.TimeZone.TZ) or tzone
 
         if cdate is None:
             LOGGER.warning("%s: Could not retrieve date/time on this camera", self.name)
@@ -343,7 +345,7 @@ class ONVIFDevice:
                     mac = interface.Info.HwAddress
         except Fault as fault:
             if "not implemented" not in fault.message:
-                raise fault
+                raise
 
             LOGGER.debug(
                 "Couldn't get network interfaces from ONVIF device '%s'. Error: %s",

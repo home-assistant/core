@@ -1,18 +1,19 @@
 """Models used for the Matter integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Objects import ClusterAttributeDescriptor
+from chip.clusters.Objects import Cluster, ClusterAttributeDescriptor
 from matter_server.client.models.device_types import DeviceType
 from matter_server.client.models.node import MatterEndpoint
 
 from homeassistant.const import Platform
 from homeassistant.helpers.entity import EntityDescription
 
-SensorValueTypes = type[
+type SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float
 ]
 
@@ -49,9 +50,6 @@ class MatterEntityInfo:
 
     # entity class to use to instantiate the entity
     entity_class: type
-
-    # [optional] bool to specify if this primary value should be polled
-    should_poll: bool
 
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
@@ -97,18 +95,24 @@ class MatterDiscoverySchema:
     # [optional] the attribute's endpoint_id must match ANY of these values
     endpoint_id: tuple[int, ...] | None = None
 
-    # [optional] additional attributes that MAY NOT be present
-    # on the node for this scheme to pass
+    # [optional] attributes that MAY NOT be present
+    # (on the same endpoint) for this scheme to pass
     absent_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None
 
-    # [optional] additional attributes that may be present
+    # [optional] cluster(s) that MAY NOT be present
+    # (on ANY endpoint) for this scheme to pass
+    absent_clusters: tuple[type[Cluster], ...] | None = None
+
+    # [optional] additional attributes that may be present (on the same endpoint)
     # these attributes are copied over to attributes_to_watch and
     # are not discovered by other entities
     optional_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None
 
+    # [optional] the primary attribute value must contain this value
+    # for example for the AcceptedCommandList
+    # NOTE: only works for list values
+    value_contains: Any | None = None
+
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
-
-    # [optional] bool to specify if this primary value should be polled
-    should_poll: bool = False

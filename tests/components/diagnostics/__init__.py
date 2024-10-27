@@ -1,4 +1,5 @@
 """Tests for the Diagnostics integration."""
+
 from http import HTTPStatus
 from typing import cast
 
@@ -18,6 +19,7 @@ async def _get_diagnostics_for_config_entry(
 ) -> JsonObjectType:
     """Return the diagnostics config entry for the specified domain."""
     assert await async_setup_component(hass, "diagnostics", {})
+    await hass.async_block_till_done()
 
     client = await hass_client()
     response = await client.get(

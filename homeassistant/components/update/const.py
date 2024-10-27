@@ -1,4 +1,5 @@
 """Constants for the update component."""
+
 from __future__ import annotations
 
 from enum import IntFlag
@@ -22,6 +23,7 @@ SERVICE_SKIP: Final = "skip"
 
 ATTR_AUTO_UPDATE: Final = "auto_update"
 ATTR_BACKUP: Final = "backup"
+ATTR_DISPLAY_PRECISION: Final = "display_precision"
 ATTR_INSTALLED_VERSION: Final = "installed_version"
 ATTR_IN_PROGRESS: Final = "in_progress"
 ATTR_LATEST_VERSION: Final = "latest_version"
@@ -29,4 +31,5 @@ ATTR_RELEASE_SUMMARY: Final = "release_summary"
 ATTR_RELEASE_URL: Final = "release_url"
 ATTR_SKIPPED_VERSION: Final = "skipped_version"
 ATTR_TITLE: Final = "title"
+ATTR_UPDATE_PERCENTAGE: Final = "update_percentage"
 ATTR_VERSION: Final = "version"

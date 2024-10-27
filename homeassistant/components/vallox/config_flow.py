@@ -1,4 +1,5 @@
 """Config flow for the Vallox integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,10 +8,9 @@ from typing import Any
 from vallox_websocket_api import Vallox, ValloxApiException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.network import is_ip_address
 
@@ -18,7 +18,7 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
     }
@@ -32,25 +32,25 @@ async def validate_host(hass: HomeAssistant, host: str) -> None:
         raise InvalidHost(f"Invalid IP address: {host}")
 
     client = Vallox(host)
-    await client.get_info()
+    await client.fetch_metric_data()
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ValloxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the Vallox integration."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
+                data_schema=CONFIG_SCHEMA,
             )
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         host = user_input[CONF_HOST]
 
@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_HOST] = "invalid_host"
         except ValloxApiException:
             errors[CONF_HOST] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors[CONF_HOST] = "unknown"
         else:
@@ -76,7 +76,51 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, {CONF_HOST: host}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Vallox device host address."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    CONFIG_SCHEMA, {CONF_HOST: reconfigure_entry.data.get(CONF_HOST)}
+                ),
+            )
+
+        updated_host = user_input[CONF_HOST]
+
+        if reconfigure_entry.data.get(CONF_HOST) != updated_host:
+            self._async_abort_entries_match({CONF_HOST: updated_host})
+
+        errors: dict[str, str] = {}
+
+        try:
+            await validate_host(self.hass, updated_host)
+        except InvalidHost:
+            errors[CONF_HOST] = "invalid_host"
+        except ValloxApiException:
+            errors[CONF_HOST] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors[CONF_HOST] = "unknown"
+        else:
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data_updates={CONF_HOST: updated_host}
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, {CONF_HOST: updated_host}
+            ),
             errors=errors,
         )
 

@@ -1,4 +1,5 @@
 """Test pegel_online component."""
+
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError

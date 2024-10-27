@@ -1,14 +1,19 @@
 """The tests for Network UPS Tools (NUT) device actions."""
-from unittest.mock import MagicMock
 
-from pynut2.nut2 import PyNUTError
+from unittest.mock import AsyncMock
+
+from aionut import NUTError
 import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, device_automation
-from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.nut import DOMAIN
 from homeassistant.components.nut.const import INTEGRATION_SUPPORTED_COMMANDS
+from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -98,7 +103,7 @@ async def test_list_commands_exception(
 ) -> None:
     """Test there are no actions if list_commands raises exception."""
     await async_init_integration(
-        hass, list_vars={"ups.status": "OL"}, list_commands_side_effect=PyNUTError
+        hass, list_vars={"ups.status": "OL"}, list_commands_side_effect=NUTError
     )
 
     device_entry = next(device for device in device_registry.devices.values())
@@ -136,7 +141,7 @@ async def test_action(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -
         "beeper.enable": None,
         "beeper.disable": None,
     }
-    run_command = MagicMock()
+    run_command = AsyncMock()
     await async_init_integration(
         hass,
         list_ups={"someUps": "Some UPS"},
@@ -195,7 +200,7 @@ async def test_rund_command_exception(
 
     list_commands_return_value = {"beeper.enable": None}
     error_message = "Something wrong happened"
-    run_command = MagicMock(side_effect=PyNUTError(error_message))
+    run_command = AsyncMock(side_effect=NUTError(error_message))
     await async_init_integration(
         hass,
         list_vars={"ups.status": "OL"},
@@ -228,3 +233,25 @@ async def test_rund_command_exception(
     await hass.async_block_till_done()
 
     assert error_message in caplog.text
+
+
+async def test_action_exception_invalid_device(hass: HomeAssistant) -> None:
+    """Test raises exception if invalid device."""
+    list_commands_return_value = {"beeper.enable": None}
+    await async_init_integration(
+        hass,
+        list_vars={"ups.status": "OL"},
+        list_commands_return_value=list_commands_return_value,
+    )
+
+    platform = await device_automation.async_get_device_automation_platform(
+        hass, DOMAIN, DeviceAutomationType.ACTION
+    )
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await platform.async_call_action_from_config(
+            hass,
+            {CONF_TYPE: "beeper.enable", CONF_DEVICE_ID: "invalid_device_id"},
+            {},
+            None,
+        )

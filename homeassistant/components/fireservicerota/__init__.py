@@ -1,4 +1,5 @@
 """The FireServiceRota integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -25,7 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -183,7 +184,7 @@ class FireServiceRotaClient:
     async def update_call(self, func, *args):
         """Perform update call and return data."""
         if self.token_refresh_failure:
-            return
+            return None
 
         try:
             return await self._hass.async_add_executor_job(func, *args)

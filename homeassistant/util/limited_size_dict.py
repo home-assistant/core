@@ -1,14 +1,12 @@
 """Helpers for script and automation tracing and debugging."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Any, TypeVar
-
-_KT = TypeVar("_KT")
-_VT = TypeVar("_VT")
+from typing import Any
 
 
-class LimitedSizeDict(OrderedDict[_KT, _VT]):
+class LimitedSizeDict[_KT, _VT](OrderedDict[_KT, _VT]):
     """OrderedDict limited in size."""
 
     def __init__(self, *args: Any, **kwds: Any) -> None:

@@ -1,4 +1,5 @@
 """Support for Magic home button."""
+
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
@@ -28,7 +29,6 @@ RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
 UNPAIR_REMOTES_DESCRIPTION = ButtonEntityDescription(
     key=_UNPAIR_REMOTES_KEY,
     translation_key="unpair_remotes",
-    icon="mdi:remote-off",
 )
 
 

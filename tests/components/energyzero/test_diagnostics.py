@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the EnergyZero integration."""
+
 from unittest.mock import MagicMock
 
 from energyzero import EnergyZeroNoDataError

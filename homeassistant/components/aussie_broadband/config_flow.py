@@ -1,4 +1,5 @@
 """Config flow for Aussie Broadband integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,24 +10,23 @@ from aussiebb.asyncio import AussieBB, AuthenticationException
 from aussiebb.const import FETCH_TYPES
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERVICES, DOMAIN
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aussie Broadband."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict = {}
         self.options: dict = {CONF_SERVICES: []}
-        self.services: list[dict[str]] = []
+        self.services: list[dict[str, Any]] = []
         self.client: AussieBB | None = None
         self._reauth_username: str | None = None
 
@@ -47,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -77,7 +77,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth on credential failure."""
         self._reauth_username = entry_data[CONF_USERNAME]
 
@@ -85,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle users reauth credentials."""
 
         errors: dict[str, str] | None = None
@@ -97,15 +99,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
 
             if not (errors := await self.async_auth(data)):
-                entry = await self.async_set_unique_id(self._reauth_username.lower())
-                if entry:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data=data,
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                return self.async_create_entry(title=self._reauth_username, data=data)
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=data
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",

@@ -1,11 +1,11 @@
 """BleBox light entities implementation."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 from typing import Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
 
@@ -20,12 +20,11 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
+from .entity import BleBoxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +33,13 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BleBoxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
     entities = [
-        BleBoxLightEntity(feature) for feature in product.features.get("lights", [])
+        BleBoxLightEntity(feature)
+        for feature in config_entry.runtime_data.features.get("lights", [])
     ]
     async_add_entities(entities, True)
 
@@ -59,10 +58,12 @@ COLOR_MODE_MAP = {
 class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
 
+    _attr_max_mireds = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
+    _attr_min_mireds = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
+
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
         super().__init__(feature)
-        self._attr_supported_color_modes = {self.color_mode}
         if feature.effect_list:
             self._attr_supported_features = LightEntityFeature.EFFECT
 
@@ -87,12 +88,12 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
 
         Set values to _attr_ibutes if needed.
         """
-        color_mode_tmp = COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
-        if color_mode_tmp == ColorMode.COLOR_TEMP:
-            self._attr_min_mireds = 1
-            self._attr_max_mireds = 255
+        return COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
 
-        return color_mode_tmp
+    @property
+    def supported_color_modes(self):
+        """Return supported color modes."""
+        return {self.color_mode}
 
     @property
     def effect_list(self) -> list[str]:

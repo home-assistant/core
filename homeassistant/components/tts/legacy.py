@@ -1,4 +1,5 @@
 """Provide the legacy TTS service provider interface."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -30,7 +31,11 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.setup import (
+    SetupPhases,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 from homeassistant.util.yaml import load_yaml_dict
 
 from .const import (
@@ -51,9 +56,6 @@ from .const import (
 )
 from .media_source import generate_media_source_id
 from .models import Voice
-
-if TYPE_CHECKING:
-    from . import SpeechManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,8 +102,6 @@ async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy text-to-speech providers."""
-    tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
     services_dict = await hass.async_add_executor_job(
@@ -123,21 +123,29 @@ async def async_setup_legacy(
             return
 
         try:
-            if hasattr(platform, "async_get_engine"):
-                provider = await platform.async_get_engine(
-                    hass, p_config, discovery_info
-                )
-            else:
-                provider = await hass.async_add_executor_job(
-                    platform.get_engine, hass, p_config, discovery_info
-                )
+            with async_start_setup(
+                hass,
+                integration=p_type,
+                group=str(id(p_config)),
+                phase=SetupPhases.PLATFORM_SETUP,
+            ):
+                if hasattr(platform, "async_get_engine"):
+                    provider = await platform.async_get_engine(
+                        hass, p_config, discovery_info
+                    )
+                else:
+                    provider = await hass.async_add_executor_job(
+                        platform.get_engine, hass, p_config, discovery_info
+                    )
 
-            if provider is None:
-                _LOGGER.error("Error setting up platform: %s", p_type)
-                return
+                if provider is None:
+                    _LOGGER.error("Error setting up platform: %s", p_type)
+                    return
 
-            tts.async_register_legacy_engine(p_type, provider, p_config)
-        except Exception:  # pylint: disable=broad-except
+                hass.data[DATA_TTS_MANAGER].async_register_legacy_engine(
+                    p_type, provider, p_config
+                )
+        except Exception:
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 
@@ -230,7 +238,7 @@ class Provider:
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]

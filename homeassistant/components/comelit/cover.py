@@ -1,4 +1,5 @@
 """Support for covers."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,7 @@ from typing import Any
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
-from homeassistant.components.cover import STATE_CLOSED, CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,7 +55,7 @@ class ComelitCoverEntity(
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device)
+        self._attr_device_info = coordinator.platform_device_info(device, device.type)
         # Device doesn't provide a status so we assume UNKNOWN at first startup
         self._last_action: int | None = None
         self._last_state: str | None = None
@@ -84,7 +85,7 @@ class ComelitCoverEntity(
         if self._last_action:
             return self._last_action == STATE_COVER.index("closing")
 
-        return self._last_state == STATE_CLOSED
+        return self._last_state == CoverState.CLOSED
 
     @property
     def is_closing(self) -> bool:

@@ -1,4 +1,5 @@
 """Support for Venstar WiFi Thermostats."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -9,7 +10,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_NONE,
     ClimateEntity,
@@ -35,7 +36,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
@@ -45,8 +45,10 @@ from .const import (
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
 )
+from .coordinator import VenstarDataUpdateCoordinator
+from .entity import VenstarEntity
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -108,6 +110,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
     _attr_precision = PRECISION_HALVES
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -130,6 +133,8 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
         if self._client.mode == self._client.MODE_AUTO:

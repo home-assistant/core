@@ -1,4 +1,5 @@
 """CalDAV todo platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,14 +18,13 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import CalDavConfigEntry
 from .api import async_get_calendars, get_attr_value
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,12 +45,11 @@ TODO_STATUS_MAP_INV: dict[TodoItemStatus, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CalDavConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
-    client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
-    calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
+    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavTodoListEntity(
@@ -90,20 +89,6 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     )
 
 
-def _to_ics_fields(item: TodoItem) -> dict[str, Any]:
-    """Convert a TodoItem to the set of add or update arguments."""
-    item_data: dict[str, Any] = {}
-    if summary := item.summary:
-        item_data["summary"] = summary
-    if status := item.status:
-        item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
-    if due := item.due:
-        item_data["due"] = due
-    if description := item.description:
-        item_data["description"] = description
-    return item_data
-
-
 class WebDavTodoListEntity(TodoListEntity):
     """CalDAV To-do list entity."""
 
@@ -140,9 +125,18 @@ class WebDavTodoListEntity(TodoListEntity):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
+        item_data: dict[str, Any] = {}
+        if summary := item.summary:
+            item_data["summary"] = summary
+        if status := item.status:
+            item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+        if due := item.due:
+            item_data["due"] = due
+        if description := item.description:
+            item_data["description"] = description
         try:
             await self.hass.async_add_executor_job(
-                partial(self._calendar.save_todo, **_to_ics_fields(item)),
+                partial(self._calendar.save_todo, **item_data),
             )
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
@@ -159,10 +153,17 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
-        updated_fields = _to_ics_fields(item)
-        if "due" in updated_fields:
-            todo.set_due(updated_fields.pop("due"))  # type: ignore[attr-defined]
-        vtodo.update(**updated_fields)
+        vtodo["SUMMARY"] = item.summary or ""
+        if status := item.status:
+            vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+        if due := item.due:
+            todo.set_due(due)  # type: ignore[attr-defined]
+        else:
+            vtodo.pop("DUE", None)
+        if description := item.description:
+            vtodo["DESCRIPTION"] = description
+        else:
+            vtodo.pop("DESCRIPTION", None)
         try:
             await self.hass.async_add_executor_job(
                 partial(

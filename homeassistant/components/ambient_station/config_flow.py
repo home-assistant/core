@@ -1,19 +1,21 @@
 """Config flow to configure the Ambient PWS component."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from aioambient import API
 from aioambient.errors import AmbientError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_APP_KEY, DOMAIN
 
 
-class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an Ambient PWS config flow."""
 
     VERSION = 2
@@ -24,7 +26,7 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {vol.Required(CONF_API_KEY): str, vol.Required(CONF_APP_KEY): str}
         )
 
-    async def _show_form(self, errors: dict | None = None) -> FlowResult:
+    async def _show_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -32,7 +34,9 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()

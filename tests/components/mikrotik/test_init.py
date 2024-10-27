@@ -1,11 +1,11 @@
 """Test Mikrotik setup process."""
+
 from unittest.mock import MagicMock, patch
 
 from librouteros.exceptions import ConnectionClosed, LibRouterosError
 import pytest
 
 from homeassistant.components import mikrotik
-from homeassistant.components.mikrotik.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -17,9 +17,10 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_api():
     """Mock api."""
-    with patch("librouteros.create_transport"), patch(
-        "librouteros.Api.readResponse"
-    ) as mock_api:
+    with (
+        patch("librouteros.create_transport"),
+        patch("librouteros.Api.readResponse") as mock_api,
+    ):
         yield mock_api
 
 
@@ -32,7 +33,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_hub_connection_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -47,7 +48,7 @@ async def test_hub_connection_error(hass: HomeAssistant, mock_api: MagicMock) ->
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_hub_authentication_error(
@@ -64,7 +65,7 @@ async def test_hub_authentication_error(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -81,5 +82,4 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
-    assert entry.entry_id not in hass.data[DOMAIN]
+    assert entry.state is ConfigEntryState.NOT_LOADED

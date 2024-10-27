@@ -1,4 +1,5 @@
 """Test reproduce state for Text entities."""
+
 import pytest
 
 from homeassistant.components.text.const import (

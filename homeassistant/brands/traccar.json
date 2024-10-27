@@ -1,0 +1,5 @@
+{
+  "domain": "traccar",
+  "name": "Traccar",
+  "integrations": ["traccar", "traccar_server"]
+}

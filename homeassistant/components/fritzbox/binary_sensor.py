@@ -1,4 +1,5 @@
 """Support for Fritzbox binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,24 +13,23 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxDeviceEntity
-from .common import get_coordinator
+from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxDeviceEntity
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
     """BinarySensor description mixin for Fritz!Smarthome entities."""
 
     is_on: Callable[[FritzhomeDevice], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzBinarySensorEntityDescription(
     BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
 ):
@@ -64,10 +64,12 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    coordinator = get_coordinator(hass, entry.entry_id)
+    coordinator = entry.runtime_data
 
     @callback
     def _add_entities(devices: set[str] | None = None) -> None:
@@ -85,7 +87,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    _add_entities(set(coordinator.data.devices.keys()))
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzboxBinarySensor(FritzBoxDeviceEntity, BinarySensorEntity):

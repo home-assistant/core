@@ -1,4 +1,5 @@
 """Test the Nibe Heat Pump config flow."""
+
 import asyncio
 from typing import Any
 from unittest.mock import patch
@@ -21,10 +22,10 @@ async def fixture_single_platform():
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_partial_refresh(
     hass: HomeAssistant,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that coordinator can handle partial fields."""
@@ -44,10 +45,10 @@ async def test_partial_refresh(
     assert data == snapshot(name="3. Sensor is available")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_invalid_coil(
     hass: HomeAssistant,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
     freezer_ticker: Any,
 ) -> None:
@@ -66,10 +67,10 @@ async def test_invalid_coil(
     assert hass.states.get(entity_id) == snapshot(name="Sensor is not available")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_pushed_update(
     hass: HomeAssistant,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
     mock_connection: MockConnection,
     freezer_ticker: Any,
@@ -96,10 +97,10 @@ async def test_pushed_update(
     assert hass.states.get(entity_id) == snapshot(name="4. final values")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shutdown(
     hass: HomeAssistant,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     mock_connection: MockConnection,
     freezer_ticker: Any,
 ) -> None:

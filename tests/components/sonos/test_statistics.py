@@ -1,4 +1,5 @@
 """Tests for the Sonos statistics."""
+
 from homeassistant.components.sonos.const import DATA_SONOS
 from homeassistant.core import HomeAssistant
 

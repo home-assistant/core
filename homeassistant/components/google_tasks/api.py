@@ -1,5 +1,6 @@
 """API for Google Tasks bound to Home Assistant OAuth."""
 
+from functools import partial
 import json
 import logging
 from typing import Any
@@ -45,14 +46,15 @@ class AsyncConfigEntryAuth:
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
         return self._oauth_session.token[CONF_ACCESS_TOKEN]
 
     async def _get_service(self) -> Resource:
         """Get current resource."""
         token = await self.async_get_access_token()
-        return build("tasks", "v1", credentials=Credentials(token=token))
+        return await self._hass.async_add_executor_job(
+            partial(build, "tasks", "v1", credentials=Credentials(token=token))
+        )
 
     async def list_task_lists(self) -> list[dict[str, Any]]:
         """Get all TaskList resources."""
@@ -65,7 +67,10 @@ class AsyncConfigEntryAuth:
         """Get all Task resources for the task list."""
         service = await self._get_service()
         cmd: HttpRequest = service.tasks().list(
-            tasklist=task_list_id, maxResults=MAX_TASK_RESULTS
+            tasklist=task_list_id,
+            maxResults=MAX_TASK_RESULTS,
+            showCompleted=True,
+            showHidden=True,
         )
         result = await self._execute(cmd)
         return result["items"]
@@ -112,8 +117,9 @@ class AsyncConfigEntryAuth:
                 raise GoogleTasksApiError(
                     f"Google Tasks API responded with error ({exception.status_code})"
                 ) from exception
-            data = json.loads(response)
-            _raise_if_error(data)
+            if response:
+                data = json.loads(response)
+                _raise_if_error(data)
 
         for task_id in task_ids:
             batch.add(
@@ -125,6 +131,21 @@ class AsyncConfigEntryAuth:
                 callback=response_handler,
             )
         await self._execute(batch)
+
+    async def move(
+        self,
+        task_list_id: str,
+        task_id: str,
+        previous: str | None,
+    ) -> None:
+        """Move a task resource to a specific position within the task list."""
+        service = await self._get_service()
+        cmd: HttpRequest = service.tasks().move(
+            tasklist=task_list_id,
+            task=task_id,
+            previous=previous,
+        )
+        await self._execute(cmd)
 
     async def _execute(self, request: HttpRequest | BatchHttpRequest) -> Any:
         try:

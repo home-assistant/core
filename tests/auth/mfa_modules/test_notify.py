@@ -1,4 +1,5 @@
 """Test the HMAC-based One Time Password (MFA) auth module."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -154,7 +155,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
-        assert result["data_schema"].schema.get("code") == str
+        assert result["data_schema"].schema.get("code") is str
 
     # wait service call finished
     await hass.async_block_till_done()
@@ -164,8 +165,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test-notify"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.verify", return_value=False):
         result = await hass.auth.login_flow.async_configure(
@@ -182,8 +182,9 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert len(notify_calls) == 1
 
     # retry twice
-    with patch("pyotp.HOTP.verify", return_value=False), patch(
-        "pyotp.HOTP.at", return_value=MOCK_CODE_2
+    with (
+        patch("pyotp.HOTP.verify", return_value=False),
+        patch("pyotp.HOTP.at", return_value=MOCK_CODE_2),
     ):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
@@ -212,7 +213,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
-        assert result["data_schema"].schema.get("code") == str
+        assert result["data_schema"].schema.get("code") is str
 
     # wait service call finished
     await hass.async_block_till_done()
@@ -222,8 +223,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test-notify"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.verify", return_value=True):
         result = await hass.auth.login_flow.async_configure(
@@ -262,8 +262,7 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test1"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE_2):
         step = await flow.async_step_setup({"code": "invalid"})
@@ -279,8 +278,7 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test1"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE_2 in message.async_render()
+    assert MOCK_CODE_2 in message
 
     with patch("pyotp.HOTP.verify", return_value=True):
         step = await flow.async_step_setup({"code": MOCK_CODE_2})

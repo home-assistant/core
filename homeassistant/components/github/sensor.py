@@ -1,4 +1,5 @@
 """Sensor platform for the GitHub integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -10,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -18,29 +18,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import GithubConfigEntry
 from .const import DOMAIN
 from .coordinator import GitHubDataUpdateCoordinator
 
 
-@dataclass
-class BaseEntityDescriptionMixin:
-    """Mixin for required GitHub base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class GitHubSensorEntityDescription(SensorEntityDescription):
+    """Describes GitHub issue sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
 
-
-@dataclass
-class BaseEntityDescription(SensorEntityDescription):
-    """Describes GitHub sensor entity default overrides."""
-
-    icon: str = "mdi:github"
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
-
-
-@dataclass
-class GitHubSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
-    """Describes GitHub issue sensor entity."""
 
 
 SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
@@ -55,7 +45,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="stargazers_count",
         translation_key="stargazers_count",
-        icon="mdi:star",
         native_unit_of_measurement="Stars",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,7 +53,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="subscribers_count",
         translation_key="subscribers_count",
-        icon="mdi:glasses",
         native_unit_of_measurement="Watchers",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -73,7 +61,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="forks_count",
         translation_key="forks_count",
-        icon="mdi:source-fork",
         native_unit_of_measurement="Forks",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -158,11 +145,11 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GithubConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
-    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
+    repositories = entry.runtime_data
     async_add_entities(
         (
             GitHubSensorEntity(coordinator, description)

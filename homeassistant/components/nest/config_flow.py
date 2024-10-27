@@ -7,6 +7,7 @@ This configuration flow supports the following:
 NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
 some overrides to custom steps inserted in the middle of the flow.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
@@ -19,11 +20,10 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     SubscriberException,
 )
-from google_nest_sdm.structure import InfoTrait, Structure
+from google_nest_sdm.structure import Structure
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import get_random_string
 
@@ -71,10 +71,11 @@ def _generate_subscription_id(cloud_project_id: str) -> str:
 
 def generate_config_title(structures: Iterable[Structure]) -> str | None:
     """Pick a user friendly config title based on the Google Home name(s)."""
-    names: list[str] = []
-    for structure in structures:
-        if (trait := structure.traits.get(InfoTrait.NAME)) and trait.custom_name:
-            names.append(trait.custom_name)
+    names: list[str] = [
+        structure.info.custom_name
+        for structure in structures
+        if structure.info and structure.info.custom_name
+    ]
     if not names:
         return None
     return ", ".join(names)
@@ -94,21 +95,6 @@ class NestFlowHandler(
         self._data: dict[str, Any] = {DATA_SDM: {}}
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
-
-    def _async_reauth_entry(self) -> ConfigEntry | None:
-        """Return existing entry for reauth."""
-        if self.source != SOURCE_REAUTH or not (
-            entry_id := self.context.get("entry_id")
-        ):
-            return None
-        return next(
-            (
-                entry
-                for entry in self._async_current_entries()
-                if entry.entry_id == entry_id
-            ),
-            None,
-        )
 
     @property
     def logger(self) -> logging.Logger:
@@ -133,16 +119,18 @@ class NestFlowHandler(
         authorize_url = OAUTH2_AUTHORIZE.format(project_id=project_id)
         return f"{authorize_url}{query}"
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
         _LOGGER.debug("Finishing post-oauth configuration")
         self._data.update(data)
         if self.source == SOURCE_REAUTH:
             _LOGGER.debug("Skipping Pub/Sub configuration")
-            return await self.async_step_finish()
+            return await self._async_finish()
         return await self.async_step_pubsub()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._data.update(entry_data)
 
@@ -150,7 +138,7 @@ class NestFlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
@@ -158,7 +146,7 @@ class NestFlowHandler(
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         self._data[DATA_SDM] = {}
         if self.source == SOURCE_REAUTH:
@@ -169,8 +157,8 @@ class NestFlowHandler(
 
     async def async_step_create_cloud_project(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle initial step in app credentails flow."""
+    ) -> ConfigFlowResult:
+        """Handle initial step in app credentials flow."""
         implementations = await config_entry_oauth2_flow.async_get_implementations(
             self.hass, self.DOMAIN
         )
@@ -196,7 +184,7 @@ class NestFlowHandler(
 
     async def async_step_cloud_project(
         self, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle cloud project in user input."""
         if user_input is not None:
             self._data.update(user_input)
@@ -216,7 +204,7 @@ class NestFlowHandler(
 
     async def async_step_device_project(
         self, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Collect device access project from user input."""
         errors = {}
         if user_input is not None:
@@ -249,7 +237,7 @@ class NestFlowHandler(
 
     async def async_step_pubsub(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure and create Pub/Sub subscriber."""
         data = {
             **self._data,
@@ -300,7 +288,7 @@ class NestFlowHandler(
                         CONF_CLOUD_PROJECT_ID: cloud_project_id,
                     }
                 )
-                return await self.async_step_finish()
+                return await self._async_finish()
 
         return self.async_show_form(
             step_id="pubsub",
@@ -313,17 +301,15 @@ class NestFlowHandler(
             errors=errors,
         )
 
-    async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
+    async def _async_finish(self) -> ConfigFlowResult:
         """Create an entry for the SDM flow."""
         _LOGGER.debug("Creating/updating configuration entry")
         # Update existing config entry when in the reauth flow.
-        if entry := self._async_reauth_entry():
-            self.hass.config_entries.async_update_entry(
-                entry,
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
                 data=self._data,
             )
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
         title = self.flow_impl.name
         if self._structure_config_title:
             title = self._structure_config_title

@@ -1,4 +1,5 @@
 """Support for Aqualink pool lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ from iaqualink.device import AqualinkLight
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -17,8 +18,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AqualinkEntity, refresh_system
+from . import refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
 PARALLEL_UPDATES = 0
@@ -30,10 +32,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered lights."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkLight(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkLight(dev) for dev in hass.data[AQUALINK_DOMAIN][LIGHT_DOMAIN]),
+        True,
+    )
 
 
 class HassAqualinkLight(AqualinkEntity, LightEntity):

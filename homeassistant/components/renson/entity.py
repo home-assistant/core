@@ -1,4 +1,5 @@
 """Entity class for Renson ventilation unit."""
+
 from __future__ import annotations
 
 from renson_endura_delta.field_enum import (

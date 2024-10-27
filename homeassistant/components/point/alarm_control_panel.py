@@ -1,20 +1,17 @@
 """Support for Minut Point."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import logging
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN,
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 EVENT_MAP = {
-    "off": STATE_ALARM_DISARMED,
-    "alarm_silenced": STATE_ALARM_DISARMED,
-    "alarm_grace_period_expired": STATE_ALARM_TRIGGERED,
+    "off": AlarmControlPanelState.DISARMED,
+    "alarm_silenced": AlarmControlPanelState.DISARMED,
+    "alarm_grace_period_expired": AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -42,11 +39,13 @@ async def async_setup_entry(
 
     async def async_discover_home(home_id):
         """Discover and add a discovered home."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        client = config_entry.runtime_data.client
         async_add_entities([MinutPointAlarmControl(client, home_id)], True)
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN), async_discover_home
+        hass,
+        POINT_DISCOVERY_NEW.format(ALARM_CONTROL_PANEL_DOMAIN, POINT_DOMAIN),
+        async_discover_home,
     )
 
 
@@ -54,6 +53,7 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
     """The platform class required by Home Assistant."""
 
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _attr_code_arm_required = False
 
     def __init__(self, point_client: MinutPointClient, home_id: str) -> None:
         """Initialize the entity."""
@@ -99,9 +99,11 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return state of the device."""
-        return EVENT_MAP.get(self._home["alarm_status"], STATE_ALARM_ARMED_AWAY)
+        return EVENT_MAP.get(
+            self._home["alarm_status"], AlarmControlPanelState.ARMED_AWAY
+        )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

@@ -1,7 +1,6 @@
 """Test removing statistics duplicates."""
-from collections.abc import Callable
+
 import importlib
-from pathlib import Path
 import sys
 from unittest.mock import patch
 
@@ -15,27 +14,31 @@ from homeassistant.components.recorder.auto_repairs.statistics.duplicates import
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
 )
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from ...common import wait_recording_done
+from ...common import async_wait_recording_done
 
-from tests.common import get_test_home_assistant
+from tests.common import async_test_home_assistant
+from tests.typing import RecorderInstanceGenerator
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
 
 
-def test_delete_duplicates_no_duplicates(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+@pytest.mark.usefixtures("recorder_mock")
+async def test_delete_duplicates_no_duplicates(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     instance = recorder.get_instance(hass)
     with session_scope(hass=hass) as session:
         delete_statistics_duplicates(instance, hass, session)
@@ -44,12 +47,13 @@ def test_delete_duplicates_no_duplicates(
     assert "Found duplicated" not in caplog.text
 
 
-def test_duplicate_statistics_handle_integrity_error(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+@pytest.mark.usefixtures("recorder_mock")
+async def test_duplicate_statistics_handle_integrity_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the recorder does not blow up if statistics is duplicated."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -79,11 +83,12 @@ def test_duplicate_statistics_handle_integrity_error(
         }
     ]
 
-    with patch.object(
-        statistics, "_statistics_exists", return_value=False
-    ), patch.object(
-        statistics, "_insert_statistics", wraps=statistics._insert_statistics
-    ) as insert_statistics_mock:
+    with (
+        patch.object(statistics, "_statistics_exists", return_value=False),
+        patch.object(
+            statistics, "_insert_statistics", wraps=statistics._insert_statistics
+        ) as insert_statistics_mock,
+    ):
         async_add_external_statistics(
             hass, external_energy_metadata_1, external_energy_statistics_1
         )
@@ -93,7 +98,7 @@ def test_duplicate_statistics_handle_integrity_error(
         async_add_external_statistics(
             hass, external_energy_metadata_1, external_energy_statistics_2
         )
-        wait_recording_done(hass)
+        await async_wait_recording_done(hass)
         assert insert_statistics_mock.call_count == 3
 
     with session_scope(hass=hass) as session:
@@ -126,15 +131,13 @@ def _create_engine_28(*args, **kwargs):
     return engine
 
 
-def test_delete_metadata_duplicates(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
+async def test_delete_metadata_duplicates(
+    async_test_recorder: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
     module = "tests.components.recorder.db_schema_28"
     importlib.import_module(module)
     old_db_schema = sys.modules[module]
@@ -164,18 +167,7 @@ def test_delete_metadata_duplicates(
         "unit_of_measurement": "%",
     }
 
-    # Create some duplicated statistics_meta with schema version 28
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
-    ):
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-
+    def add_statistics_meta(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
@@ -187,8 +179,35 @@ def test_delete_metadata_duplicates(
                 recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
             )
 
-        with session_scope(hass=hass) as session:
-            tmp = session.query(recorder.db_schema.StatisticsMeta).all()
+    def get_statistics_meta(hass: HomeAssistant) -> list:
+        with session_scope(hass=hass, read_only=True) as session:
+            return list(session.query(recorder.db_schema.StatisticsMeta).all())
+
+    # Create some duplicated statistics_meta with schema version 28
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=_create_engine_28,
+        ),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass),
+        ):
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
+
+            instance = recorder.get_instance(hass)
+            await instance.async_add_executor_job(add_statistics_meta, hass)
+
+            tmp = await instance.async_add_executor_job(get_statistics_meta, hass)
             assert len(tmp) == 3
             assert tmp[0].id == 1
             assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
@@ -197,39 +216,36 @@ def test_delete_metadata_duplicates(
             assert tmp[2].id == 3
             assert tmp[2].statistic_id == "test:fossil_percentage"
 
-        hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+            await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 28
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass),
+    ):
+        await hass.async_start()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
-    assert "Deleted 1 duplicated statistics_meta rows" in caplog.text
-    with session_scope(hass=hass) as session:
-        tmp = session.query(recorder.db_schema.StatisticsMeta).all()
+        assert "Deleted 1 duplicated statistics_meta rows" in caplog.text
+        instance = recorder.get_instance(hass)
+        tmp = await instance.async_add_executor_job(get_statistics_meta, hass)
         assert len(tmp) == 2
         assert tmp[0].id == 2
         assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
         assert tmp[1].id == 3
         assert tmp[1].statistic_id == "test:fossil_percentage"
 
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+        await hass.async_stop()
 
 
-def test_delete_metadata_duplicates_many(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
+async def test_delete_metadata_duplicates_many(
+    async_test_recorder: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-
     module = "tests.components.recorder.db_schema_28"
     importlib.import_module(module)
     old_db_schema = sys.modules[module]
@@ -259,18 +275,7 @@ def test_delete_metadata_duplicates_many(
         "unit_of_measurement": "%",
     }
 
-    # Create some duplicated statistics with schema version 28
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(
-        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
-    ):
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-
+    def add_statistics_meta(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
@@ -294,20 +299,48 @@ def test_delete_metadata_duplicates_many(
                 recorder.db_schema.StatisticsMeta.from_meta(external_co2_metadata)
             )
 
-        hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    def get_statistics_meta(hass: HomeAssistant) -> list:
+        with session_scope(hass=hass, read_only=True) as session:
+            return list(session.query(recorder.db_schema.StatisticsMeta).all())
+
+    # Create some duplicated statistics with schema version 28
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(
+            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=_create_engine_28,
+        ),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass),
+        ):
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
+
+            instance = recorder.get_instance(hass)
+            await instance.async_add_executor_job(add_statistics_meta, hass)
+
+            await hass.async_stop()
 
     # Test that the duplicates are removed during migration from schema 28
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass),
+    ):
+        await hass.async_start()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
-    assert "Deleted 1102 duplicated statistics_meta rows" in caplog.text
-    with session_scope(hass=hass) as session:
-        tmp = session.query(recorder.db_schema.StatisticsMeta).all()
+        assert "Deleted 1102 duplicated statistics_meta rows" in caplog.text
+        instance = recorder.get_instance(hass)
+        tmp = await instance.async_add_executor_job(get_statistics_meta, hass)
         assert len(tmp) == 3
         assert tmp[0].id == 1101
         assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
@@ -316,16 +349,15 @@ def test_delete_metadata_duplicates_many(
         assert tmp[2].id == 1105
         assert tmp[2].statistic_id == "test:fossil_percentage"
 
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+        await hass.async_stop()
 
 
-def test_delete_metadata_duplicates_no_duplicates(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+@pytest.mark.usefixtures("recorder_mock")
+async def test_delete_metadata_duplicates_no_duplicates(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test removal of duplicated statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     with session_scope(hass=hass) as session:
         instance = recorder.get_instance(hass)
         delete_statistics_meta_duplicates(instance, session)

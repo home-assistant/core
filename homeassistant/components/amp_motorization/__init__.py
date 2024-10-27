@@ -1,0 +1,1 @@
+"""Virtual integration: AMP motorization."""

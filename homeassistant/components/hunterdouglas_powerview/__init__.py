@@ -1,50 +1,31 @@
 """The Hunter Douglas PowerView integration."""
-import asyncio
-import logging
 
-from aiopvapi.helpers.aiorequest import AioRequest
-from aiopvapi.helpers.api_base import ApiEntryPoint
-from aiopvapi.helpers.tools import base64_to_unicode
+import logging
+from typing import TYPE_CHECKING
+
+from aiopvapi.resources.model import PowerviewData
 from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
-from aiopvapi.userdata import UserData
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.entity_registry as er
 
-from .const import (
-    API_PATH_FWVERSION,
-    DEFAULT_LEGACY_MAINPROCESSOR,
-    DOMAIN,
-    FIRMWARE,
-    FIRMWARE_MAINPROCESSOR,
-    FIRMWARE_NAME,
-    HUB_EXCEPTIONS,
-    HUB_NAME,
-    MAC_ADDRESS_IN_USERDATA,
-    ROOM_DATA,
-    SCENE_DATA,
-    SERIAL_NUMBER_IN_USERDATA,
-    SHADE_DATA,
-    USER_DATA,
-)
+from .const import DOMAIN, HUB_EXCEPTIONS
 from .coordinator import PowerviewShadeUpdateCoordinator
-from .model import PowerviewDeviceInfo, PowerviewEntryData
+from .model import PowerviewConfigEntry, PowerviewEntryData
 from .shade_data import PowerviewShadeData
-from .util import async_map_data_by_id
+from .util import async_connect_hub
 
 PARALLEL_UPDATES = 1
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [
     Platform.BUTTON,
     Platform.COVER,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
@@ -52,52 +33,74 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
     """Set up Hunter Douglas PowerView from a config entry."""
-
     config = entry.data
+    hub_address: str = config[CONF_HOST]
+    api_version: int | None = config.get(CONF_API_VERSION)
+    _LOGGER.debug("Connecting %s at %s with v%s api", DOMAIN, hub_address, api_version)
 
-    hub_address = config[CONF_HOST]
-    websession = async_get_clientsession(hass)
-
-    pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
-
+    # default 15 second timeout for each call in upstream
     try:
-        async with asyncio.timeout(10):
-            device_info = await async_get_device_info(pv_request, hub_address)
-
-        async with asyncio.timeout(10):
-            rooms = Rooms(pv_request)
-            room_data = async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
-
-        async with asyncio.timeout(10):
-            scenes = Scenes(pv_request)
-            scene_data = async_map_data_by_id(
-                (await scenes.get_resources())[SCENE_DATA]
-            )
-
-        async with asyncio.timeout(10):
-            shades = Shades(pv_request)
-            shade_entries = await shades.get_resources()
-            shade_data = async_map_data_by_id(shade_entries[SHADE_DATA])
-
+        api = await async_connect_hub(hass, hub_address, api_version)
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
-            f"Connection error to PowerView hub: {hub_address}: {err}"
+            f"Connection error to PowerView hub {hub_address}: {err}"
         ) from err
+
+    hub = api.hub
+    pv_request = api.pv_request
+    device_info = api.device_info
+
+    if hub.role != "Primary":
+        # this should be caught in config_flow, but account for a hub changing roles
+        # this will only happen manually by a user
+        _LOGGER.error(
+            "%s (%s) is performing role of %s Hub. "
+            "Only the Primary Hub can manage shades",
+            hub.name,
+            hub.hub_address,
+            hub.role,
+        )
+        return False
+
+    try:
+        rooms = Rooms(pv_request)
+        room_data: PowerviewData = await rooms.get_rooms()
+
+        scenes = Scenes(pv_request)
+        scene_data: PowerviewData = await scenes.get_scenes()
+
+        shades = Shades(pv_request)
+        shade_data: PowerviewData = await shades.get_shades()
+    except HUB_EXCEPTIONS as err:
+        raise ConfigEntryNotReady(
+            f"Connection error to PowerView hub {hub_address}: {err}"
+        ) from err
+
     if not device_info:
         raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
-    coordinator = PowerviewShadeUpdateCoordinator(hass, shades, hub_address)
+    if CONF_API_VERSION not in config:
+        new_data = {**entry.data}
+        new_data[CONF_API_VERSION] = hub.api_version
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=device_info.serial_number
+        )
+
+    coordinator = PowerviewShadeUpdateCoordinator(hass, shades, hub)
     coordinator.async_set_updated_data(PowerviewShadeData())
     # populate raw shade data into the coordinator for diagnostics
-    coordinator.data.store_group_data(shade_entries[SHADE_DATA])
+    coordinator.data.store_group_data(shade_data)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = PowerviewEntryData(
+    entry.runtime_data = PowerviewEntryData(
         api=pv_request,
-        room_data=room_data,
-        scene_data=scene_data,
-        shade_data=shade_data,
+        room_data=room_data.processed,
+        scene_data=scene_data.processed,
+        shade_data=shade_data.processed,
         coordinator=coordinator,
         device_info=device_info,
     )
@@ -107,39 +110,62 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_get_device_info(
-    pv_request: AioRequest, hub_address: str
-) -> PowerviewDeviceInfo:
-    """Determine device info."""
-    userdata = UserData(pv_request)
-    resources = await userdata.get_resources()
-    userdata_data = resources[USER_DATA]
+async def async_unload_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if FIRMWARE in userdata_data:
-        main_processor_info = userdata_data[FIRMWARE][FIRMWARE_MAINPROCESSOR]
-    elif userdata_data:
-        # Legacy devices
-        fwversion = ApiEntryPoint(pv_request, API_PATH_FWVERSION)
-        resources = await fwversion.get_resources()
 
-        if FIRMWARE in resources:
-            main_processor_info = resources[FIRMWARE][FIRMWARE_MAINPROCESSOR]
-        else:
-            main_processor_info = DEFAULT_LEGACY_MAINPROCESSOR
+async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+    """Migrate entry."""
 
-    return PowerviewDeviceInfo(
-        name=base64_to_unicode(userdata_data[HUB_NAME]),
-        mac_address=userdata_data[MAC_ADDRESS_IN_USERDATA],
-        serial_number=userdata_data[SERIAL_NUMBER_IN_USERDATA],
-        firmware=main_processor_info,
-        model=main_processor_info[FIRMWARE_NAME],
-        hub_address=hub_address,
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
+
+    if entry.version == 1:
+        # 1 -> 2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            if entry.unique_id is None:
+                await _async_add_missing_entry_unique_id(hass, entry)
+            await _migrate_unique_ids(hass, entry)
+            hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    _LOGGER.debug("Migrated to version %s.%s", entry.version, entry.minor_version)
+
+    return True
+
+
+async def _async_add_missing_entry_unique_id(
+    hass: HomeAssistant, entry: PowerviewConfigEntry
+) -> None:
+    """Add the unique id if its missing."""
+    address: str = entry.data[CONF_HOST]
+    api_version: int | None = entry.data.get(CONF_API_VERSION)
+    api = await async_connect_hub(hass, address, api_version)
+    hass.config_entries.async_update_entry(
+        entry, unique_id=api.device_info.serial_number
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
+    """Migrate int based unique ids to str."""
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+    if TYPE_CHECKING:
+        assert entry.unique_id
+    for reg_entry in registry_entries:
+        if isinstance(reg_entry.unique_id, int) or (
+            isinstance(reg_entry.unique_id, str)
+            and not reg_entry.unique_id.startswith(entry.unique_id)
+        ):
+            _LOGGER.debug(
+                "Migrating %s: %s to %s_%s",
+                reg_entry.entity_id,
+                reg_entry.unique_id,
+                entry.unique_id,
+                reg_entry.unique_id,
+            )
+            entity_registry.async_update_entity(
+                reg_entry.entity_id,
+                new_unique_id=f"{entry.unique_id}_{reg_entry.unique_id}",
+            )

@@ -1,4 +1,5 @@
 """Support for Denon Network Receivers."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -37,7 +38,7 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.PLAY
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -252,11 +253,12 @@ class DenonDevice(MediaPlayerEntity):
         return SUPPORT_DENON
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         for pretty_name, name in self._source_list.items():
             if self._mediasource == name:
                 return pretty_name
+        return None
 
     def turn_off(self) -> None:
         """Turn off media player."""

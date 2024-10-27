@@ -1,12 +1,16 @@
 """Tests for Roborock vacuums."""
 
-
+import copy
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from roborock import RoborockException
 from roborock.roborock_typing import RoborockCommand
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock.const import GET_MAPS_SERVICE_NAME
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
@@ -15,12 +19,15 @@ from homeassistant.components.vacuum import (
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
-    SERVICE_START_PAUSE,
     SERVICE_STOP,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from .mock_data import PROP
 
 from tests.common import MockConfigEntry
 
@@ -29,12 +36,19 @@ DEVICE_ID = "abc123"
 
 
 async def test_registry_entries(
-    hass: HomeAssistant, bypass_api_fixture, setup_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
 ) -> None:
     """Tests devices are registered in the entity registry."""
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(ENTITY_ID)
-    assert entry.unique_id == DEVICE_ID
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry.unique_id == DEVICE_ID
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.model_id == "roborock.vacuum.a27"
 
 
 @pytest.mark.parametrize(
@@ -46,7 +60,6 @@ async def test_registry_entries(
         (SERVICE_RETURN_TO_BASE, RoborockCommand.APP_CHARGE, None, None),
         (SERVICE_CLEAN_SPOT, RoborockCommand.APP_SPOT, None, None),
         (SERVICE_LOCATE, RoborockCommand.FIND_ME, None, None),
-        (SERVICE_START_PAUSE, RoborockCommand.APP_START, None, None),
         (
             SERVICE_SET_FAN_SPEED,
             RoborockCommand.SET_CUSTOM_MODE,
@@ -77,7 +90,7 @@ async def test_commands(
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, **(service_params or {})}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
         await hass.services.async_call(
             Platform.VACUUM,
@@ -91,34 +104,80 @@ async def test_commands(
 
 
 @pytest.mark.parametrize(
-    ("service", "issue_id"),
+    ("in_cleaning_int", "expected_command"),
     [
-        (SERVICE_START_PAUSE, "service_deprecation_start_pause"),
+        (0, RoborockCommand.APP_START),
+        (1, RoborockCommand.APP_START),
+        (2, RoborockCommand.RESUME_ZONED_CLEAN),
+        (3, RoborockCommand.RESUME_SEGMENT_CLEAN),
     ],
 )
-async def test_issues(
+async def test_resume_cleaning(
     hass: HomeAssistant,
     bypass_api_fixture,
-    setup_entry: MockConfigEntry,
-    service: str,
-    issue_id: str,
+    mock_roborock_entry: MockConfigEntry,
+    in_cleaning_int: int,
+    expected_command: RoborockCommand,
 ) -> None:
-    """Test issues raised by calling deprecated services."""
+    """Test resuming clean on start button when a clean is paused."""
+    prop = copy.deepcopy(PROP)
+    prop.status.in_cleaning = in_cleaning_int
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+        return_value=prop,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
+    ) as mock_send_command:
+        await hass.services.async_call(
+            Platform.VACUUM,
+            SERVICE_START,
+            data,
+            blocking=True,
+        )
+        assert mock_send_command.call_count == 1
+        assert mock_send_command.call_args[0][0] == expected_command
+
+
+async def test_failed_user_command(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test that when a user sends an invalid command, we raise HomeAssistantError."""
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "fake_command"}
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command",
+            side_effect=RoborockException(),
+        ),
+        pytest.raises(HomeAssistantError, match="Error while calling fake_command"),
     ):
         await hass.services.async_call(
             Platform.VACUUM,
-            service,
+            SERVICE_SEND_COMMAND,
             data,
             blocking=True,
         )
 
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue("roborock", issue_id)
-    assert issue.is_fixable is True
-    assert issue.is_persistent is True
+
+async def test_get_maps(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the service for maps correctly outputs rooms with the right name."""
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_MAPS_SERVICE_NAME,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot

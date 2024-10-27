@@ -1,4 +1,5 @@
 """Support for Z-Wave controls using the siren platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -32,7 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Siren entity from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_siren(info: ZwaveDiscoveryInfo) -> None:
@@ -62,7 +63,8 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         super().__init__(config_entry, driver, info)
         # Entity class attributes
         self._attr_available_tones = {
-            int(id): val for id, val in self.info.primary_value.metadata.states.items()
+            int(state_id): val
+            for state_id, val in self.info.primary_value.metadata.states.items()
         }
         self._attr_supported_features = (
             SirenEntityFeature.TURN_ON

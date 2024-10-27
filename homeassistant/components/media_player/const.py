@@ -1,5 +1,14 @@
 """Provides the constants needed for component."""
+
 from enum import IntFlag, StrEnum
+from functools import partial
+
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
@@ -78,26 +87,34 @@ class MediaClass(StrEnum):
 
 # These MEDIA_CLASS_* constants are deprecated as of Home Assistant 2022.10.
 # Please use the MediaClass enum instead.
-MEDIA_CLASS_ALBUM = "album"
-MEDIA_CLASS_APP = "app"
-MEDIA_CLASS_ARTIST = "artist"
-MEDIA_CLASS_CHANNEL = "channel"
-MEDIA_CLASS_COMPOSER = "composer"
-MEDIA_CLASS_CONTRIBUTING_ARTIST = "contributing_artist"
-MEDIA_CLASS_DIRECTORY = "directory"
-MEDIA_CLASS_EPISODE = "episode"
-MEDIA_CLASS_GAME = "game"
-MEDIA_CLASS_GENRE = "genre"
-MEDIA_CLASS_IMAGE = "image"
-MEDIA_CLASS_MOVIE = "movie"
-MEDIA_CLASS_MUSIC = "music"
-MEDIA_CLASS_PLAYLIST = "playlist"
-MEDIA_CLASS_PODCAST = "podcast"
-MEDIA_CLASS_SEASON = "season"
-MEDIA_CLASS_TRACK = "track"
-MEDIA_CLASS_TV_SHOW = "tv_show"
-MEDIA_CLASS_URL = "url"
-MEDIA_CLASS_VIDEO = "video"
+_DEPRECATED_MEDIA_CLASS_ALBUM = DeprecatedConstantEnum(MediaClass.ALBUM, "2025.10")
+_DEPRECATED_MEDIA_CLASS_APP = DeprecatedConstantEnum(MediaClass.APP, "2025.10")
+_DEPRECATED_MEDIA_CLASS_ARTIST = DeprecatedConstantEnum(MediaClass.ARTIST, "2025.10")
+_DEPRECATED_MEDIA_CLASS_CHANNEL = DeprecatedConstantEnum(MediaClass.CHANNEL, "2025.10")
+_DEPRECATED_MEDIA_CLASS_COMPOSER = DeprecatedConstantEnum(
+    MediaClass.COMPOSER, "2025.10"
+)
+_DEPRECATED_MEDIA_CLASS_CONTRIBUTING_ARTIST = DeprecatedConstantEnum(
+    MediaClass.CONTRIBUTING_ARTIST, "2025.10"
+)
+_DEPRECATED_MEDIA_CLASS_DIRECTORY = DeprecatedConstantEnum(
+    MediaClass.DIRECTORY, "2025.10"
+)
+_DEPRECATED_MEDIA_CLASS_EPISODE = DeprecatedConstantEnum(MediaClass.EPISODE, "2025.10")
+_DEPRECATED_MEDIA_CLASS_GAME = DeprecatedConstantEnum(MediaClass.GAME, "2025.10")
+_DEPRECATED_MEDIA_CLASS_GENRE = DeprecatedConstantEnum(MediaClass.GENRE, "2025.10")
+_DEPRECATED_MEDIA_CLASS_IMAGE = DeprecatedConstantEnum(MediaClass.IMAGE, "2025.10")
+_DEPRECATED_MEDIA_CLASS_MOVIE = DeprecatedConstantEnum(MediaClass.MOVIE, "2025.10")
+_DEPRECATED_MEDIA_CLASS_MUSIC = DeprecatedConstantEnum(MediaClass.MUSIC, "2025.10")
+_DEPRECATED_MEDIA_CLASS_PLAYLIST = DeprecatedConstantEnum(
+    MediaClass.PLAYLIST, "2025.10"
+)
+_DEPRECATED_MEDIA_CLASS_PODCAST = DeprecatedConstantEnum(MediaClass.PODCAST, "2025.10")
+_DEPRECATED_MEDIA_CLASS_SEASON = DeprecatedConstantEnum(MediaClass.SEASON, "2025.10")
+_DEPRECATED_MEDIA_CLASS_TRACK = DeprecatedConstantEnum(MediaClass.TRACK, "2025.10")
+_DEPRECATED_MEDIA_CLASS_TV_SHOW = DeprecatedConstantEnum(MediaClass.TV_SHOW, "2025.10")
+_DEPRECATED_MEDIA_CLASS_URL = DeprecatedConstantEnum(MediaClass.URL, "2025.10")
+_DEPRECATED_MEDIA_CLASS_VIDEO = DeprecatedConstantEnum(MediaClass.VIDEO, "2025.10")
 
 
 class MediaType(StrEnum):
@@ -128,27 +145,30 @@ class MediaType(StrEnum):
 
 # These MEDIA_TYPE_* constants are deprecated as of Home Assistant 2022.10.
 # Please use the MediaType enum instead.
-MEDIA_TYPE_ALBUM = "album"
-MEDIA_TYPE_APP = "app"
-MEDIA_TYPE_APPS = "apps"
-MEDIA_TYPE_ARTIST = "artist"
-MEDIA_TYPE_CHANNEL = "channel"
-MEDIA_TYPE_CHANNELS = "channels"
-MEDIA_TYPE_COMPOSER = "composer"
-MEDIA_TYPE_CONTRIBUTING_ARTIST = "contributing_artist"
-MEDIA_TYPE_EPISODE = "episode"
-MEDIA_TYPE_GAME = "game"
-MEDIA_TYPE_GENRE = "genre"
-MEDIA_TYPE_IMAGE = "image"
-MEDIA_TYPE_MOVIE = "movie"
-MEDIA_TYPE_MUSIC = "music"
-MEDIA_TYPE_PLAYLIST = "playlist"
-MEDIA_TYPE_PODCAST = "podcast"
-MEDIA_TYPE_SEASON = "season"
-MEDIA_TYPE_TRACK = "track"
-MEDIA_TYPE_TVSHOW = "tvshow"
-MEDIA_TYPE_URL = "url"
-MEDIA_TYPE_VIDEO = "video"
+_DEPRECATED_MEDIA_TYPE_ALBUM = DeprecatedConstantEnum(MediaType.ALBUM, "2025.10")
+_DEPRECATED_MEDIA_TYPE_APP = DeprecatedConstantEnum(MediaType.APP, "2025.10")
+_DEPRECATED_MEDIA_TYPE_APPS = DeprecatedConstantEnum(MediaType.APPS, "2025.10")
+_DEPRECATED_MEDIA_TYPE_ARTIST = DeprecatedConstantEnum(MediaType.ARTIST, "2025.10")
+_DEPRECATED_MEDIA_TYPE_CHANNEL = DeprecatedConstantEnum(MediaType.CHANNEL, "2025.10")
+_DEPRECATED_MEDIA_TYPE_CHANNELS = DeprecatedConstantEnum(MediaType.CHANNELS, "2025.10")
+_DEPRECATED_MEDIA_TYPE_COMPOSER = DeprecatedConstantEnum(MediaType.COMPOSER, "2025.10")
+_DEPRECATED_MEDIA_TYPE_CONTRIBUTING_ARTIST = DeprecatedConstantEnum(
+    MediaType.CONTRIBUTING_ARTIST, "2025.10"
+)
+_DEPRECATED_MEDIA_TYPE_EPISODE = DeprecatedConstantEnum(MediaType.EPISODE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_GAME = DeprecatedConstantEnum(MediaType.GAME, "2025.10")
+_DEPRECATED_MEDIA_TYPE_GENRE = DeprecatedConstantEnum(MediaType.GENRE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_IMAGE = DeprecatedConstantEnum(MediaType.IMAGE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_MOVIE = DeprecatedConstantEnum(MediaType.MOVIE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_MUSIC = DeprecatedConstantEnum(MediaType.MUSIC, "2025.10")
+_DEPRECATED_MEDIA_TYPE_PLAYLIST = DeprecatedConstantEnum(MediaType.PLAYLIST, "2025.10")
+_DEPRECATED_MEDIA_TYPE_PODCAST = DeprecatedConstantEnum(MediaType.PODCAST, "2025.10")
+_DEPRECATED_MEDIA_TYPE_SEASON = DeprecatedConstantEnum(MediaType.SEASON, "2025.10")
+_DEPRECATED_MEDIA_TYPE_TRACK = DeprecatedConstantEnum(MediaType.TRACK, "2025.10")
+_DEPRECATED_MEDIA_TYPE_TVSHOW = DeprecatedConstantEnum(MediaType.TVSHOW, "2025.10")
+_DEPRECATED_MEDIA_TYPE_URL = DeprecatedConstantEnum(MediaType.URL, "2025.10")
+_DEPRECATED_MEDIA_TYPE_VIDEO = DeprecatedConstantEnum(MediaType.VIDEO, "2025.10")
+
 
 SERVICE_CLEAR_PLAYLIST = "clear_playlist"
 SERVICE_JOIN = "join"
@@ -168,10 +188,10 @@ class RepeatMode(StrEnum):
 
 # These REPEAT_MODE_* constants are deprecated as of Home Assistant 2022.10.
 # Please use the RepeatMode enum instead.
-REPEAT_MODE_ALL = "all"
-REPEAT_MODE_OFF = "off"
-REPEAT_MODE_ONE = "one"
-REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
+_DEPRECATED_REPEAT_MODE_ALL = DeprecatedConstantEnum(RepeatMode.ALL, "2025.10")
+_DEPRECATED_REPEAT_MODE_OFF = DeprecatedConstantEnum(RepeatMode.OFF, "2025.10")
+_DEPRECATED_REPEAT_MODE_ONE = DeprecatedConstantEnum(RepeatMode.ONE, "2025.10")
+REPEAT_MODES = [cls.value for cls in RepeatMode]
 
 
 class MediaPlayerEntityFeature(IntFlag):
@@ -203,23 +223,67 @@ class MediaPlayerEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the MediaPlayerEntityFeature enum instead.
-SUPPORT_PAUSE = 1
-SUPPORT_SEEK = 2
-SUPPORT_VOLUME_SET = 4
-SUPPORT_VOLUME_MUTE = 8
-SUPPORT_PREVIOUS_TRACK = 16
-SUPPORT_NEXT_TRACK = 32
+_DEPRECATED_SUPPORT_PAUSE = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.PAUSE, "2025.10"
+)
+_DEPRECATED_SUPPORT_SEEK = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.SEEK, "2025.10"
+)
+_DEPRECATED_SUPPORT_VOLUME_SET = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.VOLUME_SET, "2025.10"
+)
+_DEPRECATED_SUPPORT_VOLUME_MUTE = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.VOLUME_MUTE, "2025.10"
+)
+_DEPRECATED_SUPPORT_PREVIOUS_TRACK = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.PREVIOUS_TRACK, "2025.10"
+)
+_DEPRECATED_SUPPORT_NEXT_TRACK = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.NEXT_TRACK, "2025.10"
+)
+_DEPRECATED_SUPPORT_TURN_ON = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.TURN_ON, "2025.10"
+)
+_DEPRECATED_SUPPORT_TURN_OFF = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.TURN_OFF, "2025.10"
+)
+_DEPRECATED_SUPPORT_PLAY_MEDIA = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.PLAY_MEDIA, "2025.10"
+)
+_DEPRECATED_SUPPORT_VOLUME_STEP = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.VOLUME_STEP, "2025.10"
+)
+_DEPRECATED_SUPPORT_SELECT_SOURCE = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.SELECT_SOURCE, "2025.10"
+)
+_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.STOP, "2025.10"
+)
+_DEPRECATED_SUPPORT_CLEAR_PLAYLIST = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.CLEAR_PLAYLIST, "2025.10"
+)
+_DEPRECATED_SUPPORT_PLAY = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.PLAY, "2025.10"
+)
+_DEPRECATED_SUPPORT_SHUFFLE_SET = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.SHUFFLE_SET, "2025.10"
+)
+_DEPRECATED_SUPPORT_SELECT_SOUND_MODE = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.SELECT_SOUND_MODE, "2025.10"
+)
+_DEPRECATED_SUPPORT_BROWSE_MEDIA = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.BROWSE_MEDIA, "2025.10"
+)
+_DEPRECATED_SUPPORT_REPEAT_SET = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.REPEAT_SET, "2025.10"
+)
+_DEPRECATED_SUPPORT_GROUPING = DeprecatedConstantEnum(
+    MediaPlayerEntityFeature.GROUPING, "2025.10"
+)
 
-SUPPORT_TURN_ON = 128
-SUPPORT_TURN_OFF = 256
-SUPPORT_PLAY_MEDIA = 512
-SUPPORT_VOLUME_STEP = 1024
-SUPPORT_SELECT_SOURCE = 2048
-SUPPORT_STOP = 4096
-SUPPORT_CLEAR_PLAYLIST = 8192
-SUPPORT_PLAY = 16384
-SUPPORT_SHUFFLE_SET = 32768
-SUPPORT_SELECT_SOUND_MODE = 65536
-SUPPORT_BROWSE_MEDIA = 131072
-SUPPORT_REPEAT_SET = 262144
-SUPPORT_GROUPING = 524288
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

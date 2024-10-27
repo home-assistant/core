@@ -61,3 +61,18 @@ set_climate_temperature_offset:
           max: 10
           step: 0.01
           unit_of_measurement: "°"
+
+add_meter_reading:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: tado
+    reading:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 0
+          step: 1

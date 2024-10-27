@@ -16,19 +16,5 @@
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml_invalid_token": {
-      "title": "The {integration_title} YAML configuration is being removed",
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour configuration couldn't be imported because the token in the configuration.yaml was invalid.\n\nPlease add Twitch again via the UI.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
-    "deprecated_yaml_credentials_imported": {
-      "title": "The {integration_title} YAML configuration is being removed",
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour application credentials are imported, but a config entry could not be created because there was no access token.\n\nPlease add Twitch again via the UI.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
-    "deprecated_yaml_already_imported": {
-      "title": "The {integration_title} YAML configuration is being removed",
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour application credentials are already imported.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "window_handle": {
+        "default": "mdi:window-open-variant"
+      }
+    }
+  }
+}

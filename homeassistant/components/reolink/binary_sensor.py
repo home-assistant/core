@@ -1,4 +1,5 @@
 """Component providing support for Reolink binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,6 +8,7 @@ from dataclasses import dataclass
 from reolink_aio.api import (
     DUAL_LENS_DUAL_MOTION_MODELS,
     FACE_DETECTION_TYPE,
+    PACKAGE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
     PET_DETECTION_TYPE,
     VEHICLE_DETECTION_TYPE,
@@ -18,29 +20,26 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .util import ReolinkConfigEntry, ReolinkData
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkBinarySensorEntityDescription(
     BinarySensorEntityDescription,
     ReolinkChannelEntityDescription,
 ):
     """A class that describes binary sensor entities."""
 
-    icon_off: str = "mdi:motion-sensor-off"
-    icon: str = "mdi:motion-sensor"
     value: Callable[[Host, int], bool]
 
 
-BINARY_SENSORS = (
+BINARY_PUSH_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
@@ -49,7 +48,6 @@ BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,
         translation_key="face",
-        icon="mdi:face-recognition",
         value=lambda api, ch: api.ai_detected(ch, FACE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, FACE_DETECTION_TYPE),
     ),
@@ -62,16 +60,12 @@ BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key=VEHICLE_DETECTION_TYPE,
         translation_key="vehicle",
-        icon="mdi:car",
-        icon_off="mdi:car-off",
         value=lambda api, ch: api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
         translation_key="pet",
-        icon="mdi:dog-side",
-        icon_off="mdi:dog-side-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: (
             api.ai_supported(ch, PET_DETECTION_TYPE)
@@ -81,45 +75,61 @@ BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
         translation_key="animal",
-        icon="mdi:paw",
-        icon_off="mdi:paw-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
     ReolinkBinarySensorEntityDescription(
+        key=PACKAGE_DETECTION_TYPE,
+        translation_key="package",
+        value=lambda api, ch: api.ai_detected(ch, PACKAGE_DETECTION_TYPE),
+        supported=lambda api, ch: api.ai_supported(ch, PACKAGE_DETECTION_TYPE),
+    ),
+    ReolinkBinarySensorEntityDescription(
         key="visitor",
         translation_key="visitor",
-        icon="mdi:bell-ring-outline",
-        icon_off="mdi:doorbell",
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),
+    ),
+)
+
+BINARY_SENSORS = (
+    ReolinkBinarySensorEntityDescription(
+        key="sleep",
+        cmd_key="GetChannelstatus",
+        translation_key="sleep",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, ch: api.sleeping(ch),
+        supported=lambda api, ch: api.supported(ch, "sleep"),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkBinarySensorEntity] = []
     for channel in reolink_data.host.api.channels:
         entities.extend(
-            [
-                ReolinkBinarySensorEntity(reolink_data, channel, entity_description)
-                for entity_description in BINARY_SENSORS
-                if entity_description.supported(reolink_data.host.api, channel)
-            ]
+            ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
+            for entity_description in BINARY_PUSH_SENSORS
+            if entity_description.supported(reolink_data.host.api, channel)
+        )
+        entities.extend(
+            ReolinkBinarySensorEntity(reolink_data, channel, entity_description)
+            for entity_description in BINARY_SENSORS
+            if entity_description.supported(reolink_data.host.api, channel)
         )
 
     async_add_entities(entities)
 
 
 class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEntity):
-    """Base binary-sensor class for Reolink IP camera motion sensors."""
+    """Base binary-sensor class for Reolink IP camera."""
 
     entity_description: ReolinkBinarySensorEntityDescription
 
@@ -141,16 +151,13 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
             self._attr_translation_key = f"{key}_lens_{self._channel}"
 
     @property
-    def icon(self) -> str | None:
-        """Icon of the sensor."""
-        if self.is_on is False:
-            return self.entity_description.icon_off
-        return super().icon
-
-    @property
     def is_on(self) -> bool:
         """State of the sensor."""
         return self.entity_description.value(self._host.api, self._channel)
+
+
+class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
+    """Binary-sensor class for Reolink IP camera motion sensors."""
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""

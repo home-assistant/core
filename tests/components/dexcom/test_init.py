@@ -1,4 +1,5 @@
 """Test the Dexcom config flow."""
+
 from unittest.mock import patch
 
 from pydexcom import AccountError, SessionError

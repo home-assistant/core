@@ -1,0 +1,658 @@
+{
+  "data": {
+    "Catalog": {
+      "searchStore": {
+        "elements": [
+          {
+            "title": "Borderlands 3 Season Pass",
+            "id": "c3913a91e07b43cfbbbcfd8244c86dcc",
+            "namespace": "catnip",
+            "description": "Prolongez votre aventure dans Borderlands\u00a03 avec le Season Pass, regroupant des \u00e9l\u00e9ments cosm\u00e9tiques exclusifs et quatre histoires additionnelles, pour encore plus de missions et de d\u00e9fis\u00a0!",
+            "effectiveDate": "2019-09-11T12:00:00.000Z",
+            "offerType": "DLC",
+            "expiryDate": null,
+            "status": "ACTIVE",
+            "isCodeRedemptionOnly": false,
+            "keyImages": [
+              {
+                "type": "OfferImageWide",
+                "url": "https://cdn1.epicgames.com/offer/catnip/Diesel_productv2_borderlands-3_season-pass_BL3_SEASONPASS_Hero-3840x2160-4411e63a005a43811a2bc516ae7ec584598fd4aa-3840x2160-b8988ebb0f3d9159671e8968af991f30_3840x2160-b8988ebb0f3d9159671e8968af991f30"
+              },
+              {
+                "type": "OfferImageTall",
+                "url": "https://cdn1.epicgames.com/offer/catnip/2KGMKT_BL3_Season_Pass_EGS_1200x1600_1200x1600-a7438a079c5576d328a74b9121278075"
+              },
+              {
+                "type": "CodeRedemption_340x440",
+                "url": "https://cdn1.epicgames.com/offer/catnip/2KGMKT_BL3_Season_Pass_EGS_1200x1600_1200x1600-a7438a079c5576d328a74b9121278075"
+              },
+              {
+                "type": "Thumbnail",
+                "url": "https://cdn1.epicgames.com/offer/catnip/2KGMKT_BL3_Season_Pass_EGS_1200x1600_1200x1600-a7438a079c5576d328a74b9121278075"
+              }
+            ],
+            "seller": {
+              "id": "o-37m6jbj5wcvrcvm4wusv7nazdfvbjk",
+              "name": "2K Games, Inc."
+            },
+            "productSlug": "borderlands-3/season-pass",
+            "urlSlug": "borderlands-3--season-pass",
+            "url": null,
+            "items": [
+              {
+                "id": "e9fdc1a9f47b4a5e8e63841c15de2b12",
+                "namespace": "catnip"
+              },
+              {
+                "id": "fbc46bb6056940d2847ee1e80037a9af",
+                "namespace": "catnip"
+              },
+              {
+                "id": "ff8e1152ddf742b68f9ac0cecd378917",
+                "namespace": "catnip"
+              },
+              {
+                "id": "939e660825764e208938ab4f26b4da56",
+                "namespace": "catnip"
+              },
+              {
+                "id": "4c43a9a691114ccd91c1884ab18f4e27",
+                "namespace": "catnip"
+              },
+              {
+                "id": "3a6a3f9b351b4b599808df3267669b83",
+                "namespace": "catnip"
+              },
+              {
+                "id": "ab030a9f53f3428fb2baf2ddbb0bb5ac",
+                "namespace": "catnip"
+              },
+              {
+                "id": "ff96eef22b0e4c498e8ed80ac0030325",
+                "namespace": "catnip"
+              },
+              {
+                "id": "5021e93a73374d6db1c1ce6c92234f8f",
+                "namespace": "catnip"
+              },
+              {
+                "id": "9c0b1eb3265340678dff0fcb106402b1",
+                "namespace": "catnip"
+              },
+              {
+                "id": "8c826db6e14f44aeac8816e1bd593632",
+                "namespace": "catnip"
+              }
+            ],
+            "customAttributes": [
+              {
+                "key": "com.epicgames.app.blacklist",
+                "value": "SA"
+              },
+              {
+                "key": "publisherName",
+                "value": "2K"
+              },
+              {
+                "key": "developerName",
+                "value": "Gearbox Software"
+              },
+              {
+                "key": "com.epicgames.app.productSlug",
+                "value": "borderlands-3/season-pass"
+              }
+            ],
+            "categories": [
+              {
+                "path": "addons"
+              },
+              {
+                "path": "freegames"
+              },
+              {
+                "path": "addons/durable"
+              },
+              {
+                "path": "applications"
+              }
+            ],
+            "tags": [
+              {
+                "id": "1264"
+              },
+              {
+                "id": "16004"
+              },
+              {
+                "id": "14869"
+              },
+              {
+                "id": "26789"
+              },
+              {
+                "id": "1367"
+              },
+              {
+                "id": "1370"
+              },
+              {
+                "id": "9547"
+              },
+              {
+                "id": "9549"
+              },
+              {
+                "id": "1294"
+              }
+            ],
+            "catalogNs": {
+              "mappings": [
+                {
+                  "pageSlug": "borderlands-3",
+                  "pageType": "productHome"
+                }
+              ]
+            },
+            "offerMappings": [
+              {
+                "pageSlug": "borderlands-3--season-pass",
+                "pageType": "addon--cms-hybrid"
+              }
+            ],
+            "price": {
+              "totalPrice": {
+                "discountPrice": 4999,
+                "originalPrice": 4999,
+                "voucherDiscount": 0,
+                "discount": 0,
+                "currencyCode": "EUR",
+                "currencyInfo": {
+                  "decimals": 2
+                },
+                "fmtPrice": {
+                  "originalPrice": "49,99\u00a0\u20ac",
+                  "discountPrice": "49,99\u00a0\u20ac",
+                  "intermediatePrice": "49,99\u00a0\u20ac"
+                }
+              },
+              "lineOffers": [
+                {
+                  "appliedRules": []
+                }
+              ]
+            },
+            "promotions": {
+              "promotionalOffers": [],
+              "upcomingPromotionalOffers": [
+                {
+                  "promotionalOffers": [
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 30
+                      }
+                    },
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 25
+                      }
+                    },
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 25
+                      }
+                    },
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 30
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "title": "Call of the Sea",
+            "id": "92da5d8d918543b6b408e36d9af81765",
+            "namespace": "5e427319eea1401ab20c6cd78a4163c4",
+            "description": "Call of the Sea is an otherworldly tale of mystery and love set in the 1930s South Pacific. Explore a lush island paradise, solve puzzles and unlock secrets in the hunt for your husband\u2019s missing expedition.",
+            "effectiveDate": "2022-02-17T15:00:00.000Z",
+            "offerType": "BASE_GAME",
+            "expiryDate": null,
+            "status": "ACTIVE",
+            "isCodeRedemptionOnly": false,
+            "keyImages": [
+              {
+                "type": "DieselStoreFrontWide",
+                "url": "https://cdn1.epicgames.com/salesEvent/salesEvent/EGS_CalloftheSea_OutoftheBlue_S1_2560x1440-204699c6410deef9c18be0ee392f8335"
+              },
+              {
+                "type": "DieselStoreFrontTall",
+                "url": "https://cdn1.epicgames.com/salesEvent/salesEvent/EGS_CalloftheSea_OutoftheBlue_S2_1200x1600-db63acf0c479c185e0ef8f8e73c8f0d8"
+              },
+              {
+                "type": "OfferImageWide",
+                "url": "https://cdn1.epicgames.com/salesEvent/salesEvent/EGS_CalloftheSea_OutoftheBlue_S5_1920x1080-7b22dfebdd9fcdde6e526c5dc4c16eb1"
+              },
+              {
+                "type": "OfferImageTall",
+                "url": "https://cdn1.epicgames.com/salesEvent/salesEvent/EGS_CalloftheSea_OutoftheBlue_S2_1200x1600-db63acf0c479c185e0ef8f8e73c8f0d8"
+              },
+              {
+                "type": "CodeRedemption_340x440",
+                "url": "https://cdn1.epicgames.com/salesEvent/salesEvent/EGS_CalloftheSea_OutoftheBlue_S2_1200x1600-db63acf0c479c185e0ef8f8e73c8f0d8"
+              },
+              {
+                "type": "Thumbnail",
+                "url": "https://cdn1.epicgames.com/salesEvent/salesEvent/EGS_CalloftheSea_OutoftheBlue_S2_1200x1600-db63acf0c479c185e0ef8f8e73c8f0d8"
+              }
+            ],
+            "seller": {
+              "id": "o-fay4ghw9hhamujs53rfhy83ffexb7k",
+              "name": "Raw Fury"
+            },
+            "productSlug": "call-of-the-sea",
+            "urlSlug": "call-of-the-sea",
+            "url": null,
+            "items": [
+              {
+                "id": "cbc9c76c4bfc4bc6b28abb3afbcbf07a",
+                "namespace": "5e427319eea1401ab20c6cd78a4163c4"
+              }
+            ],
+            "customAttributes": [
+              {
+                "key": "com.epicgames.app.productSlug",
+                "value": "call-of-the-sea"
+              }
+            ],
+            "categories": [
+              {
+                "path": "freegames"
+              },
+              {
+                "path": "games"
+              },
+              {
+                "path": "games/edition"
+              },
+              {
+                "path": "games/edition/base"
+              },
+              {
+                "path": "applications"
+              }
+            ],
+            "tags": [
+              {
+                "id": "1296"
+              },
+              {
+                "id": "1298"
+              },
+              {
+                "id": "21894"
+              },
+              {
+                "id": "1370"
+              },
+              {
+                "id": "9547"
+              },
+              {
+                "id": "1117"
+              }
+            ],
+            "catalogNs": {
+              "mappings": [
+                {
+                  "pageSlug": "call-of-the-sea",
+                  "pageType": "productHome"
+                }
+              ]
+            },
+            "offerMappings": [],
+            "price": {
+              "totalPrice": {
+                "discountPrice": 1999,
+                "originalPrice": 1999,
+                "voucherDiscount": 0,
+                "discount": 0,
+                "currencyCode": "EUR",
+                "currencyInfo": {
+                  "decimals": 2
+                },
+                "fmtPrice": {
+                  "originalPrice": "19,99\u00a0\u20ac",
+                  "discountPrice": "19,99\u00a0\u20ac",
+                  "intermediatePrice": "19,99\u00a0\u20ac"
+                }
+              },
+              "lineOffers": [
+                {
+                  "appliedRules": []
+                }
+              ]
+            },
+            "promotions": {
+              "promotionalOffers": [],
+              "upcomingPromotionalOffers": [
+                {
+                  "promotionalOffers": [
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 60
+                      }
+                    },
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 0
+                      }
+                    },
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 60
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "title": "Rise of Industry",
+            "id": "c04a2ab8ff4442cba0a41fb83453e701",
+            "namespace": "9f101e25b1a9427a9e6971d2b21c5f82",
+            "description": "Mettez vos comp\u00e9tences entrepreneuriales \u00e0 l'\u00e9preuve en cr\u00e9ant et en optimisant des cha\u00eenes de production complexes tout en gardant un \u0153il sur les r\u00e9sultats financiers. \u00c0 l'aube du 20e si\u00e8cle, appr\u00eatez-vous \u00e0 entrer dans un \u00e2ge d'or industriel, ou une d\u00e9pression historique.",
+            "effectiveDate": "2022-08-11T11:00:00.000Z",
+            "offerType": "BASE_GAME",
+            "expiryDate": null,
+            "status": "ACTIVE",
+            "isCodeRedemptionOnly": false,
+            "keyImages": [
+              {
+                "type": "OfferImageWide",
+                "url": "https://cdn1.epicgames.com/spt-assets/a6aeec29591b4b56b4383b4d2d7d0e1e/rise-of-industry-offer-1p22f.jpg"
+              },
+              {
+                "type": "OfferImageTall",
+                "url": "https://cdn1.epicgames.com/spt-assets/a6aeec29591b4b56b4383b4d2d7d0e1e/download-rise-of-industry-offer-1uujr.jpg"
+              },
+              {
+                "type": "Thumbnail",
+                "url": "https://cdn1.epicgames.com/spt-assets/a6aeec29591b4b56b4383b4d2d7d0e1e/download-rise-of-industry-offer-1uujr.jpg"
+              }
+            ],
+            "seller": {
+              "id": "o-fnqgc5v2xczx9fgawvcejwj88z2mnx",
+              "name": "Kasedo Games Ltd"
+            },
+            "productSlug": null,
+            "urlSlug": "f88fedc022fe488caaedaa5c782ff90d",
+            "url": null,
+            "items": [
+              {
+                "id": "9f5b48a778824e6aa330d2c1a47f41b2",
+                "namespace": "9f101e25b1a9427a9e6971d2b21c5f82"
+              }
+            ],
+            "customAttributes": [
+              {
+                "key": "autoGeneratedPrice",
+                "value": "false"
+              },
+              {
+                "key": "isManuallySetPCReleaseDate",
+                "value": "true"
+              }
+            ],
+            "categories": [
+              {
+                "path": "freegames"
+              },
+              {
+                "path": "games/edition/base"
+              },
+              {
+                "path": "games/edition"
+              },
+              {
+                "path": "games"
+              }
+            ],
+            "tags": [
+              {
+                "id": "26789"
+              },
+              {
+                "id": "19847"
+              },
+              {
+                "id": "1370"
+              },
+              {
+                "id": "1115"
+              },
+              {
+                "id": "9547"
+              },
+              {
+                "id": "10719"
+              }
+            ],
+            "catalogNs": {
+              "mappings": [
+                {
+                  "pageSlug": "rise-of-industry-0af838",
+                  "pageType": "productHome"
+                }
+              ]
+            },
+            "offerMappings": [
+              {
+                "pageSlug": "rise-of-industry-0af838",
+                "pageType": "productHome"
+              }
+            ],
+            "price": {
+              "totalPrice": {
+                "discountPrice": 0,
+                "originalPrice": 2999,
+                "voucherDiscount": 0,
+                "discount": 2999,
+                "currencyCode": "EUR",
+                "currencyInfo": {
+                  "decimals": 2
+                },
+                "fmtPrice": {
+                  "originalPrice": "29,99\u00a0\u20ac",
+                  "discountPrice": "0",
+                  "intermediatePrice": "0"
+                }
+              },
+              "lineOffers": [
+                {
+                  "appliedRules": [
+                    {
+                      "id": "a19d30dc34f44923993e68b82b75a084",
+                      "endDate": "2023-03-09T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "promotions": {
+              "promotionalOffers": [
+                {
+                  "promotionalOffers": [
+                    {
+                      "startDate": "2023-03-02T16:00:00.000Z",
+                      "endDate": "2023-03-09T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 0
+                      }
+                    }
+                  ]
+                }
+              ],
+              "upcomingPromotionalOffers": [
+                {
+                  "promotionalOffers": [
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 25
+                      }
+                    },
+                    {
+                      "startDate": "2023-03-09T16:00:00.000Z",
+                      "endDate": "2023-03-16T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 25
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "title": "Dishonored - Definitive Edition",
+            "id": "4d25d74b88d1474a8ab21ffb88ca6d37",
+            "namespace": "d5241c76f178492ea1540fce45616757",
+            "description": "Experience the definitive Dishonored collection. This complete compilation includes Dishonored as well as all of its additional content - Dunwall City Trials, The Knife of Dunwall, The Brigmore Witches and Void Walker\u2019s Arsenal.",
+            "effectiveDate": "2099-01-01T00:00:00.000Z",
+            "offerType": "OTHERS",
+            "expiryDate": null,
+            "status": "ACTIVE",
+            "isCodeRedemptionOnly": true,
+            "keyImages": [
+              {
+                "type": "VaultClosed",
+                "url": "https://cdn1.epicgames.com/offer/d5241c76f178492ea1540fce45616757/15days-day15-wrapped-desktop-carousel-image_1920x1080-ebecfa7c79f02a9de5bca79560bee953"
+              },
+              {
+                "type": "DieselStoreFrontWide",
+                "url": "https://cdn1.epicgames.com/offer/d5241c76f178492ea1540fce45616757/15days-day15-Unwrapped-desktop-carousel-image1_1920x1080-1992edb42bb8554ddeb14d430ba3f858"
+              },
+              {
+                "type": "DieselStoreFrontTall",
+                "url": "https://cdn1.epicgames.com/offer/d5241c76f178492ea1540fce45616757/DAY15-carousel-mobile-unwrapped-image1_1200x1600-9716d77667d2a82931c55a4e4130989e"
+              }
+            ],
+            "seller": {
+              "id": "o-ufmrk5furrrxgsp5tdngefzt5rxdcn",
+              "name": "Epic Dev Test Account"
+            },
+            "productSlug": "dishonored-definitive-edition",
+            "urlSlug": "mystery-game15",
+            "url": null,
+            "items": [
+              {
+                "id": "8341d7c7e4534db7848cc428aa4cbe5a",
+                "namespace": "d5241c76f178492ea1540fce45616757"
+              }
+            ],
+            "customAttributes": [
+              {
+                "key": "com.epicgames.app.freegames.vault.close",
+                "value": "[]"
+              },
+              {
+                "key": "com.epicgames.app.freegames.vault.slug",
+                "value": "sales-and-specials/holiday-sale"
+              },
+              {
+                "key": "com.epicgames.app.blacklist",
+                "value": "[]"
+              },
+              {
+                "key": "com.epicgames.app.freegames.vault.open",
+                "value": "[]"
+              },
+              {
+                "key": "com.epicgames.app.productSlug",
+                "value": "dishonored-definitive-edition"
+              }
+            ],
+            "categories": [
+              {
+                "path": "freegames/vaulted"
+              },
+              {
+                "path": "freegames"
+              },
+              {
+                "path": "games"
+              },
+              {
+                "path": "applications"
+              }
+            ],
+            "tags": [],
+            "catalogNs": {
+              "mappings": []
+            },
+            "offerMappings": [],
+            "price": {
+              "totalPrice": {
+                "discountPrice": 0,
+                "originalPrice": 0,
+                "voucherDiscount": 0,
+                "discount": 0,
+                "currencyCode": "EUR",
+                "currencyInfo": {
+                  "decimals": 2
+                },
+                "fmtPrice": {
+                  "originalPrice": "0",
+                  "discountPrice": "0",
+                  "intermediatePrice": "0"
+                }
+              },
+              "lineOffers": [
+                {
+                  "appliedRules": []
+                }
+              ]
+            },
+            "promotions": null
+          }
+        ],
+        "paging": {
+          "count": 1000,
+          "total": 4
+        }
+      }
+    }
+  },
+  "extensions": {}
+}

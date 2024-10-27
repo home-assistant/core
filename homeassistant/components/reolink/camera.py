@@ -1,4 +1,5 @@
 """Component providing support for Reolink IP cameras."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,19 +13,17 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .util import ReolinkConfigEntry, ReolinkData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkCameraEntityDescription(
     CameraEntityDescription,
     ReolinkChannelEntityDescription,
@@ -90,11 +89,11 @@ CAMERA_ENTITIES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkCamera] = []
     for entity_description in CAMERA_ENTITIES:
@@ -115,7 +114,6 @@ async def async_setup_entry(
 class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
-    _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
     entity_description: ReolinkCameraEntityDescription
 
     def __init__(
@@ -128,6 +126,9 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         self.entity_description = entity_description
         ReolinkChannelCoordinatorEntity.__init__(self, reolink_data, channel)
         Camera.__init__(self)
+
+        if "snapshots" not in entity_description.stream:
+            self._attr_supported_features = CameraEntityFeature.STREAM
 
         if self._host.api.model in DUAL_LENS_MODELS:
             self._attr_translation_key = (

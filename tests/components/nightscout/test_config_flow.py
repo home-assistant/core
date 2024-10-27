@@ -1,14 +1,16 @@
 """Test the Nightscout config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.components.nightscout.utils import hash_from_url
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import GLUCOSE_READINGS, SERVER_STATUS, SERVER_STATUS_STATUS_ONLY
 
@@ -23,16 +25,20 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with _patch_glucose_readings(), _patch_server_status(), _patch_async_setup_entry() as mock_setup_entry:
+    with (
+        _patch_glucose_readings(),
+        _patch_server_status(),
+        _patch_async_setup_entry() as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == SERVER_STATUS.name  # pylint: disable=maybe-no-member
         assert result2["data"] == CONFIG
         await hass.async_block_till_done()
@@ -54,7 +60,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -64,19 +70,22 @@ async def test_user_form_api_key_required(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
-        return_value=SERVER_STATUS_STATUS_ONLY,
-    ), patch(
-        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
-        side_effect=ClientResponseError(None, None, status=HTTPStatus.UNAUTHORIZED),
+    with (
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+            return_value=SERVER_STATUS_STATUS_ONLY,
+        ),
+        patch(
+            "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+            side_effect=ClientResponseError(None, None, status=HTTPStatus.UNAUTHORIZED),
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -95,7 +104,7 @@ async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -104,13 +113,14 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
     with _patch_glucose_readings(), _patch_server_status():
         unique_id = hash_from_url(CONFIG[CONF_URL])
         entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id)
-        await hass.config_entries.async_add(entry)
+        entry.add_to_hass(hass)
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=CONFIG,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 

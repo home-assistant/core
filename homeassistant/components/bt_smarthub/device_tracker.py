@@ -1,4 +1,5 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -8,8 +9,8 @@ from btsmarthub_devicelist import BTSmartHub
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_IP = "192.168.1.254"
 CONF_SMARTHUB_MODEL = "smarthub_model"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
         vol.Optional(CONF_SMARTHUB_MODEL): vol.In([1, 2]),
@@ -32,7 +33,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> BTSmartHubScanner | None:
     """Return a BT Smart Hub scanner if successful."""
-    info = config[DOMAIN]
+    info = config[DEVICE_TRACKER_DOMAIN]
     smarthub_client = BTSmartHub(
         router_ip=info[CONF_HOST], smarthub_model=info.get(CONF_SMARTHUB_MODEL)
     )
@@ -50,7 +51,7 @@ def _create_device(data):
     return _Device(ip_address, mac, host, status, name)
 
 
-_Device = namedtuple("_Device", ["ip_address", "mac", "host", "status", "name"])
+_Device = namedtuple("_Device", ["ip_address", "mac", "host", "status", "name"])  # noqa: PYI024
 
 
 class BTSmartHubScanner(DeviceScanner):
@@ -66,7 +67,7 @@ class BTSmartHubScanner(DeviceScanner):
         if self.get_bt_smarthub_data():
             self.success_init = True
         else:
-            _LOGGER.info("Failed to connect to %s", self.smarthub.router_ip)
+            _LOGGER.warning("Failed to connect to %s", self.smarthub.router_ip)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -87,7 +88,7 @@ class BTSmartHubScanner(DeviceScanner):
         if not self.success_init:
             return
 
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
         if not (data := self.get_bt_smarthub_data()):
             _LOGGER.warning("Error scanning devices")
             return

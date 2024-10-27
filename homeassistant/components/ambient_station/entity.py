@@ -1,4 +1,5 @@
 """Base entity Ambient Weather Station Service."""
+
 from __future__ import annotations
 
 from aioambient.util import get_public_device_id
@@ -48,7 +49,7 @@ class AmbientWeatherEntity(Entity):
         last_data = self._ambient.stations[self._mac_address][ATTR_LAST_DATA]
         key = self.entity_description.key
         available_key = TYPE_SOLARRADIATION if key == TYPE_SOLARRADIATION_LX else key
-        self._attr_available = last_data[available_key] is not None
+        self._attr_available = last_data.get(available_key) is not None
         self.update_from_latest_data()
         self.async_write_ha_state()
 

@@ -1,4 +1,5 @@
 """Merging of policies."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -57,10 +58,7 @@ def _merge_policies(sources: list[CategoryType]) -> CategoryType:
                 continue
             seen.add(key)
 
-            key_sources = []
-            for src in sources:
-                if isinstance(src, dict):
-                    key_sources.append(src.get(key))
+            key_sources = [src.get(key) for src in sources if isinstance(src, dict)]
 
             policy[key] = _merge_policies(key_sources)
 

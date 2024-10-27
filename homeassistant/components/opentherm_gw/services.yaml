@@ -181,3 +181,19 @@ set_setback_temperature:
           max: 30
           step: 0.1
           unit_of_measurement: "°"
+
+send_transparent_command:
+  fields:
+    gateway_id:
+      required: true
+      example: "opentherm_gateway"
+      selector:
+        text:
+    transp_cmd:
+      required: true
+      selector:
+        text:
+    transp_arg:
+      required: true
+      selector:
+        text:

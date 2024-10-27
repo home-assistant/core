@@ -1,4 +1,5 @@
 """Constants for Google Travel Time."""
+
 DOMAIN = "google_travel_time"
 
 ATTRIBUTION = "Powered by Google"
@@ -66,7 +67,7 @@ ALL_LANGUAGES = [
     "sr",
     "sv",
     "ta",
-    "te",
+    "te",  # codespell:ignore te
     "th",
     "tl",
     "tr",

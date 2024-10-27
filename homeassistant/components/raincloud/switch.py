@@ -1,4 +1,5 @@
 """Support for Melnor RainCloud sprinkler water timer."""
+
 from __future__ import annotations
 
 import logging
@@ -6,25 +7,28 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    ALLOWED_WATERING_TIME,
-    CONF_WATERING_TIME,
-    DATA_RAINCLOUD,
-    DEFAULT_WATERING_TIME,
-    SWITCHES,
-    RainCloudEntity,
-)
+from .const import DATA_RAINCLOUD
+from .entity import RainCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
+CONF_WATERING_TIME = "watering_minutes"
+DEFAULT_WATERING_TIME = 15
+
+SWITCHES = ["auto_watering", "manual_watering"]
+
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)): vol.All(
             cv.ensure_list, [vol.In(SWITCHES)]
@@ -46,13 +50,14 @@ def setup_platform(
     raincloud = hass.data[DATA_RAINCLOUD].data
     default_watering_timer = config[CONF_WATERING_TIME]
 
-    sensors = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        # create a sensor for each zone managed by faucet
-        for zone in raincloud.controller.faucet.zones:
-            sensors.append(RainCloudSwitch(default_watering_timer, zone, sensor_type))
-
-    add_entities(sensors, True)
+    add_entities(
+        (
+            RainCloudSwitch(default_watering_timer, zone, sensor_type)
+            for zone in raincloud.controller.faucet.zones
+            for sensor_type in config[CONF_MONITORED_CONDITIONS]
+        ),
+        True,
+    )
 
 
 class RainCloudSwitch(RainCloudEntity, SwitchEntity):

@@ -1,17 +1,22 @@
 """The test for the sensibo coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from yalesmartalarmclient.const import YALE_STATE_ARM_FULL
-from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
+from yalesmartalarmclient import (
+    YALE_STATE_ARM_FULL,
+    AuthenticationError,
+    UnknownError,
+    YaleSmartAlarmData,
+)
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -31,7 +36,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 )
 async def test_coordinator_setup_errors(
     hass: HomeAssistant,
-    load_json: dict[str, Any],
+    get_data: YaleSmartAlarmData,
     p_error: Exception,
 ) -> None:
     """Test the Yale Smart Living coordinator with errors."""
@@ -63,61 +68,61 @@ async def test_coordinator_setup_errors(
 async def test_coordinator_setup_and_update_errors(
     hass: HomeAssistant,
     load_config_entry: tuple[MockConfigEntry, Mock],
-    load_json: dict[str, Any],
+    get_data: YaleSmartAlarmData,
 ) -> None:
     """Test the Yale Smart Living coordinator with errors."""
 
     client = load_config_entry[1]
 
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
     client.reset_mock()
 
-    client.get_all.side_effect = ConnectionError("Could not connect")
+    client.get_information.side_effect = ConnectionError("Could not connect")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
-    await hass.async_block_till_done()
-    client.get_all.assert_called_once()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    client.get_information.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
-    client.get_all.side_effect = ConnectionError("Could not connect")
+    client.get_information.side_effect = ConnectionError("Could not connect")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
-    await hass.async_block_till_done()
-    client.get_all.assert_called_once()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    client.get_information.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
-    client.get_all.side_effect = TimeoutError("Could not connect")
+    client.get_information.side_effect = TimeoutError("Could not connect")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=3))
-    await hass.async_block_till_done()
-    client.get_all.assert_called_once()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    client.get_information.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
-    client.get_all.side_effect = UnknownError("info")
+    client.get_information.side_effect = UnknownError("info")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
-    await hass.async_block_till_done()
-    client.get_all.assert_called_once()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    client.get_information.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
-    client.get_all.side_effect = None
-    client.get_all.return_value = load_json
+    client.get_information.side_effect = None
+    client.get_information.return_value = get_data
     client.get_armed_status.return_value = YALE_STATE_ARM_FULL
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
-    client.get_all.assert_called_once()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    client.get_information.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
     client.reset_mock()
 
-    client.get_all.side_effect = AuthenticationError("Can not authenticate")
+    client.get_information.side_effect = AuthenticationError("Can not authenticate")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=6))
-    await hass.async_block_till_done()
-    client.get_all.assert_called_once()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    client.get_information.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
     assert state.state == STATE_UNAVAILABLE

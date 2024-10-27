@@ -1,4 +1,5 @@
 """The Sun WEG inverter sensor integration."""
+
 import datetime
 import json
 import logging
@@ -10,11 +11,11 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import StateType
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.typing import StateType, UndefinedType
 from homeassistant.util import Throttle
 
 from .const import CONF_PLANT_ID, DOMAIN, PLATFORMS, DeviceType
-from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
@@ -27,8 +28,7 @@ async def async_setup_entry(
     """Load the saved entities."""
     api = APIHelper(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     if not await hass.async_add_executor_job(api.authenticate):
-        _LOGGER.error("Username or Password may be incorrect!")
-        return False
+        raise ConfigEntryAuthFailed("Username or Password may be incorrect!")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SunWEGData(
         api, entry.data[CONF_PLANT_ID]
     )
@@ -102,24 +102,30 @@ class SunWEGData:
 
     def get_data(
         self,
-        entity_description: SunWEGSensorEntityDescription,
+        *,
+        api_variable_key: str,
+        api_variable_unit: str | None,
+        deep_name: str | None,
         device_type: DeviceType,
-        inverter_id: int = 0,
-        deep_name: str | None = None,
-    ) -> StateType | datetime.datetime:
+        inverter_id: int,
+        name: str | UndefinedType | None,
+        native_unit_of_measurement: str | None,
+        never_resets: bool,
+        previous_value_drop_threshold: float | None,
+    ) -> tuple[StateType | datetime.datetime, str | None]:
         """Get the data."""
         _LOGGER.debug(
             "Data request for: %s",
-            entity_description.name,
+            name,
         )
-        variable = entity_description.api_variable_key
-        previous_unit = entity_description.native_unit_of_measurement
+        variable = api_variable_key
+        previous_unit = native_unit_of_measurement
         api_value = self.get_api_value(variable, device_type, inverter_id, deep_name)
         previous_value = self.previous_values.get(variable)
         return_value = api_value
-        if entity_description.api_variable_unit is not None:
-            entity_description.native_unit_of_measurement = self.get_api_value(
-                entity_description.api_variable_unit,
+        if api_variable_unit is not None:
+            native_unit_of_measurement = self.get_api_value(
+                api_variable_unit,
                 device_type,
                 inverter_id,
                 deep_name,
@@ -127,18 +133,18 @@ class SunWEGData:
 
         # If we have a 'drop threshold' specified, then check it and correct if needed
         if (
-            entity_description.previous_value_drop_threshold is not None
+            previous_value_drop_threshold is not None
             and previous_value is not None
             and api_value is not None
-            and previous_unit == entity_description.native_unit_of_measurement
+            and previous_unit == native_unit_of_measurement
         ):
             _LOGGER.debug(
                 (
                     "%s - Drop threshold specified (%s), checking for drop... API"
                     " Value: %s, Previous Value: %s"
                 ),
-                entity_description.name,
-                entity_description.previous_value_drop_threshold,
+                name,
+                previous_value_drop_threshold,
                 api_value,
                 previous_value,
             )
@@ -149,7 +155,7 @@ class SunWEGData:
             # Note - The energy dashboard takes care of drops within 10%
             # of the current value, however if the value is low e.g. 0.2
             # and drops by 0.1 it classes as a reset.
-            if -(entity_description.previous_value_drop_threshold) <= diff < 0:
+            if -(previous_value_drop_threshold) <= diff < 0:
                 _LOGGER.debug(
                     (
                         "Diff is negative, but only by a small amount therefore not a"
@@ -161,9 +167,7 @@ class SunWEGData:
                 )
                 return_value = previous_value
             else:
-                _LOGGER.debug(
-                    "%s - No drop detected, using API value", entity_description.name
-                )
+                _LOGGER.debug("%s - No drop detected, using API value", name)
 
         # Lifetime total values should always be increasing, they will never reset,
         # however the API sometimes returns 0 values when the clock turns to 00:00
@@ -178,7 +182,7 @@ class SunWEGData:
         #        - Previous value will not exist meaning 0 will be returned
         #        - This is an edge case that would be better handled by looking
         #          up the previous value of the entity from the recorder
-        if entity_description.never_resets and api_value == 0 and previous_value:
+        if never_resets and api_value == 0 and previous_value:
             _LOGGER.debug(
                 (
                     "API value is 0, but this value should never reset, returning"
@@ -190,4 +194,4 @@ class SunWEGData:
 
         self.previous_values[variable] = return_value
 
-        return return_value
+        return (return_value, native_unit_of_measurement)

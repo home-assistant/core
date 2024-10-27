@@ -1,4 +1,5 @@
 """Test KNX weather."""
+
 from homeassistant.components.knx.schema import WeatherSchema
 from homeassistant.components.weather import (
     ATTR_CONDITION_EXCEPTIONAL,
@@ -44,12 +45,12 @@ async def test_weather(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # brightness
     await knx.assert_read("1/1/6")
-    await knx.receive_response("1/1/6", (0x7C, 0x5E))
     await knx.assert_read("1/1/8")
+    await knx.receive_response("1/1/6", (0x7C, 0x5E))
     await knx.receive_response("1/1/8", (0x7C, 0x5E))
+    await knx.assert_read("1/1/5")
     await knx.assert_read("1/1/7")
     await knx.receive_response("1/1/7", (0x7C, 0x5E))
-    await knx.assert_read("1/1/5")
     await knx.receive_response("1/1/5", (0x7C, 0x5E))
 
     # wind speed
@@ -63,10 +64,10 @@ async def test_weather(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # alarms
     await knx.assert_read("1/1/2")
     await knx.receive_response("1/1/2", False)
-    await knx.assert_read("1/1/3")
-    await knx.receive_response("1/1/3", False)
     await knx.assert_read("1/1/1")
+    await knx.assert_read("1/1/3")
     await knx.receive_response("1/1/1", False)
+    await knx.receive_response("1/1/3", False)
 
     # day night
     await knx.assert_read("1/1/12")

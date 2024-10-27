@@ -1,8 +1,8 @@
 """Tests for the Crownstone integration."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import Union
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from crownstone_cloud.cloud_models.spheres import Spheres
@@ -13,7 +13,6 @@ from crownstone_cloud.exceptions import (
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
 
-from homeassistant import data_entry_flow
 from homeassistant.components import usb
 from homeassistant.components.crownstone.const import (
     CONF_USB_MANUAL_PATH,
@@ -27,10 +26,11 @@ from homeassistant.components.crownstone.const import (
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MockFixture = Generator[Union[MagicMock, AsyncMock], None, None]
+type MockFixture = Generator[MagicMock | AsyncMock]
 
 
 @pytest.fixture(name="crownstone_setup")
@@ -185,7 +185,7 @@ async def test_no_user_input(
         DOMAIN, context={"source": "user"}
     )
     # show the login form
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert crownstone_setup.call_count == 0
 
@@ -215,7 +215,7 @@ async def test_abort_if_configured(
     result = await start_config_flow(hass, get_mocked_crownstone_cloud())
 
     # test if we abort if we try to configure the same entry
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert crownstone_setup.call_count == 0
 
@@ -232,7 +232,7 @@ async def test_authentication_errors(
 
     result = await start_config_flow(hass, cloud)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     # side effect: auth error account not verified
@@ -242,7 +242,7 @@ async def test_authentication_errors(
 
     result = await start_config_flow(hass, cloud)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "account_not_verified"}
     assert crownstone_setup.call_count == 0
 
@@ -257,8 +257,8 @@ async def test_unknown_error(
 
     result = await start_config_flow(hass, cloud)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown_error"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
     assert crownstone_setup.call_count == 0
 
 
@@ -277,14 +277,14 @@ async def test_successful_login_no_usb(
 
     result = await start_config_flow(hass, get_mocked_crownstone_cloud())
     # should show usb form
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_config"
 
     # don't setup USB dongle, create entry
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_USB_PATH: DONT_USE_USB}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_without_usb
     assert result["options"] == entry_options_without_usb
     assert crownstone_setup.call_count == 1
@@ -310,7 +310,7 @@ async def test_successful_login_with_usb(
         hass, get_mocked_crownstone_cloud(create_mocked_spheres(2))
     )
     # should show usb form
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_config"
     assert pyserial_comports_none_types.call_count == 1
 
@@ -330,7 +330,7 @@ async def test_successful_login_with_usb(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_USB_PATH: port_select}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_sphere_config"
     assert pyserial_comports_none_types.call_count == 2
     assert usb_path.call_count == 1
@@ -339,7 +339,7 @@ async def test_successful_login_with_usb(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_USB_SPHERE: "sphere_name_1"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_with_usb
     assert result["options"] == entry_options_with_usb
     assert crownstone_setup.call_count == 1
@@ -362,7 +362,7 @@ async def test_successful_login_with_manual_usb_path(
         hass, get_mocked_crownstone_cloud(create_mocked_spheres(1))
     )
     # should show usb form
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_config"
     assert pyserial_comports.call_count == 1
 
@@ -371,7 +371,7 @@ async def test_successful_login_with_manual_usb_path(
         result["flow_id"], user_input={CONF_USB_PATH: MANUAL_PATH}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_manual_config"
     assert pyserial_comports.call_count == 2
 
@@ -383,7 +383,7 @@ async def test_successful_login_with_manual_usb_path(
 
     # since we only have 1 sphere here, test that it's automatically selected and
     # creating entry without asking for user input
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_with_manual_usb
     assert result["options"] == entry_options_with_manual_usb
     assert crownstone_setup.call_count == 1
@@ -419,7 +419,7 @@ async def test_options_flow_setup_usb(
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     schema = result["data_schema"].schema
@@ -433,7 +433,7 @@ async def test_options_flow_setup_usb(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_USE_USB_OPTION: True}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_config"
     assert pyserial_comports.call_count == 1
 
@@ -453,7 +453,7 @@ async def test_options_flow_setup_usb(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_USB_PATH: port_select}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_sphere_config"
     assert pyserial_comports.call_count == 2
     assert usb_path.call_count == 1
@@ -462,7 +462,7 @@ async def test_options_flow_setup_usb(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_USB_SPHERE: "sphere_name_1"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == create_mocked_entry_options_conf(
         usb_path="/dev/serial/by-id/crownstone-usb", usb_sphere="sphere_id_1"
     )
@@ -496,7 +496,7 @@ async def test_options_flow_remove_usb(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     schema = result["data_schema"].schema
@@ -513,7 +513,7 @@ async def test_options_flow_remove_usb(hass: HomeAssistant) -> None:
             CONF_USB_SPHERE_OPTION: "sphere_name_0",
         },
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == create_mocked_entry_options_conf(
         usb_path=None, usb_sphere=None
     )
@@ -549,13 +549,13 @@ async def test_options_flow_manual_usb_path(
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_USE_USB_OPTION: True}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_config"
     assert pyserial_comports.call_count == 1
 
@@ -564,7 +564,7 @@ async def test_options_flow_manual_usb_path(
         result["flow_id"], user_input={CONF_USB_PATH: MANUAL_PATH}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_manual_config"
     assert pyserial_comports.call_count == 2
 
@@ -574,7 +574,7 @@ async def test_options_flow_manual_usb_path(
         result["flow_id"], user_input={CONF_USB_MANUAL_PATH: path}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == create_mocked_entry_options_conf(
         usb_path=path, usb_sphere="sphere_id_0"
     )
@@ -608,14 +608,14 @@ async def test_options_flow_change_usb_sphere(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={CONF_USE_USB_OPTION: True, CONF_USB_SPHERE_OPTION: "sphere_name_2"},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == create_mocked_entry_options_conf(
         usb_path="/dev/serial/by-id/crownstone-usb", usb_sphere="sphere_id_2"
     )

@@ -1,7 +1,7 @@
 """Test Google Assistant helpers."""
+
 from datetime import timedelta
 from http import HTTPStatus
-from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -14,21 +14,16 @@ from homeassistant.components.google_assistant.const import (
     SOURCE_LOCAL,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from homeassistant.components.matter.models import MatterDeviceInfo
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.matter import MatterDeviceInfo
 from homeassistant.core import HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import MockConfig
 
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-)
+from tests.common import MockConfigEntry, async_capture_events, async_mock_service
 from tests.typing import ClientSessionGenerator
 
 
@@ -274,72 +269,6 @@ async def test_config_local_sdk_if_ssl_enabled(
     assert await resp.read() == b""
 
 
-async def test_agent_user_id_storage(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test a disconnect message."""
-
-    hass_storage["google_assistant"] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "google_assistant",
-        "data": {
-            "agent_user_ids": {
-                "agent_1": {
-                    "local_webhook_id": "test_webhook",
-                }
-            },
-        },
-    }
-
-    store = helpers.GoogleConfigStore(hass)
-    await store.async_initialize()
-
-    assert hass_storage["google_assistant"] == {
-        "version": 1,
-        "minor_version": 1,
-        "key": "google_assistant",
-        "data": {
-            "agent_user_ids": {
-                "agent_1": {
-                    "local_webhook_id": "test_webhook",
-                }
-            },
-        },
-    }
-
-    async def _check_after_delay(data):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
-        await hass.async_block_till_done()
-
-        assert (
-            list(hass_storage["google_assistant"]["data"]["agent_user_ids"].keys())
-            == data
-        )
-
-    store.add_agent_user_id("agent_2")
-    await _check_after_delay(["agent_1", "agent_2"])
-
-    store.pop_agent_user_id("agent_1")
-    await _check_after_delay(["agent_2"])
-
-    hass_storage["google_assistant"] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "google_assistant",
-        "data": {
-            "agent_user_ids": {"agent_1": {}},
-        },
-    }
-    store = helpers.GoogleConfigStore(hass)
-    await store.async_initialize()
-
-    assert (
-        STORE_GOOGLE_LOCAL_WEBHOOK_ID
-        in hass_storage["google_assistant"]["data"]["agent_user_ids"]["agent_1"]
-    )
-
-
 async def test_agent_user_id_connect() -> None:
     """Test the connection and disconnection of users."""
     config = MockConfig()
@@ -415,7 +344,10 @@ def test_supported_features_string(caplog: pytest.LogCaptureFixture) -> None:
         State("test.entity_id", "on", {"supported_features": "invalid"}),
     )
     assert entity.is_supported() is False
-    assert "Entity test.entity_id contains invalid supported_features value invalid"
+    assert (
+        "Entity test.entity_id contains invalid supported_features value invalid"
+        in caplog.text
+    )
 
 
 def test_request_data() -> None:
@@ -475,7 +407,7 @@ async def test_config_local_sdk_allow_min_version(
     ) not in caplog.text
 
 
-@pytest.mark.parametrize("version", (None, "2.1.4"))
+@pytest.mark.parametrize("version", [None, "2.1.4"])
 async def test_config_local_sdk_warn_version(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

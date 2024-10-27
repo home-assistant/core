@@ -1,4 +1,5 @@
 """Test the local_todo config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -20,7 +21,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result.get("errors")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -31,7 +32,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TODO_NAME
     assert result2["data"] == {
         "todo_list_name": TODO_NAME,
@@ -48,7 +49,7 @@ async def test_duplicate_todo_list_name(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result.get("errors")
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -60,5 +61,5 @@ async def test_duplicate_todo_list_name(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

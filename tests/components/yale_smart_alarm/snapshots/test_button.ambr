@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_button[load_platforms0][button.yale_smart_alarm_panic_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.yale_smart_alarm_panic_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Panic button',
+    'platform': 'yale_smart_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'panic',
+    'unique_id': 'yale_smart_alarm-panic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[load_platforms0][button.yale_smart_alarm_panic_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Yale Smart Alarm Panic button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.yale_smart_alarm_panic_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-04-29T18:00:00.612351+00:00',
+  })
+# ---

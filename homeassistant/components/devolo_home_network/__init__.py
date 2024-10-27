@@ -1,6 +1,8 @@
 """The devolo Home Network integration."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -37,6 +39,7 @@ from .const import (
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
     FIRMWARE_UPDATE_INTERVAL,
+    LAST_RESTART,
     LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
     REGULAR_FIRMWARE,
@@ -47,12 +50,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type DevoloHomeNetworkConfigEntry = ConfigEntry[DevoloHomeNetworkData]
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
+
+@dataclass
+class DevoloHomeNetworkData:
+    """The devolo Home Network data."""
+
+    device: Device
+    coordinators: dict[str, DataUpdateCoordinator[Any]]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
 ) -> bool:
     """Set up devolo Home Network from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     async_client = get_async_client(hass)
     device_registry = dr.async_get(hass)
@@ -68,10 +80,13 @@ async def async_setup_entry(  # noqa: C901
         )
     except DeviceNotFound as err:
         raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}"
+            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}",
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
         ) from err
 
-    hass.data[DOMAIN][entry.entry_id] = {"device": device}
+    entry.runtime_data = DevoloHomeNetworkData(device=device, coordinators={})
 
     async def async_update_firmware_available() -> UpdateFirmwareCheck:
         """Fetch data from API endpoint."""
@@ -100,7 +115,9 @@ async def async_setup_entry(  # noqa: C901
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
         except DevicePasswordProtected as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                err, translation_domain=DOMAIN, translation_key="password_wrong"
+            ) from err
 
     async def async_update_led_status() -> bool:
         """Fetch data from API endpoint."""
@@ -110,6 +127,19 @@ async def async_setup_entry(  # noqa: C901
             return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
+
+    async def async_update_last_restart() -> int:
+        """Fetch data from API endpoint."""
+        assert device.device
+        update_sw_version(device_registry, device)
+        try:
+            return await device.device.async_uptime()
+        except DeviceUnavailable as err:
+            raise UpdateFailed(err) from err
+        except DevicePasswordProtected as err:
+            raise ConfigEntryAuthFailed(
+                err, translation_domain=DOMAIN, translation_key="password_wrong"
+            ) from err
 
     async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
         """Fetch data from API endpoint."""
@@ -150,6 +180,14 @@ async def async_setup_entry(  # noqa: C901
             update_method=async_update_led_status,
             update_interval=SHORT_UPDATE_INTERVAL,
         )
+    if device.device and "restart" in device.device.features:
+        coordinators[LAST_RESTART] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=LAST_RESTART,
+            update_method=async_update_last_restart,
+            update_interval=SHORT_UPDATE_INTERVAL,
+        )
     if device.device and "update" in device.device.features:
         coordinators[REGULAR_FIRMWARE] = DataUpdateCoordinator(
             hass,
@@ -184,7 +222,7 @@ async def async_setup_entry(  # noqa: C901
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id]["coordinators"] = coordinators
+    entry.runtime_data.coordinators = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms(device))
 
@@ -195,15 +233,16 @@ async def async_setup_entry(  # noqa: C901
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: DevoloHomeNetworkConfigEntry
+) -> bool:
     """Unload a config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
+    device = entry.runtime_data.device
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, platforms(device)
     )
     if unload_ok:
         await device.async_disconnect()
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

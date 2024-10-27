@@ -1,4 +1,5 @@
 """Support for MQTT lights."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -38,32 +39,28 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 import homeassistant.util.color as color_util
 
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
 )
-from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
+from ..entity import MqttEntity
 from ..models import (
-    MessageCallbackType,
     MqttCommandTemplate,
     MqttValueTemplate,
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
     TemplateVarsType,
 )
+from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_publish_topic, valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
@@ -252,7 +249,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     _optimistic_xy_color: bool
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_BASIC
 
@@ -376,271 +373,238 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         attr: bool = getattr(self, f"_optimistic_{attribute}")
         return attr
 
-    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
-        """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
+    @callback
+    def _state_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.NONE
+        )
+        if not payload:
+            _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
+            return
 
-        def add_topic(topic: str, msg_callback: MessageCallbackType) -> None:
-            """Add a topic."""
-            if self._topic[topic] is not None:
-                topics[topic] = {
-                    "topic": self._topic[topic],
-                    "msg_callback": msg_callback,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
+        if payload == self._payload["on"]:
+            self._attr_is_on = True
+        elif payload == self._payload["off"]:
+            self._attr_is_on = False
+        elif payload == PAYLOAD_NONE:
+            self._attr_is_on = None
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_is_on"})
-        def state_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](
-                msg.payload, PayloadSentinel.NONE
-            )
-            if not payload:
-                _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
-                return
+    @callback
+    def _brightness_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for the brightness."""
+        payload = self._value_templates[CONF_BRIGHTNESS_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.DEFAULT
+        )
+        if payload is PayloadSentinel.DEFAULT or not payload:
+            _LOGGER.debug("Ignoring empty brightness message from '%s'", msg.topic)
+            return
 
-            if payload == self._payload["on"]:
-                self._attr_is_on = True
-            elif payload == self._payload["off"]:
-                self._attr_is_on = False
-            elif payload == PAYLOAD_NONE:
-                self._attr_is_on = None
+        device_value = float(payload)
+        if device_value == 0:
+            _LOGGER.debug("Ignoring zero brightness from '%s'", msg.topic)
+            return
 
-        if self._topic[CONF_STATE_TOPIC] is not None:
-            topics[CONF_STATE_TOPIC] = {
-                "topic": self._topic[CONF_STATE_TOPIC],
-                "msg_callback": state_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
+        percent_bright = device_value / self._config[CONF_BRIGHTNESS_SCALE]
+        self._attr_brightness = min(round(percent_bright * 255), 255)
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_brightness"})
-        def brightness_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for the brightness."""
-            payload = self._value_templates[CONF_BRIGHTNESS_VALUE_TEMPLATE](
-                msg.payload, PayloadSentinel.DEFAULT
-            )
-            if payload is PayloadSentinel.DEFAULT or not payload:
-                _LOGGER.debug("Ignoring empty brightness message from '%s'", msg.topic)
-                return
-
-            device_value = float(payload)
-            if device_value == 0:
-                _LOGGER.debug("Ignoring zero brightness from '%s'", msg.topic)
-                return
-
-            percent_bright = device_value / self._config[CONF_BRIGHTNESS_SCALE]
-            self._attr_brightness = min(round(percent_bright * 255), 255)
-
-        add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
-
-        @callback
-        def _rgbx_received(
-            msg: ReceiveMessage,
-            template: str,
-            color_mode: ColorMode,
-            convert_color: Callable[..., tuple[int, ...]],
-        ) -> tuple[int, ...] | None:
-            """Handle new MQTT messages for RGBW and RGBWW."""
-            payload = self._value_templates[template](
-                msg.payload, PayloadSentinel.DEFAULT
-            )
-            if payload is PayloadSentinel.DEFAULT or not payload:
+    @callback
+    def _rgbx_received(
+        self,
+        msg: ReceiveMessage,
+        template: str,
+        color_mode: ColorMode,
+        convert_color: Callable[..., tuple[int, ...]],
+    ) -> tuple[int, ...] | None:
+        """Process MQTT messages for RGBW and RGBWW."""
+        payload = self._value_templates[template](msg.payload, PayloadSentinel.DEFAULT)
+        if payload is PayloadSentinel.DEFAULT or not payload:
+            _LOGGER.debug("Ignoring empty %s message from '%s'", color_mode, msg.topic)
+            return None
+        color = tuple(int(val) for val in str(payload).split(","))
+        if self._optimistic_color_mode:
+            self._attr_color_mode = color_mode
+        if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
+            rgb = convert_color(*color)
+            brightness = max(rgb)
+            if brightness == 0:
                 _LOGGER.debug(
-                    "Ignoring empty %s message from '%s'", color_mode, msg.topic
+                    "Ignoring %s message with zero rgb brightness from '%s'",
+                    color_mode,
+                    msg.topic,
                 )
                 return None
-            color = tuple(int(val) for val in str(payload).split(","))
-            if self._optimistic_color_mode:
-                self._attr_color_mode = color_mode
-            if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
-                rgb = convert_color(*color)
-                brightness = max(rgb)
-                if brightness == 0:
-                    _LOGGER.debug(
-                        "Ignoring %s message with zero rgb brightness from '%s'",
-                        color_mode,
-                        msg.topic,
-                    )
-                    return None
-                self._attr_brightness = brightness
-                # Normalize the color to 100% brightness
-                color = tuple(
-                    min(round(channel / brightness * 255), 255) for channel in color
-                )
-            return color
+            self._attr_brightness = brightness
+            # Normalize the color to 100% brightness
+            color = tuple(
+                min(round(channel / brightness * 255), 255) for channel in color
+            )
+        return color
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self, {"_attr_brightness", "_attr_color_mode", "_attr_rgb_color"}
+    @callback
+    def _rgb_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for RGB."""
+        rgb = self._rgbx_received(
+            msg, CONF_RGB_VALUE_TEMPLATE, ColorMode.RGB, lambda *x: x
         )
-        def rgb_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for RGB."""
-            rgb = _rgbx_received(
-                msg, CONF_RGB_VALUE_TEMPLATE, ColorMode.RGB, lambda *x: x
-            )
-            if rgb is None:
-                return
-            self._attr_rgb_color = cast(tuple[int, int, int], rgb)
+        if rgb is None:
+            return
+        self._attr_rgb_color = cast(tuple[int, int, int], rgb)
 
-        add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self, {"_attr_brightness", "_attr_color_mode", "_attr_rgbw_color"}
+    @callback
+    def _rgbw_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for RGBW."""
+        rgbw = self._rgbx_received(
+            msg,
+            CONF_RGBW_VALUE_TEMPLATE,
+            ColorMode.RGBW,
+            color_util.color_rgbw_to_rgb,
         )
-        def rgbw_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for RGBW."""
-            rgbw = _rgbx_received(
-                msg,
-                CONF_RGBW_VALUE_TEMPLATE,
-                ColorMode.RGBW,
-                color_util.color_rgbw_to_rgb,
-            )
-            if rgbw is None:
-                return
-            self._attr_rgbw_color = cast(tuple[int, int, int, int], rgbw)
+        if rgbw is None:
+            return
+        self._attr_rgbw_color = cast(tuple[int, int, int, int], rgbw)
 
-        add_topic(CONF_RGBW_STATE_TOPIC, rgbw_received)
+    @callback
+    def _rgbww_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for RGBWW."""
 
         @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(
-            self, {"_attr_brightness", "_attr_color_mode", "_attr_rgbww_color"}
+        def _converter(
+            r: int, g: int, b: int, cw: int, ww: int
+        ) -> tuple[int, int, int]:
+            min_kelvin = color_util.color_temperature_mired_to_kelvin(self.max_mireds)
+            max_kelvin = color_util.color_temperature_mired_to_kelvin(self.min_mireds)
+            return color_util.color_rgbww_to_rgb(
+                r, g, b, cw, ww, min_kelvin, max_kelvin
+            )
+
+        rgbww = self._rgbx_received(
+            msg,
+            CONF_RGBWW_VALUE_TEMPLATE,
+            ColorMode.RGBWW,
+            _converter,
         )
-        def rgbww_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for RGBWW."""
+        if rgbww is None:
+            return
+        self._attr_rgbww_color = cast(tuple[int, int, int, int, int], rgbww)
 
-            @callback
-            def _converter(
-                r: int, g: int, b: int, cw: int, ww: int
-            ) -> tuple[int, int, int]:
-                min_kelvin = color_util.color_temperature_mired_to_kelvin(
-                    self.max_mireds
-                )
-                max_kelvin = color_util.color_temperature_mired_to_kelvin(
-                    self.min_mireds
-                )
-                return color_util.color_rgbww_to_rgb(
-                    r, g, b, cw, ww, min_kelvin, max_kelvin
-                )
+    @callback
+    def _color_mode_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for color mode."""
+        payload = self._value_templates[CONF_COLOR_MODE_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.DEFAULT
+        )
+        if payload is PayloadSentinel.DEFAULT or not payload:
+            _LOGGER.debug("Ignoring empty color mode message from '%s'", msg.topic)
+            return
 
-            rgbww = _rgbx_received(
-                msg,
-                CONF_RGBWW_VALUE_TEMPLATE,
-                ColorMode.RGBWW,
-                _converter,
-            )
-            if rgbww is None:
-                return
-            self._attr_rgbww_color = cast(tuple[int, int, int, int, int], rgbww)
+        self._attr_color_mode = ColorMode(str(payload))
 
-        add_topic(CONF_RGBWW_STATE_TOPIC, rgbww_received)
+    @callback
+    def _color_temp_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for color temperature."""
+        payload = self._value_templates[CONF_COLOR_TEMP_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.DEFAULT
+        )
+        if payload is PayloadSentinel.DEFAULT or not payload:
+            _LOGGER.debug("Ignoring empty color temp message from '%s'", msg.topic)
+            return
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_color_mode"})
-        def color_mode_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for color mode."""
-            payload = self._value_templates[CONF_COLOR_MODE_VALUE_TEMPLATE](
-                msg.payload, PayloadSentinel.DEFAULT
-            )
-            if payload is PayloadSentinel.DEFAULT or not payload:
-                _LOGGER.debug("Ignoring empty color mode message from '%s'", msg.topic)
-                return
+        if self._optimistic_color_mode:
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+        self._attr_color_temp = int(payload)
 
-            self._attr_color_mode = ColorMode(str(payload))
+    @callback
+    def _effect_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for effect."""
+        payload = self._value_templates[CONF_EFFECT_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.DEFAULT
+        )
+        if payload is PayloadSentinel.DEFAULT or not payload:
+            _LOGGER.debug("Ignoring empty effect message from '%s'", msg.topic)
+            return
 
-        add_topic(CONF_COLOR_MODE_STATE_TOPIC, color_mode_received)
+        self._attr_effect = str(payload)
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_color_mode", "_attr_color_temp"})
-        def color_temp_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for color temperature."""
-            payload = self._value_templates[CONF_COLOR_TEMP_VALUE_TEMPLATE](
-                msg.payload, PayloadSentinel.DEFAULT
-            )
-            if payload is PayloadSentinel.DEFAULT or not payload:
-                _LOGGER.debug("Ignoring empty color temp message from '%s'", msg.topic)
-                return
-
+    @callback
+    def _hs_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for hs color."""
+        payload = self._value_templates[CONF_HS_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.DEFAULT
+        )
+        if payload is PayloadSentinel.DEFAULT or not payload:
+            _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
+            return
+        try:
+            hs_color = tuple(float(val) for val in str(payload).split(",", 2))
             if self._optimistic_color_mode:
-                self._attr_color_mode = ColorMode.COLOR_TEMP
-            self._attr_color_temp = int(payload)
+                self._attr_color_mode = ColorMode.HS
+            self._attr_hs_color = cast(tuple[float, float], hs_color)
+        except ValueError:
+            _LOGGER.warning("Failed to parse hs state update: '%s'", payload)
 
-        add_topic(CONF_COLOR_TEMP_STATE_TOPIC, color_temp_received)
+    @callback
+    def _xy_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages for xy color."""
+        payload = self._value_templates[CONF_XY_VALUE_TEMPLATE](
+            msg.payload, PayloadSentinel.DEFAULT
+        )
+        if payload is PayloadSentinel.DEFAULT or not payload:
+            _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)
+            return
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_effect"})
-        def effect_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for effect."""
-            payload = self._value_templates[CONF_EFFECT_VALUE_TEMPLATE](
-                msg.payload, PayloadSentinel.DEFAULT
-            )
-            if payload is PayloadSentinel.DEFAULT or not payload:
-                _LOGGER.debug("Ignoring empty effect message from '%s'", msg.topic)
-                return
+        xy_color = tuple(float(val) for val in str(payload).split(",", 2))
+        if self._optimistic_color_mode:
+            self._attr_color_mode = ColorMode.XY
+        self._attr_xy_color = cast(tuple[float, float], xy_color)
 
-            self._attr_effect = str(payload)
-
-        add_topic(CONF_EFFECT_STATE_TOPIC, effect_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_color_mode", "_attr_hs_color"})
-        def hs_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for hs color."""
-            payload = self._value_templates[CONF_HS_VALUE_TEMPLATE](
-                msg.payload, PayloadSentinel.DEFAULT
-            )
-            if payload is PayloadSentinel.DEFAULT or not payload:
-                _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
-                return
-            try:
-                hs_color = tuple(float(val) for val in str(payload).split(",", 2))
-                if self._optimistic_color_mode:
-                    self._attr_color_mode = ColorMode.HS
-                self._attr_hs_color = cast(tuple[float, float], hs_color)
-            except ValueError:
-                _LOGGER.warning("Failed to parse hs state update: '%s'", payload)
-
-        add_topic(CONF_HS_STATE_TOPIC, hs_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_color_mode", "_attr_xy_color"})
-        def xy_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages for xy color."""
-            payload = self._value_templates[CONF_XY_VALUE_TEMPLATE](
-                msg.payload, PayloadSentinel.DEFAULT
-            )
-            if payload is PayloadSentinel.DEFAULT or not payload:
-                _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)
-                return
-
-            xy_color = tuple(float(val) for val in str(payload).split(",", 2))
-            if self._optimistic_color_mode:
-                self._attr_color_mode = ColorMode.XY
-            self._attr_xy_color = cast(tuple[float, float], xy_color)
-
-        add_topic(CONF_XY_STATE_TOPIC, xy_received)
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+    @callback
+    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
+        """(Re)Subscribe to topics."""
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
+        self.add_subscription(
+            CONF_BRIGHTNESS_STATE_TOPIC, self._brightness_received, {"_attr_brightness"}
+        )
+        self.add_subscription(
+            CONF_RGB_STATE_TOPIC,
+            self._rgb_received,
+            {"_attr_brightness", "_attr_color_mode", "_attr_rgb_color"},
+        )
+        self.add_subscription(
+            CONF_RGBW_STATE_TOPIC,
+            self._rgbw_received,
+            {"_attr_brightness", "_attr_color_mode", "_attr_rgbw_color"},
+        )
+        self.add_subscription(
+            CONF_RGBWW_STATE_TOPIC,
+            self._rgbww_received,
+            {"_attr_brightness", "_attr_color_mode", "_attr_rgbww_color"},
+        )
+        self.add_subscription(
+            CONF_COLOR_MODE_STATE_TOPIC, self._color_mode_received, {"_attr_color_mode"}
+        )
+        self.add_subscription(
+            CONF_COLOR_TEMP_STATE_TOPIC,
+            self._color_temp_received,
+            {"_attr_color_mode", "_attr_color_temp"},
+        )
+        self.add_subscription(
+            CONF_EFFECT_STATE_TOPIC, self._effect_received, {"_attr_effect"}
+        )
+        self.add_subscription(
+            CONF_HS_STATE_TOPIC,
+            self._hs_received,
+            {"_attr_color_mode", "_attr_hs_color"},
+        )
+        self.add_subscription(
+            CONF_XY_STATE_TOPIC,
+            self._xy_received,
+            {"_attr_color_mode", "_attr_xy_color"},
         )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
         last_state = await self.async_get_last_state()
 
         def restore_state(
@@ -677,13 +641,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         async def publish(topic: str, payload: PublishPayloadType) -> None:
             """Publish an MQTT message."""
-            await self.async_publish(
-                str(self._topic[topic]),
-                payload,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-                self._config[CONF_ENCODING],
-            )
+            await self.async_publish_with_config(str(self._topic[topic]), payload)
 
         def scale_rgbx(
             color: tuple[int, ...],
@@ -711,7 +669,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 keys.append("white")
             elif color_mode == ColorMode.RGBWW:
                 keys.extend(["cold_white", "warm_white"])
-            variables = dict(zip(keys, color))
+            variables = dict(zip(keys, color, strict=False))
             return self._command_templates[template](rgb_color_str, variables)
 
         def set_optimistic(
@@ -888,12 +846,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish(
-            str(self._topic[CONF_COMMAND_TOPIC]),
-            self._payload["off"],
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        await self.async_publish_with_config(
+            str(self._topic[CONF_COMMAND_TOPIC]), self._payload["off"]
         )
 
         if self._optimistic:

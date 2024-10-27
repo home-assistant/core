@@ -1,4 +1,5 @@
 """Config helpers for Alexa."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -12,6 +13,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
+from .entities import TRANSLATION_TABLE
 from .state_report import async_enable_proactive_mode
 
 STORE_AUTHORIZED = "authorized"
@@ -29,11 +31,19 @@ class AbstractConfig(ABC):
         """Initialize abstract config."""
         self.hass = hass
         self._enable_proactive_mode_lock = asyncio.Lock()
+        self._on_deinitialize: list[CALLBACK_TYPE] = []
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
         self._store = AlexaConfigStore(self.hass)
         await self._store.async_load()
+
+    @callback
+    def async_deinitialize(self) -> None:
+        """Remove listeners."""
+        _LOGGER.debug("async_deinitialize")
+        while self._on_deinitialize:
+            self._on_deinitialize.pop()()
 
     @property
     def supports_auth(self) -> bool:
@@ -91,6 +101,10 @@ class AbstractConfig(ABC):
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
         return False
+
+    def generate_alexa_id(self, entity_id: str) -> str:
+        """Return the alexa ID for an entity ID."""
+        return entity_id.replace(".", "#").translate(TRANSLATION_TABLE)
 
     @callback
     def async_invalidate_access_token(self) -> None:

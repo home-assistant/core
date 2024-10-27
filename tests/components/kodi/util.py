@@ -1,4 +1,5 @@
 """Test the Kodi config flow."""
+
 from ipaddress import ip_address
 
 from homeassistant.components import zeroconf
@@ -56,14 +57,13 @@ def get_kodi_connection(
     """Get Kodi connection."""
     if ws_port is None:
         return MockConnection()
-    else:
-        return MockWSConnection()
+    return MockWSConnection()
 
 
 class MockConnection:
     """A mock kodi connection."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Mock the Kodi connection."""
         self._connected = connected
 
@@ -92,7 +92,7 @@ class MockConnection:
 class MockWSConnection:
     """A mock kodi websocket connection."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Mock the websocket connection."""
         self._connected = connected
 

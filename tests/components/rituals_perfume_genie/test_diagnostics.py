@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the Rituals Perfume Genie integration."""
+
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant

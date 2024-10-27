@@ -1,6 +1,5 @@
 """Test ESPHome selects."""
 
-
 from unittest.mock import call
 
 from aioesphomeapi import APIClient, SelectInfo, SelectState
@@ -20,7 +19,7 @@ async def test_pipeline_selector(
 ) -> None:
     """Test assist pipeline selector."""
 
-    state = hass.states.get("select.test_assist_pipeline")
+    state = hass.states.get("select.test_assistant")
     assert state is not None
     assert state.state == "preferred"
 

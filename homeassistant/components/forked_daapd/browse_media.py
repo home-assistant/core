@@ -1,4 +1,5 @@
 """Browse media for forked-daapd."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -6,8 +7,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import quote, unquote
 
-from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
 from homeassistant.helpers.network import is_internal_request
 
 from .const import CAN_PLAY_TYPE, URI_SCHEMA

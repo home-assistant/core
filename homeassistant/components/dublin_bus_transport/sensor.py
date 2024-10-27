@@ -3,16 +3,21 @@
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
 """
+
 from __future__ import annotations
 
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Any
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +42,7 @@ DEFAULT_NAME = "Next Bus"
 SCAN_INTERVAL = timedelta(minutes=1)
 TIME_STR_FORMAT = "%H:%M"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -98,7 +103,7 @@ class DublinPublicTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times is not None:
             next_up = "None"
@@ -113,6 +118,7 @@ class DublinPublicTransportSensor(SensorEntity):
                 ATTR_ROUTE: self._times[0][ATTR_ROUTE],
                 ATTR_NEXT_UP: next_up,
             }
+        return None
 
     @property
     def native_unit_of_measurement(self):

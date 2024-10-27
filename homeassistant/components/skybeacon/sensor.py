@@ -1,4 +1,5 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -11,7 +12,7 @@ from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -43,7 +44,7 @@ DEFAULT_NAME = "Skybeacon"
 
 SKIP_HANDLE_LOOKUP = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -68,7 +69,7 @@ def setup_platform(
 
     def monitor_stop(_service_or_event):
         """Stop the monitor thread."""
-        _LOGGER.info("Stopping monitor for %s", name)
+        _LOGGER.debug("Stopping monitor for %s", name)
         mon.terminate()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, monitor_stop)
@@ -158,12 +159,11 @@ class Monitor(threading.Thread, SensorEntity):
                     )
                 if SKIP_HANDLE_LOOKUP:
                     # HACK: inject handle mapping collected offline
-                    # pylint: disable-next=protected-access
-                    device._characteristics[UUID(BLE_TEMP_UUID)] = cached_char
+                    device._characteristics[UUID(BLE_TEMP_UUID)] = cached_char  # noqa: SLF001
                 # Magic: writing this makes device happy
                 device.char_write_handle(0x1B, bytearray([255]), False)
                 device.subscribe(BLE_TEMP_UUID, self._update)
-                _LOGGER.info("Subscribed to %s", self.name)
+                _LOGGER.debug("Subscribed to %s", self.name)
                 while self.keep_going:
                     # protect against stale connections, just read temperature
                     device.char_read(BLE_TEMP_UUID, timeout=CONNECT_TIMEOUT)
@@ -184,7 +184,7 @@ class Monitor(threading.Thread, SensorEntity):
             value[2],
             value[1],
         )
-        self.data["temp"] = float("%d.%d" % (value[0], value[2]))
+        self.data["temp"] = float(f"{value[0]}.{value[2]}")
         self.data["humid"] = value[1]
 
     def terminate(self):

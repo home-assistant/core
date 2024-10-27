@@ -1,4 +1,5 @@
 """Support for SimpliSafe freeze sensor."""
+
 from __future__ import annotations
 
 from simplipy.device import DeviceTypes
@@ -15,8 +16,9 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import DOMAIN, LOGGER
+from .entity import SimpliSafeEntity
 
 
 async def async_setup_entry(
@@ -24,16 +26,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up SimpliSafe freeze sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]
-    sensors = []
+    sensors: list[SimplisafeFreezeSensor] = []
 
     for system in simplisafe.systems.values():
         if system.version == 2:
-            LOGGER.info("Skipping sensor setup for V2 system: %s", system.system_id)
+            LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
-        for sensor in system.sensors.values():
-            if sensor.type == DeviceTypes.TEMPERATURE:
-                sensors.append(SimplisafeFreezeSensor(simplisafe, system, sensor))
+        sensors.extend(
+            SimplisafeFreezeSensor(simplisafe, system, sensor)
+            for sensor in system.sensors.values()
+            if sensor.type == DeviceTypes.TEMPERATURE
+        )
 
     async_add_entities(sensors)
 

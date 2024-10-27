@@ -1,4 +1,5 @@
 """Meteo-France component constants."""
+
 from __future__ import annotations
 
 from homeassistant.components.weather import (

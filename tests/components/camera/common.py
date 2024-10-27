@@ -3,10 +3,12 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+
 from unittest.mock import Mock
 
 EMPTY_8_6_JPEG = b"empty_8_6"
 WEBRTC_ANSWER = "a=sendonly"
+STREAM_SOURCE = "rtsp://127.0.0.1/stream"
 
 
 def mock_turbo_jpeg(

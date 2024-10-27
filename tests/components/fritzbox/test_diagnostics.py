@@ -1,4 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock
@@ -29,4 +30,4 @@ async def test_entry_diagnostics(
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entries[0])
 
-    assert result == {"entry": entry_dict, "data": {}}
+    assert result == {"entry": entry_dict | {"discovery_keys": {}}, "data": {}}

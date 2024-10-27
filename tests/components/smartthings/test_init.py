@@ -1,5 +1,9 @@
 """Tests for the SmartThings component init module."""
+
+from collections.abc import Callable, Coroutine
+from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -19,8 +23,8 @@ from homeassistant.components.smartthings.const import (
     PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -32,8 +36,8 @@ async def test_migration_creates_new_flow(
 ) -> None:
     """Test migration deletes app and creates new flow."""
 
-    config_entry.version = 1
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, version=1)
 
     await smartthings.async_migrate_entry(hass, config_entry)
     await hass.async_block_till_done()
@@ -178,11 +182,13 @@ async def test_scenes_unauthorized_loads_platforms(
     ]
     smartthings_mock.subscriptions.return_value = subscriptions
 
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(PLATFORMS)
+        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
 
 
 async def test_config_entry_loads_platforms(
@@ -210,11 +216,13 @@ async def test_config_entry_loads_platforms(
     ]
     smartthings_mock.subscriptions.return_value = subscriptions
 
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(PLATFORMS)
+        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
 
 
 async def test_config_entry_loads_unconnected_cloud(
@@ -242,10 +250,12 @@ async def test_config_entry_loads_unconnected_cloud(
         subscription_factory(capability) for capability in device.capabilities
     ]
     smartthings_mock.subscriptions.return_value = subscriptions
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(PLATFORMS)
+        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
 
 
 async def test_unload_entry(hass: HomeAssistant, config_entry) -> None:
@@ -289,11 +299,12 @@ async def test_remove_entry_cloudhook(
     config_entry.add_to_hass(hass)
     hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
     # Act
-    with patch.object(
-        cloud, "async_is_logged_in", return_value=True
-    ) as mock_async_is_logged_in, patch.object(
-        cloud, "async_delete_cloudhook"
-    ) as mock_async_delete_cloudhook:
+    with (
+        patch.object(
+            cloud, "async_is_logged_in", return_value=True
+        ) as mock_async_is_logged_in,
+        patch.object(cloud, "async_delete_cloudhook") as mock_async_delete_cloudhook,
+    ):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1
@@ -362,9 +373,9 @@ async def test_remove_entry_installedapp_unknown_error(
 ) -> None:
     """Test raises exceptions removing the installed app."""
     # Arrange
-    smartthings_mock.delete_installed_app.side_effect = Exception
+    smartthings_mock.delete_installed_app.side_effect = ValueError
     # Act
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1
@@ -395,9 +406,9 @@ async def test_remove_entry_app_unknown_error(
 ) -> None:
     """Test raises exceptions removing the app."""
     # Arrange
-    smartthings_mock.delete_app.side_effect = Exception
+    smartthings_mock.delete_app.side_effect = ValueError
     # Act
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         await smartthings.async_remove_entry(hass, config_entry)
     # Assert
     assert smartthings_mock.delete_installed_app.call_count == 1
@@ -409,8 +420,13 @@ async def test_broker_regenerates_token(hass: HomeAssistant, config_entry) -> No
     token = Mock(OAuthToken)
     token.refresh_token = str(uuid4())
     stored_action = None
+    config_entry.add_to_hass(hass)
 
-    def async_track_time_interval(hass, action, interval):
+    def async_track_time_interval(
+        hass: HomeAssistant,
+        action: Callable[[datetime], Coroutine[Any, Any, None] | None],
+        interval: timedelta,
+    ) -> None:
         nonlocal stored_action
         stored_action = action
 
@@ -455,10 +471,14 @@ async def test_event_handler_dispatches_updated_devices(
         data={"codeId": "1"},
     )
     request = event_request_factory(device_ids=device_ids, events=[event])
-    config_entry.data = {
-        **config_entry.data,
-        CONF_INSTALLED_APP_ID: request.installed_app_id,
-    }
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_INSTALLED_APP_ID: request.installed_app_id,
+        },
+    )
     called = False
 
     def signal(ids):
@@ -520,10 +540,14 @@ async def test_event_handler_fires_button_events(
         device.device_id, capability="button", attribute="button", value="pushed"
     )
     request = event_request_factory(events=[event])
-    config_entry.data = {
-        **config_entry.data,
-        CONF_INSTALLED_APP_ID: request.installed_app_id,
-    }
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_INSTALLED_APP_ID: request.installed_app_id,
+        },
+    )
     called = False
 
     def handler(evt):

@@ -1,4 +1,5 @@
 """Sensor platform for motionEye."""
+
 from __future__ import annotations
 
 import logging
@@ -15,8 +16,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
+from . import get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_ACTION_SENSOR
+from .entity import MotionEyeEntity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,4 +1,5 @@
 """Support for ComEd Hourly Pricing data."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,11 +11,11 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, CONF_OFFSET
+from homeassistant.const import CONF_NAME, CONF_OFFSET, CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -35,12 +36,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONF_FIVE_MINUTE,
         name="ComEd 5 Minute Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement=f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key=CONF_CURRENT_HOUR_AVERAGE,
         name="ComEd Current Hour Average Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement=f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}",
     ),
 )
 
@@ -56,7 +57,7 @@ SENSORS_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA]}
 )
 
@@ -123,7 +124,7 @@ class ComedHourlyPricingSensor(SensorEntity):
             else:
                 self._attr_native_value = None
 
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Could not get data from ComEd API: %s", err)
         except (ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
