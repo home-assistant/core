@@ -116,6 +116,9 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(
                 switch_platform.LEGACY_SENSOR_SCHEMA
             ),
+            vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(
+                switch_platform.LEGACY_SWITCH_SCHEMA
+            ),
         },
         ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN),
     )
@@ -221,6 +224,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                 CONF_BINARY_SENSORS,
                 BINARY_SENSOR_DOMAIN,
                 binary_sensor_platform.rewrite_legacy_to_modern_conf,
+            ),
+            (
+                CONF_SWITCHES,
+                SWITCH_DOMAIN,
+                switch_platform.rewrite_legacy_to_modern_conf,
             ),
         ):
             if old_key not in template_config:
