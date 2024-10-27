@@ -708,6 +708,15 @@
       "maximum_level": {
         "name": "Maximum load dimming level"
       },
+      "default_level_local": {
+        "name": "Local default dimming level"
+      },
+      "default_level_remote": {
+        "name": "Remote default dimming level"
+      },
+      "state_after_power_restored": {
+        "name": "Start-up default dimming level"
+      },
       "auto_off_timer": {
         "name": "Automatic switch shutoff timer"
       },
@@ -818,6 +827,9 @@
       "increased_non_neutral_output": {
         "name": "Non neutral output"
       },
+      "leading_or_trailing_edge": {
+        "name": "Dimming mode"
+      },
       "feeding_mode": {
         "name": "Mode"
       },
@@ -897,6 +909,12 @@
       },
       "device_temperature": {
         "name": "Device temperature"
+      },
+      "internal_temp_monitor": {
+        "name": "Internal temperature"
+      },
+      "overheated": {
+        "name": "Overheat protection"
       },
       "formaldehyde": {
         "name": "Formaldehyde concentration"
