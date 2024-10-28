@@ -205,6 +205,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        self.updated_once = True
         # Add all time periods together
         output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
         for period in data.get("time_series", []):
