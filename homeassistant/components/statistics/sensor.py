@@ -361,7 +361,7 @@ class StatisticsSensor(SensorEntity):
         self._precision: int = precision
         self._percentile: int = percentile
         self._value: float | int | datetime | None = None
-        self._available: bool = False
+        self._attr_available: bool = False
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
@@ -385,7 +385,7 @@ class StatisticsSensor(SensorEntity):
         if not self._source_entity_id or (
             self._samples_max_buffer_size is None and self._samples_max_age is None
         ):
-            self._available = False
+            self._attr_available = False
             calculated_state = self._async_calculate_state()
             preview_callback(calculated_state.state, calculated_state.attributes)
             return self._call_on_remove_callbacks
@@ -461,7 +461,7 @@ class StatisticsSensor(SensorEntity):
         # Attention: it is not safe to store the new_state object,
         # since the "last_reported" value will be updated over time.
         # Here we make a copy the current value, which is okay.
-        self._available = new_state.state != STATE_UNAVAILABLE
+        self._attr_available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
             self.attributes[STAT_SOURCE_VALUE_VALID] = None
             return
@@ -589,11 +589,6 @@ class StatisticsSensor(SensorEntity):
     def native_value(self) -> float | int | datetime | None:
         """Return the state of the sensor."""
         return self._value
-
-    @property
-    def available(self) -> bool:
-        """Return the availability of the sensor linked to the source sensor."""
-        return self._available
 
     @property
     def extra_state_attributes(self) -> dict[str, StateType] | None:
