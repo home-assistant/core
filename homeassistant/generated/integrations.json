@@ -3285,6 +3285,12 @@
           "iot_class": "local_polling",
           "name": "LG Soundbars"
         },
+        "lg_thinq": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "LG ThinQ"
+        },
         "webostv": {
           "integration_type": "hub",
           "config_flow": true,
@@ -3292,12 +3298,6 @@
           "name": "LG webOS Smart TV"
         }
       }
-    },
-    "lg_thinq": {
-      "name": "LG ThinQ",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
     },
     "lidarr": {
       "name": "Lidarr",
