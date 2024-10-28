@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.const import Platform
@@ -16,6 +17,15 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 _LOGGER = logging.getLogger(__name__)
 
 
+async def device_discovery_task(hass: HomeAssistant, gateway: HausbusGateway) -> None:
+    """Device discovery is repeated every minute."""
+    while True:
+        # Perform device discovery
+        hass.async_add_executor_job(gateway.home_server.searchDevices)
+        # Wait for 60 seconds
+        await asyncio.sleep(60)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Set up Haus-Bus from a config entry."""
 
@@ -27,8 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
     _LOGGER.debug("start searching devices")
 
-    # search devices after adding all callbacks to the gateway object
-    hass.async_add_executor_job(gateway.home_server.searchDevices)
+    # search devices after adding all callbacks to the gateway object repeatedly
+    entry.async_create_background_task(
+        hass,
+        target=device_discovery_task(hass, gateway),
+        name="Hausbus device discovery task",
+    )
 
     return True
 
