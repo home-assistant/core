@@ -40,17 +40,18 @@ async def async_setup_entry(
     @callback
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
+        entities = []
         if coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
         ):
-            async_add_entities([SwitcherSingleCoverEntity(coordinator, 0)])
+            entities.append(SwitcherSingleCoverEntity(coordinator, 0))
         if (
             coordinator.data.device_type.category
             == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
         ):
-            async_add_entities([SwitcherDualCoverEntity(coordinator, 0)])
-            async_add_entities([SwitcherDualCoverEntity(coordinator, 1)])
+            entities.extend(SwitcherDualCoverEntity(coordinator, i) for i in range(2))
+        async_add_entities(entities)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
@@ -140,7 +141,7 @@ class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id,
+        cover_id: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -159,7 +160,7 @@ class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id,
+        cover_id: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

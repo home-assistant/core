@@ -34,21 +34,18 @@ async def async_setup_entry(
     @callback
     def async_add_light(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add light from Switcher device."""
+        entities = []
         if (
             coordinator.data.device_type.category
             == DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT
         ):
-            async_add_entities(
-                [
-                    SwitcherDualLightEntity(coordinator, 0),
-                    SwitcherDualLightEntity(coordinator, 1),
-                ]
-            )
+            entities.extend(SwitcherDualLightEntity(coordinator, i) for i in range(2))
         if (
             coordinator.data.device_type.category
             == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
         ):
-            async_add_entities([SwitcherSingleLightEntity(coordinator, 0)])
+            entities.append(SwitcherSingleLightEntity(coordinator, 0))
+        async_add_entities(entities)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_light)
@@ -125,7 +122,7 @@ class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        light_id,
+        light_id: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -144,7 +141,7 @@ class SwitcherDualLightEntity(SwitcherBaseLightEntity):
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        light_id,
+        light_id: int,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
