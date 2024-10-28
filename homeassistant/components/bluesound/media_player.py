@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
-from asyncio import CancelledError, Task
-from contextlib import suppress
+from asyncio import Task
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
-from pyblu.errors import PlayerUnreachableError
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -25,7 +22,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
@@ -44,9 +41,12 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN, INTEGRATION_TITLE
+from .coordinator import BluesoundCoordinator
 from .utils import dispatcher_join_signal, dispatcher_unjoin_signal, format_unique_id
 
 if TYPE_CHECKING:
@@ -63,11 +63,6 @@ SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_JOIN = "join"
 SERVICE_SET_TIMER = "set_sleep_timer"
 SERVICE_UNJOIN = "unjoin"
-
-NODE_OFFLINE_CHECK_TIMEOUT = 180
-NODE_RETRY_INITIATION = timedelta(minutes=3)
-
-SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
 POLL_TIMEOUT = 120
 
@@ -137,10 +132,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Bluesound entry."""
     bluesound_player = BluesoundPlayer(
+        config_entry.runtime_data.coordinator,
         config_entry.data[CONF_HOST],
         config_entry.data[CONF_PORT],
         config_entry.runtime_data.player,
-        config_entry.runtime_data.sync_status,
     )
 
     platform = entity_platform.async_get_current_platform()
@@ -175,7 +170,7 @@ async def async_setup_platform(
         hass.async_create_task(_async_import(hass, import_data))
 
 
-class BluesoundPlayer(MediaPlayerEntity):
+class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
@@ -184,12 +179,15 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
+        coordinator: BluesoundCoordinator,
         host: str,
         port: int,
         player: Player,
-        sync_status: SyncStatus,
     ) -> None:
         """Initialize the media player."""
+        super().__init__(coordinator)
+        sync_status = coordinator.data.sync_status
+
         self.host = host
         self.port = port
         self._poll_status_loop_task: Task[None] | None = None
@@ -197,13 +195,14 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._id = sync_status.id
         self._last_status_update: datetime | None = None
         self._sync_status = sync_status
-        self._status: Status | None = None
-        self._inputs: list[Input] = []
-        self._presets: list[Preset] = []
+        self._status: Status = coordinator.data.status
+        self._inputs: list[Input] = coordinator.data.inputs
+        self._presets: list[Preset] = coordinator.data.presets
         self._group_name: str | None = None
         self._group_list: list[str] = []
         self._bluesound_device_name = sync_status.name
         self._player = player
+        self._last_status_update = dt_util.utcnow()
 
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
         # there should always be one player with the default port per mac
@@ -226,51 +225,9 @@ class BluesoundPlayer(MediaPlayerEntity):
                 via_device=(DOMAIN, format_mac(sync_status.mac)),
             )
 
-    async def _poll_status_loop(self) -> None:
-        """Loop which polls the status of the player."""
-        while True:
-            try:
-                await self.async_update_status()
-            except PlayerUnreachableError:
-                _LOGGER.error(
-                    "Node %s:%s is offline, retrying later", self.host, self.port
-                )
-                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-            except CancelledError:
-                _LOGGER.debug(
-                    "Stopping the polling of node %s:%s", self.host, self.port
-                )
-                return
-            except:  # noqa: E722 - this loop should never stop
-                _LOGGER.exception(
-                    "Unexpected error for %s:%s, retrying later", self.host, self.port
-                )
-                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-
-    async def _poll_sync_status_loop(self) -> None:
-        """Loop which polls the sync status of the player."""
-        while True:
-            try:
-                await self.update_sync_status()
-            except PlayerUnreachableError:
-                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-            except CancelledError:
-                raise
-            except:  # noqa: E722 - all errors must be caught for this loop
-                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-
     async def async_added_to_hass(self) -> None:
         """Start the polling task."""
         await super().async_added_to_hass()
-
-        self._poll_status_loop_task = self.hass.async_create_background_task(
-            self._poll_status_loop(),
-            name=f"bluesound.poll_status_loop_{self.host}:{self.port}",
-        )
-        self._poll_sync_status_loop_task = self.hass.async_create_background_task(
-            self._poll_sync_status_loop(),
-            name=f"bluesound.poll_sync_status_loop_{self.host}:{self.port}",
-        )
 
         assert self._sync_status.id is not None
         self.async_on_remove(
@@ -291,92 +248,36 @@ class BluesoundPlayer(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Stop the polling task."""
         await super().async_will_remove_from_hass()
-
-        assert self._poll_status_loop_task is not None
-        if self._poll_status_loop_task.cancel():
-            # the sleeps in _poll_loop will raise CancelledError
-            with suppress(CancelledError):
-                await self._poll_status_loop_task
-
-        assert self._poll_sync_status_loop_task is not None
-        if self._poll_sync_status_loop_task.cancel():
-            # the sleeps in _poll_sync_status_loop will raise CancelledError
-            with suppress(CancelledError):
-                await self._poll_sync_status_loop_task
-
         self.hass.data[DATA_BLUESOUND].remove(self)
 
-    async def async_update(self) -> None:
-        """Update internal status of the entity."""
-        if not self.available:
-            return
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_available = self.coordinator.data.is_online
+        self._sync_status = self.coordinator.data.sync_status
+        self._status = self.coordinator.data.status
+        self._inputs = self.coordinator.data.inputs
+        self._presets = self.coordinator.data.presets
 
-        with suppress(PlayerUnreachableError):
-            await self.async_update_presets()
-            await self.async_update_captures()
+        self._last_status_update = dt_util.utcnow()
 
-    async def async_update_status(self) -> None:
-        """Use the poll session to always get the status of the player."""
-        etag = None
-        if self._status is not None:
-            etag = self._status.etag
-
-        try:
-            status = await self._player.status(
-                etag=etag, poll_timeout=POLL_TIMEOUT, timeout=POLL_TIMEOUT + 5
-            )
-
-            self._attr_available = True
-            self._last_status_update = dt_util.utcnow()
-            self._status = status
-
-            group_name = status.group_name
-            if group_name != self._group_name:
-                _LOGGER.debug("Group name change detected on device: %s", self.id)
-                self._group_name = group_name
-
-                # rebuild ordered list of entity_ids that are in the group, leader is first
-                self._group_list = self.rebuild_bluesound_group()
-
-            self.async_write_ha_state()
-        except PlayerUnreachableError:
-            self._attr_available = False
-            self._last_status_update = None
-            self._status = None
-            self.async_write_ha_state()
-            _LOGGER.error(
-                "Client connection error, marking %s as offline",
-                self._bluesound_device_name,
-            )
-            raise
-
-    async def update_sync_status(self) -> None:
-        """Update the internal status."""
-        etag = None
-        if self._sync_status:
-            etag = self._sync_status.etag
-        sync_status = await self._player.sync_status(
-            etag=etag, poll_timeout=POLL_TIMEOUT, timeout=POLL_TIMEOUT + 5
-        )
-
-        self._sync_status = sync_status
+        group_name = self._status.group_name
+        if group_name != self._group_name:
+            _LOGGER.debug("Group name change detected on device: %s", self.id)
+            self._group_name = group_name
+            self._group_list = self.rebuild_bluesound_group()
 
         self.async_write_ha_state()
 
-    async def async_update_captures(self) -> None:
-        """Update Capture sources."""
-        inputs = await self._player.inputs()
-        self._inputs = inputs
-
-    async def async_update_presets(self) -> None:
-        """Update Presets."""
-        presets = await self._player.presets()
-        self._presets = presets
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._attr_available
 
     @property
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
-        if self._status is None:
+        if self.available is False:
             return MediaPlayerState.OFF
 
         if self.is_grouped and not self.is_leader:
@@ -392,7 +293,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        if self._status is None or (self.is_grouped and not self.is_leader):
+        if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
         return self._status.name
@@ -400,7 +301,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media (Music track only)."""
-        if self._status is None:
+        if self.available is False:
             return None
 
         if self.is_grouped and not self.is_leader:
@@ -411,7 +312,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_album_name(self) -> str | None:
         """Artist of current playing media (Music track only)."""
-        if self._status is None or (self.is_grouped and not self.is_leader):
+        if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
         return self._status.album
@@ -419,7 +320,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        if self._status is None or (self.is_grouped and not self.is_leader):
+        if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
         url = self._status.image
@@ -434,7 +335,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if self._status is None or (self.is_grouped and not self.is_leader):
+        if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
         mediastate = self.state
@@ -453,7 +354,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self._status is None or (self.is_grouped and not self.is_leader):
+        if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
         duration = self._status.total_seconds
@@ -470,15 +371,10 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        volume = None
+        volume = self._status.volume
 
-        if self._status is not None:
-            volume = self._status.volume
         if self.is_grouped:
             volume = self._sync_status.volume
-
-        if volume is None:
-            return None
 
         return volume / 100
 
@@ -512,7 +408,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def source_list(self) -> list[str] | None:
         """List of available input sources."""
-        if self._status is None or (self.is_grouped and not self.is_leader):
+        if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
         sources = [x.text for x in self._inputs]
@@ -523,7 +419,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Name of the current input source."""
-        if self._status is None or (self.is_grouped and not self.is_leader):
+        if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
         if self._status.input_id is not None:
@@ -540,7 +436,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag of media commands that are supported."""
-        if self._status is None:
+        if self.available is False:
             return MediaPlayerEntityFeature(0)
 
         if self.is_grouped and not self.is_leader:
@@ -665,10 +561,36 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_increase_timer(self) -> int:
         """Increase sleep time on player."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_SET_TIMER}",
+            breaks_in_ha_version="2025.5.0",
+            is_fixable=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_set_sleep_timer",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
+        )
         return await self._player.sleep_timer()
 
     async def async_clear_timer(self) -> None:
         """Clear sleep timer on player."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_CLEAR_TIMER}",
+            breaks_in_ha_version="2025.5.0",
+            is_fixable=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_clear_sleep_timer",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
+        )
         sleep = 1
         while sleep > 0:
             sleep = await self._player.sleep_timer()
