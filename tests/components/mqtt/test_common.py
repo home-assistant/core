@@ -1197,7 +1197,7 @@ async def help_test_entity_id_update_subscriptions(
     )
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(
-            topic, ANY, ANY, ANY, HassJobType.Callback
+            topic, ANY, ANY, ANY, HassJobType.Callback, ANY
         )
     mqtt_mock.async_subscribe.reset_mock()
 
@@ -1213,7 +1213,7 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(
-            topic, ANY, ANY, ANY, HassJobType.Callback
+            topic, ANY, ANY, ANY, HassJobType.Callback, ANY
         )
 
 

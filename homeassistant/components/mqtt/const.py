@@ -191,7 +191,6 @@ ENTITY_PLATFORMS = [
 
 TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
 
-
 SUPPORTED_COMPONENTS = (
     "alarm_control_panel",
     "binary_sensor",

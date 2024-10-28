@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
@@ -207,6 +207,7 @@ def async_subscribe_internal(
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
     job_type: HassJobType | None = None,
+    late_wildcard_subscription: bool = False,
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
@@ -234,7 +235,9 @@ def async_subscribe_internal(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    return client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
+    return client.async_subscribe(
+        topic, msg_callback, qos, encoding, job_type, late_wildcard_subscription
+    )
 
 
 @bind_hass
@@ -271,6 +274,7 @@ class Subscription:
     job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
     qos: int = 0
     encoding: str | None = "utf-8"
+    late_wildcard_subscription: bool = False
 
 
 class MqttClientSetup:
@@ -817,6 +821,7 @@ class MQTT:
         qos: int,
         encoding: str | None = None,
         job_type: HassJobType | None = None,
+        late_wildcard_subscription: bool = False,
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos."""
         if not isinstance(topic, str):
@@ -837,7 +842,15 @@ class MQTT:
         is_simple_match = not ("+" in topic or "#" in topic)
         matcher = None if is_simple_match else _matcher_for_topic(topic)
 
-        subscription = Subscription(topic, is_simple_match, matcher, job, qos, encoding)
+        subscription = Subscription(
+            topic,
+            is_simple_match,
+            matcher,
+            job,
+            qos,
+            encoding,
+            late_wildcard_subscription,
+        )
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
@@ -896,11 +909,20 @@ class MQTT:
 
         # Split out the wildcard subscriptions, we subscribe to them one by one
         pending_subscriptions: dict[str, int] = self._pending_subscriptions
-        pending_wildcard_subscriptions = {
-            subscription.topic: pending_subscriptions.pop(subscription.topic)
-            for subscription in self._wildcard_subscriptions
-            if subscription.topic in pending_subscriptions
-        }
+
+        pending_wildcard_subscriptions: OrderedDict[str, int] = OrderedDict()
+        late_pending_wildcard_subscriptions: OrderedDict[str, int] = OrderedDict()
+        for subscription in self._wildcard_subscriptions:
+            if subscription.topic not in pending_subscriptions:
+                continue
+            if subscription.late_wildcard_subscription:
+                late_pending_wildcard_subscriptions[subscription.topic] = (
+                    pending_subscriptions.pop(subscription.topic)
+                )
+            else:
+                pending_wildcard_subscriptions[subscription.topic] = (
+                    pending_subscriptions.pop(subscription.topic)
+                )
 
         self._pending_subscriptions = {}
 
@@ -909,6 +931,10 @@ class MQTT:
         for chunk in chain(
             chunked_or_all(
                 pending_wildcard_subscriptions.items(), MAX_WILDCARD_SUBSCRIBES_PER_CALL
+            ),
+            chunked_or_all(
+                late_pending_wildcard_subscriptions.items(),
+                MAX_WILDCARD_SUBSCRIBES_PER_CALL,
             ),
             chunked_or_all(pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL),
         ):

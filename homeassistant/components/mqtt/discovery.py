@@ -565,21 +565,22 @@ async def async_start(  # noqa: C901
             async_discovery_message_received,
             0,
             job_type=HassJobType.Callback,
+            late_wildcard_subscription=late_wildcard_subscription,
         )
-        # Subscribe first to device discovery config wildcard topics,
-        # and then subscribe to all supported single component config wildcard topics.
-        for topic in chain(
+        # Subscribe first for platform discovery wildcard topics first,
+        # and then subscribe device discovery wildcard topics.
+        for topic, late_wildcard_subscription in chain(
             (
-                f"{discovery_topic}/device/+/config",
-                f"{discovery_topic}/device/+/+/config",
-            ),
-            (
-                f"{discovery_topic}/{component}/+/config"
+                (f"{discovery_topic}/{component}/+/config", False)
                 for component in SUPPORTED_COMPONENTS
             ),
             (
-                f"{discovery_topic}/{component}/+/+/config"
+                (f"{discovery_topic}/{component}/+/+/config", False)
                 for component in SUPPORTED_COMPONENTS
+            ),
+            (
+                (f"{discovery_topic}/device/+/config", True),
+                (f"{discovery_topic}/device/+/+/config", True),
             ),
         )
     ]
