@@ -97,22 +97,22 @@
         "name": "Comfort temperature"
       },
       "normal_heating_temperature": {
-        "name": "Normal temperature (heating)"
+        "name": "Normal heating temperature"
       },
       "reduced_heating_temperature": {
-        "name": "Reduced temperature (heating)"
+        "name": "Reduced heating temperature"
       },
       "comfort_heating_temperature": {
-        "name": "Comfort temperature (heating)"
+        "name": "Comfort heating temperature"
       },
       "normal_cooling_temperature": {
-        "name": "Normal temperature (cooling)"
+        "name": "Normal cooling temperature"
       },
       "reduced_cooling_temperature": {
-        "name": "Reduced temperature (cooling)"
+        "name": "Reduced cooling temperature"
       },
       "comfort_cooling_temperature": {
-        "name": "Comfort temperature (cooling)"
+        "name": "Comfort cooling temperature"
       },
       "dhw_temperature": {
         "name": "DHW temperature"
