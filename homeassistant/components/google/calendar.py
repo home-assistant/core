@@ -338,7 +338,6 @@ class GoogleCalendarEntity(
         self.entity_description = entity_description
         self._ignore_availability = entity_description.ignore_availability
         self._offset = entity_description.offset
-        self._viewer_email = self.coordinator.config_entry.unique_id
         self._event: CalendarEvent | None = None
         if entity_description.entity_id:
             self.entity_id = entity_description.entity_id
@@ -371,7 +370,7 @@ class GoogleCalendarEntity(
         """Return True if the event is visible and not declined."""
 
         if any(
-            attendee.is_self and attendee.response_status == "declined"
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
             for attendee in event.attendees
         ):
             return False
