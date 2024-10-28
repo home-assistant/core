@@ -167,11 +167,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_device = device
                 await self._async_try_connect(device, credentials)
             else:
-                device = await self._async_try_discover_and_update(
-                    host, credentials, raise_on_progress=True
+                await self._async_try_discover_and_update(
+                    host,
+                    credentials,
+                    raise_on_progress=True,
+                    raise_on_timeout=True,
                 )
-                if not device:
-                    return await self.async_step_discovery_auth_confirm()
         except AuthenticationError:
             return await self.async_step_discovery_auth_confirm()
         except KasaException:
@@ -187,26 +188,20 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that auth is required."""
+        assert self._discovered_device is not None
         errors = {}
-        assert self.host
-        device: Device | None = None
 
-        if not user_input:
-            credentials = await get_credentials(self.hass)
-            if (
-                self._discovered_device
-                and credentials
-                and credentials != self._discovered_device.config.credentials
-            ):
-                try:
-                    device = await self._async_try_connect(
-                        self._discovered_device, credentials
-                    )
-                except AuthenticationError:
-                    pass  # Authentication exceptions should continue to the rest of the step
-                else:
-                    self._discovered_device = device
-                    return await self.async_step_discovery_confirm()
+        credentials = await get_credentials(self.hass)
+        if credentials and credentials != self._discovered_device.config.credentials:
+            try:
+                device = await self._async_try_connect(
+                    self._discovered_device, credentials
+                )
+            except AuthenticationError:
+                pass  # Authentication exceptions should continue to the rest of the step
+            else:
+                self._discovered_device = device
+                return await self.async_step_discovery_confirm()
 
         placeholders = self._async_make_placeholders_from_discovery()
 
@@ -214,29 +209,23 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             credentials = Credentials(username, password)
-
             try:
-                if self._discovered_device:
-                    device = await self._async_try_connect(
-                        self._discovered_device, credentials
-                    )
-                else:
-                    device = await self._async_try_discover_and_update(
-                        self.host, credentials=credentials, raise_on_progress=False
-                    )
+                device = await self._async_try_connect(
+                    self._discovered_device, credentials
+                )
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
-
-            if device:
+            else:
+                self._discovered_device = device
                 await set_credentials(self.hass, username, password)
                 self.hass.async_create_task(
                     self._async_reload_requires_auth_entries(), eager_start=False
                 )
-                return self._async_create_entry_from_device(device)
+                return self._async_create_entry_from_device(self._discovered_device)
 
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -286,10 +275,14 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             credentials = await get_credentials(self.hass)
             try:
                 device = await self._async_try_discover_and_update(
-                    host, credentials, raise_on_progress=False
+                    host, credentials, raise_on_progress=False, raise_on_timeout=False
                 )
                 if not device:
-                    return await self.async_step_user_auth_confirm()
+                    device = await self._async_try_connect_all(
+                        host, credentials=credentials, raise_on_progress=False
+                    )
+                    if not device:
+                        return await self.async_step_user_auth_confirm()
             except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
             except KasaException as ex:
@@ -330,11 +323,11 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._discovered_device, credentials
                     )
                 else:
-                    device = await Discover.try_connect_all(
-                        self.host, credentials=credentials
+                    device = await self._async_try_connect_all(
+                        self.host, credentials=credentials, raise_on_progress=False
                     )
                     if not device:
-                        errors[CONF_PASSWORD] = "invalid_auth"
+                        errors["base"] = "cannot_connect"
                         placeholders["error"] = "try_connect_all failed"
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
@@ -450,9 +443,14 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         to connect with tcp.
         """
         if credentials:
-            device = await Discover.try_connect_all(host, credentials=credentials)
+            device = await Discover.try_connect_all(
+                host,
+                credentials=credentials,
+                http_client=create_async_tplink_clientsession(self.hass),
+            )
         else:
             # This will just try the legacy protocol that doesn't require auth
+            # and doesn't use http
             try:
                 device = await Device.connect(config=DeviceConfig(host))
             except Exception:  # noqa: BLE001
@@ -469,6 +467,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str,
         credentials: Credentials | None,
         raise_on_progress: bool,
+        raise_on_timeout: bool,
     ) -> Device | None:
         """Try to discover the device and call update.
 
@@ -479,10 +478,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_device = await Discover.discover_single(
                 host, credentials=credentials
             )
-        except TimeoutError:
-            return await self._async_try_connect_all(
-                host, credentials, raise_on_progress
-            )
+        except TimeoutError as ex:
+            if raise_on_timeout:
+                raise ex from ex
+            return None
         if TYPE_CHECKING:
             assert self._discovered_device
         await self.async_set_unique_id(
@@ -543,10 +542,15 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     host,
                     credentials=credentials,
                     raise_on_progress=False,
+                    raise_on_timeout=False,
                 )
                 if not device:
-                    errors["base"] = "cannot_connect"
-                    placeholders["error"] = "try_connect_all failed"
+                    device = await self._async_try_connect_all(
+                        host, credentials=credentials, raise_on_progress=False
+                    )
+                    if not device:
+                        errors["base"] = "cannot_connect"
+                        placeholders["error"] = "try_connect_all failed"
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
@@ -554,21 +558,20 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
             else:
-                if TYPE_CHECKING:
-                    assert device
-                await self.async_set_unique_id(
-                    dr.format_mac(device.mac),
-                    raise_on_progress=False,
-                )
-                await set_credentials(self.hass, username, password)
-                if updates := self._get_config_updates(reauth_entry, host, device):
-                    self.hass.config_entries.async_update_entry(
-                        reauth_entry, data=updates
+                if device:
+                    await self.async_set_unique_id(
+                        dr.format_mac(device.mac),
+                        raise_on_progress=False,
                     )
-                self.hass.async_create_task(
-                    self._async_reload_requires_auth_entries(), eager_start=False
-                )
-                return self.async_abort(reason="reauth_successful")
+                    await set_credentials(self.hass, username, password)
+                    if updates := self._get_config_updates(reauth_entry, host, device):
+                        self.hass.config_entries.async_update_entry(
+                            reauth_entry, data=updates
+                        )
+                    self.hass.async_create_task(
+                        self._async_reload_requires_auth_entries(), eager_start=False
+                    )
+                    return self.async_abort(reason="reauth_successful")
 
         # Old config entries will not have these values.
         alias = entry_data.get(CONF_ALIAS) or "unknown"
