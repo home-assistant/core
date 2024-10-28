@@ -360,7 +360,6 @@ class StatisticsSensor(SensorEntity):
         self.samples_keep_last: bool = samples_keep_last
         self._precision: int = precision
         self._percentile: int = percentile
-        self._value: float | int | datetime | None = None
         self._attr_available: bool = False
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
@@ -586,11 +585,6 @@ class StatisticsSensor(SensorEntity):
         return SensorStateClass.MEASUREMENT
 
     @property
-    def native_value(self) -> float | int | datetime | None:
-        """Return the state of the sensor."""
-        return self._value
-
-    @property
     def extra_state_attributes(self) -> dict[str, StateType] | None:
         """Return the state attributes of the sensor."""
         return {
@@ -776,7 +770,7 @@ class StatisticsSensor(SensorEntity):
                 value = round(cast(float, value), self._precision)
                 if self._precision == 0:
                     value = int(value)
-        self._value = value
+        self._attr_native_value = value
 
     def _callable_characteristic_fn(
         self, characteristic: str
