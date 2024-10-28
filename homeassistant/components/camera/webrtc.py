@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
@@ -113,13 +114,20 @@ class WebRTCClientConfiguration:
         return data
 
 
-class CameraWebRTCProvider(Protocol):
+class CameraWebRTCProvider(ABC):
     """WebRTC provider."""
 
+    @property
+    @abstractmethod
+    def domain(self) -> str:
+        """Return the integration domain of the provider."""
+
     @callback
+    @abstractmethod
     def async_is_supported(self, stream_source: str) -> bool:
         """Determine if the provider supports the stream source."""
 
+    @abstractmethod
     async def async_handle_async_webrtc_offer(
         self,
         camera: Camera,
@@ -129,10 +137,12 @@ class CameraWebRTCProvider(Protocol):
     ) -> None:
         """Handle the WebRTC offer and return the answer via the provided callback."""
 
+    @abstractmethod
     async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
         """Handle the WebRTC candidate."""
 
     @callback
+    @abstractmethod
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
         return  ## This is an optional method so we need a default here.
@@ -425,7 +435,10 @@ def async_register_rtsp_to_web_rtc_provider(
 
     The first provider to satisfy the offer will be used.
     """
-    if hass.data.get(DATA_WEBRTC_PROVIDERS):
+    builtin_webrtc_integration = "go2rtc"
+    if (providers := hass.data.get(DATA_WEBRTC_PROVIDERS)) and any(
+        provider.domain == builtin_webrtc_integration for provider in providers
+    ):
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -437,7 +450,7 @@ def async_register_rtsp_to_web_rtc_provider(
             translation_key="legacy_webrtc_provider",
             translation_placeholders={
                 "legacy_integration": domain,
-                "new_integration": "go2rtc",
+                "new_integration": builtin_webrtc_integration,
             },
         )
     provider_instance = _CameraRtspToWebRTCProvider(provider)

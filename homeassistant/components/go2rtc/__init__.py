@@ -139,6 +139,11 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._rest_client = Go2RtcRestClient(self._session, url)
         self._sessions: dict[str, Go2RtcWsClient] = {}
 
+    @property
+    def domain(self) -> str:
+        """Return the integration domain of the provider."""
+        return DOMAIN
+
     @callback
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
