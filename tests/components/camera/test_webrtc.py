@@ -145,7 +145,7 @@ async def test_async_register_ice_server(
     assert not called
 
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
-    config = await camera.async_get_webrtc_client_configuration()
+    config = camera.async_get_webrtc_client_configuration()
 
     assert config.configuration.ice_servers == [
         RTCIceServer(urls="stun:example.com"),
@@ -170,7 +170,7 @@ async def test_async_register_ice_server(
 
     unregister_2 = async_register_ice_servers(hass, get_ice_servers_2)
 
-    config = await camera.async_get_webrtc_client_configuration()
+    config = camera.async_get_webrtc_client_configuration()
     assert config.configuration.ice_servers == [
         RTCIceServer(urls="stun:example.com"),
         RTCIceServer(urls="turn:example.com"),
@@ -187,7 +187,7 @@ async def test_async_register_ice_server(
 
     unregister()
 
-    config = await camera.async_get_webrtc_client_configuration()
+    config = camera.async_get_webrtc_client_configuration()
     assert config.configuration.ice_servers == [
         RTCIceServer(
             urls=["stun:example2.com", "turn:example2.com"],
@@ -201,7 +201,7 @@ async def test_async_register_ice_server(
     # unregister the second ICE server
     unregister_2()
 
-    config = await camera.async_get_webrtc_client_configuration()
+    config = camera.async_get_webrtc_client_configuration()
     assert config.configuration.ice_servers == []
 
 

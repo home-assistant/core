@@ -735,14 +735,16 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC providers."""
         return self._webrtc_providers
 
-    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+    @callback
+    def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration adjustable per integration."""
         return WebRTCClientConfiguration()
 
     @final
-    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+    @callback
+    def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
-        config = await self._async_get_webrtc_client_configuration()
+        config = self._async_get_webrtc_client_configuration()
 
         ice_servers = [
             server

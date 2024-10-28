@@ -123,7 +123,7 @@ async def ws_get_client_config(
         )
         return
 
-    config = (await camera.async_get_webrtc_client_configuration()).to_frontend_dict()
+    config = camera.async_get_webrtc_client_configuration().to_frontend_dict()
     connection.send_result(
         msg["id"],
         config,
