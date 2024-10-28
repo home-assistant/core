@@ -65,8 +65,8 @@ async def test_browsing_mjpeg(hass: HomeAssistant) -> None:
     assert item.children[0].title == "Demo camera without stream"
 
 
-@pytest.mark.usefixtures("mock_camera_web_rtc")
-async def test_browsing_web_rtc(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_camera_webrtc")
+async def test_browsing_webrtc(hass: HomeAssistant) -> None:
     """Test browsing WebRTC camera media source."""
     # 3 cameras:
     # one only supports WebRTC (no stream source)

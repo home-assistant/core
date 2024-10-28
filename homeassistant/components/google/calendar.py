@@ -10,7 +10,14 @@ from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, Calendar, DateOrDatetime, Event, EventTypeEnum
+from gcal_sync.model import (
+    AccessRole,
+    Calendar,
+    DateOrDatetime,
+    Event,
+    EventTypeEnum,
+    ResponseStatus,
+)
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -367,7 +374,14 @@ class GoogleCalendarEntity(
         return event
 
     def _event_filter(self, event: Event) -> bool:
-        """Return True if the event is visible."""
+        """Return True if the event is visible and not declined."""
+
+        if any(
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
+            for attendee in event.attendees
+        ):
+            return False
+
         if event.event_type == EventTypeEnum.WORKING_LOCATION:
             return self.entity_description.working_location
         if self._ignore_availability:

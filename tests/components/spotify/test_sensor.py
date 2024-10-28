@@ -17,6 +17,7 @@ from tests.common import MockConfigEntry, load_fixture, snapshot_platform
 
 
 @pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entities(
     hass: HomeAssistant,
     mock_spotify: MagicMock,

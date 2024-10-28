@@ -13,7 +13,7 @@
     "velbus-packet",
     "velbus-protocol"
   ],
-  "requirements": ["velbus-aio==2024.7.6"],
+  "requirements": ["velbus-aio==2024.10.0"],
   "usb": [
     {
       "vid": "10CF",
