@@ -6,6 +6,8 @@ from collections.abc import Callable
 from functools import lru_cache
 
 from homeassistant.const import (
+    CONCENTRATION_MILLIGRAMS_PER_DECILITER,
+    CONCENTRATION_MILLIMOLS_PER_LITER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -170,6 +172,20 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.MILLIMETERS,
         UnitOfLength.INCHES,
         UnitOfLength.YARDS,
+    }
+
+
+class BloodSugarLevelConverter(BaseUnitConverter):
+    """Utility to convert blood sugar level values."""
+
+    UNIT_CLASS = "blood_sugar_level"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_MILLIGRAMS_PER_DECILITER: 1,
+        CONCENTRATION_MILLIMOLS_PER_LITER: 1 / 180,
+    }
+    VALID_UNITS = {
+        CONCENTRATION_MILLIGRAMS_PER_DECILITER,
+        CONCENTRATION_MILLIMOLS_PER_LITER,
     }
 
 

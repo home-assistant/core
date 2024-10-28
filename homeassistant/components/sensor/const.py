@@ -10,6 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_DECILITER,
+    CONCENTRATION_MILLIMOLS_PER_LITER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -47,6 +49,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    BloodSugarLevelConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -125,6 +128,12 @@ class SensorDeviceClass(StrEnum):
     """Percentage of battery that is left.
 
     Unit of measurement: `%`
+    """
+
+    BLOOD_SUGAR_LEVEL = "blood_sugar_level"
+    """Blood sugar level.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
     """
 
     CO = "carbon_monoxide"
@@ -493,6 +502,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    SensorDeviceClass.BLOOD_SUGAR_LEVEL: BloodSugarLevelConverter,
     SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
@@ -524,6 +534,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.AQI: {None},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
+    SensorDeviceClass.BLOOD_SUGAR_LEVEL: {
+        CONCENTRATION_MILLIGRAMS_PER_DECILITER,
+        CONCENTRATION_MILLIMOLS_PER_LITER,
+    },
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
@@ -599,6 +613,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.BLOOD_SUGAR_LEVEL: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CONDUCTIVITY: {SensorStateClass.MEASUREMENT},
