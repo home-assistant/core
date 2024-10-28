@@ -376,6 +376,8 @@ class MQTT:
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set
         )
+        # To ensure the wildcard subscriptions order is preserved, we use a dict
+        # with `None` values instead of a set.
         self._wildcard_subscriptions: dict[Subscription, None] = {}
         # _retained_topics prevents a Subscription from receiving a
         # retained message more than once per topic. This prevents flooding
