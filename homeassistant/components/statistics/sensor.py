@@ -500,9 +500,12 @@ class StatisticsSensor(SensorEntity):
         self._attr_state_class = self._calculate_state_class(new_state)
 
     def _calculate_unit_of_measurement(self, new_state: State) -> str | None:
-        """Return the calculated unit of measurement."""
+        """Return the calculated unit of measurement.
 
-        # Calculate the unit of measurement based on the state characteristics
+        The unit of measurement is that of the source sensor, adjusted based on the
+        state characteristics.
+        """
+
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         unit: str | None = None
         if self.is_binary and self._state_characteristic in STATS_BINARY_PERCENTAGE:
@@ -533,11 +536,13 @@ class StatisticsSensor(SensorEntity):
     def _calculate_device_class(
         self, new_state: State, unit: str | None
     ) -> SensorDeviceClass | None:
-        """Return the calculated device class."""
+        """Return the calculated device class.
 
-        # Calculate the device class based on the state characteristics,
-        # the source device class and the unit of measurement is
-        # in the device class units list.
+        The device class is calculated based on the state characteristics,
+        the source device class and the unit of measurement is
+        in the device class units list.
+        """
+
         device_class: SensorDeviceClass | None = None
         if self._state_characteristic in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
