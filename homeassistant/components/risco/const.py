@@ -1,10 +1,7 @@
 """Constants for the Risco integration."""
 
-from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.const import CONF_SCAN_INTERVAL
 
 DOMAIN = "risco"
 
@@ -33,16 +30,18 @@ RISCO_ARM = "arm"
 RISCO_PARTIAL_ARM = "partial_arm"
 RISCO_STATES = [RISCO_ARM, RISCO_PARTIAL_ARM, *RISCO_GROUPS]
 
-DEFAULT_RISCO_GROUPS_TO_HA = {group: STATE_ALARM_ARMED_HOME for group in RISCO_GROUPS}
+DEFAULT_RISCO_GROUPS_TO_HA = {
+    group: AlarmControlPanelState.ARMED_HOME for group in RISCO_GROUPS
+}
 DEFAULT_RISCO_STATES_TO_HA = {
-    RISCO_ARM: STATE_ALARM_ARMED_AWAY,
-    RISCO_PARTIAL_ARM: STATE_ALARM_ARMED_HOME,
+    RISCO_ARM: AlarmControlPanelState.ARMED_AWAY,
+    RISCO_PARTIAL_ARM: AlarmControlPanelState.ARMED_HOME,
     **DEFAULT_RISCO_GROUPS_TO_HA,
 }
 
 DEFAULT_HA_STATES_TO_RISCO = {
-    STATE_ALARM_ARMED_AWAY: RISCO_ARM,
-    STATE_ALARM_ARMED_HOME: RISCO_PARTIAL_ARM,
+    AlarmControlPanelState.ARMED_AWAY: RISCO_ARM,
+    AlarmControlPanelState.ARMED_HOME: RISCO_PARTIAL_ARM,
 }
 
 DEFAULT_OPTIONS = {

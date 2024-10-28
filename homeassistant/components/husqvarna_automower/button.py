@@ -11,7 +11,6 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -22,19 +21,6 @@ from .entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def _async_set_time(
-    session: AutomowerSession,
-    mower_id: str,
-) -> None:
-    """Set datetime for the mower."""
-    # dt_util returns the current (aware) local datetime, set in the frontend.
-    # We assume it's the timezone in which the mower is.
-    await session.commands.set_datetime(
-        mower_id,
-        dt_util.now(),
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,7 +44,7 @@ MOWER_BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
         key="sync_clock",
         translation_key="sync_clock",
         available_fn=_check_error_free,
-        press_fn=_async_set_time,
+        press_fn=lambda session, mower_id: session.commands.set_datetime(mower_id),
     ),
 )
 

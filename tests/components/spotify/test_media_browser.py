@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.spotify import DOMAIN
 from homeassistant.components.spotify.browse_media import async_browse_media
 from homeassistant.const import CONF_ID
@@ -138,3 +139,42 @@ async def test_browsing(
         f"spotify://{mock_config_entry.entry_id}/{media_content_id}",
     )
     assert response.as_dict() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("media_content_id"),
+    [
+        "artist",
+        None,
+    ],
+)
+@pytest.mark.usefixtures("setup_credentials")
+async def test_invalid_spotify_url(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    media_content_id: str | None,
+) -> None:
+    """Test browsing with an invalid Spotify URL."""
+    await setup_integration(hass, mock_config_entry)
+    with pytest.raises(BrowseError, match="Invalid Spotify URL specified"):
+        await async_browse_media(
+            hass,
+            "spotify://artist",
+            media_content_id,
+        )
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_browsing_not_loaded_entry(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing with an unloaded config entry."""
+    with pytest.raises(BrowseError, match="Invalid Spotify account specified"):
+        await async_browse_media(
+            hass,
+            "spotify://artist",
+            f"spotify://{mock_config_entry.entry_id}/spotify:artist:0TnOYISbd1XYRBk9myaseg",
+        )
