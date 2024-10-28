@@ -27,7 +27,7 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
 )
-from homeassistant.components.go2rtc import WebRTCProvider
+from homeassistant.components.go2rtc import CONF_USE_BUILTIN, WebRTCProvider
 from homeassistant.components.go2rtc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_URL
@@ -475,3 +475,16 @@ async def test_setup_with_error(
 
     assert not await async_setup_component(hass, DOMAIN, config)
     assert expected_log_message in caplog.text
+
+
+async def test_setup_builtin_disabled(hass: HomeAssistant) -> None:
+    """Test option to not use builtin go2rtc provider."""
+    with patch(
+        "homeassistant.components.go2rtc.async_register_webrtc_provider"
+    ) as mock_register_provider:
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_USE_BUILTIN: False}}
+        )
+        await hass.async_block_till_done()
+
+    assert mock_register_provider.call_count == 0
