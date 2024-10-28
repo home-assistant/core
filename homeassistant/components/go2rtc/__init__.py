@@ -34,6 +34,7 @@ from homeassistant.util.package import is_docker_env
 from .const import DOMAIN
 from .server import Server
 
+CONF_USE_BUILTIN = "use_builtin"
 _LOGGER = logging.getLogger(__name__)
 
 _SUPPORTED_STREAMS = frozenset(
@@ -68,13 +69,23 @@ _SUPPORTED_STREAMS = frozenset(
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Optional(CONF_URL): cv.url})},
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_URL): cv.url,
+                vol.Optional(CONF_USE_BUILTIN, default=True): cv.boolean,
+            }
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
+    if not config.get(DOMAIN, {}).get(CONF_USE_BUILTIN, True):
+        return True
+
     url: str | None = None
     if not (configured_by_user := DOMAIN in config) or not (
         url := config[DOMAIN].get(CONF_URL)
