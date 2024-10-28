@@ -693,7 +693,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             # an arbitrary cast app, generally for UX.
             if "app_id" in app_data:
                 app_id = app_data.pop("app_id")
-                _LOGGER.info("Starting Cast app by ID %s", app_id)
+                _LOGGER.debug("Starting Cast app by ID %s", app_id)
                 await self.hass.async_add_executor_job(self._start_app, app_id)
                 if app_data:
                     _LOGGER.warning(

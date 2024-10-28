@@ -14,7 +14,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import UkraineAlarmDataUpdateCoordinator
 from .const import (
     ALERT_TYPE_AIR,
     ALERT_TYPE_ARTILLERY,
@@ -26,6 +25,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
+from .coordinator import UkraineAlarmDataUpdateCoordinator
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(

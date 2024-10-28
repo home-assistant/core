@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -37,6 +37,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
     EventStateChangedData,
+    EventStateReportedData,
     HomeAssistant,
     State,
     callback,
@@ -48,9 +49,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
+    async_track_state_report_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -371,41 +372,95 @@ class StatisticsSensor(SensorEntity):
         )
 
         self._update_listener: CALLBACK_TYPE | None = None
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
-    @callback
-    def _async_stats_sensor_state_listener(
+    async def async_start_preview(
         self,
-        event: Event[EventStateChangedData],
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # abort early if there is no entity_id
+        # as without we can't track changes
+        # or either size or max_age is not set
+        if not self._source_entity_id or (
+            self._samples_max_buffer_size is None and self._samples_max_age is None
+        ):
+            self._available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        await self._async_stats_sensor_startup()
+        return self._call_on_remove_callbacks
+
+    def _async_handle_new_state(
+        self,
+        reported_state: State | None,
     ) -> None:
         """Handle the sensor state changes."""
-        if (new_state := event.data["new_state"]) is None:
+        if (new_state := reported_state) is None:
             return
         self._add_state_to_queue(new_state)
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        # only write state to the state machine if we are not in preview mode
+        if not self._preview_callback:
+            self.async_write_ha_state()
 
     @callback
-    def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
-        """Add listener and get recorded state."""
+    def _async_stats_sensor_state_change_listener(
+        self,
+        event: Event[EventStateChangedData],
+    ) -> None:
+        self._async_handle_new_state(event.data["new_state"])
+
+    @callback
+    def _async_stats_sensor_state_report_listener(
+        self,
+        event: Event[EventStateReportedData],
+    ) -> None:
+        self._async_handle_new_state(event.data["new_state"])
+
+    async def _async_stats_sensor_startup(self) -> None:
+        """Add listener and get recorded state.
+
+        Historical data needs to be loaded from the database first before we
+        can start accepting new incoming changes.
+        This is needed to ensure that the buffer is properly sorted by time.
+        """
         _LOGGER.debug("Startup for %s", self.entity_id)
+        if "recorder" in self.hass.config.components:
+            await self._initialize_from_database()
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
                 [self._source_entity_id],
-                self._async_stats_sensor_state_listener,
+                self._async_stats_sensor_state_change_listener,
             )
         )
-        if "recorder" in self.hass.config.components:
-            self.hass.async_create_task(self._initialize_from_database())
+        self.async_on_remove(
+            async_track_state_report_event(
+                self.hass,
+                [self._source_entity_id],
+                self._async_stats_sensor_state_report_listener,
+            )
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(
-            async_at_start(self.hass, self._async_stats_sensor_startup)
-        )
+        await self._async_stats_sensor_startup()
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
+
+        # Attention: it is not safe to store the new_state object,
+        # since the "last_reported" value will be updated over time.
+        # Here we make a copy the current value, which is okay.
         self._available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
             self.attributes[STAT_SOURCE_VALUE_VALID] = None
@@ -420,7 +475,7 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state == "on")
             else:
                 self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_updated)
+            self.ages.append(new_state.last_reported)
             self.attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
@@ -604,7 +659,9 @@ class StatisticsSensor(SensorEntity):
         _LOGGER.debug("%s: executing scheduled update", self.entity_id)
         self._async_cancel_update_listener()
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+        # only write state to the state machine if we are not in preview mode
+        if not self._preview_callback:
+            self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
         """Fetch the states from the database."""
@@ -648,7 +705,13 @@ class StatisticsSensor(SensorEntity):
                 self._add_state_to_queue(state)
 
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+
+        # only write state to the state machine if we are not in preview mode
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        else:
+            self.async_write_ha_state()
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
     def _update_attributes(self) -> None:
@@ -675,7 +738,9 @@ class StatisticsSensor(SensorEntity):
         """
 
         value = self._state_characteristic_fn()
-
+        _LOGGER.debug(
+            "Updating value: states: %s, ages: %s => %s", self.states, self.ages, value
+        )
         if self._state_characteristic not in STATS_NOT_A_NUMBER:
             with contextlib.suppress(TypeError):
                 value = round(cast(float, value), self._precision)
@@ -698,6 +763,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for numeric sensor
 
     def _stat_average_linear(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -711,6 +778,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -766,12 +835,12 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 1.96 * cast(float, self._stat_standard_deviation())
         return None
 
     def _stat_distance_99_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 2.58 * cast(float, self._stat_standard_deviation())
         return None
 
@@ -798,17 +867,23 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_noisiness(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
     def _stat_percentile(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
             return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.stdev(self.states)
         return None
@@ -819,6 +894,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 abs(j - i)
@@ -827,6 +904,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences_nonnegative(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 (j - i if j >= i else j - 0)
@@ -848,6 +927,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_variance(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.variance(self.states)
         return None
@@ -855,6 +936,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for binary sensor
 
     def _stat_binary_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return 100.0 * int(self.states[0] is True)
         if len(self.states) >= 2:
             on_seconds: float = 0
             for i in range(1, len(self.states)):

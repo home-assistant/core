@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OneWireConfigEntry
 from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_BOOL
-from .onewire_entities import OneWireEntity, OneWireEntityDescription
+from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 

@@ -20,8 +20,44 @@
   },
   "entity": {
     "switch": {
+      "auto_mode": {
+        "name": "Auto mode"
+      },
+      "express_mode": {
+        "name": "Ice plus"
+      },
+      "hot_water_mode": {
+        "name": "Hot water"
+      },
+      "humidity_warm_mode": {
+        "name": "Warm mist"
+      },
+      "hygiene_dry_mode": {
+        "name": "Drying mode"
+      },
+      "mood_lamp_state": {
+        "name": "Mood light"
+      },
       "operation_power": {
-        "name": "Power"
+        "name": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]"
+      },
+      "optimal_humidity": {
+        "name": "Ventilation"
+      },
+      "power_save_enabled": {
+        "name": "Energy saving"
+      },
+      "rapid_freeze": {
+        "name": "Quick freeze"
+      },
+      "sleep_mode": {
+        "name": "Sleep mode"
+      },
+      "uv_nano": {
+        "name": "UVnano"
+      },
+      "warm_mode": {
+        "name": "Heating"
       }
     },
     "binary_sensor": {
@@ -68,8 +104,8 @@
               "low": "Low",
               "mid": "Medium",
               "high": "High",
-              "power": "Power",
-              "auto": "Auto"
+              "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
+              "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]"
             }
           },
           "preset_mode": {
@@ -241,11 +277,31 @@
       }
     },
     "sensor": {
-      "error": {
-        "name": "Error"
+      "odor_level": {
+        "name": "Odor",
+        "state": {
+          "invalid": "Invalid",
+          "weak": "Weak",
+          "normal": "Normal",
+          "strong": "Strong",
+          "very_strong": "Very strong"
+        }
       },
       "current_temperature": {
         "name": "Current temperature"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "total_pollution_level": {
+        "name": "Overall air quality",
+        "state": {
+          "invalid": "Invalid",
+          "good": "Good",
+          "normal": "Moderate",
+          "bad": "Unhealthy",
+          "very_bad": "Poor"
+        }
       },
       "monitoring_enabled": {
         "name": "Air quality sensor",
@@ -276,6 +332,18 @@
       },
       "wind_volume_for_location": {
         "name": "{location} wind speed"
+      },
+      "brightness": {
+        "name": "Lighting intensity"
+      },
+      "brightness_for_location": {
+        "name": "{location} lighting intensity"
+      },
+      "duration": {
+        "name": "Lighting duration"
+      },
+      "duration_for_location": {
+        "name": "{location} lighting duration"
       },
       "day_target_temperature": {
         "name": "Day growth temperature"
@@ -484,12 +552,15 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
-          "power": "Power",
+          "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "Replace filter",
           "smart_power": "Smart safe storage",
           "smart_off": "[%key:common::state::off%]",
           "smart_on": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]"
         }
+      },
+      "filter_lifetime": {
+        "name": "Filter remaining"
       },
       "used_time": {
         "name": "Water filter used"
@@ -502,7 +573,7 @@
           "clothes_dry": "Laundry",
           "edge": "Edge cleaning",
           "heat_pump": "Heat pump",
-          "high": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::high%]",
+          "high": "Power",
           "intensive_dry": "Spot",
           "macro": "Custom mode",
           "mop": "Mop",
@@ -514,7 +585,7 @@
           "select": "My space",
           "smart_humidity": "Smart",
           "spot": "Spiral spot mode",
-          "turbo": "Turbo",
+          "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
           "vacation": "Vacation",
           "zigzag": "Zigzag"
         }
@@ -523,17 +594,17 @@
         "name": "Operating mode",
         "state": {
           "auto": "Low power",
-          "high": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::high%]",
+          "high": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "mop": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::mop%]",
           "normal": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::normal%]",
           "off": "[%key:common::state::off%]",
-          "turbo": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::turbo%]"
+          "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]"
         }
       },
       "personalization_mode": {
         "name": "Personal mode",
         "state": {
-          "auto_inside": "Auto mode",
+          "auto_inside": "[%key:component::lg_thinq::entity::switch::auto_mode::name%]",
           "sleep": "Sleep mode",
           "baby": "Baby care mode",
           "sick_house": "New Home mode",
@@ -545,10 +616,50 @@
           "others": "Others"
         }
       },
-      "cock_state": {
-        "name": "UVnano",
+      "current_dish_washing_course": {
+        "name": "Current cycle",
         "state": {
-          "cleaning": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "heavy": "Intensive",
+          "delicate": "Delicate",
+          "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
+          "normal": "Normal",
+          "rinse": "Rinse",
+          "refresh": "Refresh",
+          "express": "Express",
+          "machine_clean": "Machine clean",
+          "short_mode": "Short mode",
+          "download_cycle": "Download cycle",
+          "quick": "Quick",
+          "steam": "Steam care",
+          "spray": "Spray",
+          "eco": "Eco"
+        }
+      },
+      "rinse_level": {
+        "name": "Rinse aid dispenser level",
+        "state": {
+          "rinselevel_0": "0",
+          "rinselevel_1": "1",
+          "rinselevel_2": "2",
+          "rinselevel_3": "3",
+          "rinselevel_4": "4"
+        }
+      },
+      "softening_level": {
+        "name": "Softening level",
+        "state": {
+          "softeninglevel_0": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_0%]",
+          "softeninglevel_1": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_1%]",
+          "softeninglevel_2": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_2%]",
+          "softeninglevel_3": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_3%]",
+          "softeninglevel_4": "[%key:component::lg_thinq::entity::sensor::rinse_level::state::rinselevel_4%]"
+        }
+      },
+      "cock_state": {
+        "name": "[%key:component::lg_thinq::entity::switch::uv_nano::name%]",
+        "state": {
+          "cleaning": "In progress",
           "normal": "[%key:common::state::standby%]"
         }
       },
@@ -589,6 +700,288 @@
           "rice_grain": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::rice_grain%]",
           "vegetable_fruit": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::vegetable_fruit%]",
           "temperature_number": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::temperature_number%]"
+        }
+      },
+      "elapsed_day_state": {
+        "name": "Brewing period"
+      },
+      "elapsed_day_total": {
+        "name": "Brewing duration"
+      },
+      "recipe_name": {
+        "name": "Homebrew recipe",
+        "state": {
+          "ipa": "IPA",
+          "pale_ale": "Pale ale",
+          "stout": "Stout",
+          "wheat": "Wheat",
+          "pilsner": "Pilsner",
+          "red_ale": "Red ale",
+          "my_recipe": "My recipe"
+        }
+      },
+      "wort_info": {
+        "name": "Wort",
+        "state": {
+          "hoppy": "Hoppy",
+          "deep_gold": "DeepGold",
+          "wheat": "Wheat",
+          "dark": "Dark"
+        }
+      },
+      "yeast_info": {
+        "name": "Yeast",
+        "state": {
+          "american_ale": "American ale",
+          "english_ale": "English ale",
+          "lager": "Lager",
+          "weizen": "Weizen"
+        }
+      },
+      "hop_oil_info": {
+        "name": "Hops"
+      },
+      "flavor_info": {
+        "name": "Flavor"
+      },
+      "beer_remain": {
+        "name": "Recipe progress"
+      },
+      "battery_level": {
+        "name": "Battery",
+        "state": {
+          "high": "Full",
+          "mid": "Medium",
+          "low": "Low",
+          "warning": "Empty"
+        }
+      },
+      "relative_to_start": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start::name%]"
+      },
+      "relative_to_start_for_location": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_for_location::name%]"
+      },
+      "relative_to_start_wm": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_wm::name%]"
+      },
+      "relative_to_start_wm_for_location": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_wm_for_location::name%]"
+      },
+      "relative_to_stop": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop::name%]"
+      },
+      "relative_to_stop_for_location": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_for_location::name%]"
+      },
+      "relative_to_stop_wm": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_wm::name%]"
+      },
+      "relative_to_stop_wm_for_location": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_wm_for_location::name%]"
+      },
+      "sleep_timer_relative_to_stop": {
+        "name": "[%key:component::lg_thinq::entity::number::sleep_timer_relative_hour_to_stop::name%]"
+      },
+      "sleep_timer_relative_to_stop_for_location": {
+        "name": "[%key:component::lg_thinq::entity::number::sleep_timer_relative_hour_to_stop_for_location::name%]"
+      },
+      "absolute_to_start": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start::name%]"
+      },
+      "absolute_to_start_for_location": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_start_for_location::name%]"
+      },
+      "absolute_to_stop": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop::name%]"
+      },
+      "absolute_to_stop_for_location": {
+        "name": "[%key:component::lg_thinq::entity::number::relative_hour_to_stop_for_location::name%]"
+      },
+      "remain": {
+        "name": "Remaining time"
+      },
+      "remain_for_location": {
+        "name": "{location} remaining time"
+      },
+      "running": {
+        "name": "Running time"
+      },
+      "running_for_location": {
+        "name": "{location} running time"
+      },
+      "total": {
+        "name": "Total time"
+      },
+      "total_for_location": {
+        "name": "{location} total time"
+      },
+      "target": {
+        "name": "Cook time"
+      },
+      "target_for_location": {
+        "name": "{location} cook time"
+      },
+      "light_start": {
+        "name": "Lights on time"
+      },
+      "light_start_for_location": {
+        "name": "{location} lights on time"
+      },
+      "power_level": {
+        "name": "Power level"
+      },
+      "power_level_for_location": {
+        "name": "{location} power level"
+      }
+    },
+    "select": {
+      "wind_strength": {
+        "name": "Speed",
+        "state": {
+          "slow": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::fan_mode::state::slow%]",
+          "low": "Low",
+          "mid": "Medium",
+          "high": "High",
+          "power": "Turbo",
+          "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "wind_1": "Step 1",
+          "wind_2": "Step 2",
+          "wind_3": "Step 3",
+          "wind_4": "Step 4",
+          "wind_5": "Step 5",
+          "wind_6": "Step 6",
+          "wind_7": "Step 7",
+          "wind_8": "Step 8",
+          "wind_9": "Step 9",
+          "wind_10": "Step 10"
+        }
+      },
+      "monitoring_enabled": {
+        "name": "[%key:component::lg_thinq::entity::sensor::monitoring_enabled::name%]",
+        "state": {
+          "on_working": "[%key:component::lg_thinq::entity::sensor::monitoring_enabled::state::on_working%]",
+          "always": "[%key:component::lg_thinq::entity::sensor::monitoring_enabled::state::always%]"
+        }
+      },
+      "current_job_mode": {
+        "name": "Operating mode",
+        "state": {
+          "air_clean": "Purifying",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "baby_care": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::baby%]",
+          "circulator": "Booster",
+          "clean": "Single",
+          "direct_clean": "Direct mode",
+          "dual_clean": "Dual",
+          "fast": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
+          "heat_pump": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::heat_pump%]",
+          "humidify": "Mist",
+          "humidify_and_air_clean": "Mist & purifying",
+          "humidity": "Humid",
+          "nature_clean": "Natural mode",
+          "pet_clean": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::pet%]",
+          "silent": "Silent",
+          "sleep": "Sleep",
+          "smart": "Smart mode",
+          "space_clean": "Diffusion mode",
+          "spot_clean": "Wide mode",
+          "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
+          "up_feature": "Additional mode",
+          "vacation": "Vacation"
+        }
+      },
+      "operation_mode": {
+        "name": "Operation",
+        "state": {
+          "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
+          "power_off": "Power off",
+          "preheating": "Preheating",
+          "start": "[%key:common::action::start%]",
+          "stop": "[%key:common::action::stop%]",
+          "wake_up": "Sleep mode off"
+        }
+      },
+      "operation_mode_for_location": {
+        "name": "{location} operation",
+        "state": {
+          "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
+          "power_off": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_off%]",
+          "preheating": "[%key:component::lg_thinq::entity::select::operation_mode::state::preheating%]",
+          "start": "[%key:common::action::start%]",
+          "stop": "[%key:common::action::stop%]",
+          "wake_up": "[%key:component::lg_thinq::entity::select::operation_mode::state::wake_up%]"
+        }
+      },
+      "air_clean_operation_mode": {
+        "name": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::preset_mode::state::air_clean%]",
+        "state": {
+          "start": "[%key:common::action::start%]",
+          "stop": "[%key:common::action::stop%]"
+        }
+      },
+      "cook_mode": {
+        "name": "Cook mode",
+        "state": {
+          "bake": "Bake",
+          "convection_bake": "Convection bake",
+          "convection_roast": "Convection roast",
+          "roast": "Roast",
+          "crisp_convection": "Crisp convection"
+        }
+      },
+      "cook_mode_for_location": {
+        "name": "{location} cook mode",
+        "state": {
+          "bake": "[%key:component::lg_thinq::entity::select::cook_mode::state::bake%]",
+          "convection_bake": "[%key:component::lg_thinq::entity::select::cook_mode::state::convection_bake%]",
+          "convection_roast": "[%key:component::lg_thinq::entity::select::cook_mode::state::convection_roast%]",
+          "roast": "[%key:component::lg_thinq::entity::select::cook_mode::state::roast%]",
+          "crisp_convection": "[%key:component::lg_thinq::entity::select::cook_mode::state::crisp_convection%]"
+        }
+      },
+      "light_brightness": {
+        "name": "Light"
+      },
+      "wind_angle": {
+        "name": "Rotation",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "angle_45": "45°",
+          "angle_60": "60°",
+          "angle_90": "90°",
+          "angle_140": "140°"
+        }
+      },
+      "display_light": {
+        "name": "Display brightness",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level_1": "Brightness 1",
+          "level_2": "Brightness 2",
+          "level_3": "Brightness 3"
+        }
+      },
+      "fresh_air_filter": {
+        "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
+          "replace": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::replace%]",
+          "smart_power": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]",
+          "smart_off": "[%key:common::state::off%]",
+          "smart_on": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]"
+        }
+      },
+      "hygiene_dry_mode": {
+        "name": "[%key:component::lg_thinq::entity::switch::hygiene_dry_mode::name%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "fast": "Fast",
+          "silent": "Silent",
+          "normal": "[%key:component::lg_thinq::entity::sensor::current_dish_washing_course::state::delicate%]"
         }
       }
     }

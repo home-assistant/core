@@ -6,14 +6,14 @@ from collections.abc import Callable
 from datetime import timedelta
 from enum import IntFlag, StrEnum
 import functools as ft
-from functools import cached_property
 import logging
 from typing import Any, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -41,15 +41,35 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
+
+
+class CoverState(StrEnum):
+    """State of Cover entities."""
+
+    CLOSED = "closed"
+    CLOSING = "closing"
+    OPEN = "open"
+    OPENING = "opening"
+
+
+# STATE_* below are deprecated as of 2024.11
+# when imported from homeassistant.components.cover
+# use the CoverState enum instead.
+_DEPRECATED_STATE_CLOSED = DeprecatedConstantEnum(CoverState.CLOSED, "2025.11")
+_DEPRECATED_STATE_CLOSING = DeprecatedConstantEnum(CoverState.CLOSING, "2025.11")
+_DEPRECATED_STATE_OPEN = DeprecatedConstantEnum(CoverState.OPEN, "2025.11")
+_DEPRECATED_STATE_OPENING = DeprecatedConstantEnum(CoverState.OPENING, "2025.11")
 
 
 class CoverDeviceClass(StrEnum):
@@ -146,12 +166,12 @@ ATTR_TILT_POSITION = "tilt_position"
 @bind_hass
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the cover is closed based on the statemachine."""
-    return hass.states.is_state(entity_id, STATE_CLOSED)
+    return hass.states.is_state(entity_id, CoverState.CLOSED)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for covers."""
-    component = hass.data[DOMAIN] = EntityComponent[CoverEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[CoverEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -231,14 +251,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[CoverEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[CoverEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class CoverEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -303,15 +321,15 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the state of the cover."""
         if self.is_opening:
             self._cover_is_last_toggle_direction_open = True
-            return STATE_OPENING
+            return CoverState.OPENING
         if self.is_closing:
             self._cover_is_last_toggle_direction_open = False
-            return STATE_CLOSING
+            return CoverState.CLOSING
 
         if (closed := self.is_closed) is None:
             return None
 
-        return STATE_CLOSED if closed else STATE_OPEN
+        return CoverState.CLOSED if closed else CoverState.OPEN
 
     @final
     @property

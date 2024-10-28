@@ -15,8 +15,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import DOMAIN, LOGGER
+from .entity import SimpliSafeEntity
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
@@ -63,7 +64,7 @@ async def async_setup_entry(
 
     for system in simplisafe.systems.values():
         if system.version == 2:
-            LOGGER.info("Skipping sensor setup for V2 system: %s", system.system_id)
+            LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
         for sensor in system.sensors.values():

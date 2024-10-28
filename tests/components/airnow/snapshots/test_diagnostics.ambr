@@ -8,7 +8,7 @@
       'DateObserved': '2020-12-20',
       'HourObserved': 15,
       'Latitude': '**REDACTED**',
-      'LocalTimeZoneInfo': 'PST',
+      'LocalTimeZone': 'PST',
       'Longitude': '**REDACTED**',
       'O3': 0.048,
       'PM10': 12,
@@ -24,6 +24,8 @@
         'longitude': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'airnow',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
       'minor_version': 1,

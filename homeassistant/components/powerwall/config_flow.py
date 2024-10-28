@@ -99,7 +99,6 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the powerwall flow."""
         self.ip_address: str | None = None
         self.title: str | None = None
-        self.reauth_entry: ConfigEntry | None = None
 
     async def _async_powerwall_is_offline(self, entry: ConfigEntry) -> bool:
         """Check if the power wall is offline.
@@ -188,9 +187,9 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm a discovered powerwall."""
         assert self.ip_address is not None
+        assert self.title is not None
         assert self.unique_id is not None
         if user_input is not None:
-            assert self.title is not None
             return self.async_create_entry(
                 title=self.title,
                 data={
@@ -250,17 +249,16 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauth confirmation."""
-        assert self.reauth_entry is not None
         errors: dict[str, str] | None = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            entry_data = self.reauth_entry.data
+            reauth_entry = self._get_reauth_entry()
             errors, _, description_placeholders = await self._async_try_connect(
-                {CONF_IP_ADDRESS: entry_data[CONF_IP_ADDRESS], **user_input}
+                {CONF_IP_ADDRESS: reauth_entry.data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self.reauth_entry, data={**entry_data, **user_input}
+                    reauth_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
@@ -274,9 +272,6 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
 

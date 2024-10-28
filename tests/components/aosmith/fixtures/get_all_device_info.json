@@ -103,7 +103,7 @@
           }
         ],
         "firmwareVersion": "2.14",
-        "hotWaterStatus": "HIGH",
+        "hotWaterStatus": 10,
         "isAdvancedLoadUpMore": false,
         "isCtaUcmPresent": false,
         "isDemandResponsePaused": false,

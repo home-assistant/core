@@ -8,7 +8,6 @@ from devolo_plc_api.device_api import ConnectedStationInfo
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
@@ -52,7 +51,7 @@ async def async_setup_entry(
                 )
             )
             tracked.add(station.mac_address)
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     @callback
     def restore_entities() -> None:
@@ -98,7 +97,7 @@ class DevoloScannerEntity(
         """Initialize entity."""
         super().__init__(coordinator)
         self._device = device
-        self._mac = mac
+        self._attr_mac_address = mac
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -141,16 +140,6 @@ class DevoloScannerEntity(
         )
 
     @property
-    def mac_address(self) -> str:
-        """Return mac_address."""
-        return self._mac
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return tracker source type."""
-        return SourceType.ROUTER
-
-    @property
     def unique_id(self) -> str:
         """Return unique ID of the entity."""
-        return f"{self._device.serial_number}_{self._mac}"
+        return f"{self._device.serial_number}_{self.mac_address}"

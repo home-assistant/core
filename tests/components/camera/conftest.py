@@ -1,18 +1,19 @@
 """Test helpers for camera."""
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera.webrtc import WebRTCAnswer, WebRTCSendMessage
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.setup import async_setup_component
 
-from .common import WEBRTC_ANSWER
+from .common import STREAM_SOURCE, WEBRTC_ANSWER
 
 
 @pytest.fixture(autouse=True)
@@ -56,23 +57,37 @@ def mock_camera_hls_fixture(mock_camera: None) -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="mock_camera_web_rtc")
-async def mock_camera_web_rtc_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
+@pytest.fixture
+async def mock_camera_webrtc_frontendtype_only(
+    hass: HomeAssistant,
+) -> AsyncGenerator[None]:
     """Initialize a demo camera platform with WebRTC."""
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.camera.Camera.frontend_stream_type",
-            new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
-        ),
-        patch(
-            "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-            return_value=WEBRTC_ANSWER,
-        ),
+    with patch(
+        "homeassistant.components.camera.Camera.frontend_stream_type",
+        new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
+    ):
+        yield
+
+
+@pytest.fixture
+async def mock_camera_webrtc(
+    mock_camera_webrtc_frontendtype_only: None,
+) -> AsyncGenerator[None]:
+    """Initialize a demo camera platform with WebRTC."""
+
+    async def async_handle_async_webrtc_offer(
+        offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+    ) -> None:
+        send_message(WebRTCAnswer(WEBRTC_ANSWER))
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+        side_effect=async_handle_async_webrtc_offer,
     ):
         yield
 
@@ -111,3 +126,19 @@ def mock_camera_with_no_name_fixture(mock_camera_with_device: None) -> Generator
         new_callable=PropertyMock(return_value=None),
     ):
         yield
+
+
+@pytest.fixture(name="mock_stream")
+async def mock_stream_fixture(hass: HomeAssistant) -> None:
+    """Initialize a demo camera platform with streaming."""
+    assert await async_setup_component(hass, "stream", {"stream": {}})
+
+
+@pytest.fixture(name="mock_stream_source")
+def mock_stream_source_fixture() -> Generator[AsyncMock]:
+    """Fixture to create an RTSP stream source."""
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        return_value=STREAM_SOURCE,
+    ) as mock_stream_source:
+        yield mock_stream_source

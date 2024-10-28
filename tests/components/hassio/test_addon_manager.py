@@ -6,6 +6,8 @@ import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, call
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonsOptions
 import pytest
 
 from homeassistant.components.hassio.addon_manager import (
@@ -42,8 +44,8 @@ async def test_not_available_raises_exception(
     addon_info: AsyncMock,
 ) -> None:
     """Test addon not available raises exception."""
-    addon_store_info.return_value["available"] = False
-    addon_info.return_value["available"] = False
+    addon_store_info.return_value.available = False
+    addon_info.return_value.available = False
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_install_addon()
@@ -118,7 +120,7 @@ async def test_get_addon_info(
     addon_state: AddonState,
 ) -> None:
     """Test get addon info when addon is installed."""
-    addon_installed.return_value["state"] = addon_info_state
+    addon_installed.return_value.state = addon_info_state
     assert await addon_manager.async_get_addon_info() == AddonInfo(
         available=True,
         hostname="core-test-addon",
@@ -136,7 +138,7 @@ async def test_get_addon_info(
         "addon_store_info_error",
         "addon_store_info_calls",
     ),
-    [(HassioAPIError("Boom"), 1, None, 1), (None, 0, HassioAPIError("Boom"), 1)],
+    [(SupervisorError("Boom"), 1, None, 1), (None, 0, SupervisorError("Boom"), 1)],
 )
 async def test_get_addon_info_error(
     addon_manager: AddonManager,
@@ -169,7 +171,7 @@ async def test_set_addon_options(
 
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "test_addon", {"options": {"test_key": "test"}}
+        "test_addon", AddonsOptions(config={"test_key": "test"})
     )
 
 
@@ -177,7 +179,7 @@ async def test_set_addon_options_error(
     hass: HomeAssistant, addon_manager: AddonManager, set_addon_options: AsyncMock
 ) -> None:
     """Test set addon options raises error."""
-    set_addon_options.side_effect = HassioAPIError("Boom")
+    set_addon_options.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_set_addon_options({"test_key": "test"})
@@ -186,7 +188,7 @@ async def test_set_addon_options_error(
 
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "test_addon", {"options": {"test_key": "test"}}
+        "test_addon", AddonsOptions(config={"test_key": "test"})
     )
 
 
@@ -197,8 +199,8 @@ async def test_install_addon(
     addon_info: AsyncMock,
 ) -> None:
     """Test install addon."""
-    addon_store_info.return_value["available"] = True
-    addon_info.return_value["available"] = True
+    addon_store_info.return_value.available = True
+    addon_info.return_value.available = True
 
     await addon_manager.async_install_addon()
 
@@ -212,9 +214,9 @@ async def test_install_addon_error(
     addon_info: AsyncMock,
 ) -> None:
     """Test install addon raises error."""
-    addon_store_info.return_value["available"] = True
-    addon_info.return_value["available"] = True
-    install_addon.side_effect = HassioAPIError("Boom")
+    addon_store_info.return_value.available = True
+    addon_info.return_value.available = True
+    install_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_install_addon()
@@ -265,7 +267,7 @@ async def test_schedule_install_addon_error(
     install_addon: AsyncMock,
 ) -> None:
     """Test schedule install addon raises error."""
-    install_addon.side_effect = HassioAPIError("Boom")
+    install_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_schedule_install_addon()
@@ -282,7 +284,7 @@ async def test_schedule_install_addon_logs_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test schedule install addon logs error."""
-    install_addon.side_effect = HassioAPIError("Boom")
+    install_addon.side_effect = SupervisorError("Boom")
 
     await addon_manager.async_schedule_install_addon(catch_error=True)
 
@@ -303,7 +305,7 @@ async def test_uninstall_addon_error(
     addon_manager: AddonManager, uninstall_addon: AsyncMock
 ) -> None:
     """Test uninstall addon raises error."""
-    uninstall_addon.side_effect = HassioAPIError("Boom")
+    uninstall_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_uninstall_addon()
@@ -324,7 +326,7 @@ async def test_start_addon_error(
     addon_manager: AddonManager, start_addon: AsyncMock
 ) -> None:
     """Test start addon raises error."""
-    start_addon.side_effect = HassioAPIError("Boom")
+    start_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_start_addon()
@@ -366,7 +368,7 @@ async def test_schedule_start_addon_error(
     start_addon: AsyncMock,
 ) -> None:
     """Test schedule start addon raises error."""
-    start_addon.side_effect = HassioAPIError("Boom")
+    start_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_schedule_start_addon()
@@ -383,7 +385,7 @@ async def test_schedule_start_addon_logs_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test schedule start addon logs error."""
-    start_addon.side_effect = HassioAPIError("Boom")
+    start_addon.side_effect = SupervisorError("Boom")
 
     await addon_manager.async_schedule_start_addon(catch_error=True)
 
@@ -404,7 +406,7 @@ async def test_restart_addon_error(
     addon_manager: AddonManager, restart_addon: AsyncMock
 ) -> None:
     """Test restart addon raises error."""
-    restart_addon.side_effect = HassioAPIError("Boom")
+    restart_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_restart_addon()
@@ -446,7 +448,7 @@ async def test_schedule_restart_addon_error(
     restart_addon: AsyncMock,
 ) -> None:
     """Test schedule restart addon raises error."""
-    restart_addon.side_effect = HassioAPIError("Boom")
+    restart_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_schedule_restart_addon()
@@ -463,7 +465,7 @@ async def test_schedule_restart_addon_logs_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test schedule restart addon logs error."""
-    restart_addon.side_effect = HassioAPIError("Boom")
+    restart_addon.side_effect = SupervisorError("Boom")
 
     await addon_manager.async_schedule_restart_addon(catch_error=True)
 
@@ -482,7 +484,7 @@ async def test_stop_addon_error(
     addon_manager: AddonManager, stop_addon: AsyncMock
 ) -> None:
     """Test stop addon raises error."""
-    stop_addon.side_effect = HassioAPIError("Boom")
+    stop_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_stop_addon()
@@ -501,7 +503,7 @@ async def test_update_addon(
     update_addon: AsyncMock,
 ) -> None:
     """Test update addon."""
-    addon_info.return_value["update_available"] = True
+    addon_info.return_value.update_available = True
 
     await addon_manager.async_update_addon()
 
@@ -521,7 +523,7 @@ async def test_update_addon_no_update(
     update_addon: AsyncMock,
 ) -> None:
     """Test update addon without update available."""
-    addon_info.return_value["update_available"] = False
+    addon_info.return_value.update_available = False
 
     await addon_manager.async_update_addon()
 
@@ -539,8 +541,8 @@ async def test_update_addon_error(
     update_addon: AsyncMock,
 ) -> None:
     """Test update addon raises error."""
-    addon_info.return_value["update_available"] = True
-    update_addon.side_effect = HassioAPIError("Boom")
+    addon_info.return_value.update_available = True
+    update_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_update_addon()
@@ -564,7 +566,7 @@ async def test_schedule_update_addon(
     update_addon: AsyncMock,
 ) -> None:
     """Test schedule update addon."""
-    addon_info.return_value["update_available"] = True
+    addon_info.return_value.update_available = True
 
     update_task = addon_manager.async_schedule_update_addon()
 
@@ -619,7 +621,7 @@ async def test_schedule_update_addon(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to update the Test add-on: Boom",
         ),
@@ -637,7 +639,7 @@ async def test_schedule_update_addon_error(
     error_message: str,
 ) -> None:
     """Test schedule update addon raises error."""
-    addon_installed.return_value["update_available"] = True
+    addon_installed.return_value.update_available = True
     create_backup.side_effect = create_backup_error
     update_addon.side_effect = update_addon_error
 
@@ -669,7 +671,7 @@ async def test_schedule_update_addon_error(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to update the Test add-on: Boom",
         ),
@@ -688,7 +690,7 @@ async def test_schedule_update_addon_logs_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test schedule update addon logs error."""
-    addon_installed.return_value["update_available"] = True
+    addon_installed.return_value.update_available = True
     create_backup.side_effect = create_backup_error
     update_addon.side_effect = update_addon_error
 
@@ -789,7 +791,7 @@ async def test_schedule_install_setup_addon(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -800,7 +802,7 @@ async def test_schedule_install_setup_addon(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -811,7 +813,7 @@ async def test_schedule_install_setup_addon(
             1,
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to start the Test add-on: Boom",
         ),
@@ -858,7 +860,7 @@ async def test_schedule_install_setup_addon_error(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -869,7 +871,7 @@ async def test_schedule_install_setup_addon_error(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -880,7 +882,7 @@ async def test_schedule_install_setup_addon_error(
             1,
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to start the Test add-on: Boom",
         ),
@@ -955,7 +957,7 @@ async def test_schedule_setup_addon(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -964,7 +966,7 @@ async def test_schedule_setup_addon(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to start the Test add-on: Boom",
         ),
@@ -1004,7 +1006,7 @@ async def test_schedule_setup_addon_error(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -1013,7 +1015,7 @@ async def test_schedule_setup_addon_error(
         (
             None,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             "Failed to start the Test add-on: Boom",
         ),
