@@ -172,6 +172,27 @@
         "reveal": "always",
         "panel": "new"
       }
+    },
+    {
+      "label": "Test zimi discovery (broadcast)",
+      "detail": "Run python -m zcc to discover zcc properties",
+      "type": "shell",
+      "command": "python -m zcc --verbosity 3 --discover",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test zimi discovery (192.168.1.61)",
+      "detail": "Run python -m zcc to discover zcc properties",
+      "type": "shell",
+      "command": "python -m zcc --verbosity 3 --discover --host 192.168.1.61 --port 5003",
+      "problemMatcher": []
+    },
+    {
+      "label": "Test zimi discovery (192.168.1.62)",
+      "detail": "Run python -m zcc to discover zcc properties",
+      "type": "shell",
+      "command": "python -m zcc --verbosity 3 --discover --host 192.168.1.62 --port 5003",
+      "problemMatcher": []
     }
   ],
   "inputs": [
