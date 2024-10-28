@@ -50,9 +50,6 @@ def _last_restart(runtime: int) -> datetime:
 type _CoordinatorDataType = (
     LogicalNetwork | DataRate | list[ConnectedStationInfo] | list[NeighborAPInfo] | int
 )
-type _ValueDataType = (
-    LogicalNetwork | DataRate | list[ConnectedStationInfo] | list[NeighborAPInfo] | int
-)
 type _SensorDataType = int | float | datetime
 
 
@@ -190,7 +187,7 @@ async def async_setup_entry(
 
 class BaseDevoloSensorEntity[
     _CoordinatorDataT: _CoordinatorDataType,
-    _ValueDataT: _ValueDataType,
+    _ValueDataT: _CoordinatorDataType,
     _SensorDataT: _SensorDataType,
 ](
     DevoloCoordinatorEntity[_CoordinatorDataT],
@@ -211,7 +208,7 @@ class BaseDevoloSensorEntity[
 
 class DevoloSensorEntity[
     _CoordinatorDataT: _CoordinatorDataType,
-    _ValueDataT: _ValueDataType,
+    _ValueDataT: _CoordinatorDataType,
     _SensorDataT: _SensorDataType,
 ](BaseDevoloSensorEntity[_CoordinatorDataT, _ValueDataT, _SensorDataT]):
     """Representation of a generic devolo sensor."""
