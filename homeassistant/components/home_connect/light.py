@@ -154,7 +154,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         except HomeConnectError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_turn_on_light",
+                translation_key="turn_on_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
@@ -173,7 +173,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 except HomeConnectError as err:
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
-                        translation_key="home_connect_error_select_light_custom_color",
+                        translation_key="select_light_custom_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
                             SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
@@ -191,7 +191,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 except HomeConnectError as err:
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
-                        translation_key="home_connect_error_set_light_color",
+                        translation_key="set_light_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
                             SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
@@ -223,7 +223,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     except HomeConnectError as err:
                         raise ServiceValidationError(
                             translation_domain=DOMAIN,
-                            translation_key="home_connect_error_set_light_color",
+                            translation_key="set_light_color",
                             translation_placeholders={
                                 **get_dict_from_home_connect_error(err),
                                 SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
@@ -248,7 +248,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             except HomeConnectError as err:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="home_connect_error_set_light_brightness",
+                    translation_key="set_light_brightness",
                     translation_placeholders={
                         **get_dict_from_home_connect_error(err),
                         SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
@@ -267,7 +267,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         except HomeConnectError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_turn_off_light",
+                translation_key="turn_off_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,

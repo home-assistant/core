@@ -148,7 +148,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             self._attr_available = False
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_turn_on",
+                translation_key="turn_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
@@ -172,7 +172,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             self._attr_available = False
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_turn_off",
+                translation_key="turn_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
@@ -223,7 +223,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         except HomeConnectError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_start_program",
+                translation_key="start_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     "program": self.program_name,
@@ -239,7 +239,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         except HomeConnectError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_stop_program",
+                translation_key="stop_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     "program": self.program_name,
@@ -293,7 +293,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._attr_is_on = False
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_power_on",
+                translation_key="power_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name,
@@ -322,7 +322,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._attr_is_on = True
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_power_off",
+                translation_key="power_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name,

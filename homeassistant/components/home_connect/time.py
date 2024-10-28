@@ -85,7 +85,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
         except HomeConnectError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="home_connect_error_set_setting",
+                translation_key="set_setting",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
