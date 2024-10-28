@@ -248,7 +248,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
-            "turn_on_light",
+            r"Error.*turn.*on.*",
         ),
         (
             "light.hood_functional_light",
@@ -263,7 +263,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
-            "turn_on_light",
+            r"Error.*turn.*on.*",
         ),
         (
             "light.hood_functional_light",
@@ -275,7 +275,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
-            "turn_off_light",
+            r"Error.*turn.*off.*",
         ),
         (
             "light.hood_ambient_light",
@@ -290,7 +290,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
-            "turn_on_light",
+            r"Error.*turn.*on.*",
         ),
         (
             "light.hood_ambient_light",
@@ -305,7 +305,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, None, HomeConnectError],
             "Hood",
-            "set_light_color",
+            r"Error.*set.*color.*",
         ),
     ],
     indirect=["problematic_appliance"],

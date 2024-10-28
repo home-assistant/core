@@ -169,7 +169,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "start_program",
             "Dishwasher",
-            "start_program",
+            r"Error.*start.*program.*",
         ),
         (
             "switch.dishwasher_program_mix",
@@ -177,7 +177,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "stop_program",
             "Dishwasher",
-            "stop_program",
+            r"Error.*stop.*program.*",
         ),
         (
             "switch.dishwasher_power",
@@ -185,7 +185,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
-            "power_on",
+            r"Error.*turn.*on.*appliance.*",
         ),
         (
             "switch.dishwasher_power",
@@ -193,7 +193,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
-            "power_off",
+            r"Error.*turn.*off.*appliance.*value.*",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -201,7 +201,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
-            "turn_on",
+            r"Error.*turn.*on.*key.*",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -209,7 +209,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
-            "turn_off",
+            r"Error.*turn.*off.*key.*",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -320,7 +320,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "FridgeFreezer",
-            "turn_on",
+            r"Error.*turn.*on.*key.*",
         ),
         (
             "switch.fridgefreezer_freezer_super_mode",
@@ -328,7 +328,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "FridgeFreezer",
-            "turn_off",
+            r"Error.*turn.*off.*key.*",
         ),
     ],
     indirect=["problematic_appliance"],
