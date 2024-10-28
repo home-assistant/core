@@ -12,6 +12,16 @@ import sys
 from typing import TypedDict, cast
 
 from awesomeversion import AwesomeVersion
+from license_expression import (
+    AND,
+    OR,
+    ExpressionError,
+    LicenseExpression,
+    LicenseSymbol,
+    get_spdx_licensing,
+)
+
+licensing = get_spdx_licensing()
 
 
 class PackageMetadata(TypedDict):
@@ -29,6 +39,9 @@ class PackageDefinition:
     """Package definition."""
 
     license: str
+    license_expression: str | None
+    license_metadata: str | None
+    license_classifier: list[str]
     name: str
     version: AwesomeVersion
 
@@ -36,15 +49,48 @@ class PackageDefinition:
     def from_dict(cls, data: PackageMetadata) -> PackageDefinition:
         """Create a package definition from PackageMetadata."""
         if not (license_str := "; ".join(data["license_classifier"])):
-            license_str = (
-                data["license_metadata"] or data["license_expression"] or "UNKNOWN"
-            )
+            license_str = data["license_metadata"] or "UNKNOWN"
         return cls(
             license=license_str,
+            license_expression=data["license_expression"],
+            license_metadata=data["license_metadata"],
+            license_classifier=data["license_classifier"],
             name=data["name"],
             version=AwesomeVersion(data["version"]),
         )
 
+
+# Incomplete list of OSI approved SPDX identifiers
+# Add more as needed, see https://spdx.org/licenses/
+OSI_APPROVED_LICENSES_SPDX = {
+    "0BSD",
+    "AFL-2.1",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "Apache-2.0",
+    "BSD-1-Clause",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "EPL-1.0",
+    "EPL-2.0",
+    "GPL-2.0-only",
+    "GPL-2.0-or-later",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "HPND",
+    "ISC",
+    "LGPL-2.1-only",
+    "LGPL-2.1-or-later",
+    "LGPL-3.0-only",
+    "LGPL-3.0-or-later",
+    "MIT",
+    "MPL-1.1",
+    "MPL-2.0",
+    "PSF-2.0",
+    "Unlicense",
+    "Zlib",
+    "ZPL-2.1",
+}
 
 OSI_APPROVED_LICENSES = {
     "Academic Free License (AFL)",
@@ -114,13 +160,10 @@ OSI_APPROVED_LICENSES = {
     "Zero-Clause BSD (0BSD)",
     "Zope Public License",
     "zlib/libpng License",
+    # End license classifier
     "Apache License",
     "MIT",
-    "apache-2.0",
-    "GPL-3.0",
-    "GPLv3+",
     "MPL2",
-    "MPL-2.0",
     "Apache 2",
     "LGPL v3",
     "BSD",
@@ -128,14 +171,8 @@ OSI_APPROVED_LICENSES = {
     "GPLv3",
     "Eclipse Public License v2.0",
     "ISC",
-    "GPL-2.0-only",
-    "mit",
     "GNU General Public License v3",
-    "Unlicense",
-    "Apache-2",
     "GPLv2",
-    "Python-2.0.1",
-    "LGPL-2.1-or-later",
 }
 
 EXCEPTIONS = {
@@ -144,7 +181,6 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "chacha20poly1305",  # LGPL
-    "chacha20poly1305-reuseable",  # Apache 2.0 or BSD 3-Clause
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
@@ -169,7 +205,6 @@ EXCEPTIONS = {
     "repoze.lru",
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    "vincenty",  # Public domain
 }
 
 TODO = {
@@ -199,7 +234,7 @@ def check_licenses(args: CheckArgs) -> int:
 
         if status is True:
             print(
-                f"Approved license detected for "
+                "Approved license detected for "
                 f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
                 "Please remove the package from the TODO list.\n"
             )
@@ -220,9 +255,9 @@ def check_licenses(args: CheckArgs) -> int:
             exit_code = 1
         if status is True and pkg.name in EXCEPTIONS:
             print(
-                f"Approved license detected for "
+                "Approved license detected for "
                 f"{pkg.name}@{pkg.version}: {get_license_str(pkg)}\n"
-                f"Please remove the package from the EXCEPTIONS list.\n"
+                "Please remove the package from the EXCEPTIONS list.\n"
             )
             exit_code = 1
 
@@ -238,15 +273,53 @@ def check_licenses(args: CheckArgs) -> int:
 
 def check_license_status(package: PackageDefinition) -> bool:
     """Check if package licenses is OSI approved."""
+    if package.license_expression:
+        # Prefer 'License-Expression' if it exists
+        return check_license_expression(package.license_expression) or False
+
+    if (
+        package.license_metadata
+        and (check := check_license_expression(package.license_metadata)) is not None
+    ):
+        # Check license metadata if it's a valid SPDX license expression
+        return check
+
     for approved_license in OSI_APPROVED_LICENSES:
         if approved_license in package.license:
             return True
     return False
 
 
+def check_license_expression(license_str: str) -> bool | None:
+    """Check if license expression is a valid and approved SPDX license string."""
+    if license_str == "UNKNOWN" or "\n" in license_str:
+        # Ignore common errors for license metadata values
+        return None
+
+    try:
+        expr = licensing.parse(license_str, validate=True)
+    except ExpressionError:
+        return None
+    return check_spdx_license(expr)
+
+
+def check_spdx_license(expr: LicenseExpression) -> bool:
+    """Check a SPDX license expression."""
+    if isinstance(expr, LicenseSymbol):
+        return expr.key in OSI_APPROVED_LICENSES_SPDX
+    if isinstance(expr, OR):
+        return any(check_spdx_license(arg) for arg in expr.args)
+    if isinstance(expr, AND):
+        return all(check_spdx_license(arg) for arg in expr.args)
+    return False
+
+
 def get_license_str(package: PackageDefinition) -> str:
     """Return license string."""
-    return f"{package.license}"
+    return (
+        f"{package.license_expression} -- {package.license_metadata} "
+        f"-- {package.license_classifier}"
+    )
 
 
 def extract_licenses(args: ExtractArgs) -> int:
