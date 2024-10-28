@@ -50,7 +50,7 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
-MAX_REQUEST_SPREAD = 20 * 60
+TWENTY_MINUTES = 20 * 60
 
 RT_SENSORS_UNIQUE_ID_MIGRATION = {
     "accumulated_consumption_last_hour": "accumulated consumption current hour",
@@ -369,7 +369,7 @@ class TibberSensorElPrice(TibberSensor):
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
         self._last_updated: datetime.datetime | None = None
-        self._spread_load_constant = randrange(MAX_REQUEST_SPREAD)
+        self._spread_load_constant = randrange(TWENTY_MINUTES)
 
         self._attr_available = False
         self._attr_extra_state_attributes = {
