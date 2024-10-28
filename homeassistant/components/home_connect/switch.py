@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import get_dict_from_home_connect_error
 from .api import ConfigEntryAuth
 from .const import (
     ATTR_VALUE,
@@ -27,7 +28,6 @@ from .const import (
     REFRIGERATION_SUPERMODEFREEZER,
     REFRIGERATION_SUPERMODEREFRIGERATOR,
     SVE_TRANSLATION_KEY_APPLIANCE_NAME,
-    SVE_TRANSLATION_KEY_DESCRIPTION,
     SVE_TRANSLATION_KEY_ENTITY_ID,
     SVE_TRANSLATION_KEY_SETTING_KEY,
     SVE_TRANSLATION_KEY_VALUE,
@@ -150,13 +150,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_turn_on",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                     SVE_TRANSLATION_KEY_SETTING_KEY: self.bsh_key,
                 },
@@ -180,13 +174,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_turn_off",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                     SVE_TRANSLATION_KEY_SETTING_KEY: self.bsh_key,
                 },
@@ -237,13 +225,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_start_program",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     "program": self.program_name,
                 },
             ) from err
@@ -259,13 +241,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_stop_program",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     "program": self.program_name,
                 },
             ) from err
@@ -319,13 +295,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_power_on",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name,
                 },
             ) from err
@@ -354,13 +324,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_power_off",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name,
                     SVE_TRANSLATION_KEY_VALUE: self.power_off_state,
                 },

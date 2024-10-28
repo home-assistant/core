@@ -21,6 +21,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
+from . import get_dict_from_home_connect_error
 from .api import ConfigEntryAuth, HomeConnectDevice
 from .const import (
     ATTR_VALUE,
@@ -36,7 +37,6 @@ from .const import (
     REFRIGERATION_EXTERNAL_LIGHT_POWER,
     REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
     REFRIGERATION_INTERNAL_LIGHT_POWER,
-    SVE_TRANSLATION_KEY_DESCRIPTION,
     SVE_TRANSLATION_KEY_ENTITY_ID,
 )
 from .entity import HomeConnectEntity
@@ -156,13 +156,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_turn_on_light",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                 },
             ) from err
@@ -181,13 +175,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_domain=DOMAIN,
                         translation_key="home_connect_error_select_light_custom_color",
                         translation_placeholders={
-                            **(
-                                err.args[0]
-                                if len(err.args) > 0 and isinstance(err.args[0], dict)
-                                else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                                if len(err.args) > 0 and isinstance(err.args[0], str)
-                                else {}
-                            ),
+                            **get_dict_from_home_connect_error(err),
                             SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                         },
                     ) from err
@@ -205,13 +193,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_domain=DOMAIN,
                         translation_key="home_connect_error_set_light_color",
                         translation_placeholders={
-                            **(
-                                err.args[0]
-                                if len(err.args) > 0 and isinstance(err.args[0], dict)
-                                else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                                if len(err.args) > 0 and isinstance(err.args[0], str)
-                                else {}
-                            ),
+                            **get_dict_from_home_connect_error(err),
                             SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                         },
                     ) from err
@@ -243,15 +225,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                             translation_domain=DOMAIN,
                             translation_key="home_connect_error_set_light_color",
                             translation_placeholders={
-                                **(
-                                    err.args[0]
-                                    if len(err.args) > 0
-                                    and isinstance(err.args[0], dict)
-                                    else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                                    if len(err.args) > 0
-                                    and isinstance(err.args[0], str)
-                                    else {}
-                                ),
+                                **get_dict_from_home_connect_error(err),
                                 SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                             },
                         ) from err
@@ -276,13 +250,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     translation_domain=DOMAIN,
                     translation_key="home_connect_error_set_light_brightness",
                     translation_placeholders={
-                        **(
-                            err.args[0]
-                            if len(err.args) > 0 and isinstance(err.args[0], dict)
-                            else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                            if len(err.args) > 0 and isinstance(err.args[0], str)
-                            else {}
-                        ),
+                        **get_dict_from_home_connect_error(err),
                         SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                     },
                 ) from err
@@ -301,13 +269,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_turn_off_light",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                 },
             ) from err

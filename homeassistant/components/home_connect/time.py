@@ -11,11 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import get_dict_from_home_connect_error
 from .api import ConfigEntryAuth
 from .const import (
     ATTR_VALUE,
     DOMAIN,
-    SVE_TRANSLATION_KEY_DESCRIPTION,
     SVE_TRANSLATION_KEY_ENTITY_ID,
     SVE_TRANSLATION_KEY_SETTING_KEY,
     SVE_TRANSLATION_KEY_VALUE,
@@ -87,13 +87,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
                 translation_domain=DOMAIN,
                 translation_key="home_connect_error_set_setting",
                 translation_placeholders={
-                    **(
-                        err.args[0]
-                        if len(err.args) > 0 and isinstance(err.args[0], dict)
-                        else {SVE_TRANSLATION_KEY_DESCRIPTION: err.args[0]}
-                        if len(err.args) > 0 and isinstance(err.args[0], str)
-                        else {}
-                    ),
+                    **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
                     SVE_TRANSLATION_KEY_SETTING_KEY: self.bsh_key,
                     SVE_TRANSLATION_KEY_VALUE: str(value),
