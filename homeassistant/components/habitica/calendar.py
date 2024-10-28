@@ -63,28 +63,35 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
         translation_key=HabiticaCalendar.TODOS,
     )
 
-    def dated_todos(self) -> list[CalendarEvent]:
+    def dated_todos(
+        self, start_date: datetime, end_date: datetime | None = None
+    ) -> list[CalendarEvent]:
         """Get all dated todos."""
 
+        events = []
+        for task in self.coordinator.data.tasks:
+            if (
+                task["type"] == HabiticaTaskType.TODO  # only todos
+                and not task["completed"]  # that are not completed
+                and task.get("date")  # and have a due date
+            ):
+                start = dt_util.start_of_local_day(datetime.fromisoformat(task["date"]))
+                end = start + timedelta(days=1)
+                # return current and upcoming events or events events within the requested range
+                if (not end_date and start_date < end) or (
+                    end_date and start < end_date and end > start_date
+                ):
+                    events.append(
+                        CalendarEvent(
+                            start=start.date(),
+                            end=end.date(),
+                            summary=task["text"],
+                            description=task["notes"],
+                            uid=task["id"],
+                        )
+                    )
         return sorted(
-            [
-                CalendarEvent(
-                    start=start,
-                    end=start + timedelta(days=1),
-                    summary=task["text"],
-                    description=task["notes"],
-                    uid=task["id"],
-                )
-                for task in self.coordinator.data.tasks
-                if task["type"] == HabiticaTaskType.TODO
-                and not task["completed"]
-                and task.get("date")
-                and (
-                    start := dt_util.as_local(
-                        datetime.fromisoformat(task["date"])
-                    ).date()
-                )
-            ],
+            events,
             key=lambda event: (
                 event.start,
                 self.coordinator.data.user["tasksOrder"]["todos"].index(event.uid),
@@ -95,29 +102,13 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
 
-        return next(
-            (
-                e
-                for e in self.dated_todos()
-                if dt_util.start_of_local_day(e.start)
-                <= (now := dt_util.now())
-                < dt_util.start_of_local_day(e.end)
-                or dt_util.start_of_local_day(e.start) > now
-            ),
-            None,
-        )
+        return next(iter(self.dated_todos(dt_util.now())), None)
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-
-        return [
-            event
-            for event in self.dated_todos()
-            if dt_util.start_of_local_day(event.start) < end_date
-            and dt_util.start_of_local_day(event.end) > start_date
-        ]
+        return self.dated_todos(start_date, end_date)
 
 
 class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):

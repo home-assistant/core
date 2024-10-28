@@ -32,7 +32,7 @@ async def set_tz(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_habitica")
-@pytest.mark.freeze_time("2024-09-22 00:00:00")
+@pytest.mark.freeze_time("2024-09-20T22:00:00.000Z")
 async def test_calendar_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -57,7 +57,7 @@ async def test_calendar_platform(
         "calendar.test_user_dailies",
     ],
 )
-@pytest.mark.freeze_time("2024-09-22 00:00:00")
+@pytest.mark.freeze_time("2024-09-20T22:00:00.000Z")
 @pytest.mark.usefixtures("mock_habitica")
 async def test_api_events(
     hass: HomeAssistant,
