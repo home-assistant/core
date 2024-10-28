@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,7 +60,7 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
     _attr_event_types = DEVICE_BUTTON_EVENTS
     _attr_icon = "mdi:gesture-tap-button"
 
-    def __init__(self, config_entry: ConfigEntry, button_type: str) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry, button_type: str) -> None:
         """Initialize Button."""
         super().__init__(config_entry, config_entry.runtime_data.client)
 
