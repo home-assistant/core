@@ -434,48 +434,40 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
     current_work_areas: dict[str, set[int]] = {}
 
-    def _create_entities(mower_id: str) -> None:
-        data = coordinator.data[mower_id]
-        entities.extend(
+    def _create_mower_entities() -> list[SensorEntity]:
+        """Create entities for each mower."""
+        return [
             AutomowerSensorEntity(mower_id, coordinator, description)
+            for mower_id, data in coordinator.data.items()
             for description in MOWER_SENSOR_TYPES
             if description.exists_fn(data)
-        )
-        if data.capabilities.work_areas and data.work_areas:
-            _work_areas = data.work_areas
-            if _work_areas is not None:
-                entities.extend(
-                    WorkAreaSensorEntity(
-                        mower_id, coordinator, description, work_area_id
-                    )
-                    for description in WORK_AREA_SENSOR_TYPES
-                    for work_area_id in _work_areas
-                    if description.exists_fn(_work_areas[work_area_id])
-                )
-                current_work_areas[mower_id] = set(_work_areas.keys())
+        ]
 
-    for mower_id in coordinator.data:
-        _create_entities(mower_id)
-
+    entities.extend(_create_mower_entities())
     async_add_entities(entities)
 
     def _async_work_area_listener() -> None:
+        """Listen for new work areas and add sensor entities if they did not exist."""
         for mower_id in coordinator.data:
             if (
                 coordinator.data[mower_id].capabilities.work_areas
                 and (_work_areas := coordinator.data[mower_id].work_areas) is not None
             ):
                 received_work_areas = set(_work_areas.keys())
-                current_work_area_set = current_work_areas.setdefault(mower_id, set())
-                new_work_areas = received_work_areas - current_work_area_set
+                new_work_areas = received_work_areas - current_work_areas.get(
+                    mower_id, set()
+                )
                 if new_work_areas:
-                    current_work_area_set.update(new_work_areas)
+                    current_work_areas.setdefault(mower_id, set()).update(
+                        new_work_areas
+                    )
                     async_add_entities(
                         WorkAreaSensorEntity(
                             mower_id, coordinator, description, work_area_id
                         )
                         for description in WORK_AREA_SENSOR_TYPES
                         for work_area_id in new_work_areas
+                        if description.exists_fn(_work_areas[work_area_id])
                     )
 
     coordinator.async_add_listener(_async_work_area_listener)

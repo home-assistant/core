@@ -20,6 +20,7 @@ from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERV
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
@@ -226,7 +227,9 @@ async def test_add_and_remove_work_area(
                 cutting_height=12,
                 enabled=True,
                 progress=12,
-                last_time_completed_naive=datetime(2024, 10, 1, 11, 11, 0),
+                last_time_completed=datetime(
+                    2024, 10, 1, 11, 11, 0, tzinfo=dt_util.get_default_time_zone()
+                ),
             )
         }
     )

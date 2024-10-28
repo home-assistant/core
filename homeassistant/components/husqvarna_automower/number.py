@@ -113,39 +113,20 @@ async def async_setup_entry(
     entities: list[NumberEntity] = []
     current_work_areas: dict[str, set[int]] = {}
 
-    def _create_work_area_entities(
-        mower_id: str, work_areas: list[int]
-    ) -> list[NumberEntity]:
-        """Create WorkAreaNumberEntity instances for the specified work areas."""
-        return [
-            WorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
-            for description in WORK_AREA_NUMBER_TYPES
-            for work_area_id in work_areas
-        ]
-
-    def _create_mower_entities(mower_id: str) -> list[NumberEntity]:
-        """Create AutomowerNumberEntity instances for the specified mower."""
+    def _create_mower_entities() -> list[NumberEntity]:
+        """Create entities for each mower."""
         return [
             AutomowerNumberEntity(mower_id, coordinator, description)
+            for mower_id in coordinator.data
             for description in MOWER_NUMBER_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         ]
 
-    for mower_id in coordinator.data:
-        if coordinator.data[mower_id].capabilities.work_areas:
-            _work_areas = coordinator.data[mower_id].work_areas
-            if _work_areas is not None:
-                entities.extend(
-                    _create_work_area_entities(mower_id, list(_work_areas.keys()))
-                )
-                current_work_areas[mower_id] = set(_work_areas.keys())
-
-        entities.extend(_create_mower_entities(mower_id))
-
+    entities.extend(_create_mower_entities())
     async_add_entities(entities)
 
-    def _remove_all_work_areas(removed_work_areas: set[int], mower_id: str) -> None:
-        """Remove all unused work areas for all platforms."""
+    def _remove_work_area_entities(removed_work_areas: set[int], mower_id: str) -> None:
+        """Remove all unused work area entities for the specified mower."""
         entity_reg = er.async_get(hass)
         for entity_entry in er.async_entries_for_config_entry(
             entity_reg, entry.entry_id
@@ -156,28 +137,31 @@ async def async_setup_entry(
                     entity_reg.async_remove(entity_entry.entity_id)
 
     def _async_work_area_listener() -> None:
-        """Listen for new work areas and add/remove number entities if they did not exist."""
+        """Listen for new work areas and add/remove entities as needed."""
         for mower_id in coordinator.data:
             if (
                 coordinator.data[mower_id].capabilities.work_areas
                 and (_work_areas := coordinator.data[mower_id].work_areas) is not None
             ):
                 received_work_areas = set(_work_areas.keys())
-                new_work_areas = received_work_areas - current_work_areas.get(
-                    mower_id, set()
-                )
-                removed_work_areas = (
-                    current_work_areas.get(mower_id, set()) - received_work_areas
-                )
+                current_work_area_set = current_work_areas.setdefault(mower_id, set())
+
+                new_work_areas = received_work_areas - current_work_area_set
+                removed_work_areas = current_work_area_set - received_work_areas
+
                 if new_work_areas:
-                    current_work_areas.setdefault(mower_id, set()).update(
-                        new_work_areas
-                    )
+                    current_work_area_set.update(new_work_areas)
                     async_add_entities(
-                        _create_work_area_entities(mower_id, list(new_work_areas))
+                        WorkAreaNumberEntity(
+                            mower_id, coordinator, description, work_area_id
+                        )
+                        for description in WORK_AREA_NUMBER_TYPES
+                        for work_area_id in new_work_areas
                     )
+
                 if removed_work_areas:
-                    _remove_all_work_areas(removed_work_areas, mower_id)
+                    _remove_work_area_entities(removed_work_areas, mower_id)
+                    current_work_area_set.difference_update(removed_work_areas)
 
     coordinator.async_add_listener(_async_work_area_listener)
     _async_work_area_listener()

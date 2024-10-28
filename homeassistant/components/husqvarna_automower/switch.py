@@ -33,13 +33,13 @@ async def async_setup_entry(
     current_work_areas: dict[str, set[int]] = {}
     current_stay_out_zones: dict[str, set[str]] = {}
 
-    def _create_schedule_entities() -> list[SwitchEntity]:
+    def _create_mower_entities() -> list[SwitchEntity]:
         return [
             AutomowerScheduleSwitchEntity(mower_id, coordinator)
             for mower_id in coordinator.data
         ]
 
-    entities.extend(_create_schedule_entities())
+    entities.extend(_create_mower_entities())
     async_add_entities(entities)
 
     def _async_work_area_listener() -> None:
