@@ -817,7 +817,6 @@ class MQTT:
         qos: int,
         encoding: str | None = None,
         job_type: HassJobType | None = None,
-        late_wildcard_subscription: bool = False,
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos."""
         if not isinstance(topic, str):
