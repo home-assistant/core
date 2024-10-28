@@ -63,19 +63,16 @@ async def test_sensors_restore(
     initial: str,
     restored: str,
 ) -> None:
-    """Tests that the sensor entities are correct."""
+    """Test if the sensor should restore it's state or not when vehicle is offline."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
-    # Setup platform to get some history data
     await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
 
     assert hass.states.get(entity_id).state == initial
 
-    # Set the vehicle offline
     mock_vehicle_data.side_effect = VehicleOffline
 
-    # Reload the platform and allow restore entities to happen
     with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
 
