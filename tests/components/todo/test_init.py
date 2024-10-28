@@ -933,6 +933,10 @@ async def test_move_todo_item_service_invalid_input(
             TodoServices.REMOVE_COMPLETED_ITEMS,
             None,
         ),
+        (
+            TodoServices.REMOVE_ALL_ITEMS,
+            None,
+        ),
     ],
 )
 async def test_unsupported_service(
@@ -1137,6 +1141,54 @@ async def test_remove_completed_items_service_raises(
         await hass.services.async_call(
             DOMAIN,
             TodoServices.REMOVE_COMPLETED_ITEMS,
+            target={ATTR_ENTITY_ID: "todo.entity1"},
+            blocking=True,
+        )
+
+
+async def test_remove_all_items_service(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test remove all todo items service."""
+    await create_mock_platform(hass, [test_entity])
+
+    await hass.services.async_call(
+        DOMAIN,
+        TodoServices.REMOVE_ALL_ITEMS,
+        target={ATTR_ENTITY_ID: "todo.entity1"},
+        blocking=True,
+    )
+
+    args = test_entity.async_delete_todo_items.call_args
+    assert args
+    assert args.kwargs.get("uids") == ["1", "2"]
+
+    test_entity.async_delete_todo_items.reset_mock()
+
+    # calling service multiple times will not call the entity method
+    await hass.services.async_call(
+        DOMAIN,
+        TodoServices.REMOVE_ALL_ITEMS,
+        target={ATTR_ENTITY_ID: "todo.entity1"},
+        blocking=True,
+    )
+    test_entity.async_delete_todo_items.assert_not_called()
+
+
+async def test_remove_all_items_service_raises(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test removing all item from a To-do list that raises an error."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    test_entity.async_delete_todo_items.side_effect = HomeAssistantError("Ooops")
+    with pytest.raises(HomeAssistantError, match="Ooops"):
+        await hass.services.async_call(
+            DOMAIN,
+            TodoServices.REMOVE_ALL_ITEMS,
             target={ATTR_ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
