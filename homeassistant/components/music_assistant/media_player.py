@@ -675,9 +675,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_media_title = media_item.name
 
         if media_item.media_type == MediaType.TRACK:
-            self._attr_media_artist = getattr(media_item, "artist_str", None)
             if TYPE_CHECKING:
                 assert isinstance(media_item, Track)
+            self._attr_media_artist = media_item.artist_str
             if media_item.version:
                 self._attr_media_title += f" ({media_item.version})"
             if media_item.album:
