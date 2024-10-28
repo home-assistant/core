@@ -32,19 +32,19 @@ class SmartyBinarySensorEntityDescription(BinarySensorEntityDescription):
 ENTITIES: tuple[SmartyBinarySensorEntityDescription, ...] = (
     SmartyBinarySensorEntityDescription(
         key="alarm",
-        name="Alarm",
+        translation_key="alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda smarty: smarty.alarm,
     ),
     SmartyBinarySensorEntityDescription(
         key="warning",
-        name="Warning",
+        translation_key="warning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda smarty: smarty.warning,
     ),
     SmartyBinarySensorEntityDescription(
         key="boost",
-        name="Boost State",
+        translation_key="boost_state",
         value_fn=lambda smarty: smarty.boost,
     ),
 )
@@ -77,7 +77,6 @@ class SmartyBinarySensor(SmartyEntity, BinarySensorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = f"{coordinator.config_entry.title} {entity_description.name}"
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )

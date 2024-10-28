@@ -11,6 +11,7 @@ from sense_energy import (
 DOMAIN = "sense"
 DEFAULT_TIMEOUT = 30
 ACTIVE_UPDATE_RATE = 60
+TREND_UPDATE_RATE = 300
 DEFAULT_NAME = "Sense"
 SENSE_DEVICE_UPDATE = "sense_devices_update"
 

@@ -26,7 +26,12 @@ def command[_EntityT: CambridgeAudioEntity, **_P](
             await func(self, *args, **kwargs)
         except STREAM_MAGIC_EXCEPTIONS as exc:
             raise HomeAssistantError(
-                f"Error executing {func.__name__} on entity {self.entity_id},"
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={
+                    "function_name": func.__name__,
+                    "entity_id": self.entity_id,
+                },
             ) from exc
 
     return decorator
