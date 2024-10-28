@@ -5,12 +5,16 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Sequence
 from contextlib import suppress
+import enum
 import logging
-from typing import Any, Final
+import os
+import pathlib
+from typing import TYPE_CHECKING, Any, Final
 from urllib.parse import urlparse
 
 import voluptuous as vol
-from webrtc_models import RTCIceServer
+from webrtc_models import RTCConfiguration, RTCIceServer
+import yarl
 
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
@@ -18,6 +22,7 @@ from .const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
+    BASE_PLATFORMS,
     CONF_ALLOWLIST_EXTERNAL_DIRS,
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
@@ -46,15 +51,33 @@ from .const import (
     CONF_UNIT_SYSTEM,
     CONF_URL,
     CONF_USERNAME,
+    EVENT_CORE_CONFIG_UPDATE,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+    UnitOfLength,
+    __version__,
 )
-from .core import DOMAIN as HOMEASSISTANT_DOMAIN, ConfigSource, HomeAssistant
+from .core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
+from .helpers.frame import report
+from .helpers.storage import Store
+from .helpers.typing import UNDEFINED, UndefinedType
+from .util import dt as dt_util, location
 from .util.hass_dict import HassKey
 from .util.package import is_docker_env
-from .util.unit_system import get_unit_system, validate_unit_system
+from .util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    METRIC_SYSTEM,
+    UnitSystem,
+    get_unit_system,
+    validate_unit_system,
+)
+
+# Typing imports that create a circular dependency
+if TYPE_CHECKING:
+    from .components.http import ApiConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +86,19 @@ DATA_CUSTOMIZE: HassKey[EntityValues] = HassKey("hass_customize")
 CONF_CREDENTIAL: Final = "credential"
 CONF_ICE_SERVERS: Final = "ice_servers"
 CONF_WEBRTC: Final = "webrtc"
+
+CORE_STORAGE_KEY = "core.config"
+CORE_STORAGE_VERSION = 1
+CORE_STORAGE_MINOR_VERSION = 4
+
+
+class ConfigSource(enum.StrEnum):
+    """Source of core configuration."""
+
+    DEFAULT = "default"
+    DISCOVERED = "discovered"
+    STORAGE = "storage"
+    YAML = "yaml"
 
 
 def _no_duplicate_auth_provider(
@@ -421,3 +457,435 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     if CONF_UNIT_SYSTEM in config:
         hac.units = get_unit_system(config[CONF_UNIT_SYSTEM])
+
+
+class _ComponentSet(set[str]):
+    """Set of loaded components.
+
+    This set contains both top level components and platforms.
+
+    Examples:
+    `light`, `switch`, `hue`, `mjpeg.camera`, `universal.media_player`,
+    `homeassistant.scene`
+
+    The top level components set only contains the top level components.
+
+    The all components set contains all components, including platform
+    based components.
+
+    """
+
+    def __init__(
+        self, top_level_components: set[str], all_components: set[str]
+    ) -> None:
+        """Initialize the component set."""
+        self._top_level_components = top_level_components
+        self._all_components = all_components
+
+    def add(self, component: str) -> None:
+        """Add a component to the store."""
+        if "." not in component:
+            self._top_level_components.add(component)
+            self._all_components.add(component)
+        else:
+            platform, _, domain = component.partition(".")
+            if domain in BASE_PLATFORMS:
+                self._all_components.add(platform)
+        return super().add(component)
+
+    def remove(self, component: str) -> None:
+        """Remove a component from the store."""
+        if "." in component:
+            raise ValueError("_ComponentSet does not support removing sub-components")
+        self._top_level_components.remove(component)
+        return super().remove(component)
+
+    def discard(self, component: str) -> None:
+        """Remove a component from the store."""
+        raise NotImplementedError("_ComponentSet does not support discard, use remove")
+
+
+class Config:
+    """Configuration settings for Home Assistant."""
+
+    _store: Config._ConfigStore
+
+    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
+        """Initialize a new config object."""
+        # pylint: disable-next=import-outside-toplevel
+        from .components.zone import DEFAULT_RADIUS
+
+        self.hass = hass
+
+        self.latitude: float = 0
+        self.longitude: float = 0
+
+        self.elevation: int = 0
+        """Elevation (always in meters regardless of the unit system)."""
+
+        self.radius: int = DEFAULT_RADIUS
+        """Radius of the Home Zone (always in meters regardless of the unit system)."""
+
+        self.debug: bool = False
+        self.location_name: str = "Home"
+        self.time_zone: str = "UTC"
+        self.units: UnitSystem = METRIC_SYSTEM
+        self.internal_url: str | None = None
+        self.external_url: str | None = None
+        self.currency: str = "EUR"
+        self.country: str | None = None
+        self.language: str = "en"
+
+        self.config_source: ConfigSource = ConfigSource.DEFAULT
+
+        # If True, pip install is skipped for requirements on startup
+        self.skip_pip: bool = False
+
+        # List of packages to skip when installing requirements on startup
+        self.skip_pip_packages: list[str] = []
+
+        # Set of loaded top level components
+        # This set is updated by _ComponentSet
+        # and should not be modified directly
+        self.top_level_components: set[str] = set()
+
+        # Set of all loaded components including platform
+        # based components
+        self.all_components: set[str] = set()
+
+        # Set of loaded components
+        self.components: _ComponentSet = _ComponentSet(
+            self.top_level_components, self.all_components
+        )
+
+        # API (HTTP) server configuration
+        self.api: ApiConfig | None = None
+
+        # Directory that holds the configuration
+        self.config_dir: str = config_dir
+
+        # List of allowed external dirs to access
+        self.allowlist_external_dirs: set[str] = set()
+
+        # List of allowed external URLs that integrations may use
+        self.allowlist_external_urls: set[str] = set()
+
+        # Dictionary of Media folders that integrations may use
+        self.media_dirs: dict[str, str] = {}
+
+        # If Home Assistant is running in recovery mode
+        self.recovery_mode: bool = False
+
+        # Use legacy template behavior
+        self.legacy_templates: bool = False
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
+
+        self.webrtc = RTCConfiguration()
+
+    def async_initialize(self) -> None:
+        """Finish initializing a config object.
+
+        This must be called before the config object is used.
+        """
+        self._store = self._ConfigStore(self.hass)
+
+    def distance(self, lat: float, lon: float) -> float | None:
+        """Calculate distance from Home Assistant.
+
+        Async friendly.
+        """
+        return self.units.length(
+            location.distance(self.latitude, self.longitude, lat, lon),
+            UnitOfLength.METERS,
+        )
+
+    def path(self, *path: str) -> str:
+        """Generate path to the file within the configuration directory.
+
+        Async friendly.
+        """
+        return os.path.join(self.config_dir, *path)
+
+    def is_allowed_external_url(self, url: str) -> bool:
+        """Check if an external URL is allowed."""
+        parsed_url = f"{yarl.URL(url)!s}/"
+
+        return any(
+            allowed
+            for allowed in self.allowlist_external_urls
+            if parsed_url.startswith(allowed)
+        )
+
+    def is_allowed_path(self, path: str) -> bool:
+        """Check if the path is valid for access from outside.
+
+        This function does blocking I/O and should not be called from the event loop.
+        Use hass.async_add_executor_job to schedule it on the executor.
+        """
+        assert path is not None
+
+        thepath = pathlib.Path(path)
+        try:
+            # The file path does not have to exist (it's parent should)
+            if thepath.exists():
+                thepath = thepath.resolve()
+            else:
+                thepath = thepath.parent.resolve()
+        except (FileNotFoundError, RuntimeError, PermissionError):
+            return False
+
+        for allowed_path in self.allowlist_external_dirs:
+            try:
+                thepath.relative_to(allowed_path)
+            except ValueError:
+                pass
+            else:
+                return True
+
+        return False
+
+    def as_dict(self) -> dict[str, Any]:
+        """Create a dictionary representation of the configuration.
+
+        Async friendly.
+        """
+        allowlist_external_dirs = list(self.allowlist_external_dirs)
+        return {
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "elevation": self.elevation,
+            "unit_system": self.units.as_dict(),
+            "location_name": self.location_name,
+            "time_zone": self.time_zone,
+            "components": list(self.components),
+            "config_dir": self.config_dir,
+            # legacy, backwards compat
+            "whitelist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_urls": list(self.allowlist_external_urls),
+            "version": __version__,
+            "config_source": self.config_source,
+            "recovery_mode": self.recovery_mode,
+            "state": self.hass.state.value,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
+            "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
+            "safe_mode": self.safe_mode,
+            "debug": self.debug,
+            "radius": self.radius,
+        }
+
+    async def async_set_time_zone(self, time_zone_str: str) -> None:
+        """Help to set the time zone."""
+        if time_zone := await dt_util.async_get_time_zone(time_zone_str):
+            self.time_zone = time_zone_str
+            dt_util.set_default_time_zone(time_zone)
+        else:
+            raise ValueError(f"Received invalid time zone {time_zone_str}")
+
+    def set_time_zone(self, time_zone_str: str) -> None:
+        """Set the time zone.
+
+        This is a legacy method that should not be used in new code.
+        Use async_set_time_zone instead.
+
+        It will be removed in Home Assistant 2025.6.
+        """
+        report(
+            "set the time zone using set_time_zone instead of async_set_time_zone"
+            " which will stop working in Home Assistant 2025.6",
+            error_if_core=True,
+            error_if_integration=True,
+        )
+        if time_zone := dt_util.get_time_zone(time_zone_str):
+            self.time_zone = time_zone_str
+            dt_util.set_default_time_zone(time_zone)
+        else:
+            raise ValueError(f"Received invalid time zone {time_zone_str}")
+
+    async def _async_update(
+        self,
+        *,
+        source: ConfigSource,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        elevation: int | None = None,
+        unit_system: str | None = None,
+        location_name: str | None = None,
+        time_zone: str | None = None,
+        external_url: str | UndefinedType | None = UNDEFINED,
+        internal_url: str | UndefinedType | None = UNDEFINED,
+        currency: str | None = None,
+        country: str | UndefinedType | None = UNDEFINED,
+        language: str | None = None,
+        radius: int | None = None,
+    ) -> None:
+        """Update the configuration from a dictionary."""
+        self.config_source = source
+        if latitude is not None:
+            self.latitude = latitude
+        if longitude is not None:
+            self.longitude = longitude
+        if elevation is not None:
+            self.elevation = elevation
+        if unit_system is not None:
+            try:
+                self.units = get_unit_system(unit_system)
+            except ValueError:
+                self.units = METRIC_SYSTEM
+        if location_name is not None:
+            self.location_name = location_name
+        if time_zone is not None:
+            await self.async_set_time_zone(time_zone)
+        if external_url is not UNDEFINED:
+            self.external_url = external_url
+        if internal_url is not UNDEFINED:
+            self.internal_url = internal_url
+        if currency is not None:
+            self.currency = currency
+        if country is not UNDEFINED:
+            self.country = country
+        if language is not None:
+            self.language = language
+        if radius is not None:
+            self.radius = radius
+
+    async def async_update(self, **kwargs: Any) -> None:
+        """Update the configuration from a dictionary."""
+        await self._async_update(source=ConfigSource.STORAGE, **kwargs)
+        await self._async_store()
+        self.hass.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE, kwargs)
+
+        _raise_issue_if_historic_currency(self.hass, self.currency)
+        _raise_issue_if_no_country(self.hass, self.country)
+
+    async def async_load(self) -> None:
+        """Load [homeassistant] core config."""
+        if not (data := await self._store.async_load()):
+            return
+
+        # In 2021.9 we fixed validation to disallow a path (because that's never
+        # correct) but this data still lives in storage, so we print a warning.
+        if data.get("external_url") and urlparse(data["external_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid external_url set. It's not allowed to have a path")
+
+        if data.get("internal_url") and urlparse(data["internal_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
+
+        await self._async_update(
+            source=ConfigSource.STORAGE,
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
+            elevation=data.get("elevation"),
+            unit_system=data.get("unit_system_v2"),
+            location_name=data.get("location_name"),
+            time_zone=data.get("time_zone"),
+            external_url=data.get("external_url", UNDEFINED),
+            internal_url=data.get("internal_url", UNDEFINED),
+            currency=data.get("currency"),
+            country=data.get("country"),
+            language=data.get("language"),
+            radius=data["radius"],
+        )
+
+    async def _async_store(self) -> None:
+        """Store [homeassistant] core config."""
+        data = {
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "elevation": self.elevation,
+            # We don't want any integrations to use the name of the unit system
+            # so we are using the private attribute here
+            "unit_system_v2": self.units._name,  # noqa: SLF001
+            "location_name": self.location_name,
+            "time_zone": self.time_zone,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
+            "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
+            "radius": self.radius,
+        }
+        await self._store.async_save(data)
+
+    class _ConfigStore(Store[dict[str, Any]]):
+        """Class to help storing Config data."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            """Initialize storage class."""
+            super().__init__(
+                hass,
+                CORE_STORAGE_VERSION,
+                CORE_STORAGE_KEY,
+                private=True,
+                atomic_writes=True,
+                minor_version=CORE_STORAGE_MINOR_VERSION,
+            )
+            self._original_unit_system: str | None = None  # from old store 1.1
+
+        async def _async_migrate_func(
+            self,
+            old_major_version: int,
+            old_minor_version: int,
+            old_data: dict[str, Any],
+        ) -> dict[str, Any]:
+            """Migrate to the new version."""
+
+            # pylint: disable-next=import-outside-toplevel
+            from .components.zone import DEFAULT_RADIUS
+
+            data = old_data
+            if old_major_version == 1 and old_minor_version < 2:
+                # In 1.2, we remove support for "imperial", replaced by "us_customary"
+                # Using a new key to allow rollback
+                self._original_unit_system = data.get("unit_system")
+                data["unit_system_v2"] = self._original_unit_system
+                if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
+                    data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+            if old_major_version == 1 and old_minor_version < 3:
+                # In 1.3, we add the key "language", initialize it from the
+                # owner account.
+                data["language"] = "en"
+                try:
+                    owner = await self.hass.auth.async_get_owner()
+                    if owner is not None:
+                        # pylint: disable-next=import-outside-toplevel
+                        from .components.frontend import storage as frontend_store
+
+                        _, owner_data = await frontend_store.async_user_store(
+                            self.hass, owner.id
+                        )
+
+                        if (
+                            "language" in owner_data
+                            and "language" in owner_data["language"]
+                        ):
+                            with suppress(vol.InInvalid):
+                                data["language"] = cv.language(
+                                    owner_data["language"]["language"]
+                                )
+                # pylint: disable-next=broad-except
+                except Exception:
+                    _LOGGER.exception("Unexpected error during core config migration")
+            if old_major_version == 1 and old_minor_version < 4:
+                # In 1.4, we add the key "radius", initialize it with the default.
+                data.setdefault("radius", DEFAULT_RADIUS)
+
+            if old_major_version > 1:
+                raise NotImplementedError
+            return data
+
+        async def async_save(self, data: dict[str, Any]) -> None:
+            if self._original_unit_system:
+                data["unit_system"] = self._original_unit_system
+            return await super().async_save(data)

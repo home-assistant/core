@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from geniushubclient import GeniusDevice, GeniusZone
 import pytest
@@ -11,7 +11,6 @@ from homeassistant.components.geniushub.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_array_fixture
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
