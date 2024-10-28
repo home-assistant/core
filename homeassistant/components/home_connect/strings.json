@@ -21,6 +21,50 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "exceptions": {
+    "turn_on_light": {
+      "message": "Error while trying to turn on {entity_id}: {description}"
+    },
+    "turn_off_light": {
+      "message": "Error while trying to turn off {entity_id}: {description}"
+    },
+    "set_light_brightness": {
+      "message": "Error while trying to set brightness of {entity_id}: {description}"
+    },
+    "select_light_custom_color": {
+      "message": "Error while trying to select custom color of {entity_id}: {description}"
+    },
+    "set_light_color": {
+      "message": "Error while trying to set color of {entity_id}: {description}"
+    },
+    "set_light_effect": {
+      "message": "Error while trying to set effect of {entity_id}: {description}"
+    },
+    "set_setting": {
+      "message": "Error while trying to set \"{value}\" to \"{key}\" setting for {entity_id}: {description}"
+    },
+    "turn_on": {
+      "message": "Error while trying to turn on {entity_id} ({key}): {description}"
+    },
+    "turn_off": {
+      "message": "Error while trying to turn off {entity_id} ({key}): {description}"
+    },
+    "start_program": {
+      "message": "Error while trying to start program {program}: {description}"
+    },
+    "stop_program": {
+      "message": "Error while trying to stop program {program}: {description}"
+    },
+    "power_on": {
+      "message": "Error while trying to turn on {appliance_name}: {description}"
+    },
+    "power_off": {
+      "message": "Error while trying to turn off {appliance_name} with value \"{value}\": {description}"
+    },
+    "turn_off_not_supported": {
+      "message": "{appliance_name} does not support turning off or entering standby mode."
+    }
+  },
   "services": {
     "start_program": {
       "name": "Start program",
