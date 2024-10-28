@@ -7,7 +7,7 @@ import logging
 from typing import Final, final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+from homeassistant.const import UnitOfVolumetricMassDensity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -151,4 +151,4 @@ class AirQualityEntity(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        return UnitOfVolumetricMassDensity.MICROGRAMS_PER_CUBIC_METER

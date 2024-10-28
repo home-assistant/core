@@ -1344,10 +1344,35 @@ _DEPRECATED_PRECIPITATION_INCHES_PER_HOUR: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
 
+
+class UnitOfVolumetricMassDensity(StrEnum):
+    """Volumetric mass density.
+
+    A substance's mass per unit of volume.
+    """
+
+    MICROGRAMS_PER_CUBIC_METER = "µg/m³"
+    MILLIGRAMS_PER_CUBIC_METER = "mg/m³"
+    MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
+
+
 # Concentration units
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = DeprecatedConstantEnum(
+    UnitOfVolumetricMassDensity.MICROGRAMS_PER_CUBIC_METER,
+    "2025.11",
+)
+"""Deprecated: please use UnitOfDensity.MICROGRAMS_PER_CUBIC_METER"""
+_DEPRECATED_CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = DeprecatedConstantEnum(
+    UnitOfVolumetricMassDensity.MILLIGRAMS_PER_CUBIC_METER,
+    "2025.11",
+)
+"""Deprecated: please use UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER"""
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = DeprecatedConstantEnum(
+    UnitOfVolumetricMassDensity.MICROGRAMS_PER_CUBIC_FOOT,
+    "2025.11",
+)
+"""Deprecated: please use UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT"""
+
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
