@@ -32,6 +32,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType as HAMediaType,
     RepeatMode,
     async_process_play_media_url,
 )
@@ -110,7 +111,8 @@ def catch_musicassistant_error[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except MusicAssistantError as err:
-            raise HomeAssistantError(f"{err.__class__.__name__}: {err!s}") from err
+            error_msg = str(err) or err.__class__.__name__
+            raise HomeAssistantError(error_msg) from err
 
     return wrapper
 
@@ -123,16 +125,14 @@ async def async_setup_entry(
     """Set up Music Assistant MediaPlayer(s) from Config Entry."""
     mass = entry.runtime_data.mass
     added_ids = set()
-    if TYPE_CHECKING:
-        assert mass is not None
 
     async def handle_player_added(event: MassEvent) -> None:
         """Handle Mass Player Added event."""
+        if TYPE_CHECKING:
+            assert event.object_id is not None
         if event.object_id in added_ids:
             return
         added_ids.add(event.object_id)
-        if TYPE_CHECKING:
-            assert event.object_id is not None
         async_add_entities([MusicAssistantPlayer(mass, event.object_id)])
 
     # register listener for new players
@@ -150,26 +150,17 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     """Representation of MediaPlayerEntity from Music Assistant Player."""
 
     _attr_name = None
+    _attr_media_image_remotely_accessible = True
+    _attr_media_content_type = HAMediaType.MUSIC
 
     def __init__(self, mass: MusicAssistantClient, player_id: str) -> None:
         """Initialize MediaPlayer entity."""
         super().__init__(mass, player_id)
         self._attr_icon = self.player.icon.replace("mdi-", "mdi:")
-        self._attr_media_image_remotely_accessible = True
         self._attr_supported_features = SUPPORTED_FEATURES
         if PlayerFeature.SYNC in self.player.supported_features:
             self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
-        self._attr_media_position_updated_at = None
-        self._attr_media_position = None
-        self._attr_media_duration = None
-        self._attr_media_album_artist = None
-        self._attr_media_artist = None
-        self._attr_media_album_name = None
-        self._attr_media_title = None
-        self._attr_media_content_id = None
-        self._attr_media_content_type = "music"
-        self._attr_media_image_url = None
         self._prev_time: float = 0
 
     async def async_added_to_hass(self) -> None:
@@ -230,8 +221,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
 
     async def async_on_update(self) -> None:
         """Handle player updates."""
-        # ruff: noqa: PLR0915
-        # pylint: disable=too-many-statements
         if not self.available:
             return
         player = self.player
