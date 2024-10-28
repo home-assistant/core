@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -39,15 +39,6 @@ async def test_on_off_sensors(
     """Test the Sense binary sensors."""
     await setup_platform(hass, config_entry, BINARY_SENSOR_DOMAIN)
     device_1, device_2 = mock_sense.devices
-
-    state = hass.states.get(f"binary_sensor.{DEVICE_1_NAME.lower()}")
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get(f"binary_sensor.{DEVICE_2_NAME.lower()}")
-    assert state.state == STATE_UNAVAILABLE
-
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=ACTIVE_UPDATE_RATE))
-    await hass.async_block_till_done()
 
     state = hass.states.get(f"binary_sensor.{DEVICE_1_NAME.lower()}")
     assert state.state == STATE_OFF

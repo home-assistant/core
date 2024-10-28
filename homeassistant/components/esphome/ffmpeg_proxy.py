@@ -181,7 +181,6 @@ class FFmpegConvertResponse(web.StreamResponse):
                 self.hass.is_running
                 and (request.transport is not None)
                 and (not request.transport.is_closing())
-                and (proc.returncode is None)
                 and (chunk := await proc.stdout.read(self.chunk_size))
             ):
                 await writer.write(chunk)

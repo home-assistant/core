@@ -347,6 +347,13 @@ def label_mock(hass: HomeAssistant) -> None:
         platform="test",
         device_id=device_has_label1.id,
     )
+    entity_with_label1_from_device_and_different_area = er.RegistryEntry(
+        entity_id="light.with_label1_from_device_diff_area",
+        unique_id="with_label1_from_device_diff_area",
+        platform="test",
+        device_id=device_has_label1.id,
+        area_id=area_without_labels.id,
+    )
     entity_with_label1_and_label2_from_device = er.RegistryEntry(
         entity_id="light.with_label1_and_label2_from_device",
         unique_id="with_label1_and_label2_from_device",
@@ -373,6 +380,7 @@ def label_mock(hass: HomeAssistant) -> None:
             config_entity_with_my_label.entity_id: config_entity_with_my_label,
             entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
             entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
+            entity_with_label1_from_device_and_different_area.entity_id: entity_with_label1_from_device_and_different_area,
             entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
             entity_with_my_label.entity_id: entity_with_my_label,
             entity_with_no_labels.entity_id: entity_with_no_labels,
@@ -754,6 +762,7 @@ async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
 
     assert {
         "light.with_label1_from_device",
+        "light.with_label1_from_device_diff_area",
         "light.with_labels_from_device",
         "light.with_label1_and_label2_from_device",
     } == await service.async_extract_entity_ids(hass, call)

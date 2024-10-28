@@ -45,7 +45,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.4
+PyChromecast==14.0.5
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -176,7 +176,7 @@ aio-georss-gdacs==0.10
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.8
+aioairzone-cloud==0.6.10
 
 # homeassistant.components.airzone
 aioairzone==0.9.5
@@ -319,7 +319,7 @@ aiooncue==0.3.7
 aioopenexchangerates==0.6.8
 
 # homeassistant.components.nmap_tracker
-aiooui==0.1.6
+aiooui==0.1.7
 
 # homeassistant.components.pegel_online
 aiopegelonline==0.0.10
@@ -465,7 +465,7 @@ anthemav==1.4.1
 anthropic==0.31.2
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.1.2
+apple_weatherkit==1.1.3
 
 # homeassistant.components.apprise
 apprise==1.9.0
@@ -937,13 +937,13 @@ freesms==0.2.0
 fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
-fyta_cli==0.6.7
+fyta_cli==0.6.10
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.3
+gardena-bluetooth==1.4.4
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -986,7 +986,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.0.1b0
+go2rtc-client==0.0.1b1
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1020,7 +1020,7 @@ google-photos-library-api==0.12.1
 googlemaps==2.5.1
 
 # homeassistant.components.slide
-goslide-api==0.5.1
+goslide-api==0.7.0
 
 # homeassistant.components.tailwind
 gotailwind==0.2.4
@@ -1029,7 +1029,7 @@ gotailwind==0.2.4
 govee-ble==0.40.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.5.2
+govee-local-api==1.5.3
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1096,7 +1096,7 @@ hassil==1.7.4
 hdate==0.10.9
 
 # homeassistant.components.heatmiser
-heatmiserV3==1.1.18
+heatmiserV3==2.0.3
 
 # homeassistant.components.here_travel_time
 here-routing==1.0.1
@@ -1253,10 +1253,10 @@ knx-frontend==2024.9.10.221729
 konnected==1.2.0
 
 # homeassistant.components.kraken
-krakenex==2.1.0
+krakenex==2.2.2
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.0.2
+lacrosse-view==1.0.3
 
 # homeassistant.components.eufy
 lakeside==0.13
@@ -1265,7 +1265,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.1.6
+lcn-frontend==0.2.0
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1616,7 +1616,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.4.3
+plugwise==1.4.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1820,7 +1820,7 @@ pycomfoconnect==0.5.1
 pycoolmasternet-async==0.2.2
 
 # homeassistant.components.radio_browser
-pycountry==23.12.11
+pycountry==24.6.1
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
@@ -2142,6 +2142,9 @@ pyoverkiz==1.14.1
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
 
+# homeassistant.components.palazzetti
+pypalazzetti==0.1.6
+
 # homeassistant.components.elv
 pypca==0.0.7
 
@@ -2278,7 +2281,7 @@ pysqueezebox==0.10.0
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuezV2==0.2.1
+pysuezV2==0.2.2
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2517,7 +2520,7 @@ qnapstats==0.4.0
 quantum-gateway==0.0.8
 
 # homeassistant.components.radio_browser
-radios==0.3.1
+radios==0.3.2
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
@@ -2821,6 +2824,9 @@ thermopro-ble==0.10.0
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
 
+# homeassistant.components.lg_thinq
+thinqconnect==0.9.8
+
 # homeassistant.components.tikteck
 tikteck==0.4
 
@@ -2920,7 +2926,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.7.6
+velbus-aio==2024.10.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -3054,13 +3060,13 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.135.0
+zeroconf==0.136.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.35
+zha==0.0.36
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

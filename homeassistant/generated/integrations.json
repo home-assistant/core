@@ -3293,6 +3293,12 @@
         }
       }
     },
+    "lg_thinq": {
+      "name": "LG ThinQ",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "lidarr": {
       "name": "Lidarr",
       "integration_type": "service",
@@ -4527,6 +4533,12 @@
     "p1_monitor": {
       "name": "P1 Monitor",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "palazzetti": {
+      "name": "Palazzetti",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
