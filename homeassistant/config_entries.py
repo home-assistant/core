@@ -1251,13 +1251,30 @@ class ConfigEntriesFlowManager(
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        # reauth/reconfigure flows should be linked to a config entry
+        if (source := context["source"]) in {
+            SOURCE_REAUTH,
+            SOURCE_RECONFIGURE,
+        } and "entry_id" not in context:
+            # Deprecated in 2024.11, should fail in 2025.11
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=handler
+            )
+            _LOGGER.error(
+                (
+                    "Initialising a '%s' flow without an `entry_id` in the context"
+                    " please %s"
+                ),
+                source,
+                report_issue,
+            )
+
         flow_id = ulid_util.ulid_now()
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
-            context.get("source")
-            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
+            source not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
             and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
         ):
@@ -1271,7 +1288,7 @@ class ConfigEntriesFlowManager(
 
         loop = self.hass.loop
 
-        if context["source"] == SOURCE_IMPORT:
+        if source == SOURCE_IMPORT:
             self._pending_import_flows[handler][flow_id] = loop.create_future()
 
         cancel_init_future = loop.create_future()
