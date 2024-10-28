@@ -244,6 +244,12 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         ) and power_state in [BSH_POWER_OFF, BSH_POWER_STANDBY]:
             self.power_off_state = power_state
 
+    async def async_added_to_hass(self) -> None:
+        """Add the entity to the hass instance."""
+        await super().async_added_to_hass()
+        if not hasattr(self, "power_off_state"):
+            await self.async_fetch_power_off_state()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
         _LOGGER.debug("Tried to switch on %s", self.name)
