@@ -145,7 +145,7 @@ CORE_STORAGE_MINOR_VERSION = 4
 DOMAIN = "homeassistant"
 
 # How long to wait to log tasks that are blocking
-BLOCK_LOG_TIMEOUT = 60
+BLOCK_LOG_TIMEOUT = 2
 
 type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
@@ -1028,7 +1028,7 @@ class HomeAssistant:
                 # continue to block. At this point we start
                 # logging all waiting tasks.
                 for task in tasks:
-                    _LOGGER.debug("Waiting for task: %s", task)
+                    _LOGGER.info("Waiting for task: %s", task)
 
     async def _await_and_log_pending(
         self, pending: Collection[asyncio.Future[Any]]
@@ -1041,7 +1041,7 @@ class HomeAssistant:
                 return
             wait_time += BLOCK_LOG_TIMEOUT
             for task in pending:
-                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
+                _LOGGER.info("Waited %s seconds for task: %s", wait_time, task)
 
     @overload
     @callback
@@ -1111,6 +1111,7 @@ class HomeAssistant:
                 )
 
         # Stage 1 - Run shutdown jobs
+        _LOGGER.warning("SHUTDOWN STAGE 1 START")
         try:
             async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
                 tasks: list[asyncio.Future[Any]] = []
@@ -1127,8 +1128,10 @@ class HomeAssistant:
                 " continue"
             )
             self._async_log_running_tasks("run shutdown jobs")
+        _LOGGER.warning("SHUTDOWN STAGE 1 DONE")
 
         # Stage 2 - Stop integrations
+        _LOGGER.warning("SHUTDOWN STAGE 2 START")
 
         # Keep holding the reference to the tasks but do not allow them
         # to block shutdown. Only tasks created after this point will
@@ -1149,6 +1152,7 @@ class HomeAssistant:
 
         self.set_state(CoreState.stopping)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_STOP)
+        _LOGGER.warning("SHUTDOWN STAGE 2 WAIT")
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
@@ -1158,8 +1162,10 @@ class HomeAssistant:
                 " continue"
             )
             self._async_log_running_tasks("stop integrations")
+        _LOGGER.warning("SHUTDOWN STAGE 2 DONE")
 
         # Stage 3 - Final write
+        _LOGGER.warning("SHUTDOWN STAGE 3 START")
         self.set_state(CoreState.final_write)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
@@ -1173,6 +1179,7 @@ class HomeAssistant:
             self._async_log_running_tasks("final write")
 
         # Stage 4 - Close
+        _LOGGER.warning("SHUTDOWN STAGE 4 START")
         self.set_state(CoreState.not_running)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_CLOSE)
 
@@ -1227,6 +1234,7 @@ class HomeAssistant:
 
         if self._stopped is not None:
             self._stopped.set()
+        _LOGGER.warning("SHUTDOWN STAGE 4 DONE")
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""

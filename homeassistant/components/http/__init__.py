@@ -243,7 +243,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def stop_server(event: Event) -> None:
         """Stop the server."""
+        _LOGGER.warning("Stopping server start")
         await server.stop()
+        _LOGGER.warning("Stopping server done")
 
     async def start_server(*_: Any) -> None:
         """Start the server."""
@@ -644,9 +646,13 @@ class HomeAssistantHTTP:
     async def stop(self) -> None:
         """Stop the aiohttp server."""
         if self.site is not None:
+            _LOGGER.warning("Stopping site start")
             await self.site.stop()
+            _LOGGER.warning("Stopping site done")
         if self.runner is not None:
+            _LOGGER.warning("Stopping runner start")
             await self.runner.cleanup()
+            _LOGGER.warning("Stopping runner done")
 
 
 async def start_http_server_and_save_config(

@@ -131,11 +131,10 @@ class FFmpegConvertResponse(web.StreamResponse):
         self.proxy_data = proxy_data
         self.chunk_size = chunk_size
 
-    async def prepare(self, request: BaseRequest) -> AbstractStreamWriter | None:
+    async def transcode(
+        self, request: BaseRequest, writer: AbstractStreamWriter
+    ) -> None:
         """Stream url through ffmpeg conversion and out to HTTP client."""
-        writer = await super().prepare(request)
-        assert writer is not None
-
         command_args = [
             "-i",
             self.convert_info.media_url,
@@ -172,6 +171,19 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Only one conversion process per device is allowed
         self.convert_info.proc = proc
 
+        write_task = self.hass.async_create_background_task(
+            self._write_ffmpeg_data(request, writer, proc), "ESPHome media proxy"
+        )
+        _LOGGER.warning("Await write_data")
+        await write_task
+        _LOGGER.warning("Done write_data")
+
+    async def _write_ffmpeg_data(
+        self,
+        request: BaseRequest,
+        writer: AbstractStreamWriter,
+        proc: asyncio.subprocess.Process,
+    ) -> None:
         assert proc.stdout is not None
         assert proc.stderr is not None
 
@@ -184,8 +196,8 @@ class FFmpegConvertResponse(web.StreamResponse):
                 and (chunk := await proc.stdout.read(self.chunk_size))
             ):
                 await writer.write(chunk)
-                await writer.drain()
         except asyncio.CancelledError:
+            _LOGGER.warning("Cancelled ffmpeg transcoding")
             raise  # don't log error
         except:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
@@ -197,6 +209,8 @@ class FFmpegConvertResponse(web.StreamResponse):
             _LOGGER.error("FFmpeg output: %s", stderr_text)
 
             raise
+        else:
+            _LOGGER.warning("Ending ffmpeg transcoding %s", self.hass.is_running)
         finally:
             # Terminate hangs, so kill is used
             if proc.returncode is None:
@@ -204,8 +218,6 @@ class FFmpegConvertResponse(web.StreamResponse):
 
             # Close connection
             await writer.write_eof()
-
-        return writer
 
 
 class FFmpegProxyView(HomeAssistantView):
@@ -245,6 +257,10 @@ class FFmpegProxyView(HomeAssistantView):
             convert_info.proc = None
 
         # Stream converted audio back to client
-        return FFmpegConvertResponse(
+        resp = FFmpegConvertResponse(
             self.manager, convert_info, device_id, self.proxy_data
         )
+        writer = await resp.prepare(request)
+        assert writer is not None
+        await resp.transcode(request, writer)
+        return resp
