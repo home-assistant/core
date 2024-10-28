@@ -11,10 +11,9 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AutomowerConfigEntry
+from . import AutomowerConfigEntry, remove_work_area_entities
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerControlEntity,
@@ -119,17 +118,6 @@ async def async_setup_entry(
         if description.exists_fn(coordinator.data[mower_id])
     )
 
-    def _remove_work_area_entities(removed_work_areas: set[int], mower_id: str) -> None:
-        """Remove all unused work area entities for the specified mower."""
-        entity_reg = er.async_get(hass)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, entry.entry_id
-        ):
-            for work_area_id in removed_work_areas:
-                if entity_entry.unique_id.startswith(f"{mower_id}_{work_area_id}_"):
-                    _LOGGER.info("Deleting: %s", entity_entry.entity_id)
-                    entity_reg.async_remove(entity_entry.entity_id)
-
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add/remove entities as needed."""
         for mower_id in coordinator.data:
@@ -154,7 +142,7 @@ async def async_setup_entry(
                     )
 
                 if removed_work_areas:
-                    _remove_work_area_entities(removed_work_areas, mower_id)
+                    remove_work_area_entities(hass, entry, removed_work_areas, mower_id)
                     current_work_area_set.difference_update(removed_work_areas)
 
     coordinator.async_add_listener(_async_work_area_listener)

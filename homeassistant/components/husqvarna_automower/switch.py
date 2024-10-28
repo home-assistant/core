@@ -38,7 +38,10 @@ async def async_setup_entry(
     )
 
     def _async_work_area_listener() -> None:
-        """Listen for new work areas and add switch entities if they did not exist."""
+        """Listen for new work areas and add switch entities if they did not exist.
+
+        Listening for deletable work areas is managed in the number platform.
+        """
         for mower_id in coordinator.data:
             if (
                 coordinator.data[mower_id].capabilities.work_areas
