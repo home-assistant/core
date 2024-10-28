@@ -383,7 +383,11 @@ def _async_track_state_change_event(
     action: Callable[[Event[EventStateChangedData]], Any],
     job_type: HassJobType | None,
 ) -> CALLBACK_TYPE:
-    """async_track_state_change_event without lowercasing."""
+    """async_track_state_change_event without lowercasing.
+
+    EVENT_STATE_CHANGED is fired on each occasion the state is updated
+    and changed, opposite of EVENT_STATE_REPORTED.
+    """
     return _async_track_event(
         _KEYED_TRACK_STATE_CHANGE, hass, entity_ids, action, job_type
     )
@@ -403,7 +407,11 @@ def async_track_state_report_event(
     action: Callable[[Event[EventStateReportedData]], Any],
     job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
-    """Track EVENT_STATE_REPORTED by entity_id without lowercasing."""
+    """Track EVENT_STATE_REPORTED by entity_id without lowercasing.
+
+    EVENT_STATE_REPORTED is fired on each occasion the state is updated
+    but not changed, opposite of EVENT_STATE_CHANGED.
+    """
     return _async_track_event(
         _KEYED_TRACK_STATE_REPORT, hass, entity_ids, action, job_type
     )
