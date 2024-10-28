@@ -111,5 +111,5 @@ class MotionMountEntity(Entity):
                 self.platform.config_entry.async_start_reauth(self.hass)
                 return False
 
-        _LOGGER.warning("Successfully reconnected to MotionMount")
+        _LOGGER.debug("Successfully reconnected to MotionMount")
         return True
