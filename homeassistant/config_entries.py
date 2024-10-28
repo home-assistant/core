@@ -1256,18 +1256,7 @@ class ConfigEntriesFlowManager(
             SOURCE_REAUTH,
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
-            # Deprecated in 2024.11, should fail in 2025.11
-            report_issue = async_suggest_report_issue(
-                self.hass, integration_domain=handler
-            )
-            _LOGGER.error(
-                (
-                    "Initialising a '%s' flow without a link to the config entry,"
-                    " which will stop working in 2025.11; please %s"
-                ),
-                source,
-                report_issue,
-            )
+            raise KeyError("Context doesn't have an entry_id set")
 
         flow_id = ulid_util.ulid_now()
 
