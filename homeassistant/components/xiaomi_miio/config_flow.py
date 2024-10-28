@@ -82,7 +82,6 @@ class OptionsFlowHandler(OptionsFlow):
                 not cloud_username or not cloud_password or not cloud_country
             ):
                 errors["base"] = "cloud_credentials_incomplete"
-                # trigger re-auth flow
                 self.config_entry.async_start_reauth(self.hass)
 
             if not errors:
