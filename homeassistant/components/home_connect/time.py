@@ -8,10 +8,18 @@ from homeconnect.api import HomeConnectError
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import get_dict_from_home_connect_error
 from .api import ConfigEntryAuth
-from .const import ATTR_VALUE, DOMAIN
+from .const import (
+    ATTR_VALUE,
+    DOMAIN,
+    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
+    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_VALUE,
+)
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,13 +83,16 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
                 time_to_seconds(value),
             )
         except HomeConnectError as err:
-            _LOGGER.error(
-                "Error setting value %s to %s for %s: %s",
-                value,
-                self.bsh_key,
-                self.entity_id,
-                err,
-            )
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_setting",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+                },
+            ) from err
 
     async def async_update(self) -> None:
         """Update the Time setting status."""
