@@ -20,7 +20,6 @@ async def test_full_user_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -29,12 +28,10 @@ async def test_full_user_flow(
         result["flow_id"],
         user_input={CONF_HOST: "192.168.1.1"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Stove"
-    assert result["data"]["host"] == "192.168.1.1"
-    assert result["data"]["mac"] == "11:22:33:44:55:66"
+    assert result["data"] == {CONF_HOST: "192.168.1.1"}
     assert result["result"].unique_id == "11:22:33:44:55:66"
     assert len(mock_palazzetti_client.connect.mock_calls) > 0
 
@@ -47,13 +44,17 @@ async def test_invalid_host(
     """Test cannot connect error."""
 
     mock_palazzetti_client.connect.side_effect = CommunicationError()
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.1"},
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.1"},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -63,7 +64,6 @@ async def test_invalid_host(
         result["flow_id"],
         user_input={CONF_HOST: "192.168.1.1"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -81,7 +81,7 @@ async def test_duplicate(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -89,7 +89,6 @@ async def test_duplicate(
         result["flow_id"],
         {CONF_HOST: "192.168.1.1"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

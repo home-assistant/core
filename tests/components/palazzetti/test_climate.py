@@ -31,12 +31,12 @@ ENTITY_ID = "climate.stove"
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    palazzetti_devices: AsyncMock,
+    mock_palazzetti_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.CLIMATE]):
+    with patch("homeassistant.components.palazzetti.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -48,8 +48,7 @@ async def test_async_set_data(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting climate data via service call."""
-    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.CLIMATE]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     # Set HVAC Mode: Success
     await hass.services.async_call(

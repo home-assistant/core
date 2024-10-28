@@ -27,5 +27,20 @@
     "invalid_target_temperatures": {
       "message": "Target temperature {value} is invalid."
     }
+  },
+  "entity": {
+    "climate": {
+      "palazzetti": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "silent": "Silent",
+              "auto": "Auto",
+              "high": "High"
+            }
+          }
+        }
+      }
+    }
   }
 }

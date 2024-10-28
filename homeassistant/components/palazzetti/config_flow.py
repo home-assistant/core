@@ -7,7 +7,7 @@ from pypalazzetti.exceptions import CommunicationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
@@ -40,7 +40,7 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=client.name,
-                    data={CONF_HOST: host, CONF_MAC: formatted_mac},
+                    data=user_input,
                 )
 
         return self.async_show_form(

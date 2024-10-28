@@ -1,15 +1,14 @@
 """Fixtures for Palazzetti integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.palazzetti.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -28,48 +27,48 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="palazzetti",
         domain=DOMAIN,
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_MAC: "11:22:33:44:55:66",
-        },
+        data={CONF_HOST: "127.0.0.1"},
         unique_id="11:22:33:44:55:66",
     )
 
 
 @pytest.fixture
-def mock_palazzetti_client():
+def mock_palazzetti_client() -> Generator[AsyncMock]:
     """Return a mocked PalazzettiClient."""
     with (
         patch(
             "homeassistant.components.palazzetti.coordinator.PalazzettiClient",
-            AsyncMock,
-        ) as mock_client,
+            autospec=True,
+        ) as client,
         patch(
             "homeassistant.components.palazzetti.config_flow.PalazzettiClient",
-            new=mock_client,
+            new=client,
         ),
     ):
-        data = json.loads(load_fixture("palazzetti_client_example1.json", DOMAIN))
-        for k, v in data.items():
-            setattr(mock_client, k, v)
-        mock_client.connect = AsyncMock(return_value=True)
-        mock_client.update_state = AsyncMock(return_value=True)
-        mock_client.set_on = AsyncMock(return_value=True)
-        mock_client.set_target_temperature = AsyncMock(return_value=True)
-        mock_client.set_fan_speed = AsyncMock(return_value=True)
-        mock_client.set_fan_silent = AsyncMock(return_value=True)
-        mock_client.set_fan_high = AsyncMock(return_value=True)
-        mock_client.set_fan_auto = AsyncMock(return_value=True)
+        mock_client = client.return_value
+        mock_client.mac = "11:22:33:44:55:66"
+        mock_client.name = "Stove"
+        mock_client.sw_version = "0.0.0"
+        mock_client.hw_version = "1.1.1"
+        mock_client.fan_speed_min = 1
+        mock_client.fan_speed_max = 5
+        mock_client.has_fan_silent = True
+        mock_client.has_fan_high = True
+        mock_client.has_fan_auto = True
+        mock_client.has_on_off_switch = True
+        mock_client.connected = True
+        mock_client.is_heating = True
+        mock_client.room_temperature = 18
+        mock_client.target_temperature = 21
+        mock_client.target_temperature_min = 5
+        mock_client.target_temperature_max = 50
+        mock_client.fan_speed = 3
+        mock_client.connect.return_value = True
+        mock_client.update_state.return_value = True
+        mock_client.set_on.return_value = True
+        mock_client.set_target_temperature.return_value = True
+        mock_client.set_fan_speed.return_value = True
+        mock_client.set_fan_silent.return_value = True
+        mock_client.set_fan_high.return_value = True
+        mock_client.set_fan_auto.return_value = True
         yield mock_client
-
-
-@pytest.fixture(params=["example1", "example2"])
-def palazzetti_devices(
-    mock_palazzetti_client: AsyncMock, request: pytest.FixtureRequest
-) -> Generator[AsyncMock]:
-    """Return a list of AirGradient devices."""
-    data = json.loads(load_fixture(f"palazzetti_client_{request.param}.json", DOMAIN))
-    for k, v in data.items():
-        setattr(mock_palazzetti_client, k, v)
-
-    return mock_palazzetti_client

@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_MAC, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Palazzetti climates based on a config entry."""
-    async_add_entities([PalazzettiClimateEntity(coordinator=entry.runtime_data)])
+    async_add_entities([PalazzettiClimateEntity(entry.runtime_data)])
 
 
 class PalazzettiClimateEntity(
@@ -37,6 +37,7 @@ class PalazzettiClimateEntity(
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = DOMAIN
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
@@ -46,14 +47,14 @@ class PalazzettiClimateEntity(
         | ClimateEntityFeature.TURN_OFF
     )
 
-    def __init__(self, *kargs, **kwargs) -> None:
+    def __init__(self, coordinator: PalazzettiDataUpdateCoordinator) -> None:
         """Initialize Palazzetti climate."""
-        super().__init__(*kargs, **kwargs)
-        client = self.coordinator.client
-        mac = self.coordinator.config_entry.data[CONF_MAC]
+        super().__init__(coordinator)
+        client = coordinator.client
+        mac = coordinator.config_entry.unique_id
+        assert mac is not None
         self._attr_unique_id = mac
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, mac)},
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},
             name=client.name,
             manufacturer=PALAZZETTI,
@@ -66,11 +67,11 @@ class PalazzettiClimateEntity(
         self._attr_fan_modes = list(
             map(str, range(client.fan_speed_min, client.fan_speed_max + 1))
         )
-        if self.coordinator.client.has_fan_silent:
+        if client.has_fan_silent:
             self._attr_fan_modes.insert(0, FAN_SILENT)
-        if self.coordinator.client.has_fan_high:
+        if client.has_fan_high:
             self._attr_fan_modes.append(FAN_HIGH)
-        if self.coordinator.client.has_fan_auto:
+        if client.has_fan_auto:
             self._attr_fan_modes.append(FAN_AUTO)
 
     @property

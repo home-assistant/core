@@ -13,7 +13,7 @@ ERROR_INVALID_FAN_MODE = "invalid_fan_mode"
 ERROR_INVALID_TARGET_TEMPERATURE = "invalid_target_temperature"
 ERROR_CANNOT_CONNECT = "cannot_connect"
 
-FAN_SILENT: Final = "SILENT"
-FAN_HIGH: Final = "HIGH"
-FAN_AUTO: Final = "AUTO"
+FAN_SILENT: Final = "silent"
+FAN_HIGH: Final = "high"
+FAN_AUTO: Final = "auto"
 FAN_MODES: Final = [FAN_SILENT, "1", "2", "3", "4", "5", FAN_HIGH, FAN_AUTO]
