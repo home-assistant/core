@@ -585,10 +585,7 @@ async def test_declined_event(
         **upcoming(),
         "attendees": [
             {
-                "id": "abc123",
-                "email": "user@gmail.com",
-                "self": "False",
-                "resource": "True",
+                "self": "True",
                 "responseStatus": "declined",
             }
         ],
@@ -616,10 +613,7 @@ async def test_attending_event(
         **upcoming(),
         "attendees": [
             {
-                "id": "abc123",
-                "email": "user@gmail.com",
-                "self": "False",
-                "resource": "True",
+                "self": "True",
                 "responseStatus": "accepted",
             }
         ],
