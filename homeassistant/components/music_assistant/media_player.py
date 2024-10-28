@@ -20,7 +20,7 @@ from music_assistant.common.models.enums import (
 )
 from music_assistant.common.models.errors import MediaNotFoundError, MusicAssistantError
 from music_assistant.common.models.event import MassEvent
-from music_assistant.common.models.media_items import MediaItemType, Track
+from music_assistant.common.models.media_items import ItemMapping, MediaItemType, Track
 
 from homeassistant.components import media_source
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -166,10 +166,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        # we need to get the hass object in order to get our config entry
-        # and expose the player to the conversation component, assuming that
-        # the config entry has the option enabled.
-        await self._expose_players_assist()
 
         # we subscribe to player queue time update but we only
         # accept a state change on big time jumps (e.g. seeking)
@@ -394,7 +390,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
 
         # forward to our advanced play_media handler
         await self._async_play_media_advanced(
-            media_id=media_id if isinstance(media_id, list) else [media_id],  # type: ignore[unreachable]
+            media_id=[media_id],
             enqueue=enqueue,
             media_type=media_type,
             radio_mode=kwargs[ATTR_MEDIA_EXTRA].get(ATTR_RADIO_MODE),
@@ -431,7 +427,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # pylint: disable=too-many-arguments
         media_uris: list[str] = []
-        item: MediaItemType | None = None
+        item: MediaItemType | ItemMapping | None = None
         # work out (all) uri(s) to play
         for media_id_str in media_id:
             # URL or URI string
@@ -441,14 +437,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             # try content id as library id
             if media_type and media_id_str.isnumeric():
                 with suppress(MediaNotFoundError):
-                    if media_type is not None:
-                        continue
-                    item = await self.mass.music.get_item(  # type: ignore[unreachable]
+                    item = await self.mass.music.get_item(
                         MediaType(media_type), media_id_str, "library"
                     )
-                    if item.uri is not None:
-                        continue
-                    media_uris.append(item.uri)
+                    if isinstance(item, MediaItemType | ItemMapping):
+                        if TYPE_CHECKING:
+                            assert item.uri is not None
+                        media_uris.append(item.uri)
                     continue
             # try local accessible filename
             elif await asyncio.to_thread(os.path.isfile, media_id_str):
