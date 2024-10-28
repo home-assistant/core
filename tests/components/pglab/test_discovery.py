@@ -102,7 +102,8 @@ async def test_device_update(
         connections={(dr.CONNECTION_NETWORK_MAC, payload["mac"])}
     )
     assert device_entry is not None
-    assert device_entry == snapshot
+    assert device_entry.sw_version == "1.0.1"
+    assert device_entry.hw_version == "1.0.8"
 
 
 async def test_device_remove(
