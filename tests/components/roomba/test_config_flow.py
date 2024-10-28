@@ -206,7 +206,7 @@ async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> No
     assert result3["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 30,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
