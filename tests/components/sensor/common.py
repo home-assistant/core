@@ -7,10 +7,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
+    UnitLessRatio,
     UnitOfApparentPower,
     UnitOfFrequency,
     UnitOfPressure,
@@ -23,8 +23,8 @@ from tests.common import MockEntity
 UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,  # apparent power (VA)
     SensorDeviceClass.BATTERY: PERCENTAGE,  # % of battery that is left
-    SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
-    SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
+    SensorDeviceClass.CO: UnitLessRatio.PARTS_PER_MILLION,  # ppm of CO concentration
+    SensorDeviceClass.CO2: UnitLessRatio.PARTS_PER_MILLION,  # ppm of CO2 concentration
     SensorDeviceClass.HUMIDITY: PERCENTAGE,  # % of humidity in the air
     SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,  # current light level lx
     SensorDeviceClass.MOISTURE: PERCENTAGE,  # % of water in a substance

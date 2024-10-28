@@ -10,12 +10,11 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitLessRatio,
     UnitOfApparentPower,
     UnitOfConductivity,
     UnitOfDataRate,
@@ -524,8 +523,8 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.AQI: {None},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
-    SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
-    SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    SensorDeviceClass.CO: {UnitLessRatio.PARTS_PER_MILLION},
+    SensorDeviceClass.CO2: {UnitLessRatio.PARTS_PER_MILLION},
     SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
@@ -576,8 +575,8 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_PARTS_PER_MILLION,
+        UnitLessRatio.PARTS_PER_BILLION,
+        UnitLessRatio.PARTS_PER_MILLION,
     },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),

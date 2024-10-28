@@ -1258,8 +1258,17 @@ LIGHT_LUX: Final = "lx"
 # UV Index units
 UV_INDEX: Final = "UV index"
 
-# Percentage units
+
+# Unit-less ratios
 PERCENTAGE: Final = "%"
+
+
+class UnitLessRatio(StrEnum):
+    """Pseudo-units to describe dimensionless quantities."""
+
+    PARTS_PER_BILLION = "ppb"
+    PARTS_PER_MILLION = "ppm"
+
 
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
@@ -1349,8 +1358,17 @@ CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
-CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
-CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
+
+_DEPRECATED_CONCENTRATION_PARTS_PER_MILLION: Final = DeprecatedConstantEnum(
+    UnitLessRatio.PARTS_PER_MILLION,
+    "2025.11",
+)
+"""Deprecated: please use UnitLessRatio.PARTS_PER_MILLION"""
+_DEPRECATED_CONCENTRATION_PARTS_PER_BILLION: Final = DeprecatedConstantEnum(
+    UnitLessRatio.PARTS_PER_BILLION,
+    "2025.11",
+)
+"""Deprecated: please use UnitLessRatio.PARTS_PER_BILLION"""
 
 
 # Speed units

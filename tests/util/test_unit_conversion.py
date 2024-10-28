@@ -8,9 +8,8 @@ from itertools import chain
 import pytest
 
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitLessRatio,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -548,8 +547,8 @@ _CONVERTED_VALUE: dict[
     ],
     UnitlessRatioConverter: [
         (5, None, 500, PERCENTAGE),
-        (5, None, 5000000000, CONCENTRATION_PARTS_PER_BILLION),
-        (5, None, 5000000, CONCENTRATION_PARTS_PER_MILLION),
+        (5, None, 5000000000, UnitLessRatio.PARTS_PER_BILLION),
+        (5, None, 5000000, UnitLessRatio.PARTS_PER_MILLION),
         (5, PERCENTAGE, 0.05, None),
     ],
     VolumeConverter: [

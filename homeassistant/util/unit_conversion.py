@@ -6,10 +6,9 @@ from collections.abc import Callable
 from functools import lru_cache
 
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitLessRatio,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -563,8 +562,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     UNIT_CLASS = "unitless"
     _UNIT_CONVERSION: dict[str | None, float] = {
         None: 1,
-        CONCENTRATION_PARTS_PER_BILLION: 1000000000,
-        CONCENTRATION_PARTS_PER_MILLION: 1000000,
+        UnitLessRatio.PARTS_PER_BILLION: 1000000000,
+        UnitLessRatio.PARTS_PER_MILLION: 1000000,
         PERCENTAGE: 100,
     }
     VALID_UNITS = {
