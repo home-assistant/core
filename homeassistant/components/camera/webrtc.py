@@ -451,7 +451,7 @@ def async_register_rtsp_to_web_rtc_provider(
             translation_key="legacy_webrtc_provider",
             translation_placeholders={
                 "legacy_integration": domain,
-                "new_integration": builtin_webrtc_integration,
+                "builtin_integration": builtin_webrtc_integration,
             },
         )
     provider_instance = _CameraRtspToWebRTCProvider(provider)

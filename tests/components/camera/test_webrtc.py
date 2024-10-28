@@ -1180,7 +1180,7 @@ async def test_repair_issue_legacy_provider(
     assert issue.translation_key == "legacy_webrtc_provider"
     assert issue.translation_placeholders == {
         "legacy_integration": "mock_domain",
-        "new_integration": "go2rtc",
+        "builtin_integration": "go2rtc",
     }
 
 
