@@ -16,9 +16,9 @@ from .api import ConfigEntryAuth
 from .const import (
     ATTR_VALUE,
     DOMAIN,
-    SVE_TRANSLATION_KEY_ENTITY_ID,
-    SVE_TRANSLATION_KEY_SETTING_KEY,
-    SVE_TRANSLATION_KEY_VALUE,
+    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
+    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 from .entity import HomeConnectEntity
 
@@ -88,9 +88,9 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
                 translation_key="set_setting",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_KEY_SETTING_KEY: self.bsh_key,
-                    SVE_TRANSLATION_KEY_VALUE: str(value),
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
                 },
             ) from err
 

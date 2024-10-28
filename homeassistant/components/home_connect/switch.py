@@ -27,10 +27,10 @@ from .const import (
     REFRIGERATION_DISPENSER,
     REFRIGERATION_SUPERMODEFREEZER,
     REFRIGERATION_SUPERMODEREFRIGERATOR,
-    SVE_TRANSLATION_KEY_APPLIANCE_NAME,
-    SVE_TRANSLATION_KEY_ENTITY_ID,
-    SVE_TRANSLATION_KEY_SETTING_KEY,
-    SVE_TRANSLATION_KEY_VALUE,
+    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME,
+    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
+    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 from .entity import HomeConnectDevice, HomeConnectEntity
 
@@ -151,8 +151,8 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="turn_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_KEY_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -175,8 +175,8 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="turn_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_KEY_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_KEY_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -296,7 +296,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="power_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name,
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name,
                 },
             ) from err
         self.async_entity_update()
@@ -308,7 +308,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="turn_off_not_supported",
                 translation_placeholders={
-                    SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name
                 },
             )
         _LOGGER.debug("tried to switch off %s", self.name)
@@ -325,8 +325,8 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="power_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name,
-                    SVE_TRANSLATION_KEY_VALUE: self.power_off_state,
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name,
+                    SVE_TRANSLATION_PLACEHOLDER_VALUE: self.power_off_state,
                 },
             ) from err
         self.async_entity_update()
