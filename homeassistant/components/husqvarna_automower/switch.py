@@ -29,18 +29,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch platform."""
     coordinator = entry.runtime_data
-    entities: list[SwitchEntity] = []
     current_work_areas: dict[str, set[int]] = {}
     current_stay_out_zones: dict[str, set[str]] = {}
 
-    def _create_mower_entities() -> list[SwitchEntity]:
-        return [
-            AutomowerScheduleSwitchEntity(mower_id, coordinator)
-            for mower_id in coordinator.data
-        ]
-
-    entities.extend(_create_mower_entities())
-    async_add_entities(entities)
+    async_add_entities(
+        AutomowerScheduleSwitchEntity(mower_id, coordinator)
+        for mower_id in coordinator.data
+    )
 
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add switch entities if they did not exist."""

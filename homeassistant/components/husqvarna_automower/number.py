@@ -110,20 +110,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up number platform."""
     coordinator = entry.runtime_data
-    entities: list[NumberEntity] = []
     current_work_areas: dict[str, set[int]] = {}
 
-    def _create_mower_entities() -> list[NumberEntity]:
-        """Create entities for each mower."""
-        return [
-            AutomowerNumberEntity(mower_id, coordinator, description)
-            for mower_id in coordinator.data
-            for description in MOWER_NUMBER_TYPES
-            if description.exists_fn(coordinator.data[mower_id])
-        ]
-
-    entities.extend(_create_mower_entities())
-    async_add_entities(entities)
+    async_add_entities(
+        AutomowerNumberEntity(mower_id, coordinator, description)
+        for mower_id in coordinator.data
+        for description in MOWER_NUMBER_TYPES
+        if description.exists_fn(coordinator.data[mower_id])
+    )
 
     def _remove_work_area_entities(removed_work_areas: set[int], mower_id: str) -> None:
         """Remove all unused work area entities for the specified mower."""
