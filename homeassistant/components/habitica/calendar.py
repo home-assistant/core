@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from enum import StrEnum
 
+from dateutil.rrule import rrule
+
 from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEntityDescription,
@@ -126,55 +128,69 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             datetime.fromisoformat(self.coordinator.data.user["lastCron"])
         )
 
-    def calculate_end_date(self, next_recurrence: datetime) -> date:
+    def end_date(self, recurrence: datetime, end: datetime | None = None) -> date:
         """Calculate the end date for a yesterdaily.
 
         The enddates of events from yesterday move forward to the end
-        of the current day until the cron resets the dailies as they
-        are still the active events.
+        of the current day (until the cron resets the dailies) to show them
+        as still active events on the calendar state entity (state: on).
+
+        Events in the calendar view will show all-day events on their due day
         """
+        if end:
+            return recurrence.date() + timedelta(days=1)
         return (
-            dt_util.start_of_local_day()
-            if next_recurrence == self.today
-            else next_recurrence
+            dt_util.start_of_local_day() if recurrence == self.today else recurrence
         ).date() + timedelta(days=1)
 
+    def get_recurrence_dates(
+        self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None
+    ) -> list[datetime]:
+        """Calculate recurrence dates based on start_date and end_date."""
+        if end_date:
+            return recurrences.between(
+                start_date, end_date - timedelta(days=1), inc=True
+            )
+        # if no end_date is given, return only the next recurrence
+        return [recurrences.after(self.today, inc=True)]
+
     def due_dailies(
-        self, start_date: datetime | None = None, end_date: datetime | None = None
+        self, start_date: datetime, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
         """Get dailies and recurrences for a given period or the next upcoming."""
-        if start_date and start_date < self.today:
-            start_date = self.today
-        return sorted(
-            [
-                CalendarEvent(
-                    start=recurrence.date(),
-                    end=(
-                        self.calculate_end_date(recurrence)
-                        if not end_date
-                        else recurrence.date() + timedelta(days=1)
-                    ),
-                    summary=task["text"],
-                    description=task["notes"],
-                    uid=task["id"],
-                    rrule=get_recurrence_rule(recurrences),
+
+        # we only have dailies for today and future recurrences
+        if end_date and end_date < self.today:
+            return []
+        start_date = max(start_date, self.today)
+
+        events = []
+        for task in self.coordinator.data.tasks:
+            #  only dailies that that are not 'grey dailies'
+            if task["type"] == HabiticaTaskType.DAILY and task["everyX"]:
+                recurrences = build_rrule(task)
+                recurrence_dates = self.get_recurrence_dates(
+                    recurrences, start_date, end_date
                 )
-                for task in self.coordinator.data.tasks
-                if task["type"] == HabiticaTaskType.DAILY
-                and task["everyX"]
-                and (recurrences := build_rrule(task))
-                for recurrence in (
-                    recurrences.between(
-                        start_date, end_date - timedelta(days=1), inc=True
+                for recurrence in recurrence_dates:
+                    is_future_event = recurrence > self.today
+                    is_current_event = (
+                        recurrence <= self.today and not task["completed"]
                     )
-                    if end_date
-                    # if we don't have an end_date, calculate only the next occurrence
-                    else [recurrences.after(self.today, inc=True)]
-                )
-                if recurrence > self.today
-                # only show the current event if it is not completed
-                or (recurrence <= self.today and not task["completed"])
-            ],
+
+                    if is_future_event or is_current_event:
+                        events.append(
+                            CalendarEvent(
+                                start=recurrence.date(),
+                                end=self.end_date(recurrence, end_date),
+                                summary=task["text"],
+                                description=task["notes"],
+                                uid=task["id"],
+                                rrule=get_recurrence_rule(recurrences),
+                            )
+                        )
+        return sorted(
+            events,
             key=lambda event: (
                 event.start,
                 self.coordinator.data.user["tasksOrder"]["dailys"].index(event.uid),
@@ -184,7 +200,7 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return next(iter(self.due_dailies()), None)
+        return next(iter(self.due_dailies(self.today)), None)
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
