@@ -10,7 +10,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form_create_success(
-    hass: HomeAssistant, mock_portainer: AsyncMock
+    hass: HomeAssistant, mock_portainer_client: AsyncMock
 ) -> None:
     """Test we handle creatinw with success."""
     result = await hass.config_entries.flow.async_init(

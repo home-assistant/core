@@ -3,12 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiotainer.model import NodeData
+from aiotainer.utils import portainer_list_to_dictionary
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_value_fixture
 
 
 @pytest.fixture
@@ -20,8 +22,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
+@pytest.fixture(name="values")
+def mock_values() -> dict[str, NodeData]:
+    """Fixture to set correct scope for the token."""
+    return portainer_list_to_dictionary(
+        load_json_value_fixture("portainer.json", DOMAIN)
+    )
+
+
 @pytest.fixture
-def mock_portainer() -> Generator[MagicMock]:
+def mock_portainer_client(values) -> Generator[MagicMock]:
     """Mock APSystems lib."""
     with (
         patch(
@@ -34,7 +44,7 @@ def mock_portainer() -> Generator[MagicMock]:
         ),
     ):
         mock_api = mock_client.return_value
-        mock_api.get_status.return_value = MagicMock()
+        mock_api.get_status.return_value = values
         yield mock_api
 
 
@@ -44,7 +54,10 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
+            CONF_ACCESS_TOKEN: "prt_xxx",
             CONF_HOST: "127.0.0.1",
+            CONF_PORT: 9443,
+            CONF_VERIFY_SSL: True,
         },
         unique_id="MY_SERIAL_NUMBER",
     )

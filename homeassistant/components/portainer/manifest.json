@@ -4,6 +4,7 @@
   "codeowners": ["@Thomas55555"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/portainer",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["aiotainer"],
   "requirements": ["aiotainer==0.0.0"]

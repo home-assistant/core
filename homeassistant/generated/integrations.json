@@ -4732,7 +4732,7 @@
     },
     "portainer": {
       "name": "Portainer",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
