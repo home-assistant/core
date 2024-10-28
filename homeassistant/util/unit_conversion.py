@@ -180,8 +180,8 @@ class BloodSugarLevelConverter(BaseUnitConverter):
 
     UNIT_CLASS = "blood_sugar_level"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MILLIGRAMS_PER_DECILITER: 1,
-        CONCENTRATION_MILLIMOLS_PER_LITER: 1 / 180,
+        CONCENTRATION_MILLIGRAMS_PER_DECILITER: 18,
+        CONCENTRATION_MILLIMOLS_PER_LITER: 1,
     }
     VALID_UNITS = {
         CONCENTRATION_MILLIGRAMS_PER_DECILITER,

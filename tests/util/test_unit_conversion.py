@@ -87,7 +87,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     BloodSugarLevelConverter: (
         CONCENTRATION_MILLIGRAMS_PER_DECILITER,
         CONCENTRATION_MILLIMOLS_PER_LITER,
-        1 / 18,
+        18,
     ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -141,9 +141,9 @@ _CONVERTED_VALUE: dict[
 ] = {
     BloodSugarLevelConverter: [
         (
-            1,
+            90,
             CONCENTRATION_MILLIGRAMS_PER_DECILITER,
-            0.05556,
+            5,
             CONCENTRATION_MILLIMOLS_PER_LITER,
         ),
         (
