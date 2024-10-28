@@ -439,6 +439,7 @@ FLOWS = {
         "ovo_energy",
         "owntracks",
         "p1_monitor",
+        "palazzetti",
         "panasonic_viera",
         "peco",
         "pegel_online",
