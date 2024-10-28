@@ -4,14 +4,14 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import socket
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import motionmount
 import voluptuous as vol
 
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
-    ConfigEntry,
+    SOURCE_REAUTH,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -38,7 +38,6 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up the instance."""
         self.connection_data: dict[str, Any] = {}
-        self.reauth_entry: ConfigEntry | None = None
         self.backoff_task: asyncio.Task | None = None
         self.backoff_time: int = 0
 
@@ -161,14 +160,8 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
-        if TYPE_CHECKING:
-            assert self.reauth_entry
-
-        self.connection_data.update(self.reauth_entry.data)
+        reauth_entry = self._get_reauth_entry()
+        self.connection_data.update(reauth_entry.data)
         return await self.async_step_auth()
 
     async def async_step_auth(
@@ -222,9 +215,10 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     def _create_or_update_entry(self) -> ConfigFlowResult:
-        if self.reauth_entry:
+        if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
-                self.reauth_entry, data=self.connection_data
+                reauth_entry, data_updates=self.connection_data
             )
         return self.async_create_entry(
             title=self.connection_data[CONF_NAME],
