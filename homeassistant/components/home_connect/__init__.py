@@ -303,3 +303,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True
+
+
+def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any]:
+    """Return a dict from a Home Connect error."""
+    return (
+        err.args[0]
+        if len(err.args) > 0 and isinstance(err.args[0], dict)
+        else {"description": err.args[0]}
+        if len(err.args) > 0 and isinstance(err.args[0], str)
+        else {}
+    )
