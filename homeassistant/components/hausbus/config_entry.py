@@ -11,6 +11,6 @@ type HausbusConfigEntry = ConfigEntry[HausbusConfig]
 class HausbusConfig:
     """Class for Hausbus ConfigEntry."""
 
-    from .gateway import HausbusGateway
+    from .gateway import HausbusGateway  # pylint: disable=import-outside-toplevel
 
     gateway: HausbusGateway
