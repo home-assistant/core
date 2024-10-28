@@ -120,7 +120,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.FROST,
         translation_key=HabitipyButtonEntity.FROST,
-        press_fn=(lambda coordinator: coordinator.api.user.class_.cast["frost"].post()),
+        press_fn=lambda coordinator: coordinator.api.user.class_.cast["frost"].post(),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 40
@@ -200,7 +200,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL,
         translation_key=HabitipyButtonEntity.HEAL,
-        press_fn=(lambda coordinator: coordinator.api.user.class_.cast["heal"].post()),
+        press_fn=lambda coordinator: coordinator.api.user.class_.cast["heal"].post(),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 11
             and data.user["stats"]["mp"] >= 15
