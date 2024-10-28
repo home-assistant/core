@@ -233,6 +233,7 @@ async def test_light_functionality(
         "mock_attr",
         "attr_side_effect",
         "problematic_appliance",
+        "exception_match",
     ),
     [
         (
@@ -247,6 +248,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            "turn_on_light",
         ),
         (
             "light.hood_functional_light",
@@ -261,6 +263,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            "turn_on_light",
         ),
         (
             "light.hood_functional_light",
@@ -272,6 +275,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            "turn_off_light",
         ),
         (
             "light.hood_ambient_light",
@@ -286,6 +290,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            "turn_on_light",
         ),
         (
             "light.hood_ambient_light",
@@ -300,6 +305,7 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, None, HomeConnectError],
             "Hood",
+            "set_light_color",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -312,6 +318,7 @@ async def test_switch_exception_handling(
     mock_attr: str,
     attr_side_effect: list,
     problematic_appliance: Mock,
+    exception_match: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -334,7 +341,7 @@ async def test_switch_exception_handling(
 
     problematic_appliance.status.update(status)
     service_data["entity_id"] = entity_id
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match=exception_match):
         await hass.services.async_call(
             LIGHT_DOMAIN, service, service_data, blocking=True
         )

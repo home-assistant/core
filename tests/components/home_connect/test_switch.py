@@ -154,7 +154,14 @@ async def test_switch_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "mock_attr", "problematic_appliance"),
+    (
+        "entity_id",
+        "status",
+        "service",
+        "mock_attr",
+        "problematic_appliance",
+        "exception_match",
+    ),
     [
         (
             "switch.dishwasher_program_mix",
@@ -162,6 +169,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "start_program",
             "Dishwasher",
+            "start_program",
         ),
         (
             "switch.dishwasher_program_mix",
@@ -169,6 +177,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "stop_program",
             "Dishwasher",
+            "stop_program",
         ),
         (
             "switch.dishwasher_power",
@@ -176,6 +185,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
+            "power_on",
         ),
         (
             "switch.dishwasher_power",
@@ -183,6 +193,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
+            "power_off",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -190,6 +201,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
+            "turn_on",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -197,6 +209,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
+            "turn_off",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -206,6 +219,7 @@ async def test_switch_exception_handling(
     status: dict,
     service: str,
     mock_attr: str,
+    exception_match: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -228,7 +242,7 @@ async def test_switch_exception_handling(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )
@@ -291,7 +305,14 @@ async def test_ent_desc_switch_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "mock_attr", "problematic_appliance"),
+    (
+        "entity_id",
+        "status",
+        "service",
+        "mock_attr",
+        "problematic_appliance",
+        "exception_match",
+    ),
     [
         (
             "switch.fridgefreezer_freezer_super_mode",
@@ -299,6 +320,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "FridgeFreezer",
+            "turn_on",
         ),
         (
             "switch.fridgefreezer_freezer_super_mode",
@@ -306,6 +328,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "FridgeFreezer",
+            "turn_off",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -315,6 +338,7 @@ async def test_ent_desc_switch_exception_handling(
     status: dict,
     service: str,
     mock_attr: str,
+    exception_match: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -343,7 +367,7 @@ async def test_ent_desc_switch_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )

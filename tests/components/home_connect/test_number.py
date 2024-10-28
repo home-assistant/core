@@ -161,7 +161,7 @@ async def test_number_entity_error(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match="set_setting"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
