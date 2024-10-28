@@ -210,7 +210,6 @@ class HausbusDimmerLight(HausbusLight):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off action."""
         self._channel.setBrightness(0, 0)
-        self._attr_is_on = False
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on action."""
@@ -243,7 +242,6 @@ class HausbusRGBDimmerLight(HausbusLight):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off action."""
         self._channel.setColor(0, 0, 0, 0)
-        self._attr_is_on = False
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on action."""
@@ -279,7 +277,6 @@ class HausbusLedLight(HausbusLight):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off action."""
         self._channel.off(0)
-        self._attr_is_on = False
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on action."""
