@@ -207,7 +207,6 @@ def async_subscribe_internal(
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
     job_type: HassJobType | None = None,
-    late_wildcard_subscription: bool = False,
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
@@ -235,9 +234,7 @@ def async_subscribe_internal(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    return client.async_subscribe(
-        topic, msg_callback, qos, encoding, job_type, late_wildcard_subscription
-    )
+    return client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
 @bind_hass
@@ -274,7 +271,6 @@ class Subscription:
     job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
     qos: int = 0
     encoding: str | None = "utf-8"
-    late_wildcard_subscription: bool = False
 
 
 class MqttClientSetup:
@@ -380,7 +376,7 @@ class MQTT:
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set
         )
-        self._wildcard_subscriptions: set[Subscription] = set()
+        self._wildcard_subscriptions: dict[Subscription, None] = {}
         # _retained_topics prevents a Subscription from receiving a
         # retained message more than once per topic. This prevents flooding
         # already active subscribers when new subscribers subscribe to a topic
@@ -758,7 +754,7 @@ class MQTT:
         if subscription.is_simple_match:
             self._simple_subscriptions[subscription.topic].add(subscription)
         else:
-            self._wildcard_subscriptions.add(subscription)
+            self._wildcard_subscriptions[subscription] = None
 
     @callback
     def _async_untrack_subscription(self, subscription: Subscription) -> None:
@@ -776,7 +772,7 @@ class MQTT:
                 if not simple_subscriptions[topic]:
                     del simple_subscriptions[topic]
             else:
-                self._wildcard_subscriptions.remove(subscription)
+                del self._wildcard_subscriptions[subscription]
         except (KeyError, ValueError) as exc:
             raise HomeAssistantError("Can't remove subscription twice") from exc
 
@@ -842,15 +838,7 @@ class MQTT:
         is_simple_match = not ("+" in topic or "#" in topic)
         matcher = None if is_simple_match else _matcher_for_topic(topic)
 
-        subscription = Subscription(
-            topic,
-            is_simple_match,
-            matcher,
-            job,
-            qos,
-            encoding,
-            late_wildcard_subscription,
-        )
+        subscription = Subscription(topic, is_simple_match, matcher, job, qos, encoding)
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
@@ -909,20 +897,11 @@ class MQTT:
 
         # Split out the wildcard subscriptions, we subscribe to them one by one
         pending_subscriptions: dict[str, int] = self._pending_subscriptions
-
-        pending_wildcard_subscriptions: dict[str, int] = {}
-        late_pending_wildcard_subscriptions: dict[str, int] = {}
-        for subscription in self._wildcard_subscriptions:
-            if subscription.topic not in pending_subscriptions:
-                continue
-            if subscription.late_wildcard_subscription:
-                late_pending_wildcard_subscriptions[subscription.topic] = (
-                    pending_subscriptions.pop(subscription.topic)
-                )
-            else:
-                pending_wildcard_subscriptions[subscription.topic] = (
-                    pending_subscriptions.pop(subscription.topic)
-                )
+        pending_wildcard_subscriptions = {
+            subscription.topic: pending_subscriptions.pop(subscription.topic)
+            for subscription in self._wildcard_subscriptions
+            if subscription.topic in pending_subscriptions
+        }
 
         self._pending_subscriptions = {}
 
@@ -931,10 +910,6 @@ class MQTT:
         for chunk in chain(
             chunked_or_all(
                 pending_wildcard_subscriptions.items(), MAX_WILDCARD_SUBSCRIBES_PER_CALL
-            ),
-            chunked_or_all(
-                late_pending_wildcard_subscriptions.items(),
-                MAX_WILDCARD_SUBSCRIBES_PER_CALL,
             ),
             chunked_or_all(pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL),
         ):

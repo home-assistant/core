@@ -252,7 +252,7 @@ async def test_encoding_default(
     )
 
     setup_comp.async_subscribe.assert_called_with(
-        "test-topic", ANY, 0, "utf-8", HassJobType.Callback, False
+        "test-topic", ANY, 0, "utf-8", HassJobType.Callback
     )
 
 
@@ -272,5 +272,5 @@ async def test_encoding_custom(
     )
 
     setup_comp.async_subscribe.assert_called_with(
-        "test-topic", ANY, 0, None, HassJobType.Callback, False
+        "test-topic", ANY, 0, None, HassJobType.Callback
     )
