@@ -97,8 +97,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 emoncms_client = EmoncmsClient(
                     self.url, self.api_key, session=async_get_clientsession(self.hass)
                 )
-                emoncms_unique_id = await emoncms_client.async_get_uuid()
-                await self.async_set_unique_id(unique_id=emoncms_unique_id)
+                await self.async_set_unique_id(await emoncms_client.async_get_uuid())
                 self._abort_if_unique_id_configured()
                 options = get_options(result[CONF_MESSAGE])
                 self.dropdown = {
