@@ -698,12 +698,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "bloomsky": {
-      "name": "BloomSky",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "blue_current": {
       "name": "Blue Current",
       "integration_type": "hub",
@@ -2252,13 +2246,6 @@
         }
       }
     },
-    "go2rtc": {
-      "name": "go2rtc",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "single_config_entry": true
-    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -2691,11 +2678,22 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
-    "husqvarna_automower": {
-      "name": "Husqvarna Automower",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
+    "husqvarna": {
+      "name": "Husqvarna",
+      "integrations": {
+        "husqvarna_automower": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Husqvarna Automower"
+        },
+        "husqvarna_automower_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Husqvarna Automower BLE"
+        }
+      }
     },
     "huum": {
       "name": "Huum",
@@ -4325,8 +4323,8 @@
     },
     "onkyo": {
       "name": "Onkyo",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "onvif": {
@@ -5675,7 +5673,7 @@
     "smarty": {
       "name": "Salda Smarty",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "smhi": {

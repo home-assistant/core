@@ -23,7 +23,6 @@ ATTR_SUBSCRIPTION_TIER = "subscription_tier"
 ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
-ATTR_VIEWS = "views"
 ATTR_VIEWERS = "viewers"
 ATTR_STARTED_AT = "started_at"
 
@@ -79,7 +78,6 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
         channel = self.channel
         resp = {
             ATTR_FOLLOWING: channel.followers,
-            ATTR_VIEWS: channel.views,
             ATTR_GAME: channel.game,
             ATTR_TITLE: channel.title,
             ATTR_STARTED_AT: channel.started_at,
