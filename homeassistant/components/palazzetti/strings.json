@@ -19,13 +19,16 @@
   },
   "exceptions": {
     "on_off_not_available": {
-      "message": "The appliance cannot be turned on or off at the moment. Try again later."
+      "message": "The appliance cannot be turned on or off."
     },
     "invalid_fan_mode": {
       "message": "Fan mode {value} is invalid."
     },
     "invalid_target_temperatures": {
       "message": "Target temperature {value} is invalid."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the device."
     }
   },
   "entity": {
