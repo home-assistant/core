@@ -387,7 +387,7 @@ def _async_track_state_change_event(
     action: Callable[[Event[EventStateChangedData]], Any],
     job_type: HassJobType | None,
 ) -> CALLBACK_TYPE:
-    """async_track_state_change_event.
+    """Faster version of _async_track_state_change_event.
 
     The passed in entity_ids will not be automatically lower cased.
     """
