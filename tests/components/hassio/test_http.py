@@ -82,7 +82,9 @@ async def test_forward_request_onboarded_user_unallowed_methods(
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs/follow", HTTPStatus.UNAUTHORIZED),
         ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs/follow", HTTPStatus.UNAUTHORIZED),
     ],
 )
 async def test_forward_request_onboarded_user_unallowed_paths(
@@ -152,7 +154,9 @@ async def test_forward_request_onboarded_noauth_unallowed_methods(
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs/follow", HTTPStatus.UNAUTHORIZED),
         ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs/follow", HTTPStatus.UNAUTHORIZED),
     ],
 )
 async def test_forward_request_onboarded_noauth_unallowed_paths(
@@ -265,7 +269,9 @@ async def test_forward_request_not_onboarded_unallowed_methods(
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs/follow", HTTPStatus.UNAUTHORIZED),
         ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs/follow", HTTPStatus.UNAUTHORIZED),
     ],
 )
 async def test_forward_request_not_onboarded_unallowed_paths(
@@ -292,7 +298,9 @@ async def test_forward_request_not_onboarded_unallowed_paths(
         ("addons/bl_b392/icon", False),
         ("backups/1234abcd/info", True),
         ("supervisor/logs", True),
+        ("supervisor/logs/follow", True),
         ("addons/bl_b392/logs", True),
+        ("addons/bl_b392/logs/follow", True),
         ("addons/bl_b392/changelog", True),
         ("addons/bl_b392/documentation", True),
     ],
@@ -494,3 +502,57 @@ async def test_entrypoint_cache_control(
     assert resp1.headers["Cache-Control"] == "no-store, max-age=0"
 
     assert "Cache-Control" not in resp2.headers
+
+
+async def test_no_follow_logs_compress(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that we do not compress follow logs."""
+    aioclient_mock.get("http://127.0.0.1/supervisor/logs/follow")
+    aioclient_mock.get("http://127.0.0.1/supervisor/logs")
+
+    resp1 = await hassio_client.get("/api/hassio/supervisor/logs/follow")
+    resp2 = await hassio_client.get("/api/hassio/supervisor/logs")
+
+    # Check we got right response
+    assert resp1.status == HTTPStatus.OK
+    assert resp1.headers.get("Content-Encoding") is None
+
+    assert resp2.status == HTTPStatus.OK
+    assert resp2.headers.get("Content-Encoding") == "deflate"
+
+
+async def test_forward_range_header_for_logs(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that we forward the Range header for logs."""
+    aioclient_mock.get("http://127.0.0.1/host/logs")
+    aioclient_mock.get("http://127.0.0.1/addons/123abc_esphome/logs")
+    aioclient_mock.get("http://127.0.0.1/backups/1234abcd/download")
+
+    test_range = ":-100:50"
+
+    host_resp = await hassio_client.get(
+        "/api/hassio/host/logs", headers={"Range": test_range}
+    )
+    addon_resp = await hassio_client.get(
+        "/api/hassio/addons/123abc_esphome/logs", headers={"Range": test_range}
+    )
+    backup_resp = await hassio_client.get(
+        "/api/hassio/backups/1234abcd/download", headers={"Range": test_range}
+    )
+
+    assert host_resp.status == HTTPStatus.OK
+    assert addon_resp.status == HTTPStatus.OK
+    assert backup_resp.status == HTTPStatus.OK
+
+    assert len(aioclient_mock.mock_calls) == 3
+
+    req_headers1 = aioclient_mock.mock_calls[0][-1]
+    assert req_headers1.get("Range") == test_range
+
+    req_headers2 = aioclient_mock.mock_calls[1][-1]
+    assert req_headers2.get("Range") == test_range
+
+    req_headers3 = aioclient_mock.mock_calls[2][-1]
+    assert req_headers3.get("Range") is None
