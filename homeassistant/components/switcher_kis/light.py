@@ -34,7 +34,7 @@ async def async_setup_entry(
     @callback
     def async_add_light(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add light from Switcher device."""
-        entities = []
+        entities: list[LightEntity] = []
         if (
             coordinator.data.device_type.category
             == DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT
