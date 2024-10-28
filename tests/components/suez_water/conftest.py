@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pysuez.client import SuezClient
 import pytest
 
 from homeassistant.components.suez_water.const import DOMAIN
@@ -46,35 +45,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_client() -> Generator[None]:
-    """Fixture to mock _get_devices which makes a call to the API."""
+def mock_coordinator(hass: HomeAssistant) -> SuezWaterCoordinator:
+    """Create mock coordinator."""
 
-    client = SuezClient(
-        MOCK_DATA["username"],
-        MOCK_DATA["password"],
-        MOCK_DATA["counter_id"],
-        provider=None,
-    )
-
-    with patch(
-        "homeassistant.components.suez_water._get_client",
-        return_value=client,
-    ):
-        yield
-
-
-@pytest.fixture
-def mock_coordinator(mock_client: SuezClient, hass: HomeAssistant) -> Generator[None]:
-    """Fixture to mock _get_devices which makes a call to the API."""
-
-    coordinator = SuezWaterCoordinator(
+    return SuezWaterCoordinator(
         hass,
-        mock_client,
+        None,
         MOCK_DATA["counter_id"],
     )
-
-    with patch(
-        "homeassistant.components.suez_water._get_coordinator",
-        return_value=coordinator,
-    ):
-        yield
