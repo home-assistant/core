@@ -190,17 +190,19 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
         await super().async_added_to_hass()
         entity_automations = automations_with_entity(self.hass, self.entity_id)
         entity_scripts = scripts_with_entity(self.hass, self.entity_id)
-        for item in entity_automations + entity_scripts:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_binary_common_door_sensor_{self.entity_id}_{item}",
-                breaks_in_ha_version="2025.5.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_binary_common_door_sensor",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "info": item,
-                },
-            )
+        items = entity_automations + entity_scripts
+        if not items:
+            return
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_binary_common_door_sensor_{self.entity_id}",
+            breaks_in_ha_version="2025.5.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_binary_common_door_sensor",
+            translation_placeholders={
+                "entity": self.entity_id,
+                "items": "\n".join([f"- {item}" for item in items]),
+            },
+        )
