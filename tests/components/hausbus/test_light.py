@@ -242,14 +242,14 @@ async def test_dimmer_turned_on(hass: HomeAssistant) -> None:
     state = hass.states.get(channel.entity_id)
 
     assert state.state == "on"
-    # make sure the internal state was updated to 127 (50% of 255)
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 127
+    # make sure the internal state was updated to 127.5 (50% of 255)
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 127.5
 
 
 @pytest.mark.parametrize(
     ("inputs", "expected"),
     [
-        ({"brightness": 50, "duration": 0}, {"state": "on", "brightness": 127}),
+        ({"brightness": 50, "duration": 0}, {"state": "on", "brightness": 127.5}),
         ({"brightness": 0, "duration": 0}, {"state": "off", "brightness": None}),
     ],
 )
@@ -302,7 +302,7 @@ async def test_rgbdimmer_turned_on(hass: HomeAssistant) -> None:
     state = hass.states.get(channel.entity_id)
 
     assert state.state == "on"
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 76
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 76.5
     assert state.attributes.get(ATTR_HS_COLOR) == (210, 67)
 
 
@@ -316,7 +316,7 @@ async def test_rgbdimmer_turned_on(hass: HomeAssistant) -> None:
                 "brightnessBlue": 30,
                 "duration": 0,
             },
-            {"state": "on", "brightness": 76, "hs": (210, 67)},
+            {"state": "on", "brightness": 76.5, "hs": (210, 67)},
         ),
         (
             {
@@ -385,14 +385,14 @@ async def test_led_turned_on(hass: HomeAssistant) -> None:
     state = hass.states.get(channel.entity_id)
 
     assert state.state == "on"
-    # make sure the internal state was updated to 127 (50% of 255)
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 127
+    # make sure the internal state was updated to 127.5 (50% of 255)
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 127.5
 
 
 @pytest.mark.parametrize(
     ("inputs", "expected"),
     [
-        ({"brightness": 50, "duration": 0}, {"state": "on", "brightness": 127}),
+        ({"brightness": 50, "duration": 0}, {"state": "on", "brightness": 127.5}),
         ({"brightness": 0, "duration": 0}, {"state": "off", "brightness": None}),
     ],
 )

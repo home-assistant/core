@@ -30,8 +30,9 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rGBDimmer.data.Status import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_HS_COLOR,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
 )
@@ -52,13 +53,12 @@ async def async_setup_entry(
     """Set up the Haus-Bus lights from a config entry."""
     gateway = config_entry.runtime_data.gateway
 
-    @callback
     async def async_add_light(channel: HausbusEntity) -> None:
         """Add light from Haus-Bus."""
         if isinstance(channel, HausbusLight):
             async_add_entities([channel])
 
-    gateway.register_platform_add_channel_callback(async_add_light, DOMAIN)
+    gateway.register_platform_add_channel_callback(async_add_light, LIGHT_DOMAIN)
 
 
 class HausbusLight(HausbusEntity, LightEntity):
@@ -97,14 +97,14 @@ class HausbusLight(HausbusEntity, LightEntity):
         )
         params = {
             ATTR_ON_STATE: True,
-            ATTR_BRIGHTNESS: round(value * 255),
+            ATTR_BRIGHTNESS_PCT: value,
             ATTR_HS_COLOR: (round(hue * 360), round(saturation * 100)),
         }
         self.async_update_callback(**params)
 
     def set_light_brightness(self, brightness: int) -> None:
         """Set the brightness of a light channel."""
-        params = {ATTR_ON_STATE: True, ATTR_BRIGHTNESS: (brightness * 255) // 100}
+        params = {ATTR_ON_STATE: True, ATTR_BRIGHTNESS_PCT: brightness / 100}
         self.async_update_callback(**params)
 
     def light_turn_off(self) -> None:
@@ -172,9 +172,9 @@ class HausbusLight(HausbusEntity, LightEntity):
                 self._attr_is_on = kwargs[ATTR_ON_STATE]
                 state_changed = True
 
-        if ATTR_BRIGHTNESS in kwargs:
-            if self._attr_brightness != kwargs[ATTR_BRIGHTNESS]:
-                self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_BRIGHTNESS_PCT in kwargs:
+            if self._attr_brightness != kwargs[ATTR_BRIGHTNESS_PCT] * 255:
+                self._attr_brightness = kwargs[ATTR_BRIGHTNESS_PCT] * 255
                 state_changed = True
 
         if ATTR_HS_COLOR in kwargs:
@@ -214,7 +214,7 @@ class HausbusDimmerLight(HausbusLight):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on action."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)
-        brightness = brightness * 100 // 255
+        brightness = round(brightness * 100 // 255)
         self._channel.setBrightness(brightness, 0)
 
 
@@ -281,5 +281,5 @@ class HausbusLedLight(HausbusLight):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on action."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)
-        brightness = brightness * 100 // 255
+        brightness = round(brightness * 100 // 255)
         self._channel.on(brightness, 0, 0)
