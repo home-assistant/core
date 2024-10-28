@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
       'friendly_name': 'GS01234 Gateway firmware',
       'in_progress': False,
@@ -14,6 +15,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 1>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.gs01234_gateway_firmware',
@@ -61,6 +63,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/lamarzocco/icon.png',
       'friendly_name': 'GS01234 Machine firmware',
       'in_progress': False,
@@ -71,6 +74,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 1>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.gs01234_machine_firmware',

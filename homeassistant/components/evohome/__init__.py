@@ -223,7 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_PASSWORD],
         )
 
-    except evo.AuthenticationFailed as err:
+    except (evo.AuthenticationFailed, evo.RequestFailed) as err:
         handle_evo_exception(err)
         return False
 

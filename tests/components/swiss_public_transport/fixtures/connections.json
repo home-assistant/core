@@ -99,7 +99,7 @@
     "line": "T10"
   },
   {
-    "departure": "2024-01-06T18:14:00+0100",
+    "departure": "invalid",
     "number": 11,
     "platform": 11,
     "transfers": 0,

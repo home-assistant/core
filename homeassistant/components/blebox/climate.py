@@ -3,7 +3,6 @@
 from datetime import timedelta
 from typing import Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.climate
 
 from homeassistant.components.climate import (
@@ -12,12 +11,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -39,14 +37,13 @@ BLEBOX_TO_HVACACTION = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BleBoxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox climate entity."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-
     entities = [
-        BleBoxClimateEntity(feature) for feature in product.features.get("climates", [])
+        BleBoxClimateEntity(feature)
+        for feature in config_entry.runtime_data.features.get("climates", [])
     ]
     async_add_entities(entities, True)
 

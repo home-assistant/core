@@ -21,10 +21,10 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import HabiticaConfigEntry
 from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
+from .types import HabiticaConfigEntry
 from .util import next_due_date
 
 

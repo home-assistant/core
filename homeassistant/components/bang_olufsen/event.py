@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from mozart_api.mozart_client import MozartClient
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
@@ -11,12 +9,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BangOlufsenData
+from . import BangOlufsenConfigEntry
 from .const import (
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
-    DOMAIN,
     MODEL_SUPPORT_DEVICE_BUTTONS,
     MODEL_SUPPORT_MAP,
     WebsocketNotification,
@@ -26,20 +23,18 @@ from .entity import BangOlufsenEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[EventEntity] = []
 
-    # The Beoconnect Core does not have any physical controls
+    # Add physical "buttons"
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
-        # Add physical "buttons"
         entities.extend(
             [
-                BangOlufsenButtonEvent(config_entry, data.client, button_type)
+                BangOlufsenButtonEvent(config_entry, button_type)
                 for button_type in DEVICE_BUTTONS
             ]
         )
@@ -66,11 +61,9 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
     _attr_event_types = DEVICE_BUTTON_EVENTS
     _attr_icon = "mdi:gesture-tap-button"
 
-    def __init__(
-        self, entry: ConfigEntry, client: MozartClient, button_type: str
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, button_type: str) -> None:
         """Initialize Button."""
-        super().__init__(entry, client)
+        super().__init__(config_entry, config_entry.runtime_data.client)
 
         self._attr_unique_id = f"{self._unique_id}_{button_type}"
 
