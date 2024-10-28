@@ -148,12 +148,12 @@ update_todo:
           required: false
           selector:
             date:
-    clear_date:
-      required: false
-      selector:
-        constant:
-          value: true
-          label: ""
+        clear_date:
+          required: false
+          selector:
+            constant:
+              value: true
+              label: ""
     reminder_options:
       collapsed: true
       fields:
@@ -169,12 +169,12 @@ update_todo:
             text:
               type: datetime-local
               multiple: true
-    clear_reminder: &clear_reminder
-      required: false
-      selector:
-        constant:
-          value: true
-          label: ""
+        clear_reminder: &clear_reminder
+          required: false
+          selector:
+            constant:
+              value: true
+              label: ""
     tag_options: &tag_options
       collapsed: true
       fields:
@@ -335,7 +335,7 @@ update_daily:
             text:
               type: time
               multiple: true
-    clear_reminder: *clear_reminder
+        clear_reminder: *clear_reminder
     tag_options: *tag_options
     developer_options:
       collapsed: true
