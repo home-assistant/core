@@ -104,7 +104,9 @@ def build_rrule(task: dict[str, Any]) -> rrule:
     return rrule(
         freq=rrule_frequency,
         interval=task["everyX"],
-        dtstart=dt_util.as_local(datetime.datetime.fromisoformat(task["startDate"])),
+        dtstart=dt_util.start_of_local_day(
+            datetime.datetime.fromisoformat(task["startDate"])
+        ),
         byweekday=weekdays if rrule_frequency in [WEEKLY, MONTHLY] else None,
         bymonthday=bymonthday,
         bysetpos=bysetpos,

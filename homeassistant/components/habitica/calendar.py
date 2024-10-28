@@ -136,56 +136,33 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         )
 
     def calculate_end_date(self, next_recurrence: datetime) -> date:
-        """Calculate the end date for a yesterdaily."""
+        """Calculate the end date for a yesterdaily.
+
+        The enddates of events from yesterday move forward to the end
+        of the current day until the cron resets the dailies as they
+        are still the active events.
+        """
         return (
             dt_util.start_of_local_day()
             if next_recurrence == self.today
             else next_recurrence
         ).date() + timedelta(days=1)
 
-    @property
-    def event(self) -> CalendarEvent | None:
-        """Return the next upcoming event."""
-
-        events = [
-            CalendarEvent(
-                start=next_recurrence.date(),
-                end=self.calculate_end_date(next_recurrence),
-                summary=task["text"],
-                description=task["notes"],
-                uid=task["id"],
-            )
-            for task in self.coordinator.data.tasks
-            if task["type"] == HabiticaTaskType.DAILY and task["everyX"]
-            if (
-                next_recurrence := self.today
-                if not task["completed"] and task["isDue"]
-                else build_rrule(task).after(self.today, inc=True)
-            )
-        ]
-        events_sorted = sorted(
-            events,
-            key=lambda event: (
-                event.start,
-                self.coordinator.data.user["tasksOrder"]["dailys"].index(event.uid),
-            ),
-        )
-
-        return next(iter(events_sorted), None)
-
-    async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    def due_dailies(
+        self, start_date: datetime | None = None, end_date: datetime | None = None
     ) -> list[CalendarEvent]:
-        """Return calendar events within a datetime range."""
-
-        # returns only todays and future dailies.
-        # If a daily is completed it will not be shown for today but still future recurrences
-        # If the cron hasn't run, not completed dailies are yesterdailies and displayed yesterday
+        """Get dailies and recurrences for a given period or the next upcoming."""
+        if start_date and start_date < self.today:
+            start_date = self.today
         return sorted(
             [
                 CalendarEvent(
-                    start=start,
-                    end=start + timedelta(days=1),
+                    start=recurrence.date(),
+                    end=(
+                        self.calculate_end_date(recurrence)
+                        if not end_date
+                        else recurrence.date() + timedelta(days=1)
+                    ),
                     summary=task["text"],
                     description=task["notes"],
                     uid=task["id"],
@@ -195,18 +172,35 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
                 if task["type"] == HabiticaTaskType.DAILY
                 and task["everyX"]
                 and (recurrences := build_rrule(task))
-                for recurrence in recurrences.between(
-                    start_date, end_date - timedelta(days=1), inc=True
+                for recurrence in (
+                    recurrences.between(
+                        start_date, end_date - timedelta(days=1), inc=True
+                    )
+                    if end_date
+                    # if we don't have an end_date, calculate only the next occurrence
+                    else [recurrences.after(self.today, inc=True)]
                 )
-                # return only future events and due current events
-                if (start := recurrence) > self.today
-                or (start == self.today and not task["completed"])
+                if recurrence > self.today
+                # only show the current event if it is not completed
+                or (recurrence <= self.today and not task["completed"])
             ],
             key=lambda event: (
                 event.start,
                 self.coordinator.data.user["tasksOrder"]["dailys"].index(event.uid),
             ),
         )
+
+    @property
+    def event(self) -> CalendarEvent | None:
+        """Return the next upcoming event."""
+        return next(iter(self.due_dailies()), None)
+
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Return calendar events within a datetime range."""
+
+        return self.due_dailies(start_date, end_date)
 
     @property
     def extra_state_attributes(self) -> dict[str, bool | None] | None:
