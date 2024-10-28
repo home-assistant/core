@@ -26,20 +26,21 @@ ciso8601==2.3.1
 cryptography==43.0.1
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
+go2rtc-client==0.0.1b1
 ha-av==10.1.1
 ha-ffmpeg==3.2.1
 habluetooth==3.6.0
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20241002.3
+home-assistant-frontend==20241002.4
 home-assistant-intents==2024.10.2
 httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.10.9
+orjson==3.10.10
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.4.0
@@ -64,8 +65,9 @@ uv==0.4.22
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
+webrtc-models==0.0.0b2
 yarl==1.16.0
-zeroconf==0.135.0
+zeroconf==0.136.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -100,7 +102,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.0
+anyio==4.6.2.post1
 h11==0.14.0
 httpcore==1.0.5
 

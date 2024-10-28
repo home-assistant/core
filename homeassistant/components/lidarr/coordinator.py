@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum)
+T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum | int)
 
 
 class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
@@ -96,3 +96,11 @@ class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrAlbum]):
             LidarrAlbum,
             await self.api_client.async_get_wanted(page_size=DEFAULT_MAX_RECORDS),
         )
+
+
+class AlbumsDataUpdateCoordinator(LidarrDataUpdateCoordinator[int]):
+    """Albums update coordinator."""
+
+    async def _fetch_data(self) -> int:
+        """Fetch the album data."""
+        return len(cast(list[LidarrAlbum], await self.api_client.async_get_albums()))
