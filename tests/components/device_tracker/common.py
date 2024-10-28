@@ -61,7 +61,7 @@ def async_see(
 class MockScannerEntity(ScannerEntity):
     """Test implementation of a ScannerEntity."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init."""
         self.connected = False
         self._hostname = "test.hostname.org"
@@ -69,7 +69,7 @@ class MockScannerEntity(ScannerEntity):
         self._mac_address = "ad:de:ef:be:ed:fe"
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.ROUTER
 
@@ -110,7 +110,7 @@ class MockScannerEntity(ScannerEntity):
 class MockScanner(DeviceScanner):
     """Mock device scanner."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the MockScanner."""
         self.devices_home = []
 

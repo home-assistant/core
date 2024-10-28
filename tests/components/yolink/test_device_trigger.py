@@ -6,6 +6,7 @@ from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.yolink import DOMAIN, YOLINK_EVENT
+from homeassistant.components.yolink.const import DEV_MODEL_FLEX_FOB_YS3604_UC
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -23,6 +24,7 @@ async def test_get_triggers(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         model=ATTR_DEVICE_SMART_REMOTER,
+        model_id=DEV_MODEL_FLEX_FOB_YS3604_UC,
     )
 
     expected_triggers = [
@@ -99,6 +101,7 @@ async def test_get_triggers_exception(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         model=ATTR_DEVICE_DIMMER,
+        model_id=None,
     )
 
     expected_triggers = []
@@ -123,6 +126,7 @@ async def test_if_fires_on_event(
         connections={connection},
         identifiers={(DOMAIN, mac_address)},
         model=ATTR_DEVICE_SMART_REMOTER,
+        model_id=DEV_MODEL_FLEX_FOB_YS3604_UC,
     )
 
     assert await async_setup_component(

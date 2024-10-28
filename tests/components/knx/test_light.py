@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from xknx.core import XknxConnectionState
 from xknx.devices.light import Light as XknxLight
 
@@ -18,8 +19,9 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ColorMode,
 )
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
@@ -1158,7 +1160,7 @@ async def test_light_ui_create(
     knx: KNXTestKit,
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
-    """Test creating a switch."""
+    """Test creating a light."""
     await knx.setup_integration({})
     await create_ui_entity(
         platform=Platform.LIGHT,
@@ -1174,3 +1176,66 @@ async def test_light_ui_create(
     await knx.receive_response("2/2/2", True)
     state = hass.states.get("light.test")
     assert state.state is STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("color_temp_mode", "raw_ct"),
+    [
+        ("7.600", (0x10, 0x68)),
+        ("9", (0x46, 0x69)),
+        ("5.001", (0x74,)),
+    ],
+)
+async def test_light_ui_color_temp(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    color_temp_mode: str,
+    raw_ct: tuple[int, ...],
+) -> None:
+    """Test creating a color-temp light."""
+    await knx.setup_integration({})
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "ga_color_temp": {
+                "write": "3/3/3",
+                "dpt": color_temp_mode,
+            },
+            "_light_color_mode_schema": "default",
+            "sync_state": True,
+        },
+    )
+    await knx.assert_read("2/2/2", True)
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.test", ATTR_COLOR_TEMP_KELVIN: 4200},
+        blocking=True,
+    )
+    await knx.assert_write("3/3/3", raw_ct)
+    state = hass.states.get("light.test")
+    assert state.state is STATE_ON
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == pytest.approx(4200, abs=1)
+
+
+async def test_light_ui_load(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    load_config_store: None,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test loading a light from storage."""
+    await knx.setup_integration({})
+
+    await knx.assert_read("1/0/21", response=True, ignore_order=True)
+    # unrelated switch in config store
+    await knx.assert_read("1/0/45", response=True, ignore_order=True)
+
+    state = hass.states.get("light.test")
+    assert state.state is STATE_ON
+
+    entity = entity_registry.async_get("light.test")
+    assert entity.entity_category is EntityCategory.CONFIG

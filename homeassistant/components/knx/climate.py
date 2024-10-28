@@ -5,12 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 from xknx import XKNX
-from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
-from xknx.dpt.dpt_20 import HVACControllerMode
+from xknx.devices import (
+    Climate as XknxClimate,
+    ClimateMode as XknxClimateMode,
+    Device as XknxDevice,
+)
+from xknx.devices.fan import FanSpeedMode
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 
 from homeassistant import config_entries
 from homeassistant.components.climate import (
-    PRESET_AWAY,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -28,19 +36,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import (
-    CONTROLLER_MODES,
-    CURRENT_HVAC_ACTIONS,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    PRESET_MODES,
-)
-from .knx_entity import KnxYamlEntity
+from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import ClimateSchema
 
 ATTR_COMMAND_VALUE = "command_value"
 CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
-PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 
 async def async_setup_entry(
@@ -49,8 +50,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.CLIMATE]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.CLIMATE]
 
     async_add_entities(
         KNXClimate(knx_module, entity_config) for entity_config in config
@@ -130,6 +131,14 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
         min_temp=config.get(ClimateSchema.CONF_MIN_TEMP),
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
+        group_address_fan_speed=config.get(ClimateSchema.CONF_FAN_SPEED_ADDRESS),
+        group_address_fan_speed_state=config.get(
+            ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS
+        ),
+        fan_speed_mode=config[ClimateSchema.CONF_FAN_SPEED_MODE],
+        group_address_humidity_state=config.get(
+            ClimateSchema.CONF_HUMIDITY_STATE_ADDRESS
+        ),
     )
 
 
@@ -138,6 +147,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
     _device: XknxClimate
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "knx_climate"
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
@@ -161,8 +171,44 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-        if self.preset_modes:
+        if (
+            self._device.mode is not None
+            and self._device.mode.operation_modes  # empty list when not writable
+        ):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            self._attr_preset_modes = [
+                mode.name.lower() for mode in self._device.mode.operation_modes
+            ]
+
+        fan_max_step = config[ClimateSchema.CONF_FAN_MAX_STEP]
+        self._fan_modes_percentages = [
+            int(100 * i / fan_max_step) for i in range(fan_max_step + 1)
+        ]
+        self.fan_zero_mode: str = config[ClimateSchema.CONF_FAN_ZERO_MODE]
+
+        if self._device.fan_speed is not None and self._device.fan_speed.initialized:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+
+            if fan_max_step == 3:
+                self._attr_fan_modes = [
+                    self.fan_zero_mode,
+                    FAN_LOW,
+                    FAN_MEDIUM,
+                    FAN_HIGH,
+                ]
+            elif fan_max_step == 2:
+                self._attr_fan_modes = [self.fan_zero_mode, FAN_LOW, FAN_HIGH]
+            elif fan_max_step == 1:
+                self._attr_fan_modes = [self.fan_zero_mode, FAN_ON]
+            elif self._device.fan_speed_mode == FanSpeedMode.STEP:
+                self._attr_fan_modes = [self.fan_zero_mode] + [
+                    str(i) for i in range(1, fan_max_step + 1)
+                ]
+            else:
+                self._attr_fan_modes = [self.fan_zero_mode] + [
+                    f"{percentage}%" for percentage in self._fan_modes_percentages[1:]
+                ]
+
         self._attr_target_temperature_step = self._device.temperature_step
         self._attr_unique_id = (
             f"{self._device.temperature.group_address_state}_"
@@ -241,12 +287,9 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         if self._device.supports_on_off and not self._device.is_on:
             return HVACMode.OFF
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            hvac_mode = CONTROLLER_MODES.get(
+            return CONTROLLER_MODES.get(
                 self._device.mode.controller_mode, self.default_hvac_mode
             )
-            if hvac_mode is not HVACMode.OFF:
-                self._last_hvac_mode = hvac_mode
-            return hvac_mode
         return self.default_hvac_mode
 
     @property
@@ -261,11 +304,15 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
         if self._device.supports_on_off:
             if not ha_controller_modes:
-                ha_controller_modes.append(self.default_hvac_mode)
+                ha_controller_modes.append(self._last_hvac_mode)
             ha_controller_modes.append(HVACMode.OFF)
 
         hvac_modes = list(set(filter(None, ha_controller_modes)))
-        return hvac_modes if hvac_modes else [self.default_hvac_mode]
+        return (
+            hvac_modes
+            if hvac_modes
+            else [self.hvac_mode]  # mode read-only -> fall back to only current mode
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -304,33 +351,59 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         Requires ClimateEntityFeature.PRESET_MODE.
         """
         if self._device.mode is not None and self._device.mode.supports_operation_mode:
-            return PRESET_MODES.get(self._device.mode.operation_mode, PRESET_AWAY)
+            return self._device.mode.operation_mode.name.lower()
         return None
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes.
-
-        Requires ClimateEntityFeature.PRESET_MODE.
-        """
-        if self._device.mode is None:
-            return None
-
-        presets = [
-            PRESET_MODES.get(operation_mode)
-            for operation_mode in self._device.mode.operation_modes
-        ]
-        return list(filter(None, presets))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if (
             self._device.mode is not None
-            and self._device.mode.supports_operation_mode
-            and (knx_operation_mode := PRESET_MODES_INV.get(preset_mode)) is not None
+            and self._device.mode.operation_modes  # empty list when not writable
         ):
-            await self._device.mode.set_operation_mode(knx_operation_mode)
+            await self._device.mode.set_operation_mode(
+                HVACOperationMode[preset_mode.upper()]
+            )
             self.async_write_ha_state()
+
+    @property
+    def fan_mode(self) -> str:
+        """Return the fan setting."""
+
+        fan_speed = self._device.current_fan_speed
+
+        if not fan_speed or self._attr_fan_modes is None:
+            return self.fan_zero_mode
+
+        if self._device.fan_speed_mode == FanSpeedMode.STEP:
+            return self._attr_fan_modes[fan_speed]
+
+        # Find the closest fan mode percentage
+        closest_percentage = min(
+            self._fan_modes_percentages[1:],  # fan_speed == 0 is handled above
+            key=lambda x: abs(x - fan_speed),
+        )
+        return self._attr_fan_modes[
+            self._fan_modes_percentages.index(closest_percentage)
+        ]
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set fan mode."""
+
+        if self._attr_fan_modes is None:
+            return
+
+        fan_mode_index = self._attr_fan_modes.index(fan_mode)
+
+        if self._device.fan_speed_mode == FanSpeedMode.STEP:
+            await self._device.set_fan_speed(fan_mode_index)
+            return
+
+        await self._device.set_fan_speed(self._fan_modes_percentages[fan_mode_index])
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        return self._device.humidity.value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -354,3 +427,13 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             self._device.mode.unregister_device_updated_cb(self.after_update_callback)
             self._device.mode.xknx.devices.async_remove(self._device.mode)
         await super().async_will_remove_from_hass()
+
+    def after_update_callback(self, _device: XknxDevice) -> None:
+        """Call after device was updated."""
+        if self._device.mode is not None and self._device.mode.supports_controller_mode:
+            hvac_mode = CONTROLLER_MODES.get(
+                self._device.mode.controller_mode, self.default_hvac_mode
+            )
+            if hvac_mode is not HVACMode.OFF:
+                self._last_hvac_mode = hvac_mode
+        super().after_update_callback(_device)

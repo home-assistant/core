@@ -265,12 +265,16 @@ def assert_dict_of_states_equal_without_context_and_last_changed(
         )
 
 
-async def async_record_states(hass: HomeAssistant):
+async def async_record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states."""
     return await hass.async_add_executor_job(record_states, hass)
 
 
-def record_states(hass):
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.
@@ -441,9 +445,8 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),

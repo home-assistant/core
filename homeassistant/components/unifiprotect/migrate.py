@@ -107,19 +107,17 @@ async def async_migrate_data(
 ) -> None:
     """Run all valid UniFi Protect data migrations."""
 
-    _LOGGER.debug("Start Migrate: async_deprecate_hdr_package")
-    async_deprecate_hdr_package(hass, entry)
-    _LOGGER.debug("Completed Migrate: async_deprecate_hdr_package")
+    _LOGGER.debug("Start Migrate: async_deprecate_hdr")
+    async_deprecate_hdr(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
 
 @callback
-def async_deprecate_hdr_package(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
-    """Check for usages of hdr_mode switch and package sensor and raise repair if it is used.
+def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Check for usages of hdr_mode switch and raise repair if it is used.
 
     UniFi Protect v3.0.22 changed how HDR works so it is no longer a simple on/off toggle. There is
     Always On, Always Off and Auto. So it has been migrated to a select. The old switch is now deprecated.
-
-    Additionally, the Package sensor is no longer functional due to how events work so a repair to notify users.
 
     Added in 2024.4.0
     """
@@ -128,11 +126,5 @@ def async_deprecate_hdr_package(hass: HomeAssistant, entry: UFPConfigEntry) -> N
         hass,
         entry,
         "2024.10.0",
-        {
-            "hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH},
-            "package_sensor": {
-                "id": "smart_obj_package",
-                "platform": Platform.BINARY_SENSOR,
-            },
-        },
+        {"hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH}},
     )

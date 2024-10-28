@@ -92,7 +92,9 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             except AirGradientError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(current_measures.serial_number)
+                await self.async_set_unique_id(
+                    current_measures.serial_number, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 await self.set_configuration_source()
                 return self.async_create_entry(

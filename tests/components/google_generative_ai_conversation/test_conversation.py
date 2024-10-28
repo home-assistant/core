@@ -1,5 +1,6 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
@@ -211,11 +212,13 @@ async def test_function_call(
             name="test_tool",
             args={
                 "param1": ["test_value", "param1\\'s value"],
-                "param2": "param2\\'s value",
+                "param2": 2.7,
             },
         )
 
-        def tool_call(hass, tool_input, tool_context):
+        def tool_call(
+            hass: HomeAssistant, tool_input: llm.ToolInput, tool_context: llm.LLMContext
+        ) -> dict[str, Any]:
             mock_part.function_call = None
             mock_part.text = "Hi there!"
             return {"result": "Test response"}
@@ -255,7 +258,7 @@ async def test_function_call(
             tool_name="test_tool",
             tool_args={
                 "param1": ["test_value", "param1's value"],
-                "param2": "param2's value",
+                "param2": 2.7,
             },
         ),
         llm.LLMContext(
@@ -314,7 +317,9 @@ async def test_function_call_without_parameters(
         mock_part = MagicMock()
         mock_part.function_call = FunctionCall(name="test_tool", args={})
 
-        def tool_call(hass, tool_input, tool_context):
+        def tool_call(
+            hass: HomeAssistant, tool_input: llm.ToolInput, tool_context: llm.LLMContext
+        ) -> dict[str, Any]:
             mock_part.function_call = None
             mock_part.text = "Hi there!"
             return {"result": "Test response"}
@@ -400,7 +405,9 @@ async def test_function_exception(
         mock_part = MagicMock()
         mock_part.function_call = FunctionCall(name="test_tool", args={"param1": 1})
 
-        def tool_call(hass, tool_input, tool_context):
+        def tool_call(
+            hass: HomeAssistant, tool_input: llm.ToolInput, tool_context: llm.LLMContext
+        ) -> dict[str, Any]:
             mock_part.function_call = None
             mock_part.text = "Hi there!"
             raise HomeAssistantError("Test tool exception")

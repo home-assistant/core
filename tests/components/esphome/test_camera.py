@@ -5,13 +5,13 @@ from collections.abc import Awaitable, Callable
 from aioesphomeapi import (
     APIClient,
     CameraInfo,
-    CameraState,
+    CameraState as ESPHomeCameraState,
     EntityInfo,
     EntityState,
     UserService,
 )
 
-from homeassistant.components.camera import STATE_IDLE
+from homeassistant.components.camera import CameraState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -53,21 +53,21 @@ async def test_camera_single_image(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
 
     def _mock_camera_image():
-        mock_device.set_state(CameraState(key=1, data=SMALLEST_VALID_JPEG_BYTES))
+        mock_device.set_state(ESPHomeCameraState(key=1, data=SMALLEST_VALID_JPEG_BYTES))
 
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.test_my_camera")
+    resp = await client.get("/api/camera_proxy/camera.test_mycamera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
 
     assert resp.status == 200
     assert resp.content_type == "image/jpeg"
@@ -101,15 +101,15 @@ async def test_camera_single_image_unavailable_before_requested(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
     await mock_device.mock_disconnect(False)
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.test_my_camera")
+    resp = await client.get("/api/camera_proxy/camera.test_mycamera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -142,9 +142,9 @@ async def test_camera_single_image_unavailable_during_request(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
 
     def _mock_camera_image():
         hass.async_create_task(mock_device.mock_disconnect(False))
@@ -152,9 +152,9 @@ async def test_camera_single_image_unavailable_during_request(
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy/camera.test_my_camera")
+    resp = await client.get("/api/camera_proxy/camera.test_mycamera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -187,9 +187,9 @@ async def test_camera_stream(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
     remaining_responses = 3
 
     def _mock_camera_image():
@@ -197,17 +197,17 @@ async def test_camera_stream(
         if remaining_responses == 0:
             return
         remaining_responses -= 1
-        mock_device.set_state(CameraState(key=1, data=SMALLEST_VALID_JPEG_BYTES))
+        mock_device.set_state(ESPHomeCameraState(key=1, data=SMALLEST_VALID_JPEG_BYTES))
 
     mock_client.request_image_stream = _mock_camera_image
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    resp = await client.get("/api/camera_proxy_stream/camera.test_my_camera")
+    resp = await client.get("/api/camera_proxy_stream/camera.test_mycamera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
 
     assert resp.status == 200
     assert resp.content_type == "multipart/x-mixed-replace"
@@ -247,16 +247,16 @@ async def test_camera_stream_unavailable(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
 
     await mock_device.mock_disconnect(False)
 
     client = await hass_client()
-    await client.get("/api/camera_proxy_stream/camera.test_my_camera")
+    await client.get("/api/camera_proxy_stream/camera.test_mycamera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -287,9 +287,9 @@ async def test_camera_stream_with_disconnection(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
-    assert state.state == STATE_IDLE
+    assert state.state == CameraState.IDLE
     remaining_responses = 3
 
     def _mock_camera_image():
@@ -299,14 +299,14 @@ async def test_camera_stream_with_disconnection(
         if remaining_responses == 2:
             hass.async_create_task(mock_device.mock_disconnect(False))
         remaining_responses -= 1
-        mock_device.set_state(CameraState(key=1, data=SMALLEST_VALID_JPEG_BYTES))
+        mock_device.set_state(ESPHomeCameraState(key=1, data=SMALLEST_VALID_JPEG_BYTES))
 
     mock_client.request_image_stream = _mock_camera_image
     mock_client.request_single_image = _mock_camera_image
 
     client = await hass_client()
-    await client.get("/api/camera_proxy_stream/camera.test_my_camera")
+    await client.get("/api/camera_proxy_stream/camera.test_mycamera")
     await hass.async_block_till_done()
-    state = hass.states.get("camera.test_my_camera")
+    state = hass.states.get("camera.test_mycamera")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

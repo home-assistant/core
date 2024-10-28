@@ -1,12 +1,11 @@
 """Support for exposing Concord232 elements as sensors."""
 
-# mypy: ignore-errors
 from __future__ import annotations
 
 import datetime
 import logging
 
-# from concord232 import client as concord232_client
+from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
@@ -81,7 +80,7 @@ def setup_platform(
     client.zones.sort(key=lambda zone: zone["number"])
 
     for zone in client.zones:
-        _LOGGER.info("Loading Zone found: %s", zone["name"])
+        _LOGGER.debug("Loading Zone found: %s", zone["name"])
         if zone["number"] not in exclude:
             sensors.append(
                 Concord232ZoneSensor(

@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import RoborockConfigEntry
 from .const import DOMAIN, GET_MAPS_SERVICE_NAME
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntityV1
+from .entity import RoborockCoordinatedEntityV1
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: STATE_IDLE,  # "Starting"
@@ -69,7 +69,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         GET_MAPS_SERVICE_NAME,
-        {},
+        None,
         RoborockVacuum.get_maps.__name__,
         supports_response=SupportsResponse.ONLY,
     )

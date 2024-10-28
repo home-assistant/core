@@ -24,9 +24,9 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import StateType
 
-from . import HabiticaConfigEntry
 from .const import DOMAIN, UNIT_TASKS
 from .entity import HabiticaBase
+from .types import HabiticaConfigEntry
 from .util import entity_used_in
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +63,8 @@ class HabitipySensorEntity(StrEnum):
     DAILIES = "dailys"
     TODOS = "todos"
     REWARDS = "rewards"
+    GEMS = "gems"
+    TRINKETS = "trinkets"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
@@ -129,6 +131,25 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["warrior", "healer", "wizard", "rogue"],
     ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.GEMS,
+        translation_key=HabitipySensorEntity.GEMS,
+        value_fn=lambda user: user.get("balance", 0) * 4,
+        suggested_display_precision=0,
+        native_unit_of_measurement="gems",
+    ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.TRINKETS,
+        translation_key=HabitipySensorEntity.TRINKETS,
+        value_fn=(
+            lambda user: user.get("purchased", {})
+            .get("plan", {})
+            .get("consecutive", {})
+            .get("trinkets", 0)
+        ),
+        suggested_display_precision=0,
+        native_unit_of_measurement="⧖",
+    ),
 )
 
 
@@ -140,6 +161,8 @@ TASKS_MAP = {
     "frequency": "frequency",
     "every_x": "everyX",
     "streak": "streak",
+    "up": "up",
+    "down": "down",
     "counter_up": "counterUp",
     "counter_down": "counterDown",
     "next_due": "nextDue",
@@ -172,6 +195,7 @@ TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
         translation_key=HabitipySensorEntity.DAILIES,
         native_unit_of_measurement=UNIT_TASKS,
         value_fn=lambda tasks: [r for r in tasks if r.get("type") == "daily"],
+        entity_registry_enabled_default=False,
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.TODOS,
@@ -180,6 +204,7 @@ TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
         value_fn=lambda tasks: [
             r for r in tasks if r.get("type") == "todo" and not r.get("completed")
         ],
+        entity_registry_enabled_default=False,
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.REWARDS,

@@ -5,21 +5,20 @@ from __future__ import annotations
 import asyncio
 
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import EntityComponent
 
 from . import Camera, _async_stream_endpoint_url
-from .const import DOMAIN, StreamType
+from .const import DATA_COMPONENT, DOMAIN, StreamType
 
 
 async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
@@ -59,7 +58,7 @@ class CameraMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        component: EntityComponent[Camera] = self.hass.data[DOMAIN]
+        component = self.hass.data[DATA_COMPONENT]
         camera = component.get_entity(item.identifier)
 
         if not camera:
@@ -108,7 +107,7 @@ class CameraMediaSource(MediaSource):
 
             return _media_source_for_camera(self.hass, camera, content_type)
 
-        component: EntityComponent[Camera] = self.hass.data[DOMAIN]
+        component = self.hass.data[DATA_COMPONENT]
         results = await asyncio.gather(
             *(_filter_browsable_camera(camera) for camera in component.entities),
             return_exceptions=True,

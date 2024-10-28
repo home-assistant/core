@@ -7,7 +7,7 @@ from aioesphomeapi import (
     APIClient,
     CoverInfo,
     CoverOperation,
-    CoverState,
+    CoverState as ESPHomeCoverState,
     EntityInfo,
     EntityState,
     UserService,
@@ -26,10 +26,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -58,7 +55,7 @@ async def test_cover_entity(
         )
     ]
     states = [
-        CoverState(
+        ESPHomeCoverState(
             key=1,
             position=0.5,
             tilt=0.5,
@@ -72,16 +69,16 @@ async def test_cover_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=0.0)])
@@ -90,7 +87,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=1.0)])
@@ -99,7 +96,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_POSITION: 50},
+        {ATTR_ENTITY_ID: "cover.test_mycover", ATTR_POSITION: 50},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=0.5)])
@@ -108,7 +105,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, stop=True)])
@@ -117,7 +114,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=1.0)])
@@ -126,7 +123,7 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.0)])
@@ -135,35 +132,37 @@ async def test_cover_entity(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_TILT_POSITION: 50},
+        {ATTR_ENTITY_ID: "cover.test_mycover", ATTR_TILT_POSITION: 50},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.5)])
     mock_client.cover_command.reset_mock()
 
     mock_device.set_state(
-        CoverState(key=1, position=0.0, current_operation=CoverOperation.IDLE)
+        ESPHomeCoverState(key=1, position=0.0, current_operation=CoverOperation.IDLE)
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     mock_device.set_state(
-        CoverState(key=1, position=0.5, current_operation=CoverOperation.IS_CLOSING)
+        ESPHomeCoverState(
+            key=1, position=0.5, current_operation=CoverOperation.IS_CLOSING
+        )
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     mock_device.set_state(
-        CoverState(key=1, position=1.0, current_operation=CoverOperation.IDLE)
+        ESPHomeCoverState(key=1, position=1.0, current_operation=CoverOperation.IDLE)
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 async def test_cover_entity_without_position(
@@ -187,7 +186,7 @@ async def test_cover_entity_without_position(
         )
     ]
     states = [
-        CoverState(
+        ESPHomeCoverState(
             key=1,
             position=0.5,
             tilt=0.5,
@@ -201,8 +200,8 @@ async def test_cover_entity_without_position(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("cover.test_my_cover")
+    state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
     assert ATTR_CURRENT_POSITION not in state.attributes

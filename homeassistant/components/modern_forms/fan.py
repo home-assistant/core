@@ -18,7 +18,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import ModernFormsDeviceEntity, modernforms_exception_handler
+from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -29,6 +29,7 @@ from .const import (
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
 from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
@@ -56,7 +57,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_FAN_SLEEP_TIMER,
-        {},
+        None,
         "async_clear_fan_sleep_timer",
     )
 

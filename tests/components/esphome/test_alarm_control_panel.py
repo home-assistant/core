@@ -4,9 +4,9 @@ from unittest.mock import call
 
 from aioesphomeapi import (
     AlarmControlPanelCommand,
-    AlarmControlPanelEntityState,
+    AlarmControlPanelEntityState as ESPHomeAlarmEntityState,
     AlarmControlPanelInfo,
-    AlarmControlPanelState,
+    AlarmControlPanelState as ESPHomeAlarmState,
     APIClient,
 )
 
@@ -20,9 +20,10 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
+    AlarmControlPanelState,
 )
 from homeassistant.components.esphome.alarm_control_panel import EspHomeACPFeatures
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 
@@ -48,9 +49,7 @@ async def test_generic_alarm_control_panel_requires_code(
             requires_code_to_arm=True,
         )
     ]
-    states = [
-        AlarmControlPanelEntityState(key=1, state=AlarmControlPanelState.ARMED_AWAY)
-    ]
+    states = [ESPHomeAlarmEntityState(key=1, state=ESPHomeAlarmState.ARMED_AWAY)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -58,15 +57,15 @@ async def test_generic_alarm_control_panel_requires_code(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("alarm_control_panel.test_my_alarm_control_panel")
+    state = hass.states.get("alarm_control_panel.test_myalarm_control_panel")
     assert state is not None
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_ARM_AWAY,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel",
             ATTR_CODE: 1234,
         },
         blocking=True,
@@ -80,7 +79,7 @@ async def test_generic_alarm_control_panel_requires_code(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel",
             ATTR_CODE: 1234,
         },
         blocking=True,
@@ -94,7 +93,7 @@ async def test_generic_alarm_control_panel_requires_code(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_ARM_HOME,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel",
             ATTR_CODE: 1234,
         },
         blocking=True,
@@ -108,7 +107,7 @@ async def test_generic_alarm_control_panel_requires_code(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_ARM_NIGHT,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel",
             ATTR_CODE: 1234,
         },
         blocking=True,
@@ -122,7 +121,7 @@ async def test_generic_alarm_control_panel_requires_code(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_ARM_VACATION,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel",
             ATTR_CODE: 1234,
         },
         blocking=True,
@@ -136,7 +135,7 @@ async def test_generic_alarm_control_panel_requires_code(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_TRIGGER,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel",
             ATTR_CODE: 1234,
         },
         blocking=True,
@@ -150,7 +149,7 @@ async def test_generic_alarm_control_panel_requires_code(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_DISARM,
         {
-            ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel",
+            ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel",
             ATTR_CODE: 1234,
         },
         blocking=True,
@@ -183,9 +182,7 @@ async def test_generic_alarm_control_panel_no_code(
             requires_code_to_arm=False,
         )
     ]
-    states = [
-        AlarmControlPanelEntityState(key=1, state=AlarmControlPanelState.ARMED_AWAY)
-    ]
+    states = [ESPHomeAlarmEntityState(key=1, state=ESPHomeAlarmState.ARMED_AWAY)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -193,14 +190,14 @@ async def test_generic_alarm_control_panel_no_code(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("alarm_control_panel.test_my_alarm_control_panel")
+    state = hass.states.get("alarm_control_panel.test_myalarm_control_panel")
     assert state is not None
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
         SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test_my_alarm_control_panel"},
+        {ATTR_ENTITY_ID: "alarm_control_panel.test_myalarm_control_panel"},
         blocking=True,
     )
     mock_client.alarm_control_panel_command.assert_has_calls(
@@ -239,6 +236,6 @@ async def test_generic_alarm_control_panel_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("alarm_control_panel.test_my_alarm_control_panel")
+    state = hass.states.get("alarm_control_panel.test_myalarm_control_panel")
     assert state is not None
     assert state.state == STATE_UNKNOWN

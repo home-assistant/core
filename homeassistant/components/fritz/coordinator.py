@@ -79,7 +79,7 @@ def device_filter_out_from_trackers(
 
 def _ha_is_stopping(activity: str) -> None:
     """Inform that HA is stopping."""
-    _LOGGER.info("Cannot execute %s: HomeAssistant is shutting down", activity)
+    _LOGGER.warning("Cannot execute %s: HomeAssistant is shutting down", activity)
 
 
 class ClassSetupMissing(Exception):
@@ -606,6 +606,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 dev_info: Device = hosts[dev_mac]
 
                 for link in interf["node_links"]:
+                    if link.get("state") != "CONNECTED":
+                        continue  # ignore orphan node links
+
                     intf = mesh_intf.get(link["node_interface_1_uid"])
                     if intf is not None:
                         if intf["op_mode"] == "AP_GUEST":
@@ -652,26 +655,23 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
         )
-
-        orphan_macs: set[str] = set()
         for entity in entities:
             entry_mac = entity.unique_id.split("_")[0]
             if (
                 entity.domain == DEVICE_TRACKER_DOMAIN
                 or "_internet_access" in entity.unique_id
             ) and entry_mac not in device_hosts:
-                _LOGGER.info("Removing orphan entity entry %s", entity.entity_id)
-                orphan_macs.add(entry_mac)
+                _LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
 
         device_reg = dr.async_get(self.hass)
-        orphan_connections = {
-            (CONNECTION_NETWORK_MAC, dr.format_mac(mac)) for mac in orphan_macs
+        valid_connections = {
+            (CONNECTION_NETWORK_MAC, dr.format_mac(mac)) for mac in device_hosts
         }
         for device in dr.async_entries_for_config_entry(
             device_reg, config_entry.entry_id
         ):
-            if any(con in device.connections for con in orphan_connections):
+            if not any(con in device.connections for con in valid_connections):
                 _LOGGER.debug("Removing obsolete device entry %s", device.name)
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry.entry_id

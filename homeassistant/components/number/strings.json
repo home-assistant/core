@@ -49,6 +49,9 @@
     "carbon_monoxide": {
       "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
     },
+    "conductivity": {
+      "name": "[%key:component::sensor::entity_component::conductivity::name%]"
+    },
     "current": {
       "name": "[%key:component::sensor::entity_component::current::name%]"
     },

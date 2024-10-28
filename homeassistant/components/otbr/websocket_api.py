@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
@@ -26,6 +26,9 @@ from .util import (
     update_issues,
 )
 
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
@@ -47,41 +50,45 @@ async def websocket_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get OTBR info."""
-    if DOMAIN not in hass.data:
+    config_entries: list[OTBRConfigEntry]
+    config_entries = hass.config_entries.async_loaded_entries(DOMAIN)
+
+    if not config_entries:
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
-    data: OTBRData = hass.data[DOMAIN]
+    response: dict[str, dict[str, Any]] = {}
 
-    try:
-        border_agent_id = await data.get_border_agent_id()
-        dataset = await data.get_active_dataset()
-        dataset_tlvs = await data.get_active_dataset_tlvs()
-        extended_address = (await data.get_extended_address()).hex()
-    except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "otbr_info_failed", str(exc))
-        return
+    for config_entry in config_entries:
+        data = config_entry.runtime_data
+        try:
+            border_agent_id = await data.get_border_agent_id()
+            dataset = await data.get_active_dataset()
+            dataset_tlvs = await data.get_active_dataset_tlvs()
+            extended_address = (await data.get_extended_address()).hex()
+        except HomeAssistantError as exc:
+            connection.send_error(msg["id"], "otbr_info_failed", str(exc))
+            return
 
-    # The border agent ID is checked when the OTBR config entry is setup,
-    # we can assert it's not None
-    assert border_agent_id is not None
+        # The border agent ID is checked when the OTBR config entry is setup,
+        # we can assert it's not None
+        assert border_agent_id is not None
 
-    extended_pan_id = (
-        dataset.extended_pan_id.lower() if dataset and dataset.extended_pan_id else None
-    )
-    connection.send_result(
-        msg["id"],
-        {
-            extended_address: {
-                "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
-                "border_agent_id": border_agent_id.hex(),
-                "channel": dataset.channel if dataset else None,
-                "extended_address": extended_address,
-                "extended_pan_id": extended_pan_id,
-                "url": data.url,
-            }
-        },
-    )
+        extended_pan_id = (
+            dataset.extended_pan_id.lower()
+            if dataset and dataset.extended_pan_id
+            else None
+        )
+        response[extended_address] = {
+            "active_dataset_tlvs": dataset_tlvs.hex() if dataset_tlvs else None,
+            "border_agent_id": border_agent_id.hex(),
+            "channel": dataset.channel if dataset else None,
+            "extended_address": extended_address,
+            "extended_pan_id": extended_pan_id,
+            "url": data.url,
+        }
+
+    connection.send_result(msg["id"], response)
 
 
 def async_get_otbr_data(
@@ -99,22 +106,29 @@ def async_get_otbr_data(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """Fetch OTBR data and pass to orig_func."""
-        if DOMAIN not in hass.data:
+        config_entries: list[OTBRConfigEntry]
+        config_entries = hass.config_entries.async_loaded_entries(DOMAIN)
+
+        if not config_entries:
             connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
             return
 
-        data: OTBRData = hass.data[DOMAIN]
+        for config_entry in config_entries:
+            data = config_entry.runtime_data
+            try:
+                extended_address = await data.get_extended_address()
+            except HomeAssistantError as exc:
+                connection.send_error(
+                    msg["id"], "get_extended_address_failed", str(exc)
+                )
+                return
+            if extended_address.hex() != msg["extended_address"]:
+                continue
 
-        try:
-            extended_address = await data.get_extended_address()
-        except HomeAssistantError as exc:
-            connection.send_error(msg["id"], "get_extended_address_failed", str(exc))
-            return
-        if extended_address.hex() != msg["extended_address"]:
-            connection.send_error(msg["id"], "unknown_router", "")
+            await orig_func(hass, connection, msg, data)
             return
 
-        await orig_func(hass, connection, msg, data)
+        connection.send_error(msg["id"], "unknown_router", "")
 
     return async_check_extended_address_func
 
@@ -144,7 +158,7 @@ async def websocket_create_network(
         return
 
     try:
-        await data.factory_reset()
+        await data.factory_reset(hass)
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "factory_reset_failed", str(exc))
         return

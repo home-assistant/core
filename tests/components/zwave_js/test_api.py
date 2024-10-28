@@ -5,7 +5,7 @@ from http import HTTPStatus
 from io import BytesIO
 import json
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from zwave_js_server.const import (
@@ -489,6 +489,7 @@ async def test_node_alerts(
 
 async def test_add_node(
     hass: HomeAssistant,
+    nortek_thermostat,
     nortek_thermostat_added_event,
     integration,
     client,
@@ -524,7 +525,7 @@ async def test_add_node(
         data={
             "source": "controller",
             "event": "inclusion started",
-            "secure": False,
+            "strategy": 2,
         },
     )
     client.driver.receive_event(event)
@@ -590,6 +591,7 @@ async def test_add_node(
         "status": 0,
         "ready": False,
         "low_security": False,
+        "low_security_reason": None,
     }
     assert msg["event"]["node"] == node_details
 
@@ -935,12 +937,46 @@ async def test_add_node(
         assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "zwave_error: Z-Wave error 1 - error message"
 
+    # Test inclusion already in progress
+    client.async_send_command.reset_mock()
+    type(client.driver.controller).inclusion_state = PropertyMock(
+        return_value=InclusionState.INCLUDING
+    )
+
+    # Create a node that's not ready
+    node_data = deepcopy(nortek_thermostat.data)  # Copy to allow modification in tests.
+    node_data["ready"] = False
+    node_data["values"] = {}
+    node_data["endpoints"] = {}
+    node = Node(client, node_data)
+    client.driver.controller.nodes[node.node_id] = node
+
+    await ws_client.send_json(
+        {
+            ID: 11,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Verify no command was sent since inclusion is already in progress
+    assert len(client.async_send_command.call_args_list) == 0
+
+    # Verify we got a node added event
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node added"
+    assert msg["event"]["node"]["node_id"] == node.node_id
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 11, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 12, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -1822,7 +1858,7 @@ async def test_replace_failed_node(
         data={
             "source": "controller",
             "event": "inclusion started",
-            "secure": False,
+            "strategy": 2,
         },
     )
     client.driver.receive_event(event)
@@ -3048,9 +3084,21 @@ async def test_get_config_parameters(
     assert result[key]["property"] == 2
     assert result[key]["property_key"] is None
     assert result[key]["endpoint"] == 0
-    assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
     assert result[key]["metadata"]["states"]
+    assert (
+        result[key]["metadata"]["description"]
+        == "Stay awake for 10 minutes at power on"
+    )
+    assert result[key]["metadata"]["label"] == "Stay Awake in Battery Mode"
+    assert result[key]["metadata"]["type"] == "number"
+    assert result[key]["metadata"]["min"] == 0
+    assert result[key]["metadata"]["max"] == 1
+    assert result[key]["metadata"]["unit"] is None
+    assert result[key]["metadata"]["writeable"] is True
+    assert result[key]["metadata"]["readable"] is True
+    assert result[key]["metadata"]["default"] == 0
+    assert result[key]["value"] == 0
 
     key = "52-112-0-201-255"
     assert result[key]["property_key"] == 255

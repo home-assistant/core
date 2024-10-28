@@ -51,11 +51,15 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
@@ -84,7 +88,7 @@ from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
-from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -372,7 +376,7 @@ def verify_cleanup(
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # type: ignore[attr-defined]
+    for handle in get_scheduled_timer_handles(event_loop):
         if not handle.cancelled():
             with long_repr_strings():
                 if expected_lingering_timers:
@@ -414,7 +418,7 @@ def reset_hass_threading_local_object() -> Generator[None]:
     ha._hass.__dict__.clear()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
     gensalt_orig = bcrypt.gensalt
@@ -1263,6 +1267,16 @@ def enable_statistics() -> bool:
 
 
 @pytest.fixture
+def enable_missing_statistics() -> bool:
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_missing_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def enable_schema_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
@@ -1283,11 +1297,21 @@ def enable_nightly_purge() -> bool:
 
 
 @pytest.fixture
-def enable_migrate_context_ids() -> bool:
+def enable_migrate_event_context_ids() -> bool:
     """Fixture to control enabling of recorder's context id migration.
 
     To enable context id migration, tests can be marked with:
-    @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+    @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_state_context_ids() -> bool:
+    """Fixture to control enabling of recorder's context id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
     """
     return False
 
@@ -1453,8 +1477,10 @@ async def async_test_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
+    enable_missing_statistics: bool,
     enable_schema_validation: bool,
-    enable_migrate_context_ids: bool,
+    enable_migrate_event_context_ids: bool,
+    enable_migrate_state_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
@@ -1511,17 +1537,17 @@ async def async_test_recorder(
     )
     compile_missing = (
         recorder.Recorder._schedule_compile_missing_statistics
-        if enable_statistics
+        if enable_missing_statistics
         else None
     )
     migrate_states_context_ids = (
         migration.StatesContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_state_context_ids
         else None
     )
     migrate_events_context_ids = (
         migration.EventsContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_event_context_ids
         else None
     )
     migrate_event_type_ids = (
@@ -1689,7 +1715,7 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (

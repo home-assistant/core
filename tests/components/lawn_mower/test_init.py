@@ -176,4 +176,4 @@ async def test_lawn_mower_state(hass: HomeAssistant) -> None:
     lawn_mower.hass = hass
     lawn_mower.start_mowing()
 
-    assert lawn_mower.state == str(LawnMowerActivity.MOWING)
+    assert lawn_mower.state == LawnMowerActivity.MOWING

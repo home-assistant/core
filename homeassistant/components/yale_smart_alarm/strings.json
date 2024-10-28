@@ -19,10 +19,7 @@
       },
       "reauth_confirm": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     }
@@ -55,6 +52,21 @@
       "panic": {
         "name": "Panic button"
       }
+    },
+    "switch": {
+      "autolock": {
+        "name": "Autolock"
+      }
+    },
+    "select": {
+      "volume": {
+        "name": "Volume",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "off": "[%key:common::state::off%]"
+        }
+      }
     }
   },
   "exceptions": {
@@ -66,6 +78,9 @@
     },
     "set_lock": {
       "message": "Could not set lock for {name}: {error}"
+    },
+    "no_code": {
+      "message": "Can not unlock without code"
     },
     "could_not_change_lock": {
       "message": "Could not set lock, check system ready for lock"

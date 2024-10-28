@@ -151,14 +151,6 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-        self._body_on.hass = hass
-        self._body_off.hass = hass
-        if (is_on_template := self._is_on_template) is not None:
-            is_on_template.hass = hass
-
-        template.attach(hass, self._headers)
-        template.attach(hass, self._params)
-
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
         await super().async_added_to_hass()

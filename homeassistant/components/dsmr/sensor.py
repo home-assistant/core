@@ -57,6 +57,7 @@ from .const import (
     DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
+    DEVICE_NAME_HEAT,
     DEVICE_NAME_WATER,
     DOMAIN,
     DSMR_PROTOCOL,
@@ -75,6 +76,7 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
     dsmr_versions: set[str] | None = None
     is_gas: bool = False
     is_water: bool = False
+    is_heat: bool = False
     obis_reference: str
 
 
@@ -82,6 +84,7 @@ class MbusDeviceType(IntEnum):
     """Types of mbus devices (13757-3:2013)."""
 
     GAS = 3
+    HEAT = 4
     WATER = 7
 
 
@@ -396,6 +399,16 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
+    MbusDeviceType.HEAT: (
+        DSMRSensorEntityDescription(
+            key="heat_reading",
+            translation_key="heat_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_heat=True,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
     MbusDeviceType.WATER: (
         DSMRSensorEntityDescription(
             key="water_reading",
@@ -431,41 +444,42 @@ def rename_old_gas_to_mbus(
 ) -> None:
     """Rename old gas sensor to mbus variant."""
     dev_reg = dr.async_get(hass)
-    device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
-    if device_entry_v1 is not None:
-        device_id = device_entry_v1.id
+    for dev_id in (mbus_device_id, entry.entry_id):
+        device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
+        if device_entry_v1 is not None:
+            device_id = device_entry_v1.id
 
-        ent_reg = er.async_get(hass)
-        entries = er.async_entries_for_device(ent_reg, device_id)
+            ent_reg = er.async_get(hass)
+            entries = er.async_entries_for_device(ent_reg, device_id)
 
-        for entity in entries:
-            if entity.unique_id.endswith(
-                "belgium_5min_gas_meter_reading"
-            ) or entity.unique_id.endswith("hourly_gas_meter_reading"):
-                try:
-                    ent_reg.async_update_entity(
-                        entity.entity_id,
-                        new_unique_id=mbus_device_id,
-                        device_id=mbus_device_id,
-                    )
-                except ValueError:
-                    LOGGER.debug(
-                        "Skip migration of %s because it already exists",
-                        entity.entity_id,
-                    )
-                else:
-                    LOGGER.debug(
-                        "Migrated entity %s from unique id %s to %s",
-                        entity.entity_id,
-                        entity.unique_id,
-                        mbus_device_id,
-                    )
-        # Cleanup old device
-        dev_entities = er.async_entries_for_device(
-            ent_reg, device_id, include_disabled_entities=True
-        )
-        if not dev_entities:
-            dev_reg.async_remove_device(device_id)
+            for entity in entries:
+                if entity.unique_id.endswith(
+                    "belgium_5min_gas_meter_reading"
+                ) or entity.unique_id.endswith("hourly_gas_meter_reading"):
+                    try:
+                        ent_reg.async_update_entity(
+                            entity.entity_id,
+                            new_unique_id=mbus_device_id,
+                            device_id=mbus_device_id,
+                        )
+                    except ValueError:
+                        LOGGER.debug(
+                            "Skip migration of %s because it already exists",
+                            entity.entity_id,
+                        )
+                    else:
+                        LOGGER.debug(
+                            "Migrated entity %s from unique id %s to %s",
+                            entity.entity_id,
+                            entity.unique_id,
+                            mbus_device_id,
+                        )
+            # Cleanup old device
+            dev_entities = er.async_entries_for_device(
+                ent_reg, device_id, include_disabled_entities=True
+            )
+            if not dev_entities:
+                dev_reg.async_remove_device(device_id)
 
 
 def is_supported_description(
@@ -488,6 +502,10 @@ def create_mbus_entities(
         if (device_type := getattr(device, "MBUS_DEVICE_TYPE", None)) is None:
             continue
         type_ = int(device_type.value)
+
+        if type_ not in SENSORS_MBUS_DEVICE_TYPE:
+            LOGGER.warning("Unsupported MBUS_DEVICE_TYPE (%d)", type_)
+            continue
 
         if identifier := getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None):
             serial_ = identifier.value
@@ -553,7 +571,10 @@ async def async_setup_entry(
                 )
                 for description in SENSORS
                 if is_supported_description(telegram, description, dsmr_version)
-                and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
+                and (
+                    (not description.is_gas and not description.is_heat)
+                    or CONF_SERIAL_ID_GAS in entry.data
+                )
             ]
         )
         async_add_entities(entities)
@@ -692,7 +713,7 @@ async def async_setup_entry(
     task = asyncio.create_task(connect_and_reconnect())
 
     @callback
-    async def _async_stop(_: Event) -> None:
+    def _async_stop(_: Event) -> None:
         if add_entities_handler is not None:
             add_entities_handler()
         task.cancel()
@@ -742,6 +763,10 @@ class DSMREntity(SensorEntity):
             if serial_id:
                 device_serial = serial_id
             device_name = DEVICE_NAME_WATER
+        if entity_description.is_heat:
+            if serial_id:
+                device_serial = serial_id
+            device_name = DEVICE_NAME_HEAT
         if device_serial is None:
             device_serial = entry.entry_id
 

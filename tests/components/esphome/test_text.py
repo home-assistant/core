@@ -39,14 +39,14 @@ async def test_generic_text_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_my_text")
+    state = hass.states.get("text.test_mytext")
     assert state is not None
     assert state.state == "hello world"
 
     await hass.services.async_call(
         TEXT_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "text.test_my_text", ATTR_VALUE: "goodbye"},
+        {ATTR_ENTITY_ID: "text.test_mytext", ATTR_VALUE: "goodbye"},
         blocking=True,
     )
     mock_client.text_command.assert_has_calls([call(1, "goodbye")])
@@ -79,7 +79,7 @@ async def test_generic_text_entity_no_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_my_text")
+    state = hass.states.get("text.test_mytext")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -110,6 +110,6 @@ async def test_generic_text_entity_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_my_text")
+    state = hass.states.get("text.test_mytext")
     assert state is not None
     assert state.state == STATE_UNKNOWN

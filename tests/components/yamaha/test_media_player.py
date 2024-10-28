@@ -25,7 +25,7 @@ def _create_zone_mock(name, url):
 class FakeYamahaDevice:
     """A fake Yamaha device."""
 
-    def __init__(self, ctrl_url, name, zones=None):
+    def __init__(self, ctrl_url, name, zones=None) -> None:
         """Initialize the fake Yamaha device."""
         self.ctrl_url = ctrl_url
         self.name = name
@@ -86,17 +86,25 @@ async def test_setup_host(hass: HomeAssistant, device, device2, main_zone) -> No
     assert state.state == "off"
 
 
-async def test_setup_attribute_error(hass: HomeAssistant, device, main_zone) -> None:
-    """Test set up integration encountering an Attribute Error."""
+@pytest.mark.parametrize(
+    ("error"),
+    [
+        AttributeError,
+        ValueError,
+        UnicodeDecodeError("", b"", 1, 0, ""),
+    ],
+)
+async def test_setup_find_errors(hass: HomeAssistant, device, main_zone, error) -> None:
+    """Test set up integration encountering an Error."""
 
-    with patch("rxv.find", side_effect=AttributeError):
+    with patch("rxv.find", side_effect=error):
         assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
         await hass.async_block_till_done()
 
-    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+        state = hass.states.get("media_player.yamaha_receiver_main_zone")
 
-    assert state is not None
-    assert state.state == "off"
+        assert state is not None
+        assert state.state == "off"
 
 
 async def test_setup_no_host(hass: HomeAssistant, device, main_zone) -> None:

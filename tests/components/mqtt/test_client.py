@@ -1,9 +1,10 @@
 """The tests for the MQTT client."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import socket
 import ssl
+import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -13,6 +14,7 @@ import pytest
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.client import RECONNECT_INTERVAL_SECONDS
+from homeassistant.components.mqtt.const import SUPPORTED_COMPONENTS
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
@@ -34,11 +36,6 @@ from tests.common import (
     async_fire_time_changed,
 )
 from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, MqttMockPahoClient
-
-
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage: dict[str, Any]) -> None:
-    """Autouse hass_storage for the TestCase tests."""
 
 
 def help_assert_message(
@@ -225,7 +222,7 @@ async def test_publish(
 
 async def test_convert_outgoing_payload(hass: HomeAssistant) -> None:
     """Test the converting of outgoing MQTT payloads without template."""
-    command_template = mqtt.MqttCommandTemplate(None, hass=hass)
+    command_template = mqtt.MqttCommandTemplate(None)
     assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
     assert (
         command_template.async_render("b'\\xde\\xad\\xbe\\xef'")
@@ -300,10 +297,13 @@ async def test_subscribe_mqtt_config_entry_disabled(
     mqtt_mock.connected = True
 
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+
+    mqtt_config_entry_state = mqtt_config_entry.state
+    assert mqtt_config_entry_state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-    assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+    mqtt_config_entry_state = mqtt_config_entry.state
+    assert mqtt_config_entry_state is ConfigEntryState.NOT_LOADED
 
     await hass.config_entries.async_set_disabled_by(
         mqtt_config_entry.entry_id, ConfigEntryDisabler.USER
@@ -1283,7 +1283,7 @@ async def test_handle_message_callback(
         callbacks.append(args)
 
     msg = ReceiveMessage(
-        "some-topic", b"test-payload", 1, False, "some-topic", datetime.now()
+        "some-topic", b"test-payload", 1, False, "some-topic", time.monotonic()
     )
     mock_debouncer.clear()
     await mqtt.async_subscribe(hass, "some-topic", _callback)
@@ -1614,8 +1614,9 @@ async def test_subscription_done_when_birth_message_is_sent(
     """Test sending birth message until initial subscription has been completed."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
-    assert ("homeassistant/+/+/config", 0) in subscribe_calls
-    assert ("homeassistant/+/+/+/config", 0) in subscribe_calls
+    for component in SUPPORTED_COMPONENTS:
+        assert (f"homeassistant/{component}/+/config", 0) in subscribe_calls
+        assert (f"homeassistant/{component}/+/+/config", 0) in subscribe_calls
     mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )

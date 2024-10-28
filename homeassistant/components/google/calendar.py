@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+import dataclasses
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, DateOrDatetime, Event
+from gcal_sync.model import (
+    AccessRole,
+    Calendar,
+    DateOrDatetime,
+    Event,
+    EventTypeEnum,
+    ResponseStatus,
+)
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -22,6 +31,7 @@ from homeassistant.components.calendar import (
     EVENT_START,
     EVENT_SUMMARY,
     CalendarEntity,
+    CalendarEntityDescription,
     CalendarEntityFeature,
     CalendarEvent,
     extract_offset,
@@ -81,6 +91,104 @@ RRULE_PREFIX = "RRULE:"
 SERVICE_CREATE_EVENT = "create_event"
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class GoogleCalendarEntityDescription(CalendarEntityDescription):
+    """Google calendar entity description."""
+
+    name: str | None
+    entity_id: str | None
+    read_only: bool
+    ignore_availability: bool
+    offset: str | None
+    search: str | None
+    local_sync: bool
+    device_id: str
+    working_location: bool = False
+
+
+def _get_entity_descriptions(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    calendar_item: Calendar,
+    calendar_info: Mapping[str, Any],
+) -> list[GoogleCalendarEntityDescription]:
+    """Create entity descriptions for the calendar.
+
+    The entity descriptions are based on the type of Calendar from the API
+    and optional calendar_info yaml configuration that is the older way to
+    configure calendars before they supported UI based config.
+
+    The yaml config may map one calendar to multiple entities and they do not
+    have a unique id. The yaml config also supports additional options like
+    offsets or search.
+    """
+    calendar_id = calendar_item.id
+    num_entities = len(calendar_info[CONF_ENTITIES])
+    entity_descriptions = []
+    for data in calendar_info[CONF_ENTITIES]:
+        if num_entities > 1:
+            key = ""
+        else:
+            key = calendar_id
+        entity_enabled = data.get(CONF_TRACK, True)
+        if not entity_enabled:
+            _LOGGER.warning(
+                "The 'track' option in google_calendars.yaml has been deprecated."
+                " The setting has been imported to the UI, and should now be"
+                " removed from google_calendars.yaml"
+            )
+        read_only = not (
+            calendar_item.access_role.is_writer
+            and get_feature_access(config_entry) is FeatureAccess.read_write
+        )
+        # Prefer calendar sync down of resources when possible. However,
+        # sync does not work for search. Also free-busy calendars denormalize
+        # recurring events as individual events which is not efficient for sync
+        local_sync = True
+        if (
+            search := data.get(CONF_SEARCH)
+        ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
+            read_only = True
+            local_sync = False
+        entity_description = GoogleCalendarEntityDescription(
+            key=key,
+            name=data[CONF_NAME].capitalize(),
+            entity_id=generate_entity_id(
+                ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
+            ),
+            read_only=read_only,
+            ignore_availability=data.get(CONF_IGNORE_AVAILABILITY, False),
+            offset=data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET),
+            search=search,
+            local_sync=local_sync,
+            entity_registry_enabled_default=entity_enabled,
+            device_id=data[CONF_DEVICE_ID],
+        )
+        entity_descriptions.append(entity_description)
+        _LOGGER.debug(
+            "calendar_item.primary=%s, search=%s, calendar_item.access_role=%s - %s",
+            calendar_item.primary,
+            search,
+            calendar_item.access_role,
+            local_sync,
+        )
+        if calendar_item.primary and local_sync:
+            _LOGGER.debug("work location entity")
+            # Create an optional disabled by default entity for Work Location
+            entity_descriptions.append(
+                dataclasses.replace(
+                    entity_description,
+                    key=f"{key}-work-location",
+                    translation_key="working_location",
+                    working_location=True,
+                    name=None,
+                    entity_id=None,
+                    entity_registry_enabled_default=False,
+                )
+            )
+    return entity_descriptions
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -117,30 +225,21 @@ async def async_setup_entry(
                 hass, calendar_item.dict(exclude_unset=True)
             )
             new_calendars.append(calendar_info)
-        # Yaml calendar config may map one calendar to multiple entities
-        # with extra options like offsets or search criteria.
-        num_entities = len(calendar_info[CONF_ENTITIES])
-        for data in calendar_info[CONF_ENTITIES]:
-            entity_enabled = data.get(CONF_TRACK, True)
-            if not entity_enabled:
-                _LOGGER.warning(
-                    "The 'track' option in google_calendars.yaml has been deprecated."
-                    " The setting has been imported to the UI, and should now be"
-                    " removed from google_calendars.yaml"
-                )
-            entity_name = data[CONF_DEVICE_ID]
-            # The unique id is based on the config entry and calendar id since
-            # multiple accounts can have a common calendar id
-            # (e.g. `en.usa#holiday@group.v.calendar.google.com`).
-            # When using google_calendars.yaml with multiple entities for a
-            # single calendar, we have no way to set a unique id.
-            if num_entities > 1:
-                unique_id = None
-            else:
-                unique_id = f"{config_entry.unique_id}-{calendar_id}"
+
+        for entity_description in _get_entity_descriptions(
+            hass, config_entry, calendar_item, calendar_info
+        ):
+            unique_id = (
+                f"{config_entry.unique_id}-{entity_description.key}"
+                if entity_description.key
+                else None
+            )
             # Migrate to new unique_id format which supports
             # multiple config entries as of 2022.7
-            for old_unique_id in (calendar_id, f"{calendar_id}-{entity_name}"):
+            for old_unique_id in (
+                calendar_id,
+                f"{calendar_id}-{entity_description.device_id}",
+            ):
                 if not (entity_entry := entity_entry_map.get(old_unique_id)):
                     continue
                 if unique_id:
@@ -162,25 +261,16 @@ async def async_setup_entry(
                     entity_registry.async_remove(
                         entity_entry.entity_id,
                     )
+            _LOGGER.debug("Creating entity with unique_id=%s", unique_id)
             coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator
-            # Prefer calendar sync down of resources when possible. However,
-            # sync does not work for search. Also free-busy calendars denormalize
-            # recurring events as individual events which is not efficient for sync
-            support_write = (
-                calendar_item.access_role.is_writer
-                and get_feature_access(hass, config_entry) is FeatureAccess.read_write
-            )
-            if (
-                search := data.get(CONF_SEARCH)
-            ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
+            if not entity_description.local_sync:
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
                     calendar_service,
-                    data[CONF_NAME],
+                    entity_description.name or entity_description.key,
                     calendar_id,
-                    search,
+                    entity_description.search,
                 )
-                support_write = False
             else:
                 request_template = SyncEventsRequest(
                     calendar_id=calendar_id,
@@ -188,23 +278,22 @@ async def async_setup_entry(
                 )
                 sync = CalendarEventSyncManager(
                     calendar_service,
-                    store=ScopedCalendarStore(store, unique_id or entity_name),
+                    store=ScopedCalendarStore(
+                        store, unique_id or entity_description.device_id
+                    ),
                     request_template=request_template,
                 )
                 coordinator = CalendarSyncUpdateCoordinator(
                     hass,
                     sync,
-                    data[CONF_NAME],
+                    entity_description.name or entity_description.key,
                 )
             entities.append(
                 GoogleCalendarEntity(
                     coordinator,
                     calendar_id,
-                    data,
-                    generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
+                    entity_description,
                     unique_id,
-                    entity_enabled,
-                    support_write,
                 )
             )
 
@@ -222,7 +311,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     if (
         any(calendar_item.access_role.is_writer for calendar_item in result.items)
-        and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+        and get_feature_access(config_entry) is FeatureAccess.read_write
     ):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
@@ -238,29 +327,29 @@ class GoogleCalendarEntity(
 ):
     """A calendar event entity."""
 
+    entity_description: GoogleCalendarEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator,
         calendar_id: str,
-        data: dict[str, Any],
-        entity_id: str,
+        entity_description: GoogleCalendarEntityDescription,
         unique_id: str | None,
-        entity_enabled: bool,
-        supports_write: bool,
     ) -> None:
         """Create the Calendar event device."""
         super().__init__(coordinator)
+        _LOGGER.debug("entity_description.entity_id=%s", entity_description.entity_id)
+        _LOGGER.debug("entity_description=%s", entity_description)
         self.calendar_id = calendar_id
-        self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
+        self.entity_description = entity_description
+        self._ignore_availability = entity_description.ignore_availability
+        self._offset = entity_description.offset
         self._event: CalendarEvent | None = None
-        self._attr_name = data[CONF_NAME].capitalize()
-        self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self.entity_id = entity_id
+        if entity_description.entity_id:
+            self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
-        self._attr_entity_registry_enabled_default = entity_enabled
-        if supports_write:
+        if not entity_description.read_only:
             self._attr_supported_features = (
                 CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
             )
@@ -285,7 +374,16 @@ class GoogleCalendarEntity(
         return event
 
     def _event_filter(self, event: Event) -> bool:
-        """Return True if the event is visible."""
+        """Return True if the event is visible and not declined."""
+
+        if any(
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
+            for attendee in event.attendees
+        ):
+            return False
+
+        if event.event_type == EventTypeEnum.WORKING_LOCATION:
+            return self.entity_description.working_location
         if self._ignore_availability:
             return True
         return event.transparency == OPAQUE

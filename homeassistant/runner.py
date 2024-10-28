@@ -107,7 +107,6 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
-        setattr(loop, "_thread_ident", threading.get_ident())
         loop.set_exception_handler(_async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)
@@ -176,7 +175,7 @@ def _enable_posix_spawn() -> None:
     # less efficient. This is a workaround to force posix_spawn()
     # when using musl since cpython is not aware its supported.
     tag = next(packaging.tags.sys_tags())
-    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # noqa: SLF001
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # type: ignore[misc]  # noqa: SLF001
 
 
 def run(runtime_config: RuntimeConfig) -> int:

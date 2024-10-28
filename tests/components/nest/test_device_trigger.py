@@ -59,7 +59,9 @@ def make_camera(
     }
 
 
-async def setup_automation(hass, device_id, trigger_type):
+async def setup_automation(
+    hass: HomeAssistant, device_id: str, trigger_type: str
+) -> bool:
     """Set up an automation trigger for testing triggering."""
     return await async_setup_component(
         hass,

@@ -48,12 +48,6 @@ from tests.components.recorder.common import (
 from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
-@pytest.fixture
-async def set_utc(hass):
-    """Set timezone to UTC."""
-    await hass.config.async_set_time_zone("UTC")
-
-
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
     """Return listeners without final write listeners since we are not testing for these."""
     return {
@@ -1187,6 +1181,10 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
     init_listeners = hass.bus.async_listeners()
+    init_listeners = {
+        **init_listeners,
+        EVENT_HOMEASSISTANT_START: init_listeners[EVENT_HOMEASSISTANT_START] - 1,
+    }
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -2987,8 +2985,8 @@ async def test_live_stream_with_changed_state_change(
         ]
     )
 
-    hass.states.async_set("binary_sensor.is_light", "ignored")
-    hass.states.async_set("binary_sensor.is_light", "init")
+    hass.states.async_set("binary_sensor.is_light", "unavailable")
+    hass.states.async_set("binary_sensor.is_light", "unknown")
     await async_wait_recording_done(hass)
 
     @callback
@@ -3025,7 +3023,7 @@ async def test_live_stream_with_changed_state_change(
 
     # Make sure we get rows back in order
     assert recieved_rows == [
-        {"entity_id": "binary_sensor.is_light", "state": "init", "when": ANY},
+        {"entity_id": "binary_sensor.is_light", "state": "unknown", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "on", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "off", "when": ANY},
     ]

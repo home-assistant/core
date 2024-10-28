@@ -81,9 +81,6 @@ async def async_setup_platform(
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
 
-    if value_template is not None:
-        value_template.hass = hass
-
     trigger_entity_config = {CONF_NAME: name}
     for key in TRIGGER_ENTITY_OPTIONS:
         if key not in conf:
@@ -117,12 +114,10 @@ async def async_setup_entry(
     value_template: Template | None = None
     if template is not None:
         try:
-            value_template = Template(template)
+            value_template = Template(template, hass)
             value_template.ensure_valid()
         except TemplateError:
             value_template = None
-        if value_template is not None:
-            value_template.hass = hass
 
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}

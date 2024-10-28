@@ -1,5 +1,6 @@
 """The tests for recorder platform migrating data from v30."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import importlib
 import sys
@@ -19,37 +20,48 @@ from homeassistant.core import Event, EventOrigin, State
 import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done
+from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceGenerator
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
+SCHEMA_MODULE_30 = "tests.components.recorder.db_schema_30"
+SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
 
 
-def _create_engine_test(*args, **kwargs):
+def _create_engine_test(schema_module: str) -> Callable:
     """Test version of create_engine that initializes with old schema.
 
     This simulates an existing db with the old schema.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
-    engine = create_engine(*args, **kwargs)
-    old_db_schema.Base.metadata.create_all(engine)
-    with Session(engine) as session:
-        session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
-        )
-        session.add(
-            recorder.db_schema.SchemaChanges(
-                schema_version=old_db_schema.SCHEMA_VERSION
+
+    def _create_engine_test(*args, **kwargs):
+        """Test version of create_engine that initializes with old schema.
+
+        This simulates an existing db with the old schema.
+        """
+        importlib.import_module(schema_module)
+        old_db_schema = sys.modules[schema_module]
+        engine = create_engine(*args, **kwargs)
+        old_db_schema.Base.metadata.create_all(engine)
+        with Session(engine) as session:
+            session.add(
+                recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
             )
-        )
-        session.commit()
-    return engine
+            session.add(
+                recorder.db_schema.SchemaChanges(
+                    schema_version=old_db_schema.SCHEMA_VERSION
+                )
+            )
+            session.commit()
+        return engine
+
+    return _create_engine_test
 
 
-@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
@@ -58,9 +70,9 @@ async def test_migrate_times(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we can migrate times."""
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    """Test we can migrate times in the events and states tables."""
+    importlib.import_module(SCHEMA_MODULE_30)
+    old_db_schema = sys.modules[SCHEMA_MODULE_30]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     now_timestamp = now.timestamp()
@@ -98,20 +110,19 @@ async def test_migrate_times(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(migration.EventsContextIDMigration, "migrate_data"),
         patch.object(migration.StatesContextIDMigration, "migrate_data"),
         patch.object(migration.EventTypeIDMigration, "migrate_data"),
         patch.object(migration.EntityIDMigration, "migrate_data"),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_30)),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -181,9 +192,12 @@ async def test_migrate_times(
 
         assert len(events_result) == 1
         assert events_result[0].time_fired_ts == now_timestamp
+        assert events_result[0].time_fired is None
         assert len(states_result) == 1
         assert states_result[0].last_changed_ts == one_second_past_timestamp
         assert states_result[0].last_updated_ts == now_timestamp
+        assert states_result[0].last_changed is None
+        assert states_result[0].last_updated is None
 
         def _get_events_index_names():
             with session_scope(hass=hass) as session:
@@ -207,6 +221,7 @@ async def test_migrate_times(
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
@@ -215,8 +230,8 @@ async def test_migrate_can_resume_entity_id_post_migration(
     recorder_db_url: str,
 ) -> None:
     """Test we resume the entity id post migration after a restart."""
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -250,19 +265,16 @@ async def test_migrate_can_resume_entity_id_post_migration(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -313,6 +325,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
@@ -326,8 +339,8 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
     This case tests the migration still happens if
     ix_states_event_id is removed from the states table.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -372,19 +385,16 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -462,8 +472,8 @@ async def test_out_of_disk_space_while_rebuild_states_table(
     This case tests the migration still happens if
     ix_states_event_id is removed from the states table.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -508,19 +518,16 @@ async def test_out_of_disk_space_while_rebuild_states_table(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -625,6 +632,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
 
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
@@ -637,9 +645,13 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     This case tests the migration still happens if
     ix_states_event_id is removed from the states table.
+
+    Note that the test is somewhat forced; the states.event_id foreign key constraint is
+    removed when migrating to schema version 46, inspecting the schema in
+    EventIDPostMigration.migrate_data, is not likely to fail.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -684,19 +696,16 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -737,36 +746,52 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     assert "ix_states_entity_id_last_updated_ts" in states_index_names
 
-    # Simulate out of disk space while removing the foreign key from the states table by
-    # - patching DropConstraint to raise InternalError for MySQL and PostgreSQL
-    with (
-        patch(
-            "homeassistant.components.recorder.migration.DropConstraint",
-            side_effect=OperationalError(
-                None, None, OSError("No space left on device")
-            ),
-        ),
-    ):
-        async with (
-            async_test_home_assistant() as hass,
-            async_test_recorder(hass) as instance,
-        ):
-            await hass.async_block_till_done()
+    async with async_test_home_assistant() as hass:
+        with instrument_migration(hass) as instrumented_migration:
+            # Allow migration to start, but stall when live migration is completed
+            instrumented_migration.migration_stall.set()
+            instrumented_migration.live_migration_done_stall.clear()
 
-            # We need to wait for all the migration tasks to complete
-            # before we can check the database.
-            for _ in range(number_of_migrations):
-                await instance.async_block_till_done()
-                await async_wait_recording_done(hass)
+            async with async_test_recorder(hass, wait_recorder=False) as instance:
+                await hass.async_block_till_done()
 
-            states_indexes = await instance.async_add_executor_job(
-                _get_states_index_names
-            )
-            states_index_names = {index["name"] for index in states_indexes}
-            assert instance.use_legacy_events_index is True
-            assert await instance.async_add_executor_job(_get_event_id_foreign_keys)
+                # Wait for live migration to complete
+                await hass.async_add_executor_job(
+                    instrumented_migration.live_migration_done.wait
+                )
 
-            await hass.async_stop()
+                # Simulate out of disk space while removing the foreign key from the states table by
+                # - patching DropConstraint to raise InternalError for MySQL and PostgreSQL
+                with (
+                    patch(
+                        "homeassistant.components.recorder.migration.sqlalchemy.inspect",
+                        side_effect=OperationalError(
+                            None, None, OSError("No space left on device")
+                        ),
+                    ),
+                ):
+                    instrumented_migration.live_migration_done_stall.set()
+                    # We need to wait for all the migration tasks to complete
+                    # before we can check the database.
+                    for _ in range(number_of_migrations):
+                        await instance.async_block_till_done()
+                        await async_wait_recording_done(hass)
+
+                    states_indexes = await instance.async_add_executor_job(
+                        _get_states_index_names
+                    )
+                    states_index_names = {index["name"] for index in states_indexes}
+                    assert instance.use_legacy_events_index is True
+                    # The states.event_id foreign key constraint was removed when
+                    # migration to schema version 46
+                    assert (
+                        await instance.async_add_executor_job(
+                            _get_event_id_foreign_keys
+                        )
+                        is None
+                    )
+
+                    await hass.async_stop()
 
     # Now run it again to verify the table rebuild tries again
     caplog.clear()

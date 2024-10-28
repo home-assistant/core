@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import aiohttp
 import python_otbr_api
 
@@ -15,21 +17,27 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DOMAIN
-from .util import OTBRData, update_issues
+from .util import (
+    GetBorderAgentIdNotSupported,
+    OTBRData,
+    update_issues,
+    update_unique_id,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+type OTBRConfigEntry = ConfigEntry[OTBRData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
     websocket_api.async_setup(hass)
-    if len(config_entries := hass.config_entries.async_entries(DOMAIN)):
-        for config_entry in config_entries[1:]:
-            await hass.config_entries.async_remove(config_entry.entry_id)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
@@ -38,13 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
-    except (
-        HomeAssistantError,
-        aiohttp.ClientError,
-        TimeoutError,
-    ) as err:
-        raise ConfigEntryNotReady("Unable to connect") from err
-    if border_agent_id is None:
+    except GetBorderAgentIdNotSupported:
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -55,6 +57,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="get_get_border_agent_id_unsupported",
         )
         return False
+    except (
+        HomeAssistantError,
+        aiohttp.ClientError,
+        TimeoutError,
+    ) as err:
+        raise ConfigEntryNotReady("Unable to connect") from err
+    await update_unique_id(hass, entry, border_agent_id)
     if dataset_tlvs:
         await update_issues(hass, otbrdata, dataset_tlvs)
         await async_add_dataset(
@@ -66,31 +75,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    hass.data[DOMAIN] = otbrdata
+    entry.runtime_data = otbrdata
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data.pop(DOMAIN)
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
-    """Get current active operational dataset in TLVS format, or None.
-
-    Returns None if there is no active operational dataset.
-    Raises if the http status is 400 or higher or if the response is invalid.
-    """
-    if DOMAIN not in hass.data:
-        raise HomeAssistantError("OTBR API not available")
-
-    data: OTBRData = hass.data[DOMAIN]
-    return await data.get_active_dataset_tlvs()

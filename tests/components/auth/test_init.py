@@ -13,6 +13,7 @@ from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     TOKEN_TYPE_NORMAL,
     Credentials,
+    RefreshToken,
 )
 from homeassistant.components import auth
 from homeassistant.core import HomeAssistant
@@ -37,7 +38,7 @@ def mock_credential():
     )
 
 
-async def async_setup_user_refresh_token(hass):
+async def async_setup_user_refresh_token(hass: HomeAssistant) -> RefreshToken:
     """Create a testing user with a connected credential."""
     user = await hass.auth.async_create_user("Test User")
 

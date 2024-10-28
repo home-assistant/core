@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 class SimpleMediaPlayer(mp.MediaPlayerEntity):
     """Media player test class."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the test media player."""
         self.hass = hass
         self._volume = 0

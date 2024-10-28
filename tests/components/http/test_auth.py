@@ -4,6 +4,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp import BasicAuth, web
@@ -311,7 +312,7 @@ async def test_auth_access_signed_path_with_refresh_token(
     assert data["user_id"] == refresh_token.user.id
 
     # Use signature on other path
-    req = await client.get("/another_path?{}".format(signed_path.split("?")[1]))
+    req = await client.get(f"/another_path?{signed_path.split('?')[1]}")
     assert req.status == HTTPStatus.UNAUTHORIZED
 
     # We only allow GET
@@ -476,7 +477,11 @@ async def test_auth_access_signed_path_via_websocket(
 
     @websocket_api.websocket_command({"type": "diagnostics/list"})
     @callback
-    def get_signed_path(hass, connection, msg):
+    def get_signed_path(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
         connection.send_result(
             msg["id"], {"path": async_sign_path(hass, "/", timedelta(seconds=5))}
         )

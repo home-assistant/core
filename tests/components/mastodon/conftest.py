@@ -1,7 +1,7 @@
 """Mastodon tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +9,6 @@ from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
 from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
@@ -53,5 +52,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: "access_token",
         },
         entry_id="01J35M4AH9HYRC2V0G6RNVNWJH",
-        unique_id="client_id",
+        unique_id="trwnh_mastodon_social",
+        version=1,
+        minor_version=2,
     )

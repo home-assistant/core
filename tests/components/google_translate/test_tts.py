@@ -14,9 +14,9 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.components.google_translate.const import CONF_TLD, DOMAIN
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -30,9 +30,8 @@ def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 @pytest.fixture(autouse=True)
@@ -104,7 +103,7 @@ async def mock_config_entry_setup(hass: HomeAssistant, config: dict[str, Any]) -
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.google_en_com",
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
             },
@@ -161,7 +160,7 @@ async def test_tts_service(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.google_de_com",
+                ATTR_ENTITY_ID: "tts.google_translate_de_com",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
             },
@@ -217,7 +216,7 @@ async def test_service_say_german_config(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.google_en_com",
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
@@ -274,7 +273,7 @@ async def test_service_say_german_service(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.google_en_co_uk",
+                ATTR_ENTITY_ID: "tts.google_translate_en_co_uk",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
             },
@@ -330,7 +329,7 @@ async def test_service_say_en_uk_config(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.google_en_com",
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "en-uk",
@@ -387,7 +386,7 @@ async def test_service_say_en_uk_service(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.google_en_com",
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_OPTIONS: {"tld": "co.uk"},
@@ -444,7 +443,7 @@ async def test_service_say_en_couk(
             "mock_config_entry_setup",
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.google_en_com",
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is a person at the front door.",
             },

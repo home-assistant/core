@@ -3,6 +3,7 @@
 import asyncio
 import typing
 from unittest.mock import AsyncMock, Mock, patch
+import zoneinfo
 
 import pytest
 from zigpy.application import ControllerApplication
@@ -16,7 +17,7 @@ from homeassistant.components.zha.const import (
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.components.zha.helpers import get_zha_data
+from homeassistant.components.zha.helpers import get_zha_data, get_zha_gateway
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MAJOR_VERSION,
@@ -251,7 +252,7 @@ async def test_zha_retry_unique_ids(
     ) as mock_connect:
         with patch(
             "homeassistant.config_entries.async_call_later",
-            lambda hass, delay, action: async_call_later(hass, 0, action),
+            lambda hass, delay, action: async_call_later(hass, 0.01, action),
         ):
             await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done(wait_background_tasks=True)
@@ -288,3 +289,23 @@ async def test_shutdown_on_ha_stop(
         await hass.async_block_till_done()
 
     assert len(mock_shutdown.mock_calls) == 1
+
+
+async def test_timezone_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that the ZHA gateway timezone is updated when HA timezone changes."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    gateway = get_zha_gateway(hass)
+
+    assert hass.config.time_zone == "US/Pacific"
+    assert gateway.config.local_timezone == zoneinfo.ZoneInfo("US/Pacific")
+
+    await hass.config.async_update(time_zone="America/New_York")
+
+    assert hass.config.time_zone == "America/New_York"
+    assert gateway.config.local_timezone == zoneinfo.ZoneInfo("America/New_York")

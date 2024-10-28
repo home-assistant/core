@@ -1,0 +1,49 @@
+{
+  "title": "Mold Indicator",
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "calibration_is_zero": "Calibration factor can't be zero."
+    },
+    "step": {
+      "user": {
+        "description": "Add Mold indicator helper",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "indoor_humidity_sensor": "Indoor humidity sensor",
+          "indoor_temp_sensor": "Indoor temperature sensor",
+          "outdoor_temp_sensor": "Outdoor temperature sensor",
+          "calibration_factor": "Calibration factor"
+        },
+        "data_description": {
+          "name": "Name for the created entity.",
+          "indoor_humidity_sensor": "The entity ID of the indoor humidity sensor.",
+          "indoor_temp_sensor": "The entity ID of the indoor temperature sensor.",
+          "outdoor_temp_sensor": "The entity ID of the outdoor temperature sensor.",
+          "calibration_factor": "Needs to be calibrated to the critical point in the room."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "calibration_is_zero": "Calibration factor can't be zero."
+    },
+    "step": {
+      "init": {
+        "description": "Adjust the calibration factor as required",
+        "data": {
+          "calibration_factor": "[%key:component::mold_indicator::config::step::user::data::calibration_factor%]"
+        },
+        "data_description": {
+          "calibration_factor": "[%key:component::mold_indicator::config::step::user::data_description::calibration_factor%]"
+        }
+      }
+    }
+  }
+}

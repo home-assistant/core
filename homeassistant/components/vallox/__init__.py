@@ -13,8 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DEFAULT_FAN_SPEED_AWAY,
@@ -22,6 +20,7 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
+    I18N_KEY_TO_VALLOX_PROFILE,
 )
 from .coordinator import ValloxDataUpdateCoordinator
 
@@ -61,6 +60,18 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     }
 )
 
+ATTR_PROFILE = "profile"
+ATTR_DURATION = "duration"
+
+SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+    {
+        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
+        vol.Optional(ATTR_DURATION): vol.All(
+            vol.Coerce(int), vol.Clamp(min=1, max=65535)
+        ),
+    }
+)
+
 
 class ServiceMethodDetails(NamedTuple):
     """Details for SERVICE_TO_METHOD mapping."""
@@ -72,6 +83,7 @@ class ServiceMethodDetails(NamedTuple):
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
+SERVICE_SET_PROFILE = "set_profile"
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
@@ -85,6 +97,9 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_BOOST: ServiceMethodDetails(
         method="async_set_profile_fan_speed_boost",
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE: ServiceMethodDetails(
+        method="async_set_profile", schema=SERVICE_SCHEMA_SET_PROFILE
     ),
 }
 
@@ -183,6 +198,22 @@ class ValloxServiceHandler:
             return False
         return True
 
+    async def async_set_profile(
+        self, profile: str, duration: int | None = None
+    ) -> bool:
+        """Activate profile for given duration."""
+        _LOGGER.debug("Activating profile %s for %s min", profile, duration)
+        try:
+            await self._client.set_profile(
+                I18N_KEY_TO_VALLOX_PROFILE[profile], duration
+            )
+        except ValloxApiException as err:
+            _LOGGER.error(
+                "Error setting profile %d for duration %s: %s", profile, duration, err
+            )
+            return False
+        return True
+
     async def async_handle(self, call: ServiceCall) -> None:
         """Dispatch a service call."""
         service_details = SERVICE_TO_METHOD.get(call.service)
@@ -201,24 +232,3 @@ class ValloxServiceHandler:
         # be observed by all parties involved.
         if result:
             await self._coordinator.async_request_refresh()
-
-
-class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
-    """Representation of a Vallox entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
-        """Initialize a Vallox entity."""
-        super().__init__(coordinator)
-
-        self._device_uuid = self.coordinator.data.uuid
-        assert self.coordinator.config_entry is not None
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_uuid))},
-            manufacturer=DEFAULT_NAME,
-            model=self.coordinator.data.model,
-            name=name,
-            sw_version=self.coordinator.data.sw_version,
-            configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
-        )

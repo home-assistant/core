@@ -6,6 +6,7 @@ from homeassistant.components.coinbase.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_API_VERSION
+from homeassistant.core import HomeAssistant
 
 from .const import (
     GOOD_CURRENCY_2,
@@ -21,7 +22,7 @@ from tests.common import MockConfigEntry
 class MockPagination:
     """Mock pagination result."""
 
-    def __init__(self, value=None):
+    def __init__(self, value=None) -> None:
         """Load simple pagination for tests."""
         self.next_starting_after = value
 
@@ -29,7 +30,7 @@ class MockPagination:
 class MockGetAccounts:
     """Mock accounts with pagination."""
 
-    def __init__(self, starting_after=0):
+    def __init__(self, starting_after=0) -> None:
         """Init mocked object, forced to return two at a time."""
         if (target_end := starting_after + 2) >= (
             max_end := len(MOCK_ACCOUNTS_RESPONSE)
@@ -58,7 +59,7 @@ def mocked_get_accounts(_, **kwargs):
 class MockGetAccountsV3:
     """Mock accounts with pagination."""
 
-    def __init__(self, cursor=""):
+    def __init__(self, cursor="") -> None:
         """Init mocked object, forced to return two at a time."""
         ids = [account["uuid"] for account in MOCK_ACCOUNTS_RESPONSE_V3]
         start = ids.index(cursor) if cursor else 0
@@ -115,7 +116,11 @@ def mock_get_portfolios():
     }
 
 
-async def init_mock_coinbase(hass, currencies=None, rates=None):
+async def init_mock_coinbase(
+    hass: HomeAssistant,
+    currencies: list[str] | None = None,
+    rates: list[str] | None = None,
+) -> MockConfigEntry:
     """Init Coinbase integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -136,7 +141,11 @@ async def init_mock_coinbase(hass, currencies=None, rates=None):
     return config_entry
 
 
-async def init_mock_coinbase_v3(hass, currencies=None, rates=None):
+async def init_mock_coinbase_v3(
+    hass: HomeAssistant,
+    currencies: list[str] | None = None,
+    rates: list[str] | None = None,
+) -> MockConfigEntry:
     """Init Coinbase integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

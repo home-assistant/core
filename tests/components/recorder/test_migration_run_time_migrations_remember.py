@@ -72,7 +72,7 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migration_changes_prevent_trying_to_migrate_again(
@@ -94,9 +94,8 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
     # Start with db schema that needs migration (version 32)
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
@@ -173,4 +172,6 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
             await hass.async_stop()
 
     for task in tasks:
-        assert not isinstance(task, MigrationTask)
+        if not isinstance(task, MigrationTask):
+            continue
+        assert not isinstance(task.migrator, migration.StatesContextIDMigration)

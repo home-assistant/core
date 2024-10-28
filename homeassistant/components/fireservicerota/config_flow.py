@@ -27,18 +27,20 @@ class FireServiceRotaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
         self.api = None
         self._base_url = None
         self._username = None
         self._password = None
-        self._existing_entry = None
-        self._description_placeholders = None
+        self._existing_entry: dict[str, Any] | None = None
+        self._description_placeholders: dict[str, str] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is None:
             return self._show_setup_form(user_input, errors)

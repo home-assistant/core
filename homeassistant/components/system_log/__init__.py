@@ -299,9 +299,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass_path: str = HOMEASSISTANT_PATH[0]
     config_dir = hass.config.config_dir
-    paths_re = re.compile(
-        r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
-    )
+    paths_re = re.compile(rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)")
     handler = LogErrorHandler(
         hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT], paths_re
     )

@@ -91,7 +91,8 @@
       'motion_sensors': dict({
       }),
       'name': 'Kitchen',
-      'pm25': 1,
+      'pm25': None,
+      'pm25_pure': 1,
       'pure_ac_integration': False,
       'pure_boost_enabled': False,
       'pure_conf': dict({
@@ -424,6 +425,7 @@
       }),
       'name': 'Hallway',
       'pm25': None,
+      'pm25_pure': None,
       'pure_ac_integration': None,
       'pure_boost_enabled': None,
       'pure_conf': dict({
@@ -550,7 +552,8 @@
       'motion_sensors': dict({
       }),
       'name': 'Bedroom',
-      'pm25': 1,
+      'pm25': None,
+      'pm25_pure': 1,
       'pure_ac_integration': False,
       'pure_boost_enabled': False,
       'pure_conf': dict({

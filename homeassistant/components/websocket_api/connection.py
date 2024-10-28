@@ -16,6 +16,12 @@ from homeassistant.helpers.http import current_request
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
+from .messages import (
+    error_message,
+    event_message,
+    message_to_json_bytes,
+    result_message,
+)
 from .util import describe_request
 
 if TYPE_CHECKING:
@@ -126,12 +132,12 @@ class ActiveConnection:
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
-        self.send_message(messages.result_message(msg_id, result))
+        self.send_message(message_to_json_bytes(result_message(msg_id, result)))
 
     @callback
     def send_event(self, msg_id: int, event: Any | None = None) -> None:
         """Send a event message."""
-        self.send_message(messages.event_message(msg_id, event))
+        self.send_message(message_to_json_bytes(event_message(msg_id, event)))
 
     @callback
     def send_error(
@@ -145,13 +151,15 @@ class ActiveConnection:
     ) -> None:
         """Send an error message."""
         self.send_message(
-            messages.error_message(
-                msg_id,
-                code,
-                message,
-                translation_key=translation_key,
-                translation_domain=translation_domain,
-                translation_placeholders=translation_placeholders,
+            message_to_json_bytes(
+                error_message(
+                    msg_id,
+                    code,
+                    message,
+                    translation_key=translation_key,
+                    translation_domain=translation_domain,
+                    translation_placeholders=translation_placeholders,
+                )
             )
         )
 
@@ -223,7 +231,7 @@ class ActiveConnection:
         try:
             if schema is False:
                 if len(msg) > 2:
-                    raise vol.Invalid("extra keys not allowed")
+                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
                 handler(self.hass, self, msg)
             else:
                 handler(self.hass, self, schema(msg))

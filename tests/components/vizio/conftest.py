@@ -30,7 +30,7 @@ from .const import (
 class MockInput:
     """Mock Vizio device input."""
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         """Initialize mock Vizio device input."""
         self.meta_name = name
         self.name = name

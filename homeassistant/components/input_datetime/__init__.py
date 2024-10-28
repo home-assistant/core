@@ -176,14 +176,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         "set_datetime",
         vol.All(
-            vol.Schema(
+            cv.make_entity_service_schema(
                 {
                     vol.Optional(ATTR_DATE): cv.date,
                     vol.Optional(ATTR_TIME): cv.time,
                     vol.Optional(ATTR_DATETIME): cv.datetime,
                     vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
                 },
-                extra=vol.ALLOW_EXTRA,
             ),
             cv.has_at_least_one_key(
                 ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP

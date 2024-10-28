@@ -9,8 +9,8 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import webhook
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -319,7 +319,9 @@ async def test_ws_webhook(
 
     received = []
 
-    async def handler(hass, webhook_id, request):
+    async def handler(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
         """Handle a webhook."""
         received.append(request)
         return web.json_response({"from": "handler"})

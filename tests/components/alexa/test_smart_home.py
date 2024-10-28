@@ -12,7 +12,6 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Context, Event, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
@@ -120,7 +120,9 @@ async def test_wrong_version(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(hass, get_default_config(hass), msg)
 
 
-async def discovery_test(device, hass, expected_endpoints=1):
+async def discovery_test(
+    device, hass: HomeAssistant, expected_endpoints: int = 1
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Test alexa discovery request."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -2601,8 +2603,15 @@ async def test_stop_valve(
 
 
 async def assert_percentage_changes(
-    hass, adjustments, namespace, name, endpoint, parameter, service, changed_parameter
-):
+    hass: HomeAssistant,
+    adjustments,
+    namespace,
+    name,
+    endpoint,
+    parameter,
+    service,
+    changed_parameter,
+) -> None:
     """Assert an API request making percentage changes works.
 
     AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
@@ -2616,8 +2625,15 @@ async def assert_percentage_changes(
 
 
 async def assert_range_changes(
-    hass, adjustments, namespace, name, endpoint, service, changed_parameter, instance
-):
+    hass: HomeAssistant,
+    adjustments: list[tuple[int | str, int, bool]],
+    namespace: str,
+    name: str,
+    endpoint: str,
+    service: str,
+    changed_parameter: str | None,
+    instance: str,
+) -> None:
     """Assert an API request making range changes works.
 
     AdjustRangeValue are examples of such requests.

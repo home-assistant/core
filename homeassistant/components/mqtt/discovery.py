@@ -4,16 +4,22 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from dataclasses import dataclass
 import functools
+from itertools import chain
 import logging
 import re
 import time
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_MQTT,
+    ConfigEntry,
+    signal_discovered_config_entry_removed,
+)
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -25,8 +31,8 @@ from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
 from homeassistant.util.signal_type import SignalTypeFormat
 
-from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
+from .client import async_subscribe_internal
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -69,6 +75,14 @@ class MQTTDiscoveryPayload(dict[str, Any]):
     """Class to hold and MQTT discovery payload and discovery data."""
 
     discovery_data: DiscoveryInfoType
+
+
+@dataclass(frozen=True)
+class MQTTIntegrationDiscoveryConfig:
+    """Class to hold an integration discovery playload."""
+
+    integration: str
+    msg: ReceiveMessage
 
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
@@ -191,6 +205,7 @@ async def async_start(  # noqa: C901
     """Start MQTT Discovery."""
     mqtt_data = hass.data[DATA_MQTT]
     platform_setup_lock: dict[str, asyncio.Lock] = {}
+    integration_discovery_messages: dict[str, MQTTIntegrationDiscoveryConfig] = {}
 
     @callback
     def _async_add_component(discovery_payload: MQTTDiscoveryPayload) -> None:
@@ -237,10 +252,6 @@ async def async_start(  # noqa: C901
             return
 
         component, node_id, object_id = match.groups()
-
-        if component not in SUPPORTED_COMPONENTS:
-            _LOGGER.warning("Integration %s is not supported", component)
-            return
 
         if payload:
             try:
@@ -344,16 +355,22 @@ async def async_start(  # noqa: C901
             )
 
     mqtt_data.discovery_unsubscribe = [
-        mqtt.async_subscribe_internal(
+        async_subscribe_internal(
             hass,
             topic,
             async_discovery_message_received,
             0,
             job_type=HassJobType.Callback,
         )
-        for topic in (
-            f"{discovery_topic}/+/+/config",
-            f"{discovery_topic}/+/+/+/config",
+        for topic in chain(
+            (
+                f"{discovery_topic}/{component}/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
+            (
+                f"{discovery_topic}/{component}/+/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
         )
     ]
 
@@ -361,21 +378,53 @@ async def async_start(  # noqa: C901
     mqtt_integrations = await async_get_mqtt(hass)
     integration_unsubscribe = mqtt_data.integration_unsubscribe
 
+    async def _async_handle_config_entry_removed(entry: ConfigEntry) -> None:
+        """Handle integration config entry changes."""
+        for discovery_key in entry.discovery_keys[DOMAIN]:
+            if (
+                discovery_key.version != 1
+                or not isinstance(discovery_key.key, str)
+                or discovery_key.key not in integration_discovery_messages
+            ):
+                continue
+            topic = discovery_key.key
+            discovery_message = integration_discovery_messages[topic]
+            del integration_discovery_messages[topic]
+            _LOGGER.debug("Rediscover service on topic %s", topic)
+            # Initiate re-discovery
+            await async_integration_message_received(
+                discovery_message.integration, discovery_message.msg
+            )
+
+    mqtt_data.discovery_unsubscribe.append(
+        async_dispatcher_connect(
+            hass,
+            signal_discovered_config_entry_removed(DOMAIN),
+            _async_handle_config_entry_removed,
+        )
+    )
+
     async def async_integration_message_received(
         integration: str, msg: ReceiveMessage
     ) -> None:
         """Process the received message."""
+        if (
+            msg.topic in integration_discovery_messages
+            and integration_discovery_messages[msg.topic].msg.payload == msg.payload
+        ):
+            _LOGGER.debug(
+                "Ignoring already processed discovery message for '%s' on topic %s: %s",
+                integration,
+                msg.topic,
+                msg.payload,
+            )
+            return
         if TYPE_CHECKING:
             assert mqtt_data.data_config_flow_lock
-        key = f"{integration}_{msg.subscribed_topic}"
 
         # Lock to prevent initiating many parallel config flows.
         # Note: The lock is not intended to prevent a race, only for performance
         async with mqtt_data.data_config_flow_lock:
-            # Already unsubscribed
-            if key not in integration_unsubscribe:
-                return
-
             data = MqttServiceInfo(
                 topic=msg.topic,
                 payload=msg.payload,
@@ -384,20 +433,28 @@ async def async_start(  # noqa: C901
                 subscribed_topic=msg.subscribed_topic,
                 timestamp=msg.timestamp,
             )
-            result = await hass.config_entries.flow.async_init(
-                integration, context={"source": DOMAIN}, data=data
+            discovery_key = discovery_flow.DiscoveryKey(
+                domain=DOMAIN, key=msg.topic, version=1
             )
-            if (
-                result
-                and result["type"] == FlowResultType.ABORT
-                and result["reason"]
-                in ("already_configured", "single_instance_allowed")
-            ):
-                integration_unsubscribe.pop(key)()
+            discovery_flow.async_create_flow(
+                hass,
+                integration,
+                {"source": SOURCE_MQTT},
+                data,
+                discovery_key=discovery_key,
+            )
+            if msg.payload:
+                # Update the last discovered config message
+                integration_discovery_messages[msg.topic] = (
+                    MQTTIntegrationDiscoveryConfig(integration=integration, msg=msg)
+                )
+            elif msg.topic in integration_discovery_messages:
+                # Cleanup cache if discovery payload is empty
+                del integration_discovery_messages[msg.topic]
 
     integration_unsubscribe.update(
         {
-            f"{integration}_{topic}": mqtt.async_subscribe_internal(
+            f"{integration}_{topic}": async_subscribe_internal(
                 hass,
                 topic,
                 functools.partial(async_integration_message_received, integration),

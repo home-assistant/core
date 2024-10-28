@@ -250,7 +250,7 @@ async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
         user_input=user_input_dict,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] is None
+    assert result["data"] == {}
     for other_param in advanced_parameters:
         if other_param == parameter:
             continue
@@ -264,7 +264,7 @@ async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
         user_input={"known_hosts": ""},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] is None
+    assert result["data"] == {}
     expected_data = {**orig_data, "known_hosts": []}
     if parameter in advanced_parameters:
         expected_data[parameter] = updated

@@ -1,6 +1,7 @@
 """The waze_travel_time component."""
 
 import asyncio
+from collections.abc import Collection
 import logging
 
 from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
@@ -28,10 +29,13 @@ from .const import (
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
     CONF_DESTINATION,
+    CONF_EXCL_FILTER,
+    CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DEFAULT_FILTER,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     METRIC_UNITS,
@@ -86,6 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Load the saved entities."""
     if SEMAPHORE not in hass.data.setdefault(DOMAIN, {}):
         hass.data.setdefault(DOMAIN, {})[SEMAPHORE] = asyncio.Semaphore(1)
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def async_get_travel_times_service(service: ServiceCall) -> ServiceResponse:
@@ -124,10 +129,13 @@ async def async_get_travel_times(
     avoid_subscription_roads: bool,
     avoid_ferries: bool,
     realtime: bool,
-    incl_filter: str | None = None,
-    excl_filter: str | None = None,
+    incl_filters: Collection[str] | None = None,
+    excl_filters: Collection[str] | None = None,
 ) -> list[CalcRoutesResponse] | None:
     """Get all available routes."""
+
+    incl_filters = incl_filters or ()
+    excl_filters = excl_filters or ()
 
     _LOGGER.debug(
         "Getting update for origin: %s destination: %s",
@@ -147,28 +155,46 @@ async def async_get_travel_times(
             real_time=realtime,
             alternatives=3,
         )
+        _LOGGER.debug("Got routes: %s", routes)
 
-        if incl_filter not in {None, ""}:
-            routes = [
-                r
-                for r in routes
-                if any(
-                    incl_filter.lower() == street_name.lower()  # type: ignore[union-attr]
-                    for street_name in r.street_names
+        incl_routes: list[CalcRoutesResponse] = []
+
+        def should_include_route(route: CalcRoutesResponse) -> bool:
+            if len(incl_filters) < 1:
+                return True
+            should_include = any(
+                street_name in incl_filters or "" in incl_filters
+                for street_name in route.street_names
+            )
+            if not should_include:
+                _LOGGER.debug(
+                    "Excluding route [%s], because no inclusive filter matched any streetname",
+                    route.name,
                 )
-            ]
+                return False
+            return True
 
-        if excl_filter not in {None, ""}:
-            routes = [
-                r
-                for r in routes
-                if not any(
-                    excl_filter.lower() == street_name.lower()  # type: ignore[union-attr]
-                    for street_name in r.street_names
-                )
-            ]
+        incl_routes = [route for route in routes if should_include_route(route)]
 
-        if len(routes) < 1:
+        filtered_routes: list[CalcRoutesResponse] = []
+
+        def should_exclude_route(route: CalcRoutesResponse) -> bool:
+            for street_name in route.street_names:
+                for excl_filter in excl_filters:
+                    if excl_filter == street_name:
+                        _LOGGER.debug(
+                            "Excluding route, because exclusive filter [%s] matched streetname: %s",
+                            excl_filter,
+                            route.name,
+                        )
+                        return True
+            return False
+
+        filtered_routes = [
+            route for route in incl_routes if not should_exclude_route(route)
+        ]
+
+        if len(filtered_routes) < 1:
             _LOGGER.warning("No routes found")
             return None
     except WRCError as exp:
@@ -176,9 +202,36 @@ async def async_get_travel_times(
         return None
 
     else:
-        return routes
+        return filtered_routes
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+
+    if config_entry.version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+        options = dict(config_entry.options)
+        if (incl_filters := options.pop(CONF_INCL_FILTER, None)) not in {None, ""}:
+            options[CONF_INCL_FILTER] = [incl_filters]
+        else:
+            options[CONF_INCL_FILTER] = DEFAULT_FILTER
+        if (excl_filters := options.pop(CONF_EXCL_FILTER, None)) not in {None, ""}:
+            options[CONF_EXCL_FILTER] = [excl_filters]
+        else:
+            options[CONF_EXCL_FILTER] = DEFAULT_FILTER
+        hass.config_entries.async_update_entry(config_entry, options=options, version=2)
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+    return True

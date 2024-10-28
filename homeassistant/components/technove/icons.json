@@ -4,6 +4,11 @@
       "ssid": {
         "default": "mdi:wifi"
       }
+    },
+    "switch": {
+      "session_active": {
+        "default": "mdi:ev-station"
+      }
     }
   }
 }
