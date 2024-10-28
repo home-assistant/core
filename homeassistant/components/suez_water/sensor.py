@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities([SuezAggregatedSensor(coordinator, entry.data[CONF_COUNTER_ID])])
 
 
-class SuezAggregatedSensor(CoordinatorEntity, SensorEntity):
+class SuezAggregatedSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
     """Representation of a Sensor."""
 
     _attr_has_entity_name = True
@@ -37,8 +37,7 @@ class SuezAggregatedSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator: SuezWaterCoordinator, counter_id: int) -> None:
         """Initialize the data object."""
-        super().__init__(coordinator, context=counter_id)
-        self.coordinator: SuezWaterCoordinator = coordinator
+        super().__init__(coordinator)
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{counter_id}_water_usage_yesterday"
         self._attr_device_info = DeviceInfo(
@@ -50,27 +49,25 @@ class SuezAggregatedSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current daily usage."""
-        if self.coordinator.aggregated_data is None:
-            return None
-        return self.coordinator.aggregated_data.value
+        return self.coordinator.data.value
 
     @property
     def attribution(self) -> None | str:
         """Return data attribution message."""
-        if self.coordinator.aggregated_data is None:
+        if self.coordinator.data is None:
             return None
-        return self.coordinator.aggregated_data.attribution
+        return self.coordinator.data.attribution
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return aggregated data."""
-        if self.coordinator.aggregated_data is None:
+        if self.coordinator.data is None:
             return None
         return {
-            "this_month_consumption": self.coordinator.aggregated_data.currentMonth,
-            "previous_month_consumption": self.coordinator.aggregated_data.previousMonth,
-            "highest_monthly_consumption": self.coordinator.aggregated_data.highestMonthlyConsumption,
-            "last_year_overall": self.coordinator.aggregated_data.previousYear,
-            "this_year_overall": self.coordinator.aggregated_data.currentYear,
-            "history": self.coordinator.aggregated_data.history,
+            "this_month_consumption": self.coordinator.data.current_month,
+            "previous_month_consumption": self.coordinator.data.previous_month,
+            "highest_monthly_consumption": self.coordinator.data.highest_monthly_consumption,
+            "last_year_overall": self.coordinator.data.previous_year,
+            "this_year_overall": self.coordinator.data.current_year,
+            "history": self.coordinator.data.history,
         }
