@@ -15,7 +15,7 @@ from webrtc_models import RTCConfiguration, RTCIceServer
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
 
@@ -425,6 +425,21 @@ def async_register_rtsp_to_web_rtc_provider(
 
     The first provider to satisfy the offer will be used.
     """
+    if hass.data.get(DATA_WEBRTC_PROVIDERS):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"legacy_webrtc_provider_{domain}",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=domain,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="legacy_webrtc_provider",
+            translation_placeholders={
+                "legacy_integration": domain,
+                "new_integration": "go2rtc",
+            },
+        )
     provider_instance = _CameraRtspToWebRTCProvider(provider)
     return _async_register_webrtc_provider(
         hass, DATA_WEBRTC_LEGACY_PROVIDERS, provider_instance
