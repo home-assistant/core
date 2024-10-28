@@ -177,7 +177,7 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         return volume / 100
 
     @property
-    def shuffle(self) -> bool | None:
+    def shuffle(self) -> bool:
         """Current shuffle configuration."""
         return self.client.play_state.mode_shuffle != ShuffleMode.OFF
 
