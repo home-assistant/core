@@ -437,7 +437,7 @@ ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
         ({}, None, False),
     ],
 )
-@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "mock_server")
+@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "server")
 async def test_non_user_setup_with_error(
     hass: HomeAssistant,
     config: ConfigType,
