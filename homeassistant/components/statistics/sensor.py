@@ -576,10 +576,13 @@ class StatisticsSensor(SensorEntity):
         return device_class
 
     def _calculate_state_class(self, new_state: State) -> SensorStateClass | None:
-        """Return the calculated state class."""
+        """Return the calculated state class.
+
+        Will be None if the characteristics is not numerical, otherwise
+        SensorStateClass.MEASUREMENT.
+        """
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
-        # Automatically set state class when output is a number
         return SensorStateClass.MEASUREMENT
 
     @property
