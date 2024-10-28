@@ -249,13 +249,12 @@ async def test_add_and_remove_work_area(
     )
 
     values[TEST_MOWER_ID].work_area_names.remove("new work area")
-    values[TEST_MOWER_ID].work_area_dict.pop(1)
-    values[TEST_MOWER_ID].work_areas.pop(1)
+    del values[TEST_MOWER_ID].work_area_dict[1]
+    del values[TEST_MOWER_ID].work_areas[1]
     values[TEST_MOWER_ID].work_area_names.remove("Front lawn")
-    values[TEST_MOWER_ID].work_area_dict.pop(123456)
-    values[TEST_MOWER_ID].work_areas.pop(123456)
-    values[TEST_MOWER_ID].calendar.tasks.pop(0)
-    values[TEST_MOWER_ID].calendar.tasks.pop(0)
+    del values[TEST_MOWER_ID].work_area_dict[123456]
+    del values[TEST_MOWER_ID].work_areas[123456]
+    del values[TEST_MOWER_ID].calendar.tasks[:2]
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
