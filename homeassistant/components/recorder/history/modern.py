@@ -24,9 +24,9 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
-from ... import recorder
 from ..const import LAST_REPORTED_SCHEMA_VERSION
 from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
 from ..filters import Filters
@@ -231,7 +231,7 @@ def get_significant_states_with_session(
         raise ValueError("entity_ids must be provided")
     entity_id_to_metadata_id: dict[str, int | None] | None = None
     metadata_ids_in_significant_domains: list[int] = []
-    instance = recorder.get_instance(hass)
+    instance = get_instance(hass)
     if not (
         entity_id_to_metadata_id := instance.states_meta_manager.get_many(
             entity_ids, session, False
@@ -393,14 +393,14 @@ def state_changes_during_period(
 ) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     has_last_reported = (
-        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+        get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
     )
     if not entity_id:
         raise ValueError("entity_id must be provided")
     entity_ids = [entity_id.lower()]
 
     with session_scope(hass=hass, read_only=True) as session:
-        instance = recorder.get_instance(hass)
+        instance = get_instance(hass)
         if not (
             possible_metadata_id := instance.states_meta_manager.get(
                 entity_id, session, False
@@ -507,7 +507,7 @@ def get_last_state_changes(
 ) -> dict[str, list[State]]:
     """Return the last number_of_states."""
     has_last_reported = (
-        recorder.get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
+        get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
     )
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
@@ -517,7 +517,7 @@ def get_last_state_changes(
     # because the metadata_id_last_updated_ts index is in ascending order.
 
     with session_scope(hass=hass, read_only=True) as session:
-        instance = recorder.get_instance(hass)
+        instance = get_instance(hass)
         if not (
             possible_metadata_id := instance.states_meta_manager.get(
                 entity_id, session, False
@@ -604,7 +604,7 @@ def _get_run_start_ts_for_utc_point_in_time(
     hass: HomeAssistant, utc_point_in_time: datetime
 ) -> float | None:
     """Return the start time of a run."""
-    run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
+    run = get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
     if (
         run is not None
         and (run_start := process_timestamp(run.start)) < utc_point_in_time

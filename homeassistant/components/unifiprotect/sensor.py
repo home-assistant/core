@@ -44,11 +44,14 @@ from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
+    PermRequired,
     ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectEventMixin,
     ProtectNVREntity,
+    T,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin, T
 from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)

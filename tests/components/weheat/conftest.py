@@ -17,7 +17,14 @@ from homeassistant.components.weheat.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import CLIENT_ID, CLIENT_SECRET, TEST_HP_UUID, TEST_MODEL, TEST_SN
+from .const import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    TEST_HP_UUID,
+    TEST_MODEL,
+    TEST_SN,
+    USER_UUID_1,
+)
 
 from tests.common import MockConfigEntry
 
@@ -70,6 +77,18 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_user_id() -> Generator[AsyncMock]:
+    """Mock the user API call."""
+    with (
+        patch(
+            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            return_value=USER_UUID_1,
+        ) as user_mock,
+    ):
+        yield user_mock
+
+
+@pytest.fixture
 def mock_weheat_discover(mock_heat_pump_info) -> Generator[AsyncMock]:
     """Mock an Weheat discovery."""
     with (
@@ -96,6 +115,9 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.power_output = 66
     mock_heat_pump_instance.dhw_top_temperature = 77
     mock_heat_pump_instance.dhw_bottom_temperature = 88
+    mock_heat_pump_instance.thermostat_water_setpoint = 35
+    mock_heat_pump_instance.thermostat_room_temperature = 19
+    mock_heat_pump_instance.thermostat_room_temperature_setpoint = 21
     mock_heat_pump_instance.cop = 4.5
     mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
     mock_heat_pump_instance.energy_total = 12345

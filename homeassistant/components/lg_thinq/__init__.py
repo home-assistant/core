@@ -3,31 +3,58 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 import logging
 
 from thinqconnect import ThinQApi, ThinQAPIException
 from thinqconnect.integration import async_get_ha_bridge_list
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, Platform
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_COUNTRY,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_CONNECT_CLIENT_ID
+from .const import CONF_CONNECT_CLIENT_ID, MQTT_SUBSCRIPTION_INTERVAL
 from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordinator
+from .mqtt import ThinQMQTT
 
-type ThinqConfigEntry = ConfigEntry[dict[str, DeviceDataUpdateCoordinator]]
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
+@dataclass(kw_only=True)
+class ThinqData:
+    """A class that holds runtime data."""
+
+    coordinators: dict[str, DeviceDataUpdateCoordinator] = field(default_factory=dict)
+    mqtt_client: ThinQMQTT | None = None
+
+
+type ThinqConfigEntry = ConfigEntry[ThinqData]
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.EVENT,
+    Platform.FAN,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VACUUM,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
-    entry.runtime_data = {}
+    entry.runtime_data = ThinqData()
 
     access_token = entry.data[CONF_ACCESS_TOKEN]
     client_id = entry.data[CONF_CONNECT_CLIENT_ID]
@@ -45,6 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Set up MQTT connection.
+    await async_setup_mqtt(hass, entry, thinq_api, client_id)
 
     # Clean up devices they are no longer in use.
     async_cleanup_device_registry(hass, entry)
@@ -74,14 +104,15 @@ async def async_setup_coordinators(
     ]
     task_result = await asyncio.gather(*task_list)
     for coordinator in task_result:
-        entry.runtime_data[coordinator.unique_id] = coordinator
+        entry.runtime_data.coordinators[coordinator.unique_id] = coordinator
 
 
 @callback
 def async_cleanup_device_registry(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
     """Clean up device registry."""
     new_device_unique_ids = [
-        coordinator.unique_id for coordinator in entry.runtime_data.values()
+        coordinator.unique_id
+        for coordinator in entry.runtime_data.coordinators.values()
     ]
     device_registry = dr.async_get(hass)
     existing_entries = dr.async_entries_for_config_entry(
@@ -96,6 +127,40 @@ def async_cleanup_device_registry(hass: HomeAssistant, entry: ThinqConfigEntry) 
             _LOGGER.debug("Remove device_registry: device_id=%s", old_entry.id)
 
 
+async def async_setup_mqtt(
+    hass: HomeAssistant, entry: ThinqConfigEntry, thinq_api: ThinQApi, client_id: str
+) -> None:
+    """Set up MQTT connection."""
+    mqtt_client = ThinQMQTT(hass, thinq_api, client_id, entry.runtime_data.coordinators)
+    entry.runtime_data.mqtt_client = mqtt_client
+
+    # Try to connect.
+    result = await mqtt_client.async_connect()
+    if not result:
+        _LOGGER.error("Failed to set up mqtt connection")
+        return
+
+    # Ready to subscribe.
+    await mqtt_client.async_start_subscribes()
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            mqtt_client.async_refresh_subscribe,
+            MQTT_SUBSCRIPTION_INTERVAL,
+            cancel_on_shutdown=True,
+        )
+    )
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, mqtt_client.async_disconnect
+        )
+    )
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Unload the entry."""
+    if entry.runtime_data.mqtt_client:
+        await entry.runtime_data.mqtt_client.async_disconnect()
+
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

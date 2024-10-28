@@ -17,6 +17,7 @@ from homeassistant.components.tplink import (
     DeviceConfig,
     KasaException,
 )
+from homeassistant.components.tplink.config_flow import TPLinkConfigFlow
 from homeassistant.components.tplink.const import (
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
@@ -682,7 +683,19 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_single_discovery(), _patch_connect():
+    real_is_matching = TPLinkConfigFlow.is_matching
+    return_values = []
+
+    def is_matching(self, other_flow) -> bool:
+        return_values.append(real_is_matching(self, other_flow))
+        return return_values[-1]
+
+    with (
+        _patch_discovery(),
+        _patch_single_discovery(),
+        _patch_connect(),
+        patch.object(TPLinkConfigFlow, "is_matching", wraps=is_matching, autospec=True),
+    ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -693,6 +706,8 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
+    # Ensure the is_matching method returned True
+    assert return_values == [True]
 
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         result3 = await hass.config_entries.flow.async_init(

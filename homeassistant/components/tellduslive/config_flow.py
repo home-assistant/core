@@ -124,9 +124,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Run when a Tellstick is discovered."""
         await self._async_handle_discovery_without_unique_id()
 
-        _LOGGER.info("Discovered tellstick device: %s", discovery_info)
+        _LOGGER.debug("Discovered tellstick device: %s", discovery_info)
         if supports_local_api(discovery_info[1]):
-            _LOGGER.info("%s support local API", discovery_info[1])
+            _LOGGER.debug("%s support local API", discovery_info[1])
             self._hosts.append(discovery_info[0])
 
         return await self.async_step_user()

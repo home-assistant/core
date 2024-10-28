@@ -15,6 +15,7 @@ from weheat.exceptions import (
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,7 +25,6 @@ EXCEPTIONS = (
     ServiceException,
     NotFoundException,
     ForbiddenException,
-    UnauthorizedException,
     BadRequestException,
     ApiException,
 )
@@ -72,6 +72,8 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
         """Get the data from the API."""
         try:
             self._heat_pump_data.get_status(self.session.token[CONF_ACCESS_TOKEN])
+        except UnauthorizedException as error:
+            raise ConfigEntryAuthFailed from error
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
 
