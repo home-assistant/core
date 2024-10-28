@@ -20,6 +20,21 @@ from .const import CONF_DIRECTION, CONF_ROUTE, CONF_STOP, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def _dict_to_select_name_selector(options: dict[str, str]) -> SelectSelector:
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=sorted(
+                (
+                    SelectOptionDict(value=value, label=value)
+                    for key, value in options.items()
+                ),
+                key=lambda o: o["label"],
+            ),
+            mode=SelectSelectorMode.DROPDOWN,
+        )
+    )
+
+
 def _dict_to_select_selector(options: dict[str, str]) -> SelectSelector:
     return SelectSelector(
         SelectSelectorConfig(
@@ -37,6 +52,12 @@ def _dict_to_select_selector(options: dict[str, str]) -> SelectSelector:
 
 def _get_routes(citybussin: Citybussin) -> dict[str, str]:
     return {a["key"]: a["shortName"] for a in citybussin.get_bus_routes()}
+
+
+def _get_route_key_from_route_name(citybussin: Citybussin, route_name: str) -> str:
+    return [
+        key for key, value in _get_routes(citybussin).items() if value == route_name
+    ][0]
 
 
 def _get_directions(citybussin: Citybussin, route_key: str) -> dict[str, str]:
@@ -92,7 +113,7 @@ class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="route",
             data_schema=vol.Schema(
-                {vol.Required(CONF_ROUTE): _dict_to_select_selector(self._routes)}
+                {vol.Required(CONF_ROUTE): _dict_to_select_name_selector(self._routes)}
             ),
         )
 
@@ -106,15 +127,19 @@ class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_stop()
 
+        self._route_key = await self.hass.async_add_executor_job(
+            _get_route_key_from_route_name, self._citybussin, self.data[CONF_ROUTE]
+        )
+
         self._directions = await self.hass.async_add_executor_job(
-            _get_directions, self._citybussin, self.data[CONF_ROUTE]
+            _get_directions, self._citybussin, self._route_key
         )
 
         return self.async_show_form(
             step_id="direction",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DIRECTION): _dict_to_select_selector(
+                    vol.Required(CONF_DIRECTION): _dict_to_select_name_selector(
                         self._directions
                     )
                 }
@@ -132,21 +157,23 @@ class CityBusFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(_unique_id_from_data(self.data))
             self._abort_if_unique_id_configured()
 
-            route = self.data[CONF_ROUTE]
-            direction = self.data[CONF_DIRECTION]
-            stop = self.data[CONF_STOP]
+            route_name = self.data[CONF_ROUTE]
+            direction_destination = self.data[CONF_DIRECTION]
 
-            route_name = self._routes[route]
-            direction_name = self._directions[direction]
-            stop_name = self._stops[stop]
+            self._route_key = await self.hass.async_add_executor_job(
+                _get_route_key_from_route_name, self._citybussin, route_name
+            )
+
+            stop_code = self.data[CONF_STOP]
+            stop_name = self._stops[stop_code]
 
             return self.async_create_entry(
-                title=f"{route_name} - {direction_name} - {stop_name}",
+                title=f"{route_name} - {direction_destination} - {stop_name}",
                 data=self.data,
             )
 
         self._stops = await self.hass.async_add_executor_job(
-            _get_stops, self._citybussin, self.data[CONF_ROUTE]
+            _get_stops, self._citybussin, self._route_key
         )
 
         return self.async_show_form(

@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/citybus/",
   "iot_class": "cloud_polling",
-  "requirements": ["citybussin==0.0.1a2"],
+  "requirements": ["citybussin==0.0.1a3"],
   "version": "0.0.1"
 }

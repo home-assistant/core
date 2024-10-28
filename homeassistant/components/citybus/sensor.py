@@ -11,7 +11,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utc_from_timestamp
 
 from .const import CONF_ROUTE, CONF_DIRECTION, CONF_STOP, DOMAIN
 from .coordinator import CityBusDataUpdateCoordinator

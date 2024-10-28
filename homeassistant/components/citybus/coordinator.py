@@ -31,22 +31,26 @@ class CityBusDataUpdateCoordinator(DataUpdateCoordinator):
         self._estimates: dict[RouteStop, dict[str, Any]] = {}
 
     def add_route_stop(
-        self, route_key: str, direction_key: str, stop_code: str
+        self, route_name: str, direction_destination: str, stop_code: str
     ) -> None:
         """Tell coordinator to start tracking a given stop for a route and direction."""
-        self._route_stops.add(RouteStop(route_key, direction_key, stop_code))
+        self._route_stops.add(RouteStop(route_name, direction_destination, stop_code))
 
     def remove_route_stop(
-        self, route_key: str, direction_key: str, stop_code: str
+        self, route_name: str, direction_destination: str, stop_code: str
     ) -> None:
         """Tell coordinator to stop tracking a given stop for a route and direction."""
-        self._route_stops.remove(RouteStop(route_key, direction_key, stop_code))
+        self._route_stops.remove(
+            RouteStop(route_name, direction_destination, stop_code)
+        )
 
     def get_estimate_data(
-        self, route_key: str, direction_key: str, stop_code: str
+        self, route_name: str, direction_destination: str, stop_code: str
     ) -> dict[str, Any] | None:
         """Get the estimate data for a given stop for a route and direction."""
-        return self._estimates.get(RouteStop(route_key, direction_key, stop_code))
+        return self._estimates.get(
+            RouteStop(route_name, direction_destination, stop_code)
+        )
 
     def has_route_stops(self) -> bool:
         """Check if this coordinator is tracking any route stops."""
@@ -62,10 +66,14 @@ class CityBusDataUpdateCoordinator(DataUpdateCoordinator):
 
             for route_stop in self._route_stops:
                 try:
+                    route_key = self.citybussin.get_route_by_short_name(
+                        route_stop.route_name
+                    )["key"]
+                    direction_key = self.citybussin.get_direction_by_destination(
+                        route_key, route_stop.direction_destination
+                    )["direction"]["key"]
                     estimates[route_stop] = self.citybussin.get_next_depart_times(
-                        route_stop.route_key,
-                        route_stop.direction_key,
-                        route_stop.stop_code,
+                        route_key, direction_key, route_stop.stop_code
                     )
                 except Exception as err:
                     raise UpdateFailed(

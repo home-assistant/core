@@ -3,21 +3,21 @@
     "config": {
         "step": {
             "route": {
-                "title": "Select route",
+                "title": "Select route (short name)",
                 "data": {
-                    "route": "Route"
+                    "route_name": "Route"
                 }
             },
             "direction": {
-                "title": "Select direction",
+                "title": "Select direction (target destination)",
                 "data": {
-                    "direction": "Direction"
+                    "direction_destination": "Direction"
                 }
             },
             "stop": {
-                "title": "Select stop",
+                "title": "Select stop (stop code)",
                 "data": {
-                    "stop": "Stop"
+                    "stop_code": "Stop"
                 }
             }
         },
