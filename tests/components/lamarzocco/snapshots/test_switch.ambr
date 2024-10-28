@@ -123,6 +123,52 @@
     'via_device_id': None,
   })
 # ---
+# name: test_switches[-set_power-kwargs0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS01234',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs01234',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[-set_power-kwargs0].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.gs01234',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'main',
+    'unique_id': 'GS01234_main',
+    'unit_of_measurement': None,
+  })
+# ---
 # name: test_switches[-set_power]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -166,6 +212,144 @@
     'supported_features': 0,
     'translation_key': 'main',
     'unique_id': 'GS01234_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[_smart_standby_enabled-set_smart_standby-kwargs2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS01234 Smart standby enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs01234_smart_standby_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[_smart_standby_enabled-set_smart_standby-kwargs2].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.gs01234_smart_standby_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart standby enabled',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_standby_enabled',
+    'unique_id': 'GS01234_smart_standby_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[_smart_standby_enabled-set_smart_standby]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS01234 Smart standby enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs01234_smart_standby_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[_smart_standby_enabled-set_smart_standby].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.gs01234_smart_standby_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart standby enabled',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_standby_enabled',
+    'unique_id': 'GS01234_smart_standby_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[_steam_boiler-set_steam-kwargs1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS01234 Steam boiler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.gs01234_steam_boiler',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[_steam_boiler-set_steam-kwargs1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.gs01234_steam_boiler',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Steam boiler',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'steam_boiler',
+    'unique_id': 'GS01234_steam_boiler_enable',
     'unit_of_measurement': None,
   })
 # ---
