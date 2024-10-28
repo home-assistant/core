@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
 from homeassistant.components.lock import LockState
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
     CURRENCY_DOLLAR,
     DEGREE,
@@ -38,6 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UV_INDEX,
     Platform,
+    UnitLessRatio,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -374,7 +374,7 @@ UOM_FRIENDLY_NAME = {
     UOM_PERCENTAGE: PERCENTAGE,
     "52": UnitOfMass.POUNDS,
     "53": "pf",
-    "54": CONCENTRATION_PARTS_PER_MILLION,
+    "54": UnitLessRatio.PARTS_PER_MILLION,
     "55": "pulse count",
     "57": UnitOfTime.SECONDS,
     "58": UnitOfTime.SECONDS,
