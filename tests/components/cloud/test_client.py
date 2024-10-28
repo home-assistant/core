@@ -184,18 +184,24 @@ async def test_handler_google_actions_disabled(
     assert resp["payload"] == response_payload
 
 
-async def test_handler_ice_servers(hass: HomeAssistant, cloud: MagicMock) -> None:
+async def test_handler_ice_servers(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
     """Test handler ICE servers."""
     assert await async_setup_component(hass, "cloud", {"cloud": {}})
     await hass.async_block_till_done()
+    # make sure that preferences will not be reset
+    await cloud.client.prefs.async_set_username(cloud.username)
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": False,
+            "google_enabled": False,
+        }
+    )
 
     await cloud.login("test-user", "test-pass")
-
-    alexa_config_mock = Mock(async_enable_proactive_mode=AsyncMock())
-    google_config_mock = Mock(async_sync_entities=AsyncMock())
-    cloud.client._alexa_config = alexa_config_mock
-    cloud.client._google_config = google_config_mock
-
     await cloud.client.cloud_connected()
 
     assert cloud.client._cloud_ice_servers_listener is not None
@@ -210,14 +216,16 @@ async def test_handler_ice_servers_disabled(
     """Test handler ICE servers when user has disabled it."""
     assert await async_setup_component(hass, "cloud", {"cloud": {}})
     await hass.async_block_till_done()
+    # make sure that preferences will not be reset
+    await cloud.client.prefs.async_set_username(cloud.username)
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": False,
+            "google_enabled": False,
+        }
+    )
 
     await cloud.login("test-user", "test-pass")
-
-    alexa_config_mock = Mock(async_enable_proactive_mode=AsyncMock())
-    google_config_mock = Mock(async_sync_entities=AsyncMock())
-    cloud.client._alexa_config = alexa_config_mock
-    cloud.client._google_config = google_config_mock
-
     await cloud.client.cloud_connected()
 
     await set_cloud_prefs(
