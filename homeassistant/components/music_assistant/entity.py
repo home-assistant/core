@@ -61,7 +61,7 @@ class MusicAssistantEntity(Entity):
     @property
     def unique_id(self) -> str | None:
         """Return unique id for entity."""
-        _base = f"mass_{self.player_id}"
+        _base = self.player_id
         if hasattr(self, "entity_description"):
             return f"{_base}_{self.entity_description.key}"
         return _base
