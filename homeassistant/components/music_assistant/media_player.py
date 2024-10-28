@@ -376,7 +376,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Send the play_media command to the media player."""
-        if isinstance(media_id, str) and media_source.is_media_source_id(media_id):
+        if media_source.is_media_source_id(media_id):
             # Handle media_source
             sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
