@@ -1174,6 +1174,7 @@ async def test_repair_issue_legacy_provider(
     assert issue.is_fixable is False
     assert issue.is_persistent is False
     assert issue.issue_domain == "mock_domain"
+    assert issue.learn_more_url == "https://www.home-assistant.io/integrations/go2rtc/"
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.issue_id == "legacy_webrtc_provider_mock_domain"
     assert issue.translation_key == "legacy_webrtc_provider"

@@ -49,7 +49,7 @@
     },
     "legacy_webrtc_provider": {
       "title": "Detected use of legacy WebRTC provider registered by {legacy_integration}",
-      "description": "The {legacy_integration} integration has registered a legacy WebRTC provider. Home Assistant prefers using the builtin modern WebRTC provider registered by the {new_integration} integration. To fix this issue, you can either keep using the modern WebRTC provider and remove the {legacy_integration} or configure the {new_integration} to not use the builtin provider, and then restart Home Assistant."
+      "description": "The {legacy_integration} integration has registered a legacy WebRTC provider. Home Assistant prefers using the builtin modern WebRTC provider registered by the {new_integration} integration. To fix this issue, you can either keep using the builtin modern WebRTC provider and remove the {legacy_integration} integration or configure the {new_integration} integration to not use the builtin provider, and then restart Home Assistant."
     }
   },
   "services": {

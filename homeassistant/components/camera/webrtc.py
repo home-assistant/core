@@ -446,6 +446,7 @@ def async_register_rtsp_to_web_rtc_provider(
             is_fixable=False,
             is_persistent=False,
             issue_domain=domain,
+            learn_more_url="https://www.home-assistant.io/integrations/go2rtc/",
             severity=ir.IssueSeverity.WARNING,
             translation_key="legacy_webrtc_provider",
             translation_placeholders={
