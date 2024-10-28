@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -44,7 +44,14 @@ async def test_sensors(
     assert_entities_alt(hass, normal_config_entry.entry_id, entity_registry, snapshot)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "initial", "restored"),
+    [
+        ("sensor.test_battery_level", "77", "77"),
+        ("sensor.test_outside_temperature", "30", "30"),
+        ("sensor.test_time_to_arrival", "2024-01-01T00:00:06+00:00", STATE_UNAVAILABLE),
+    ],
+)
 async def test_sensors_restore(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -52,6 +59,9 @@ async def test_sensors_restore(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
+    entity_id: str,
+    initial: str,
+    restored: str,
 ) -> None:
     """Tests that the sensor entities are correct."""
 
@@ -60,10 +70,13 @@ async def test_sensors_restore(
     # Setup platform to get some history data
     await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
 
+    assert hass.states.get(entity_id).state == initial
+
     # Set the vehicle offline
     mock_vehicle_data.side_effect = VehicleOffline
 
     # Reload the platform and allow restore entities to happen
     with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
-    assert_entities_alt(hass, normal_config_entry.entry_id, entity_registry, snapshot)
+
+    assert hass.states.get(entity_id).state == restored
