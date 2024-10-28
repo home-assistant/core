@@ -1262,7 +1262,7 @@ class ConfigEntriesFlowManager(
             )
             _LOGGER.error(
                 (
-                    "Initialising a '%s' flow without an `entry_id` in the context"
+                    "Initialising a '%s' flow without a link to the config entry,"
                     " please %s"
                 ),
                 source,
