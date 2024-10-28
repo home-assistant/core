@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import get_dict_from_home_connect_error
 from .api import ConfigEntryAuth
 from .const import (
     ATTR_ALLOWED_VALUES,
@@ -29,6 +30,9 @@ from .const import (
     REFRIGERATION_SUPERMODEFREEZER,
     REFRIGERATION_SUPERMODEREFRIGERATOR,
     SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME,
+    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
+    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 from .entity import HomeConnectDevice, HomeConnectEntity
 
@@ -143,9 +147,16 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 self.device.appliance.set_setting, self.entity_description.key, True
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn on: %s", err)
             self._attr_available = False
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                },
+            ) from err
 
         self._attr_available = True
         self.async_entity_update()
@@ -161,7 +172,15 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off: %s", err)
             self._attr_available = False
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                },
+            ) from err
 
         self._attr_available = True
         self.async_entity_update()
@@ -204,7 +223,14 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 self.device.appliance.start_program, self.program_name
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to start program: %s", err)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="start_program",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "program": self.program_name,
+                },
+            ) from err
         self.async_entity_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -213,7 +239,14 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         try:
             await self.hass.async_add_executor_job(self.device.appliance.stop_program)
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to stop program: %s", err)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="stop_program",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "program": self.program_name,
+                },
+            ) from err
         self.async_entity_update()
 
     async def async_update(self) -> None:
@@ -258,8 +291,15 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 self.device.appliance.set_setting, BSH_POWER_STATE, BSH_POWER_ON
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn on device: %s", err)
             self._attr_is_on = False
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="power_on",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name,
+                },
+            ) from err
         self.async_entity_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -291,8 +331,16 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 self.power_off_state,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn off device: %s", err)
             self._attr_is_on = True
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="power_off",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name,
+                    SVE_TRANSLATION_PLACEHOLDER_VALUE: self.power_off_state,
+                },
+            ) from err
         self.async_entity_update()
 
     async def async_update(self) -> None:

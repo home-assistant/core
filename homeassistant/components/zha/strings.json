@@ -776,6 +776,21 @@
       },
       "regulation_setpoint_offset": {
         "name": "Regulation setpoint offset"
+      },
+      "irrigation_cycles": {
+        "name": "Irrigation cycles"
+      },
+      "irrigation_target": {
+        "name": "Irrigation target"
+      },
+      "irrigation_interval": {
+        "name": "Irrigation interval"
+      },
+      "valve_countdown_1": {
+        "name": "Irrigation time 1"
+      },
+      "valve_countdown_2": {
+        "name": "Irrigation time 2"
       }
     },
     "select": {
@@ -865,6 +880,12 @@
       },
       "setpoint_response_time": {
         "name": "Setpoint response time"
+      },
+      "irrigation_mode": {
+        "name": "Irrigation mode"
+      },
+      "weather_delay": {
+        "name": "Weather delay"
       }
     },
     "sensor": {
@@ -1041,6 +1062,27 @@
       },
       "motor_stepcount": {
         "name": "Motor stepcount"
+      },
+      "irrigation_duration": {
+        "name": "Last irrigation duration"
+      },
+      "irrigation_start_time": {
+        "name": "Irrigation start time"
+      },
+      "irrigation_end_time": {
+        "name": "Irrigation end time"
+      },
+      "irrigation_duration_1": {
+        "name": "Irrigation duration 1"
+      },
+      "irriation_duration_2": {
+        "name": "Irrigation duration 2"
+      },
+      "valve_status_1": {
+        "name": "Status 1"
+      },
+      "valve_status_2": {
+        "name": "Status 2"
       }
     },
     "switch": {
@@ -1145,6 +1187,12 @@
       },
       "adaptation_run_enabled": {
         "name": "Adaptation run enabled"
+      },
+      "valve_on_off_1": {
+        "name": "Valve 1"
+      },
+      "valve_on_off_2": {
+        "name": "Valve 2"
       }
     }
   }
