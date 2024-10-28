@@ -196,7 +196,8 @@ chacha20poly1305-reuseable>=0.13.0
 pycountry>=23.12.11
 
 # scapy<2.5.0 will not work with python3.12
-# scapy==2.6.0 causes race condition failures in CI https://github.com/secdev/scapy/issues/4546
+# scapy==2.6.0 causes race condition failures in CI
+# https://github.com/secdev/scapy/issues/4546
 scapy>=2.5.0,!=2.6.0
 
 # tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
