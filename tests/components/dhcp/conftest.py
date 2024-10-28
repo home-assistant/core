@@ -6,7 +6,7 @@ import pathlib
 import pytest
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def _ensure_path_exists():
     """Fixture to avoid CI flaky race condition in scapy v2.6.0.
 
