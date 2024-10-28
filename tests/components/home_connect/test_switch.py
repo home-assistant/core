@@ -419,19 +419,21 @@ async def test_power_swtich(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "allowed_values", "service", "appliance"),
+    ("entity_id", "allowed_values", "service", "appliance", "exception_match"),
     [
         (
             "switch.dishwasher_power",
             [BSH_POWER_ON],
             SERVICE_TURN_OFF,
             "Dishwasher",
+            r".*not support.*turn.*off.*",
         ),
         (
             "switch.dishwasher_power",
             None,
             SERVICE_TURN_OFF,
             "Dishwasher",
+            r".*Unable.*determine.*turn.*off.*",
         ),
     ],
     indirect=["appliance"],
@@ -446,6 +448,7 @@ async def test_power_switch_service_validation_errors(
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
     appliance: Mock,
+    exception_match: str,
     get_appliances: MagicMock,
 ) -> None:
     """Test power switch functionality validation errors."""
@@ -466,7 +469,7 @@ async def test_power_switch_service_validation_errors(
 
     appliance.status.update({BSH_POWER_STATE: {"value": BSH_POWER_ON}})
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )
