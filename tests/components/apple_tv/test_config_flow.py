@@ -1189,9 +1189,7 @@ async def test_reconfigure_update_credentials(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    result = await config_entry.start_reauth_flow(
-        hass, data={"identifier": "mrpid", "name": "apple tv"}
-    )
+    result = await config_entry.start_reauth_flow(hass, data={"name": "apple tv"})
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
