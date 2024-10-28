@@ -28,7 +28,7 @@ from .const import (
     REFRIGERATION_DISPENSER,
     REFRIGERATION_SUPERMODEFREEZER,
     REFRIGERATION_SUPERMODEREFRIGERATOR,
-    SVE_TRANSLATION_KEY_APPLIANCE_NAME,
+    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME,
 )
 from .entity import HomeConnectDevice, HomeConnectEntity
 
@@ -271,7 +271,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                     translation_domain=DOMAIN,
                     translation_key="unable_to_retrieve_turn_off",
                     translation_placeholders={
-                        SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name
+                        SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name
                     },
                 )
 
@@ -280,7 +280,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="turn_off_not_supported",
                 translation_placeholders={
-                    SVE_TRANSLATION_KEY_APPLIANCE_NAME: self.device.appliance.name
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name
                 },
             )
         _LOGGER.debug("tried to switch off %s", self.name)

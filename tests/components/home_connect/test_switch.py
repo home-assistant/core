@@ -413,7 +413,7 @@ async def test_power_swtich(
     assert config_entry.state == ConfigEntryState.LOADED
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     assert hass.states.is_state(entity_id, power_state)
 
