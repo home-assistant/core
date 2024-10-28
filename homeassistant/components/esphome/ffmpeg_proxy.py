@@ -131,11 +131,10 @@ class FFmpegConvertResponse(web.StreamResponse):
         self.proxy_data = proxy_data
         self.chunk_size = chunk_size
 
-    async def prepare(self, request: BaseRequest) -> AbstractStreamWriter | None:
+    async def transcode(
+        self, request: BaseRequest, writer: AbstractStreamWriter
+    ) -> None:
         """Stream url through ffmpeg conversion and out to HTTP client."""
-        writer = await super().prepare(request)
-        assert writer is not None
-
         command_args = [
             "-i",
             self.convert_info.media_url,
@@ -172,6 +171,18 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Only one conversion process per device is allowed
         self.convert_info.proc = proc
 
+        # Create background task which will be cancelled when home assistant shuts down
+        write_task = self.hass.async_create_background_task(
+            self._write_ffmpeg_data(request, writer, proc), "ESPHome media proxy"
+        )
+        await write_task
+
+    async def _write_ffmpeg_data(
+        self,
+        request: BaseRequest,
+        writer: AbstractStreamWriter,
+        proc: asyncio.subprocess.Process,
+    ) -> None:
         assert proc.stdout is not None
         assert proc.stderr is not None
 
@@ -184,9 +195,13 @@ class FFmpegConvertResponse(web.StreamResponse):
                 and (proc.returncode is None)
                 and (chunk := await proc.stdout.read(self.chunk_size))
             ):
-                await writer.write(chunk)
-                await writer.drain()
+                await self.write(chunk)
         except asyncio.CancelledError:
+            _LOGGER.debug("ffmpeg transcoding cancelled")
+            # Abort the transport, we don't wait for ESPHome to drain the write buffer;
+            # it may need a very long time or never finish if the player is paused.
+            if request.transport:
+                request.transport.abort()
             raise  # don't log error
         except:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
@@ -203,10 +218,9 @@ class FFmpegConvertResponse(web.StreamResponse):
             if proc.returncode is None:
                 proc.kill()
 
-            # Close connection
-            await writer.write_eof()
-
-        return writer
+            # Close connection by writing EOF unless already closing
+            if request.transport and not request.transport.is_closing():
+                await writer.write_eof()
 
 
 class FFmpegProxyView(HomeAssistantView):
@@ -246,6 +260,10 @@ class FFmpegProxyView(HomeAssistantView):
             convert_info.proc = None
 
         # Stream converted audio back to client
-        return FFmpegConvertResponse(
+        resp = FFmpegConvertResponse(
             self.manager, convert_info, device_id, self.proxy_data
         )
+        writer = await resp.prepare(request)
+        assert writer is not None
+        await resp.transcode(request, writer)
+        return resp
