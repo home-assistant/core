@@ -41,7 +41,7 @@
       "message": "Error while trying to set effect of {entity_id}: {description}"
     },
     "home_connect_error_set_setting": {
-      "message": "Error while trying to set {value} to {key} setting for {entity_id}: {description}"
+      "message": "Error while trying to set \"{value}\" to \"{key}\" setting for {entity_id}: {description}"
     },
     "home_connect_error_turn_on": {
       "message": "Error while trying to turn on {entity_id} ({key}): {description}"
@@ -59,7 +59,7 @@
       "message": "Error while trying to turn on {appliance_name}: {description}"
     },
     "home_connect_error_power_off": {
-      "message": "Error while trying to turn off {appliance_name} with value {value}: {description}"
+      "message": "Error while trying to turn off {appliance_name} with value \"{value}\": {description}"
     },
     "turn_off_not_supported": {
       "message": "{appliance_name} does not support turning off or entering standby mode."
