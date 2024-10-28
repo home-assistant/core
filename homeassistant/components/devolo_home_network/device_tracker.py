@@ -81,7 +81,7 @@ async def async_setup_entry(
     )
 
 
-class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
+class DevoloScannerEntity(
     CoordinatorEntity[DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]],
     ScannerEntity,
 ):
