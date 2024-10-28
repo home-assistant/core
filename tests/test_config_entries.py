@@ -4747,6 +4747,41 @@ async def test_reauth(
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
+)
+async def test_reauth_reconfigure_missing_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the async_reauth_helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await manager.flow.async_init("test", context={"source": source})
+    await hass.async_block_till_done()
+
+    # Flow still created, but deprecation logged
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == source
+
+    assert (
+        f"Initialising a '{source}' flow without a link to the config entry,"
+        " which will stop working in 2025.11; please create a bug report at "
+        in caplog.text
+    )
+
+
 async def test_reconfigure(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:

@@ -1263,7 +1263,7 @@ class ConfigEntriesFlowManager(
             _LOGGER.error(
                 (
                     "Initialising a '%s' flow without a link to the config entry,"
-                    " please %s"
+                    " which will stop working in 2025.11; please %s"
                 ),
                 source,
                 report_issue,
