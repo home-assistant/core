@@ -7,11 +7,10 @@ import pytest
 
 
 def pytest_sessionstart(session):
-    """
+    """Try to avoid flaky FileExistsError in CI.
+
     Called after the Session object has been created and
     before performing collection and entering the run test loop.
-
-    Try to avoid flaky FileExistsError in CI.
 
     This is needed due to a race condition in scapy v2.6.0
     See https://github.com/secdev/scapy/pull/4558
