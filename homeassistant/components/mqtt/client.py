@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
@@ -910,8 +910,8 @@ class MQTT:
         # Split out the wildcard subscriptions, we subscribe to them one by one
         pending_subscriptions: dict[str, int] = self._pending_subscriptions
 
-        pending_wildcard_subscriptions: OrderedDict[str, int] = OrderedDict()
-        late_pending_wildcard_subscriptions: OrderedDict[str, int] = OrderedDict()
+        pending_wildcard_subscriptions: dict[str, int] = {}
+        late_pending_wildcard_subscriptions: dict[str, int] = {}
         for subscription in self._wildcard_subscriptions:
             if subscription.topic not in pending_subscriptions:
                 continue
