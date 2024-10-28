@@ -5,7 +5,6 @@ import pathlib
 
 import pytest
 
-
 def pytest_sessionstart(session):
     """Try to avoid flaky FileExistsError in CI.
 
