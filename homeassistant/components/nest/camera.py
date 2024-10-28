@@ -28,7 +28,7 @@ from homeassistant.components.camera import (
 )
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -216,6 +216,7 @@ class NestCamera(Camera):
             raise HomeAssistantError(f"Nest API error: {err}") from err
         return stream.answer_sdp
 
-    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+    @callback
+    def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration adjustable per integration."""
         return WebRTCClientConfiguration(data_channel="dataSendChannel")
