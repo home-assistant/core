@@ -2835,9 +2835,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         The step_id parameter is deprecated and will be removed in a future release.
         """
-        if self.source == SOURCE_REAUTH:
+        if self.source == SOURCE_REAUTH and "entry_id" in self.context:
             # If the integration does not provide a name for the reauth title,
             # we append it to the description placeholders.
+            # We also need to check entry_id as some integrations bypass the
+            # reauth helpers and create a flow without it.
             description_placeholders = dict(description_placeholders or {})
             if description_placeholders.get(CONF_NAME) is None:
                 description_placeholders[CONF_NAME] = self._get_reauth_entry().title
