@@ -21,6 +21,8 @@ from .const import CONNECTED_PLC_DEVICES, CONNECTED_TO_ROUTER
 from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 
 def _is_connected_to_router(entity: DevoloBinarySensorEntity) -> bool:
     """Check, if device is attached to the router."""

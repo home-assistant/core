@@ -21,6 +21,8 @@ from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
 from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 _DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
 
 

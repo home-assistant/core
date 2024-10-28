@@ -19,6 +19,8 @@ from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
 from .coordinator import DevoloDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -79,7 +81,7 @@ async def async_setup_entry(
     )
 
 
-class DevoloScannerEntity(
+class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
     CoordinatorEntity[DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]],
     ScannerEntity,
 ):

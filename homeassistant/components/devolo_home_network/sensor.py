@@ -34,6 +34,8 @@ from .const import (
 from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 
 def _last_restart(runtime: int) -> datetime:
     """Calculate uptime. As fetching the data might also take some time, let's floor to the nearest 5 seconds."""

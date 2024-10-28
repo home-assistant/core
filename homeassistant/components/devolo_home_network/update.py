@@ -26,6 +26,8 @@ from .const import DOMAIN, REGULAR_FIRMWARE
 from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class DevoloUpdateEntityDescription(UpdateEntityDescription):

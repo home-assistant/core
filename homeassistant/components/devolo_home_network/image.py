@@ -20,6 +20,8 @@ from .const import IMAGE_GUEST_WIFI, SWITCH_GUEST_WIFI
 from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class DevoloImageEntityDescription(ImageEntityDescription):
