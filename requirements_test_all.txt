@@ -42,7 +42,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.4
+PyChromecast==14.0.5
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -836,7 +836,7 @@ gios==5.0.0
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.0.1b0
+go2rtc-client==0.0.1b1
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1729,6 +1729,9 @@ pyoverkiz==1.14.1
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
 
+# homeassistant.components.palazzetti
+pypalazzetti==0.1.6
+
 # homeassistant.components.lcn
 pypck==0.7.24
 
@@ -2243,6 +2246,9 @@ thermobeacon-ble==0.7.0
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
 
+# homeassistant.components.lg_thinq
+thinqconnect==0.9.8
+
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
 
@@ -2443,7 +2449,7 @@ zeroconf==0.136.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.35
+zha==0.0.36
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.58.1

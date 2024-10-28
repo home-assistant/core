@@ -45,7 +45,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.4
+PyChromecast==14.0.5
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -986,7 +986,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.0.1b0
+go2rtc-client==0.0.1b1
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -2142,6 +2142,9 @@ pyoverkiz==1.14.1
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
 
+# homeassistant.components.palazzetti
+pypalazzetti==0.1.6
+
 # homeassistant.components.elv
 pypca==0.0.7
 
@@ -2821,6 +2824,9 @@ thermopro-ble==0.10.0
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
 
+# homeassistant.components.lg_thinq
+thinqconnect==0.9.8
+
 # homeassistant.components.tikteck
 tikteck==0.4
 
@@ -3060,7 +3066,7 @@ zeroconf==0.136.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.35
+zha==0.0.36
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
