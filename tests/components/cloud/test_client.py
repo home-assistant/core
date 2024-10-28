@@ -1,5 +1,6 @@
 """Test the cloud.iot module."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
@@ -183,50 +184,49 @@ async def test_handler_google_actions_disabled(
     assert resp["payload"] == response_payload
 
 
-async def test_handler_ice_servers(hass: HomeAssistant) -> None:
+async def test_handler_ice_servers(hass: HomeAssistant, cloud: MagicMock) -> None:
     """Test handler ICE servers."""
-    prefs = MagicMock(
-        alexa_enabled=False,
-        google_enabled=False,
-        async_set_username=AsyncMock(return_value=None),
-        cloud_ice_servers_enabled=True,
-    )
-    client = CloudClient(hass, prefs, None, {}, {})
-    client.cloud = Mock(
-        is_logged_in=True,
-        subscription_expired=False,
-        ice_servers=Mock(
-            async_register_ice_servers_listener=AsyncMock(
-                return_value="mock-unregister"
-            )
-        ),
-    )
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
 
-    await client.cloud_connected()
-    assert client._cloud_ice_servers_listener == "mock-unregister"
+    await cloud.login("test-user", "test-pass")
+
+    alexa_config_mock = Mock(async_enable_proactive_mode=AsyncMock())
+    google_config_mock = Mock(async_sync_entities=AsyncMock())
+    cloud.client._alexa_config = alexa_config_mock
+    cloud.client._google_config = google_config_mock
+
+    await cloud.client.cloud_connected()
+
+    assert cloud.client._cloud_ice_servers_listener is not None
+    assert cloud.client._cloud_ice_servers_listener() == "mock-unregister"
 
 
-async def test_handler_ice_servers_disabled(hass: HomeAssistant) -> None:
+async def test_handler_ice_servers_disabled(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
     """Test handler ICE servers when user has disabled it."""
-    prefs = MagicMock(
-        alexa_enabled=False,
-        google_enabled=False,
-        async_set_username=AsyncMock(return_value=None),
-        cloud_ice_servers_enabled=False,
-    )
-    client = CloudClient(hass, prefs, None, {}, {})
-    client.cloud = Mock(
-        is_logged_in=True,
-        subscription_expired=False,
-        ice_servers=Mock(
-            async_register_ice_servers_listener=AsyncMock(
-                return_value="mock-unregister"
-            )
-        ),
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+
+    alexa_config_mock = Mock(async_enable_proactive_mode=AsyncMock())
+    google_config_mock = Mock(async_sync_entities=AsyncMock())
+    cloud.client._alexa_config = alexa_config_mock
+    cloud.client._google_config = google_config_mock
+
+    await cloud.client.cloud_connected()
+
+    await set_cloud_prefs(
+        {
+            "cloud_ice_servers_enabled": False,
+        }
     )
 
-    await client.cloud_connected()
-    assert client._cloud_ice_servers_listener is None
+    assert cloud.client._cloud_ice_servers_listener is None
 
 
 async def test_webhook_msg(
