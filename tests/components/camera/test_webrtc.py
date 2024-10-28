@@ -30,6 +30,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .common import STREAM_SOURCE, WEBRTC_ANSWER
@@ -49,7 +50,7 @@ HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
 TEST_INTEGRATION_DOMAIN = "test"
 
 
-class TestProvider(CameraWebRTCProvider):
+class SomeTestProvider(CameraWebRTCProvider):
     """Test provider."""
 
     def __init__(self) -> None:
@@ -162,11 +163,13 @@ async def init_test_integration(
 
 
 @pytest.fixture
-async def register_test_provider(hass: HomeAssistant) -> AsyncGenerator[TestProvider]:
+async def register_test_provider(
+    hass: HomeAssistant,
+) -> AsyncGenerator[SomeTestProvider]:
     """Add WebRTC test provider."""
     await async_setup_component(hass, "camera", {})
 
-    provider = TestProvider()
+    provider = SomeTestProvider()
     unsub = async_register_webrtc_provider(hass, provider)
     await hass.async_block_till_done()
     yield provider
@@ -183,7 +186,7 @@ async def test_async_register_webrtc_provider(
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
     assert camera.frontend_stream_type is StreamType.HLS
 
-    provider = TestProvider()
+    provider = SomeTestProvider()
     unregister = async_register_webrtc_provider(hass, provider)
     await hass.async_block_till_done()
 
@@ -211,7 +214,7 @@ async def test_async_register_webrtc_provider(
 @pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_stream_source")
 async def test_async_register_webrtc_provider_twice(
     hass: HomeAssistant,
-    register_test_provider: TestProvider,
+    register_test_provider: SomeTestProvider,
 ) -> None:
     """Test registering a WebRTC provider twice should raise."""
     with pytest.raises(ValueError, match="Provider already registered"):
@@ -223,7 +226,7 @@ async def test_async_register_webrtc_provider_camera_not_loaded(
 ) -> None:
     """Test registering a WebRTC provider when camera is not loaded."""
     with pytest.raises(ValueError, match="Unexpected state, camera not loaded"):
-        async_register_webrtc_provider(hass, TestProvider())
+        async_register_webrtc_provider(hass, SomeTestProvider())
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_stream_source")
@@ -494,7 +497,7 @@ async def test_websocket_webrtc_offer(
 async def test_websocket_webrtc_offer_webrtc_provider(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    register_test_provider: TestProvider,
+    register_test_provider: SomeTestProvider,
     message: WebRTCMessage,
     expected_frontend_message: dict[str, Any],
 ) -> None:
@@ -997,7 +1000,7 @@ async def test_ws_webrtc_candidate_not_supported(
 async def test_ws_webrtc_candidate_webrtc_provider(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    register_test_provider: TestProvider,
+    register_test_provider: SomeTestProvider,
 ) -> None:
     """Test ws webrtc candidate command with WebRTC provider."""
     with patch.object(
@@ -1125,3 +1128,36 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     )
     await provider.async_on_webrtc_candidate("session_id", "candidate")
     provider.async_close_session("session_id")
+
+
+@pytest.mark.usefixtures("mock_camera", "register_test_provider", "mock_rtsp_to_webrtc")
+async def test_repair_issue_legacy_provider(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue created for legacy provider."""
+    issue = issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
+    assert issue
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.issue_domain == "mock_domain"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.issue_id == "legacy_webrtc_provider_mock_domain"
+    assert issue.translation_key == "legacy_webrtc_provider"
+    assert issue.translation_placeholders == {
+        "legacy_integration": "mock_domain",
+        "new_integration": "go2rtc",
+    }
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_rtsp_to_webrtc")
+async def test_no_repair_issue_without_new_provider(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue not created if no new provider exists."""
+    assert not issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
