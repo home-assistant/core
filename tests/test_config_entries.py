@@ -100,7 +100,7 @@ def mock_handlers() -> Generator[None]:
             if user_input is None:
                 return self.async_show_form(
                     step_id="reauth_confirm",
-                    description_placeholders={CONF_NAME: "Other title"},
+                    description_placeholders={CONF_NAME: "Custom title"},
                 )
             return self.async_abort(reason="test")
 
@@ -7087,4 +7087,4 @@ async def test_add_description_placeholder_automatically_not_overwrites(
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
     assert result["type"] == FlowResultType.FORM
-    assert result["description_placeholders"] == {"name": "Other title"}
+    assert result["description_placeholders"] == {"name": "Custom title"}
