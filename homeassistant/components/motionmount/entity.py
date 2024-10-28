@@ -26,6 +26,7 @@ class MotionMountEntity(Entity):
     def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
         """Initialize general MotionMount entity."""
         self.mm = mm
+        self.config_entry = config_entry
 
         # We store the pin, as we might need it during reconnect
         self.pin = config_entry.data[CONF_PIN]
@@ -84,9 +85,6 @@ class MotionMountEntity(Entity):
 
         Returns false if the connection failed to be ensured.
         """
-        if TYPE_CHECKING:
-            assert self.platform.config_entry
-
         if self.mm.is_connected:
             return True
         try:
@@ -102,13 +100,13 @@ class MotionMountEntity(Entity):
         if not self.mm.is_authenticated:
             if self.pin is None:
                 await self.mm.disconnect()
-                self.platform.config_entry.async_start_reauth(self.hass)
+                self.config_entry.async_start_reauth(self.hass)
                 return False
             await self.mm.authenticate(self.pin)
             if not self.mm.is_authenticated:
                 self.pin = None
                 await self.mm.disconnect()
-                self.platform.config_entry.async_start_reauth(self.hass)
+                self.config_entry.async_start_reauth(self.hass)
                 return False
 
         _LOGGER.debug("Successfully reconnected to MotionMount")
