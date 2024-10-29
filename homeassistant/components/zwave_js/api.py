@@ -1777,6 +1777,7 @@ async def websocket_get_config_parameters(
     }
 )
 @websocket_api.async_response
+@async_handle_failed_command
 @async_get_node
 async def websocket_set_raw_config_parameter(
     hass: HomeAssistant,
