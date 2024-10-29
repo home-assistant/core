@@ -31,11 +31,12 @@ class PortainerFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[Any, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
+            _user_input = user_input
 
             class AsyncTokenAuth(AbstractAuth):
                 """Provide aiotainer authentication tied to an OAuth2 based config entry."""
@@ -47,13 +48,13 @@ class PortainerFlow(ConfigFlow, domain=DOMAIN):
                     """Initialize aiotainer auth."""
                     super().__init__(
                         websession,
-                        user_input[CONF_HOST],  # type: ignore[index]
-                        user_input[CONF_PORT],  # type: ignore[index]
+                        _user_input[CONF_HOST],
+                        _user_input[CONF_PORT],
                     )
 
                 async def async_get_access_token(self) -> str:
                     """Return a valid access token."""
-                    return user_input[CONF_ACCESS_TOKEN]  # type: ignore[index]
+                    return _user_input[CONF_ACCESS_TOKEN]
 
             websession = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             api = PortainerClient(AsyncTokenAuth(websession))
