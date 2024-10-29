@@ -979,12 +979,8 @@ async def ws_camera_capabilities(
 
     Async friendly.
     """
-    try:
-        camera = get_camera_from_entity_id(hass, msg["entity_id"])
-        connection.send_result(msg["id"], asdict(camera.camera_capabilities))
-    except HomeAssistantError as ex:
-        _LOGGER.error("Error requesting camera capabilities: %s", ex)
-        connection.send_error(msg["id"], "camera_capabilities_failed", str(ex))
+    camera = get_camera_from_entity_id(hass, msg["entity_id"])
+    connection.send_result(msg["id"], asdict(camera.camera_capabilities))
 
 
 @websocket_api.websocket_command(
