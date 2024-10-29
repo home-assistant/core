@@ -325,7 +325,7 @@ async def async_update_pipeline(
     tts_voice: str | None | UndefinedType = UNDEFINED,
     wake_word_entity: str | None | UndefinedType = UNDEFINED,
     wake_word_id: str | None | UndefinedType = UNDEFINED,
-    prefer_local_intents: bool | UndefinedType = UNDEFINED,
+    prefer_local_intents: bool | None | UndefinedType = UNDEFINED,
 ) -> None:
     """Update a pipeline."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
