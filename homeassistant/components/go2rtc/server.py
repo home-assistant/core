@@ -82,7 +82,7 @@ class Server:
         async for line in process.stdout:
             msg = line[:-1].decode().strip()
             _LOGGER.debug(msg)
-            if not self._startup_complete.is_set() and "[api] listen" in msg:
+            if not self._startup_complete.is_set() and "INF [api] listen" in msg:
                 self._startup_complete.set()
 
     async def stop(self) -> None:
