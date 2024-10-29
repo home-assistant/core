@@ -24,6 +24,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "Configuration flow is already in progress",
       "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
       "cannot_connect": "Failed to connect",

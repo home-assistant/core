@@ -67,6 +67,10 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     self.server_info.server_id, raise_on_progress=False
                 )
+                self._abort_if_unique_id_configured(
+                    updates={CONF_URL: self.server_info.base_url},
+                    reload_on_update=True,
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidServerVersion:
