@@ -17,6 +17,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
@@ -109,17 +110,15 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the options step."""
         if user_input is not None:
-            combined_input: dict[str, Any] = {**self.data, **user_input}
+            country = self.data[CONF_COUNTRY]
+            data = {CONF_COUNTRY: country}
+            options: dict[str, Any] | None = None
+            if province := user_input.get(CONF_PROVINCE):
+                data[CONF_PROVINCE] = province
+            if categories := user_input.get(CONF_CATEGORIES):
+                options = {CONF_CATEGORIES: categories}
 
-            country = combined_input[CONF_COUNTRY]
-
-            match_dict = {CONF_COUNTRY: country}
-            if province := combined_input.get(CONF_PROVINCE):
-                match_dict[CONF_PROVINCE] = province
-            if categories := combined_input.get(CONF_CATEGORIES):
-                match_dict[CONF_CATEGORIES] = categories
-
-            self._async_abort_entries_match(match_dict)
+            self._async_abort_entries_match({**data, **(options or {})})
 
             try:
                 locale = Locale.parse(self.hass.config.language, sep="-")
@@ -130,7 +129,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             province_str = f", {province}" if province else ""
             name = f"{locale.territories[country]}{province_str}"
 
-            return self.async_create_entry(title=name, data=combined_input)
+            return self.async_create_entry(title=name, data=data, options=options)
 
         options_schema = await self.hass.async_add_executor_job(
             get_options_schema, self.data[CONF_COUNTRY]
@@ -147,17 +146,19 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the re-configuration of the options."""
         reconfigure_entry = self._get_reconfigure_entry()
+
         if user_input is not None:
-            combined_input: dict[str, Any] = {**reconfigure_entry.data, **user_input}
+            country = reconfigure_entry.data[CONF_COUNTRY]
+            data = {CONF_COUNTRY: country}
+            options: dict[str, Any] | UndefinedType = UNDEFINED
+            if province := user_input.get(CONF_PROVINCE):
+                data[CONF_PROVINCE] = province
+            if categories := user_input.get(CONF_CATEGORIES):
+                options = {CONF_CATEGORIES: categories}
 
-            country = combined_input[CONF_COUNTRY]
-            match_dict = {CONF_COUNTRY: country}
-            if province := combined_input.get(CONF_PROVINCE):
-                match_dict[CONF_PROVINCE] = province
-            if categories := combined_input.get(CONF_CATEGORIES):
-                match_dict[CONF_CATEGORIES] = categories
-
-            self._async_abort_entries_match(match_dict)
+            self._async_abort_entries_match(
+                {**data, **(options if isinstance(options, dict) else {})}
+            )
 
             try:
                 locale = Locale.parse(self.hass.config.language, sep="-")
@@ -169,7 +170,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             name = f"{locale.territories[country]}{province_str}"
 
             return self.async_update_reload_and_abort(
-                reconfigure_entry, title=name, data=combined_input
+                reconfigure_entry, title=name, data=data, options=options
             )
 
         options_schema = await self.hass.async_add_executor_job(
