@@ -24,7 +24,11 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from . import vicare_login
 from .const import (
@@ -56,7 +60,10 @@ OPTIONS_SCHEMA = vol.Schema(
             CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value
         ): SelectSelector(
             SelectSelectorConfig(
-                options=[e.value for e in HeatingType], multiple=False, sort=True
+                options=[e.value for e in HeatingType],
+                mode=SelectSelectorMode.DROPDOWN,
+                multiple=False,
+                sort=True,
             ),
         ),
     }
