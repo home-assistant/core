@@ -36,6 +36,7 @@ dependencies    = [
     "async-interrupt==1.2.0",
     "attrs==24.2.0",
     "atomicwrites-homeassistant==1.4.1",
+    "audioop-lts==0.2.1;python_version>='3.13'",
     "awesomeversion==24.6.0",
     "bcrypt==4.2.0",
     "certifi>=2021.5.30",
@@ -65,6 +66,8 @@ dependencies    = [
     "requests==2.32.3",
     "securetar==2024.2.1",
     "SQLAlchemy==2.0.31",
+    "standard-aifc==3.13.0;python_version>='3.13'",
+    "standard-telnetlib==3.13.0;python_version>='3.13'",
     "typing-extensions>=4.12.2,<5.0",
     "ulid-transform==1.0.2",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
