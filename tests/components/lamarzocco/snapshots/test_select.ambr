@@ -175,8 +175,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Smart standby mode',
       'options': list([
-        'poweron',
-        'lastbrewing',
+        'power_on',
+        'last_brewing',
       ]),
     }),
     'context': <ANY>,
@@ -184,7 +184,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'lastbrewing',
+    'state': 'last_brewing',
   })
 # ---
 # name: test_smart_standby_mode.1
@@ -194,8 +194,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'poweron',
-        'lastbrewing',
+        'power_on',
+        'last_brewing',
       ]),
     }),
     'config_entry_id': <ANY>,

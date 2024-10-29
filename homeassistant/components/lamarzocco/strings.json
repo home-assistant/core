@@ -138,8 +138,8 @@
       "smart_standby_mode": {
         "name": "Smart standby mode",
         "state": {
-          "lastbrewing": "Last brewing",
-          "poweron": "Power on"
+          "last_brewing": "Last brewing",
+          "power_on": "Power on"
         }
       },
       "steam_temp_select": {

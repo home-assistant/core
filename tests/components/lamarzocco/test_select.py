@@ -145,7 +145,7 @@ async def test_smart_standby_mode(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.{serial_number}_smart_standby_mode",
-            ATTR_OPTION: "poweron",
+            ATTR_OPTION: "power_on",
         },
         blocking=True,
     )

@@ -44,13 +44,11 @@ PREBREW_MODE_LM_TO_HA = {
 }
 
 STANDBY_MODE_HA_TO_LM = {
-    "poweron": SmartStandbyMode.POWER_ON,
-    "lastbrewing": SmartStandbyMode.LAST_BREWING,
+    "power_on": SmartStandbyMode.POWER_ON,
+    "last_brewing": SmartStandbyMode.LAST_BREWING,
 }
 
-STANDBY_MODE_LM_TO_HA = {
-    value: key for key, value in STANDBY_MODE_HA_TO_LM.items()
-}
+STANDBY_MODE_LM_TO_HA = {value: key for key, value in STANDBY_MODE_HA_TO_LM.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -96,7 +94,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         key="smart_standby_mode",
         translation_key="smart_standby_mode",
         entity_category=EntityCategory.CONFIG,
-        options=["poweron", "lastbrewing"],
+        options=["power_on", "last_brewing"],
         select_option_fn=lambda machine, option: machine.set_smart_standby(
             enabled=machine.config.smart_standby.enabled,
             mode=STANDBY_MODE_HA_TO_LM[option],
