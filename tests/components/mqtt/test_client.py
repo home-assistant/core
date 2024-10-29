@@ -1731,6 +1731,37 @@ async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
     await mqtt.async_subscribe(hass, "integration/kitchen_sink#", record_calls)
     await mock_debouncer.wait()
 
+    def _assert_subscription_order():
+        discovery_subscribes = [
+            f"homeassistant/{platform}/+/config" for platform in SUPPORTED_COMPONENTS
+        ]
+        discovery_subscribes.extend(
+            [
+                f"homeassistant/{platform}/+/+/config"
+                for platform in SUPPORTED_COMPONENTS
+            ]
+        )
+        discovery_subscribes.extend(
+            ["homeassistant/device/+/config", "homeassistant/device/+/+/config"]
+        )
+        discovery_subscribes.extend(["integration/test#", "integration/kitchen_sink#"])
+
+        expected_discovery_subscribes = discovery_subscribes.copy()
+
+        # Assert we see the expected subscribes and in the correct order
+        actual_subscribes = [
+            discovery_subscribes.pop(0)
+            for call in help_all_subscribe_calls(mqtt_client_mock)
+            if discovery_subscribes and discovery_subscribes[0] == call[0]
+        ]
+
+        # Assert we have processed all items and that they are in the correct order
+        assert len(discovery_subscribes) == 0
+        assert actual_subscribes == expected_discovery_subscribes
+
+    # Assert the initial wildcard topic subscription order
+    _assert_subscription_order()
+
     mqtt_client_mock.on_disconnect(Mock(), None, 0)
 
     mqtt_client_mock.reset_mock()
@@ -1739,29 +1770,8 @@ async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
     mqtt_client_mock.on_connect(Mock(), None, 0, 0)
     await mock_debouncer.wait()
 
-    discovery_subscribes = [
-        f"homeassistant/{platform}/+/config" for platform in SUPPORTED_COMPONENTS
-    ]
-    discovery_subscribes.extend(
-        [f"homeassistant/{platform}/+/+/config" for platform in SUPPORTED_COMPONENTS]
-    )
-    discovery_subscribes.extend(
-        ["homeassistant/device/+/config", "homeassistant/device/+/+/config"]
-    )
-    discovery_subscribes.extend(["integration/test#", "integration/kitchen_sink#"])
-
-    expected_discovery_subscribes = discovery_subscribes.copy()
-
-    # Assert we see the expected subscribes and in the correct order
-    actual_subscribes = [
-        discovery_subscribes.pop(0)
-        for call in help_all_subscribe_calls(mqtt_client_mock)
-        if discovery_subscribes and discovery_subscribes[0] == call[0]
-    ]
-
-    # Assert we have processed all items and that they are in the correct order
-    assert len(discovery_subscribes) == 0
-    assert actual_subscribes == expected_discovery_subscribes
+    # Assert the wildcard topic subscription order after a reconnect
+    _assert_subscription_order()
 
 
 @pytest.mark.parametrize(
