@@ -305,15 +305,13 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
         if not hasattr(self, "power_off_state"):
-            await self.async_fetch_power_off_state()
-            if not hasattr(self, "power_off_state"):
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="unable_to_retrieve_turn_off",
-                    translation_placeholders={
-                        SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name
-                    },
-                )
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_retrieve_turn_off",
+                translation_placeholders={
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name
+                },
+            )
 
         if self.power_off_state is None:
             raise ServiceValidationError(
@@ -345,9 +343,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the switch's status."""
-        if not hasattr(self, "power_off_state"):
-            await self.async_fetch_power_off_state()
-
         if (
             self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
             == BSH_POWER_ON

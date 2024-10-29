@@ -458,7 +458,7 @@ async def test_power_swtich(
             None,
             SERVICE_TURN_OFF,
             "Dishwasher",
-            r".*Unable.*determine.*turn.*off.*",
+            r".*Unable.*turn.*off.*support.*not.*determined.*",
         ),
     ],
     indirect=["appliance"],
