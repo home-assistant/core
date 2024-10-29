@@ -227,10 +227,11 @@ class NestCamera(Camera):
         send_message(WebRTCAnswer(stream.answer_sdp))
 
     @callback
-    def async_close_session(self, session_id: str) -> None:
-        """Close the session."""
+    def close_webrtc_session(self, session_id: str) -> None:
+        """Close a WebRTC session."""
         if (stream := self._webrtc_sessions.pop(session_id, None)) is not None:
             self.hass.async_create_task(stream.stop_stream())
+        super().close_webrtc_session(session_id)
 
     @callback
     def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
