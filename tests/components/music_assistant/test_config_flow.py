@@ -134,7 +134,7 @@ async def test_zero_conf_flow(
     assert result["result"].unique_id == "1234"
 
 
-async def test_duplicate(
+async def test_duplicate_manual(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
     mock_setup_entry: AsyncMock,
@@ -154,6 +154,26 @@ async def test_duplicate(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_URL: "http://localhost:8095"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_duplicate_zeroconf(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DATA,
     )
     await hass.async_block_till_done()
 
