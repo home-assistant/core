@@ -15,6 +15,7 @@ from google_nest_sdm.camera_traits import (
     CameraLiveStreamTrait,
     RtspStream,
     StreamingProtocol,
+    WebRtcStream,
 )
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
@@ -24,11 +25,13 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
     StreamType,
+    WebRTCAnswer,
     WebRTCClientConfiguration,
+    WebRTCSendMessage,
 )
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -92,6 +95,7 @@ class NestCamera(Camera):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
         # The API "name" field is a unique device identifier.
         self._attr_unique_id = f"{self._device.name}-camera"
+        self._webrtc_sessions: dict[str, WebRtcStream] = {}
 
     @property
     def use_stream_for_stills(self) -> bool:
@@ -205,17 +209,31 @@ class NestCamera(Camera):
         """Return placeholder image to use when no stream is available."""
         return PLACEHOLDER.read_bytes()
 
-    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
+    async def async_handle_async_webrtc_offer(
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+    ) -> None:
         """Return the source of the stream."""
         trait: CameraLiveStreamTrait = self._device.traits[CameraLiveStreamTrait.NAME]
         if StreamingProtocol.WEB_RTC not in trait.supported_protocols:
-            return await super().async_handle_web_rtc_offer(offer_sdp)
+            await super().async_handle_async_webrtc_offer(
+                offer_sdp, session_id, send_message
+            )
+            return
         try:
             stream = await trait.generate_web_rtc_stream(offer_sdp)
         except ApiException as err:
             raise HomeAssistantError(f"Nest API error: {err}") from err
-        return stream.answer_sdp
+        self._webrtc_sessions[session_id] = stream
+        send_message(WebRTCAnswer(stream.answer_sdp))
 
-    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+    @callback
+    def close_webrtc_session(self, session_id: str) -> None:
+        """Close a WebRTC session."""
+        if (stream := self._webrtc_sessions.pop(session_id, None)) is not None:
+            self.hass.async_create_task(stream.stop_stream())
+        super().close_webrtc_session(session_id)
+
+    @callback
+    def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration adjustable per integration."""
         return WebRTCClientConfiguration(data_channel="dataSendChannel")

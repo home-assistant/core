@@ -123,6 +123,9 @@ SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
 
+ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
+UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
+
 _DataT = TypeVar("_DataT", default=Any)
 
 
@@ -1850,6 +1853,7 @@ class ConfigEntries:
             )
 
         self._entries[entry.entry_id] = entry
+        self.async_update_issues()
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -1868,6 +1872,7 @@ class ConfigEntries:
             await entry.async_remove(self.hass)
 
             del self._entries[entry.entry_id]
+            self.async_update_issues()
             self._async_schedule_save()
 
         dev_reg = device_registry.async_get(self.hass)
@@ -1942,6 +1947,7 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
+        self.async_update_issues()
 
     async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.
@@ -2130,6 +2136,7 @@ class ConfigEntries:
                 )
             # Reindex the entry if the unique_id has changed
             self._entries.update_unique_id(entry, unique_id)
+            self.async_update_issues()
             changed = True
 
         for attr, value in (
@@ -2371,6 +2378,67 @@ class ConfigEntries:
         if entry.domain not in self.hass.config.components:
             return False
         return entry.state is ConfigEntryState.LOADED
+
+    @callback
+    def async_update_issues(self) -> None:
+        """Update unique id collision issues."""
+        issue_registry = ir.async_get(self.hass)
+        issues: set[str] = set()
+
+        for issue in issue_registry.issues.values():
+            if (
+                issue.domain != HOMEASSISTANT_DOMAIN
+                or not (issue_data := issue.data)
+                or issue_data.get("issue_type") != ISSUE_UNIQUE_ID_COLLISION
+            ):
+                continue
+            issues.add(issue.issue_id)
+
+        for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+            for unique_id, entries in unique_ids.items():
+                if len(entries) < 2:
+                    continue
+                issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
+                issues.discard(issue_id)
+                titles = [f"'{entry.title}'" for entry in entries]
+                translation_placeholders = {
+                    "domain": domain,
+                    "configure_url": f"/config/integrations/integration/{domain}",
+                    "unique_id": str(unique_id),
+                }
+                if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
+                    translation_key = "config_entry_unique_id_collision"
+                    translation_placeholders["titles"] = ", ".join(titles)
+                else:
+                    translation_key = "config_entry_unique_id_collision_many"
+                    translation_placeholders["number_of_entries"] = str(len(titles))
+                    translation_placeholders["titles"] = ", ".join(
+                        titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                    )
+                    translation_placeholders["title_limit"] = str(
+                        UNIQUE_ID_COLLISION_TITLE_LIMIT
+                    )
+
+                ir.async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    issue_id,
+                    breaks_in_ha_version="2025.11.0",
+                    data={
+                        "issue_type": ISSUE_UNIQUE_ID_COLLISION,
+                        "unique_id": unique_id,
+                    },
+                    is_fixable=False,
+                    issue_domain=domain,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
+
+                break  # Only create one issue per domain
+
+        for issue_id in issues:
+            ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
 
 @callback

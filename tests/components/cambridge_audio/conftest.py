@@ -1,7 +1,7 @@
 """Cambridge Audio tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiostreammagic.models import (
     Display,
@@ -19,7 +19,6 @@ from homeassistant.components.cambridge_audio.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
@@ -66,7 +65,7 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         )
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position
-        client.unregister_state_update_callbacks = AsyncMock(return_value=True)
+        client.unregister_state_update_callbacks.return_value = True
 
         yield client
 
