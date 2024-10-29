@@ -1,0 +1,40 @@
+{
+  "data": {
+    "api_user": "test-api-user",
+    "profile": { "name": "test-user" },
+    "stats": {
+      "buffs": {
+        "str": 0,
+        "int": 0,
+        "per": 0,
+        "con": 0,
+        "stealth": 0,
+        "streaks": false,
+        "seafoam": false,
+        "shinySeed": false,
+        "snowball": false,
+        "spookySparkles": false
+      },
+      "hp": 0,
+      "mp": 50.89999999999998,
+      "exp": 737,
+      "gp": 137.62587214609795,
+      "lvl": 38,
+      "class": "rogue",
+      "maxHealth": 50,
+      "maxMP": 166,
+      "toNextLevel": 880,
+      "points": 5
+    },
+    "preferences": {
+      "sleep": false,
+      "automaticAllocation": true,
+      "disableClasses": false
+    },
+    "flags": {
+      "classSelected": true
+    },
+    "needsCron": true,
+    "lastCron": "2024-09-21T22:01:55.586Z"
+  }
+}

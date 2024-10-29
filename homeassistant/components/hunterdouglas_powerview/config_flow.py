@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from aiopvapi.helpers.aiorequest import AioRequest
-from aiopvapi.hub import Hub
 import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
@@ -14,10 +12,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import async_get_device_info
 from .const import DOMAIN, HUB_EXCEPTIONS
+from .util import async_connect_hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,18 +28,9 @@ async def validate_input(hass: HomeAssistant, hub_address: str) -> dict[str, str
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
-    websession = async_get_clientsession(hass)
-
-    pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
-
-    try:
-        hub = Hub(pv_request)
-        await hub.query_firmware()
-        device_info = await async_get_device_info(hub)
-    except HUB_EXCEPTIONS as err:
-        raise CannotConnect from err
-
+    api = await async_connect_hub(hass, hub_address)
+    hub = api.hub
+    device_info = api.device_info
     if hub.role != "Primary":
         raise UnsupportedDevice(
             f"{hub.name} ({hub.hub_address}) is the {hub.role} Hub. "
@@ -63,6 +51,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hunter Douglas PowerView."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the powerview config flow."""
@@ -110,7 +99,7 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, host)
-        except CannotConnect:
+        except HUB_EXCEPTIONS:
             return None, "cannot_connect"
         except UnsupportedDevice:
             return None, "unsupported_device"
@@ -197,10 +186,6 @@ class PowerviewConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="link", description_placeholders=self.powerview_config
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class UnsupportedDevice(HomeAssistantError):
