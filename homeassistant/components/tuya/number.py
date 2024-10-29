@@ -309,6 +309,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             icon="mdi:thermometer-lines",
         ),
     ),
+    # Moes Smart Control Panel Mini
+    # Not documented
+    "dgnzk": (
+        NumberEntityDescription(
+            key=DPCode.VOICE_VOL,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="voice_volume",
+        )
+    ),
 }
 
 
