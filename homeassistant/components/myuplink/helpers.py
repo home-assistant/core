@@ -36,6 +36,17 @@ def find_matching_platform(
     return Platform.SENSOR
 
 
+WEEKDAYS = (
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+)
+
+
 def skip_entity(model: str, device_point: DevicePoint) -> bool:
     """Check if entity should be skipped for this device model."""
     if model == "SMO 20":
@@ -52,18 +63,7 @@ def skip_entity(model: str, device_point: DevicePoint) -> bool:
     if "F730" in model:
         # Entity names containing weekdays are used for advanced scheduling in the
         # heat pump and should not be exposed in the integration
-        if any(
-            d in device_point.parameter_name.lower()
-            for d in (
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            )
-        ):
+        if any(d in device_point.parameter_name.lower() for d in WEEKDAYS):
             return True
         if device_point.parameter_id in [
             "40940",
