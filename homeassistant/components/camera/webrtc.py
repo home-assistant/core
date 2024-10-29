@@ -189,6 +189,7 @@ def async_register_webrtc_provider(
 
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
+    _async_check_conflicting_legacy_provider(hass)
 
     component = hass.data[DATA_COMPONENT]
     await asyncio.gather(
@@ -425,26 +426,6 @@ def async_register_rtsp_to_web_rtc_provider(
     if DOMAIN not in hass.data:
         raise ValueError("Unexpected state, camera not loaded")
 
-    builtin_webrtc_integration = "go2rtc"
-    if (providers := hass.data.get(DATA_WEBRTC_PROVIDERS)) and any(
-        provider.domain == builtin_webrtc_integration for provider in providers
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"legacy_webrtc_provider_{domain}",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=domain,
-            learn_more_url="https://www.home-assistant.io/integrations/go2rtc/",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_webrtc_provider",
-            translation_placeholders={
-                "legacy_integration": domain,
-                "builtin_integration": builtin_webrtc_integration,
-            },
-        )
-
     legacy_providers = hass.data.setdefault(DATA_WEBRTC_LEGACY_PROVIDERS, {})
 
     if domain in legacy_providers:
@@ -461,3 +442,30 @@ def async_register_rtsp_to_web_rtc_provider(
     hass.async_create_task(_async_refresh_providers(hass))
 
     return remove_provider
+
+
+@callback
+def _async_check_conflicting_legacy_provider(hass: HomeAssistant) -> None:
+    """Check if a legacy provider is registered together with the builtin provider."""
+    builtin_provider_domain = "go2rtc"
+    if (
+        (legacy_providers := hass.data.get(DATA_WEBRTC_LEGACY_PROVIDERS))
+        and (providers := hass.data.get(DATA_WEBRTC_PROVIDERS))
+        and any(provider.domain == builtin_provider_domain for provider in providers)
+    ):
+        for domain in legacy_providers:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"legacy_webrtc_provider_{domain}",
+                is_fixable=False,
+                is_persistent=False,
+                issue_domain=domain,
+                learn_more_url="https://www.home-assistant.io/integrations/go2rtc/",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="legacy_webrtc_provider",
+                translation_placeholders={
+                    "legacy_integration": domain,
+                    "builtin_integration": builtin_provider_domain,
+                },
+            )
