@@ -1,6 +1,6 @@
 """Tests for the La Marzocco Buttons."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from lmcloud.exceptions import RequestNotSuccessful
 import pytest
@@ -33,14 +33,17 @@ async def test_start_backflush(
     assert entry
     assert entry == snapshot
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {
-            ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
-        },
-        blocking=True,
-    )
+    with patch(
+        "homeassistant.components.lamarzocco.button.asyncio.sleep", new=AsyncMock()
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
+            },
+            blocking=True,
+        )
 
     assert len(mock_lamarzocco.start_backflush.mock_calls) == 1
     mock_lamarzocco.start_backflush.assert_called_once()

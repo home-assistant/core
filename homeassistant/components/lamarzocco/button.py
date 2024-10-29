@@ -1,5 +1,6 @@
 """Button platform for La Marzocco espresso machines."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -68,4 +69,9 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
                     "key": self.entity_description.key,
                 },
             ) from exc
+
+        # Wait for state to propagate
+        await asyncio.sleep(1)
+
+        # Update state of machine
         await self.coordinator.async_request_refresh()
