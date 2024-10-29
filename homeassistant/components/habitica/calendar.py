@@ -72,26 +72,34 @@ class HabiticaTodosCalendarEntity(HabiticaCalendarEntity):
 
         events = []
         for task in self.coordinator.data.tasks:
-            if (
-                task["type"] == HabiticaTaskType.TODO  # only todos
-                and not task["completed"]  # that are not completed
-                and task.get("date")  # and have a due date
+            if not (
+                task["type"] == HabiticaTaskType.TODO
+                and not task["completed"]
+                and task.get("date")  # only if has due date
             ):
-                start = dt_util.start_of_local_day(datetime.fromisoformat(task["date"]))
-                end = start + timedelta(days=1)
-                # return current and upcoming events or events events within the requested range
-                if (not end_date and start_date < end) or (
-                    end_date and start < end_date and end > start_date
-                ):
-                    events.append(
-                        CalendarEvent(
-                            start=start.date(),
-                            end=end.date(),
-                            summary=task["text"],
-                            description=task["notes"],
-                            uid=task["id"],
-                        )
-                    )
+                continue
+
+            start = dt_util.start_of_local_day(datetime.fromisoformat(task["date"]))
+            end = start + timedelta(days=1)
+            # return current and upcoming events or events within the requested range
+
+            if end < start_date:
+                # Event ends before date range
+                continue
+
+            if end_date and start > end_date:
+                # Event starts after date range
+                continue
+
+            events.append(
+                CalendarEvent(
+                    start=start.date(),
+                    end=end.date(),
+                    summary=task["text"],
+                    description=task["notes"],
+                    uid=task["id"],
+                )
+            )
         return sorted(
             events,
             key=lambda event: (
@@ -167,28 +175,30 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         events = []
         for task in self.coordinator.data.tasks:
             #  only dailies that that are not 'grey dailies'
-            if task["type"] == HabiticaTaskType.DAILY and task["everyX"]:
-                recurrences = build_rrule(task)
-                recurrence_dates = self.get_recurrence_dates(
-                    recurrences, start_date, end_date
-                )
-                for recurrence in recurrence_dates:
-                    is_future_event = recurrence > self.today
-                    is_current_event = (
-                        recurrence <= self.today and not task["completed"]
-                    )
+            if not (task["type"] == HabiticaTaskType.DAILY and task["everyX"]):
+                continue
 
-                    if is_future_event or is_current_event:
-                        events.append(
-                            CalendarEvent(
-                                start=recurrence.date(),
-                                end=self.end_date(recurrence, end_date),
-                                summary=task["text"],
-                                description=task["notes"],
-                                uid=task["id"],
-                                rrule=get_recurrence_rule(recurrences),
-                            )
-                        )
+            recurrences = build_rrule(task)
+            recurrence_dates = self.get_recurrence_dates(
+                recurrences, start_date, end_date
+            )
+            for recurrence in recurrence_dates:
+                is_future_event = recurrence > self.today
+                is_current_event = recurrence <= self.today and not task["completed"]
+
+                if not (is_future_event or is_current_event):
+                    continue
+
+                events.append(
+                    CalendarEvent(
+                        start=recurrence.date(),
+                        end=self.end_date(recurrence, end_date),
+                        summary=task["text"],
+                        description=task["notes"],
+                        uid=task["id"],
+                        rrule=get_recurrence_rule(recurrences),
+                    )
+                )
         return sorted(
             events,
             key=lambda event: (
