@@ -35,17 +35,39 @@ def ws_client() -> Generator[Mock]:
 
 
 @pytest.fixture
-def server_start() -> Generator[AsyncMock]:
-    """Mock start of a go2rtc server."""
-    with (
-        patch(f"{GO2RTC_PATH}.server.asyncio.create_subprocess_exec") as mock_subproc,
-        patch(
-            f"{GO2RTC_PATH}.server.Server.start", wraps=Server.start, autospec=True
-        ) as mock_server_start,
-    ):
+def server_stdout() -> list[str]:
+    """Server stdout lines."""
+    return [
+        "09:00:03.466 INF go2rtc platform=linux/amd64 revision=780f378 version=1.9.5",
+        "09:00:03.466 INF config path=/tmp/go2rtc.yaml",
+        "09:00:03.467 INF [rtsp] listen addr=:8554",
+        "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
+        "09:00:03.467 INF [webrtc] listen addr=:8555/tcp",
+    ]
+
+
+@pytest.fixture
+def mock_create_subprocess(server_stdout: list[str]) -> Generator[AsyncMock]:
+    """Mock create_subprocess_exec."""
+    with patch(f"{GO2RTC_PATH}.server.asyncio.create_subprocess_exec") as mock_subproc:
         subproc = AsyncMock()
         subproc.terminate = Mock()
+        subproc.kill = Mock()
+        subproc.returncode = None
+        # Simulate process output
+        subproc.stdout.__aiter__.return_value = iter(
+            [f"{entry}\n".encode() for entry in server_stdout]
+        )
         mock_subproc.return_value = subproc
+        yield mock_subproc
+
+
+@pytest.fixture
+def server_start(mock_create_subprocess: AsyncMock) -> Generator[AsyncMock]:
+    """Mock start of a go2rtc server."""
+    with patch(
+        f"{GO2RTC_PATH}.server.Server.start", wraps=Server.start, autospec=True
+    ) as mock_server_start:
         yield mock_server_start
 
 
@@ -61,7 +83,7 @@ def server_stop() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def server(server_start, server_stop) -> Generator[AsyncMock]:
+def server(server_start: AsyncMock, server_stop: AsyncMock) -> Generator[AsyncMock]:
     """Mock a go2rtc server."""
     with patch(f"{GO2RTC_PATH}.Server", wraps=Server) as mock_server:
         yield mock_server
