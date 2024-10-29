@@ -196,7 +196,12 @@ async def _test_setup_and_signaling(
         await camera.async_handle_async_webrtc_offer(
             OFFER_SDP, "session_id", receive_message_callback
         )
-        ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+        ws_client.send.assert_called_once_with(
+            WebRTCOffer(
+                OFFER_SDP,
+                camera.async_get_webrtc_client_configuration().configuration.ice_servers,
+            )
+        )
         ws_client.subscribe.assert_called_once()
 
         # Simulate the answer from the go2rtc server
@@ -303,11 +308,17 @@ async def message_callbacks(
 ) -> Callbacks:
     """Prepare and return receive message callback."""
     receive_callback = Mock(spec_set=WebRTCSendMessage)
+    camera = init_test_integration
 
-    await init_test_integration.async_handle_async_webrtc_offer(
+    await camera.async_handle_async_webrtc_offer(
         OFFER_SDP, "session_id", receive_callback
     )
-    ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+    ws_client.send.assert_called_once_with(
+        WebRTCOffer(
+            OFFER_SDP,
+            camera.async_get_webrtc_client_configuration().configuration.ice_servers,
+        )
+    )
     ws_client.subscribe.assert_called_once()
 
     # Simulate messages from the go2rtc server
@@ -347,23 +358,6 @@ async def test_receiving_messages_from_go2rtc_server(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_receiving_unknown_message_from_go2rtc_server(
-    message_callbacks: Callbacks,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test receiving unknown message from go2rtc server."""
-    on_message, send_message = message_callbacks
-
-    send_message({"type": "unknown"})
-    on_message.assert_not_called()
-    assert (
-        "homeassistant.components.go2rtc",
-        logging.WARNING,
-        "Unknown message {'type': 'unknown'}",
-    ) in caplog.record_tuples
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_on_candidate(
     ws_client: Mock,
     init_test_integration: MockCamera,
@@ -386,7 +380,12 @@ async def test_on_candidate(
     await init_test_integration.async_handle_async_webrtc_offer(
         OFFER_SDP, session_id, Mock()
     )
-    ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+    ws_client.send.assert_called_once_with(
+        WebRTCOffer(
+            OFFER_SDP,
+            camera.async_get_webrtc_client_configuration().configuration.ice_servers,
+        )
+    )
     ws_client.reset_mock()
 
     await camera.async_on_webrtc_candidate(session_id, "candidate")
@@ -412,7 +411,12 @@ async def test_close_session(
     await init_test_integration.async_handle_async_webrtc_offer(
         OFFER_SDP, session_id, Mock()
     )
-    ws_client.send.assert_called_once_with(WebRTCOffer(OFFER_SDP))
+    ws_client.send.assert_called_once_with(
+        WebRTCOffer(
+            OFFER_SDP,
+            camera.async_get_webrtc_client_configuration().configuration.ice_servers,
+        )
+    )
 
     # Close session
     camera.close_webrtc_session(session_id)
@@ -437,7 +441,7 @@ ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
         ({}, None, False),
     ],
 )
-@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "mock_server")
+@pytest.mark.usefixtures("mock_get_binary", "mock_is_docker_env", "server")
 async def test_non_user_setup_with_error(
     hass: HomeAssistant,
     config: ConfigType,

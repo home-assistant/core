@@ -16,6 +16,8 @@ from . import get_dict_from_home_connect_error
 from .api import ConfigEntryAuth
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
+    ATTR_ALLOWED_VALUES,
+    ATTR_CONSTRAINTS,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
     BSH_CHILD_LOCK_STATE,
@@ -257,19 +259,18 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             device,
             SwitchEntityDescription(key=BSH_POWER_STATE, translation_key="power"),
         )
-        match device.appliance.type:
-            case "Dishwasher" | "Cooktop" | "Hood":
-                self.power_off_state = BSH_POWER_OFF
-            case (
-                "Oven"
-                | "WarmDrawer"
-                | "CoffeeMachine"
-                | "CleaningRobot"
-                | "CookProcessor"
-            ):
-                self.power_off_state = BSH_POWER_STANDBY
-            case _:
-                self.power_off_state = None
+        if (
+            power_state := device.appliance.status.get(BSH_POWER_STATE, {}).get(
+                ATTR_VALUE
+            )
+        ) and power_state in [BSH_POWER_OFF, BSH_POWER_STANDBY]:
+            self.power_off_state = power_state
+
+    async def async_added_to_hass(self) -> None:
+        """Add the entity to the hass instance."""
+        await super().async_added_to_hass()
+        if not hasattr(self, "power_off_state"):
+            await self.async_fetch_power_off_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
@@ -292,6 +293,15 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
+        if not hasattr(self, "power_off_state"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_retrieve_turn_off",
+                translation_placeholders={
+                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.device.appliance.name
+                },
+            )
+
         if self.power_off_state is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -328,7 +338,8 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         ):
             self._attr_is_on = True
         elif (
-            self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
+            hasattr(self, "power_off_state")
+            and self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
             == self.power_off_state
         ):
             self._attr_is_on = False
@@ -352,3 +363,24 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         else:
             self._attr_is_on = None
         _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
+
+    async def async_fetch_power_off_state(self) -> None:
+        """Fetch the power off state."""
+        try:
+            data = await self.hass.async_add_executor_job(
+                self.device.appliance.get, f"/settings/{self.bsh_key}"
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("An error occurred: %s", err)
+            return
+        if not data or not (
+            allowed_values := data.get(ATTR_CONSTRAINTS, {}).get(ATTR_ALLOWED_VALUES)
+        ):
+            return
+
+        if BSH_POWER_OFF in allowed_values:
+            self.power_off_state = BSH_POWER_OFF
+        elif BSH_POWER_STANDBY in allowed_values:
+            self.power_off_state = BSH_POWER_STANDBY
+        else:
+            self.power_off_state = None
