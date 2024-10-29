@@ -215,7 +215,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 for child_id in player.group_childs
                 if (
                     entity_id := entity_registry.async_get_entity_id(
-                        DOMAIN, self.platform.domain, child_id
+                        self.platform.domain, DOMAIN, child_id
                     )
                 )
             ]
