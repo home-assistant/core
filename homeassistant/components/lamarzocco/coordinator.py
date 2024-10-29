@@ -26,6 +26,7 @@ STATISTICS_UPDATE_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
