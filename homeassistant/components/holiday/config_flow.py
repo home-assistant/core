@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from babel import Locale, UnknownLocaleError
-from holidays import list_supported_countries
+from holidays import PUBLIC, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -17,10 +17,42 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
+
+
+def get_optional_categories(country: str) -> list[str]:
+    """Return the country categories.
+
+    public holidays are always included so they
+    don't need to be presented to the user.
+    """
+    country_data = country_holidays(country, years=dt_util.utcnow().year)
+    return [category for category in country_data.categories if category != PUBLIC]
+
+
+def get_options_schema(country: str) -> vol.Schema:
+    """Return the options schema."""
+    schema = {}
+    if SUPPORTED_COUNTRIES[country]:
+        schema[vol.Optional(CONF_PROVINCE)] = SelectSelector(
+            SelectSelectorConfig(
+                options=SUPPORTED_COUNTRIES[country],
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+    if categories := get_optional_categories(country):
+        schema[vol.Optional(CONF_CATEGORIES)] = SelectSelector(
+            SelectSelectorConfig(
+                options=categories,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="categories",
+            )
+        )
+    return vol.Schema(schema)
 
 
 class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,8 +73,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             selected_country = user_input[CONF_COUNTRY]
 
-            if SUPPORTED_COUNTRIES[selected_country]:
-                return await self.async_step_province()
+            options_schema = await self.hass.async_add_executor_job(
+                get_options_schema, selected_country
+            )
+            if options_schema.schema:
+                return await self.async_step_options()
 
             self._async_abort_entries_match({CONF_COUNTRY: user_input[CONF_COUNTRY]})
 
@@ -67,24 +102,24 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=user_schema)
+        return self.async_show_form(data_schema=user_schema)
 
-    async def async_step_province(
+    async def async_step_options(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the province step."""
+        """Handle the options step."""
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
 
             country = combined_input[CONF_COUNTRY]
-            province = combined_input.get(CONF_PROVINCE)
 
-            self._async_abort_entries_match(
-                {
-                    CONF_COUNTRY: country,
-                    CONF_PROVINCE: province,
-                }
-            )
+            match_dict = {CONF_COUNTRY: country}
+            if province := combined_input.get(CONF_PROVINCE):
+                match_dict[CONF_PROVINCE] = province
+            if categories := combined_input.get(CONF_CATEGORIES):
+                match_dict[CONF_CATEGORIES] = categories
+
+            self._async_abort_entries_match(match_dict)
 
             try:
                 locale = Locale.parse(self.hass.config.language, sep="-")
@@ -97,36 +132,32 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=name, data=combined_input)
 
-        province_schema = vol.Schema(
-            {
-                vol.Optional(CONF_PROVINCE): SelectSelector(
-                    SelectSelectorConfig(
-                        options=SUPPORTED_COUNTRIES[self.data[CONF_COUNTRY]],
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-            }
+        options_schema = await self.hass.async_add_executor_job(
+            get_options_schema, self.data[CONF_COUNTRY]
         )
 
-        return self.async_show_form(step_id="province", data_schema=province_schema)
+        return self.async_show_form(
+            step_id="options",
+            data_schema=options_schema,
+            description_placeholders={CONF_COUNTRY: self.data[CONF_COUNTRY]},
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the re-configuration of a province."""
+        """Handle the re-configuration of the options."""
         reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             combined_input: dict[str, Any] = {**reconfigure_entry.data, **user_input}
 
             country = combined_input[CONF_COUNTRY]
-            province = combined_input.get(CONF_PROVINCE)
+            match_dict = {CONF_COUNTRY: country}
+            if province := combined_input.get(CONF_PROVINCE):
+                match_dict[CONF_PROVINCE] = province
+            if categories := combined_input.get(CONF_CATEGORIES):
+                match_dict[CONF_CATEGORIES] = categories
 
-            self._async_abort_entries_match(
-                {
-                    CONF_COUNTRY: country,
-                    CONF_PROVINCE: province,
-                }
-            )
+            self._async_abort_entries_match(match_dict)
 
             try:
                 locale = Locale.parse(self.hass.config.language, sep="-")
@@ -141,17 +172,13 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
                 reconfigure_entry, title=name, data=combined_input
             )
 
-        province_schema = vol.Schema(
-            {
-                vol.Optional(CONF_PROVINCE): SelectSelector(
-                    SelectSelectorConfig(
-                        options=SUPPORTED_COUNTRIES[
-                            reconfigure_entry.data[CONF_COUNTRY]
-                        ],
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                )
-            }
+        options_schema = await self.hass.async_add_executor_job(
+            get_options_schema, reconfigure_entry.data[CONF_COUNTRY]
         )
 
-        return self.async_show_form(step_id="reconfigure", data_schema=province_schema)
+        return self.async_show_form(
+            data_schema=options_schema,
+            description_placeholders={
+                CONF_COUNTRY: reconfigure_entry.data[CONF_COUNTRY]
+            },
+        )

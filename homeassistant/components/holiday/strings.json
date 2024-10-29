@@ -11,15 +11,41 @@
           "country": "Country"
         }
       },
-      "province": {
+      "options": {
         "data": {
-          "province": "Province"
+          "province": "Province",
+          "categories": "Categories"
+        },
+        "data_description": {
+          "province": "Optionally choose a province / subdivision of {country}",
+          "categories": "Optionally choose additional holiday categories, public holidays are already included"
         }
       },
       "reconfigure": {
         "data": {
-          "province": "[%key:component::holiday::config::step::province::data::province%]"
+          "province": "[%key:component::holiday::config::step::options::data::province%]",
+          "categories": "[%key:component::holiday::config::step::options::data::categories%]"
         }
+      }
+    }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "armed_forces": "Armed forces",
+        "bank": "Bank",
+        "government": "Government",
+        "half_day": "Half day",
+        "optional": "Optional",
+        "school": "School",
+        "unofficial": "Unofficial",
+        "workday": "Workday",
+        "catholic": "Catholic",
+        "chinese": "Chinese",
+        "christian": "Christian",
+        "hebrew": "Hebrew",
+        "hindu": "Hindu",
+        "islamic": "Islamic"
       }
     }
   }

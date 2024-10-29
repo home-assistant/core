@@ -15,11 +15,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
 
 
 def _get_obj_holidays_and_language(
-    country: str, province: str | None, language: str
+    country: str,
+    province: str | None,
+    language: str,
+    categories: list[str] | None,
 ) -> tuple[HolidayBase, str]:
     """Get the object for the requested country and year."""
     obj_holidays = country_holidays(
@@ -27,6 +30,7 @@ def _get_obj_holidays_and_language(
         subdiv=province,
         years={dt_util.now().year, dt_util.now().year + 1},
         language=language,
+        categories=categories,
     )
     if language == "en":
         for lang in obj_holidays.supported_languages:
@@ -36,6 +40,7 @@ def _get_obj_holidays_and_language(
                     subdiv=province,
                     years={dt_util.now().year, dt_util.now().year + 1},
                     language=lang,
+                    categories=categories,
                 )
                 language = lang
                 break
@@ -49,6 +54,7 @@ def _get_obj_holidays_and_language(
             subdiv=province,
             years={dt_util.now().year, dt_util.now().year + 1},
             language=default_language,
+            categories=categories,
         )
         language = default_language
 
@@ -63,10 +69,11 @@ async def async_setup_entry(
     """Set up the Holiday Calendar config entry."""
     country: str = config_entry.data[CONF_COUNTRY]
     province: str | None = config_entry.data.get(CONF_PROVINCE)
+    categories: list[str] | None = config_entry.data.get(CONF_CATEGORIES)
     language = hass.config.language
 
     obj_holidays, language = await hass.async_add_executor_job(
-        _get_obj_holidays_and_language, country, province, language
+        _get_obj_holidays_and_language, country, province, language, categories
     )
 
     async_add_entities(
