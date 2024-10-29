@@ -682,7 +682,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
-                new_key.description = {"suggested_value": suggested_values[key.schema]}
+                new_key.description = {
+                    **(new_key.description or {}),
+                    "suggested_value": suggested_values[key.schema],
+                }
             schema[new_key] = val
         return vol.Schema(schema)
 
