@@ -20,6 +20,7 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
+    async_get_supported_legacy_provider,
     async_register_ice_servers,
     async_register_rtsp_to_web_rtc_provider,
     async_register_webrtc_provider,
@@ -1215,3 +1216,10 @@ async def test_registering_same_legacy_provider(
     legacy_provider = Mock(side_effect=provide_webrtc_answer)
     with pytest.raises(ValueError, match="Provider already registered"):
         async_register_rtsp_to_web_rtc_provider(hass, "mock_domain", legacy_provider)
+
+
+@pytest.mark.usefixtures("mock_hls_stream_source", "mock_camera", "mock_rtsp_to_webrtc")
+async def test_get_not_supported_legacy_provider(hass: HomeAssistant) -> None:
+    """Test getting a not supported legacy provider."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert await async_get_supported_legacy_provider(hass, camera) is None
