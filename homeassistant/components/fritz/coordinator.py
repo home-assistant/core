@@ -606,6 +606,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 dev_info: Device = hosts[dev_mac]
 
                 for link in interf["node_links"]:
+                    if link.get("state") != "CONNECTED":
+                        continue  # ignore orphan node links
+
                     intf = mesh_intf.get(link["node_interface_1_uid"])
                     if intf is not None:
                         if intf["op_mode"] == "AP_GUEST":

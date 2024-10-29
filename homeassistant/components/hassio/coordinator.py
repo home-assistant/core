@@ -318,7 +318,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
-        self._supervisor_client = get_supervisor_client(hass)
+        self.supervisor_client = get_supervisor_client(hass)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -503,7 +503,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
-            stats = await self._supervisor_client.addons.addon_stats(slug)
+            stats = await self.supervisor_client.addons.addon_stats(slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
             return (slug, None)
@@ -512,7 +512,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
         try:
-            changelog = await self._supervisor_client.store.addon_changelog(slug)
+            changelog = await self.supervisor_client.store.addon_changelog(slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
             return (slug, None)
@@ -521,7 +521,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
-            info = await self._supervisor_client.addons.addon_info(slug)
+            info = await self.supervisor_client.addons.addon_info(slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
             return (slug, None)
@@ -563,8 +563,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             # updates if this is not a scheduled refresh and
             # we are not doing the first refresh.
             try:
-                await self.hassio.refresh_updates()
-            except HassioAPIError as err:
+                await self.supervisor_client.refresh_updates()
+            except SupervisorError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
 
         await super()._async_refresh(

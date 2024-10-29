@@ -95,7 +95,7 @@ DOMAIN_DATA_LIGHT: VolDictType = {
     vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS)),
     vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
     vol.Optional(CONF_TRANSITION, default=0): vol.All(
-        vol.Coerce(float), vol.Range(min=0.0, max=486.0), lambda value: value * 1000
+        vol.Coerce(float), vol.Range(min=0.0, max=486.0)
     ),
 }
 
@@ -106,13 +106,8 @@ DOMAIN_DATA_SCENE: VolDictType = {
     vol.Optional(CONF_OUTPUTS, default=[]): vol.All(
         cv.ensure_list, [vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS))]
     ),
-    vol.Optional(CONF_TRANSITION, default=None): vol.Any(
-        vol.All(
-            vol.Coerce(int),
-            vol.Range(min=0.0, max=486.0),
-            lambda value: value * 1000,
-        ),
-        None,
+    vol.Optional(CONF_TRANSITION, default=0): vol.Any(
+        vol.All(vol.Coerce(int), vol.Range(min=0.0, max=486.0))
     ),
 }
 
@@ -130,8 +125,12 @@ DOMAIN_DATA_SENSOR: VolDictType = {
 
 
 DOMAIN_DATA_SWITCH: VolDictType = {
-    vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS)),
+    vol.Required(CONF_OUTPUT): vol.All(
+        vol.Upper,
+        vol.In(OUTPUT_PORTS + RELAY_PORTS + SETPOINTS + KEYS),
+    ),
 }
+
 
 #
 # Configuration

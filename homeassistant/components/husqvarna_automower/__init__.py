@@ -13,7 +13,9 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     device_registry as dr,
+    entity_registry as er,
 )
+from homeassistant.util import dt as dt_util
 
 from . import api
 from .const import DOMAIN
@@ -48,7 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         aiohttp_client.async_get_clientsession(hass),
         session,
     )
-    automower_api = AutomowerSession(api_api)
+    time_zone_str = str(dt_util.DEFAULT_TIME_ZONE)
+    automower_api = AutomowerSession(
+        api_api,
+        await dt_util.async_get_time_zone(time_zone_str),
+    )
     try:
         await api_api.async_get_access_token()
     except ClientResponseError as err:
@@ -94,3 +100,20 @@ def cleanup_removed_devices(
             device_reg.async_update_device(
                 device.id, remove_config_entry_id=config_entry.entry_id
             )
+
+
+def remove_work_area_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    removed_work_areas: set[int],
+    mower_id: str,
+) -> None:
+    """Remove all unused work area entities for the specified mower."""
+    entity_reg = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_reg, config_entry.entry_id
+    ):
+        for work_area_id in removed_work_areas:
+            if entity_entry.unique_id.startswith(f"{mower_id}_{work_area_id}_"):
+                _LOGGER.info("Deleting: %s", entity_entry.entity_id)
+                entity_reg.async_remove(entity_entry.entity_id)

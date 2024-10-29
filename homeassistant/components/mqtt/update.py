@@ -34,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Update"
 
-CONF_ENTITY_PICTURE = "entity_picture"
 CONF_LATEST_VERSION_TEMPLATE = "latest_version_template"
 CONF_LATEST_VERSION_TOPIC = "latest_version_topic"
 CONF_PAYLOAD_INSTALL = "payload_install"
@@ -47,7 +46,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
@@ -96,13 +94,12 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
     _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
-    _entity_picture: str | None
 
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
-        if self._entity_picture is not None:
-            return self._entity_picture
+        if self._attr_entity_picture is not None:
+            return self._attr_entity_picture
 
         return super().entity_picture
 
@@ -117,7 +114,6 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
         self._attr_release_url = self._config.get(CONF_RELEASE_URL)
         self._attr_title = self._config.get(CONF_TITLE)
-        self._entity_picture: str | None = self._config.get(CONF_ENTITY_PICTURE)
         self._templates = {
             CONF_VALUE_TEMPLATE: MqttValueTemplate(
                 config.get(CONF_VALUE_TEMPLATE),
@@ -192,7 +188,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             self._attr_release_url = json_payload["release_url"]
 
         if "entity_picture" in json_payload:
-            self._entity_picture = json_payload["entity_picture"]
+            self._attr_entity_picture = json_payload["entity_picture"]
 
     @callback
     def _handle_latest_version_received(self, msg: ReceiveMessage) -> None:
@@ -209,12 +205,12 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             CONF_STATE_TOPIC,
             self._handle_state_message_received,
             {
+                "_attr_entity_picture",
                 "_attr_installed_version",
                 "_attr_latest_version",
                 "_attr_title",
                 "_attr_release_summary",
                 "_attr_release_url",
-                "_entity_picture",
             },
         )
         self.add_subscription(
