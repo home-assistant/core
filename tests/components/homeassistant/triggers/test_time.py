@@ -159,7 +159,10 @@ async def test_if_fires_using_at_input_datetime(
 @pytest.mark.parametrize(
     ("conf_at", "trigger_deltas"),
     [
-        (["5:00:00", "6:00:00"], [timedelta(0), timedelta(hours=1)]),
+        (
+            ["5:00:00", "6:00:00", "{{ '7:00:00' }}"],
+            [timedelta(0), timedelta(hours=1), timedelta(hours=2)],
+        ),
         (
             [
                 "5:00:05",
@@ -435,10 +438,14 @@ async def test_untrack_time_change(hass: HomeAssistant) -> None:
     assert len(mock_track_time_change.mock_calls) == 3
 
 
+@pytest.mark.parametrize(
+    ("at_sensor"), ["sensor.next_alarm", "{{ 'sensor.next_alarm' }}"]
+)
 async def test_if_fires_using_at_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     service_calls: list[ServiceCall],
+    at_sensor: str,
 ) -> None:
     """Test for firing at sensor time."""
     now = dt_util.now()
@@ -461,7 +468,7 @@ async def test_if_fires_using_at_sensor(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "time", "at": "sensor.next_alarm"},
+                "trigger": {"platform": "time", "at": at_sensor},
                 "action": {
                     "service": "test.automation",
                     "data_template": {"some": some_data},
@@ -626,6 +633,9 @@ async def test_if_fires_using_at_sensor_with_offset(
         {"platform": "time", "at": "input_datetime.bla"},
         {"platform": "time", "at": "sensor.bla"},
         {"platform": "time", "at": "12:34"},
+        {"platform": "time", "at": "{{ '12:34' }}"},
+        {"platform": "time", "at": "{{ 'input_datetime.bla' }}"},
+        {"platform": "time", "at": "{{ 'sensor.bla' }}"},
         {"platform": "time", "at": {"entity_id": "sensor.bla", "offset": "-00:01"}},
         {
             "platform": "time",
@@ -724,3 +734,70 @@ async def test_datetime_in_past_on_load(
         service_calls[2].data["some"]
         == f"time-{future.day}-{future.hour}-input_datetime.my_trigger"
     )
+
+
+@pytest.mark.parametrize(
+    "trigger",
+    [
+        {"platform": "time", "at": "{{ 'hello world' }}"},
+        {"platform": "time", "at": "{{ 74 }}"},
+        {"platform": "time", "at": "{{ true }}"},
+        {"platform": "time", "at": "{{ 7.5465 }}"},
+    ],
+)
+async def test_if_at_template_renders_bad_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    trigger: dict[str, str],
+) -> None:
+    """Test for invalid templates."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": trigger,
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert (
+        "expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "trigger",
+    [
+        {"platform": "time", "at": "{{ now().strftime('%H:%M') }}"},
+        {"platform": "time", "at": "{{ states('sensor.blah') | int(0) }}"},
+    ],
+)
+async def test_if_at_template_limited_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    trigger: dict[str, str],
+) -> None:
+    """Test for invalid templates."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": trigger,
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert "is not supported in limited templates" in caplog.text

@@ -31,6 +31,7 @@ from homeassistant.components import (
     switch,
     update,
 )
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -64,8 +65,6 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
     PERCENTAGE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
@@ -643,7 +642,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Text Unit",
         entity="sensor.text_unit",
-    ).withValue(0.0).assert_in_metrics(body)
+    ).assert_not_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -716,6 +715,13 @@ async def test_input_number(
         friendly_name="Target temperature",
         entity="input_number.target_temperature",
     ).withValue(22.7).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="input_number_state_celsius",
+        domain="input_number",
+        friendly_name="Converted temperature",
+        entity="input_number.converted_temperature",
+    ).withValue(100).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -2208,6 +2214,17 @@ async def input_number_fixture(
     set_state_with_entry(hass, input_number_3, 22.7)
     data["input_number_3"] = input_number_3
 
+    input_number_4 = entity_registry.async_get_or_create(
+        domain=input_number.DOMAIN,
+        platform="test",
+        unique_id="input_number_4",
+        suggested_object_id="converted_temperature",
+        original_name="Converted temperature",
+        unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+    )
+    set_state_with_entry(hass, input_number_4, 212)
+    data["input_number_4"] = input_number_4
+
     await hass.async_block_till_done()
     return data
 
@@ -2466,7 +2483,7 @@ async def alarm_control_panel_fixture(
         suggested_object_id="alarm_control_panel_1",
         original_name="Alarm Control Panel 1",
     )
-    set_state_with_entry(hass, alarm_control_panel_1, STATE_ALARM_ARMED_AWAY)
+    set_state_with_entry(hass, alarm_control_panel_1, AlarmControlPanelState.ARMED_AWAY)
     data["alarm_control_panel_1"] = alarm_control_panel_1
 
     alarm_control_panel_2 = entity_registry.async_get_or_create(
@@ -2476,7 +2493,7 @@ async def alarm_control_panel_fixture(
         suggested_object_id="alarm_control_panel_2",
         original_name="Alarm Control Panel 2",
     )
-    set_state_with_entry(hass, alarm_control_panel_2, STATE_ALARM_ARMED_HOME)
+    set_state_with_entry(hass, alarm_control_panel_2, AlarmControlPanelState.ARMED_HOME)
     data["alarm_control_panel_2"] = alarm_control_panel_2
 
     await hass.async_block_till_done()

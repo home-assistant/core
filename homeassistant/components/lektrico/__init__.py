@@ -15,6 +15,7 @@ CHARGERS_PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 # List the platforms that load balancer device supports.

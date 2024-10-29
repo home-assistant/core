@@ -3,7 +3,10 @@
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -11,9 +14,6 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -39,7 +39,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     await setup_platform(hass, ALARM_DOMAIN)
 
     state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_ALARM_DISARMED
+    assert state.state == AlarmControlPanelState.DISARMED
     assert state.attributes.get(ATTR_DEVICE_ID) == "area_1"
     assert not state.attributes.get("battery_backup")
     assert not state.attributes.get("cellular_backup")
@@ -75,7 +75,7 @@ async def test_set_alarm_away(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
 
             state = hass.states.get(DEVICE_ID)
-            assert state.state == STATE_ALARM_ARMED_AWAY
+            assert state.state == AlarmControlPanelState.ARMED_AWAY
 
 
 async def test_set_alarm_home(hass: HomeAssistant) -> None:
@@ -105,7 +105,7 @@ async def test_set_alarm_home(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
 
             state = hass.states.get(DEVICE_ID)
-            assert state.state == STATE_ALARM_ARMED_HOME
+            assert state.state == AlarmControlPanelState.ARMED_HOME
 
 
 async def test_set_alarm_standby(hass: HomeAssistant) -> None:
@@ -134,7 +134,7 @@ async def test_set_alarm_standby(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
 
             state = hass.states.get(DEVICE_ID)
-            assert state.state == STATE_ALARM_DISARMED
+            assert state.state == AlarmControlPanelState.DISARMED
 
 
 async def test_state_unknown(hass: HomeAssistant) -> None:
