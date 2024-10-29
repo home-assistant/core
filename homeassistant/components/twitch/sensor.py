@@ -18,12 +18,12 @@ from .coordinator import TwitchUpdate
 ATTR_GAME = "game"
 ATTR_TITLE = "title"
 ATTR_SUBSCRIPTION = "subscribed"
-ATTR_SUBSCRIPTION_SINCE = "subscribed_since"
 ATTR_SUBSCRIPTION_GIFTED = "subscription_is_gifted"
+ATTR_SUBSCRIPTION_TIER = "subscription_tier"
 ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
-ATTR_VIEWS = "views"
+ATTR_VIEWERS = "viewers"
 ATTR_STARTED_AT = "started_at"
 
 STATE_OFFLINE = "offline"
@@ -78,15 +78,16 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
         channel = self.channel
         resp = {
             ATTR_FOLLOWING: channel.followers,
-            ATTR_VIEWS: channel.views,
             ATTR_GAME: channel.game,
             ATTR_TITLE: channel.title,
             ATTR_STARTED_AT: channel.started_at,
+            ATTR_VIEWERS: channel.viewers,
         }
         resp[ATTR_SUBSCRIPTION] = False
         if channel.subscribed is not None:
             resp[ATTR_SUBSCRIPTION] = channel.subscribed
             resp[ATTR_SUBSCRIPTION_GIFTED] = channel.subscription_gifted
+            resp[ATTR_SUBSCRIPTION_TIER] = channel.subscription_tier
         resp[ATTR_FOLLOW] = channel.follows
         if channel.follows:
             resp[ATTR_FOLLOW_SINCE] = channel.following_since

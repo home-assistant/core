@@ -59,6 +59,7 @@ from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
+    CONF_SUBSCRIPTION_NAME,
     DATA_DEVICE_MANAGER,
     DATA_SDM,
     DATA_SUBSCRIBER,
@@ -103,10 +104,10 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.CAMERA, Platform.CLIMATE, Platform.EVENT, Platform.SENSOR]
 
 # Fetch media events with a disk backed cache, with a limit for each camera
-# device. The largest media items are mp4 clips at ~120kb each, and we target
+# device. The largest media items are mp4 clips at ~450kb each, and we target
 # ~125MB of storage per camera to try to balance a reasonable user experience
 # for event history not not filling the disk.
-EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
+EVENT_MEDIA_CACHE_SIZE = 256  # number of events
 
 THUMBNAIL_SIZE_PX = 175
 
@@ -289,7 +290,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of pubsub subscriptions created during config flow."""
     if (
         DATA_SDM not in entry.data
-        or CONF_SUBSCRIBER_ID not in entry.data
+        or not (
+            CONF_SUBSCRIPTION_NAME in entry.data or CONF_SUBSCRIBER_ID in entry.data
+        )
         or CONF_SUBSCRIBER_ID_IMPORTED in entry.data
     ):
         return

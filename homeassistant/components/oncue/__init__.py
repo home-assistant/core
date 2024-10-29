@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OncueConfigEntry) -> boo
     coordinator = DataUpdateCoordinator[dict[str, OncueDevice]](
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"Oncue {entry.data[CONF_USERNAME]}",
         update_interval=timedelta(minutes=10),
         update_method=_async_update,
