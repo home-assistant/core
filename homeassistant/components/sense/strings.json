@@ -36,19 +36,19 @@
   "entity": {
     "sensor": {
       "daily_energy": {
-        "name": "Daily Energy"
+        "name": "Daily energy"
       },
       "weekly_energy": {
-        "name": "Weekly Energy"
+        "name": "Weekly energy"
       },
       "monthly_energy": {
-        "name": "Monthly Energy"
+        "name": "Monthly energy"
       },
       "yearly_energy": {
-        "name": "Yearly Energy"
+        "name": "Yearly energy"
       },
       "bill_energy": {
-        "name": "Bill Energy"
+        "name": "Bill energy"
       }
     }
   }
