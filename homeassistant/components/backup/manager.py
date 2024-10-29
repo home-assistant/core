@@ -279,13 +279,11 @@ class BackupManager(BaseBackupManager):
             if fut is not None:
                 await fut
 
-        await self.hass.async_add_executor_job(
-            shutil.move,
-            target_temp_file,
-            self.backup_dir / target_temp_file.name,
-        )
+        def _move_and_claenup() -> None:
+            shutil.move(target_temp_file, self.backup_dir / target_temp_file.name)
+            temp_dir_handler.cleanup()
 
-        await self.hass.async_add_executor_job(temp_dir_handler.cleanup)
+        await self.hass.async_add_executor_job(_move_and_claenup)
 
     async def async_create_backup(self, **kwargs: Any) -> Backup:
         """Generate a backup."""
