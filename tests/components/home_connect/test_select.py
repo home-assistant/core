@@ -14,6 +14,7 @@ from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import get_all_appliances
 
@@ -101,7 +102,14 @@ async def test_select_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "program_to_set", "mock_attr"),
+    (
+        "entity_id",
+        "status",
+        "service",
+        "program_to_set",
+        "mock_attr",
+        "exception_match",
+    ),
     [
         (
             "select.washer_selected_program",
@@ -109,6 +117,7 @@ async def test_select_functionality(
             SERVICE_SELECT_OPTION,
             "eco50",
             "select_program",
+            r"Error.*select.*program.*",
         ),
         (
             "select.washer_active_program",
@@ -116,6 +125,7 @@ async def test_select_functionality(
             SERVICE_SELECT_OPTION,
             "eco50",
             "start_program",
+            r"Error.*start.*program.*",
         ),
     ],
 )
@@ -125,6 +135,7 @@ async def test_switch_exception_handling(
     service: str,
     program_to_set: str,
     mock_attr: str,
+    exception_match: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -147,10 +158,11 @@ async def test_switch_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        service,
-        {"entity_id": entity_id, "option": program_to_set},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError, match=exception_match):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            service,
+            {"entity_id": entity_id, "option": program_to_set},
+            blocking=True,
+        )
     assert getattr(problematic_appliance, mock_attr).call_count == 2

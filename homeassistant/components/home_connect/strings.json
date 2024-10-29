@@ -49,6 +49,9 @@
     "turn_off": {
       "message": "Error while trying to turn off {entity_id} ({key}): {description}"
     },
+    "select_program": {
+      "message": "Error while trying to select program {program}: {description}"
+    },
     "start_program": {
       "message": "Error while trying to start program {program}: {description}"
     },

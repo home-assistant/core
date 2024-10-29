@@ -8,9 +8,11 @@ from homeconnect.api import HomeConnectError
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
+from . import get_dict_from_home_connect_error
 from .api import ConfigEntryAuth, HomeConnectDevice
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
@@ -97,13 +99,16 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 bsh_key,
             )
         except HomeConnectError as err:
-            _LOGGER.error(
-                "Error while trying to select program %s: %s"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="start_program"
                 if self.start_on_select
-                else "Error while trying to start program %s: %s",
-                bsh_key,
-                err,
-            )
+                else "select_program",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "program": bsh_key,
+                },
+            ) from err
         self.async_entity_update()
 
     def format_program(self, program: str | None) -> str | None:
