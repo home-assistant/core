@@ -99,7 +99,7 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
                 self.hass,
                 DOMAIN,
                 f"deprecated_binary_sensor_{self.entity_id}_{item}",
-                breaks_in_ha_version="2025.2.0",
+                breaks_in_ha_version="2025.5.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_regulatorlock_sensor",
