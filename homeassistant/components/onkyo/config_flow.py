@@ -47,6 +47,19 @@ CONF_DEVICE = "device"
 INPUT_SOURCES_ALL_MEANINGS = [
     input_source.value_meaning for input_source in InputSource
 ]
+STEP_MANUAL_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_CONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(OPTION_VOLUME_RESOLUTION): vol.In(VOLUME_RESOLUTION_ALLOWED),
+        vol.Required(OPTION_INPUT_SOURCES): SelectSelector(
+            SelectSelectorConfig(
+                options=INPUT_SOURCES_ALL_MEANINGS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
+)
 
 
 class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -68,6 +81,10 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle manual device entry."""
         errors = {}
+
+        entry_data = None
+        if self.source == SOURCE_RECONFIGURE:
+            entry_data = self._get_reconfigure_entry().data
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -93,15 +110,17 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     return await self.async_step_configure_receiver()
 
-        schema = vol.Schema({vol.Required(CONF_HOST): str})
-
-        suggested_values = {}
-        if self.source == SOURCE_RECONFIGURE:
-            suggested_values[CONF_HOST] = self._get_reconfigure_entry().data[CONF_HOST]
+        suggested_values = user_input
+        if suggested_values is None:
+            suggested_values = {}
+            if entry_data is not None:
+                suggested_values[CONF_HOST] = entry_data[CONF_HOST]
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=self.add_suggested_values_to_schema(schema, suggested_values),
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_MANUAL_SCHEMA, suggested_values
+            ),
             errors=errors,
         )
 
@@ -212,23 +231,9 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Configuring receiver, info: %s", self._receiver_info)
 
-        schema = vol.Schema(
-            {
-                vol.Required(OPTION_VOLUME_RESOLUTION): vol.In(
-                    VOLUME_RESOLUTION_ALLOWED
-                ),
-                vol.Required(OPTION_INPUT_SOURCES): SelectSelector(
-                    SelectSelectorConfig(
-                        options=INPUT_SOURCES_ALL_MEANINGS,
-                        multiple=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-            }
-        )
-
-        if user_input is None:
-            suggested_values: dict[str, Any] = {}
+        suggested_values = user_input
+        if suggested_values is None:
+            suggested_values = {}
             if entry_options is None:
                 suggested_values[OPTION_VOLUME_RESOLUTION] = (
                     OPTION_VOLUME_RESOLUTION_DEFAULT
@@ -242,12 +247,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     InputSource(input_source).value_meaning
                     for input_source in entry_options[OPTION_INPUT_SOURCES]
                 ]
-        else:
-            suggested_values = user_input
 
         return self.async_show_form(
             step_id="configure_receiver",
-            data_schema=self.add_suggested_values_to_schema(schema, suggested_values),
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_CONFIGURE_SCHEMA, suggested_values
+            ),
             errors=errors,
             description_placeholders={
                 "name": f"{self._receiver_info.model_name} ({self._receiver_info.host})"
