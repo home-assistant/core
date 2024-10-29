@@ -13,7 +13,7 @@ from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import mock_called_with
@@ -81,7 +81,7 @@ async def test_buttons(
         ("button.test_user_start_my_day", "cron", "user"),
         (
             "button.test_user_chilling_frost",
-            "user/class/cast/frost?targetId=00000000-0000-0000-0000-000000000000",
+            "user/class/cast/frost",
             "wizard_fixture",
         ),
         (
@@ -96,7 +96,7 @@ async def test_buttons(
         ),
         (
             "button.test_user_stealth",
-            "user/class/cast/stealth?targetId=00000000-0000-0000-0000-000000000000",
+            "user/class/cast/stealth",
             "rogue_fixture",
         ),
         (
@@ -106,22 +106,22 @@ async def test_buttons(
         ),
         (
             "button.test_user_defensive_stance",
-            "user/class/cast/defensiveStance?targetId=00000000-0000-0000-0000-000000000000",
+            "user/class/cast/defensiveStance",
             "warrior_fixture",
         ),
         (
             "button.test_user_intimidating_gaze",
-            "user/class/cast/intimidate?targetId=00000000-0000-0000-0000-000000000000",
+            "user/class/cast/intimidate",
             "warrior_fixture",
         ),
         (
             "button.test_user_valorous_presence",
-            "user/class/cast/valorousPresence?targetId=00000000-0000-0000-0000-000000000000",
+            "user/class/cast/valorousPresence",
             "warrior_fixture",
         ),
         (
             "button.test_user_healing_light",
-            "user/class/cast/heal?targetId=00000000-0000-0000-0000-000000000000",
+            "user/class/cast/heal",
             "healer_fixture",
         ),
         (
@@ -131,7 +131,7 @@ async def test_buttons(
         ),
         (
             "button.test_user_searing_brightness",
-            "user/class/cast/brightness?targetId=00000000-0000-0000-0000-000000000000",
+            "user/class/cast/brightness",
             "healer_fixture",
         ),
         (
@@ -188,15 +188,38 @@ async def test_button_press(
         ("button.test_user_buy_a_health_potion", "user/buy-health-potion"),
         ("button.test_user_revive_from_death", "user/revive"),
         ("button.test_user_start_my_day", "cron"),
+        ("button.test_user_chilling_frost", "user/class/cast/frost"),
+        ("button.test_user_earthquake", "user/class/cast/earth"),
+        ("button.test_user_ethereal_surge", "user/class/cast/mpheal"),
     ],
-    ids=["allocate-points", "health-potion", "revive", "run-cron"],
+    ids=[
+        "allocate-points",
+        "health-potion",
+        "revive",
+        "run-cron",
+        "chilling frost",
+        "earthquake",
+        "ethereal surge",
+    ],
 )
 @pytest.mark.parametrize(
-    ("status_code", "msg"),
+    ("status_code", "msg", "exception"),
     [
-        (HTTPStatus.TOO_MANY_REQUESTS, "Currently rate limited"),
-        (HTTPStatus.BAD_REQUEST, "Unable to connect to Habitica"),
-        (HTTPStatus.UNAUTHORIZED, "Unable to carry out this action"),
+        (
+            HTTPStatus.TOO_MANY_REQUESTS,
+            "Currently rate limited",
+            ServiceValidationError,
+        ),
+        (
+            HTTPStatus.BAD_REQUEST,
+            "Unable to connect to Habitica, try again later",
+            HomeAssistantError,
+        ),
+        (
+            HTTPStatus.UNAUTHORIZED,
+            "Unable to carry out this action",
+            ServiceValidationError,
+        ),
     ],
 )
 async def test_button_press_exceptions(
@@ -207,6 +230,7 @@ async def test_button_press_exceptions(
     api_url: str,
     status_code: HTTPStatus,
     msg: str,
+    exception: Exception,
 ) -> None:
     """Test button press exceptions."""
 
@@ -222,7 +246,7 @@ async def test_button_press_exceptions(
         json={"data": None},
     )
 
-    with pytest.raises(ServiceValidationError, match=msg):
+    with pytest.raises(exception, match=msg):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

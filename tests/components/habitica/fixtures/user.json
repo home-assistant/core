@@ -3,6 +3,18 @@
     "api_user": "test-api-user",
     "profile": { "name": "test-user" },
     "stats": {
+      "buffs": {
+        "str": 0,
+        "int": 0,
+        "per": 0,
+        "con": 0,
+        "stealth": 0,
+        "streaks": false,
+        "seafoam": false,
+        "shinySeed": false,
+        "snowball": false,
+        "spookySparkles": false
+      },
       "hp": 0,
       "mp": 50.89999999999998,
       "exp": 737,

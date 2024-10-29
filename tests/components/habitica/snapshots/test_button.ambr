@@ -136,7 +136,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_button_unavailable[button.test_user_earthquake-entry]
@@ -183,7 +183,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_button_unavailable[button.test_user_ethereal_surge-entry]
@@ -230,7 +230,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_button_unavailable[button.test_user_revive_from_death-entry]
@@ -501,6 +501,7 @@
 # name: test_buttons[healer_fixture][button.test_user_healing_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_heal.png',
       'friendly_name': 'test-user Healing light',
     }),
     'context': <ANY>,
