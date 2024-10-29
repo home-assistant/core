@@ -435,6 +435,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Raise the original error instead of the fallback error
                 raise ex from ex
         else:
+            if TYPE_CHECKING:
+                # device or exception is always returned unless
+                # on_unsupported callback was passed to discover_single
+                assert self._discovered_device
             if self._discovered_device.config.uses_http:
                 self._discovered_device.config.http_client = (
                     create_async_tplink_clientsession(self.hass)
