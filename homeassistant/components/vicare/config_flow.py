@@ -56,9 +56,7 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(
-            CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value
-        ): SelectSelector(
+        vol.Required(CONF_HEATING_TYPE): SelectSelector(
             SelectSelectorConfig(
                 options=[e.value for e in HeatingType],
                 mode=SelectSelectorMode.DROPDOWN,
