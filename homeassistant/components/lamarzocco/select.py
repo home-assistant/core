@@ -25,11 +25,7 @@ STEAM_LEVEL_HA_TO_LM = {
     "3": SteamLevel.LEVEL_3,
 }
 
-STEAM_LEVEL_LM_TO_HA = {
-    SteamLevel.LEVEL_1: "1",
-    SteamLevel.LEVEL_2: "2",
-    SteamLevel.LEVEL_3: "3",
-}
+STEAM_LEVEL_LM_TO_HA = {value: key for key, value in STEAM_LEVEL_HA_TO_LM.items()}
 
 PREBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,
@@ -37,11 +33,7 @@ PREBREW_MODE_HA_TO_LM = {
     "preinfusion": PrebrewMode.PREINFUSION,
 }
 
-PREBREW_MODE_LM_TO_HA = {
-    PrebrewMode.DISABLED: "disabled",
-    PrebrewMode.PREBREW: "prebrew",
-    PrebrewMode.PREINFUSION: "preinfusion",
-}
+PREBREW_MODE_LM_TO_HA = {value: key for key, value in PREBREW_MODE_HA_TO_LM.items()}
 
 STANDBY_MODE_HA_TO_LM = {
     "power_on": SmartStandbyMode.POWER_ON,
