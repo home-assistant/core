@@ -310,6 +310,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             credentials = Credentials(username, password)
+            device: Device | None
             try:
                 if self._discovered_device:
                     device = await self._async_try_connect(
