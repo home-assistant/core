@@ -63,7 +63,9 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
 
         # Set temperature limits based on device capabilities
         self._attr_min_temp = float(data.coordinator.data.dhw.reduced_setpoint.value)
-        self._attr_max_temp = float(data.coordinator.data.dhw.nominal_setpoint.value)
+        self._attr_max_temp = float(
+            data.coordinator.data.dhw.nominal_setpoint_max.value
+        )
 
     @property
     def current_operation(self) -> str | None:
@@ -74,10 +76,7 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        # need to implement the current temp in bsblan lib
-        if self.coordinator.data.dhw.nominal_setpoint.value == "---":
-            return None
-        return float(self.coordinator.data.dhw.nominal_setpoint.value)
+        return float(self.coordinator.data.dhw.dhw_actual_value_top_temperature.value)
 
     @property
     def target_temperature(self) -> float | None:
