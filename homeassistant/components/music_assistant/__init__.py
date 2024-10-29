@@ -141,9 +141,9 @@ async def _client_listen(
         LOGGER.error("Failed to listen: %s", err)
     except Exception as err:  # pylint: disable=broad-except
         # We need to guard against unknown exceptions to not crash this task.
-        LOGGER.exception("Unexpected exception: %s", err)
         if entry.state != ConfigEntryState.LOADED:
             raise
+        LOGGER.exception("Unexpected exception: %s", err)
 
     if not hass.is_stopping:
         LOGGER.debug("Disconnected from server. Reloading integration")
