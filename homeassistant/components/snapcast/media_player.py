@@ -169,11 +169,6 @@ async def async_setup_entry(
                 entity_registry.async_remove(entity_id)
 
     coordinator.async_add_listener(_check_entities)
-
-    # Remove any existing entities
-    entity_registry = er.async_get(hass)
-    entity_registry.async_clear_config_entry(config_entry.entry_id)
-
     _check_entities()
 
 
