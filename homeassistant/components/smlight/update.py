@@ -153,8 +153,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         """Update install progress on event."""
 
         progress = int(progress.data)
-        if progress > 1:
-            self._attr_update_percentage = progress
+        self._attr_update_percentage = progress
         self.async_write_ha_state()
 
     def _update_done(self) -> None:
