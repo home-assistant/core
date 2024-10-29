@@ -35,7 +35,7 @@ def mock_turbo_jpeg(
 async def add_webrtc_provider(hass: HomeAssistant) -> CameraWebRTCProvider:
     """Add test WebRTC provider."""
 
-    class TestProvider(CameraWebRTCProvider):
+    class SomeTestProvider(CameraWebRTCProvider):
         """Test provider."""
 
         async def async_is_supported(self, stream_source: str) -> bool:
@@ -48,7 +48,7 @@ async def add_webrtc_provider(hass: HomeAssistant) -> CameraWebRTCProvider:
             """Handle the WebRTC offer and return an answer."""
             return "answer"
 
-    provider = TestProvider()
+    provider = SomeTestProvider()
     async_register_webrtc_provider(hass, provider)
     await hass.async_block_till_done()
     return provider

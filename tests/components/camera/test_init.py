@@ -902,7 +902,7 @@ async def test_entity_picture_url_changes_on_token_update(hass: HomeAssistant) -
     assert "token=" in new_entity_picture
 
 
-async def _test_capbilities(
+async def _test_capabilities(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_id: str,
@@ -943,7 +943,7 @@ async def test_camera_capabilities_hls(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test HLS camera capabilities."""
-    await _test_capbilities(
+    await _test_capabilities(
         hass,
         hass_ws_client,
         "camera.demo_camera",
@@ -1008,6 +1008,6 @@ async def test_camera_capabilities_webrtc(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    await _test_capbilities(
+    await _test_capabilities(
         hass, hass_ws_client, "camera.test", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
     )
