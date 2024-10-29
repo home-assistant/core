@@ -440,7 +440,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 media_uris.append(item.uri)
 
         if not media_uris:
-            raise MediaNotFoundError(
+            raise HomeAssistantError(
                 f"Could not resolve {media_id} to playable media item"
             )
 
