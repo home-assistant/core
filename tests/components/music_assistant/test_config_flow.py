@@ -15,8 +15,6 @@ import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DEFAULT_NAME, DOMAIN
-
-# pylint: disable=wrong-import-order
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
