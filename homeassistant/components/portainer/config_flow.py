@@ -14,10 +14,11 @@ import homeassistant.helpers.config_validation as cv
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 
+DEFAULT_PORT = "9443"
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default="9443"): cv.port,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_ACCESS_TOKEN): cv.string,
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }

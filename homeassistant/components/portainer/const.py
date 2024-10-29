@@ -2,4 +2,3 @@
 
 DOMAIN = "portainer"
 NAME = "Portainer"
-DEFAULT_PORT = "9443"
