@@ -24,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_get_server_info():
+def mock_get_server_info() -> Generator[AsyncMock]:
     """Mock the function to get server info."""
     with patch(
         "homeassistant.components.music_assistant.config_flow.get_server_info"
@@ -43,10 +43,6 @@ def mock_music_assistant_client() -> Generator[AsyncMock]:
             "homeassistant.components.music_assistant.MusicAssistantClient",
             autospec=True,
         ) as mock_client,
-        patch(
-            "homeassistant.components.music_assistant.MusicAssistantClient",
-            new=mock_client,
-        ),
     ):
         client = mock_client.return_value
         client.host = "127.0.0.1"
