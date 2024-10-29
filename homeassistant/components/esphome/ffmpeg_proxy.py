@@ -153,11 +153,10 @@ class FFmpegConvertResponse(web.StreamResponse):
         self.proxy_data = proxy_data
         self.chunk_size = chunk_size
 
-    async def prepare(self, request: BaseRequest) -> AbstractStreamWriter | None:
+    async def transcode(
+        self, request: BaseRequest, writer: AbstractStreamWriter
+    ) -> None:
         """Stream url through ffmpeg conversion and out to HTTP client."""
-        writer = await super().prepare(request)
-        assert writer is not None
-
         command_args = [
             "-i",
             self.convert_info.media_url,
@@ -195,6 +194,14 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Only one conversion process per device is allowed
         self.convert_info.proc = proc
 
+        await self._write_ffmpeg_data(request, writer, proc)
+
+    async def _write_ffmpeg_data(
+        self,
+        request: BaseRequest,
+        writer: AbstractStreamWriter,
+        proc: asyncio.subprocess.Process,
+    ) -> None:
         assert proc.stdout is not None
         assert proc.stderr is not None
 
@@ -206,8 +213,7 @@ class FFmpegConvertResponse(web.StreamResponse):
                 and (not request.transport.is_closing())
                 and (chunk := await proc.stdout.read(self.chunk_size))
             ):
-                await writer.write(chunk)
-                await writer.drain()
+                await self.write(chunk)
         except asyncio.CancelledError:
             raise  # don't log error
         except:
@@ -230,8 +236,6 @@ class FFmpegConvertResponse(web.StreamResponse):
 
             # Close connection
             await writer.write_eof()
-
-        return writer
 
 
 class FFmpegProxyView(HomeAssistantView):
@@ -279,6 +283,10 @@ class FFmpegProxyView(HomeAssistantView):
             convert_info.proc = None
 
         # Stream converted audio back to client
-        return FFmpegConvertResponse(
+        resp = FFmpegConvertResponse(
             self.manager, convert_info, device_id, self.proxy_data
         )
+        writer = await resp.prepare(request)
+        assert writer is not None
+        await resp.transcode(request, writer)
+        return resp
