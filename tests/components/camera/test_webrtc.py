@@ -1062,7 +1062,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
 
 
 @pytest.mark.usefixtures("mock_camera_webrtc")
-async def test_ws_webrtc_canidate_missing_candidtae(
+async def test_ws_webrtc_canidate_missing_candidate(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test ws WebRTC candidate command with missing required fields."""
@@ -1205,3 +1205,13 @@ async def test_no_repair_issue_without_new_provider(
     assert not issue_registry.async_get_issue(
         "camera", "legacy_webrtc_provider_mock_domain"
     )
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_rtsp_to_webrtc")
+async def test_registering_same_legacy_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering the same legacy provider twice."""
+    legacy_provider = Mock(side_effect=provide_webrtc_answer)
+    with pytest.raises(ValueError, match="Provider already registered"):
+        async_register_rtsp_to_web_rtc_provider(hass, "mock_domain", legacy_provider)
