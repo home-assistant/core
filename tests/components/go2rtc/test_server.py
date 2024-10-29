@@ -58,7 +58,8 @@ api:
   listen: "127.0.0.1:1984"
 
 rtsp:
-  listen: ""
+  # ffmpeg needs rtsp for opus audio transcoding
+  listen: "127.0.0.1:8554"
 
 webrtc:
   ice_servers: []
