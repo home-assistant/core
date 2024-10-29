@@ -32,7 +32,6 @@ from homeassistant.components.google_assistant import (
     smart_home as sh,
     trait,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_CALL_SERVICE,
@@ -41,6 +40,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,

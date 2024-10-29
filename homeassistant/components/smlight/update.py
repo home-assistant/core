@@ -153,9 +153,8 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         """Update install progress on event."""
 
         progress = int(progress.data)
-        if progress > 1:
-            self._attr_in_progress = progress
-            self.async_write_ha_state()
+        self._attr_update_percentage = progress
+        self.async_write_ha_state()
 
     def _update_done(self) -> None:
         """Handle cleanup for update done."""
@@ -165,6 +164,10 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         for remove_cb in self._unload:
             remove_cb()
         self._unload.clear()
+
+        self._attr_in_progress = False
+        self._attr_update_percentage = None
+        self.async_write_ha_state()
 
     @callback
     def _update_finished(self, event: MessageEvent) -> None:
@@ -186,6 +189,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         if not self.coordinator.in_progress and self._firmware:
             self.coordinator.in_progress = True
             self._attr_in_progress = True
+            self._attr_update_percentage = None
             self.register_callbacks()
 
             await self.coordinator.client.fw_update(self._firmware)
