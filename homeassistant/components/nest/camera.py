@@ -15,6 +15,7 @@ from google_nest_sdm.camera_traits import (
     CameraLiveStreamTrait,
     RtspStream,
     StreamingProtocol,
+    WebRtcStream,
 )
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
@@ -94,6 +95,7 @@ class NestCamera(Camera):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
         # The API "name" field is a unique device identifier.
         self._attr_unique_id = f"{self._device.name}-camera"
+        self._webrtc_sessions: dict[str, WebRtcStream] = {}
 
     @property
     def use_stream_for_stills(self) -> bool:
@@ -221,7 +223,14 @@ class NestCamera(Camera):
             stream = await trait.generate_web_rtc_stream(offer_sdp)
         except ApiException as err:
             raise HomeAssistantError(f"Nest API error: {err}") from err
+        self._webrtc_sessions[session_id] = stream
         send_message(WebRTCAnswer(stream.answer_sdp))
+
+    @callback
+    def async_close_session(self, session_id: str) -> None:
+        """Close the session."""
+        if (stream := self._webrtc_sessions.pop(session_id, None)) is not None:
+            self.hass.async_create_task(stream.stop_stream())
 
     @callback
     def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
