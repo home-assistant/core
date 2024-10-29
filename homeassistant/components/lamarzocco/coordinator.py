@@ -45,7 +45,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL
+            update_interval=SCAN_INTERVAL,
         )
         self.local_connection_configured = local_client is not None
 
