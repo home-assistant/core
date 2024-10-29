@@ -6,6 +6,7 @@ from unittest import mock
 from pymodbus.exceptions import ModbusException
 import pytest
 
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -21,20 +22,24 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_SWITCHES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -44,6 +49,7 @@ from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 ENTITY_ID2 = f"{ENTITY_ID}_2"
+ENTITY_ID3 = f"{ENTITY_ID}_3"
 
 
 @pytest.mark.parametrize(
@@ -74,7 +80,7 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
-                    CONF_DEVICE_CLASS: "switch",
+                    CONF_DEVICE_CLASS: SWITCH_DOMAIN,
                     CONF_VERIFY: {
                         CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                         CONF_ADDRESS: 1235,
@@ -92,7 +98,7 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_DEVICE_ADDRESS: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
-                    CONF_DEVICE_CLASS: "switch",
+                    CONF_DEVICE_CLASS: SWITCH_DOMAIN,
                     CONF_VERIFY: {
                         CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                         CONF_ADDRESS: 1235,
@@ -110,7 +116,7 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
-                    CONF_DEVICE_CLASS: "switch",
+                    CONF_DEVICE_CLASS: SWITCH_DOMAIN,
                     CONF_VERIFY: {
                         CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                         CONF_ADDRESS: 1235,
@@ -129,7 +135,7 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
-                    CONF_DEVICE_CLASS: "switch",
+                    CONF_DEVICE_CLASS: SWITCH_DOMAIN,
                     CONF_VERIFY: {
                         CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
                         CONF_ADDRESS: 1235,
@@ -147,9 +153,45 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
-                    CONF_DEVICE_CLASS: "switch",
+                    CONF_DEVICE_CLASS: SWITCH_DOMAIN,
                     CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: None,
+                }
+            ]
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_DEVICE_ADDRESS: 10,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_DEVICE_CLASS: SWITCH_DOMAIN,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: [1, 2, 3],
+                    },
+                }
+            ]
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1236,
+                    CONF_DEVICE_ADDRESS: 10,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_DEVICE_CLASS: SWITCH_DOMAIN,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: [0, 5, 6],
+                        CONF_STATE_ON: 1,
+                    },
                 }
             ]
         },
@@ -218,6 +260,18 @@ async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
             None,
             STATE_OFF,
         ),
+        (
+            [0x03],
+            False,
+            {CONF_VERIFY: {CONF_STATE_ON: [1, 3]}},
+            STATE_ON,
+        ),
+        (
+            [0x04],
+            False,
+            {CONF_VERIFY: {CONF_STATE_OFF: [0, 4]}},
+            STATE_OFF,
+        ),
     ],
 )
 async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
@@ -269,6 +323,13 @@ async def test_restore_state_switch(
                     CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {},
                 },
+                {
+                    CONF_NAME: f"{TEST_ENTITY_NAME} 3",
+                    CONF_ADDRESS: 18,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_VERIFY: {CONF_STATE_ON: [1, 3]},
+                },
             ],
         },
     ],
@@ -283,12 +344,12 @@ async def test_switch_service_turn(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": ENTITY_ID}
+        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        "switch", "turn_off", service_data={"entity_id": ENTITY_ID}
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -296,29 +357,48 @@ async def test_switch_service_turn(
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": ENTITY_ID2}
+        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "switch", "turn_off", service_data={"entity_id": ENTITY_ID2}
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
+    mock_modbus.read_holding_registers.return_value = ReadResult([0x03])
+    assert hass.states.get(ENTITY_ID3).state == STATE_OFF
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID3}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID3).state == STATE_ON
+    mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID3}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID3).state == STATE_OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": ENTITY_ID2}
+        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
     mock_modbus.write_coil.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "switch", "turn_off", service_data={"entity_id": ENTITY_ID}
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    mock_modbus.write_register.side_effect = ModbusException("fail write_")
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID3}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID3).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -334,17 +414,43 @@ async def test_switch_service_turn(
                 }
             ]
         },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1236,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {CONF_STATE_ON: [1, 3]},
+                }
+            ]
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1235,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_VERIFY: {CONF_STATE_OFF: [0, 5]},
+                }
+            ]
+        },
     ],
 )
 async def test_service_switch_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
@@ -372,7 +478,7 @@ async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     now = dt_util.utcnow()
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": ENTITY_ID}
+        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -391,7 +497,7 @@ async def test_no_discovery_info_switch(
     assert await async_setup_component(
         hass,
         SWITCH_DOMAIN,
-        {SWITCH_DOMAIN: {"platform": MODBUS_DOMAIN}},
+        {SWITCH_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SWITCH_DOMAIN in hass.config.components
