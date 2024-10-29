@@ -59,15 +59,14 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
     for node_id in coordinator.data:
-        for snapshot in coordinator.data[node_id].snapshots:
-            for container in snapshot.docker_snapshot_raw.containers:
-                entities.extend(
-                    ContainerSensorEntity(
-                        coordinator, node_id, snapshot, container, description
-                    )
-                    for description in CONTAINER_SENSOR_TYPES
-                    if description.exists_fn(coordinator.data[node_id])
-                )
+        for container_id in (
+            coordinator.data[node_id].snapshots[-1].docker_snapshot_raw.containers
+        ):
+            entities.extend(
+                ContainerSensorEntity(coordinator, node_id, container_id, description)
+                for description in CONTAINER_SENSOR_TYPES
+                if description.exists_fn(coordinator.data[node_id])
+            )
     async_add_entities(entities)
 
 
@@ -80,18 +79,24 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
         self,
         coordinator: PortainerDataUpdateCoordinator,
         node_id: int,
-        snapshot: Snapshot,
-        container: Container,
+        container_id: str,
         description: ContainerSensorEntityDescription,
     ) -> None:
         """Set up ContainerSensors."""
-        super().__init__(coordinator, node_id, snapshot, container)
+        super().__init__(coordinator, node_id, container_id)
         self.entity_description = description
-        self._attr_unique_id = f"{node_id}-{container.id}-{description.key}"
-        self.container = container
-        self._attr_translation_placeholders = {"container": container.name}
+        self._attr_unique_id = f"{node_id}-{container_id}-{description.key}"
+        self._attr_translation_placeholders = {
+            "container": coordinator.data[self.node_id]
+            .snapshots[-1]
+            .docker_snapshot_raw.containers[self.container_id]
+            .name
+        }
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
-        return self.container.state.value
+        _LOGGER.debug(
+            "self.container_attributes in sensor: %s", self.container_attributes
+        )
+        return self.container_attributes.state.value

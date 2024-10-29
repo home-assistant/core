@@ -22,7 +22,6 @@ class SnapshotBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
         self,
         coordinator: PortainerDataUpdateCoordinator,
         node_id: int,
-        snapshot: Snapshot,
     ) -> None:
         """Initialize PortainerEntity."""
         super().__init__(coordinator)
@@ -31,7 +30,6 @@ class SnapshotBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
             identifiers={(DOMAIN, str(node_id))},
             name=self.node_attributes.name,
         )
-        self.snapshot = snapshot
 
     @property
     def node_attributes(self) -> NodeData:
@@ -59,17 +57,18 @@ class ContainerBaseEntity(SnapshotBaseEntity):
         self,
         coordinator: PortainerDataUpdateCoordinator,
         node_id: int,
-        snapshot: Snapshot,
-        container: Container,
+        container_id: str,
     ) -> None:
         """Initialize PortainerEntity."""
-        super().__init__(coordinator, node_id, snapshot)
+        super().__init__(coordinator, node_id)
+        self.node_id = node_id
+        self.container_id = container_id
 
     @property
-    def container_attributes(self) -> Container | None:
+    def container_attributes(self) -> Container:
         """Get the node attributes of the current node."""
-        for node_id in self.coordinator.data:
-            for snapshot in self.coordinator.data[node_id].snapshots:
-                for container in snapshot.docker_snapshot_raw.containers:
-                    return container
-        return None
+        return (
+            self.coordinator.data[self.node_id]
+            .snapshots[-1]
+            .docker_snapshot_raw.containers[self.container_id]
+        )
