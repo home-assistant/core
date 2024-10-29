@@ -3,11 +3,12 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sense_energy import Scale
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE
+from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE, TREND_UPDATE_RATE
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -75,6 +76,7 @@ async def test_device_energy_sensors(
     entity_registry: er.EntityRegistry,
     mock_sense: MagicMock,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sense device power sensors."""
     await setup_platform(hass, config_entry, SENSOR_DOMAIN)
@@ -88,7 +90,8 @@ async def test_device_energy_sensors(
 
     device_1.energy_kwh[Scale.DAY] = 0
     device_2.energy_kwh[Scale.DAY] = 0
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=600))
+    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_daily_energy")
@@ -98,7 +101,8 @@ async def test_device_energy_sensors(
     assert state.state == "0"
 
     device_2.energy_kwh[Scale.DAY] = DEVICE_1_DAY_ENERGY
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=600))
+    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"sensor.{DEVICE_1_NAME.lower()}_daily_energy")

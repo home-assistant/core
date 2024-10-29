@@ -85,10 +85,10 @@ async def async_setup_entry(
         entities.append(
             SenseDevicePowerSensor(device, sense_monitor_id, realtime_coordinator)
         )
-        entities += [
+        entities.extend(
             SenseDeviceEnergySensor(device, scale, trends_coordinator, sense_monitor_id)
             for scale in Scale
-        ]
+        )
 
     for variant_id, variant_name in SENSOR_VARIANTS:
         entities.append(
@@ -271,11 +271,12 @@ class SenseDeviceEnergySensor(SenseDeviceEntity, SensorEntity):
             sense_monitor_id,
             f"{device.id}-{TRENDS_SENSOR_TYPES[scale].lower()}-energy",
         )
-        self._attr_name = f"{TRENDS_SENSOR_TYPES[scale]} Energy"
+        self._attr_translation_key = f"{TRENDS_SENSOR_TYPES[scale].lower()}_energy"
+        self._attr_suggested_display_precision = 2
         self._scale = scale
         self._device = device
 
     @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
-        return round(self._device.energy_kwh[self._scale], 2)
+        return self._device.energy_kwh[self._scale]

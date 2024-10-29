@@ -32,5 +32,24 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "daily_energy": {
+        "name": "Daily Energy"
+      },
+      "weekly_energy": {
+        "name": "Weekly Energy"
+      },
+      "monthly_energy": {
+        "name": "Monthly Energy"
+      },
+      "yearly_energy": {
+        "name": "Yearly Energy"
+      },
+      "bill_energy": {
+        "name": "Bill Energy"
+      }
+    }
   }
 }
