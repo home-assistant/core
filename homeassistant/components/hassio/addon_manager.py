@@ -192,7 +192,7 @@ class AddonManager:
     )
     async def async_set_addon_options(self, config: dict) -> None:
         """Set manager add-on options."""
-        await self._supervisor_client.addons.addon_options(
+        await self._supervisor_client.addons.set_addon_options(
             self.addon_slug, AddonsOptions(config=config)
         )
 

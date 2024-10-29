@@ -853,6 +853,7 @@ async def test_migrate_event_type_ids(
     migrator = migration.EventTypeIDMigration(None, None)
     recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -943,6 +944,7 @@ async def test_migrate_entity_ids(hass: HomeAssistant, recorder_mock: Recorder) 
     migrator = migration.EntityIDMigration(old_db_schema.SCHEMA_VERSION, {})
     recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
     await _async_wait_migration_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -1022,6 +1024,7 @@ async def test_post_migrate_entity_ids(
     migrator = migration.EntityIDPostMigration(None, None)
     recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
+    await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -1079,6 +1082,7 @@ async def test_migrate_null_entity_ids(
     # This is a threadsafe way to add a task to the recorder
     migrator = migration.EntityIDMigration(old_db_schema.SCHEMA_VERSION, {})
     recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
+    await _async_wait_migration_done(hass)
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
@@ -1163,6 +1167,7 @@ async def test_migrate_null_event_type_ids(
     # This is a threadsafe way to add a task to the recorder
     migrator = migration.EventTypeIDMigration(None, None)
     recorder_mock.queue_task(migrator.task(migrator))
+    await _async_wait_migration_done(hass)
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
