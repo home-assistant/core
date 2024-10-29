@@ -20,7 +20,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .device import MySensorsChildEntity
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 DICT_HA_TO_MYS = {

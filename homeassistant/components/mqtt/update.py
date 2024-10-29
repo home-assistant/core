@@ -25,7 +25,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_RO_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC, PAYLOAD_EMPTY_JSON
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
@@ -96,13 +96,12 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
     _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
-    _entity_picture: str | None
 
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
-        if self._entity_picture is not None:
-            return self._entity_picture
+        if self._attr_entity_picture is not None:
+            return self._attr_entity_picture
 
         return super().entity_picture
 
@@ -117,7 +116,6 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
         self._attr_release_url = self._config.get(CONF_RELEASE_URL)
         self._attr_title = self._config.get(CONF_TITLE)
-        self._entity_picture: str | None = self._config.get(CONF_ENTITY_PICTURE)
         self._templates = {
             CONF_VALUE_TEMPLATE: MqttValueTemplate(
                 config.get(CONF_VALUE_TEMPLATE),
@@ -192,7 +190,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             self._attr_release_url = json_payload["release_url"]
 
         if "entity_picture" in json_payload:
-            self._entity_picture = json_payload["entity_picture"]
+            self._attr_entity_picture = json_payload["entity_picture"]
 
     @callback
     def _handle_latest_version_received(self, msg: ReceiveMessage) -> None:
@@ -209,12 +207,12 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             CONF_STATE_TOPIC,
             self._handle_state_message_received,
             {
+                "_attr_entity_picture",
                 "_attr_installed_version",
                 "_attr_latest_version",
                 "_attr_title",
                 "_attr_release_summary",
                 "_attr_release_url",
-                "_entity_picture",
             },
         )
         self.add_subscription(

@@ -3,7 +3,7 @@
     "flow_title": "LG webOS Smart TV",
     "step": {
       "user": {
-        "description": "Turn on TV, fill the following fields click submit",
+        "description": "Turn on TV, fill the following fields and select **Submit**",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
@@ -14,7 +14,7 @@
       },
       "pairing": {
         "title": "webOS TV Pairing",
-        "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
+        "description": "Select **Submit** and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
       },
       "reauth_confirm": {
         "title": "[%key:component::webostv::config::step::pairing::title%]",
@@ -22,7 +22,7 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please turn on your TV or check ip address"
+      "cannot_connect": "Failed to connect, please turn on your TV or check the IP address"
     },
     "abort": {
       "error_pairing": "Connected to LG webOS TV but not paired",

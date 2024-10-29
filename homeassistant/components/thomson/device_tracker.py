@@ -82,7 +82,7 @@ class ThomsonDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Checking ARP")
+        _LOGGER.debug("Checking ARP")
         if not (data := self.get_thomson_data()):
             return False
 

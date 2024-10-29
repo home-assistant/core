@@ -419,7 +419,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'coordinator',
   })
 # ---
 # name: test_sensors[sensor.mock_title_zigbee_uptime-entry]

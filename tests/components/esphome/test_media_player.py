@@ -310,15 +310,17 @@ async def test_media_player_proxy(
                 supported_formats=[
                     MediaPlayerSupportedFormat(
                         format="flac",
-                        sample_rate=48000,
-                        num_channels=2,
+                        sample_rate=0,  # source rate
+                        num_channels=0,  # source channels
                         purpose=MediaPlayerFormatPurpose.DEFAULT,
+                        sample_bytes=0,  # source width
                     ),
                     MediaPlayerSupportedFormat(
                         format="wav",
                         sample_rate=16000,
                         num_channels=1,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
                     ),
                     MediaPlayerSupportedFormat(
                         format="mp3",
@@ -369,7 +371,13 @@ async def test_media_player_proxy(
         mock_async_create_proxy_url.assert_called_once()
         device_id = mock_async_create_proxy_url.call_args[0][1]
         mock_async_create_proxy_url.assert_called_once_with(
-            hass, device_id, media_url, media_format="flac", rate=48000, channels=2
+            hass,
+            device_id,
+            media_url,
+            media_format="flac",
+            rate=None,
+            channels=None,
+            width=None,
         )
 
         media_args = mock_client.media_player_command.call_args.kwargs
@@ -395,7 +403,13 @@ async def test_media_player_proxy(
         mock_async_create_proxy_url.assert_called_once()
         device_id = mock_async_create_proxy_url.call_args[0][1]
         mock_async_create_proxy_url.assert_called_once_with(
-            hass, device_id, media_url, media_format="wav", rate=16000, channels=1
+            hass,
+            device_id,
+            media_url,
+            media_format="wav",
+            rate=16000,
+            channels=1,
+            width=2,
         )
 
         media_args = mock_client.media_player_command.call_args.kwargs

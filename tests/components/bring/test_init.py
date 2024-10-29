@@ -90,7 +90,14 @@ async def test_init_exceptions(
 
 
 @pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
-@pytest.mark.parametrize("bring_method", ["load_lists", "get_list"])
+@pytest.mark.parametrize(
+    "bring_method",
+    [
+        "load_lists",
+        "get_list",
+        "get_all_user_settings",
+    ],
+)
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     bring_config_entry: MockConfigEntry,

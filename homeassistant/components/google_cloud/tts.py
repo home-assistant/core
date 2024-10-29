@@ -172,10 +172,12 @@ class BaseGoogleCloudProvider:
             _LOGGER.error("Error: %s when validating options: %s", err, options)
             return None, None
 
-        encoding = texttospeech.AudioEncoding(options[CONF_ENCODING])
-        gender: texttospeech.SsmlVoiceGender | None = texttospeech.SsmlVoiceGender(
+        encoding: texttospeech.AudioEncoding = texttospeech.AudioEncoding[
+            options[CONF_ENCODING]
+        ]  # type: ignore[misc]
+        gender: texttospeech.SsmlVoiceGender | None = texttospeech.SsmlVoiceGender[
             options[CONF_GENDER]
-        )
+        ]  # type: ignore[misc]
         voice = options[CONF_VOICE]
         if voice:
             gender = None
@@ -223,7 +225,7 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
     ) -> None:
         """Init Google Cloud TTS entity."""
         super().__init__(client, voices, language, options_schema)
-        self._attr_unique_id = f"{entry.entry_id}-tts"
+        self._attr_unique_id = f"{entry.entry_id}"
         self._attr_name = entry.title
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

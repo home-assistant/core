@@ -10,6 +10,7 @@ from aioautomower.exceptions import (
     AuthException,
     HusqvarnaWSServerHandshakeError,
 )
+from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
@@ -160,3 +161,61 @@ async def test_device_info(
         identifiers={(DOMAIN, TEST_MOWER_ID)},
     )
     assert reg_device == snapshot
+
+
+async def test_workarea_deleted(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test if work area is deleted after removed."""
+
+    await setup_integration(hass, mock_config_entry)
+    current_entries = len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    )
+
+    del values[TEST_MOWER_ID].work_areas[123456]
+    mock_automower_client.get_status.return_value = values
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    ) == (current_entries - 2)
+
+
+async def test_coordinator_automatic_registry_cleanup(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test automatic registry cleanup."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.async_block_till_done()
+
+    current_entites = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    current_devices = len(
+        dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+
+    values.pop(TEST_MOWER_ID)
+    mock_automower_client.get_status.return_value = values
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites - 37
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices - 1
+    )

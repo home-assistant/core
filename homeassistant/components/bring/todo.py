@@ -31,7 +31,7 @@ from .const import (
     DOMAIN,
     SERVICE_PUSH_NOTIFICATION,
 )
-from .coordinator import BringData
+from .coordinator import BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
 
@@ -76,6 +76,13 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
+
+    def __init__(
+        self, coordinator: BringDataUpdateCoordinator, bring_list: BringData
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, bring_list)
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{self._list_uuid}"
 
     @property
     def todo_items(self) -> list[TodoItem]:

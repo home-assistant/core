@@ -36,6 +36,9 @@
       },
       "uv_nano": {
         "default": "mdi:air-filter"
+      },
+      "warm_mode": {
+        "default": "mdi:heat-wave"
       }
     },
     "binary_sensor": {
@@ -71,6 +74,22 @@
       },
       "one_touch_filter": {
         "default": "mdi:air-filter"
+      }
+    },
+    "climate": {
+      "climate_air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "slow": "mdi:fan-chevron-down",
+              "low": "mdi:fan-speed-1",
+              "mid": "mdi:fan-speed-2",
+              "high": "mdi:fan-speed-3",
+              "power": "mdi:fan-chevron-up",
+              "auto": "mdi:fan-auto"
+            }
+          }
+        }
       }
     },
     "event": {
@@ -375,12 +394,6 @@
         "default": "mdi:clock-time-three-outline"
       },
       "light_start_for_location": {
-        "default": "mdi:clock-time-three-outline"
-      },
-      "light_end": {
-        "default": "mdi:clock-time-three-outline"
-      },
-      "light_end_for_location": {
         "default": "mdi:clock-time-three-outline"
       },
       "power_level": {

@@ -20,17 +20,12 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.omadasiteclient import GatewayPortSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .controller import (
-    OmadaGatewayCoordinator,
-    OmadaSiteController,
-    OmadaSwitchPortCoordinator,
-)
+from . import OmadaConfigEntry
+from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
 from .coordinator import OmadaCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -41,11 +36,11 @@ TCoordinator = TypeVar("TCoordinator", bound="OmadaCoordinator[Any]")
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OmadaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     omada_client = controller.omada_client
 
     # Naming fun. Omada switches, as in the network hardware
@@ -74,7 +69,7 @@ async def async_setup_entry(
             if desc.exists_func(switch, port)
         )
 
-    gateway_coordinator = await controller.get_gateway_coordinator()
+    gateway_coordinator = controller.gateway_coordinator
     if gateway_coordinator:
         for gateway in gateway_coordinator.data.values():
             entities.extend(
@@ -234,7 +229,6 @@ class OmadaDevicePortSwitchEntity(
 ):
     """Generic toggle switch entity for a Netork Port of an Omada Device."""
 
-    _attr_has_entity_name = True
     entity_description: OmadaDevicePortSwitchEntityDescription[
         TCoordinator, TDevice, TPort
     ]

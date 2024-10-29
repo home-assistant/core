@@ -4,7 +4,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.camera import (
-    STATE_IDLE,
+    CameraState,
     async_get_image,
     async_get_stream_source,
 )
@@ -23,11 +23,11 @@ async def test_doorbird_cameras(
     """Test the doorbird cameras."""
     doorbird_entry = await doorbird_mocker()
     live_camera_entity_id = "camera.mydoorbird_live"
-    assert hass.states.get(live_camera_entity_id).state == STATE_IDLE
+    assert hass.states.get(live_camera_entity_id).state == CameraState.IDLE
     last_motion_camera_entity_id = "camera.mydoorbird_last_motion"
-    assert hass.states.get(last_motion_camera_entity_id).state == STATE_IDLE
+    assert hass.states.get(last_motion_camera_entity_id).state == CameraState.IDLE
     last_ring_camera_entity_id = "camera.mydoorbird_last_ring"
-    assert hass.states.get(last_ring_camera_entity_id).state == STATE_IDLE
+    assert hass.states.get(last_ring_camera_entity_id).state == CameraState.IDLE
     assert await async_get_stream_source(hass, live_camera_entity_id) is not None
     api = doorbird_entry.api
     api.get_image.side_effect = mock_not_found_exception()

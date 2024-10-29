@@ -23,8 +23,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICES_THAT_ADOPT, DOMAIN
 from .data import ProtectDeviceType, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -200,11 +200,6 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
             self.entity_id = sensor_entity_id
 
     @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return self._state
-
-    @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
@@ -247,9 +242,9 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
         if not (state := await self.async_get_last_state()):
             return
-        if state.state == STATE_UNKNOWN:
+        if state.state in {STATE_UNKNOWN, STATE_UNAVAILABLE}:
             return
-        self._state = state.state == STATE_ON
+        self._attr_is_on = state.state == STATE_ON
 
     async def async_update(self) -> None:
         """Get the latest data and update the states."""
@@ -266,13 +261,13 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         await self.hass.async_add_executor_job(self._calculate_gradient)
 
         # Update state
-        self._state = (
+        self._attr_is_on = (
             abs(self._gradient) > abs(self._min_gradient)
             and math.copysign(self._gradient, self._min_gradient) == self._gradient
         )
 
         if self._invert:
-            self._state = not self._state
+            self._attr_is_on = not self._attr_is_on
 
     def _calculate_gradient(self) -> None:
         """Compute the linear trend gradient of the current samples.

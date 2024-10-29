@@ -138,6 +138,22 @@
           "constraints": {
             "access": "readWrite"
           }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100,
+            "access": "readWrite"
+          }
         }
       ]
     }

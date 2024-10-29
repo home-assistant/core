@@ -55,6 +55,9 @@
       },
       "uv_nano": {
         "name": "UVnano"
+      },
+      "warm_mode": {
+        "name": "Heating"
       }
     },
     "binary_sensor": {
@@ -824,12 +827,6 @@
       },
       "light_start_for_location": {
         "name": "{location} lights on time"
-      },
-      "light_end": {
-        "name": "Lights off time"
-      },
-      "light_end_for_location": {
-        "name": "{location} lights off time"
       },
       "power_level": {
         "name": "Power level"

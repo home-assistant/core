@@ -20,7 +20,7 @@ from homeassistant.components.mqtt.const import (
     MQTT_CONNECTION_STATE,
     SUPPORTED_COMPONENTS,
 )
-from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.entity import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -72,7 +72,10 @@ DISCOVERY_COUNT = len(MQTT)
 
 type _MqttMessageType = list[tuple[str, str]]
 type _AttributesType = list[tuple[str, Any]]
-type _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None]]
+type _StateDataType = (
+    list[tuple[_MqttMessageType, str, _AttributesType | None]]
+    | list[tuple[_MqttMessageType, str, None]]
+)
 
 
 def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
@@ -106,7 +109,7 @@ def help_custom_config(
         )
         base.update(instance)
         entity_instances.append(base)
-    config[mqtt.DOMAIN][mqtt_entity_domain]: list[ConfigType] = entity_instances
+    config[mqtt.DOMAIN][mqtt_entity_domain] = entity_instances
     return config
 
 
@@ -1360,11 +1363,11 @@ async def help_test_entity_debug_info_message(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    service: str,
+    service: str | None,
     command_topic: str | None = None,
     command_payload: str | None = None,
     state_topic: str | object | None = _SENTINEL,
-    state_payload: str | None = None,
+    state_payload: bytes | str | None = None,
     service_parameters: dict[str, Any] | None = None,
 ) -> None:
     """Test debug_info.
@@ -1665,6 +1668,61 @@ async def help_test_entity_category(
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
 
 
+async def help_test_entity_icon_and_entity_picture(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    domain: str,
+    config: ConfigType,
+    default_entity_picture: str | None = None,
+) -> None:
+    """Test entity picture and icon."""
+    await mqtt_mock_entry()
+    # Add device settings to config
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+
+    ent_registry = er.async_get(hass)
+
+    # Discover an entity without entity icon or picture
+    unique_id = "veryunique1"
+    config["unique_id"] = unique_id
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    state = hass.states.get(entity_id)
+    assert entity_id is not None and state
+    assert state.attributes.get("icon") is None
+    assert state.attributes.get("entity_picture") == default_entity_picture
+
+    # Discover an entity with an entity picture set
+    unique_id = "veryunique2"
+    config["entity_picture"] = "https://example.com/mypicture.png"
+    config["unique_id"] = unique_id
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    state = hass.states.get(entity_id)
+    assert entity_id is not None and state
+    assert state.attributes.get("icon") is None
+    assert state.attributes.get("entity_picture") == "https://example.com/mypicture.png"
+    config.pop("entity_picture")
+
+    # Discover an entity with an entity icon set
+    unique_id = "veryunique3"
+    config["icon"] = "mdi:emoji-happy-outline"
+    config["unique_id"] = unique_id
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    state = hass.states.get(entity_id)
+    assert entity_id is not None and state
+    assert state.attributes.get("icon") == "mdi:emoji-happy-outline"
+    assert state.attributes.get("entity_picture") == default_entity_picture
+
+
 async def help_test_publishing_with_custom_encoding(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1938,7 +1996,7 @@ async def help_test_skipped_async_ha_write_state(
 ) -> None:
     """Test entity.async_ha_write_state is only called on changes."""
     with patch(
-        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+        "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
     ) as mock_async_ha_write_state:
         assert len(mock_async_ha_write_state.mock_calls) == 0
         async_fire_mqtt_message(hass, topic, payload1)

@@ -41,8 +41,14 @@ from .oauth import TeslaSystemImplementation
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -99,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         raise ConfigEntryAuthFailed from e
     except InvalidRegion:
         try:
-            LOGGER.info("Region is invalid, trying to find the correct region")
+            LOGGER.warning("Region is invalid, trying to find the correct region")
             await tesla.find_server()
             try:
                 products = (await tesla.products())["response"]
