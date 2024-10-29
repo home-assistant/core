@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.suez_water import SuezClient
 from homeassistant.components.suez_water.const import DOMAIN
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -18,10 +17,11 @@ MOCK_DATA = {
 }
 
 
-@pytest.fixture(name="config_entry")
-def mock_config_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Create mock config_entry needed by suez_water integration."""
     return MockConfigEntry(
+        unique_id=MOCK_DATA["username"],
         domain=DOMAIN,
         title="Suez mock device",
         data=MOCK_DATA,
@@ -38,36 +38,33 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="suez_client")
-def mock_suez_client(hass: HomeAssistant) -> Generator[AsyncMock]:
+def mock_suez_client() -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
-
-    mock = AsyncMock(spec=SuezClient)
-    mock.check_credentials.return_value = True
-    mock.update.return_value = None
-    mock.state = 160
-    mock.attributes = {
-        "thisMonthConsumption": {
-            "2024-01-01": 130,
-            "2024-01-02": 145,
-        },
-        "previousMonthConsumption": {
-            "2024-12-01": 154,
-            "2024-12-02": 166,
-        },
-        "highestMonthlyConsumption": 2558,
-        "lastYearOverAll": 1000,
-        "thisYearOverAll": 1500,
-        "history": {
-            "2024-01-01": 130,
-            "2024-01-02": 145,
-            "2024-12-01": 154,
-            "2024-12-02": 166,
-        },
-        "attribution": "suez water mock test",
-    }
-
-    with patch(
-        "homeassistant.components.suez_water.SuezClient",
-        return_value=mock,
-    ) as mock_client:
+    with (
+        patch("homeassistant.components.suez_water.coordinator.SuezClient", autospec=True) as mock_client,
+        patch("homeassistant.components.suez_water.config_flow.SuezClient", new=mock_client)
+    ):
+        mock_client.check_credentials.return_value = True
+        mock_client.update.return_value = None
+        mock_client.state = 160
+        mock_client.attributes = {
+            "thisMonthConsumption": {
+                "2024-01-01": 130,
+                "2024-01-02": 145,
+            },
+            "previousMonthConsumption": {
+                "2024-12-01": 154,
+                "2024-12-02": 166,
+            },
+            "highestMonthlyConsumption": 2558,
+            "lastYearOverAll": 1000,
+            "thisYearOverAll": 1500,
+            "history": {
+                "2024-01-01": 130,
+                "2024-01-02": 145,
+                "2024-12-01": 154,
+                "2024-12-02": 166,
+            },
+            "attribution": "suez water mock test",
+        }
         yield mock_client

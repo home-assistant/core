@@ -52,7 +52,7 @@ class SuezAggregatedSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity
         return self.coordinator.data.value
 
     @property
-    def attribution(self) -> None | str:
+    def attribution(self) -> str | None:
         """Return data attribution message."""
         return self.coordinator.data.attribution
 
