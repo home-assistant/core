@@ -24,9 +24,9 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import StateType
 
-from . import HabiticaConfigEntry
 from .const import DOMAIN, UNIT_TASKS
 from .entity import HabiticaBase
+from .types import HabiticaConfigEntry
 from .util import entity_used_in
 
 _LOGGER = logging.getLogger(__name__)

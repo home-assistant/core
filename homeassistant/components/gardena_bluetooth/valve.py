@@ -7,11 +7,10 @@ from typing import Any
 from gardena_bluetooth.const import Valve
 
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import GardenaBluetoothConfigEntry
 from .coordinator import GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothEntity
 
@@ -19,10 +18,12 @@ FALLBACK_WATERING_TIME_IN_SECONDS = 60 * 60
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GardenaBluetoothConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch based on a config entry."""
-    coordinator: GardenaBluetoothCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     if GardenaBluetoothValve.characteristics.issubset(coordinator.characteristics):
         entities.append(GardenaBluetoothValve(coordinator))
