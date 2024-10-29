@@ -246,7 +246,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
-    def volume_level(self) -> float | None:
+    def volume_level(self) -> float:
         """Return the volume level."""
         return self._device.volume / 100
 
