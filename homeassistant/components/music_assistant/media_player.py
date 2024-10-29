@@ -41,7 +41,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, ATTR_STREAM_TITLE, DOMAIN
+from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, DOMAIN
 from .entity import MusicAssistantEntity
 
 if TYPE_CHECKING:
@@ -177,43 +177,28 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @property
+    def active_queue(self) -> PlayerQueue | None:
+        """Return the active queue for this player (if any)."""
+        if not self.player.active_source:
+            return None
+        return self.mass.player_queues.get(self.player.active_source)
+
+    @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return additional state attributes."""
-        player = self.player
-        if TYPE_CHECKING:
-            assert player.active_source is not None
-        queue = self.mass.player_queues.get(player.active_source)
-        attrs = {
-            ATTR_MASS_PLAYER_TYPE: player.type.value,
-            ATTR_ACTIVE_QUEUE: queue.queue_id if queue else None,
+        return {
+            ATTR_MASS_PLAYER_TYPE: self.player.type.value,
+            ATTR_ACTIVE_QUEUE: self.active_queue.queue_id
+            if self.active_queue
+            else None,
         }
-        # add optional stream_title for radio streams
-        if (
-            queue
-            and queue.current_item
-            and queue.current_item.streamdetails
-            and queue.current_item.streamdetails.stream_title
-        ):
-            attrs[ATTR_STREAM_TITLE] = queue.current_item.streamdetails.stream_title
-        elif (
-            queue
-            and queue.current_item
-            and queue.current_item.media_type == MediaType.RADIO
-            and queue.current_item.media_item
-            and queue.current_item.media_item.metadata
-        ):
-            attrs[ATTR_STREAM_TITLE] = (
-                queue.current_item.media_item.metadata.description
-            )
-        return attrs
 
     async def async_on_update(self) -> None:
         """Handle player updates."""
         if not self.available:
             return
         player = self.player
-        active_queue_id = player.active_source or player.player_id
-        active_queue = self.mass.player_queues.get(active_queue_id)
+        active_queue = self.active_queue
         # update generic attributes
         if player.powered and active_queue is not None:
             self._attr_state = MediaPlayerState(active_queue.state.value)
@@ -221,20 +206,20 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
-        # translate MA group_childs to HA group_members as entity id's
-        # find a way to optimize this a tiny bit more
-        # e.g. by holding a lookup dict in memory on integration level
         group_members_entity_ids: list[str] = []
         if player.group_childs:
-            for child in player.group_childs:
-                entity_registry = er.async_get(self.hass)
-                child_player = entity_registry.async_get(child)
-                if child_player is not None:
-                    if child_player.unique_id not in group_members_entity_ids:
-                        continue
-                    group_members_entity_ids.append(child_player.unique_id)
+            # translate MA group_childs to HA group_members as entity id's
+            entity_registry = er.async_get(self.hass)
+            group_members_entity_ids = [
+                entity_id
+                for child_id in player.group_childs
+                if (
+                    entity_id := entity_registry.async_get_entity_id(
+                        DOMAIN, self.platform.domain, child_id
+                    )
+                )
+            ]
         self._attr_group_members = group_members_entity_ids
-
         self._attr_volume_level = (
             player.volume_level / 100 if player.volume_level is not None else None
         )
@@ -263,27 +248,26 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     @catch_musicassistant_error
     async def async_media_next_track(self) -> None:
         """Send next track command to device."""
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.queue_command_next(queue.queue_id)
+        if not self.active_queue:
+            return
+        await self.mass.player_queues.queue_command_next(self.active_queue.queue_id)
 
     @catch_musicassistant_error
     async def async_media_previous_track(self) -> None:
         """Send previous track command to device."""
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.queue_command_previous(queue.queue_id)
+        if not self.active_queue:
+            return
+        await self.mass.player_queues.queue_command_previous(self.active_queue.queue_id)
 
     @catch_musicassistant_error
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         position = int(position)
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.queue_command_seek(queue.queue_id, position)
+        if not self.active_queue:
+            return
+        await self.mass.player_queues.queue_command_seek(
+            self.active_queue.queue_id, position
+        )
 
     @catch_musicassistant_error
     async def async_mute_volume(self, mute: bool) -> None:
@@ -319,20 +303,20 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     @catch_musicassistant_error
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle state."""
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.queue_command_shuffle(queue.queue_id, shuffle)
+        if not self.active_queue:
+            return
+        await self.mass.player_queues.queue_command_shuffle(
+            self.active_queue.queue_id, shuffle
+        )
 
     @catch_musicassistant_error
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat state."""
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.queue_command_repeat(
-                queue.queue_id, MassRepeatMode(repeat)
-            )
+        if not self.active_queue:
+            return
+        await self.mass.player_queues.queue_command_repeat(
+            self.active_queue.queue_id, MassRepeatMode(repeat)
+        )
 
     @catch_musicassistant_error
     async def async_clear_playlist(self) -> None:
