@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_webrtc_providers"
 )
-DATA_WEBRTC_LEGACY_PROVIDERS: HassKey[set[CameraWebRTCLegacyProvider]] = HassKey(
+DATA_WEBRTC_LEGACY_PROVIDERS: HassKey[dict[str, CameraWebRTCLegacyProvider]] = HassKey(
     "camera_webrtc_legacy_providers"
 )
 DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
@@ -160,10 +160,10 @@ class CameraWebRTCLegacyProvider(Protocol):
         """Handle the WebRTC offer and return an answer."""
 
 
-def _async_register_webrtc_provider[_T](
+@callback
+def async_register_webrtc_provider(
     hass: HomeAssistant,
-    key: HassKey[set[_T]],
-    provider: _T,
+    provider: CameraWebRTCProvider,
 ) -> Callable[[], None]:
     """Register a WebRTC provider.
 
@@ -172,7 +172,7 @@ def _async_register_webrtc_provider[_T](
     if DOMAIN not in hass.data:
         raise ValueError("Unexpected state, camera not loaded")
 
-    providers = hass.data.setdefault(key, set())
+    providers = hass.data.setdefault(DATA_WEBRTC_PROVIDERS, set())
 
     @callback
     def remove_provider() -> None:
@@ -185,18 +185,6 @@ def _async_register_webrtc_provider[_T](
     providers.add(provider)
     hass.async_create_task(_async_refresh_providers(hass))
     return remove_provider
-
-
-@callback
-def async_register_webrtc_provider(
-    hass: HomeAssistant,
-    provider: CameraWebRTCProvider,
-) -> Callable[[], None]:
-    """Register a WebRTC provider.
-
-    The first provider to satisfy the offer will be used.
-    """
-    return _async_register_webrtc_provider(hass, DATA_WEBRTC_PROVIDERS, provider)
 
 
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
@@ -344,11 +332,11 @@ def async_register_ws(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_candidate)
 
 
-async def _async_get_supported_provider[
-    _T: CameraWebRTCLegacyProvider | CameraWebRTCProvider
-](hass: HomeAssistant, camera: Camera, key: HassKey[set[_T]]) -> _T | None:
+async def async_get_supported_provider(
+    hass: HomeAssistant, camera: Camera
+) -> CameraWebRTCProvider | None:
     """Return the first supported provider for the camera."""
-    providers = hass.data.get(key)
+    providers = hass.data.get(DATA_WEBRTC_PROVIDERS)
     if not providers or not (stream_source := await camera.stream_source()):
         return None
 
@@ -359,20 +347,19 @@ async def _async_get_supported_provider[
     return None
 
 
-async def async_get_supported_provider(
-    hass: HomeAssistant, camera: Camera
-) -> CameraWebRTCProvider | None:
-    """Return the first supported provider for the camera."""
-    return await _async_get_supported_provider(hass, camera, DATA_WEBRTC_PROVIDERS)
-
-
 async def async_get_supported_legacy_provider(
     hass: HomeAssistant, camera: Camera
 ) -> CameraWebRTCLegacyProvider | None:
     """Return the first supported provider for the camera."""
-    return await _async_get_supported_provider(
-        hass, camera, DATA_WEBRTC_LEGACY_PROVIDERS
-    )
+    providers = hass.data.get(DATA_WEBRTC_LEGACY_PROVIDERS)
+    if not providers or not (stream_source := await camera.stream_source()):
+        return None
+
+    for provider in providers.values():
+        if await provider.async_is_supported(stream_source):
+            return provider
+
+    return None
 
 
 @callback
@@ -435,6 +422,9 @@ def async_register_rtsp_to_web_rtc_provider(
 
     The first provider to satisfy the offer will be used.
     """
+    if DOMAIN not in hass.data:
+        raise ValueError("Unexpected state, camera not loaded")
+
     builtin_webrtc_integration = "go2rtc"
     if (providers := hass.data.get(DATA_WEBRTC_PROVIDERS)) and any(
         provider.domain == builtin_webrtc_integration for provider in providers
@@ -454,7 +444,20 @@ def async_register_rtsp_to_web_rtc_provider(
                 "builtin_integration": builtin_webrtc_integration,
             },
         )
+
+    legacy_providers = hass.data.setdefault(DATA_WEBRTC_LEGACY_PROVIDERS, {})
+
+    if domain in legacy_providers:
+        raise ValueError("Provider already registered")
+
     provider_instance = _CameraRtspToWebRTCProvider(provider)
-    return _async_register_webrtc_provider(
-        hass, DATA_WEBRTC_LEGACY_PROVIDERS, provider_instance
-    )
+
+    @callback
+    def remove_provider() -> None:
+        legacy_providers.pop(domain)
+        hass.async_create_task(_async_refresh_providers(hass))
+
+    legacy_providers[domain] = provider_instance
+    hass.async_create_task(_async_refresh_providers(hass))
+
+    return remove_provider
