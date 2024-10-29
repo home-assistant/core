@@ -261,6 +261,23 @@ async def test_flow_user_init_server_version_invalid(
     assert result["errors"] == {"base": "invalid_server_version"}
 
 
+async def test_flow_zeroconf_init_connect_issue(
+    mock_get_server_info, hass: HomeAssistant
+) -> None:
+    """Test we advance to the next step when server url is invalid."""
+    mock_get_server_info.side_effect = CannotConnect("cannot_connect")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_flow_discovery_confirm_creates_config_entry(
     mock_get_server_info: AsyncMock, mock_music_assistant_client, hass: HomeAssistant
 ) -> None:
