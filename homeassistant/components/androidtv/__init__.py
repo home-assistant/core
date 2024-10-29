@@ -41,11 +41,9 @@ from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
-    CONF_SCREENCAP,
     CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     DEFAULT_ADB_SERVER_PORT,
-    DEFAULT_SCREENCAP_INTERVAL,
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     PROP_ETHMAC,
@@ -169,22 +167,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
     )
 
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if entry.version == 1:
         new_options = {**entry.options}
 
         # Migrate MinorVersion 1 -> MinorVersion 2: New option
         if entry.minor_version < 2:
-            if (old_value := new_options.get(CONF_SCREENCAP)) is not None:
-                new_value = DEFAULT_SCREENCAP_INTERVAL if old_value else 0
-                new_options = {**new_options, CONF_SCREENCAP_INTERVAL: new_value}
+            new_options = {**new_options, CONF_SCREENCAP_INTERVAL: 0}
 
-        hass.config_entries.async_update_entry(
-            entry, options=new_options, minor_version=2, version=1
-        )
+            hass.config_entries.async_update_entry(
+                entry, options=new_options, minor_version=2, version=1
+            )
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
