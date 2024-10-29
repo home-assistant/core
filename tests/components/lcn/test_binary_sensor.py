@@ -185,10 +185,7 @@ async def test_create_issue(
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
 
     assert issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_binary_sensor_{entity_id}_automation.test"
-    )
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_binary_sensor_{entity_id}_script.test"
+        DOMAIN, f"deprecated_binary_sensor_{entity_id}"
     )
 
-    assert len(issue_registry.issues) == 2
+    assert len(issue_registry.issues) == 1

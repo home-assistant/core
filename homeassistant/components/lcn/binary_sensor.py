@@ -94,18 +94,17 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
 
         entity_automations = automations_with_entity(self.hass, self.entity_id)
         entity_scripts = scripts_with_entity(self.hass, self.entity_id)
-        for item in entity_automations + entity_scripts:
+        if entity_automations + entity_scripts:
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"deprecated_binary_sensor_{self.entity_id}_{item}",
+                f"deprecated_binary_sensor_{self.entity_id}",
                 breaks_in_ha_version="2025.5.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_regulatorlock_sensor",
                 translation_placeholders={
                     "entity": f"{DOMAIN_BINARY_SENSOR}.{self.name.lower().replace(' ', '_')}",
-                    "info": item,
                 },
             )
 
@@ -183,18 +182,17 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
 
         entity_automations = automations_with_entity(self.hass, self.entity_id)
         entity_scripts = scripts_with_entity(self.hass, self.entity_id)
-        for item in entity_automations + entity_scripts:
+        if entity_automations + entity_scripts:
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"deprecated_binary_sensor_{self.entity_id}_{item}",
-                breaks_in_ha_version="2025.2.0",
+                f"deprecated_binary_sensor_{self.entity_id}",
+                breaks_in_ha_version="2025.5.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_keylock_sensor",
                 translation_placeholders={
                     "entity": f"{DOMAIN_BINARY_SENSOR}.{self.name.lower().replace(' ', '_')}",
-                    "info": item,
                 },
             )
 

@@ -77,11 +77,11 @@
     },
     "deprecated_regulatorlock_sensor": {
       "title": "Deprecated LCN regulator lock binary sensor entity found in {info}",
-      "description": "Your LCN regulator lock binary sensor entity `{entity}` is beeing used in `{info}`. A regulator lock switch entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
+      "description": "Your LCN regulator lock binary sensor entity `{entity}` is beeing used in automations or scripts. A regulator lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     },
     "deprecated_keylock_sensor": {
       "title": "Deprecated LCN key lock binary sensor entity found in {info}",
-      "description": "Your LCN key lock binary sensor entity `{entity}` is beeing used in `{info}`. A key lock switch entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
+      "description": "Your LCN key lock binary sensor entity `{entity}` is beeing used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   },
   "services": {
