@@ -6,9 +6,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'speaker_a',
-        'speaker_b',
-        'headphones',
+        'Speaker A',
+        'Speaker B',
+        'Headphones',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -43,9 +43,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cambridge Audio CXNv2 Audio output',
       'options': list([
-        'speaker_a',
-        'speaker_b',
-        'headphones',
+        'Speaker A',
+        'Speaker B',
+        'Headphones',
       ]),
     }),
     'context': <ANY>,
