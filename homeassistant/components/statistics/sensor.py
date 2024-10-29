@@ -734,7 +734,7 @@ class StatisticsSensor(SensorEntity):
     def _update_extra_state_attributes(self) -> None:
         """Calculate and update the various attributes."""
         self._attr_extra_state_attributes[STAT_BUFFER_USAGE_RATIO] = None
-        self._attr_extra_state_attributes[STAT_AGE_COVERAGE_RATIO] = None
+        self._attr_extra_state_attributes[STAT_AGE_COVERAGE_RATIO] = 0
         if self._samples_max_buffer_size is not None:
             self._attr_extra_state_attributes[STAT_BUFFER_USAGE_RATIO] = round(
                 len(self.states) / self._samples_max_buffer_size, 2

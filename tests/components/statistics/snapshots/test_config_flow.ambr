@@ -11,7 +11,7 @@
 # name: test_config_flow_preview_success[success]
   dict({
     'attributes': dict({
-      'age_coverage_ratio': None,
+      'age_coverage_ratio': 0,
       'buffer_usage_ratio': 0.1,
       'friendly_name': 'Statistical characteristic',
       'icon': 'mdi:calculator',
