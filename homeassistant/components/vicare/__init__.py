@@ -57,7 +57,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 CONF_USERNAME: entry.data[CONF_USERNAME],
                 CONF_PASSWORD: entry.data[CONF_PASSWORD],
             },
-            options={CONF_HEATING_TYPE: entry.data.get(CONF_HEATING_TYPE)},
+            options={CONF_HEATING_TYPE: entry.data[CONF_HEATING_TYPE]},
         )
         _LOGGER.debug(
             "Migration to version %s.%s successful",
