@@ -250,8 +250,15 @@ async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
     assert "age_coverage_ratio" not in state.attributes
 
 
-async def test_sensor_source_with_force_update(hass: HomeAssistant) -> None:
-    """Test the behavior of the sensor when the source sensor force-updates with same value."""
+async def test_sensor_state_reported(hass: HomeAssistant) -> None:
+    """Test the behavior of the sensor with a sequence of identical values.
+
+    Forced updates no longer make a difference, since the statistics are now reacting not
+    only to state change events but also to state report events (EVENT_STATE_REPORTED).
+    This means repeating values will be added to the buffer repeatedly in both cases.
+    This fixes problems with time based averages and some other functions that behave
+    differently when repeating values are reported.
+    """
     repeating_values = [18, 0, 0, 0, 0, 0, 0, 0, 9]
     assert await async_setup_component(
         hass,
@@ -294,9 +301,9 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant) -> None:
     state_normal = hass.states.get("sensor.test_normal")
     state_force = hass.states.get("sensor.test_force")
     assert state_normal and state_force
-    assert state_normal.state == str(round(sum(repeating_values) / 3, 2))
+    assert state_normal.state == str(round(sum(repeating_values) / 9, 2))
     assert state_force.state == str(round(sum(repeating_values) / 9, 2))
-    assert state_normal.attributes.get("buffer_usage_ratio") == round(3 / 20, 2)
+    assert state_normal.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state_force.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
 
@@ -1777,3 +1784,51 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
     # we will end up with a buffer of [1 .. 9] (10 wasn't added)
     # so the computed average_step is 1+2+3+4+5+6+7+8/8 = 4.5
     assert float(hass.states.get("sensor.test").state) == pytest.approx(4.5)
+
+
+async def test_average_linear_unevenly_timed(hass: HomeAssistant) -> None:
+    """Test the average_linear state characteristic with unevenly distributed values.
+
+    This also implicitly tests the correct timing of repeating values.
+    """
+    values_and_times = [[5.0, 2], [10.0, 1], [10.0, 1], [10.0, 2], [5.0, 1]]
+
+    current_time = dt_util.utcnow()
+
+    with (
+        freeze_time(current_time) as freezer,
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test_sensor_average_linear",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "average_linear",
+                        "max_age": {"seconds": 10},
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        for value_and_time in values_and_times:
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value_and_time[0]),
+                {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+            )
+            current_time += timedelta(seconds=value_and_time[1])
+            freezer.move_to(current_time)
+
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test_sensor_average_linear")
+        assert state is not None
+        assert state.state == "8.33", (
+            "value mismatch for characteristic 'sensor/average_linear' - "
+            f"assert {state.state} == 8.33"
+        )

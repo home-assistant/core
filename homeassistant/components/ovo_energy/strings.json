@@ -16,7 +16,7 @@
         "description": "Set up an OVO Energy instance to access your energy usage.",
         "title": "Add OVO Energy Account"
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
