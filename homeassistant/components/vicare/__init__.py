@@ -38,6 +38,35 @@ _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s", entry.version, entry.minor_version
+        )
+        hass.config_entries.async_update_entry(
+            entry,
+            minor_version=2,
+            data={
+                CONF_CLIENT_ID: entry.data[CONF_CLIENT_ID],
+                CONF_USERNAME: entry.data[CONF_USERNAME],
+                CONF_PASSWORD: entry.data[CONF_PASSWORD],
+            },
+            options={CONF_HEATING_TYPE: entry.data.get(CONF_HEATING_TYPE)},
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            entry.version,
+            entry.minor_version,
+        )
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
@@ -114,30 +143,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    if entry.version == 1 and entry.minor_version == 1:
-            _LOGGER.debug(
-                "Migrating from version %s.%s", entry.version, entry.minor_version
-            )
-            hass.config_entries.async_update_entry(
-                entry,
-                minor_version=2,
-                data={
-                    CONF_CLIENT_ID: entry.data[CONF_CLIENT_ID],
-                    CONF_USERNAME: entry.data[CONF_USERNAME],
-                    CONF_PASSWORD: entry.data[CONF_PASSWORD],
-                },
-                options={CONF_HEATING_TYPE: entry.data.get(CONF_HEATING_TYPE)},
-            )
-            _LOGGER.debug(
-                "Migration to version %s.%s successful",
-                entry.version,
-                entry.minor_version,
-            )
-    return True
 
 
 async def async_migrate_devices_and_entities(
