@@ -35,6 +35,19 @@
       }
     }
   },
+  "issues": {
+    "deprecated_filename_template": {
+      "title": "Detected use of deprecated template variable",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::camera::issues::deprecated_filename_template::title%]",
+            "description": "The pre-defined template variable `entity_id` was used when performing action `{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue."
+          }
+        }
+      }
+    }
+  },
   "services": {
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
@@ -58,7 +71,7 @@
       "fields": {
         "filename": {
           "name": "Filename",
-          "description": "Template of a filename. Variable available is `entity_id`."
+          "description": "Full path to filename."
         }
       }
     },
@@ -82,7 +95,7 @@
       "fields": {
         "filename": {
           "name": "[%key:component::camera::services::snapshot::fields::filename::name%]",
-          "description": "Template of a filename. Variable available is `entity_id`. Must be mp4."
+          "description": "Full path to filename. Must be mp4."
         },
         "duration": {
           "name": "Duration",

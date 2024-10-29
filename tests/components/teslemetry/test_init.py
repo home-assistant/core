@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
@@ -18,7 +18,7 @@ from homeassistant.components.teslemetry.coordinator import (
 )
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -48,7 +48,10 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_init_error(
-    hass: HomeAssistant, mock_products, side_effect, state
+    hass: HomeAssistant,
+    mock_products: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
 
@@ -86,7 +89,7 @@ async def test_vehicle_refresh_asleep(
 
 
 async def test_vehicle_refresh_offline(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_vehicle_data: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test coordinator refresh with an error."""
     entry = await setup_platform(hass, [Platform.CLIMATE])
@@ -103,7 +106,10 @@ async def test_vehicle_refresh_offline(
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_vehicle_refresh_error(
-    hass: HomeAssistant, mock_vehicle_data, side_effect, state
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_vehicle_data.side_effect = side_effect
@@ -112,7 +118,7 @@ async def test_vehicle_refresh_error(
 
 
 async def test_vehicle_sleep(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_vehicle_data: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test coordinator refresh with an error."""
     await setup_platform(hass, [Platform.CLIMATE])
@@ -171,7 +177,10 @@ async def test_vehicle_sleep(
 # Test Energy Live Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_live_refresh_error(
-    hass: HomeAssistant, mock_live_status, side_effect, state
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_live_status.side_effect = side_effect
@@ -182,9 +191,70 @@ async def test_energy_live_refresh_error(
 # Test Energy Site Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_site_refresh_error(
-    hass: HomeAssistant, mock_site_info, side_effect, state
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_site_info.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
+
+
+# Test Energy History Coordinator
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_energy_history_refresh_error(
+    hass: HomeAssistant,
+    mock_energy_history: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_energy_history.side_effect = side_effect
+    entry = await setup_platform(hass)
+    assert entry.state is state
+
+
+async def test_vehicle_stream(
+    hass: HomeAssistant,
+    mock_listen: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test vehicle stream events."""
+
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    mock_listen.assert_called_once()
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state.state == STATE_ON
+
+    state = hass.states.get("binary_sensor.test_user_present")
+    assert state.state == STATE_OFF
+
+    runtime_data: TeslemetryData = entry.runtime_data
+    for listener, _ in runtime_data.vehicles[0].stream._listeners.values():
+        listener(
+            {
+                "vin": VEHICLE_DATA_ALT["response"]["vin"],
+                "vehicle_data": VEHICLE_DATA_ALT["response"],
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_user_present")
+    assert state.state == STATE_ON
+
+    for listener, _ in runtime_data.vehicles[0].stream._listeners.values():
+        listener(
+            {
+                "vin": VEHICLE_DATA_ALT["response"]["vin"],
+                "state": "offline",
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state.state == STATE_OFF

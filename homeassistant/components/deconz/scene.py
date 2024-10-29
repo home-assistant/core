@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzSceneMixin
+from .entity import DeconzSceneMixin
 from .hub import DeconzHub
 
 

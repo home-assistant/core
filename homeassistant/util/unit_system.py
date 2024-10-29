@@ -238,6 +238,7 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
         ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
+        ("distance", UnitOfLength.NAUTICAL_MILES): UnitOfLength.KILOMETERS,
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
@@ -258,6 +259,7 @@ METRIC_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ("speed", UnitOfSpeed.INCHES_PER_SECOND): UnitOfSpeed.MILLIMETERS_PER_SECOND,
         ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
         (
             "speed",
@@ -330,6 +332,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
         # Convert non-USCS speeds, except knots, to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
+        ("speed", UnitOfSpeed.MILLIMETERS_PER_SECOND): UnitOfSpeed.INCHES_PER_SECOND,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,
         (
             "speed",

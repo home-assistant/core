@@ -990,6 +990,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         *,
         data=None,
         disabled_by=None,
+        discovery_keys=None,
         domain="test",
         entry_id=None,
         minor_version=1,
@@ -1004,9 +1005,11 @@ class MockConfigEntry(config_entries.ConfigEntry):
         version=1,
     ) -> None:
         """Initialize a mock config entry."""
+        discovery_keys = discovery_keys or {}
         kwargs = {
             "data": data or {},
             "disabled_by": disabled_by,
+            "discovery_keys": discovery_keys,
             "domain": domain,
             "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,
@@ -1061,17 +1064,52 @@ class MockConfigEntry(config_entries.ConfigEntry):
         data: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Start a reauthentication flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError("Config entry must be added to hass to start reauth flow")
+        return await start_reauth_flow(hass, self, context, data)
+
+    async def start_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        *,
+        show_advanced_options: bool = False,
+    ) -> ConfigFlowResult:
+        """Start a reconfiguration flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError(
+                "Config entry must be added to hass to start reconfiguration flow"
+            )
         return await hass.config_entries.flow.async_init(
             self.domain,
             context={
-                "source": config_entries.SOURCE_REAUTH,
+                "source": config_entries.SOURCE_RECONFIGURE,
                 "entry_id": self.entry_id,
-                "title_placeholders": {"name": self.title},
-                "unique_id": self.unique_id,
-            }
-            | (context or {}),
-            data=self.data | (data or {}),
+                "show_advanced_options": show_advanced_options,
+            },
         )
+
+
+async def start_reauth_flow(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    context: dict[str, Any] | None = None,
+    data: dict[str, Any] | None = None,
+) -> ConfigFlowResult:
+    """Start a reauthentication flow for a config entry.
+
+    This helper method should be aligned with `ConfigEntry._async_init_reauth`.
+    """
+    return await hass.config_entries.flow.async_init(
+        entry.domain,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+        }
+        | (context or {}),
+        data=entry.data | (data or {}),
+    )
 
 
 def patch_yaml_files(files_dict, endswith=True):

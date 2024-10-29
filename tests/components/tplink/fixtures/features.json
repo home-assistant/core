@@ -200,6 +200,21 @@
     "type": "BinarySensor",
     "category": "Primary"
   },
+  "motion_detected": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Primary"
+  },
+  "alarm": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
+  "reboot": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
   "test_alarm": {
     "value": "<Action>",
     "type": "Action",

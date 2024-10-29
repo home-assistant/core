@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -61,11 +60,6 @@ class TeslemetryDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self.get(self.lon_key)
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device tracker."""
-        return SourceType.GPS
 
 
 class TeslemetryDeviceTrackerLocationEntity(TeslemetryDeviceTrackerEntity):

@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 DECONZ_TYPE_TO_DEVICE_CLASS = {

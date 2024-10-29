@@ -72,7 +72,7 @@ async def async_setup_entry(
 
     # If the URL has been deprecated then change to the default instead
     if url in DEPRECATED_URLS:
-        _LOGGER.info(
+        _LOGGER.warning(
             "URL: %s has been deprecated, migrating to the latest default: %s",
             url,
             DEFAULT_URL,

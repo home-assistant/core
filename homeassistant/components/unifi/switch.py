@@ -194,9 +194,9 @@ class UnifiSwitchEntityDescription(
 ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     UnifiSwitchEntityDescription[Clients, Client](
         key="Block client",
+        translation_key="block_client",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:ethernet",
         allowed_fn=async_block_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         control_fn=async_block_client_control_fn,
@@ -210,9 +210,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[DPIRestrictionGroups, DPIRestrictionGroup](
         key="DPI restriction",
+        translation_key="dpi_restriction",
         has_entity_name=False,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:network",
         allowed_fn=lambda hub, obj_id: hub.config.option_dpi_restrictions,
         api_handler_fn=lambda api: api.dpi_groups,
         control_fn=async_dpi_group_control_fn,
@@ -239,9 +239,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[PortForwarding, PortForward](
         key="Port forward control",
+        translation_key="port_forward_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:upload-network",
         api_handler_fn=lambda api: api.port_forwarding,
         control_fn=async_port_forward_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
@@ -252,9 +252,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[TrafficRules, TrafficRule](
         key="Traffic rule control",
+        translation_key="traffic_rule_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:security-network",
         api_handler_fn=lambda api: api.traffic_rules,
         control_fn=async_traffic_rule_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
@@ -265,10 +265,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
+        translation_key="poe_port_control",
         device_class=SwitchDeviceClass.OUTLET,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        icon="mdi:ethernet",
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
         control_fn=async_poe_port_control_fn,
@@ -281,9 +281,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[Wlans, Wlan](
         key="WLAN control",
+        translation_key="wlan_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:wifi-check",
         api_handler_fn=lambda api: api.wlans,
         control_fn=async_wlan_control_fn,
         device_info_fn=async_wlan_device_info_fn,

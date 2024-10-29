@@ -304,10 +304,6 @@ TIMER_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         key=TimerProperty.LIGHT_START,
         translation_key=TimerProperty.LIGHT_START,
     ),
-    TimerProperty.LIGHT_END: SensorEntityDescription(
-        key=TimerProperty.LIGHT_END,
-        translation_key=TimerProperty.LIGHT_END,
-    ),
     ThinQProperty.ELAPSED_DAY_STATE: SensorEntityDescription(
         key=ThinQProperty.ELAPSED_DAY_STATE,
         native_unit_of_measurement=UnitOfTime.DAYS,
@@ -432,7 +428,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         TEMPERATURE_SENSOR_DESC[ThinQProperty.NIGHT_TARGET_TEMPERATURE],
         TEMPERATURE_SENSOR_DESC[ThinQProperty.TEMPERATURE_STATE],
         TIMER_SENSOR_DESC[TimerProperty.LIGHT_START],
-        TIMER_SENSOR_DESC[TimerProperty.LIGHT_END],
     ),
     DeviceType.REFRIGERATOR: (
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],

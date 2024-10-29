@@ -34,5 +34,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_grouping_entity": {
+      "message": "Entity with id {entity_id} can't be added to the LinkPlay multiroom. Is the entity a LinkPlay mediaplayer?"
+    }
   }
 }

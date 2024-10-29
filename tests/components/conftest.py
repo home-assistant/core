@@ -8,10 +8,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohasupervisor.models import Repository, StoreAddon, StoreInfo
 import pytest
 
+from homeassistant.config_entries import (
+    DISCOVERY_SOURCES,
+    ConfigEntriesFlowManager,
+    FlowResult,
+    OptionsFlowManager,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.helpers.translation import async_get_translations
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
@@ -185,7 +194,9 @@ def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner],
 
 
 @pytest.fixture(name="addon_manager")
-def addon_manager_fixture(hass: HomeAssistant) -> AddonManager:
+def addon_manager_fixture(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> AddonManager:
     """Return an AddonManager instance."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_manager
@@ -227,13 +238,14 @@ def addon_store_info_side_effect_fixture() -> Any | None:
 
 @pytest.fixture(name="addon_store_info")
 def addon_store_info_fixture(
+    supervisor_client: AsyncMock,
     addon_store_info_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock Supervisor add-on store info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_store_info
 
-    yield from mock_addon_store_info(addon_store_info_side_effect)
+    return mock_addon_store_info(supervisor_client, addon_store_info_side_effect)
 
 
 @pytest.fixture(name="addon_info_side_effect")
@@ -243,12 +255,14 @@ def addon_info_side_effect_fixture() -> Any | None:
 
 
 @pytest.fixture(name="addon_info")
-def addon_info_fixture(addon_info_side_effect: Any | None) -> Generator[AsyncMock]:
+def addon_info_fixture(
+    supervisor_client: AsyncMock, addon_info_side_effect: Any | None
+) -> AsyncMock:
     """Mock Supervisor add-on info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_info
 
-    yield from mock_addon_info(addon_info_side_effect)
+    return mock_addon_info(supervisor_client, addon_info_side_effect)
 
 
 @pytest.fixture(name="addon_not_installed")
@@ -298,13 +312,12 @@ def install_addon_side_effect_fixture(
 
 @pytest.fixture(name="install_addon")
 def install_addon_fixture(
+    supervisor_client: AsyncMock,
     install_addon_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock install add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_install_addon
-
-    yield from mock_install_addon(install_addon_side_effect)
+    supervisor_client.store.install_addon.side_effect = install_addon_side_effect
+    return supervisor_client.store.install_addon
 
 
 @pytest.fixture(name="start_addon_side_effect")
@@ -319,12 +332,12 @@ def start_addon_side_effect_fixture(
 
 
 @pytest.fixture(name="start_addon")
-def start_addon_fixture(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
+def start_addon_fixture(
+    supervisor_client: AsyncMock, start_addon_side_effect: Any | None
+) -> AsyncMock:
     """Mock start add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_start_addon
-
-    yield from mock_start_addon(start_addon_side_effect)
+    supervisor_client.addons.start_addon.side_effect = start_addon_side_effect
+    return supervisor_client.addons.start_addon
 
 
 @pytest.fixture(name="restart_addon_side_effect")
@@ -335,31 +348,24 @@ def restart_addon_side_effect_fixture() -> Any | None:
 
 @pytest.fixture(name="restart_addon")
 def restart_addon_fixture(
+    supervisor_client: AsyncMock,
     restart_addon_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock restart add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_restart_addon
-
-    yield from mock_restart_addon(restart_addon_side_effect)
+    supervisor_client.addons.restart_addon.side_effect = restart_addon_side_effect
+    return supervisor_client.addons.restart_addon
 
 
 @pytest.fixture(name="stop_addon")
-def stop_addon_fixture() -> Generator[AsyncMock]:
+def stop_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock stop add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_stop_addon
-
-    yield from mock_stop_addon()
+    return supervisor_client.addons.stop_addon
 
 
 @pytest.fixture(name="addon_options")
 def addon_options_fixture(addon_info: AsyncMock) -> dict[str, Any]:
     """Mock add-on options."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_options
-
-    return mock_addon_options(addon_info)
+    return addon_info.return_value.options
 
 
 @pytest.fixture(name="set_addon_options_side_effect")
@@ -375,22 +381,18 @@ def set_addon_options_side_effect_fixture(
 
 @pytest.fixture(name="set_addon_options")
 def set_addon_options_fixture(
+    supervisor_client: AsyncMock,
     set_addon_options_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock set add-on options."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_set_addon_options
-
-    yield from mock_set_addon_options(set_addon_options_side_effect)
+    supervisor_client.addons.addon_options.side_effect = set_addon_options_side_effect
+    return supervisor_client.addons.addon_options
 
 
 @pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture() -> Generator[AsyncMock]:
+def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock uninstall add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_uninstall_addon
-
-    yield from mock_uninstall_addon()
+    return supervisor_client.addons.uninstall_addon
 
 
 @pytest.fixture(name="create_backup")
@@ -403,9 +405,196 @@ def create_backup_fixture() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="update_addon")
-def update_addon_fixture() -> Generator[AsyncMock]:
+def update_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock update add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_update_addon
+    return supervisor_client.store.update_addon
 
-    yield from mock_update_addon()
+
+@pytest.fixture(name="store_addons")
+def store_addons_fixture() -> list[StoreAddon]:
+    """Mock store addons list."""
+    return []
+
+
+@pytest.fixture(name="store_repositories")
+def store_repositories_fixture() -> list[Repository]:
+    """Mock store repositories list."""
+    return []
+
+
+@pytest.fixture(name="store_info")
+def store_info_fixture(
+    supervisor_client: AsyncMock,
+    store_addons: list[StoreAddon],
+    store_repositories: list[Repository],
+) -> AsyncMock:
+    """Mock store info."""
+    supervisor_client.store.info.return_value = StoreInfo(
+        addons=store_addons, repositories=store_repositories
+    )
+    return supervisor_client.store.info
+
+
+@pytest.fixture(name="addon_stats")
+def addon_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addon stats info."""
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import mock_addon_stats
+
+    return mock_addon_stats(supervisor_client)
+
+
+@pytest.fixture(name="addon_changelog")
+def addon_changelog_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock addon changelog."""
+    supervisor_client.store.addon_changelog.return_value = ""
+    return supervisor_client.store.addon_changelog
+
+
+@pytest.fixture(name="supervisor_client")
+def supervisor_client() -> Generator[AsyncMock]:
+    """Mock the supervisor client."""
+    supervisor_client = AsyncMock()
+    supervisor_client.addons = AsyncMock()
+    with (
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.handler.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.addon_manager.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.discovery.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.coordinator.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        yield supervisor_client
+
+
+async def _ensure_translation_exists(
+    hass: HomeAssistant,
+    ignore_translations: dict[str, StoreInfo],
+    category: str,
+    component: str,
+    key: str,
+) -> None:
+    """Raise if translation doesn't exist."""
+    full_key = f"component.{component}.{category}.{key}"
+    translations = await async_get_translations(hass, "en", category, [component])
+    if full_key in translations:
+        return
+
+    if full_key in ignore_translations:
+        ignore_translations[full_key] = "used"
+        return
+
+    key_parts = key.split(".")
+    # Ignore step data translations if title or description exists
+    if (
+        len(key_parts) >= 3
+        and key_parts[0] == "step"
+        and key_parts[2] == "data"
+        and (
+            f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.description"
+            in translations
+            or f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.title"
+            in translations
+        )
+    ):
+        return
+
+    pytest.fail(
+        f"Translation not found for {component}: `{category}.{key}`. "
+        f"Please add to homeassistant/components/{component}/strings.json"
+    )
+
+
+@pytest.fixture
+def ignore_translations() -> str | list[str]:
+    """Ignore specific translations.
+
+    Override or parametrize this fixture with a fixture that returns,
+    a list of translation that should be ignored.
+    """
+    return []
+
+
+@pytest.fixture(autouse=True)
+def check_config_translations(ignore_translations: str | list[str]) -> Generator[None]:
+    """Ensure config_flow translations are available."""
+    if not isinstance(ignore_translations, list):
+        ignore_translations = [ignore_translations]
+
+    _ignore_translations = {k: "unused" for k in ignore_translations}
+    _original = FlowManager._async_handle_step
+
+    async def _async_handle_step(
+        self: FlowManager, flow: FlowHandler, *args
+    ) -> FlowResult:
+        result = await _original(self, flow, *args)
+        if isinstance(self, ConfigEntriesFlowManager):
+            category = "config"
+            component = flow.handler
+        elif isinstance(self, OptionsFlowManager):
+            category = "options"
+            component = flow.hass.config_entries.async_get_entry(flow.handler).domain
+        else:
+            return result
+
+        # Check if this flow has been seen before
+        # Gets set to False on first run, and to True on subsequent runs
+        setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
+
+        if result["type"] is FlowResultType.FORM:
+            if errors := result.get("errors"):
+                for error in errors.values():
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"error.{error}",
+                    )
+            return result
+
+        if result["type"] is FlowResultType.ABORT:
+            # We don't need translations for a discovery flow which immediately
+            # aborts, since such flows won't be seen by users
+            if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
+                return result
+            await _ensure_translation_exists(
+                flow.hass,
+                _ignore_translations,
+                category,
+                component,
+                f"abort.{result["reason"]}",
+            )
+
+        return result
+
+    with patch(
+        "homeassistant.data_entry_flow.FlowManager._async_handle_step",
+        _async_handle_step,
+    ):
+        yield
+
+    unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
+    if unused_ignore:
+        pytest.fail(
+            f"Unused ignore translations: {', '.join(unused_ignore)}. "
+            "Please remove them from the ignore_translations fixture."
+        )

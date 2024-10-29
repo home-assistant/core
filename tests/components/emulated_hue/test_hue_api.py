@@ -1248,9 +1248,7 @@ async def test_proper_put_state_request(hue_client: TestClient) -> None:
     """Test the request to set the state."""
     # Test proper on value parsing
     result = await hue_client.put(
-        "/api/username/lights/{}/state".format(
-            ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
-        ),
+        f"/api/username/lights/{ENTITY_NUMBERS_BY_ID['light.ceiling_lights']}/state",
         data=json.dumps({HUE_API_STATE_ON: 1234}),
     )
 
@@ -1258,9 +1256,7 @@ async def test_proper_put_state_request(hue_client: TestClient) -> None:
 
     # Test proper brightness value parsing
     result = await hue_client.put(
-        "/api/username/lights/{}/state".format(
-            ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
-        ),
+        f"/api/username/lights/{ENTITY_NUMBERS_BY_ID['light.ceiling_lights']}/state",
         data=json.dumps({HUE_API_STATE_ON: True, HUE_API_STATE_BRI: "Hello world!"}),
     )
 
