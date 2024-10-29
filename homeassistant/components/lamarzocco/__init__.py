@@ -103,6 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     coordinator = LaMarzoccoUpdateCoordinator(
         hass=hass,
+        entry=entry,
         local_client=local_client,
         cloud_client=cloud_client,
         bluetooth_client=bluetooth_client,
