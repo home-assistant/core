@@ -163,17 +163,15 @@ class WebRTCProvider(CameraWebRTCProvider):
                 case WebRTCCandidate():
                     value = HAWebRTCCandidate(message.candidate)
                 case WebRTCAnswer():
-                    value = HAWebRTCAnswer(message.answer)
+                    value = HAWebRTCAnswer(message.sdp)
                 case WsError():
                     value = WebRTCError("go2rtc_webrtc_offer_failed", message.error)
-                case _:
-                    _LOGGER.warning("Unknown message %s", message)
-                    return
 
             send_message(value)
 
         ws_client.subscribe(on_messages)
-        await ws_client.send(WebRTCOffer(offer_sdp))
+        config = camera.async_get_webrtc_client_configuration()
+        await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
 
     async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
         """Handle the WebRTC candidate."""
