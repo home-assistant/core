@@ -125,8 +125,12 @@ DOMAIN_DATA_SENSOR: VolDictType = {
 
 
 DOMAIN_DATA_SWITCH: VolDictType = {
-    vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS)),
+    vol.Required(CONF_OUTPUT): vol.All(
+        vol.Upper,
+        vol.In(OUTPUT_PORTS + RELAY_PORTS + SETPOINTS + KEYS),
+    ),
 }
+
 
 #
 # Configuration
