@@ -68,6 +68,12 @@
         "state": {
           "on": "mdi:sleep"
         }
+      },
+      "pir_enabled": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
       }
     },
     "sensor": {

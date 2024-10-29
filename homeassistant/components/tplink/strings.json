@@ -187,6 +187,9 @@
       },
       "fan_sleep_mode": {
         "name": "Fan sleep mode"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
       }
     },
     "number": {
