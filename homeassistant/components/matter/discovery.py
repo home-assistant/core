@@ -13,6 +13,7 @@ from homeassistant.core import callback
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
+from .const import FEATUREMAP_ATTRIBUTE_ID
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .fan import DISCOVERY_SCHEMAS as FAN_SCHEMAS
@@ -45,8 +46,6 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.VALVE: VALVE_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
-
-FEATUREMAP_ATTRIBUTE_ID = 65532
 
 
 @callback
@@ -164,6 +163,7 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
+            discovery_schema=schema,
         )
 
         # prevent re-discovery of the primary attribute if not allowed
