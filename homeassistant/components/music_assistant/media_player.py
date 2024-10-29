@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
 import functools
 import os
@@ -22,7 +22,6 @@ from music_assistant.common.models.event import MassEvent
 from music_assistant.common.models.media_items import ItemMapping, MediaItemType, Track
 
 from homeassistant.components import media_source
-from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.media_player import (
     ATTR_MEDIA_EXTRA,
     BrowseMedia,
@@ -35,7 +34,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -431,13 +429,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             elif await asyncio.to_thread(os.path.isfile, media_id_str):
                 media_uris.append(media_id_str)
                 continue
-            # last resort: lookup by name/search
-            if item := await self._get_item_by_name(
-                media_id_str, artist, album, media_type
-            ):
-                if TYPE_CHECKING:
-                    assert item.uri is not None
-                media_uris.append(item.uri)
 
         if not media_uris:
             raise HomeAssistantError(
@@ -471,23 +462,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self.player_id, url, use_pre_announce, announce_volume
         )
 
-    @catch_musicassistant_error
-    async def _async_transfer_queue(
-        self, source_player: str, auto_play: bool | None = None
-    ) -> None:
-        """Transfer the current queue to another player."""
-        # resolve HA entity_id to MA player_id
-        if (hass_state := self.hass.states.get(source_player)) is None:
-            return  # guard
-        if (mass_player_id := hass_state.attributes.get("mass_player_id")) is None:
-            return  # guard
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            await self.mass.player_queues.transfer_queue(
-                mass_player_id, queue.queue_id, auto_play
-            )
-
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -499,73 +473,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_id,
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
-
-    async def _get_item_by_name(
-        self,
-        name: str,
-        artist: str | None = None,
-        album: str | None = None,
-        media_type: str | None = None,
-    ) -> MediaItemType | None:
-        """Try to find a media item (such as a playlist) by name."""
-        # pylint: disable=too-many-nested-blocks
-        searchname = name.lower()
-
-        funcs: Sequence[Callable] = (
-            self.mass.music.get_library_playlists,
-            self.mass.music.get_library_radios,
-            self.mass.music.get_library_tracks,
-            self.mass.music.get_library_albums,
-            self.mass.music.get_library_artists,
-        )
-
-        library_functions = [
-            x for x in funcs if not media_type or media_type.lower() in x.__name__
-        ]
-        # prefer (exact) lookup in the library by name
-        for func in library_functions:
-            result = await func(search=searchname)
-            for item in result:
-                # handle optional artist filter
-                if (
-                    artist
-                    and (artists := getattr(item, "artists", None))
-                    and not any(x for x in artists if x.name.lower() == artist.lower())
-                ):
-                    continue
-                # handle optional album filter
-                if (
-                    album
-                    and (item_album := getattr(item, "album", None))
-                    and item_album.name.lower() != album.lower()
-                ):
-                    continue
-                if searchname == item.name.lower():
-                    return item  # type: ignore[no-any-return]
-        # nothing found in the library, fallback to global search
-        search_name = name
-        if album and artist:
-            search_name = f"{artist} - {album} - {name}"
-        elif album:
-            search_name = f"{album} - {name}"
-        elif artist:
-            search_name = f"{artist} - {name}"
-        result = await self.mass.music.search(
-            search_query=search_name,
-            media_types=[MediaType(media_type)] if media_type else MediaType.ALL,
-            limit=5,
-        )
-        for results in (
-            result.tracks,
-            result.albums,
-            result.playlists,
-            result.artists,
-            result.radio,
-        ):
-            for item in results:
-                # simply return the first item because search is already sorted by best match
-                return item  # type: ignore[no-any-return]
-        return None
 
     def _update_media_image_url(
         self, player: Player, queue: PlayerQueue | None
@@ -672,17 +579,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 self._attr_media_album_artist = getattr(
                     media_item.album, "artist_str", None
                 )
-
-    async def _expose_players_assist(self) -> None:
-        """Get the correct config entry."""
-        hass = self.hass
-        config_entries = hass.config_entries.async_entries(DOMAIN)
-        for config_entry in config_entries:
-            if (
-                config_entry.state == ConfigEntryState.SETUP_IN_PROGRESS
-                and config_entry.data.get("expose_players_assist")
-            ):
-                async_expose_entity(hass, "conversation", self.entity_id, True)
 
     def _convert_queueoption_to_media_player_enqueue(
         self, queue_option: MediaPlayerEnqueue | QueueOption | None
