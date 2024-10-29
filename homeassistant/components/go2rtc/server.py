@@ -5,9 +5,11 @@ import logging
 from tempfile import NamedTemporaryFile
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
+_SETUP_TIMEOUT = 5
 
 # Default configuration for HA
 # - Api is listening only on localhost
@@ -34,14 +36,6 @@ def _create_temp_file() -> str:
         return file.name
 
 
-async def _log_output(process: asyncio.subprocess.Process) -> None:
-    """Log the output of the process."""
-    assert process.stdout is not None
-
-    async for line in process.stdout:
-        _LOGGER.debug(line[:-1].decode().strip())
-
-
 class Server:
     """Go2rtc server."""
 
@@ -50,11 +44,14 @@ class Server:
         self._hass = hass
         self._binary = binary
         self._process: asyncio.subprocess.Process | None = None
+        self._startup_complete = asyncio.Event()
 
     async def start(self) -> None:
         """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
         config_file = await self._hass.async_add_executor_job(_create_temp_file)
+
+        self._startup_complete.clear()
 
         self._process = await asyncio.create_subprocess_exec(
             self._binary,
@@ -66,8 +63,27 @@ class Server:
         )
 
         self._hass.async_create_background_task(
-            _log_output(self._process), "Go2rtc log output"
+            self._log_output(self._process), "Go2rtc log output"
         )
+
+        try:
+            async with asyncio.timeout(_SETUP_TIMEOUT):
+                await self._startup_complete.wait()
+        except TimeoutError as err:
+            msg = "Go2rtc server didn't start correctly"
+            _LOGGER.exception(msg)
+            await self.stop()
+            raise HomeAssistantError("Go2rtc server didn't start correctly") from err
+
+    async def _log_output(self, process: asyncio.subprocess.Process) -> None:
+        """Log the output of the process."""
+        assert process.stdout is not None
+
+        async for line in process.stdout:
+            msg = line[:-1].decode().strip()
+            _LOGGER.debug(msg)
+            if not self._startup_complete.is_set() and "[api] listen" in msg:
+                self._startup_complete.set()
 
     async def stop(self) -> None:
         """Stop the server."""
