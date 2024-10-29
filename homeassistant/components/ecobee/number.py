@@ -108,11 +108,12 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
 
 
 class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
-    """A number class, representing  The minimum outdoor temperature at which the compressor can operate.
-    
+    """A number class, representing the minimum outdoor temperature at which the compressor can operate.
+
     This applies more to air source heat pumps than geothermal. This serves as a safety feature (compressors have a minimum operating temperature) as well as providing the ability to choose fuel in a dual-fuel system (i.e. choose between electrical heat pump and fossil auxiliary heat depending on Time of Use, Solar, etc.).
+    Note that python-ecobee-api refers to this as Cutover Threshold, but Ecobee uses Compressor Protection Min Temp.
     """
-    
+
     _attr_native_min_value = -25
     _attr_native_max_value = 65
     _attr_native_step = 5
@@ -126,8 +127,6 @@ class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
     ) -> None:
         """Initialize ecobee compressor min temperature."""
         super().__init__(data, thermostat_index)
-        self.set_fn=lambda data, id, min_temp: data.ecobee.set_aux_cutover_threshold(
-            id, min_temp
         self._attr_unique_id = f"{self.base_unique_id}_aux_cutover_threshold"
         self.update_without_throttle = False
 
@@ -138,11 +137,11 @@ class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
             self.update_without_throttle = False
         else:
             await self.data.update()
-        self._attr_native_value = self.thermostat["settings"][aux_cutover_threshold]/10
+        self._attr_native_value = (
+            self.thermostat["settings"]["compressorProtectionMinTemp"] / 10
+        )
 
     def set_native_value(self, value: float) -> None:
-        """Set new ventilator Min On Time value."""
-        self.entity_description.set_fn(self.data, self.thermostat_index, int(value))
+        """Set new compressor minimum temperature."""
+        self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, value)
         self.update_without_throttle = True
-
-
