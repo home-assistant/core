@@ -152,7 +152,8 @@ class BoschSHCConfigFlow(ConfigFlow, domain=DOMAIN):
             zeroconf_instance = await zeroconf.async_get_instance(self.hass)
             # unique_id uniquely identifies the registered controller and is used
             # to save the key/certificate pair for each controller separately
-            unique_id: str = self.info["unique_id"]
+            unique_id = self.info["unique_id"]
+            assert unique_id
             try:
                 result = await self.hass.async_add_executor_job(
                     create_credentials_and_validate,
