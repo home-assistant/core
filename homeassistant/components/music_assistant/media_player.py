@@ -14,7 +14,6 @@ from music_assistant.common.models.enums import (
     EventType,
     MediaType,
     PlayerFeature,
-    PlayerState,
     QueueOption,
     RepeatMode as MassRepeatMode,
 )
@@ -37,7 +36,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -71,12 +70,6 @@ SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.SEEK
 )
-
-STATE_MAPPING = {
-    PlayerState.IDLE: STATE_IDLE,
-    PlayerState.PLAYING: STATE_PLAYING,
-    PlayerState.PAUSED: STATE_PAUSED,
-}
 
 QUEUE_OPTION_MAP = {
     # map from HA enqueue options to MA enqueue options
@@ -224,18 +217,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         active_queue_id = player.active_source or player.player_id
         active_queue = self.mass.player_queues.get(active_queue_id)
         # update generic attributes
-        if player.powered and active_queue:
-            mapped_active_queue_state = STATE_MAPPING.get(active_queue.state)
-            if mapped_active_queue_state is None:
-                return
-            self._attr_state = MediaPlayerState(mapped_active_queue_state)
-        if player.powered:
-            if TYPE_CHECKING:
-                assert player.state is not None
-            mapped_player_state = STATE_MAPPING.get(player.state)
-            if mapped_player_state is None:
-                return
-            self._attr_state = MediaPlayerState(mapped_player_state)
+        if player.powered and active_queue is not None:
+            self._attr_state = MediaPlayerState(active_queue.state.value)
+        if player.powered and player.state is not None:
+            self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
         # translate MA group_childs to HA group_members as entity id's
