@@ -15,13 +15,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
+from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 type _DataType = WifiGuestAccessGet | bool
 
@@ -91,7 +91,7 @@ class DevoloSwitchEntity[_DataT: _DataType](
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator[_DataT],
+        coordinator: DevoloDataUpdateCoordinator[_DataT],
         description: DevoloSwitchEntityDescription[_DataT],
     ) -> None:
         """Initialize entity."""
