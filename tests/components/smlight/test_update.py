@@ -1,7 +1,7 @@
 """Tests for the SMLIGHT update platform."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info
@@ -89,7 +89,9 @@ async def test_update_setup(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
 async def test_update_firmware(
+    mock_sleep: MagicMock,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
