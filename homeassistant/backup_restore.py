@@ -14,7 +14,7 @@ import securetar
 from .const import __version__ as HA_VERSION
 
 RESTORE_BACKUP_FILE = ".HA_RESTORE"
-KEEP_PATHS = ("backups", ".HA_RESTORE")
+KEEP_PATHS = ("backups",)
 
 _LOGGER = logging.getLogger(__name__)
 
