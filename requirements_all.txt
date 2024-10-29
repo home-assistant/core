@@ -210,7 +210,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.ccl
-aioccl==2024.9.8
+aioccl==2024.10
 
 # homeassistant.components.comelit
 aiocomelit==0.9.0
