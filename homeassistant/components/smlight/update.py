@@ -23,6 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmConfigEntry
+from .const import LOGGER
 from .coordinator import SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
@@ -197,12 +198,16 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             await self._finished_event.wait()
 
             # allow time for SLZB-06 to reboot before updating coordinator data
-            while (
-                self.coordinator.in_progress
-                and self.installed_version != self._firmware.ver
-            ):
-                await self.coordinator.async_refresh()
-                await asyncio.sleep(1)
+            try:
+                async with asyncio.timeout(180):
+                    while (
+                        self.coordinator.in_progress
+                        and self.installed_version != self._firmware.ver
+                    ):
+                        await self.coordinator.async_refresh()
+                        await asyncio.sleep(1)
+            except TimeoutError:
+                LOGGER.warning("Timeout waiting for SLZB-06 to reboot after update")
 
             self.coordinator.in_progress = False
             self._finished_event.clear()
