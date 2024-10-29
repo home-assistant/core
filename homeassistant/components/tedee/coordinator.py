@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pytedee_async import (
     TedeeClient,
@@ -26,6 +26,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 
+if TYPE_CHECKING:
+    from . import TedeeConfigEntry
+
 SCAN_INTERVAL = timedelta(seconds=30)
 GET_LOCKS_INTERVAL_SECONDS = 3600
 
@@ -35,14 +38,15 @@ _LOGGER = logging.getLogger(__name__)
 class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
-    config_entry: ConfigEntry
+    config_entry: TedeeConfigEntry
     bridge: TedeeBridge
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
