@@ -10,6 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
 _SETUP_TIMEOUT = 5
+_SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr=127.0.0.1:1984"
 
 # Default configuration for HA
 # - Api is listening only on localhost
@@ -82,7 +83,9 @@ class Server:
         async for line in process.stdout:
             msg = line[:-1].decode().strip()
             _LOGGER.debug(msg)
-            if not self._startup_complete.is_set() and "INF [api] listen" in msg:
+            if not self._startup_complete.is_set() and msg.endswith(
+                _SUCCESSFUL_BOOT_MESSAGE
+            ):
                 self._startup_complete.set()
 
     async def stop(self) -> None:
