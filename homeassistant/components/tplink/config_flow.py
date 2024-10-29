@@ -279,18 +279,14 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 ) or await self._async_try_connect_all(
                     host, credentials=credentials, raise_on_progress=False
                 )
-                if not device:
-                    return await self.async_step_user_auth_confirm()
             except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
             else:
-                if TYPE_CHECKING:
-                    # device or exception is always returned unless
-                    # on_unsupported callback was passed to discover_single
-                    assert device
+                if not device:
+                    return await self.async_step_user_auth_confirm()
                 return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
@@ -544,9 +540,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 ) or await self._async_try_connect_all(
                     host, credentials=credentials, raise_on_progress=False
                 )
-                if not device:
-                    errors["base"] = "cannot_connect"
-                    placeholders["error"] = "try_connect_all failed"
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
@@ -554,7 +547,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
             else:
-                if device:
+                if not device:
+                    errors["base"] = "cannot_connect"
+                    placeholders["error"] = "try_connect_all failed"
+                else:
                     await self.async_set_unique_id(
                         dr.format_mac(device.mac),
                         raise_on_progress=False,
