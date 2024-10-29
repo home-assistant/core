@@ -158,6 +158,14 @@ async def test_switch_functionality(
         ),
         (
             "switch.dishwasher_power",
+            {BSH_POWER_STATE: {"value": BSH_POWER_OFF}},
+            SERVICE_TURN_OFF,
+            "set_setting",
+            "Dishwasher",
+            r"Error.*turn.*off.*appliance.*value",
+        ),
+        (
+            "switch.dishwasher_power",
             {BSH_POWER_STATE: {"value": ""}},
             SERVICE_TURN_ON,
             "set_setting",
