@@ -148,9 +148,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         self._attr_state = state
 
     @callback
-    def _calculate_features(
-        self,
-    ) -> None:
+    def _calculate_features(self) -> None:
         """Calculate features for HA Vacuum platform."""
         accepted_operational_commands: list[int] = self.get_matter_attribute_value(
             clusters.RvcOperationalState.Attributes.AcceptedCommandList
