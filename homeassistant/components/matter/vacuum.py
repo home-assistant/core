@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -63,8 +63,10 @@ async def async_setup_entry(
 class MatterVacuum(MatterEntity, StateVacuumEntity):
     """Representation of a Matter Vacuum cleaner entity."""
 
-    _last_accepted_commands: list[int]
-    _supported_run_modes: dict[int, clusters.RvcCleanMode.Structs.ModeOptionStruct]
+    _last_accepted_commands: list[int] | None = None
+    _supported_run_modes: (
+        dict[int, clusters.RvcCleanMode.Structs.ModeOptionStruct] | None
+    ) = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
@@ -82,6 +84,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
+        if TYPE_CHECKING:
+            assert self._last_accepted_commands is not None
         if (
             clusters.RvcOperationalState.Commands.Resume.command_id
             in self._last_accepted_commands
@@ -124,6 +128,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             clusters.RvcOperationalState.Attributes.OperationalState
         )
         state: str | None = None
+        if TYPE_CHECKING:
+            assert self._supported_run_modes is not None
         if operational_state in (OperationalState.CHARGING, OperationalState.DOCKED):
             state = STATE_DOCKED
         elif operational_state == OperationalState.SEEKING_CHARGER:
