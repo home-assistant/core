@@ -51,6 +51,22 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
     },
 )
 
+MISSING_SERVER_ID_ZEROCONF_DATA = ZeroconfServiceInfo(
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
+    hostname="mock_hostname",
+    port=None,
+    type=mock.ANY,
+    name=mock.ANY,
+    properties={
+        "base_url": "http://localhost:8095",
+        "server_version": "0.0.0",
+        "schema_version": 23,
+        "min_supported_schema_version": 23,
+        "homeassistant_addon": True,
+    },
+)
+
 
 # pylint: disable=dangerous-default-value
 async def setup_music_assistant_integration(
@@ -132,6 +148,21 @@ async def test_zero_conf_flow(
         CONF_URL: "http://localhost:8095",
     }
     assert result["result"].unique_id == "1234"
+
+
+async def test_zero_conf_missing_server_id(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MISSING_SERVER_ID_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_server_id"
 
 
 async def test_duplicate_manual(
