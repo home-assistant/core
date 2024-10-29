@@ -202,7 +202,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                 and self.installed_version != self._firmware.ver
             ):
                 await self.coordinator.async_refresh()
-                await asyncio.sleep(0)
+                await asyncio.sleep(1)
 
             self.coordinator.in_progress = False
             self._finished_event.clear()
