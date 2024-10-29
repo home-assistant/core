@@ -63,6 +63,9 @@
     },
     "turn_off_not_supported": {
       "message": "{appliance_name} does not support turning off or entering standby mode."
+    },
+    "unable_to_retrieve_turn_off": {
+      "message": "Unable to turn off {appliance_name} because its support for turning off or entering standby mode could not be determined."
     }
   },
   "issues": {
