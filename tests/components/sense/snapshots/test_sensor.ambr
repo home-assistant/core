@@ -32,7 +32,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_energy',
     'unique_id': '12345-abc123-bill-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -88,7 +88,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_energy',
     'unique_id': '12345-abc123-daily-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -144,7 +144,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_energy',
     'unique_id': '12345-abc123-monthly-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -253,7 +253,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_energy',
     'unique_id': '12345-abc123-weekly-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -309,7 +309,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_energy',
     'unique_id': '12345-abc123-yearly-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -365,7 +365,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bill_energy',
     'unique_id': '12345-def456-bill-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -421,7 +421,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'daily_energy',
     'unique_id': '12345-def456-daily-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -477,7 +477,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'monthly_energy',
     'unique_id': '12345-def456-monthly-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -586,7 +586,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weekly_energy',
     'unique_id': '12345-def456-weekly-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -642,7 +642,7 @@
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'yearly_energy',
     'unique_id': '12345-def456-yearly-energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
