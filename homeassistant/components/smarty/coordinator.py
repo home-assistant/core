@@ -19,6 +19,8 @@ class SmartyCoordinator(DataUpdateCoordinator[None]):
     """Smarty Coordinator."""
 
     config_entry: SmartyConfigEntry
+    software_version: str
+    configuration_version: str
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
