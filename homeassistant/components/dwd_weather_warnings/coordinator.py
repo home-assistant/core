@@ -38,6 +38,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
         self._previous_position = None
 
     async def _async_setup(self) -> None:
+        """Set up coordinator."""
         if region_identifier := self.config_entry.data.get(CONF_REGION_IDENTIFIER):
             self.api = await self.hass.async_add_executor_job(
                 DwdWeatherWarningsAPI, region_identifier
