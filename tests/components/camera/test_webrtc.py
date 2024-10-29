@@ -190,20 +190,6 @@ async def register_test_provider(
     unsub()
 
 
-@pytest.fixture
-async def register_go2rtc_provider(
-    hass: HomeAssistant,
-) -> AsyncGenerator[SomeTestProvider]:
-    """Add a WebRTC provider with go2rtc domain."""
-    await async_setup_component(hass, "camera", {})
-
-    provider = Go2RTCProvider()
-    unsub = async_register_webrtc_provider(hass, provider)
-    await hass.async_block_till_done()
-    yield provider
-    unsub()
-
-
 @pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_stream_source")
 async def test_async_register_webrtc_provider(
     hass: HomeAssistant,
@@ -1162,11 +1148,34 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures(
     "mock_camera", "register_go2rtc_provider", "mock_rtsp_to_webrtc"
 )
+@pytest.mark.usefixtures("mock_camera")
 async def test_repair_issue_legacy_provider(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue created for legacy provider."""
+    # Ensure no issue if no provider is registered
+    assert not issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
+
+    # Register a legacy provider
+    legacy_provider = Mock(side_effect=provide_webrtc_answer)
+    unsub_legacy_provider = async_register_rtsp_to_web_rtc_provider(
+        hass, "mock_domain", legacy_provider
+    )
+    await hass.async_block_till_done()
+
+    # Ensure no issue if only legacy provider is registered
+    assert not issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
+
+    provider = Go2RTCProvider()
+    unsub_go2rtc_provider = async_register_webrtc_provider(hass, provider)
+    await hass.async_block_till_done()
+
+    # Ensure issue when legacy and builtin provider are registered
     issue = issue_registry.async_get_issue(
         "camera", "legacy_webrtc_provider_mock_domain"
     )
@@ -1182,6 +1191,9 @@ async def test_repair_issue_legacy_provider(
         "legacy_integration": "mock_domain",
         "builtin_integration": "go2rtc",
     }
+
+    unsub_legacy_provider()
+    unsub_go2rtc_provider()
 
 
 @pytest.mark.usefixtures("mock_camera", "register_test_provider", "mock_rtsp_to_webrtc")
