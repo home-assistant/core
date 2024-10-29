@@ -1,4 +1,6 @@
 """The tests for the Input select component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,7 +37,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None, minor_version=STORAGE_VERSION_MINOR):

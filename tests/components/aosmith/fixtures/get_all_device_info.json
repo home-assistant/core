@@ -1,0 +1,247 @@
+{
+  "devices": [
+    {
+      "alertSettings": {
+        "faultCode": {
+          "major": {
+            "email": true,
+            "sms": false
+          },
+          "minor": {
+            "email": false,
+            "sms": false
+          }
+        },
+        "operatingSetPoint": {
+          "email": false,
+          "sms": false
+        },
+        "tankTemperature": {
+          "highTemperature": {
+            "email": false,
+            "sms": false,
+            "value": 160
+          },
+          "lowTemperature": {
+            "email": false,
+            "sms": false,
+            "value": 120
+          }
+        }
+      },
+      "brand": "aosmith",
+      "deviceType": "NEXT_GEN_HEAT_PUMP",
+      "dsn": "dsn",
+      "hardware": {
+        "hasBluetooth": true,
+        "interface": "CONTROL_PANEL"
+      },
+      "id": "id",
+      "install": {
+        "address": "sample_address",
+        "city": "sample_city",
+        "country": "United States",
+        "date": "2023-09-29",
+        "email": "sample_email",
+        "group": "Residential",
+        "location": "Basement",
+        "phone": "sample_phone",
+        "postalCode": "sample_postal_code",
+        "professional": false,
+        "registeredOwner": "sample_owner",
+        "registrationDate": "2023-12-24",
+        "state": "sample_state"
+      },
+      "isRegistered": true,
+      "junctionId": "junctionId",
+      "lastUpdate": 1703386473737,
+      "model": "HPTS-50 200 202172000",
+      "name": "Water Heater",
+      "permissions": "USER",
+      "productId": "100350404",
+      "serial": "sample_serial",
+      "users": [
+        {
+          "contactId": "sample_contact_id",
+          "email": "sample_email",
+          "firstName": "sample_first_name",
+          "isSelf": true,
+          "lastName": "sample_last_name",
+          "permissions": "USER"
+        }
+      ],
+      "data": {
+        "activeAlerts": [],
+        "alertHistory": [],
+        "isOnline": true,
+        "isWifi": true,
+        "lastUpdate": 1703138389000,
+        "signalStrength": null,
+        "heaterSsid": "sample_heater_ssid",
+        "ssid": "sample_ssid",
+        "temperatureSetpoint": 145,
+        "temperatureSetpointPending": false,
+        "temperatureSetpointPrevious": 145,
+        "temperatureSetpointMaximum": 145,
+        "error": "",
+        "modes": [
+          {
+            "mode": "HYBRID",
+            "controls": null
+          },
+          {
+            "mode": "HEAT_PUMP",
+            "controls": null
+          },
+          {
+            "mode": "ELECTRIC",
+            "controls": "SELECT_DAYS"
+          },
+          {
+            "mode": "VACATION",
+            "controls": "SELECT_DAYS"
+          }
+        ],
+        "firmwareVersion": "2.14",
+        "hotWaterStatus": 10,
+        "isAdvancedLoadUpMore": false,
+        "isCtaUcmPresent": false,
+        "isDemandResponsePaused": false,
+        "isEnrolled": false,
+        "mode": "HEAT_PUMP",
+        "modePending": false,
+        "vacationModeRemainingDays": 0,
+        "electricModeRemainingDays": 100,
+        "isLowes": false,
+        "canEditTimeOfUse": false,
+        "timeOfUseData": null,
+        "consumerScheduleData": null
+      }
+    }
+  ],
+  "energy_use_data": {
+    "junctionId": {
+      "average": 2.4744000000000006,
+      "graphData": [
+        {
+          "date": "2023-11-26T04:00:00.000Z",
+          "kwh": 0.936
+        },
+        {
+          "date": "2023-11-27T04:00:00.000Z",
+          "kwh": 4.248
+        },
+        {
+          "date": "2023-11-28T04:00:00.000Z",
+          "kwh": 1.002
+        },
+        {
+          "date": "2023-11-29T04:00:00.000Z",
+          "kwh": 3.078
+        },
+        {
+          "date": "2023-11-30T04:00:00.000Z",
+          "kwh": 1.896
+        },
+        {
+          "date": "2023-12-01T04:00:00.000Z",
+          "kwh": 1.98
+        },
+        {
+          "date": "2023-12-02T04:00:00.000Z",
+          "kwh": 2.112
+        },
+        {
+          "date": "2023-12-03T04:00:00.000Z",
+          "kwh": 3.222
+        },
+        {
+          "date": "2023-12-04T04:00:00.000Z",
+          "kwh": 4.254
+        },
+        {
+          "date": "2023-12-05T04:00:00.000Z",
+          "kwh": 4.05
+        },
+        {
+          "date": "2023-12-06T04:00:00.000Z",
+          "kwh": 3.312
+        },
+        {
+          "date": "2023-12-07T04:00:00.000Z",
+          "kwh": 2.334
+        },
+        {
+          "date": "2023-12-08T04:00:00.000Z",
+          "kwh": 2.418
+        },
+        {
+          "date": "2023-12-09T04:00:00.000Z",
+          "kwh": 2.19
+        },
+        {
+          "date": "2023-12-10T04:00:00.000Z",
+          "kwh": 3.786
+        },
+        {
+          "date": "2023-12-11T04:00:00.000Z",
+          "kwh": 5.292
+        },
+        {
+          "date": "2023-12-12T04:00:00.000Z",
+          "kwh": 1.38
+        },
+        {
+          "date": "2023-12-13T04:00:00.000Z",
+          "kwh": 3.324
+        },
+        {
+          "date": "2023-12-14T04:00:00.000Z",
+          "kwh": 1.092
+        },
+        {
+          "date": "2023-12-15T04:00:00.000Z",
+          "kwh": 0.606
+        },
+        {
+          "date": "2023-12-16T04:00:00.000Z",
+          "kwh": 0
+        },
+        {
+          "date": "2023-12-17T04:00:00.000Z",
+          "kwh": 2.838
+        },
+        {
+          "date": "2023-12-18T04:00:00.000Z",
+          "kwh": 2.382
+        },
+        {
+          "date": "2023-12-19T04:00:00.000Z",
+          "kwh": 2.904
+        },
+        {
+          "date": "2023-12-20T04:00:00.000Z",
+          "kwh": 1.914
+        },
+        {
+          "date": "2023-12-21T04:00:00.000Z",
+          "kwh": 3.93
+        },
+        {
+          "date": "2023-12-22T04:00:00.000Z",
+          "kwh": 3.666
+        },
+        {
+          "date": "2023-12-23T04:00:00.000Z",
+          "kwh": 2.766
+        },
+        {
+          "date": "2023-12-24T04:00:00.000Z",
+          "kwh": 1.32
+        }
+      ],
+      "lifetimeKwh": 203.259,
+      "startDate": "Nov 26"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """VeSync integration."""
+
 import logging
 
 from pyvesync import VeSync
@@ -6,7 +7,6 @@ from pyvesync import VeSync
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import async_process_devices
@@ -24,8 +24,6 @@ from .const import (
 PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -45,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     device_dict = await async_process_devices(hass, manager)
 
-    forward_setup = hass.config_entries.async_forward_entry_setup
+    forward_setups = hass.config_entries.async_forward_entry_setups
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
@@ -96,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_switches and not switches:
             switches.extend(new_switches)
-            hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
+            hass.async_create_task(forward_setups(config_entry, [Platform.SWITCH]))
 
         fan_set = set(fan_devs)
         new_fans = list(fan_set.difference(fans))
@@ -106,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_fans and not fans:
             fans.extend(new_fans)
-            hass.async_create_task(forward_setup(config_entry, Platform.FAN))
+            hass.async_create_task(forward_setups(config_entry, [Platform.FAN]))
 
         light_set = set(light_devs)
         new_lights = list(light_set.difference(lights))
@@ -116,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_lights and not lights:
             lights.extend(new_lights)
-            hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+            hass.async_create_task(forward_setups(config_entry, [Platform.LIGHT]))
 
         sensor_set = set(sensor_devs)
         new_sensors = list(sensor_set.difference(sensors))
@@ -126,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             return
         if new_sensors and not sensors:
             sensors.extend(new_sensors)
-            hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+            hass.async_create_task(forward_setups(config_entry, [Platform.SENSOR]))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
@@ -139,6 +137,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data.pop(DOMAIN)
 
     return unload_ok

@@ -1,10 +1,14 @@
 """The tests for the emulated Hue component."""
+
+from asyncio import AbstractEventLoop
+from collections.abc import Generator
 from http import HTTPStatus
 import json
 import unittest
 from unittest.mock import patch
 
 from aiohttp import web
+from aiohttp.test_utils import TestClient
 import defusedxml.ElementTree as ET
 import pytest
 
@@ -15,6 +19,7 @@ from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import get_test_instance_port
+from tests.typing import ClientSessionGenerator
 
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
@@ -22,7 +27,7 @@ BRIDGE_SERVER_PORT = get_test_instance_port()
 class MockTransport:
     """Mock asyncio transport."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a place to store the sends."""
         self.sends = []
 
@@ -32,13 +37,19 @@ class MockTransport:
 
 
 @pytest.fixture
-def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    event_loop: AbstractEventLoop,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
 
 @pytest.fixture
-def hue_client(aiohttp_client):
+def hue_client(
+    aiohttp_client: ClientSessionGenerator,
+) -> Generator[TestClient]:
     """Return a hue API client."""
     app = web.Application()
     with unittest.mock.patch(
@@ -52,7 +63,7 @@ def hue_client(aiohttp_client):
         yield client
 
 
-async def setup_hue(hass):
+async def setup_hue(hass: HomeAssistant) -> None:
     """Set up the emulated_hue integration."""
     with patch(
         "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
@@ -71,7 +82,7 @@ def test_upnp_discovery_basic() -> None:
     mock_transport = MockTransport()
     upnp_responder_protocol.transport = mock_transport
 
-    """Original request emitted by the Hue Bridge v1 app."""
+    # Original request emitted by the Hue Bridge v1 app.
     request = """M-SEARCH * HTTP/1.1
 HOST:239.255.255.250:1900
 ST:ssdp:all
@@ -103,7 +114,7 @@ def test_upnp_discovery_rootdevice() -> None:
     mock_transport = MockTransport()
     upnp_responder_protocol.transport = mock_transport
 
-    """Original request emitted by Busch-Jaeger free@home SysAP."""
+    # Original request emitted by Busch-Jaeger free@home SysAP.
     request = """M-SEARCH * HTTP/1.1
 HOST: 239.255.255.250:1900
 MAN: "ssdp:discover"
@@ -135,7 +146,7 @@ def test_upnp_no_response() -> None:
     mock_transport = MockTransport()
     upnp_responder_protocol.transport = mock_transport
 
-    """Original request emitted by the Hue Bridge v1 app."""
+    # Original request emitted by the Hue Bridge v1 app.
     request = """INVALID * HTTP/1.1
 HOST:239.255.255.250:1900
 ST:ssdp:all
@@ -147,7 +158,7 @@ MX:3
 
     upnp_responder_protocol.datagram_received(encoded_request, 1234)
 
-    assert mock_transport.sends == []
+    assert not mock_transport.sends
 
 
 async def test_description_xml(hass: HomeAssistant, hue_client) -> None:
@@ -163,7 +174,7 @@ async def test_description_xml(hass: HomeAssistant, hue_client) -> None:
         root = ET.fromstring(await result.text())
         ns = {"s": "urn:schemas-upnp-org:device-1-0"}
         assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         pytest.fail("description.xml is not valid XML!")
 
 

@@ -1,4 +1,5 @@
 """Tests for the Yeelight integration."""
+
 from datetime import timedelta
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -108,12 +109,13 @@ CONFIG_ENTRY_DATA = {CONF_ID: ID}
 class MockAsyncBulb:
     """A mock for yeelight.aio.AsyncBulb."""
 
-    def __init__(self, model, bulb_type, cannot_connect):
+    def __init__(self, model, bulb_type, cannot_connect) -> None:
         """Init the mock."""
         self.model = model
         self.bulb_type = bulb_type
         self._async_callback = None
         self._cannot_connect = cannot_connect
+        self.capabilities = None
 
     async def async_listen(self, callback):
         """Mock the listener."""
@@ -131,6 +133,7 @@ class MockAsyncBulb:
 
 
 def _mocked_bulb(cannot_connect=False):
+    # pylint: disable=attribute-defined-outside-init
     bulb = MockAsyncBulb(MODEL, BulbType.Color, cannot_connect)
     type(bulb).async_get_properties = AsyncMock(
         side_effect=BulbException if cannot_connect else None

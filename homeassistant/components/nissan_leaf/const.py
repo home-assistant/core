@@ -1,4 +1,5 @@
 """Constants for the Nissan Leaf integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -33,3 +34,5 @@ RESTRICTED_BATTERY: Final = 2
 MAX_RESPONSE_ATTEMPTS: Final = 3
 
 PYCARWINGS2_SLEEP: Final = 40
+
+SIGNAL_UPDATE_LEAF = "nissan_leaf_update"

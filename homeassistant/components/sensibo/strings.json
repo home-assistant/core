@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -21,6 +22,14 @@
         }
       },
       "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::sensibo::config::step::user::data_description::api_key%]"
+        }
+      },
+      "reconfigure": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
@@ -108,6 +117,14 @@
         "state": {
           "n": "Normal",
           "s": "Sensitive"
+        }
+      },
+      "pm25_pure": {
+        "name": "Pure AQI",
+        "state": {
+          "good": "Good",
+          "moderate": "Moderate",
+          "bad": "Bad"
         }
       },
       "timer_time": {
@@ -499,16 +516,16 @@
       "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
     },
     "service_result_not_true": {
-      "message": "Could not execute service for {name}"
+      "message": "Could not perform action for {name}"
     },
     "service_raised": {
-      "message": "Could not execute service for {name} with error {error}"
+      "message": "Could not perform action for {name} with error {error}"
     },
     "select_option_not_available": {
       "message": "Current mode {hvac_mode} doesn't support setting {key}"
     },
     "climate_react_not_available": {
-      "message": "Use Sensibo Enable Climate React Service once to enable switch or the Sensibo app"
+      "message": "Use Sensibo Enable Climate React action once to enable switch or the Sensibo app"
     }
   }
 }

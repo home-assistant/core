@@ -1,54 +1,252 @@
 {
   "config": {
     "step": {
+      "alarm_control_panel": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "disarm": "Disarm action",
+          "arm_away": "Arm away action",
+          "arm_custom_bypass": "Arm custom bypass action",
+          "arm_home": "Arm home action",
+          "arm_night": "Arm night action",
+          "arm_vacation": "Arm vacation action",
+          "trigger": "Trigger action",
+          "code_arm_required": "Code arm required",
+          "code_format": "Code format"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template alarm control panel"
+      },
       "binary_sensor": {
         "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]"
         },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
         "title": "Template binary sensor"
+      },
+      "button": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "press": "Actions on press"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template button"
+      },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template image"
+      },
+      "number": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "step": "Step value",
+          "set_value": "Actions on set value",
+          "max": "Maximum value",
+          "min": "Minimum value",
+          "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template number"
+      },
+      "select": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "select_option": "Actions on select",
+          "options": "Available options"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template select"
       },
       "sensor": {
         "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
           "device_class": "Device class",
           "name": "[%key:common::config_flow::data::name%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "state": "State template",
           "unit_of_measurement": "Unit of measurement"
         },
+        "data_description": {
+          "device_id": "Select a device to link to this entity."
+        },
         "title": "Template sensor"
       },
       "user": {
-        "description": "This helper allow you to create helper entities that define their state using a template.",
+        "description": "This helper allows you to create helper entities that define their state using a template.",
         "menu_options": {
+          "alarm_control_panel": "Template an alarm control panel",
           "binary_sensor": "Template a binary sensor",
-          "sensor": "Template a sensor"
+          "button": "Template a button",
+          "image": "Template an image",
+          "number": "Template a number",
+          "select": "Template a select",
+          "sensor": "Template a sensor",
+          "switch": "Template a switch"
         },
         "title": "Template helper"
+      },
+      "switch": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "turn_off": "Actions on turn off",
+          "turn_on": "Actions on turn on",
+          "value_template": "Value template"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
+        },
+        "title": "Template switch"
       }
     }
   },
   "options": {
     "step": {
+      "alarm_control_panel": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "disarm": "[%key:component::template::config::step::alarm_control_panel::data::disarm%]",
+          "arm_away": "[%key:component::template::config::step::alarm_control_panel::data::arm_away%]",
+          "arm_custom_bypass": "[%key:component::template::config::step::alarm_control_panel::data::arm_custom_bypass%]",
+          "arm_home": "[%key:component::template::config::step::alarm_control_panel::data::arm_home%]",
+          "arm_night": "[%key:component::template::config::step::alarm_control_panel::data::arm_night%]",
+          "arm_vacation": "[%key:component::template::config::step::alarm_control_panel::data::arm_vacation%]",
+          "trigger": "[%key:component::template::config::step::alarm_control_panel::data::trigger%]",
+          "code_arm_required": "[%key:component::template::config::step::alarm_control_panel::data::code_arm_required%]",
+          "code_format": "[%key:component::template::config::step::alarm_control_panel::data::code_format%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::alarm_control_panel::title%]"
+      },
       "binary_sensor": {
         "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::binary_sensor::title%]"
       },
+      "button": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "press": "[%key:component::template::config::step::button::data::press%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::button::title%]"
+      },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::image::title%]"
+      },
+      "number": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "step": "[%key:component::template::config::step::number::data::step%]",
+          "set_value": "[%key:component::template::config::step::number::data::set_value%]",
+          "max": "[%key:component::template::config::step::number::data::max%]",
+          "min": "[%key:component::template::config::step::number::data::min%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::number::title%]"
+      },
+      "select": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "select_option": "[%key:component::template::config::step::select::data::select_option%]",
+          "options": "[%key:component::template::config::step::select::data::options%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::select::title%]"
+      },
       "sensor": {
         "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]",
           "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
         },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
         "title": "[%key:component::template::config::step::sensor::title%]"
+      },
+      "switch": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]"
+        },
+        "title": "[%key:component::template::config::step::switch::title%]"
       }
     }
   },
   "selector": {
+    "alarm_control_panel_code_format": {
+      "options": {
+        "no_code": "No code format",
+        "number": "Number",
+        "text": "Text"
+      }
+    },
     "binary_sensor_device_class": {
       "options": {
         "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
@@ -75,9 +273,17 @@
         "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
         "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
         "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
         "update": "[%key:component::binary_sensor::entity_component::update::name%]",
         "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
         "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    },
+    "button_device_class": {
+      "options": {
+        "identify": "[%key:component::button::entity_component::identify::name%]",
+        "restart": "[%key:common::action::restart%]",
+        "update": "[%key:component::button::entity_component::update::name%]"
       }
     },
     "sensor_device_class": {
@@ -88,6 +294,7 @@
         "battery": "[%key:component::sensor::entity_component::battery::name%]",
         "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
         "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
         "current": "[%key:component::sensor::entity_component::current::name%]",
         "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
         "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
@@ -127,6 +334,7 @@
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
         "water": "[%key:component::sensor::entity_component::water::name%]",
         "weight": "[%key:component::sensor::entity_component::weight::name%]",
@@ -150,6 +358,11 @@
     "reload": {
       "name": "[%key:common::action::reload%]",
       "description": "Reloads template entities from the YAML-configuration."
+    }
+  },
+  "exceptions": {
+    "code_format_template_error": {
+      "message": "Error evaluating code format template \"{code_format_template}\" for {entity_id}: {cause}"
     }
   }
 }

@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "jvc_power": {
+        "default": "mdi:projector-off",
+        "state": {
+          "on": "mdi:projector"
+        }
+      }
+    },
+    "select": {
+      "input": {
+        "default": "mdi:hdmi-port"
+      }
+    },
+    "sensor": {
+      "jvc_power_status": {
+        "default": "mdi:power-plug-off",
+        "state": {
+          "on": "mdi:power-plug",
+          "warming": "mdi:heat-wave",
+          "cooling": "mdi:snowflake",
+          "error": "mdi:alert-circle"
+        }
+      }
+    }
+  }
+}

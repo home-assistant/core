@@ -1,4 +1,5 @@
 """Purge old data helper."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -10,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util.collection import chunked_or_all
 
 from .db_schema import Events, States, StatesMeta
 from .models import DatabaseEngine
@@ -41,7 +42,7 @@ from .queries import (
     find_statistics_runs_to_purge,
 )
 from .repack import repack_database
-from .util import chunked_or_all, retryable_database_job, session_scope
+from .util import retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -251,7 +252,7 @@ def _select_state_attributes_ids_to_purge(
     state_ids = set()
     attributes_ids = set()
     for state_id, attributes_id in session.execute(
-        find_states_to_purge(dt_util.utc_to_timestamp(purge_before), max_bind_vars)
+        find_states_to_purge(purge_before.timestamp(), max_bind_vars)
     ).all():
         state_ids.add(state_id)
         if attributes_id:
@@ -271,7 +272,7 @@ def _select_event_data_ids_to_purge(
     event_ids = set()
     data_ids = set()
     for event_id, data_id in session.execute(
-        find_events_to_purge(dt_util.utc_to_timestamp(purge_before), max_bind_vars)
+        find_events_to_purge(purge_before.timestamp(), max_bind_vars)
     ).all():
         event_ids.add(event_id)
         if data_id:
@@ -464,7 +465,7 @@ def _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
     """
     states = session.execute(
         find_legacy_detached_states_and_attributes_to_purge(
-            dt_util.utc_to_timestamp(purge_before), max_bind_vars
+            purge_before.timestamp(), max_bind_vars
         )
     ).all()
     _LOGGER.debug("Selected %s state ids to remove", len(states))
@@ -489,7 +490,7 @@ def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
     """
     events = session.execute(
         find_legacy_event_state_and_attributes_and_data_ids_to_purge(
-            dt_util.utc_to_timestamp(purge_before), max_bind_vars
+            purge_before.timestamp(), max_bind_vars
         )
     ).all()
     _LOGGER.debug("Selected %s event ids to remove", len(events))
@@ -644,7 +645,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
         for (metadata_id, entity_id) in session.query(
             StatesMeta.metadata_id, StatesMeta.entity_id
         ).all()
-        if not entity_filter(entity_id)
+        if entity_filter and not entity_filter(entity_id)
     ]
     if excluded_metadata_ids:
         has_more_states_to_purge = _purge_filtered_states(
@@ -695,7 +696,7 @@ def _purge_filtered_states(
     )
     if not to_purge:
         return True
-    state_ids, attributes_ids, event_ids = zip(*to_purge)
+    state_ids, attributes_ids, event_ids = zip(*to_purge, strict=False)
     filtered_event_ids = {id_ for id_ in event_ids if id_ is not None}
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
@@ -736,7 +737,7 @@ def _purge_filtered_events(
     )
     if not to_purge:
         return True
-    event_ids, data_ids = zip(*to_purge)
+    event_ids, data_ids = zip(*to_purge, strict=False)
     event_ids_set = set(event_ids)
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)
@@ -764,7 +765,9 @@ def _purge_filtered_events(
 
 @retryable_database_job("purge_entity_data")
 def purge_entity_data(
-    instance: Recorder, entity_filter: Callable[[str], bool], purge_before: datetime
+    instance: Recorder,
+    entity_filter: Callable[[str], bool] | None,
+    purge_before: datetime,
 ) -> bool:
     """Purge states and events of specified entities."""
     database_engine = instance.database_engine
@@ -776,7 +779,7 @@ def purge_entity_data(
             for (metadata_id, entity_id) in session.query(
                 StatesMeta.metadata_id, StatesMeta.entity_id
             ).all()
-            if entity_filter(entity_id)
+            if entity_filter and entity_filter(entity_id)
         ]
         _LOGGER.debug("Purging entity data for %s", selected_metadata_ids)
         if not selected_metadata_ids:
@@ -793,5 +796,7 @@ def purge_entity_data(
         ):
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False
+
+        _purge_old_entity_ids(instance, session)
 
     return True

@@ -8,9 +8,8 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -25,7 +24,12 @@ def _is_complete_discovery(discovery_info: SsdpServiceInfo) -> bool:
 class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle an Openhome config flow."""
 
-    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
+    _host: str | None
+    _name: str
+
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         _LOGGER.debug("async_step_ssdp: started")
 
@@ -44,23 +48,23 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
             "async_step_ssdp: create entry %s", discovery_info.upnp[ATTR_UPNP_UDN]
         )
 
-        self.context[CONF_NAME] = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
-        self.context[CONF_HOST] = discovery_info.ssdp_location
+        self._name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
+        self._host = discovery_info.ssdp_location
 
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
 
         if user_input is not None:
             return self.async_create_entry(
-                title=self.context[CONF_NAME],
-                data={CONF_HOST: self.context[CONF_HOST]},
+                title=self._name,
+                data={CONF_HOST: self._host},
             )
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={CONF_NAME: self.context[CONF_NAME]},
+            description_placeholders={CONF_NAME: self._name},
         )

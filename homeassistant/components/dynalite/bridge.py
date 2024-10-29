@@ -1,4 +1,5 @@
 """Code to handle a Dynalite bridge."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -67,7 +68,7 @@ class DynaliteBridge:
             log_string = (
                 "Connected" if self.dynalite_devices.connected else "Disconnected"
             )
-            LOGGER.info("%s to dynalite host", log_string)
+            LOGGER.debug("%s to dynalite host", log_string)
             async_dispatcher_send(self.hass, self.update_signal())
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))

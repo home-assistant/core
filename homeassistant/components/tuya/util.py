@@ -1,13 +1,14 @@
 """Utility methods for the Tuya integration."""
+
 from __future__ import annotations
 
 
 def remap_value(
-    value: float | int,
-    from_min: float | int = 0,
-    from_max: float | int = 255,
-    to_min: float | int = 0,
-    to_max: float | int = 255,
+    value: float,
+    from_min: float = 0,
+    from_max: float = 255,
+    to_min: float = 0,
+    to_max: float = 255,
     reverse: bool = False,
 ) -> float:
     """Remap a value from its current range, to a new range."""

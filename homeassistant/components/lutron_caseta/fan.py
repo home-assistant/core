@@ -1,12 +1,16 @@
 """Support for Lutron Caseta fans."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
-from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -14,9 +18,8 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import LutronCasetaDeviceUpdatableEntity
-from .const import DOMAIN as CASETA_DOMAIN
-from .models import LutronCasetaData
+from .entity import LutronCasetaUpdatableEntity
+from .models import LutronCasetaConfigEntry
 
 DEFAULT_ON_PERCENTAGE = 50
 ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
@@ -24,7 +27,7 @@ ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronCasetaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta fan platform.
@@ -32,17 +35,22 @@ async def async_setup_entry(
     Adds fan controllers from the Caseta bridge associated with the config_entry
     as fan entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
-    fan_devices = bridge.get_devices_by_domain(DOMAIN)
+    fan_devices = bridge.get_devices_by_domain(FAN_DOMAIN)
     async_add_entities(LutronCasetaFan(fan_device, data) for fan_device in fan_devices)
 
 
-class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
+class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int | None:

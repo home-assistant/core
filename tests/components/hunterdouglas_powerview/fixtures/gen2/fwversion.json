@@ -1,0 +1,15 @@
+{
+  "firmware": {
+    "mainProcessor": {
+      "name": "Powerview Generation 2",
+      "revision": 2,
+      "subRevision": 0,
+      "build": 1056
+    },
+    "radio": {
+      "revision": 2,
+      "subRevision": 0,
+      "build": 2610
+    }
+  }
+}

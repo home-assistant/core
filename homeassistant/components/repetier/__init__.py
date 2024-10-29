@@ -1,4 +1,5 @@
 """Support for Repetier-Server sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -124,14 +125,15 @@ def has_all_unique_names(value):
     return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class RepetierRequiredKeysMixin:
     """Mixin for required keys."""
 
     type: str
 
 
-@dataclass
+@dataclass(frozen=True)
+# pylint: disable-next=hass-enforce-class-module
 class RepetierSensorEntityDescription(
     SensorEntityDescription, RepetierRequiredKeysMixin
 ):

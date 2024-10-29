@@ -1,15 +1,19 @@
 """The tests for the Dialogflow component."""
+
 import copy
 from http import HTTPStatus
 import json
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dialogflow, intent_script
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 SESSION_ID = "a9b84cec-46b6-484e-8f31-f65dba03ae6d"
 INTENT_ID = "c6a74079-a8f0-46cd-b372-5a934d23591c"
@@ -20,12 +24,12 @@ CONTEXT_NAME = "78a5db95-b7d6-4d50-9c9b-2fc73a5e34c3_id_dialog_context"
 
 
 @pytest.fixture
-async def calls(hass, fixture):
+async def calls(hass: HomeAssistant, fixture) -> list[ServiceCall]:
     """Return a list of Dialogflow calls triggered."""
-    calls = []
+    calls: list[ServiceCall] = []
 
     @callback
-    def mock_service(call):
+    def mock_service(call: ServiceCall) -> None:
         """Mock action call."""
         calls.append(call)
 
@@ -35,7 +39,7 @@ async def calls(hass, fixture):
 
 
 @pytest.fixture
-async def fixture(hass, hass_client_no_auth):
+async def fixture(hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator):
     """Initialize a Home Assistant server for testing this module."""
     await async_setup_component(hass, dialogflow.DOMAIN, {"dialogflow": {}})
     await async_setup_component(
@@ -87,10 +91,10 @@ async def fixture(hass, hass_client_no_auth):
     result = await hass.config_entries.flow.async_init(
         "dialogflow", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     webhook_id = result["result"].data["webhook_id"]
 
     return await hass_client_no_auth(), webhook_id
@@ -341,7 +345,9 @@ async def test_intent_request_without_slots_v2(hass: HomeAssistant, fixture) -> 
     assert text == "You are both home, you silly"
 
 
-async def test_intent_request_calling_service_v1(fixture, calls) -> None:
+async def test_intent_request_calling_service_v1(
+    fixture, calls: list[ServiceCall]
+) -> None:
     """Test a request for calling a service.
 
     If this request is done async the test could finish before the action
@@ -363,7 +369,9 @@ async def test_intent_request_calling_service_v1(fixture, calls) -> None:
     assert call.data.get("hello") == "virgo"
 
 
-async def test_intent_request_calling_service_v2(fixture, calls) -> None:
+async def test_intent_request_calling_service_v2(
+    fixture, calls: list[ServiceCall]
+) -> None:
     """Test a request for calling a service.
 
     If this request is done async the test could finish before the action

@@ -1,4 +1,5 @@
 """The scrape component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -29,6 +30,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_INDEX, CONF_SELECT, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import ScrapeCoordinator
+
+type ScrapeConfigEntry = ConfigEntry[ScrapeCoordinator]
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -69,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         scan_interval: timedelta = resource_config.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
-        coordinator = ScrapeCoordinator(hass, rest, scan_interval)
+        coordinator = ScrapeCoordinator(hass, None, rest, scan_interval)
 
         sensors: list[ConfigType] = resource_config.get(SENSOR_DOMAIN, [])
         if sensors:
@@ -89,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
     """Set up Scrape from a config entry."""
 
     rest_config: dict[str, Any] = COMBINED_SCHEMA(dict(entry.options))
@@ -97,11 +100,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = ScrapeCoordinator(
         hass,
+        entry,
         rest,
         DEFAULT_SCAN_INTERVAL,
     )
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -111,11 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Scrape config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN][entry.entry_id]
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

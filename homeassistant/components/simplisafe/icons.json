@@ -1,0 +1,13 @@
+{
+  "services": {
+    "remove_pin": {
+      "service": "mdi:alarm-panel-outline"
+    },
+    "set_pin": {
+      "service": "mdi:alarm-panel"
+    },
+    "set_system_properties": {
+      "service": "mdi:cog"
+    }
+  }
+}

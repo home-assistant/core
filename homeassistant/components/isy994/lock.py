@@ -1,4 +1,5 @@
 """Support for ISY locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -52,12 +53,15 @@ async def async_setup_entry(
     """Set up the ISY lock platform."""
     isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
-    entities: list[ISYLockEntity | ISYLockProgramEntity] = []
-    for node in isy_data.nodes[Platform.LOCK]:
-        entities.append(ISYLockEntity(node, devices.get(node.primary_node)))
+    entities: list[ISYLockEntity | ISYLockProgramEntity] = [
+        ISYLockEntity(node, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.LOCK]
+    ]
 
-    for name, status, actions in isy_data.programs[Platform.LOCK]:
-        entities.append(ISYLockProgramEntity(name, status, actions))
+    entities.extend(
+        ISYLockProgramEntity(name, status, actions)
+        for name, status, actions in isy_data.programs[Platform.LOCK]
+    )
 
     async_add_entities(entities)
     async_setup_lock_services(hass)

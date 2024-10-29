@@ -1,15 +1,19 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:common::config_flow::data::device%]"
+          "address": "[%key:common::config_flow::data::device%]",
+          "medium_type": "Medium Type"
         }
       },
       "bluetooth_confirm": {
-        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]",
+        "data": {
+          "medium_type": "[%key:component::mopeka::config::step::user::data::medium_type%]"
+        }
       }
     },
     "abort": {
@@ -17,6 +21,16 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Mopeka",
+        "data": {
+          "medium_type": "[%key:component::mopeka::config::step::user::data::medium_type%]"
+        }
+      }
     }
   }
 }

@@ -1,15 +1,15 @@
 """Philips TV menu switches."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
+from . import PhilipsTVConfigEntry
+from .coordinator import PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 
 HUE_POWER_OFF = "Off"
@@ -18,13 +18,11 @@ HUE_POWER_ON = "On"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PhilipsTVConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-    coordinator: PhilipsTVDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     async_add_entities([PhilipsTVScreenSwitch(coordinator)])
 
@@ -45,7 +43,6 @@ class PhilipsTVScreenSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_icon = "mdi:television-shimmer"
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
 
     @property
@@ -84,7 +81,6 @@ class PhilipsTVAmbilightHueSwitch(PhilipsJsEntity, SwitchEntity):
 
         super().__init__(coordinator)
 
-        self._attr_icon = "mdi:television-ambient-light"
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
 
     @property

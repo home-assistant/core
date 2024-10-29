@@ -1,11 +1,12 @@
 {
   "domain": "mqtt",
   "name": "MQTT",
-  "codeowners": ["@emontnemery", "@jbouwh"],
+  "codeowners": ["@emontnemery", "@jbouwh", "@bdraco"],
   "config_flow": true,
   "dependencies": ["file_upload", "http"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt",
   "iot_class": "local_push",
-  "quality_scale": "gold",
-  "requirements": ["paho-mqtt==1.6.1"]
+  "quality_scale": "platinum",
+  "requirements": ["paho-mqtt==1.6.1"],
+  "single_config_entry": true
 }

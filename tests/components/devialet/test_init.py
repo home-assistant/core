@@ -1,4 +1,5 @@
 """Test the Devialet init."""
+
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerState
 from homeassistant.config_entries import ConfigEntryState

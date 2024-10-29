@@ -1,4 +1,5 @@
 """Support for sending data to a Graphite installation."""
+
 from contextlib import suppress
 import logging
 import queue
@@ -137,8 +138,7 @@ class GraphiteFeeder(threading.Thread):
         with suppress(ValueError):
             things["state"] = state.state_as_number(new_state)
         lines = [
-            "%s.%s.%s %f %i"
-            % (self._prefix, entity_id, key.replace(" ", "_"), value, now)
+            f"{self._prefix}.{entity_id}.{key.replace(' ', '_')} {value:f} {now}"
             for key, value in things.items()
             if isinstance(value, (float, int))
         ]
@@ -176,7 +176,7 @@ class GraphiteFeeder(threading.Thread):
                     self._report_attributes(
                         event.data["entity_id"], event.data["new_state"]
                     )
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     # Catch this so we can avoid the thread dying and
                     # make it visible.
                     _LOGGER.exception("Failed to process STATE_CHANGED event")

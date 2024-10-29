@@ -1,4 +1,5 @@
 """Support for SCSGate components."""
+
 import logging
 from threading import Lock
 
@@ -36,13 +37,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         scsgate = SCSGate(device=device, logger=_LOGGER)
         scsgate.start()
-    except Exception as exception:  # pylint: disable=broad-except
+    except Exception as exception:  # noqa: BLE001
         _LOGGER.error("Cannot setup SCSGate component: %s", exception)
         return False
 
     def stop_monitor(event):
         """Stop the SCSGate."""
-        _LOGGER.info("Stopping SCSGate monitor thread")
+        _LOGGER.debug("Stopping SCSGate monitor thread")
         scsgate.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_monitor)
@@ -93,7 +94,7 @@ class SCSGate:
 
             try:
                 self._devices[message.entity].process_event(message)
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception as exception:  # noqa: BLE001
                 msg = f"Exception while processing event: {exception}"
                 self._logger.error(msg)
         else:

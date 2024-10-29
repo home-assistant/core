@@ -1,4 +1,5 @@
 """BleBox light entities tests."""
+
 import logging
 from unittest.mock import AsyncMock, PropertyMock
 

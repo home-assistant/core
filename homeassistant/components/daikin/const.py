@@ -1,4 +1,5 @@
 """Constants for Daikin."""
+
 DOMAIN = "daikin"
 
 ATTR_TARGET_TEMPERATURE = "target_temperature"

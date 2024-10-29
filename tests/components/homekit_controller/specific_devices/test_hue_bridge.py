@@ -1,4 +1,5 @@
 """Tests for handling accessories on a Hue bridge via HomeKit."""
+
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant

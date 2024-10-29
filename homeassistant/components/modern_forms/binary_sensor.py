@@ -1,4 +1,5 @@
 """Support for Modern Forms Binary Sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -7,8 +8,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import ModernFormsDataUpdateCoordinator, ModernFormsDeviceEntity
 from .const import CLEAR_TIMER, DOMAIN
+from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
@@ -40,11 +42,10 @@ class ModernFormsBinarySensor(ModernFormsDeviceEntity, BinarySensorEntity):
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        icon: str,
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
-        super().__init__(entry_id=entry_id, coordinator=coordinator, icon=icon)
+        super().__init__(entry_id=entry_id, coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
 
@@ -62,7 +63,6 @@ class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:av-timer",
             key="light_sleep_timer_active",
         )
 
@@ -94,7 +94,6 @@ class ModernFormsFanSleepTimerActive(ModernFormsBinarySensor):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:av-timer",
             key="fan_sleep_timer_active",
         )
 

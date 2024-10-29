@@ -1,10 +1,11 @@
 """Vodafone Station sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Final
+from typing import Final
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,39 +16,51 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, LINE_TYPES
 from .coordinator import VodafoneStationRouter
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
+UPTIME_DEVIATION = 45
 
 
-@dataclass
-class VodafoneStationBaseEntityDescription:
-    """Vodafone Station entity base description."""
+@dataclass(frozen=True, kw_only=True)
+class VodafoneStationEntityDescription(SensorEntityDescription):
+    """Vodafone Station entity description."""
 
-    value: Callable[[Any, Any], Any] = (
-        lambda coordinator, key: coordinator.data.sensors[key]
-    )
+    value: Callable[
+        [VodafoneStationRouter, str | datetime | float | None, str],
+        str | datetime | float | None,
+    ] = lambda coordinator, last_value, key: coordinator.data.sensors[key]
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
-@dataclass
-class VodafoneStationEntityDescription(
-    VodafoneStationBaseEntityDescription, SensorEntityDescription
-):
-    """Vodafone Station entity description."""
-
-
-def _calculate_uptime(coordinator: VodafoneStationRouter, key: str) -> datetime:
+def _calculate_uptime(
+    coordinator: VodafoneStationRouter,
+    last_value: str | datetime | float | None,
+    key: str,
+) -> datetime:
     """Calculate device uptime."""
 
-    return coordinator.api.convert_uptime(coordinator.data.sensors[key])
+    assert isinstance(last_value, datetime)
+
+    delta_uptime = coordinator.api.convert_uptime(coordinator.data.sensors[key])
+
+    if (
+        not last_value
+        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
+    ):
+        return delta_uptime
+
+    return last_value
 
 
-def _line_connection(coordinator: VodafoneStationRouter, key: str) -> str | None:
+def _line_connection(
+    coordinator: VodafoneStationRouter,
+    last_value: str | datetime | float | None,
+    key: str,
+) -> str | None:
     """Identify line type."""
 
     value = coordinator.data.sensors
@@ -72,26 +85,22 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="wan_ip4_addr",
         translation_key="external_ipv4",
-        icon="mdi:earth",
         is_suitable=lambda info: info["wan_ip4_addr"] not in NOT_AVAILABLE,
     ),
     VodafoneStationEntityDescription(
         key="wan_ip6_addr",
         translation_key="external_ipv6",
-        icon="mdi:earth",
         is_suitable=lambda info: info["wan_ip6_addr"] not in NOT_AVAILABLE,
     ),
     VodafoneStationEntityDescription(
         key="vf_internet_key_ip_addr",
         translation_key="external_ip_key",
-        icon="mdi:earth",
         is_suitable=lambda info: info["vf_internet_key_ip_addr"] not in NOT_AVAILABLE,
     ),
     VodafoneStationEntityDescription(
         key="inter_ip_address",
         translation_key="active_connection",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:wan",
         options=LINE_TYPES,
         value=_line_connection,
     ),
@@ -112,20 +121,17 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="fw_version",
         translation_key="fw_version",
-        icon="mdi:new-box",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     VodafoneStationEntityDescription(
         key="phone_num1",
         translation_key="phone_num1",
-        icon="mdi:phone",
-        is_suitable=lambda info: info["phone_unavailable1"] == "0",
+        is_suitable=lambda info: info["phone_num1"] != "",
     ),
     VodafoneStationEntityDescription(
         key="phone_num2",
         translation_key="phone_num2",
-        icon="mdi:phone",
-        is_suitable=lambda info: info["phone_unavailable2"] == "0",
+        is_suitable=lambda info: info["phone_num2"] != "",
     ),
     VodafoneStationEntityDescription(
         key="sys_uptime",
@@ -137,23 +143,24 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="sys_cpu_usage",
         translation_key="sys_cpu_usage",
-        icon="mdi:chip",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
+        value=lambda coordinator, last_value, key: float(
+            coordinator.data.sensors[key][:-1]
+        ),
     ),
     VodafoneStationEntityDescription(
         key="sys_memory_usage",
         translation_key="sys_memory_usage",
-        icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
+        value=lambda coordinator, last_value, key: float(
+            coordinator.data.sensors[key][:-1]
+        ),
     ),
     VodafoneStationEntityDescription(
         key="sys_reboot_cause",
         translation_key="sys_reboot_cause",
-        icon="mdi:restart-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -194,10 +201,12 @@ class VodafoneStationSensorEntity(
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        self._old_state: str | datetime | float | None = None
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | datetime | float | None:
         """Sensor value."""
-        return self.entity_description.value(
-            self.coordinator, self.entity_description.key
+        self._old_state = self.entity_description.value(
+            self.coordinator, self._old_state, self.entity_description.key
         )
+        return self._old_state

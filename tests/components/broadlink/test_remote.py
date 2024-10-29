@@ -1,4 +1,5 @@
 """Tests for Broadlink remotes."""
+
 from base64 import b64decode
 from unittest.mock import call
 

@@ -1,0 +1,468 @@
+# serializer version: 1
+# name: test_sensors[alert][binary_sensor.alert_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.alert_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'DROP-1_C0FFEE_81_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[alert][binary_sensor.alert_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Alert Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.alert_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[alert][binary_sensor.alert_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.alert_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Sensor',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alert_sensor',
+    'unique_id': 'DROP-1_C0FFEE_81_alert_sensor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[alert][binary_sensor.alert_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Alert Sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.alert_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_leak_detected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.hub_drop_1_c0ffee_leak_detected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Leak detected',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'leak',
+    'unique_id': 'DROP-1_C0FFEE_255_leak',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_leak_detected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Hub DROP-1_C0FFEE Leak detected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.hub_drop_1_c0ffee_leak_detected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_notification_unread-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.hub_drop_1_c0ffee_notification_unread',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Notification unread',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pending_notification',
+    'unique_id': 'DROP-1_C0FFEE_255_pending_notification',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_notification_unread-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hub DROP-1_C0FFEE Notification unread',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.hub_drop_1_c0ffee_notification_unread',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[leak][binary_sensor.leak_detector_leak_detected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.leak_detector_leak_detected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Leak detected',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'leak',
+    'unique_id': 'DROP-1_C0FFEE_20_leak',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[leak][binary_sensor.leak_detector_leak_detected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Leak Detector Leak detected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.leak_detector_leak_detected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[protection_valve][binary_sensor.protection_valve_leak_detected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.protection_valve_leak_detected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Leak detected',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'leak',
+    'unique_id': 'DROP-1_C0FFEE_78_leak',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[protection_valve][binary_sensor.protection_valve_leak_detected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Protection Valve Leak detected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.protection_valve_leak_detected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[pump_controller][binary_sensor.pump_controller_leak_detected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pump_controller_leak_detected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Leak detected',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'leak',
+    'unique_id': 'DROP-1_C0FFEE_83_leak',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[pump_controller][binary_sensor.pump_controller_leak_detected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Pump Controller Leak detected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pump_controller_leak_detected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[pump_controller][binary_sensor.pump_controller_pump_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pump_controller_pump_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pump status',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump',
+    'unique_id': 'DROP-1_C0FFEE_83_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[pump_controller][binary_sensor.pump_controller_pump_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pump Controller Pump status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pump_controller_pump_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[ro_filter][binary_sensor.ro_filter_leak_detected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ro_filter_leak_detected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Leak detected',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'leak',
+    'unique_id': 'DROP-1_C0FFEE_255_leak',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ro_filter][binary_sensor.ro_filter_leak_detected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'RO Filter Leak detected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ro_filter_leak_detected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[softener][binary_sensor.softener_reserve_capacity_in_use-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.softener_reserve_capacity_in_use',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reserve capacity in use',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reserve_in_use',
+    'unique_id': 'DROP-1_C0FFEE_0_reserve_in_use',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[softener][binary_sensor.softener_reserve_capacity_in_use-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Softener Reserve capacity in use',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.softener_reserve_capacity_in_use',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

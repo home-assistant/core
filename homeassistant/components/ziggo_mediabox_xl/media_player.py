@@ -1,4 +1,5 @@
 """Support for interface with a Ziggo Mediabox XL."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ import voluptuous as vol
 from ziggo_mediabox_xl import ZiggoMediaboxXL
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -23,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_KNOWN_DEVICES = "ziggo_mediabox_xl_known_devices"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
 
@@ -63,7 +64,7 @@ def setup_platform(
             if mediabox.test_connection():
                 connection_successful = True
             elif manual_config:
-                _LOGGER.info("Can't connect to %s", host)
+                _LOGGER.error("Can't connect to %s", host)
             else:
                 _LOGGER.error("Can't connect to %s", host)
             # When the device is in eco mode it's not connected to the network
@@ -76,7 +77,7 @@ def setup_platform(
         except OSError as error:
             _LOGGER.error("Can't connect to %s: %s", host, error)
     else:
-        _LOGGER.info("Ignoring duplicate Ziggo Mediabox XL %s", host)
+        _LOGGER.warning("Ignoring duplicate Ziggo Mediabox XL %s", host)
     add_entities(hosts, True)
 
 

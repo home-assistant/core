@@ -1,0 +1,27 @@
+{
+  "bridgeType": 1,
+  "ids": { "hardwareId": 12345678, "serverId": 12345678 },
+  "versions": {
+    "firmwareVersion": "0.1.0",
+    "wifiFirmwareVersion": "0.2.0"
+  },
+  "uptime": 120,
+  "currentTime": "2018-04-01T12:10:11Z",
+  "serverConnected": true,
+  "scanResults": [
+    {
+      "nukiId": 10,
+      "type": 0,
+      "name": "Nuki_00000010",
+      "rssi": -87,
+      "paired": true
+    },
+    {
+      "nukiId": 2,
+      "deviceType": 11,
+      "name": "Nuki_00000011",
+      "rssi": -93,
+      "paired": false
+    }
+  ]
+}

@@ -1,7 +1,12 @@
 """The test for the ecobee thermostat number module."""
+
 from unittest.mock import patch
 
-from homeassistant.components.number import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, UnitOfTime
 from homeassistant.core import HomeAssistant
 
@@ -14,7 +19,7 @@ THERMOSTAT_ID = 0
 
 async def test_ventilator_min_on_home_attributes(hass: HomeAssistant) -> None:
     """Test the ventilator number on home attributes are correct."""
-    await setup_platform(hass, DOMAIN)
+    await setup_platform(hass, NUMBER_DOMAIN)
 
     state = hass.states.get(VENTILATOR_MIN_HOME_ID)
     assert state.state == "20"
@@ -27,7 +32,7 @@ async def test_ventilator_min_on_home_attributes(hass: HomeAssistant) -> None:
 
 async def test_ventilator_min_on_away_attributes(hass: HomeAssistant) -> None:
     """Test the ventilator number on away attributes are correct."""
-    await setup_platform(hass, DOMAIN)
+    await setup_platform(hass, NUMBER_DOMAIN)
 
     state = hass.states.get(VENTILATOR_MIN_AWAY_ID)
     assert state.state == "10"
@@ -44,10 +49,10 @@ async def test_set_min_time_home(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.ecobee.Ecobee.set_ventilator_min_on_time_home"
     ) as mock_set_min_home_time:
-        await setup_platform(hass, DOMAIN)
+        await setup_platform(hass, NUMBER_DOMAIN)
 
         await hass.services.async_call(
-            DOMAIN,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: VENTILATOR_MIN_HOME_ID, ATTR_VALUE: target_value},
             blocking=True,
@@ -62,10 +67,10 @@ async def test_set_min_time_away(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.ecobee.Ecobee.set_ventilator_min_on_time_away"
     ) as mock_set_min_away_time:
-        await setup_platform(hass, DOMAIN)
+        await setup_platform(hass, NUMBER_DOMAIN)
 
         await hass.services.async_call(
-            DOMAIN,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: VENTILATOR_MIN_AWAY_ID, ATTR_VALUE: target_value},
             blocking=True,

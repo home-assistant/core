@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_initial_state[BTU/h-power-h]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'integration',
+      'icon': 'mdi:chart-histogram',
+      'source': 'sensor.source',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'BTU',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.integration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_initial_state[ft\xb3/min-volume_flow_rate-min]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'integration',
+      'icon': 'mdi:chart-histogram',
+      'source': 'sensor.source',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'ft³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.integration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_initial_state[kW-None-h]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'integration',
+      'icon': 'mdi:chart-histogram',
+      'source': 'sensor.source',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.integration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_initial_state[kW-power-h]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'integration',
+      'source': 'sensor.source',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.integration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

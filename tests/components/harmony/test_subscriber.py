@@ -1,4 +1,5 @@
 """Test the HarmonySubscriberMixin class."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
@@ -6,7 +7,7 @@ from homeassistant.components.harmony.subscriber import (
     HarmonyCallback,
     HarmonySubscriberMixin,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJob, HomeAssistant
 
 _NO_PARAM_CALLBACKS = {
     "connected": "_connected",
@@ -47,18 +48,18 @@ async def test_async_callbacks(hass: HomeAssistant) -> None:
     """Ensure we handle async callbacks."""
     subscriber = HarmonySubscriberMixin(hass)
 
-    callbacks = {k: AsyncMock() for k in _ALL_CALLBACK_NAMES}
+    callbacks = {k: HassJob(AsyncMock()) for k in _ALL_CALLBACK_NAMES}
     subscriber.async_subscribe(HarmonyCallback(**callbacks))
     _call_all_callbacks(subscriber)
     await hass.async_block_till_done()
 
     for callback_name in _NO_PARAM_CALLBACKS:
         callback_mock = callbacks[callback_name]
-        callback_mock.assert_awaited_once()
+        callback_mock.target.assert_awaited_once()
 
     for callback_name in _ACTIVITY_CALLBACKS:
         callback_mock = callbacks[callback_name]
-        callback_mock.assert_awaited_once_with(_ACTIVITY_TUPLE)
+        callback_mock.target.assert_awaited_once_with(_ACTIVITY_TUPLE)
 
 
 async def test_long_async_callbacks(hass: HomeAssistant) -> None:
@@ -76,8 +77,8 @@ async def test_long_async_callbacks(hass: HomeAssistant) -> None:
     async def notifies_when_called():
         notifier_event_two.set()
 
-    callbacks_one = {k: blocks_until_notified for k in _ALL_CALLBACK_NAMES}
-    callbacks_two = {k: notifies_when_called for k in _ALL_CALLBACK_NAMES}
+    callbacks_one = {k: HassJob(blocks_until_notified) for k in _ALL_CALLBACK_NAMES}
+    callbacks_two = {k: HassJob(notifies_when_called) for k in _ALL_CALLBACK_NAMES}
     subscriber.async_subscribe(HarmonyCallback(**callbacks_one))
     subscriber.async_subscribe(HarmonyCallback(**callbacks_two))
 
@@ -91,29 +92,29 @@ async def test_callbacks(hass: HomeAssistant) -> None:
     """Ensure we handle non-async callbacks."""
     subscriber = HarmonySubscriberMixin(hass)
 
-    callbacks = {k: MagicMock() for k in _ALL_CALLBACK_NAMES}
+    callbacks = {k: HassJob(MagicMock()) for k in _ALL_CALLBACK_NAMES}
     subscriber.async_subscribe(HarmonyCallback(**callbacks))
     _call_all_callbacks(subscriber)
     await hass.async_block_till_done()
 
     for callback_name in _NO_PARAM_CALLBACKS:
         callback_mock = callbacks[callback_name]
-        callback_mock.assert_called_once()
+        callback_mock.target.assert_called_once()
 
     for callback_name in _ACTIVITY_CALLBACKS:
         callback_mock = callbacks[callback_name]
-        callback_mock.assert_called_once_with(_ACTIVITY_TUPLE)
+        callback_mock.target.assert_called_once_with(_ACTIVITY_TUPLE)
 
 
 async def test_subscribe_unsubscribe(hass: HomeAssistant) -> None:
     """Ensure we handle subscriptions and unsubscriptions correctly."""
     subscriber = HarmonySubscriberMixin(hass)
 
-    callback_one = {k: MagicMock() for k in _ALL_CALLBACK_NAMES}
+    callback_one = {k: HassJob(MagicMock()) for k in _ALL_CALLBACK_NAMES}
     unsub_one = subscriber.async_subscribe(HarmonyCallback(**callback_one))
-    callback_two = {k: MagicMock() for k in _ALL_CALLBACK_NAMES}
+    callback_two = {k: HassJob(MagicMock()) for k in _ALL_CALLBACK_NAMES}
     _ = subscriber.async_subscribe(HarmonyCallback(**callback_two))
-    callback_three = {k: MagicMock() for k in _ALL_CALLBACK_NAMES}
+    callback_three = {k: HassJob(MagicMock()) for k in _ALL_CALLBACK_NAMES}
     unsub_three = subscriber.async_subscribe(HarmonyCallback(**callback_three))
 
     unsub_one()
@@ -123,14 +124,14 @@ async def test_subscribe_unsubscribe(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     for callback_name in _NO_PARAM_CALLBACKS:
-        callback_one[callback_name].assert_not_called()
-        callback_two[callback_name].assert_called_once()
-        callback_three[callback_name].assert_not_called()
+        callback_one[callback_name].target.assert_not_called()
+        callback_two[callback_name].target.assert_called_once()
+        callback_three[callback_name].target.assert_not_called()
 
     for callback_name in _ACTIVITY_CALLBACKS:
-        callback_one[callback_name].assert_not_called()
-        callback_two[callback_name].assert_called_once_with(_ACTIVITY_TUPLE)
-        callback_three[callback_name].assert_not_called()
+        callback_one[callback_name].target.assert_not_called()
+        callback_two[callback_name].target.assert_called_once_with(_ACTIVITY_TUPLE)
+        callback_three[callback_name].target.assert_not_called()
 
 
 def _call_all_callbacks(subscriber):

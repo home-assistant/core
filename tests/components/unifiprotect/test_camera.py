@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
-from pyunifiprotect.exceptions import NvrError
+from uiprotect.api import DEVICE_UPDATE_INTERVAL
+from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
+from uiprotect.exceptions import NvrError
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import (
     CameraEntityFeature,
+    CameraState,
     async_get_image,
     async_get_stream_source,
 )
@@ -19,16 +22,17 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_HEIGHT,
     ATTR_WIDTH,
     DEFAULT_ATTRIBUTION,
-    DEFAULT_SCAN_INTERVAL,
 )
+from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .utils import (
@@ -51,7 +55,8 @@ def validate_default_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    entity_name = f"{camera_obj.name} {channel.name}"
+    camera_name = get_camera_base_name(channel)
+    entity_name = f"{camera_obj.name} {camera_name}"
     unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
@@ -60,6 +65,14 @@ def validate_default_camera_entity(
     assert entity
     assert entity.disabled is False
     assert entity.unique_id == unique_id
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(entity.device_id)
+    assert device
+    assert device.manufacturer == "Ubiquiti"
+    assert device.name == camera_obj.name
+    assert device.model == camera_obj.market_name or camera_obj.type
+    assert device.model_id == camera_obj.type
 
     return entity_id
 
@@ -73,7 +86,7 @@ def validate_rtsps_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    entity_name = f"{camera_obj.name} {channel.name}"
+    entity_name = f"{camera_obj.name} {channel.name} Resolution Channel"
     unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
@@ -95,9 +108,9 @@ def validate_rtsp_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    entity_name = f"{camera_obj.name} {channel.name} Insecure"
+    entity_name = f"{camera_obj.name} {channel.name} Resolution Channel (Insecure)"
     unique_id = f"{camera_obj.mac}_{channel.id}_insecure"
-    entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
+    entity_id = f"camera.{entity_name.replace(' ', '_').replace('(', '').replace(')', '').lower()}"
 
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
@@ -314,7 +327,7 @@ async def test_camera_image(
 
     ufp.api.get_camera_snapshot = AsyncMock()
 
-    await async_get_image(hass, "camera.test_camera_high")
+    await async_get_image(hass, "camera.test_camera_high_resolution_channel")
     ufp.api.get_camera_snapshot.assert_called_once()
 
 
@@ -339,7 +352,7 @@ async def test_camera_generic_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -365,7 +378,7 @@ async def test_camera_interval_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
@@ -375,7 +388,7 @@ async def test_camera_interval_update(
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.update = AsyncMock(return_value=ufp.api.bootstrap)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "recording"
@@ -388,24 +401,51 @@ async def test_camera_bad_interval_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
 
     # update fails
     ufp.api.update = AsyncMock(side_effect=NvrError)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "unavailable"
 
     # next update succeeds
     ufp.api.update = AsyncMock(return_value=ufp.api.bootstrap)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
+
+
+async def test_camera_websocket_disconnected(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """Test the websocket gets disconnected and reconnected."""
+
+    await init_entry(hass, ufp, [camera])
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    entity_id = "camera.test_camera_high_resolution_channel"
+
+    state = hass.states.get(entity_id)
+    assert state and state.state == CameraState.IDLE
+
+    # websocket disconnects
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state and state.state == STATE_UNAVAILABLE
+
+    # websocket reconnects
+    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state and state.state == CameraState.IDLE
 
 
 async def test_camera_ws_update(
@@ -415,7 +455,7 @@ async def test_camera_ws_update(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
@@ -450,7 +490,7 @@ async def test_camera_ws_update_offline(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
@@ -492,7 +532,7 @@ async def test_camera_enable_motion(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()
@@ -514,7 +554,7 @@ async def test_camera_disable_motion(
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high"
+    entity_id = "camera.test_camera_high_resolution_channel"
 
     camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()

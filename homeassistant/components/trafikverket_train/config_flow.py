@@ -1,4 +1,5 @@
 """Adds config flow for Trafikverket Train integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -16,10 +17,14 @@ from pytrafikverket.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
@@ -82,7 +87,7 @@ async def validate_input(
             when = datetime.combine(
                 departure_day,
                 _time,
-                dt_util.get_time_zone(hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
 
     try:
@@ -109,63 +114,56 @@ async def validate_input(
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception as error:  # pylint: disable=broad-exception-caught
+    except Exception as error:  # noqa: BLE001
         _LOGGER.error("Unknown exception occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
 
     return errors
 
 
-class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Train integration."""
 
     VERSION = 1
 
-    entry: config_entries.ConfigEntry | None
-
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> TVTrainOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TVTrainOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm re-authentication with Trafikverket."""
         errors: dict[str, str] = {}
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
-            assert self.entry is not None
+            reauth_entry = self._get_reauth_entry()
             errors = await validate_input(
                 self.hass,
                 api_key,
-                self.entry.data[CONF_FROM],
-                self.entry.data[CONF_TO],
-                self.entry.data.get(CONF_TIME),
-                self.entry.data[CONF_WEEKDAY],
-                self.entry.options.get(CONF_FILTER_PRODUCT),
+                reauth_entry.data[CONF_FROM],
+                reauth_entry.data[CONF_TO],
+                reauth_entry.data.get(CONF_TIME),
+                reauth_entry.data[CONF_WEEKDAY],
+                reauth_entry.options.get(CONF_FILTER_PRODUCT),
             )
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_API_KEY: api_key,
-                    },
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_KEY: api_key},
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -175,7 +173,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
 
@@ -231,12 +229,12 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class TVTrainOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class TVTrainOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Trafikverket Train options."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Trafikverket Train options."""
         errors: dict[str, Any] = {}
 

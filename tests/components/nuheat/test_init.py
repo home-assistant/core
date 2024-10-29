@@ -1,4 +1,5 @@
 """NuHeat component tests."""
+
 from unittest.mock import patch
 
 from homeassistant.components.nuheat.const import DOMAIN

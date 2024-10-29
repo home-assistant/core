@@ -1,4 +1,5 @@
 """Constants for the PurpleAir integration."""
+
 import logging
 
 DOMAIN = "purpleair"

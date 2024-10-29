@@ -1,4 +1,88 @@
 # serializer version: 1
+# name: test_cleanup_mac
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+        tuple(
+          'mac',
+          'aa:bb:cc:dd:ee:ff',
+        ),
+        tuple(
+          'mac',
+          'none',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'samsungtv',
+          'any',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': '82GXARRS',
+      'model_id': None,
+      'name': 'fake',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_cleanup_mac.1
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+        tuple(
+          'mac',
+          'aa:bb:cc:dd:ee:ff',
+        ),
+        tuple(
+          'mac',
+          'none',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'samsungtv',
+          'any',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': None,
+      'model': '82GXARRS',
+      'model_id': '82GXARRS',
+      'name': 'fake',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
 # name: test_setup_updates_from_ssdp
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -9,11 +93,12 @@
         'TV',
         'HDMI',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 20413>,
+      'supported_features': <MediaPlayerEntityFeature: 24509>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.any',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -40,6 +125,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -48,7 +135,7 @@
     'original_name': None,
     'platform': 'samsungtv',
     'previous_unique_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 20413>,
+    'supported_features': <MediaPlayerEntityFeature: 24509>,
     'translation_key': None,
     'unique_id': 'sample-entry-id',
     'unit_of_measurement': None,

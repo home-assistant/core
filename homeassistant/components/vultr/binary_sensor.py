@@ -1,4 +1,5 @@
 """Support for monitoring the state of Vultr subscriptions (VPS)."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -37,7 +38,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Vultr {}"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SUBSCRIPTION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

@@ -3,6 +3,7 @@
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
+
 from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
 from homeassistant.components.binary_sensor import (
@@ -46,7 +47,10 @@ async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
 
 
 async def test_entity_and_device_attributes(
-    hass: HomeAssistant, device_factory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_factory,
 ) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
@@ -61,8 +65,6 @@ async def test_entity_and_device_attributes(
             Attribute.mnfv: "v7.89",
         },
     )
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
     # Act
     await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     # Assert
@@ -106,7 +108,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
     )
     config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
     # Assert
@@ -116,7 +118,9 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     )
 
 
-async def test_entity_category(hass: HomeAssistant, device_factory) -> None:
+async def test_entity_category(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, device_factory
+) -> None:
     """Tests the state attributes properly match the light types."""
     device1 = device_factory(
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
@@ -126,7 +130,6 @@ async def test_entity_category(hass: HomeAssistant, device_factory) -> None:
     )
     await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device1, device2])
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
     assert entry
     assert entry.entity_category is None

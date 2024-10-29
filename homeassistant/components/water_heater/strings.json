@@ -18,6 +18,24 @@
         "performance": "Performance"
       },
       "state_attributes": {
+        "current_operation": {
+          "name": "Current operation"
+        },
+        "current_temperature": {
+          "name": "Current temperature"
+        },
+        "max_temp": {
+          "name": "Max target temperature"
+        },
+        "min_temp": {
+          "name": "Min target temperature"
+        },
+        "target_temp_high": {
+          "name": "Upper target temperature"
+        },
+        "target_temp_low": {
+          "name": "Lower target temperature"
+        },
         "away_mode": {
           "name": "Away mode",
           "state": {
@@ -70,6 +88,14 @@
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
       "description": "Turns water heater off."
+    }
+  },
+  "exceptions": {
+    "not_valid_operation_mode": {
+      "message": "Operation mode {operation_mode} is not valid for {entity_id}. Valid operation modes are: {operation_list}."
+    },
+    "operation_list_not_defined": {
+      "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
     }
   }
 }

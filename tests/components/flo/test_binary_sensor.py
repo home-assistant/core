@@ -1,4 +1,7 @@
 """Test Flo by Moen binary sensor entities."""
+
+import pytest
+
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -12,9 +15,12 @@ from homeassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
+from tests.common import MockConfigEntry
 
+
+@pytest.mark.usefixtures("aioclient_mock_fixture")
 async def test_binary_sensors(
-    hass: HomeAssistant, config_entry, aioclient_mock_fixture
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test Flo by Moen sensors."""
     config_entry.add_to_hass(hass)

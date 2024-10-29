@@ -1,4 +1,5 @@
 """Support for ZhongHong HVAC Controller."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,7 @@ from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -41,7 +42,7 @@ DEFAULT_GATEWAY_ADDRRESS = 1
 SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
 SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -128,9 +129,13 @@ class ZhongHongClimate(ClimateEntity):
     ]
     _attr_should_poll = False
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""

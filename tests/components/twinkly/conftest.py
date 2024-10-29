@@ -1,4 +1,5 @@
 """Configure tests for the Twinkly integration."""
+
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any
 from unittest.mock import patch
@@ -12,7 +13,7 @@ from . import TEST_MODEL, TEST_NAME, TEST_UID, ClientMock
 
 from tests.common import MockConfigEntry
 
-ComponentSetup = Callable[[], Awaitable[ClientMock]]
+type ComponentSetup = Callable[[], Awaitable[ClientMock]]
 
 DOMAIN = "twinkly"
 TITLE = "Twinkly"

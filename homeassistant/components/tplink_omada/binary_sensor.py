@@ -1,120 +1,135 @@
 """Support for TPLink Omada binary sensors."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
+from dataclasses import dataclass
 
-from attr import dataclass
-from tplink_omada_client.definitions import GatewayPortMode, LinkStatus
-from tplink_omada_client.devices import OmadaDevice, OmadaGateway, OmadaGatewayPort
+from tplink_omada_client.definitions import GatewayPortMode, LinkStatus, PoEMode
+from tplink_omada_client.devices import (
+    OmadaDevice,
+    OmadaGatewayPortConfig,
+    OmadaGatewayPortStatus,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .controller import OmadaGatewayCoordinator, OmadaSiteController
+from . import OmadaConfigEntry
+from .controller import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OmadaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensors."""
-    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
-    omada_client = controller.omada_client
+    controller = config_entry.runtime_data
 
-    gateway_coordinator = await controller.get_gateway_coordinator()
+    gateway_coordinator = controller.gateway_coordinator
     if not gateway_coordinator:
         return
 
-    gateway = await omada_client.get_gateway(gateway_coordinator.mac)
-
-    async_add_entities(
-        get_gateway_port_status_sensors(gateway, hass, gateway_coordinator)
-    )
-
-    await gateway_coordinator.async_request_refresh()
-
-
-def get_gateway_port_status_sensors(
-    gateway: OmadaGateway, hass: HomeAssistant, coordinator: OmadaGatewayCoordinator
-) -> Generator[BinarySensorEntity, None, None]:
-    """Generate binary sensors for gateway ports."""
-    for port in gateway.port_status:
-        if port.mode == GatewayPortMode.WAN:
-            yield OmadaGatewayPortBinarySensor(
-                coordinator,
-                gateway,
-                GatewayPortBinarySensorConfig(
-                    port_number=port.port_number,
-                    id_suffix="wan_link",
-                    name_suffix="Internet Link",
-                    device_class=BinarySensorDeviceClass.CONNECTIVITY,
-                    update_func=lambda p: p.wan_connected,
-                ),
+    entities: list[OmadaDeviceEntity] = []
+    for gateway in gateway_coordinator.data.values():
+        entities.extend(
+            OmadaGatewayPortBinarySensor(
+                gateway_coordinator, gateway, p.port_number, desc
             )
-        if port.mode == GatewayPortMode.LAN:
-            yield OmadaGatewayPortBinarySensor(
-                coordinator,
-                gateway,
-                GatewayPortBinarySensorConfig(
-                    port_number=port.port_number,
-                    id_suffix="lan_status",
-                    name_suffix="LAN Status",
-                    device_class=BinarySensorDeviceClass.CONNECTIVITY,
-                    update_func=lambda p: p.link_status == LinkStatus.LINK_UP,
-                ),
-            )
+            for p in gateway.port_configs
+            for desc in GATEWAY_PORT_SENSORS
+            if desc.exists_func(p)
+        )
+
+    async_add_entities(entities)
 
 
-@dataclass
-class GatewayPortBinarySensorConfig:
-    """Config for a binary status derived from a gateway port."""
+@dataclass(frozen=True, kw_only=True)
+class GatewayPortBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Entity description for a binary status derived from a gateway port."""
 
-    port_number: int
-    id_suffix: str
-    name_suffix: str
-    device_class: BinarySensorDeviceClass
-    update_func: Callable[[OmadaGatewayPort], bool]
+    exists_func: Callable[[OmadaGatewayPortConfig], bool] = lambda _: True
+    update_func: Callable[[OmadaGatewayPortStatus], bool]
 
 
-class OmadaGatewayPortBinarySensor(OmadaDeviceEntity[OmadaGateway], BinarySensorEntity):
+GATEWAY_PORT_SENSORS: list[GatewayPortBinarySensorEntityDescription] = [
+    GatewayPortBinarySensorEntityDescription(
+        key="wan_link",
+        translation_key="wan_link",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        exists_func=lambda p: p.port_status.mode == GatewayPortMode.WAN,
+        update_func=lambda p: p.wan_connected,
+    ),
+    GatewayPortBinarySensorEntityDescription(
+        key="online_detection",
+        translation_key="online_detection",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        exists_func=lambda p: p.port_status.mode == GatewayPortMode.WAN,
+        update_func=lambda p: p.online_detection,
+    ),
+    GatewayPortBinarySensorEntityDescription(
+        key="lan_status",
+        translation_key="lan_status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        exists_func=lambda p: p.port_status.mode == GatewayPortMode.LAN,
+        update_func=lambda p: p.link_status == LinkStatus.LINK_UP,
+    ),
+    GatewayPortBinarySensorEntityDescription(
+        key="poe_delivery",
+        translation_key="poe_delivery",
+        device_class=BinarySensorDeviceClass.POWER,
+        exists_func=lambda p: (
+            p.port_status.mode == GatewayPortMode.LAN and p.poe_mode == PoEMode.ENABLED
+        ),
+        update_func=lambda p: p.poe_active,
+    ),
+]
+
+
+class OmadaGatewayPortBinarySensor(
+    OmadaDeviceEntity[OmadaGatewayCoordinator], BinarySensorEntity
+):
     """Binary status of a property on an internet gateway."""
 
-    _attr_has_entity_name = True
+    entity_description: GatewayPortBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: OmadaGatewayCoordinator,
         device: OmadaDevice,
-        config: GatewayPortBinarySensorConfig,
+        port_number: int,
+        entity_description: GatewayPortBinarySensorEntityDescription,
     ) -> None:
         """Initialize the gateway port binary sensor."""
         super().__init__(coordinator, device)
-        self._config = config
-        self._attr_unique_id = f"{device.mac}_{config.port_number}_{config.id_suffix}"
-        self._attr_device_class = config.device_class
+        self.entity_description = entity_description
+        self._port_number = port_number
+        self._attr_unique_id = f"{device.mac}_{port_number}_{entity_description.key}"
+        self._attr_translation_placeholders = {"port_name": f"{port_number}"}
 
-        self._attr_name = f"Port {config.port_number} {config.name_suffix}"
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._do_update()
+
+    def _do_update(self) -> None:
+        gateway = self.coordinator.data[self.device.mac]
+
+        port = next(
+            p for p in gateway.port_status if p.port_number == self._port_number
+        )
+        if port:
+            self._attr_is_on = self.entity_description.update_func(port)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        gateway = self.coordinator.data[self.device.mac]
-
-        port = next(
-            p for p in gateway.port_status if p.port_number == self._config.port_number
-        )
-        if port:
-            self._attr_is_on = self._config.update_func(port)
-            self._attr_available = True
-        else:
-            self._attr_available = False
-
+        self._do_update()
         self.async_write_ha_state()

@@ -1,4 +1,5 @@
 """Mobile app websocket API."""
+
 from __future__ import annotations
 
 from functools import wraps
@@ -110,9 +111,6 @@ async def handle_push_notification_channel(
         """Handle teardown."""
         if registered_channels.get(webhook_id) == channel:
             registered_channels.pop(webhook_id)
-
-        # Remove subscription from connection if still exists
-        connection.subscriptions.pop(msg["id"], None)
 
     channel = registered_channels[webhook_id] = PushChannel(
         hass,

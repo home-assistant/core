@@ -9,11 +9,9 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, entity_registry as er, restore_state
 
-from .const import DOMAIN
-from .pipeline import PipelineData, PipelineStorageCollection
+from .const import DOMAIN, OPTION_PREFERRED
+from .pipeline import AssistDevice, PipelineData, PipelineStorageCollection
 from .vad import VadSensitivity
-
-OPTION_PREFERRED = "preferred"
 
 
 @callback
@@ -70,8 +68,10 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
     _attr_current_option = OPTION_PREFERRED
     _attr_options = [OPTION_PREFERRED]
 
-    def __init__(self, hass: HomeAssistant, unique_id_prefix: str) -> None:
+    def __init__(self, hass: HomeAssistant, domain: str, unique_id_prefix: str) -> None:
         """Initialize a pipeline selector."""
+        self._domain = domain
+        self._unique_id_prefix = unique_id_prefix
         self._attr_unique_id = f"{unique_id_prefix}-pipeline"
         self.hass = hass
         self._update_options()
@@ -91,10 +91,15 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
             self._attr_current_option = state.state
 
         if self.registry_entry and (device_id := self.registry_entry.device_id):
-            pipeline_data.pipeline_devices.add(device_id)
-            self.async_on_remove(
-                lambda: pipeline_data.pipeline_devices.discard(device_id)
+            pipeline_data.pipeline_devices[device_id] = AssistDevice(
+                self._domain, self._unique_id_prefix
             )
+
+            def cleanup() -> None:
+                """Clean up registered device."""
+                pipeline_data.pipeline_devices.pop(device_id)
+
+            self.async_on_remove(cleanup)
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
@@ -102,7 +107,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         self.async_write_ha_state()
 
     async def _pipelines_updated(
-        self, change_sets: Iterable[collection.CollectionChangeSet]
+        self, change_set: Iterable[collection.CollectionChange]
     ) -> None:
         """Handle pipeline update."""
         self._update_options()

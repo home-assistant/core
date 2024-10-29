@@ -1,4 +1,5 @@
 """The Subaru integration."""
+
 from datetime import timedelta
 import logging
 import time
@@ -84,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=COORDINATOR_NAME,
         update_method=async_update_data,
         update_interval=timedelta(seconds=FETCH_INTERVAL),
@@ -148,7 +150,7 @@ async def update_subaru(vehicle, controller):
 
 def get_vehicle_info(controller, vin):
     """Obtain vehicle identifiers and capabilities."""
-    info = {
+    return {
         VEHICLE_VIN: vin,
         VEHICLE_MODEL_NAME: controller.get_model_name(vin),
         VEHICLE_MODEL_YEAR: controller.get_model_year(vin),
@@ -160,7 +162,6 @@ def get_vehicle_info(controller, vin):
         VEHICLE_HAS_SAFETY_SERVICE: controller.get_safety_status(vin),
         VEHICLE_LAST_UPDATE: 0,
     }
-    return info
 
 
 def get_device_info(vehicle_info):

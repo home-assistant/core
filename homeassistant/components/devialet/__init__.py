@@ -1,4 +1,5 @@
 """The Devialet integration."""
+
 from __future__ import annotations
 
 from devialet import DevialetApi

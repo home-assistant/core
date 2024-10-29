@@ -36,6 +36,7 @@
       "addon_start_failed": "Failed to start the Matter Server add-on.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_matter_addon": "Discovered add-on is not the official Matter Server add-on.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
     },
@@ -45,27 +46,234 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_alert": {
+        "name": "Battery alert"
+      },
+      "end_of_service": {
+        "name": "End of service"
+      },
+      "hardware_fault": {
+        "name": "Hardware fault"
+      },
+      "interconnected_smoke_alarm": {
+        "name": "Interconnected smoke alarm"
+      },
+      "interconnected_co_alarm": {
+        "name": "Interconnected CO alarm"
+      },
+      "test_in_progress": {
+        "name": "Test in progress"
+      },
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "water_freeze": {
+        "name": "Water freeze"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "muted": {
+        "name": "Muted"
+      }
+    },
+    "button": {
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "[%key:common::action::start%]"
+      },
+      "stop": {
+        "name": "[%key:common::action::stop%]"
+      },
+      "reset_filter_condition": {
+        "name": "Reset filter condition"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "[%key:component::cover::title%]"
+      }
+    },
     "event": {
-      "push": {
+      "button": {
+        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
               "switch_latched": "Switch latched",
-              "initial_press": "Initial press",
-              "long_press": "Long press",
-              "short_release": "Short release",
-              "long_release": "Long release",
-              "multi_press_ongoing": "Multi press ongoing",
-              "multi_press_complete": "Multi press complete"
+              "initial_press": "Pressed",
+              "long_press": "Held down",
+              "short_release": "Released after being pressed",
+              "long_release": "Released after being held down",
+              "multi_press_1": "Pressed once",
+              "multi_press_2": "Pressed twice",
+              "multi_press_3": "Pressed 3 times",
+              "multi_press_4": "Pressed 4 times",
+              "multi_press_5": "Pressed 5 times",
+              "multi_press_6": "Pressed 6 times",
+              "multi_press_7": "Pressed 7 times",
+              "multi_press_8": "Pressed 8 times"
             }
           }
         }
       }
     },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "low": "Low",
+              "medium": "Medium",
+              "high": "High",
+              "auto": "Auto",
+              "natural_wind": "Natural wind",
+              "sleep_wind": "Sleep wind"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "on_level": {
+        "name": "On level"
+      },
+      "on_transition_time": {
+        "name": "On transition time"
+      },
+      "off_transition_time": {
+        "name": "Off transition time"
+      },
+      "on_off_transition_time": {
+        "name": "On/Off transition time"
+      },
+      "altitude": {
+        "name": "Altitude above Sea Level"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "select": {
+      "clean_mode": {
+        "name": "Clean mode"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "sensitivity_level": {
+        "name": "Sensitivity",
+        "state": {
+          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
+          "standard": "Standard",
+          "high": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::high%]"
+        }
+      },
+      "startup_on_off": {
+        "name": "Power-on behavior on startup",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]",
+          "toggle": "[%key:common::action::toggle%]",
+          "previous": "Previous"
+        }
+      }
+    },
     "sensor": {
+      "activated_carbon_filter_condition": {
+        "name": "Activated carbon filter condition"
+      },
+      "contamination_state": {
+        "name": "Contamination state",
+        "state": {
+          "normal": "Normal",
+          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
+          "warning": "Warning",
+          "critical": "Critical"
+        }
+      },
+      "air_quality": {
+        "name": "Air quality",
+        "state": {
+          "extremely_poor": "Extremely poor",
+          "very_poor": "Very poor",
+          "poor": "Poor",
+          "fair": "Fair",
+          "good": "Good",
+          "moderate": "Moderate"
+        }
+      },
+      "expiry_date": {
+        "name": "Expiry date"
+      },
       "flow": {
         "name": "Flow"
+      },
+      "hepa_filter_condition": {
+        "name": "Hepa filter condition"
+      },
+      "operational_state": {
+        "name": "Operational state",
+        "state": {
+          "stopped": "Stopped",
+          "running": "Running",
+          "paused": "[%key:common::state::paused%]",
+          "error": "Error"
+        }
+      },
+      "switch_current_position": {
+        "name": "Current switch position"
+      },
+      "valve_position": {
+        "name": "Valve position"
       }
+    },
+    "switch": {
+      "switch": {
+        "name": "[%key:component::switch::title%]"
+      },
+      "power": {
+        "name": "Power"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "name": "[%key:component::vacuum::title%]"
+      }
+    },
+    "valve": {
+      "valve": {
+        "name": "[%key:component::valve::title%]"
+      }
+    }
+  },
+  "issues": {
+    "server_version_version_too_old": {
+      "description": "The version of the Matter Server you are currently running is too old for this version of Home Assistant. Please update the Matter Server to the latest version to fix this issue.",
+      "title": "Newer version of Matter Server needed"
+    },
+    "server_version_version_too_new": {
+      "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
+      "title": "Older version of Matter Server needed"
     }
   },
   "services": {

@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_switches[switch.device_name_electric_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.device_name_electric_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Electric heater',
+    'platform': 'flexit_bacnet',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'electric_heater',
+    'unique_id': '0000-0001-electric_heater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.device_name_electric_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Device Name Electric heater',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_name_electric_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches_implementation[switch.device_name_electric_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Device Name Electric heater',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.device_name_electric_heater',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

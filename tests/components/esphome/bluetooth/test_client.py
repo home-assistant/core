@@ -1,4 +1,5 @@
 """Tests for ESPHomeClient."""
+
 from __future__ import annotations
 
 from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceInfo
@@ -32,11 +33,11 @@ async def client_data_fixture(
             mac_address=ESP_MAC_ADDRESS,
             name=ESP_NAME,
             bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
-            & BluetoothProxyFeature.ACTIVE_CONNECTIONS
-            & BluetoothProxyFeature.REMOTE_CACHING
-            & BluetoothProxyFeature.PAIRING
-            & BluetoothProxyFeature.CACHE_CLEARING
-            & BluetoothProxyFeature.RAW_ADVERTISEMENTS,
+            | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+            | BluetoothProxyFeature.REMOTE_CACHING
+            | BluetoothProxyFeature.PAIRING
+            | BluetoothProxyFeature.CACHE_CLEARING
+            | BluetoothProxyFeature.RAW_ADVERTISEMENTS,
         ),
         api_version=APIVersion(1, 9),
         title=ESP_NAME,
@@ -54,4 +55,4 @@ async def test_client_usage_while_not_connected(client_data: ESPHomeClientData) 
     with pytest.raises(
         BleakError, match=f"{ESP_NAME}.*{ESP_MAC_ADDRESS}.*not connected"
     ):
-        await client.write_gatt_char("test", b"test") is False
+        assert await client.write_gatt_char("test", b"test") is False

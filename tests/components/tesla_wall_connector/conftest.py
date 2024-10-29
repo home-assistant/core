@@ -1,4 +1,5 @@
 """Common fixutres with default mocks as well as common test helper methods."""
+
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -62,18 +63,22 @@ async def create_wall_connector_entry(
 
     entry.add_to_hass(hass)
 
-    with patch(
-        "tesla_wall_connector.WallConnector.async_get_version",
-        return_value=get_default_version_data(),
-        side_effect=side_effect,
-    ), patch(
-        "tesla_wall_connector.WallConnector.async_get_vitals",
-        return_value=vitals_data,
-        side_effect=side_effect,
-    ), patch(
-        "tesla_wall_connector.WallConnector.async_get_lifetime",
-        return_value=lifetime_data,
-        side_effect=side_effect,
+    with (
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_version",
+            return_value=get_default_version_data(),
+            side_effect=side_effect,
+        ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_vitals",
+            return_value=vitals_data,
+            side_effect=side_effect,
+        ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_lifetime",
+            return_value=lifetime_data,
+            side_effect=side_effect,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -83,14 +88,12 @@ async def create_wall_connector_entry(
 
 def get_vitals_mock() -> Vitals:
     """Get mocked vitals object."""
-    vitals = MagicMock(auto_spec=Vitals)
-    return vitals
+    return MagicMock(auto_spec=Vitals)
 
 
 def get_lifetime_mock() -> Lifetime:
     """Get mocked lifetime object."""
-    lifetime = MagicMock(auto_spec=Lifetime)
-    return lifetime
+    return MagicMock(auto_spec=Lifetime)
 
 
 @dataclass
@@ -126,12 +129,15 @@ async def _test_sensors(
         ), f"First update: {entity.entity_id} is expected to have state {entity.first_value} but has {state.state}"
 
     # Simulate second data update
-    with patch(
-        "tesla_wall_connector.WallConnector.async_get_vitals",
-        return_value=vitals_second_update,
-    ), patch(
-        "tesla_wall_connector.WallConnector.async_get_lifetime",
-        return_value=lifetime_second_update,
+    with (
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_vitals",
+            return_value=vitals_second_update,
+        ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_lifetime",
+            return_value=lifetime_second_update,
+        ),
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL)

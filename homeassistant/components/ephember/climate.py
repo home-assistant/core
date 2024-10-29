@@ -1,4 +1,5 @@
 """Support for the EPH Controls Ember themostats."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -19,7 +20,7 @@ from pyephember.pyephember import (
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -43,7 +44,7 @@ SCAN_INTERVAL = timedelta(seconds=120)
 
 OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
@@ -83,6 +84,7 @@ class EphEmberThermostat(ClimateEntity):
 
     _attr_hvac_modes = OPERATION_LIST
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, ember, zone):
         """Initialize the thermostat."""
@@ -100,6 +102,9 @@ class EphEmberThermostat(ClimateEntity):
         if self._hot_water:
             self._attr_supported_features = ClimateEntityFeature.AUX_HEAT
             self._attr_target_temperature_step = None
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
 
     @property
     def current_temperature(self):

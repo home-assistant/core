@@ -1,4 +1,5 @@
 """Support for Neato Connected Vacuums."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -63,12 +64,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Neato vacuum with config entry."""
-    dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
     mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
     persistent_maps: dict[str, Any] | None = hass.data.get(NEATO_PERSISTENT_MAPS)
-    for robot in hass.data[NEATO_ROBOTS]:
-        dev.append(NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps))
+    dev = [
+        NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps)
+        for robot in hass.data[NEATO_ROBOTS]
+    ]
 
     if not dev:
         return
@@ -94,7 +96,6 @@ async def async_setup_entry(
 class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
 
-    _attr_icon = "mdi:robot-vacuum-variant"
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.PAUSE
@@ -375,7 +376,9 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     "Zone '%s' was not found for the robot '%s'", zone, self.entity_id
                 )
                 return
-            _LOGGER.info("Start cleaning zone '%s' with robot %s", zone, self.entity_id)
+            _LOGGER.debug(
+                "Start cleaning zone '%s' with robot %s", zone, self.entity_id
+            )
 
         self._attr_state = STATE_CLEANING
         try:

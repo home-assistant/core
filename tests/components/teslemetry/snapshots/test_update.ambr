@@ -1,0 +1,117 @@
+# serializer version: 1
+# name: test_update[update.test_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.test_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Update',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': 'vehicle_state_software_update_status',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_software_update_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[update.test_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'friendly_name': 'Test Update',
+      'in_progress': False,
+      'installed_version': '2023.44.30.8',
+      'latest_version': '2024.12.0.0',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.test_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update_alt[update.test_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'update.test_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Update',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 4>,
+    'translation_key': 'vehicle_state_software_update_status',
+    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_software_update_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_alt[update.test_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
+      'friendly_name': 'Test Update',
+      'in_progress': False,
+      'installed_version': '2023.44.30.8',
+      'latest_version': '2023.44.30.8',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 4>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.test_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

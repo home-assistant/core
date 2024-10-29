@@ -1,30 +1,23 @@
 """Support for non-delivered packages recorded in AfterShip."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any, Final
 
 from pyaftership import AfterShip, AfterShipException
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
+from . import AfterShipConfigEntry
 from .const import (
     ADD_TRACKING_SERVICE_SCHEMA,
     ATTR_TRACKINGS,
@@ -33,9 +26,7 @@ from .const import (
     CONF_SLUG,
     CONF_TITLE,
     CONF_TRACKING_NUMBER,
-    DEFAULT_NAME,
     DOMAIN,
-    ICON,
     MIN_TIME_BETWEEN_UPDATES,
     REMOVE_TRACKING_SERVICE_SCHEMA,
     SERVICE_ADD_TRACKING,
@@ -45,56 +36,16 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the AfterShip sensor platform."""
-    aftership = AfterShip(
-        api_key=config[CONF_API_KEY], session=async_get_clientsession(hass)
-    )
-    try:
-        await aftership.trackings.list()
-    except AfterShipException:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_import_issue_cannot_connect",
-            breaks_in_ha_version="2024.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue_cannot_connect",
-            translation_placeholders={
-                "integration_title": "AfterShip",
-                "url": "/config/integrations/dashboard/add?domain=aftership",
-            },
-        )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AfterShipConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AfterShip sensor entities based on a config entry."""
-    aftership: AfterShip = hass.data[DOMAIN][config_entry.entry_id]
+    aftership = config_entry.runtime_data
 
     async_add_entities([AfterShipSensor(aftership, config_entry.title)], True)
 
@@ -135,7 +86,7 @@ class AfterShipSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement: str = "packages"
-    _attr_icon: str = ICON
+    _attr_translation_key = "packages"
 
     def __init__(self, aftership: AfterShip, name: str) -> None:
         """Initialize the sensor."""

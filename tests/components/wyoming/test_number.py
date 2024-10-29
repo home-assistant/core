@@ -1,4 +1,5 @@
 """Test Wyoming number."""
+
 from unittest.mock import patch
 
 from homeassistant.components.wyoming.devices import SatelliteDevice

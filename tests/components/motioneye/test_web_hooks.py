@@ -1,4 +1,5 @@
 """Test the motionEye camera web hooks."""
+
 import copy
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, call, patch
@@ -221,18 +222,18 @@ async def test_setup_camera_with_correct_webhook(
 
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_NOTIFICATIONS_ENABLED] = True
-    cameras[KEY_CAMERAS][0][
-        KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD
-    ] = KEY_HTTP_METHOD_POST_JSON
+    cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD] = (
+        KEY_HTTP_METHOD_POST_JSON
+    )
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_NOTIFICATIONS_URL] = (
         "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_MOTION_DETECTED_QUERY_STRING}&device_id={device.id}"
     )
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_STORAGE_ENABLED] = True
-    cameras[KEY_CAMERAS][0][
-        KEY_WEB_HOOK_STORAGE_HTTP_METHOD
-    ] = KEY_HTTP_METHOD_POST_JSON
+    cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_STORAGE_HTTP_METHOD] = (
+        KEY_HTTP_METHOD_POST_JSON
+    )
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_STORAGE_URL] = (
         "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])

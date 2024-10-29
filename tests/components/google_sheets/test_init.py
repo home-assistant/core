@@ -25,7 +25,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SHEET_ID = "google-sheet-it"
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.fixture(name="scopes")
@@ -214,6 +214,32 @@ async def test_append_sheet(
     assert len(mock_client.mock_calls) == 8
 
 
+async def test_append_sheet_multiple_rows(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test service call appending to a sheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "append_sheet",
+            {
+                "config_entry": config_entry.entry_id,
+                "worksheet": "Sheet1",
+                "data": [{"foo": "bar"}, {"foo": "bar2"}],
+            },
+            blocking=True,
+        )
+    assert len(mock_client.mock_calls) == 8
+
+
 async def test_append_sheet_api_error(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -229,9 +255,12 @@ async def test_append_sheet_api_error(
     response = Response()
     response.status_code = 503
 
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.google_sheets.Client.request",
-        side_effect=APIError(response),
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.google_sheets.Client.request",
+            side_effect=APIError(response),
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -291,7 +320,7 @@ async def test_append_sheet_invalid_config_entry(
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Config entry not loaded"):
+    with pytest.raises(ValueError, match="Invalid config entry"):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",

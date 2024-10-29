@@ -5,15 +5,12 @@ To update, run python3 -m script.hassfest
 
 from __future__ import annotations
 
-DHCP: list[dict[str, str | bool]] = [
+from typing import Final
+
+DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "airzone",
         "macaddress": "E84F25*",
-    },
-    {
-        "domain": "august",
-        "hostname": "yale-connect-plus",
-        "macaddress": "00177A*",
     },
     {
         "domain": "august",
@@ -32,12 +29,13 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "august",
-        "hostname": "august*",
-        "macaddress": "E076D0*",
+        "hostname": "connect",
+        "macaddress": "789C85*",
     },
     {
-        "domain": "awair",
-        "macaddress": "70886B1*",
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*",
     },
     {
         "domain": "axis",
@@ -57,6 +55,11 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "axis",
         "hostname": "axis-b8a44f*",
         "macaddress": "B8A44F*",
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-e82725*",
+        "macaddress": "E82725*",
     },
     {
         "domain": "blink",
@@ -426,6 +429,26 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "0CAE7D*",
     },
     {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "2CAB33*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "94E36D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "9C7613*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "341513*",
+    },
+    {
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*",
@@ -572,6 +595,10 @@ DHCP: list[dict[str, str | bool]] = [
         "hostname": "tado*",
     },
     {
+        "domain": "tailwind",
+        "registered_devices": True,
+    },
+    {
         "domain": "tesla_wall_connector",
         "hostname": "teslawallconnector_*",
         "macaddress": "DC44271*",
@@ -602,6 +629,11 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "tplink",
         "hostname": "e[sp]*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "e[sp]*",
         "macaddress": "54AF97*",
     },
     {
@@ -628,6 +660,16 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "tplink",
         "hostname": "hs*",
         "macaddress": "9C5322*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "5091E3*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "5091E3*",
     },
     {
         "domain": "tplink",
@@ -776,6 +818,11 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "54AF97*",
+    },
+    {
+        "domain": "tplink",
         "hostname": "k[lps]*",
         "macaddress": "AC15A2*",
     },
@@ -793,6 +840,151 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "tplink",
         "hostname": "k[lps]*",
         "macaddress": "1C61B4*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "5CE931*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "5C628B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "14EBB6*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "tp*",
+        "macaddress": "5C628B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "482254*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "s5*",
+        "macaddress": "482254*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "30DE4B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "tp*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "s5*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "h1*",
+        "macaddress": "3C52A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l9*",
+        "macaddress": "A842A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "A842A1*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l9*",
+        "macaddress": "3460F9*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "3460F9*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "704F57*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "74DA88*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "74DA88*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p3*",
+        "macaddress": "788CB5*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "CC32E5*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "CC32E5*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "CC32E5*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "D80D17*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lps]*",
+        "macaddress": "D84732*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "p1*",
+        "macaddress": "F0A731*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l9*",
+        "macaddress": "F0A731*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "ks2*",
+        "macaddress": "F0A731*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "kh1*",
+        "macaddress": "F0A731*",
     },
     {
         "domain": "tuya",
@@ -841,6 +1033,10 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "twinkly",
         "hostname": "twinkly_*",
+    },
+    {
+        "domain": "twinkly",
+        "hostname": "twinkly-*",
     },
     {
         "domain": "unifiprotect",
@@ -913,6 +1109,19 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "wiz",
         "hostname": "wiz_*",
+    },
+    {
+        "domain": "wmspro",
+        "macaddress": "0023D5*",
+    },
+    {
+        "domain": "wmspro",
+        "registered_devices": True,
+    },
+    {
+        "domain": "yale",
+        "hostname": "yale-connect-plus",
+        "macaddress": "00177A*",
     },
     {
         "domain": "yeelight",

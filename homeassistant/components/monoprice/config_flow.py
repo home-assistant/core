@@ -1,14 +1,24 @@
 """Config flow for Monoprice 6-Zone Amplifier integration."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pymonoprice import get_monoprice
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PORT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_SOURCE_1,
@@ -32,12 +42,12 @@ SOURCES = [
     CONF_SOURCE_6,
 ]
 
-OPTIONS_FOR_DATA = {vol.Optional(source): str for source in SOURCES}
+OPTIONS_FOR_DATA: VolDictType = {vol.Optional(source): str for source in SOURCES}
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_PORT): str, **OPTIONS_FOR_DATA})
 
 
-@core.callback
+@callback
 def _sources_from_config(data):
     sources_config = {
         str(idx + 1): data.get(source) for idx, source in enumerate(SOURCES)
@@ -50,7 +60,7 @@ def _sources_from_config(data):
     }
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -67,12 +77,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {CONF_PORT: data[CONF_PORT], CONF_SOURCES: sources}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Monoprice 6-Zone Amplifier."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -82,7 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=user_input[CONF_PORT], data=info)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -91,15 +103,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    @core.callback
+    @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> MonopriceOptionsFlowHandler:
         """Define the config flow to handle options."""
         return MonopriceOptionsFlowHandler(config_entry)
 
 
-@core.callback
+@callback
 def _key_for_source(index, source, previous_sources):
     if str(index) in previous_sources:
         key = vol.Optional(
@@ -111,14 +123,14 @@ def _key_for_source(index, source, previous_sources):
     return key
 
 
-class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
+class MonopriceOptionsFlowHandler(OptionsFlow):
     """Handle a Monoprice options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 
-    @core.callback
+    @callback
     def _previous_sources(self):
         if CONF_SOURCES in self.config_entry.options:
             previous = self.config_entry.options[CONF_SOURCES]
@@ -127,7 +139,9 @@ class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
 
         return previous
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(
@@ -147,5 +161,5 @@ class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

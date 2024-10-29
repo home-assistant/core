@@ -1,4 +1,5 @@
 """Support for RFXtrx switches."""
+
 from __future__ import annotations
 
 import logging
@@ -13,19 +14,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    DOMAIN,
-    DeviceTuple,
-    RfxtrxCommandEntity,
-    async_setup_platform_entry,
-    get_pt2262_cmd,
-)
+from . import DeviceTuple, async_setup_platform_entry, get_pt2262_cmd
 from .const import (
     COMMAND_OFF_LIST,
     COMMAND_ON_LIST,
     CONF_DATA_BITS,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DOMAIN,
 )
+from .entity import RfxtrxCommandEntity
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 

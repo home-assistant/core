@@ -1,0 +1,24 @@
+{
+  "pageCount": 1,
+  "perPage": 50,
+  "page": 1,
+  "total": 1,
+  "locations": [
+    {
+      "locationId": "945e7c52-854a-41e1-8524-50c6993277e1",
+      "name": "Water Monitor",
+      "homeAway": "home",
+      "devices": [
+        {
+          "deviceId": "09bec87a-fff2-4b8a-bc00-86d5928f19f3",
+          "type": "monitor",
+          "calibrated": true,
+          "connected": true
+        }
+      ],
+      "alerts": [],
+      "subscriptionIds": [],
+      "active": true
+    }
+  ]
+}

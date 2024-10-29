@@ -8,7 +8,6 @@
       'effect_list': list([
       ]),
       'friendly_name': 'twinkly_test_device_name',
-      'icon': 'mdi:string-lights',
       'supported_color_modes': list([
         'brightness',
       ]),
@@ -28,6 +27,8 @@
         'name': 'twinkly_test_device_name',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'twinkly',
       'entry_id': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
       'minor_version': 1,

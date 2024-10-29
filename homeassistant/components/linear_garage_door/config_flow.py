@@ -1,4 +1,5 @@
 """Config flow for Linear Garage Door integration."""
+
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
@@ -10,10 +11,9 @@ from linear_garage_door import Linear
 from linear_garage_door.errors import InvalidLoginError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -53,17 +53,15 @@ async def validate_input(
     finally:
         await hub.close()
 
-    info = {
+    return {
         "email": data["email"],
         "password": data["password"],
         "sites": sites,
         "device_id": device_id,
     }
 
-    return info
 
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Linear Garage Door."""
 
     VERSION = 1
@@ -71,15 +69,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Sequence[Collection[str]]] = {}
-        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = STEP_USER_DATA_SCHEMA
-
-        data_schema = vol.Schema(data_schema)
+        data_schema = vol.Schema(STEP_USER_DATA_SCHEMA)
 
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=data_schema)
@@ -90,21 +85,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             self.data = info
 
             # Check if we are reauthenticating
-            if self._reauth_entry is not None:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
-                    data=self._reauth_entry.data
-                    | {"email": self.data["email"], "password": self.data["password"]},
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_EMAIL: self.data["email"],
+                        CONF_PASSWORD: self.data["password"],
+                    },
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             return await self.async_step_site()
 
@@ -115,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_site(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the site step."""
 
         if isinstance(self.data["sites"], list):
@@ -150,11 +145,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Reauth in case of a password change or other error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()
 
 

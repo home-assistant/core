@@ -1,8 +1,11 @@
 """Tests for the collection helper."""
+
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -14,6 +17,7 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.dt import utcnow
 
 from tests.common import flush_store
 from tests.typing import WebSocketGenerator
@@ -36,7 +40,7 @@ def track_changes(coll: collection.ObservableCollection):
 class MockEntity(collection.CollectionEntity):
     """Entity that is config based."""
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize entity."""
         self._config = config
 
@@ -51,21 +55,21 @@ class MockEntity(collection.CollectionEntity):
         raise NotImplementedError
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID of entity."""
         return self._config["id"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name of entity."""
         return self._config["name"]
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return state of entity."""
         return self._config["state"]
 
-    async def async_update_config(self, config):
+    async def async_update_config(self, config: ConfigType) -> None:
         """Update entity config."""
         self._config = config
         self.async_write_ha_state()
@@ -123,7 +127,7 @@ async def test_observable_collection() -> None:
 
     changes = track_changes(coll)
     await coll.notify_changes(
-        [collection.CollectionChangeSet("mock_type", "mock_id", {"mock": "item"})]
+        [collection.CollectionChange("mock_type", "mock_id", {"mock": "item"})]
     )
     assert len(changes) == 1
     assert changes[0] == ("mock_type", "mock_id", {"mock": "item"})
@@ -253,6 +257,84 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
     }
 
 
+async def test_storage_collection_update_modifiet_at(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that updating a storage collection will update the modified_at datetime in the entity registry."""
+
+    entities: dict[str, TestEntity] = {}
+
+    class TestEntity(MockEntity):
+        """Entity that is config based."""
+
+        def __init__(self, config: ConfigType) -> None:
+            """Initialize entity."""
+            super().__init__(config)
+            self._state = "initial"
+
+        @classmethod
+        def from_storage(cls, config: ConfigType) -> TestEntity:
+            """Create instance from storage."""
+            obj = super().from_storage(config)
+            entities[obj.unique_id] = obj
+            return obj
+
+        @property
+        def state(self) -> str:
+            """Return state of entity."""
+            return self._state
+
+        def set_state(self, value: str) -> None:
+            """Set value."""
+            self._state = value
+            self.async_write_ha_state()
+
+    store = storage.Store(hass, 1, "test-data")
+    data = {"id": "mock-1", "name": "Mock 1", "data": 1}
+    await store.async_save(
+        {
+            "items": [
+                data,
+            ]
+        }
+    )
+    id_manager = collection.IDManager()
+    ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
+    await ent_comp.async_setup({})
+    coll = MockStorageCollection(store, id_manager)
+    collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, TestEntity)
+    changes = track_changes(coll)
+
+    await coll.async_load()
+    assert id_manager.has_id("mock-1")
+    assert len(changes) == 1
+    assert changes[0] == (collection.CHANGE_ADDED, "mock-1", data)
+
+    modified_1 = entity_registry.async_get("test.mock_1").modified_at
+    assert modified_1 == utcnow()
+
+    freezer.tick(timedelta(minutes=1))
+
+    updated_item = await coll.async_update_item("mock-1", {"data": 2})
+    assert id_manager.has_id("mock-1")
+    assert updated_item == {"id": "mock-1", "name": "Mock 1", "data": 2}
+    assert len(changes) == 2
+    assert changes[1] == (collection.CHANGE_UPDATED, "mock-1", updated_item)
+
+    modified_2 = entity_registry.async_get("test.mock_1").modified_at
+    assert modified_2 > modified_1
+    assert modified_2 == utcnow()
+
+    freezer.tick(timedelta(minutes=1))
+
+    entities["mock-1"].set_state("second")
+
+    modified_3 = entity_registry.async_get("test.mock_1").modified_at
+    assert modified_3 == modified_2
+
+
 async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
@@ -262,7 +344,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_ADDED,
                 "mock_id",
                 {"id": "mock_id", "state": "initial", "name": "Mock 1"},
@@ -275,7 +357,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_UPDATED,
                 "mock_id",
                 {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
@@ -287,7 +369,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     assert hass.states.get("test.mock_1").state == "second"
 
     await coll.notify_changes(
-        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+        [collection.CollectionChange(collection.CHANGE_REMOVED, "mock_id", None)],
     )
 
     assert hass.states.get("test.mock_1") is None
@@ -330,7 +412,7 @@ async def test_entity_component_collection_abort(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_ADDED,
                 "mock_id",
                 {"id": "mock_id", "state": "initial", "name": "Mock 1"},
@@ -342,7 +424,7 @@ async def test_entity_component_collection_abort(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_UPDATED,
                 "mock_id",
                 {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
@@ -354,7 +436,7 @@ async def test_entity_component_collection_abort(
     assert len(async_update_config_calls) == 0
 
     await coll.notify_changes(
-        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+        [collection.CollectionChange(collection.CHANGE_REMOVED, "mock_id", None)],
     )
 
     assert hass.states.get("test.mock_1") is None
@@ -394,7 +476,7 @@ async def test_entity_component_collection_entity_removed(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_ADDED,
                 "mock_id",
                 {"id": "mock_id", "state": "initial", "name": "Mock 1"},
@@ -412,7 +494,7 @@ async def test_entity_component_collection_entity_removed(
 
     await coll.notify_changes(
         [
-            collection.CollectionChangeSet(
+            collection.CollectionChange(
                 collection.CHANGE_UPDATED,
                 "mock_id",
                 {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
@@ -424,7 +506,7 @@ async def test_entity_component_collection_entity_removed(
     assert len(async_update_config_calls) == 0
 
     await coll.notify_changes(
-        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+        [collection.CollectionChange(collection.CHANGE_REMOVED, "mock_id", None)],
     )
 
     assert hass.states.get("test.mock_1") is None
@@ -449,9 +531,8 @@ async def test_storage_collection_websocket(
     client = await hass_ws_client(hass)
 
     # Create invalid
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "type": "test_item/collection/create",
             "name": 1,
             # Forgot to add immutable_string
@@ -463,9 +544,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 0
 
     # Create
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
             "type": "test_item/collection/create",
             "name": "Initial Name",
             "immutable_string": "no-changes",
@@ -482,7 +562,7 @@ async def test_storage_collection_websocket(
     assert changes[0] == (collection.CHANGE_ADDED, "initial_name", response["result"])
 
     # List
-    await client.send_json({"id": 3, "type": "test_item/collection/list"})
+    await client.send_json_auto_id({"type": "test_item/collection/list"})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
@@ -495,9 +575,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 1
 
     # Update invalid data
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 4,
             "type": "test_item/collection/update",
             "test_item_id": "initial_name",
             "immutable_string": "no-changes",
@@ -509,9 +588,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 1
 
     # Update invalid item
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "test_item/collection/update",
             "test_item_id": "non-existing",
             "name": "Updated name",
@@ -523,9 +601,8 @@ async def test_storage_collection_websocket(
     assert len(changes) == 1
 
     # Update
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "test_item/collection/update",
             "test_item_id": "initial_name",
             "name": "Updated name",
@@ -542,8 +619,8 @@ async def test_storage_collection_websocket(
     assert changes[1] == (collection.CHANGE_UPDATED, "initial_name", response["result"])
 
     # Delete invalid ID
-    await client.send_json(
-        {"id": 7, "type": "test_item/collection/update", "test_item_id": "non-existing"}
+    await client.send_json_auto_id(
+        {"type": "test_item/collection/update", "test_item_id": "non-existing"}
     )
     response = await client.receive_json()
     assert not response["success"]
@@ -551,9 +628,220 @@ async def test_storage_collection_websocket(
     assert len(changes) == 2
 
     # Delete
-    await client.send_json(
-        {"id": 8, "type": "test_item/collection/delete", "test_item_id": "initial_name"}
+    await client.send_json_auto_id(
+        {"type": "test_item/collection/delete", "test_item_id": "initial_name"}
     )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert len(changes) == 3
+    assert changes[2] == (
+        collection.CHANGE_REMOVED,
+        "initial_name",
+        {
+            "id": "initial_name",
+            "immutable_string": "no-changes",
+            "name": "Updated name",
+        },
+    )
+
+
+async def test_storage_collection_websocket_subscribe(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test exposing a storage collection via websockets."""
+    store = storage.Store(hass, 1, "test-data")
+    coll = MockStorageCollection(store)
+    changes = track_changes(coll)
+    collection.DictStorageCollectionWebsocket(
+        coll,
+        "test_item/collection",
+        "test_item",
+        {vol.Required("name"): str, vol.Required("immutable_string"): str},
+        {vol.Optional("name"): str},
+    ).async_setup(hass)
+
+    client = await hass_ws_client(hass)
+
+    # Subscribe
+    await client.send_json_auto_id({"type": "test_item/collection/subscribe"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+    assert len(changes) == 0
+    event_id = response["id"]
+
+    response = await client.receive_json()
+    assert response["id"] == event_id
+    assert response["event"] == []
+
+    # Create invalid
+    await client.send_json_auto_id(
+        {
+            "type": "test_item/collection/create",
+            "name": 1,
+            # Forgot to add immutable_string
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    assert len(changes) == 0
+
+    # Create
+    await client.send_json_auto_id(
+        {
+            "type": "test_item/collection/create",
+            "name": "Initial Name",
+            "immutable_string": "no-changes",
+        }
+    )
+    response = await client.receive_json()
+    assert response["id"] == event_id
+    assert response["event"] == [
+        {
+            "change_type": "added",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Initial Name",
+            },
+            "test_item_id": "initial_name",
+        }
+    ]
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "id": "initial_name",
+        "name": "Initial Name",
+        "immutable_string": "no-changes",
+    }
+    assert len(changes) == 1
+    assert changes[0] == (collection.CHANGE_ADDED, "initial_name", response["result"])
+
+    # Subscribe again
+    await client.send_json_auto_id({"type": "test_item/collection/subscribe"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+    event_id_2 = response["id"]
+
+    response = await client.receive_json()
+    assert response["id"] == event_id_2
+    assert response["event"] == [
+        {
+            "change_type": "added",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Initial Name",
+            },
+            "test_item_id": "initial_name",
+        },
+    ]
+
+    await client.send_json_auto_id(
+        {"type": "unsubscribe_events", "subscription": event_id_2}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # List
+    await client.send_json_auto_id({"type": "test_item/collection/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "id": "initial_name",
+            "name": "Initial Name",
+            "immutable_string": "no-changes",
+        }
+    ]
+    assert len(changes) == 1
+
+    # Update invalid data
+    await client.send_json_auto_id(
+        {
+            "type": "test_item/collection/update",
+            "test_item_id": "initial_name",
+            "immutable_string": "no-changes",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    assert len(changes) == 1
+
+    # Update invalid item
+    await client.send_json_auto_id(
+        {
+            "type": "test_item/collection/update",
+            "test_item_id": "non-existing",
+            "name": "Updated name",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+    assert len(changes) == 1
+
+    # Update
+    await client.send_json_auto_id(
+        {
+            "type": "test_item/collection/update",
+            "test_item_id": "initial_name",
+            "name": "Updated name",
+        }
+    )
+    response = await client.receive_json()
+    assert response["id"] == event_id
+    assert response["event"] == [
+        {
+            "change_type": "updated",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Updated name",
+            },
+            "test_item_id": "initial_name",
+        }
+    ]
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "id": "initial_name",
+        "name": "Updated name",
+        "immutable_string": "no-changes",
+    }
+    assert len(changes) == 2
+    assert changes[1] == (collection.CHANGE_UPDATED, "initial_name", response["result"])
+
+    # Delete invalid ID
+    await client.send_json_auto_id(
+        {"type": "test_item/collection/update", "test_item_id": "non-existing"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+    assert len(changes) == 2
+
+    # Delete
+    await client.send_json_auto_id(
+        {"type": "test_item/collection/delete", "test_item_id": "initial_name"}
+    )
+    response = await client.receive_json()
+    assert response["id"] == event_id
+    assert response["event"] == [
+        {
+            "change_type": "removed",
+            "item": {
+                "id": "initial_name",
+                "immutable_string": "no-changes",
+                "name": "Updated name",
+            },
+            "test_item_id": "initial_name",
+        }
+    ]
     response = await client.receive_json()
     assert response["success"]
 

@@ -1,18 +1,18 @@
 """The Environment Canada (EC) component."""
+
 from datetime import timedelta
 import logging
-import xml.etree.ElementTree as et
 
-from env_canada import ECAirQuality, ECRadar, ECWeather, ec_exc
+from env_canada import ECAirQuality, ECRadar, ECWeather
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_STATION, DOMAIN
+from .coordinator import ECDataUpdateCoordinator
 
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
 DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
@@ -97,23 +97,3 @@ def device_info(config_entry: ConfigEntry) -> DeviceInfo:
         name=config_entry.title,
         configuration_url="https://weather.gc.ca/",
     )
-
-
-class ECDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching EC data."""
-
-    def __init__(self, hass, ec_data, name, update_interval):
-        """Initialize global EC data updater."""
-        super().__init__(
-            hass, _LOGGER, name=f"{DOMAIN} {name}", update_interval=update_interval
-        )
-        self.ec_data = ec_data
-        self.last_update_success = False
-
-    async def _async_update_data(self):
-        """Fetch data from EC."""
-        try:
-            await self.ec_data.update()
-        except (et.ParseError, ec_exc.UnknownStationId) as ex:
-            raise UpdateFailed(f"Error fetching {self.name} data: {ex}") from ex
-        return self.ec_data

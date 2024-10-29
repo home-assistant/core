@@ -1,8 +1,10 @@
 """Config flow for OwnTracks."""
-import secrets
 
-from homeassistant import config_entries
+import secrets
+from typing import Any
+
 from homeassistant.components import cloud, webhook
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_WEBHOOK_ID
 
 from .const import DOMAIN
@@ -12,16 +14,15 @@ CONF_SECRET = "secret"
 CONF_CLOUDHOOK = "cloudhook"
 
 
-class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OwnTracksFlow(ConfigFlow, domain=DOMAIN):
     """Set up OwnTracks."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a user initiated set up flow to create OwnTracks webhook."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is None:
             return self.async_show_form(step_id="user")
 

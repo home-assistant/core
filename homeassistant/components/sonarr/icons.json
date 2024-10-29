@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "commands": {
+        "default": "mdi:code-braces"
+      },
+      "diskspace": {
+        "default": "mdi:harddisk"
+      },
+      "queue": {
+        "default": "mdi:download"
+      },
+      "series": {
+        "default": "mdi:television"
+      },
+      "upcoming": {
+        "default": "mdi:television"
+      },
+      "wanted": {
+        "default": "mdi:television"
+      }
+    }
+  }
+}

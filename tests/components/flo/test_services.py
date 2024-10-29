@@ -1,4 +1,5 @@
 """Test the services for the Flo by Moen integration."""
+
 import pytest
 from voluptuous.error import MultipleInvalid
 
@@ -18,15 +19,16 @@ from homeassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 SWITCH_ENTITY_ID = "switch.smart_water_shutoff_shutoff_valve"
 
 
+@pytest.mark.usefixtures("aioclient_mock_fixture")
 async def test_services(
     hass: HomeAssistant,
-    config_entry,
-    aioclient_mock_fixture,
+    config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test Flo services."""
@@ -105,5 +107,4 @@ async def test_services(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
-        assert aioclient_mock.call_count == 13
+    assert aioclient_mock.call_count == 13

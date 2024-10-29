@@ -1,4 +1,5 @@
 """Config validation for the Z-Wave JS integration."""
+
 from typing import Any
 
 import voluptuous as vol
@@ -33,6 +34,8 @@ def boolean(value: Any) -> bool:
 
 VALUE_SCHEMA = vol.Any(
     boolean,
+    float,
+    int,
     vol.Coerce(int),
     vol.Coerce(float),
     BITMASK_SCHEMA,

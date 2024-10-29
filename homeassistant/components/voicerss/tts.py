@@ -1,4 +1,5 @@
 """Support for the voicerss speech service."""
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -6,7 +7,11 @@ import logging
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -79,7 +84,7 @@ SUPPORT_LANGUAGES = [
     "vi-vn",
 ]
 
-SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]
+SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]  # codespell:ignore caf
 
 SUPPORT_FORMATS = [
     "8khz_8bit_mono",
@@ -144,7 +149,7 @@ DEFAULT_CODEC = "mp3"
 DEFAULT_FORMAT = "8khz_8bit_mono"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
@@ -209,7 +214,7 @@ class VoiceRSSProvider(Provider):
                     _LOGGER.error("Error receive %s from VoiceRSS", str(data, "utf-8"))
                     return (None, None)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
 

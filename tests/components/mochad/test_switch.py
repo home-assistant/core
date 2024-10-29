@@ -1,5 +1,6 @@
 """The tests for the mochad switch platform."""
-import unittest.mock as mock
+
+from unittest import mock
 
 import pytest
 
@@ -12,14 +13,15 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(autouse=True)
 def pymochad_mock():
     """Mock pymochad."""
-    with mock.patch("homeassistant.components.mochad.switch.device"), mock.patch(
-        "homeassistant.components.mochad.switch.MochadException"
+    with (
+        mock.patch("homeassistant.components.mochad.switch.device"),
+        mock.patch("homeassistant.components.mochad.switch.MochadException"),
     ):
         yield
 
 
 @pytest.fixture
-def switch_mock(hass):
+def switch_mock(hass: HomeAssistant) -> mochad.MochadSwitch:
     """Mock switch."""
     controller_mock = mock.MagicMock()
     dev_dict = {"address": "a1", "name": "fake_switch"}

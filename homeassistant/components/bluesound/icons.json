@@ -1,0 +1,16 @@
+{
+  "services": {
+    "join": {
+      "service": "mdi:link-variant"
+    },
+    "unjoin": {
+      "service": "mdi:link-variant-off"
+    },
+    "set_sleep_timer": {
+      "service": "mdi:sleep"
+    },
+    "clear_sleep_timer": {
+      "service": "mdi:sleep-off"
+    }
+  }
+}

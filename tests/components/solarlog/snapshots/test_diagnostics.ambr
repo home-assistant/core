@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'has_password': True,
+        'host': '**REDACTED**',
+        'name': 'Solarlog test 1 2 3',
+        'password': 'pwd',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'solarlog',
+      'entry_id': 'ce5f5431554d101905d31797e1232da8',
+      'minor_version': 3,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'solarlog',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'solarlog_data': dict({
+      'alternator_loss': 2.0,
+      'capacity': 85.5,
+      'consumption_ac': 54.87,
+      'consumption_day': 5.31,
+      'consumption_month': 758.0,
+      'consumption_total': 354687.0,
+      'consumption_year': 4587.0,
+      'consumption_yesterday': 7.34,
+      'efficiency': 98.1,
+      'inverter_data': dict({
+        '0': dict({
+          'consumption_year': 354687,
+          'current_power': 5,
+          'enabled': True,
+          'name': 'Inverter 1',
+        }),
+        '1': dict({
+          'consumption_year': 354,
+          'current_power': 6,
+          'enabled': True,
+          'name': 'Inverter 2',
+        }),
+      }),
+      'last_updated': '2024-08-01T15:20:45+00:00',
+      'power_ac': 100.0,
+      'power_available': 45.13,
+      'power_dc': 102.0,
+      'production_year': None,
+      'self_consumption_year': 545.0,
+      'total_power': 120.0,
+      'usage': 54.8,
+      'voltage_ac': 100.0,
+      'voltage_dc': 100.0,
+      'yield_day': 4.21,
+      'yield_month': 515.0,
+      'yield_total': 56513.0,
+      'yield_year': 1023.0,
+      'yield_yesterday': 5.21,
+    }),
+  })
+# ---

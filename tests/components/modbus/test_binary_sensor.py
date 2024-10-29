@@ -1,7 +1,9 @@
 """Thetests for the Modbus sensor component."""
+
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -14,10 +16,12 @@ from homeassistant.components.modbus.const import (
     MODBUS_DOMAIN,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_UNIQUE_ID,
@@ -25,7 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -206,19 +210,25 @@ async def test_all_binary_sensor(hass: HomeAssistant, expected, mock_do_cycle) -
     ],
 )
 async def test_service_binary_sensor_update(
-    hass: HomeAssistant, mock_modbus, mock_ha
+    hass: HomeAssistant, mock_modbus_ha
 ) -> None:
     """Run test for service homeassistant.update_entity."""
 
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
@@ -290,7 +300,7 @@ async def test_config_virtual_binary_sensor(hass: HomeAssistant, mock_modbus) ->
     """Run config test for binary sensor."""
     assert SENSOR_DOMAIN in hass.config.components
 
-    for addon in ["", " 1", " 2", " 3"]:
+    for addon in ("", " 1", " 2", " 3"):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}".replace(" ", "_")
         assert hass.states.get(entity_id) is not None
 
@@ -427,7 +437,7 @@ async def test_no_discovery_info_binary_sensor(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": MODBUS_DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components

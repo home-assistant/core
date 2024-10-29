@@ -1,4 +1,5 @@
 """Support for Litter-Robot updates."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,13 +13,12 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .entity import LitterRobotEntity, LitterRobotHub
+from . import LitterRobotConfigEntry
+from .entity import LitterRobotEntity
 
 SCAN_INTERVAL = timedelta(days=1)
 
@@ -30,11 +30,11 @@ FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LitterRobotConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot update platform."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+    hub = entry.runtime_data
     entities = [
         RobotUpdateEntity(robot=robot, hub=hub, description=FIRMWARE_UPDATE_ENTITY)
         for robot in hub.litter_robots()

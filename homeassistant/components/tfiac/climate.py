@@ -1,4 +1,5 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
+
 from __future__ import annotations
 
 from concurrent import futures
@@ -14,7 +15,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -31,7 +32,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ ON_MODE = "is_on"
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the TFIAC climate device."""
@@ -73,7 +74,7 @@ async def async_setup_platform(
     except futures.TimeoutError:
         _LOGGER.error("Unable to connect to %s", config[CONF_HOST])
         return
-    async_add_devices([TfiacClimate(hass, tfiac_client)])
+    async_add_entities([TfiacClimate(hass, tfiac_client)])
 
 
 class TfiacClimate(ClimateEntity):
@@ -83,8 +84,11 @@ class TfiacClimate(ClimateEntity):
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hass, client):
         """Init class."""

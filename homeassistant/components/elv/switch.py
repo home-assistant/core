@@ -1,4 +1,5 @@
 """Support for PCA 301 smart switch."""
+
 from __future__ import annotations
 
 import logging

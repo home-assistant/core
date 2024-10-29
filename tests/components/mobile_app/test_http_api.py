@@ -1,10 +1,12 @@
 """Tests for the mobile_app HTTP API."""
+
 from binascii import unhexlify
 from http import HTTPStatus
 import json
 from unittest.mock import patch
 
-import pytest
+from nacl.encoding import Base64Encoder
+from nacl.secret import SecretBox
 
 from homeassistant.components.mobile_app.const import CONF_SECRET, DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -65,13 +67,6 @@ async def test_registration_encryption(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test that registrations happen."""
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
-    except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
-        return
-
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     api_client = await hass_client()
@@ -110,13 +105,6 @@ async def test_registration_encryption_legacy(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test that registrations happen."""
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
-    except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
-        return
-
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     api_client = await hass_client()

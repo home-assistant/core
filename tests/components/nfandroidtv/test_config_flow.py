@@ -1,11 +1,13 @@
 """Test NFAndroidTV config flow."""
+
 from unittest.mock import patch
 
 from notifications_android_tv.notifications import ConnectError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.nfandroidtv.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     CONF_CONFIG_FLOW,
@@ -38,7 +40,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
         assert result["data"] == CONF_DATA
 
@@ -63,7 +65,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -77,7 +79,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -92,6 +94,6 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}

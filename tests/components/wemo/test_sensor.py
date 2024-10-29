@@ -2,6 +2,9 @@
 
 import pytest
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
 from .conftest import MOCK_INSIGHT_CURRENT_WATTS, MOCK_INSIGHT_TODAY_KWH
 from .entity_test_helpers import EntityTestHelpers
 
@@ -24,7 +27,7 @@ class InsightTestTemplate(EntityTestHelpers):
         """Select the appropriate entity for the test."""
         return cls.ENTITY_ID_SUFFIX
 
-    def test_state(self, hass, wemo_entity):
+    def test_state(self, hass: HomeAssistant, wemo_entity: er.RegistryEntry) -> None:
         """Test the sensor state."""
         assert hass.states.get(wemo_entity.entity_id).state == self.EXPECTED_STATE_VALUE
 

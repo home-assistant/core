@@ -1,4 +1,5 @@
 """Test the Nibe Heat Pump config flow."""
+
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -40,7 +41,7 @@ async def test_reset_button(
     entity_id: str,
     coils: dict[int, Any],
     freezer_ticker: Any,
-):
+) -> None:
     """Test reset button."""
 
     unit = UNIT_COILGROUPS[model.series]["main"]

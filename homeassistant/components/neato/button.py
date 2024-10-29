@@ -1,4 +1,5 @@
 """Support for Neato buttons."""
+
 from __future__ import annotations
 
 from pybotvac import Robot

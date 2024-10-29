@@ -1,4 +1,5 @@
 """Errors for translations."""
+
 import json
 
 

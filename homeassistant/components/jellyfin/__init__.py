@@ -1,4 +1,5 @@
 """The Jellyfin integration."""
+
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -8,14 +9,13 @@ from homeassistant.helpers import device_registry as dr
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, PLATFORMS
-from .coordinator import JellyfinDataUpdateCoordinator, SessionsDataUpdateCoordinator
-from .models import JellyfinData
+from .coordinator import JellyfinDataUpdateCoordinator
+
+type JellyfinConfigEntry = ConfigEntry[JellyfinDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
     """Set up Jellyfin from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     if CONF_CLIENT_DEVICE_ID not in entry.data:
         entry_data = entry.data.copy()
         entry_data[CONF_CLIENT_DEVICE_ID] = entry.entry_id
@@ -35,43 +35,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     server_info: dict[str, Any] = connect_result["Servers"][0]
 
-    coordinators: dict[str, JellyfinDataUpdateCoordinator[Any]] = {
-        "sessions": SessionsDataUpdateCoordinator(
-            hass, client, server_info, entry.data[CONF_CLIENT_DEVICE_ID], user_id
-        ),
-    }
+    coordinator = JellyfinDataUpdateCoordinator(hass, client, server_info, user_id)
 
-    for coordinator in coordinators.values():
-        await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = JellyfinData(
-        client_device_id=entry.data[CONF_CLIENT_DEVICE_ID],
-        jellyfin_client=client,
-        coordinators=coordinators,
-    )
+    entry.runtime_data = coordinator
+    entry.async_on_unload(client.stop)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
-
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: JellyfinConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove device from a config entry."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data.coordinators["sessions"]
+    coordinator = config_entry.runtime_data
 
     return not device_entry.identifiers.intersection(
         (
             (DOMAIN, coordinator.server_id),
-            *((DOMAIN, id) for id in coordinator.device_ids),
+            *((DOMAIN, device_id) for device_id in coordinator.device_ids),
         )
     )

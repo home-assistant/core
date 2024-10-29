@@ -1,4 +1,5 @@
 """LOQED lock integration for Home Assistant."""
+
 from __future__ import annotations
 
 import logging

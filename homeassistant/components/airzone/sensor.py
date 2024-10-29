@@ -1,4 +1,5 @@
 """Support for the Airzone sensors."""
+
 from __future__ import annotations
 
 from typing import Any, Final
@@ -29,7 +30,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TEMP_UNIT_LIB_TO_HASS
+from . import AirzoneConfigEntry
+from .const import TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneEntity,
@@ -76,51 +78,68 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Airzone sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    sensors: list[AirzoneSensor] = []
+    added_zones: set[str] = set()
+
+    def _async_entity_listener() -> None:
+        """Handle additions of sensors."""
+
+        entities: list[AirzoneSensor] = []
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            entities.extend(
+                AirzoneZoneSensor(
+                    coordinator,
+                    description,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+                for description in ZONE_SENSOR_TYPES
+                if description.key in zones_data.get(system_zone_id)
+            )
+            added_zones.update(new_zones)
+
+        async_add_entities(entities)
+
+    entities: list[AirzoneSensor] = []
 
     if AZD_HOT_WATER in coordinator.data:
-        dhw_data = coordinator.data[AZD_HOT_WATER]
-        for description in HOT_WATER_SENSOR_TYPES:
-            if description.key in dhw_data:
-                sensors.append(
-                    AirzoneHotWaterSensor(
-                        coordinator,
-                        description,
-                        entry,
-                    )
-                )
+        entities.extend(
+            AirzoneHotWaterSensor(
+                coordinator,
+                description,
+                entry,
+            )
+            for description in HOT_WATER_SENSOR_TYPES
+            if description.key in coordinator.data[AZD_HOT_WATER]
+        )
 
     if AZD_WEBSERVER in coordinator.data:
-        ws_data = coordinator.data[AZD_WEBSERVER]
-        for description in WEBSERVER_SENSOR_TYPES:
-            if description.key in ws_data:
-                sensors.append(
-                    AirzoneWebServerSensor(
-                        coordinator,
-                        description,
-                        entry,
-                    )
-                )
+        entities.extend(
+            AirzoneWebServerSensor(
+                coordinator,
+                description,
+                entry,
+            )
+            for description in WEBSERVER_SENSOR_TYPES
+            if description.key in coordinator.data[AZD_WEBSERVER]
+        )
 
-    for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        for description in ZONE_SENSOR_TYPES:
-            if description.key in zone_data:
-                sensors.append(
-                    AirzoneZoneSensor(
-                        coordinator,
-                        description,
-                        entry,
-                        system_zone_id,
-                        zone_data,
-                    )
-                )
+    async_add_entities(entities)
 
-    async_add_entities(sensors)
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneSensor(AirzoneEntity, SensorEntity):

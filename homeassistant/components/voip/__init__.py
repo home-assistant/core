@@ -1,4 +1,5 @@
 """The Voice over IP integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,6 +20,7 @@ from .devices import VoIPDevices
 from .voip import HassVoipDatagramProtocol
 
 PLATFORMS = (
+    Platform.ASSIST_SATELLITE,
     Platform.BINARY_SENSOR,
     Platform.SELECT,
     Platform.SWITCH,

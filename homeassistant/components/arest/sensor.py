@@ -1,4 +1,5 @@
 """Support for an exposed aREST RESTful API of a device."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,10 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -40,7 +44,7 @@ PIN_VARIABLE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -82,8 +86,6 @@ def setup_platform(
         """Create a renderer based on variable_template value."""
         if value_template is None:
             return lambda value: value
-
-        value_template.hass = hass
 
         def _render(value):
             try:

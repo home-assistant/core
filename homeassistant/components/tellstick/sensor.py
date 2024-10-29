@@ -1,4 +1,5 @@
 """Support for Tellstick sensors."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -9,7 +10,7 @@ import tellcore.constants as tellcore_constants
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -28,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple(
+DatatypeDescription = namedtuple(  # noqa: PYI024
     "DatatypeDescription", ["name", "unit", "device_class"]
 )
 
@@ -39,7 +40,7 @@ CONF_TEMPERATURE_SCALE = "temperature_scale"
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = UnitOfTemperature.CELSIUS
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE
@@ -129,8 +130,8 @@ def setup_platform(
             sensor_name = str(tellcore_sensor.id)
         else:
             proto_id = f"{tellcore_sensor.protocol}{tellcore_sensor.id}"
-            proto_model_id = "{}{}{}".format(
-                tellcore_sensor.protocol, tellcore_sensor.model, tellcore_sensor.id
+            proto_model_id = (
+                f"{tellcore_sensor.protocol}{tellcore_sensor.model}{tellcore_sensor.id}"
             )
             if tellcore_sensor.id in named_sensors:
                 sensor_name = named_sensors[tellcore_sensor.id]

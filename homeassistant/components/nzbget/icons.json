@@ -1,0 +1,13 @@
+{
+  "services": {
+    "pause": {
+      "service": "mdi:pause"
+    },
+    "resume": {
+      "service": "mdi:play"
+    },
+    "set_speed": {
+      "service": "mdi:speedometer"
+    }
+  }
+}

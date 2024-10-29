@@ -1,4 +1,5 @@
 """Test the SmartTub light platform."""
+
 import pytest
 from smarttub import SpaLight
 

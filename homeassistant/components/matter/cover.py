@@ -1,4 +1,5 @@
 """Matter cover."""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -199,7 +200,10 @@ class MatterCover(MatterEntity, CoverEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(key="MatterCover", name=None),
+        entity_description=CoverEntityDescription(
+            key="MatterCover",
+            name=None,
+        ),
         entity_class=MatterCover,
         required_attributes=(
             clusters.WindowCovering.Attributes.OperationalStatus,

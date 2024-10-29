@@ -1,0 +1,10 @@
+{
+  "services": {
+    "add_to_playlist": {
+      "service": "mdi:playlist-plus"
+    },
+    "call_method": {
+      "service": "mdi:console"
+    }
+  }
+}

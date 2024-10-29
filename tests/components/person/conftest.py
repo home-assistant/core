@@ -1,19 +1,24 @@
 """The tests for the person component."""
+
 import logging
+from typing import Any
 
 import pytest
 
 from homeassistant.components import person
 from homeassistant.components.person import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import collection
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockUser
 
 DEVICE_TRACKER = "device_tracker.test_tracker"
 DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"
 
 
 @pytest.fixture
-def storage_collection(hass):
+def storage_collection(hass: HomeAssistant) -> person.PersonStorageCollection:
     """Return an empty storage collection."""
     id_manager = collection.IDManager()
     return person.PersonStorageCollection(
@@ -26,7 +31,9 @@ def storage_collection(hass):
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage, hass_admin_user):
+def storage_setup(
+    hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
+) -> None:
     """Storage setup."""
     hass_storage[DOMAIN] = {
         "key": DOMAIN,

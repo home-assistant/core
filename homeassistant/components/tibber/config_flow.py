@@ -1,16 +1,15 @@
 """Adds config flow for Tibber integration."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import aiohttp
 import tibber
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -22,14 +21,14 @@ ERR_TOKEN = "invalid_access_token"
 TOKEN_URL = "https://developer.tibber.com/settings/access-token"
 
 
-class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TibberConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tibber integration."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         self._async_abort_entries_match()
@@ -46,14 +45,14 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await tibber_connection.update_info()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 errors[CONF_ACCESS_TOKEN] = ERR_TIMEOUT
-            except tibber.InvalidLogin:
+            except tibber.InvalidLoginError:
                 errors[CONF_ACCESS_TOKEN] = ERR_TOKEN
             except (
                 aiohttp.ClientError,
-                tibber.RetryableHttpException,
-                tibber.FatalHttpException,
+                tibber.RetryableHttpExceptionError,
+                tibber.FatalHttpExceptionError,
             ):
                 errors[CONF_ACCESS_TOKEN] = ERR_CLIENT
 

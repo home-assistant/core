@@ -68,3 +68,23 @@ def plant_fixture(inverter_fixture) -> Plant:
     )
     plant.inverters.append(inverter_fixture)
     return plant
+
+
+@pytest.fixture
+def plant_fixture_alternative(inverter_fixture) -> Plant:
+    """Define Plant fixture."""
+    plant = Plant(
+        123456,
+        "Plant #123",
+        29.5,
+        0.5,
+        0,
+        12.786912,
+        24.0,
+        "kWh",
+        332.2,
+        0.012296,
+        None,
+    )
+    plant.inverters.append(inverter_fixture)
+    return plant

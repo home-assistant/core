@@ -1,4 +1,5 @@
 """Support for Plaato Airlock sensors."""
+
 from __future__ import annotations
 
 from pyplaato.models.device import PlaatoDevice
@@ -43,7 +44,7 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
     @callback
-    async def _async_update_from_webhook(device_id, sensor_data: PlaatoDevice):
+    def _async_update_from_webhook(device_id, sensor_data: PlaatoDevice):
         """Update/Create the sensors."""
         entry_data[SENSOR_DATA] = sensor_data
 

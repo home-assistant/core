@@ -1,4 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -81,6 +82,7 @@ class NoboZone(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
     # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, zone_id, hub: nobo, override_type) -> None:
         """Initialize the climate device."""

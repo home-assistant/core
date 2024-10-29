@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "last_rain": {
+        "default": "mdi:water"
+      },
+      "lightning_strikes_per_day": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_strikes_per_hour": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_distance": {
+        "default": "mdi:lightning-bolt"
+      },
+      "wind_direction": {
+        "default": "mdi:compass-outline"
+      }
+    }
+  }
+}

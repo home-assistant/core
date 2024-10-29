@@ -1,4 +1,5 @@
 """Config flow for HomeWizard."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -11,9 +12,9 @@ from homewizard_energy.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -42,11 +43,10 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     discovery: DiscoveryData
-    entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] | None = None
         if user_input is not None:
@@ -65,11 +65,14 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             data_schema=Schema(
                 {
-                    Required(CONF_IP_ADDRESS): str,
+                    Required(
+                        CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
+                    ): str,
                 }
             ),
             errors=errors,
@@ -77,7 +80,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if (
             CONF_API_ENABLED not in discovery_info.properties
@@ -109,7 +112,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         errors: dict[str, str] | None = None
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
@@ -143,31 +146,29 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-auth if API was disabled."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors: dict[str, str] | None = None
         if user_input is not None:
-            assert self.entry is not None
+            reauth_entry = self._get_reauth_entry()
             try:
-                await self._async_try_connect(self.entry.data[CONF_IP_ADDRESS])
+                await self._async_try_connect(reauth_entry.data[CONF_IP_ADDRESS])
             except RecoverableError as ex:
                 _LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            errors=errors,
-        )
+        return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
     @staticmethod
     async def _async_try_connect(ip_address: str) -> Device:
@@ -195,7 +196,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except Exception as ex:
-            _LOGGER.exception(ex)
+            _LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown_error") from ex
 
         finally:

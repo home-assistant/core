@@ -1,4 +1,5 @@
 """Constants for the Sure Petcare component."""
+
 DOMAIN = "surepetcare"
 
 CONF_FEEDERS = "feeders"

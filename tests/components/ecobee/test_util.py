@@ -1,4 +1,5 @@
 """Tests for the ecobee.util module."""
+
 import pytest
 import voluptuous as vol
 

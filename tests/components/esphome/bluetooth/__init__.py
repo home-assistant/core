@@ -1,0 +1,1 @@
+"""Bluetooth tests for ESPHome."""

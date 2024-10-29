@@ -1,19 +1,22 @@
 """Repairs implementation for the cloud integration."""
+
 from __future__ import annotations
 
 import asyncio
 from typing import Any
 
-from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.components.repairs import RepairsFlow, repairs_flow_manager
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    repairs_flow_manager,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
-from .client import CloudClient
-from .const import DOMAIN
+from .const import DATA_CLOUD, DOMAIN
 from .subscription import async_migrate_paypal_agreement, async_subscription_info
 
 BACKOFF_TIME = 5
@@ -68,7 +71,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
     async def async_step_change_plan(self, _: None = None) -> FlowResult:
         """Wait for the user to authorize the app installation."""
 
-        cloud: Cloud[CloudClient] = self.hass.data[DOMAIN]
+        cloud = self.hass.data[DATA_CLOUD]
 
         async def _async_wait_for_plan_change() -> None:
             flow_manager = repairs_flow_manager(self.hass)
@@ -89,7 +92,9 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
             )
 
         if not self.wait_task:
-            self.wait_task = self.hass.async_create_task(_async_wait_for_plan_change())
+            self.wait_task = self.hass.async_create_task(
+                _async_wait_for_plan_change(), eager_start=False
+            )
             migration = await async_migrate_paypal_agreement(cloud)
             return self.async_external_step(
                 step_id="change_plan",
@@ -119,4 +124,6 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    return LegacySubscriptionRepairFlow()
+    if issue_id == "legacy_subscription":
+        return LegacySubscriptionRepairFlow()
+    return ConfirmRepairFlow()

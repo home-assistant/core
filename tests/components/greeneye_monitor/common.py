@@ -1,4 +1,5 @@
 """Common helpers for greeneye_monitor tests."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -235,9 +236,9 @@ def mock_monitor(serial_number: int) -> MagicMock:
     monitor = mock_with_listeners()
     monitor.serial_number = serial_number
     monitor.voltage_sensor = mock_voltage_sensor()
-    monitor.pulse_counters = [mock_pulse_counter() for i in range(0, 4)]
-    monitor.temperature_sensors = [mock_temperature_sensor() for i in range(0, 8)]
-    monitor.channels = [mock_channel() for i in range(0, 32)]
+    monitor.pulse_counters = [mock_pulse_counter() for i in range(4)]
+    monitor.temperature_sensors = [mock_temperature_sensor() for i in range(8)]
+    monitor.channels = [mock_channel() for i in range(32)]
     return monitor
 
 

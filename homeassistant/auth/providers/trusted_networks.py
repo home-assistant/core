@@ -3,6 +3,7 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -19,17 +20,22 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import is_cloud_connection
 
 from .. import InvalidAuthError
-from ..models import Credentials, RefreshToken, UserMeta
+from ..models import (
+    AuthFlowContext,
+    AuthFlowResult,
+    Credentials,
+    RefreshToken,
+    UserMeta,
+)
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
-IPAddress = IPv4Address | IPv6Address
-IPNetwork = IPv4Network | IPv6Network
+type IPAddress = IPv4Address | IPv6Address
+type IPNetwork = IPv4Network | IPv6Network
 
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 CONF_TRUSTED_USERS = "trusted_users"
@@ -98,7 +104,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         """Trusted Networks auth provider does not support MFA."""
         return False
 
-    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
+    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
@@ -226,7 +232,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         try:
             cast(

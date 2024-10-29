@@ -7,7 +7,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Logitech Media Server."
+          "host": "The hostname or IP address of your Lyrion Music Server."
         }
       },
       "edit": {
@@ -39,11 +39,11 @@
       "fields": {
         "command": {
           "name": "Command",
-          "description": "Command to pass to Logitech Media Server (p0 in the CLI documentation)."
+          "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation)."
         },
         "parameters": {
           "name": "Parameters",
-          "description": "Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).\n."
+          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).\n."
         }
       }
     },
@@ -60,20 +60,42 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
-    },
-    "sync": {
-      "name": "Sync",
-      "description": "Adds another player to this player's sync group. If the other player is already in a sync group, it will leave it.\n.",
-      "fields": {
-        "other_player": {
-          "name": "Other player",
-          "description": "Name of the other Squeezebox player to link."
-        }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rescan": {
+        "name": "Library rescan"
+      },
+      "needsrestart": {
+        "name": "Needs restart"
       }
     },
-    "unsync": {
-      "name": "Unsync",
-      "description": "Removes this player from its sync group."
+    "sensor": {
+      "lastscan": {
+        "name": "Last scan"
+      },
+      "info_total_albums": {
+        "name": "Total albums"
+      },
+      "info_total_artists": {
+        "name": "Total artists"
+      },
+      "info_total_duration": {
+        "name": "Total duration"
+      },
+      "info_total_genres": {
+        "name": "Total genres"
+      },
+      "info_total_songs": {
+        "name": "Total songs"
+      },
+      "player_count": {
+        "name": "Player count"
+      },
+      "other_player_count": {
+        "name": "Player count off service"
+      }
     }
   }
 }

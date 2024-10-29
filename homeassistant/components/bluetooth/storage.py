@@ -1,4 +1,5 @@
 """Storage for remote scanners."""
+
 from __future__ import annotations
 
 from bluetooth_adapters import (

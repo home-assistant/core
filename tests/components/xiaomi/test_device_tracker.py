@@ -1,11 +1,12 @@
 """The tests for the Xiaomi router device tracker platform."""
+
 from http import HTTPStatus
 import logging
 from unittest.mock import MagicMock, call, patch
 
 import requests
 
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 import homeassistant.components.xiaomi.device_tracker as xiaomi
 from homeassistant.components.xiaomi.device_tracker import get_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
@@ -27,7 +28,7 @@ def mocked_requests(*args, **kwargs):
     class MockResponse:
         """Class to represent a mocked response."""
 
-        def __init__(self, json_data, status_code):
+        def __init__(self, json_data, status_code) -> None:
             """Initialize the mock response class."""
             self.json_data = json_data
             self.status_code = status_code
@@ -47,7 +48,8 @@ def mocked_requests(*args, **kwargs):
                 raise requests.HTTPError(self.status_code)
 
     data = kwargs.get("data")
-    global FIRST_CALL
+    # pylint: disable-next=global-statement
+    global FIRST_CALL  # noqa: PLW0603
 
     if data and data.get("username", None) == INVALID_USERNAME:
         # deliver an invalid token
@@ -142,6 +144,7 @@ def mocked_requests(*args, **kwargs):
             200,
         )
     _LOGGER.debug("UNKNOWN ROUTE")
+    return None
 
 
 @patch(
@@ -151,9 +154,9 @@ def mocked_requests(*args, **kwargs):
 async def test_config(xiaomi_mock, hass: HomeAssistant) -> None:
     """Testing minimal configuration."""
     config = {
-        DOMAIN: xiaomi.PLATFORM_SCHEMA(
+        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_PASSWORD: "passwordTest",
             }
@@ -161,7 +164,7 @@ async def test_config(xiaomi_mock, hass: HomeAssistant) -> None:
     }
     xiaomi.get_scanner(hass, config)
     assert xiaomi_mock.call_count == 1
-    assert xiaomi_mock.call_args == call(config[DOMAIN])
+    assert xiaomi_mock.call_args == call(config[DEVICE_TRACKER_DOMAIN])
     call_arg = xiaomi_mock.call_args[0][0]
     assert call_arg["username"] == "admin"
     assert call_arg["password"] == "passwordTest"
@@ -176,9 +179,9 @@ async def test_config(xiaomi_mock, hass: HomeAssistant) -> None:
 async def test_config_full(xiaomi_mock, hass: HomeAssistant) -> None:
     """Testing full configuration."""
     config = {
-        DOMAIN: xiaomi.PLATFORM_SCHEMA(
+        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: "alternativeAdminName",
                 CONF_PASSWORD: "passwordTest",
@@ -187,7 +190,7 @@ async def test_config_full(xiaomi_mock, hass: HomeAssistant) -> None:
     }
     xiaomi.get_scanner(hass, config)
     assert xiaomi_mock.call_count == 1
-    assert xiaomi_mock.call_args == call(config[DOMAIN])
+    assert xiaomi_mock.call_args == call(config[DEVICE_TRACKER_DOMAIN])
     call_arg = xiaomi_mock.call_args[0][0]
     assert call_arg["username"] == "alternativeAdminName"
     assert call_arg["password"] == "passwordTest"
@@ -200,9 +203,9 @@ async def test_config_full(xiaomi_mock, hass: HomeAssistant) -> None:
 async def test_invalid_credential(mock_get, mock_post, hass: HomeAssistant) -> None:
     """Testing invalid credential handling."""
     config = {
-        DOMAIN: xiaomi.PLATFORM_SCHEMA(
+        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: INVALID_USERNAME,
                 CONF_PASSWORD: "passwordTest",
@@ -217,9 +220,9 @@ async def test_invalid_credential(mock_get, mock_post, hass: HomeAssistant) -> N
 async def test_valid_credential(mock_get, mock_post, hass: HomeAssistant) -> None:
     """Testing valid refresh."""
     config = {
-        DOMAIN: xiaomi.PLATFORM_SCHEMA(
+        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: "admin",
                 CONF_PASSWORD: "passwordTest",
@@ -241,9 +244,9 @@ async def test_token_timed_out(mock_get, mock_post, hass: HomeAssistant) -> None
     New token is requested and list is downloaded a second time.
     """
     config = {
-        DOMAIN: xiaomi.PLATFORM_SCHEMA(
+        DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: TOKEN_TIMEOUT_USERNAME,
                 CONF_PASSWORD: "passwordTest",

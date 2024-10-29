@@ -1,5 +1,6 @@
 """Test BMW switches."""
-from unittest.mock import AsyncMock
+
+from unittest.mock import AsyncMock, patch
 
 from bimmer_connected.models import MyBMWAPIError, MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
@@ -7,24 +8,33 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import check_remote_service_call, setup_mocked_integration
 
+from tests.common import snapshot_platform
 
+
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch options and values.."""
 
     # Setup component
-    assert await setup_mocked_integration(hass)
+    with patch(
+        "homeassistant.components.bmw_connected_drive.PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        mock_config_entry = await setup_mocked_integration(hass)
 
-    # Get all switch entities
-    assert hass.states.async_all("switch") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -63,6 +73,7 @@ async def test_service_call_success(
     assert hass.states.get(entity_id).state == new_value
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
     ("raised", "expected"),
     [
@@ -75,7 +86,6 @@ async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
-    bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test exception handling."""

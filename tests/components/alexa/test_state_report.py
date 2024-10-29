@@ -1,4 +1,5 @@
 """Test report state."""
+
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -184,13 +185,13 @@ async def test_report_state_unsets_authorized_on_error(
     config = get_default_config(hass)
     await state_report.async_enable_proactive_mode(hass, config)
 
+    config._store.set_authorized.assert_not_called()
+
     hass.states.async_set(
         "binary_sensor.test_contact",
         "off",
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
-
-    config._store.set_authorized.assert_not_called()
 
     # To trigger event listener
     await hass.async_block_till_done()
@@ -214,15 +215,15 @@ async def test_report_state_unsets_authorized_on_access_token_error(
 
     await state_report.async_enable_proactive_mode(hass, config)
 
-    hass.states.async_set(
-        "binary_sensor.test_contact",
-        "off",
-        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
-    )
-
     config._store.set_authorized.assert_not_called()
 
     with patch.object(config, "async_get_access_token", AsyncMock(side_effect=exc)):
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "off",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
+
         # To trigger event listener
         await hass.async_block_till_done()
         config._store.set_authorized.assert_called_once_with(False)
@@ -409,7 +410,7 @@ async def test_report_state_number(
     }
 
     if unit:
-        state["unit_of_measurement"]: unit
+        state["unit_of_measurement"] = unit
 
     hass.states.async_set(
         f"{domain}.test_{domain}",
@@ -730,36 +731,39 @@ async def test_proactive_mode_filter_states(
     assert len(aioclient_mock.mock_calls) == 0
 
     # hass not running should not report
+    current_state = hass.state
+    hass.set_state(core.CoreState.stopping)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
     hass.states.async_set(
         "binary_sensor.test_contact",
         "off",
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
-    with patch.object(hass, "state", core.CoreState.stopping):
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+
+    hass.set_state(current_state)
     assert len(aioclient_mock.mock_calls) == 0
 
     # unsupported entity should not report
-    hass.states.async_set(
-        "binary_sensor.test_contact",
-        "on",
-        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
-    )
     with patch.dict(
         "homeassistant.components.alexa.state_report.ENTITY_ADAPTERS", {}, clear=True
     ):
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "on",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 0
 
     # Not exposed by config should not report
-    hass.states.async_set(
-        "binary_sensor.test_contact",
-        "off",
-        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
-    )
     with patch.object(config, "should_expose", return_value=False):
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "off",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 0

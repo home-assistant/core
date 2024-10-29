@@ -1,4 +1,5 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import LeafDataStore, LeafEntity
+from . import LeafDataStore
 from .const import (
     DATA_BATTERY,
     DATA_CHARGING,
@@ -20,6 +21,7 @@ from .const import (
     DATA_RANGE_AC,
     DATA_RANGE_AC_OFF,
 )
+from .entity import LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 

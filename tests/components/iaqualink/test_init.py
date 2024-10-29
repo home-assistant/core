@@ -1,5 +1,5 @@
 """Tests for iAqualink integration."""
-import asyncio
+
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -30,7 +30,7 @@ from .conftest import get_aqualink_device, get_aqualink_system
 from tests.common import async_fire_time_changed
 
 
-async def _ffwd_next_update_interval(hass):
+async def _ffwd_next_update_interval(hass: HomeAssistant) -> None:
     now = dt_util.utcnow()
     async_fire_time_changed(hass, now + UPDATE_INTERVAL)
     await hass.async_block_till_done()
@@ -56,7 +56,7 @@ async def test_setup_login_timeout(hass: HomeAssistant, config_entry) -> None:
 
     with patch(
         "homeassistant.components.iaqualink.AqualinkClient.login",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -68,12 +68,15 @@ async def test_setup_systems_exception(hass: HomeAssistant, config_entry) -> Non
     """Test setup encountering an exception while retrieving systems."""
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-        side_effect=AqualinkServiceException,
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            side_effect=AqualinkServiceException,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -85,12 +88,15 @@ async def test_setup_no_systems_recognized(hass: HomeAssistant, config_entry) ->
     """Test setup ending in no systems recognized."""
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-        return_value={},
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={},
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -107,16 +113,20 @@ async def test_setup_devices_exception(
     system = get_aqualink_system(client, cls=IaquaSystem)
     systems = {system.serial: system}
 
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-        return_value=systems,
-    ), patch.object(
-        system,
-        "get_devices",
-    ) as mock_get_devices:
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+        patch.object(
+            system,
+            "get_devices",
+        ) as mock_get_devices,
+    ):
         mock_get_devices.side_effect = AqualinkServiceException
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -136,16 +146,20 @@ async def test_setup_all_good_no_recognized_devices(
     device = get_aqualink_device(system, name="dev_1")
     devices = {device.name: device}
 
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-        return_value=systems,
-    ), patch.object(
-        system,
-        "get_devices",
-    ) as mock_get_devices:
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+        patch.object(
+            system,
+            "get_devices",
+        ) as mock_get_devices,
+    ):
         mock_get_devices.return_value = devices
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -184,12 +198,15 @@ async def test_setup_all_good_all_device_types(
 
     system.get_devices = AsyncMock(return_value=devices)
 
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-        return_value=systems,
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -221,12 +238,15 @@ async def test_multiple_updates(
 
     caplog.set_level(logging.WARNING)
 
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-        return_value=systems,
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -326,16 +346,19 @@ async def test_entity_assumed_and_available(
     light = get_aqualink_device(
         system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
     )
-    devices = {d.name: d for d in [light]}
+    devices = {light.name: light}
     system.get_devices = AsyncMock(return_value=devices)
     system.update = AsyncMock()
 
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-        return_value=systems,
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Support for Waterfurnace."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -103,12 +104,9 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    sensors = []
     client = hass.data[WF_DOMAIN]
-    for description in SENSORS:
-        sensors.append(WaterFurnaceSensor(client, description))
 
-    add_entities(sensors)
+    add_entities(WaterFurnaceSensor(client, description) for description in SENSORS)
 
 
 class WaterFurnaceSensor(SensorEntity):

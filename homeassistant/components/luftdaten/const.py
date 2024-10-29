@@ -1,4 +1,5 @@
 """Define constants for the Sensor.Community integration."""
+
 from datetime import timedelta
 
 ATTR_SENSOR_ID = "sensor_id"

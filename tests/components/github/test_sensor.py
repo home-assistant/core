@@ -1,4 +1,5 @@
 """Test GitHub sensor."""
+
 import json
 
 import pytest

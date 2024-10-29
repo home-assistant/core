@@ -1,4 +1,5 @@
 """Test Konnected setup process."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -6,8 +7,8 @@ import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -706,7 +707,7 @@ async def test_state_updates_zone(
     resp = await client.post(
         "/api/konnected/device/112233445566",
         headers={"Authorization": "Bearer abcdefgh"},
-        json={"zone": "5", "temp": 32, "addr": 1},
+        json={"zone": "5", "temp": 32.0, "addr": 1},
     )
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
@@ -863,7 +864,7 @@ async def test_state_updates_pin(
     resp = await client.post(
         "/api/konnected/device/112233445566",
         headers={"Authorization": "Bearer abcdefgh"},
-        json={"pin": "7", "temp": 32, "addr": 1},
+        json={"pin": "7", "temp": 32.0, "addr": 1},
     )
     assert resp.status == HTTPStatus.OK
     result = await resp.json()

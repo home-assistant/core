@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'data': dict({
+        'station_id': '123',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'imgw_pib',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'River Name (Station Name)',
+      'unique_id': '123',
+      'version': 1,
+    }),
+    'hydrological_data': dict({
+      'flood_alarm': False,
+      'flood_alarm_level': dict({
+        'name': 'Flood Alarm Level',
+        'unit': None,
+        'value': 630.0,
+      }),
+      'flood_warning': False,
+      'flood_warning_level': dict({
+        'name': 'Flood Warning Level',
+        'unit': None,
+        'value': 590.0,
+      }),
+      'river': 'River Name',
+      'station': 'Station Name',
+      'station_id': '123',
+      'water_level': dict({
+        'name': 'Water Level',
+        'unit': None,
+        'value': 526.0,
+      }),
+      'water_level_measurement_date': '2024-04-27T10:00:00+00:00',
+      'water_temperature': dict({
+        'name': 'Water Temperature',
+        'unit': None,
+        'value': 10.8,
+      }),
+      'water_temperature_measurement_date': '2024-04-27T10:10:00+00:00',
+    }),
+  })
+# ---

@@ -1,0 +1,271 @@
+# serializer version: 1
+# name: test_backup_end[with_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'only_supervisor',
+      'message': 'Only allowed as Supervisor',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end[with_hassio-hass_supervisor_access_token]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end[without_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end[without_hassio-hass_supervisor_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end_excepion[exception0]
+  dict({
+    'error': dict({
+      'code': 'post_backup_actions_failed',
+      'message': '',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end_excepion[exception1]
+  dict({
+    'error': dict({
+      'code': 'post_backup_actions_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end_excepion[exception2]
+  dict({
+    'error': dict({
+      'code': 'post_backup_actions_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start[with_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'only_supervisor',
+      'message': 'Only allowed as Supervisor',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start[with_hassio-hass_supervisor_access_token]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start[without_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start[without_hassio-hass_supervisor_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start_excepion[exception0]
+  dict({
+    'error': dict({
+      'code': 'pre_backup_actions_failed',
+      'message': '',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start_excepion[exception1]
+  dict({
+    'error': dict({
+      'code': 'pre_backup_actions_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start_excepion[exception2]
+  dict({
+    'error': dict({
+      'code': 'pre_backup_actions_failed',
+      'message': 'Boom',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_details[with_hassio-with_backup_content]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_details[with_hassio-without_backup_content]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_details[without_hassio-with_backup_content]
+  dict({
+    'id': 1,
+    'result': dict({
+      'backup': dict({
+        'date': '1970-01-01T00:00:00.000Z',
+        'name': 'Test',
+        'path': 'abc123.tar',
+        'size': 0.0,
+        'slug': 'abc123',
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_details[without_hassio-without_backup_content]
+  dict({
+    'id': 1,
+    'result': dict({
+      'backup': None,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[with_hassio]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[without_hassio]
+  dict({
+    'id': 1,
+    'result': dict({
+      'date': '1970-01-01T00:00:00.000Z',
+      'name': 'Test',
+      'path': 'abc123.tar',
+      'size': 0.0,
+      'slug': 'abc123',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_info[with_hassio]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_info[without_hassio]
+  dict({
+    'id': 1,
+    'result': dict({
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'date': '1970-01-01T00:00:00.000Z',
+          'name': 'Test',
+          'path': 'abc123.tar',
+          'size': 0.0,
+          'slug': 'abc123',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_remove[with_hassio]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_remove[without_hassio]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---

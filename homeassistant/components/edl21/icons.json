@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "ownership_id": {
+        "default": "mdi:flash"
+      },
+      "electricity_id": {
+        "default": "mdi:flash"
+      },
+      "configuration_program_version_number": {
+        "default": "mdi:flash"
+      },
+      "firmware_version_number": {
+        "default": "mdi:flash"
+      },
+      "supply_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "u_l2_u_l1_phase_angle": {
+        "default": "mdi:sine-wave"
+      },
+      "u_l3_u_l1_phase_angle": {
+        "default": "mdi:sine-wave"
+      },
+      "u_l1_i_l1_phase_angle": {
+        "default": "mdi:sine-wave"
+      },
+      "u_l2_i_l2_phase_angle": {
+        "default": "mdi:sine-wave"
+      },
+      "u_l3_i_l3_phase_angle": {
+        "default": "mdi:sine-wave"
+      },
+      "metering_point_id_1": {
+        "default": "mdi:flash"
+      },
+      "internal_operating_status": {
+        "default": "mdi:flash"
+      }
+    }
+  }
+}

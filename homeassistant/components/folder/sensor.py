@@ -1,4 +1,5 @@
 """Sensor for monitoring the contents of a folder."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,7 +10,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -27,7 +28,7 @@ DEFAULT_FILTER = "*"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FOLDER_PATHS): cv.isdir,
         vol.Optional(CONF_FILTER, default=DEFAULT_FILTER): cv.string,
@@ -38,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_files_list(folder_path: str, filter_term: str) -> list[str]:
     """Return the list of files, applying filter."""
     query = folder_path + filter_term
-    files_list = glob.glob(query)
-    return files_list
+    return glob.glob(query)
 
 
 def get_size(files_list: list[str]) -> int:

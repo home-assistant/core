@@ -1,4 +1,5 @@
 """Tests for the Freebox buttons."""
+
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from pytest_unordered import unordered

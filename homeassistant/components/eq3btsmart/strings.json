@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "flow_title": "eQ-3 Device [{mac}]",
+    "step": {
+      "user": {
+        "title": "Configure new eQ-3 device",
+        "data": {
+          "mac": "MAC address"
+        }
+      },
+      "init": {
+        "title": "Configure new eQ-3 device"
+      }
+    },
+    "error": {
+      "invalid_mac_address": "Invalid MAC address"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Test the Developer Credentials integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -111,8 +113,8 @@ class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[FakeConfigFlow, None, None]:
+    hass: HomeAssistant, current_request_with_host: None
+) -> Generator[None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
@@ -122,7 +124,12 @@ def config_flow_handler(
 class OAuthFixture:
     """Fixture to facilitate testing an OAuth flow."""
 
-    def __init__(self, hass, hass_client, aioclient_mock):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        hass_client: ClientSessionGenerator,
+        aioclient_mock: AiohttpClientMocker,
+    ) -> None:
         """Initialize OAuthFixture."""
         self.hass = hass
         self.hass_client = hass_client
@@ -162,7 +169,7 @@ class OAuthFixture:
         )
 
         result = await self.hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
         assert result.get("title") == self.title
         assert "data" in result
         assert "token" in result["data"]
@@ -173,7 +180,7 @@ class OAuthFixture:
 async def oauth_fixture(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: Any,
+    aioclient_mock: AiohttpClientMocker,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
@@ -182,12 +189,14 @@ async def oauth_fixture(
 class Client:
     """Test client with helper methods for application credentials websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0
 
-    async def cmd(self, cmd: str, payload: dict[str, Any] = None) -> dict[str, Any]:
+    async def cmd(
+        self, cmd: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Send a command and receive the json result."""
         self.id += 1
         await self.client.send_json(
@@ -201,7 +210,7 @@ class Client:
         assert resp.get("id") == self.id
         return resp
 
-    async def cmd_result(self, cmd: str, payload: dict[str, Any] = None) -> Any:
+    async def cmd_result(self, cmd: str, payload: dict[str, Any] | None = None) -> Any:
         """Send a command and parse the result."""
         resp = await self.cmd(cmd, payload)
         assert resp.get("success")
@@ -209,7 +218,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Client]
+type ClientFixture = Callable[[], Client]
 
 
 @pytest.fixture
@@ -414,15 +423,23 @@ async def test_import_named_credential(
     ]
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_credentials"],
+)
 async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_credentials"],
+)
 async def test_config_flow_other_domain(
     hass: HomeAssistant,
     ws_client: ClientFixture,
@@ -446,7 +463,7 @@ async def test_config_flow_other_domain(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -469,7 +486,7 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     result = await oauth_fixture.complete_external_step(result)
     assert (
         result["data"].get("auth_implementation") == "fake_integration_some_client_id"
@@ -534,14 +551,14 @@ async def test_config_flow_multiple_entries(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "pick_implementation"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"implementation": "fake_integration_some_client_id2"},
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.client_id = CLIENT_ID + "2"
     oauth_fixture.title = CLIENT_ID + "2"
     result = await oauth_fixture.complete_external_step(result)
@@ -550,6 +567,10 @@ async def test_config_flow_multiple_entries(
     )
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_credentials"],
+)
 async def test_config_flow_create_delete_credential(
     hass: HomeAssistant,
     ws_client: ClientFixture,
@@ -571,7 +592,7 @@ async def test_config_flow_create_delete_credential(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -588,13 +609,17 @@ async def test_config_flow_with_config_credential(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_configuration"],
+)
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_import_without_setup(hass: HomeAssistant, config_credential) -> None:
     """Test import of credentials without setting up the integration."""
@@ -606,10 +631,14 @@ async def test_import_without_setup(hass: HomeAssistant, config_credential) -> N
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_configuration"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_configuration"],
+)
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_platform(
     hass: HomeAssistant, ws_client: ClientFixture
@@ -635,7 +664,7 @@ async def test_websocket_without_platform(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_configuration"
 
 
@@ -710,7 +739,7 @@ async def test_platform_with_auth_implementation(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
@@ -768,7 +797,7 @@ async def test_name(
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     oauth_fixture.title = NAME
     result = await oauth_fixture.complete_external_step(result)
     assert (

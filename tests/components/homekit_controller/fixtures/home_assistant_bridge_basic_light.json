@@ -1,0 +1,183 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "3E",
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "14",
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "iid": 3,
+            "type": "20",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Home Assistant"
+          },
+          {
+            "iid": 4,
+            "type": "21",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Bridge"
+          },
+          {
+            "iid": 5,
+            "type": "23",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "HASS Bridge S6"
+          },
+          {
+            "iid": 6,
+            "type": "30",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "homekit.bridge"
+          },
+          {
+            "iid": 7,
+            "type": "52",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2024.2.0"
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "A2",
+        "characteristics": [
+          {
+            "iid": 9,
+            "type": "37",
+            "perms": ["pr", "ev"],
+            "format": "string",
+            "value": "01.01.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 3982136094,
+    "services": [
+      {
+        "iid": 1,
+        "type": "3E",
+        "characteristics": [
+          {
+            "iid": 597,
+            "type": "14",
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "iid": 598,
+            "type": "20",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "FirstAlert"
+          },
+          {
+            "iid": 599,
+            "type": "21",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1039102"
+          },
+          {
+            "iid": 600,
+            "type": "23",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Laundry Smoke ED78"
+          },
+          {
+            "iid": 601,
+            "type": "30",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "light.laundry_smoke_ed78"
+          },
+          {
+            "iid": 602,
+            "type": "52",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.4.84"
+          },
+          {
+            "iid": 603,
+            "type": "53",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "9.0.0"
+          }
+        ]
+      },
+      {
+        "iid": 604,
+        "type": "96",
+        "characteristics": [
+          {
+            "iid": 605,
+            "type": "68",
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "unit": "percentage",
+            "value": 100
+          },
+          {
+            "iid": 606,
+            "type": "8F",
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1, 2],
+            "value": 2
+          },
+          {
+            "iid": 607,
+            "type": "79",
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1],
+            "value": 0
+          }
+        ]
+      },
+      {
+        "iid": 608,
+        "type": "43",
+        "characteristics": [
+          {
+            "iid": 609,
+            "type": "25",
+            "perms": ["pr", "pw", "ev"],
+            "format": "bool",
+            "value": false
+          },
+          {
+            "iid": 610,
+            "type": "8",
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "unit": "percentage",
+            "value": 100
+          }
+        ]
+      }
+    ]
+  }
+]

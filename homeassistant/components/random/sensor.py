@@ -1,4 +1,5 @@
 """Support for showing random numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,7 +8,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -29,7 +33,7 @@ ATTR_MINIMUM = "minimum"
 DEFAULT_NAME = "Random sensor"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
         vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
@@ -64,6 +68,8 @@ async def async_setup_entry(
 
 class RandomSensor(SensorEntity):
     """Representation of a Random number sensor."""
+
+    _attr_translation_key = "random"
 
     def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the Random sensor."""

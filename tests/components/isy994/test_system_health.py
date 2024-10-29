@@ -1,4 +1,5 @@
 """Test ISY system health."""
+
 import asyncio
 from unittest.mock import Mock
 
@@ -27,6 +28,7 @@ async def test_system_health(
 
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     MockConfigEntry(
         domain=DOMAIN,
@@ -66,6 +68,7 @@ async def test_system_health_failed_connect(
 
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     MockConfigEntry(
         domain=DOMAIN,

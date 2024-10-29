@@ -1,4 +1,5 @@
 """Sensor support for Wireless Sensor Tags platform."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -19,12 +20,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    SIGNAL_TAG_UPDATE,
-    WirelessTagBaseSensor,
-    async_migrate_unique_id,
-)
+from .const import DOMAIN, SIGNAL_TAG_UPDATE
+from .entity import WirelessTagBaseSensor
+from .util import async_migrate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +62,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 SENSOR_KEYS: list[str] = list(SENSOR_TYPES)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]
@@ -80,7 +78,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
-    platform = hass.data[WIRELESSTAG_DOMAIN]
+    platform = hass.data[DOMAIN]
     sensors = []
     tags = platform.tags
     for tag in tags.values():
@@ -112,9 +110,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self.entity_id = (
-            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
-        )
+        self.entity_id = f"sensor.{DOMAIN}_{self.underscored_name}_{self._sensor_type}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

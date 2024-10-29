@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/orvibo",
   "iot_class": "local_push",
   "loggers": ["orvibo"],
-  "requirements": ["orvibo==1.1.1"]
+  "requirements": ["orvibo==1.1.2"]
 }

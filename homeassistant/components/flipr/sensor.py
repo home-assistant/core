@@ -1,4 +1,5 @@
 """Sensor platform for the Flipr's pool_sensor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -7,12 +8,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import FliprConfigEntry
 from .entity import FliprEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -20,12 +20,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="chlorine",
         translation_key="chlorine",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
-        icon="mdi:pool",
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -45,7 +43,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="red_ox",
         translation_key="red_ox",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -59,14 +56,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FliprConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinators = config_entry.runtime_data.flipr_coordinators
 
-    sensors = [FliprSensor(coordinator, description) for description in SENSOR_TYPES]
-    async_add_entities(sensors)
+    async_add_entities(
+        FliprSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        for coordinator in coordinators
+    )
 
 
 class FliprSensor(FliprEntity, SensorEntity):

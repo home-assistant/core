@@ -1,4 +1,5 @@
 """Helper to test significant Remote state changes."""
+
 from __future__ import annotations
 
 from typing import Any

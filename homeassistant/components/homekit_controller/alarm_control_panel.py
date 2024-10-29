@@ -1,4 +1,5 @@
 """Support for Homekit Alarm Control Panel."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -9,17 +10,10 @@ from aiohomekit.model.services import Service, ServicesTypes
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    Platform,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,18 +22,18 @@ from .connection import HKDevice
 from .entity import HomeKitEntity
 
 CURRENT_STATE_MAP = {
-    0: STATE_ALARM_ARMED_HOME,
-    1: STATE_ALARM_ARMED_AWAY,
-    2: STATE_ALARM_ARMED_NIGHT,
-    3: STATE_ALARM_DISARMED,
-    4: STATE_ALARM_TRIGGERED,
+    0: AlarmControlPanelState.ARMED_HOME,
+    1: AlarmControlPanelState.ARMED_AWAY,
+    2: AlarmControlPanelState.ARMED_NIGHT,
+    3: AlarmControlPanelState.DISARMED,
+    4: AlarmControlPanelState.TRIGGERED,
 }
 
 TARGET_STATE_MAP = {
-    STATE_ALARM_ARMED_HOME: 0,
-    STATE_ALARM_ARMED_AWAY: 1,
-    STATE_ALARM_ARMED_NIGHT: 2,
-    STATE_ALARM_DISARMED: 3,
+    AlarmControlPanelState.ARMED_HOME: 0,
+    AlarmControlPanelState.ARMED_AWAY: 1,
+    AlarmControlPanelState.ARMED_NIGHT: 2,
+    AlarmControlPanelState.DISARMED: 3,
 }
 
 
@@ -70,7 +64,6 @@ async def async_setup_entry(
 class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
     """Representation of a Homekit Alarm Control Panel."""
 
-    _attr_icon = "mdi:security"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -86,7 +79,7 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
         ]
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
         return CURRENT_STATE_MAP[
             self.service.value(CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT)
@@ -94,21 +87,23 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self.set_alarm_state(STATE_ALARM_DISARMED, code)
+        await self.set_alarm_state(AlarmControlPanelState.DISARMED, code)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
-        await self.set_alarm_state(STATE_ALARM_ARMED_AWAY, code)
+        await self.set_alarm_state(AlarmControlPanelState.ARMED_AWAY, code)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send stay command."""
-        await self.set_alarm_state(STATE_ALARM_ARMED_HOME, code)
+        await self.set_alarm_state(AlarmControlPanelState.ARMED_HOME, code)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send night command."""
-        await self.set_alarm_state(STATE_ALARM_ARMED_NIGHT, code)
+        await self.set_alarm_state(AlarmControlPanelState.ARMED_NIGHT, code)
 
-    async def set_alarm_state(self, state: str, code: str | None = None) -> None:
+    async def set_alarm_state(
+        self, state: AlarmControlPanelState, code: str | None = None
+    ) -> None:
         """Send state command."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: TARGET_STATE_MAP[state]}

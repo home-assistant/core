@@ -1,4 +1,5 @@
 """Constants for YouTube integration."""
+
 import logging
 
 DEFAULT_ACCESS = ["https://www.googleapis.com/auth/youtube.readonly"]
@@ -14,6 +15,7 @@ AUTH = "auth"
 LOGGER = logging.getLogger(__package__)
 
 ATTR_TITLE = "title"
+ATTR_TOTAL_VIEWS = "total_views"
 ATTR_LATEST_VIDEO = "latest_video"
 ATTR_SUBSCRIBER_COUNT = "subscriber_count"
 ATTR_DESCRIPTION = "description"

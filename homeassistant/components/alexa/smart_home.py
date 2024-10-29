@@ -1,4 +1,5 @@
 """Support for alexa Smart Home Skill API."""
+
 import logging
 from typing import Any
 
@@ -7,8 +8,11 @@ from yarl import URL
 
 from homeassistant import core
 from homeassistant.auth.models import User
-from homeassistant.components.http import HomeAssistantRequest
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import (
+    KEY_HASS,
+    HomeAssistantRequest,
+    HomeAssistantView,
+)
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -25,6 +29,7 @@ from .const import (
     CONF_LOCALE,
     EVENT_ALEXA_SMART_HOME,
 )
+from .diagnostics import async_redact_auth_data
 from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .state_report import AlexaDirective
@@ -145,16 +150,25 @@ class SmartHomeView(HomeAssistantView):
         Lambda, which will need to forward the requests to here and pass back
         the response.
         """
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         user: User = request["hass_user"]
         message: dict[str, Any] = await request.json()
 
-        _LOGGER.debug("Received Alexa Smart Home request: %s", message)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Received Alexa Smart Home request: %s",
+                async_redact_auth_data(message),
+            )
 
         response = await async_handle_message(
             hass, self.smart_home_config, message, context=core.Context(user_id=user.id)
         )
-        _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Sending Alexa Smart Home response: %s",
+                async_redact_auth_data(response),
+            )
+
         return b"" if response is None else self.json(response)
 
 
@@ -180,7 +194,7 @@ async def async_handle_message(
 
     try:
         if not enabled:
-            raise AlexaBridgeUnreachableError(
+            raise AlexaBridgeUnreachableError(  # noqa: TRY301
                 "Alexa API not enabled in Home Assistant configuration"
             )
 
@@ -205,7 +219,7 @@ async def async_handle_message(
             error_message=err.error_message,
             payload=err.payload,
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception(
             "Uncaught exception processing Alexa %s/%s request (%s)",
             directive.namespace,
