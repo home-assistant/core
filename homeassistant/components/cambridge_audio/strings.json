@@ -32,6 +32,9 @@
           "dim": "Dim",
           "off": "[%key:common::state::off%]"
         }
+      },
+      "audio_output": {
+        "name": "Audio output"
       }
     },
     "switch": {
