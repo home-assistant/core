@@ -63,7 +63,6 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
-    entry: ConfigEntry | None
 
     @staticmethod
     @callback
@@ -168,6 +167,5 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
                 OPTIONS_SCHEMA,
                 user_input
                 or dict(self.config_entry.options)
-                or dict(self.config_entry.data),
             ),
         )

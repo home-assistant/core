@@ -118,8 +118,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version == 1:
-        if entry.minor_version == 1:
+    if entry.version == 1 and entry.minor_version == 1:
             _LOGGER.debug(
                 "Migrating from version %s.%s", entry.version, entry.minor_version
             )
@@ -127,9 +126,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry,
                 minor_version=2,
                 data={
-                    CONF_CLIENT_ID: entry.data.get(CONF_CLIENT_ID),
-                    CONF_USERNAME: entry.data.get(CONF_USERNAME),
-                    CONF_PASSWORD: entry.data.get(CONF_PASSWORD),
+                    CONF_CLIENT_ID: entry.data[CONF_CLIENT_ID],
+                    CONF_USERNAME: entry.data[CONF_USERNAME],
+                    CONF_PASSWORD: entry.data[CONF_PASSWORD],
                 },
                 options={CONF_HEATING_TYPE: entry.data.get(CONF_HEATING_TYPE)},
             )
