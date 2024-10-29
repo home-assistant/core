@@ -8,33 +8,32 @@
         "int": 0,
         "per": 0,
         "con": 0,
-        "stealth": 0,
+        "stealth": 4,
         "streaks": false,
         "seafoam": false,
         "shinySeed": false,
         "snowball": false,
         "spookySparkles": false
       },
-      "hp": 0,
-      "mp": 50.89999999999998,
+      "hp": 50,
+      "mp": 50,
       "exp": 737,
-      "gp": 137.62587214609795,
+      "gp": 0,
       "lvl": 38,
-      "class": "wizard",
+      "class": "rogue",
       "maxHealth": 50,
       "maxMP": 166,
       "toNextLevel": 880,
-      "points": 5
+      "points": 0
     },
     "preferences": {
       "sleep": false,
-      "automaticAllocation": true,
+      "automaticAllocation": false,
       "disableClasses": false
     },
     "flags": {
       "classSelected": true
     },
-    "needsCron": true,
-    "lastCron": "2024-09-21T22:01:55.586Z"
+    "needsCron": false
   }
 }
