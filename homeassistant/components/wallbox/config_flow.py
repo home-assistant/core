@@ -13,7 +13,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_STATION, DOMAIN
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import InvalidAuth, async_validate_input
 
 COMPONENT_DOMAIN = DOMAIN
 
@@ -32,9 +32,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     wallbox = Wallbox(data["username"], data["password"])
-    wallbox_coordinator = WallboxCoordinator(data["station"], wallbox, hass)
 
-    await wallbox_coordinator.async_validate_input()
+    await async_validate_input(hass, wallbox)
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
