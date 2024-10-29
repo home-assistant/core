@@ -2,9 +2,7 @@
 
 from typing import Any
 
-from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectionError
-from aiotainer.auth import AbstractAuth
 from aiotainer.client import PortainerClient
 import voluptuous as vol
 
@@ -13,12 +11,13 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PORT, CONF_VE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
+from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default="9443"): cv.port,
+        vol.Required(CONF_PORT, default="9443"): cv.port,
         vol.Required(CONF_ACCESS_TOKEN): cv.string,
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -36,28 +35,8 @@ class PortainerFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            _user_input = user_input
-
-            class AsyncTokenAuth(AbstractAuth):
-                """Provide aiotainer authentication tied to an OAuth2 based config entry."""
-
-                def __init__(
-                    self,
-                    websession: ClientSession,
-                ) -> None:
-                    """Initialize aiotainer auth."""
-                    super().__init__(
-                        websession,
-                        _user_input[CONF_HOST],
-                        _user_input[CONF_PORT],
-                    )
-
-                async def async_get_access_token(self) -> str:
-                    """Return a valid access token."""
-                    return _user_input[CONF_ACCESS_TOKEN]
-
             websession = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
-            api = PortainerClient(AsyncTokenAuth(websession))
+            api = PortainerClient(AsyncConfigEntryAuth(websession, user_input))
             try:
                 await api.get_status()
             except (TimeoutError, ClientConnectionError):

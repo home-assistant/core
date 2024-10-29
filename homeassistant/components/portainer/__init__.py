@@ -6,7 +6,7 @@ from aiohttp import ClientResponseError
 from aiotainer.client import PortainerClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -20,16 +20,19 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
+
 type PortainerConfigEntry = ConfigEntry[PortainerDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up this integration using UI."""
-    client_session = aiohttp_client.async_get_clientsession(hass, False)
-    api_api = api.AsyncConfigEntryAuth(client_session, entry)
-    portainer_api = PortainerClient(api_api)
+    client_session = aiohttp_client.async_get_clientsession(
+        hass, entry.data[CONF_VERIFY_SSL]
+    )
+    api_auth = api.AsyncConfigEntryAuth(client_session, entry.data)
+    portainer_api = PortainerClient(api_auth)
     try:
-        await api_api.async_get_access_token()
+        await api_auth.async_get_access_token()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed from err
