@@ -306,7 +306,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.host is not None
         placeholders: dict[str, str] = {CONF_HOST: self.host}
 
-        device: Device | None = None
         if user_input:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
