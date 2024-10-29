@@ -113,11 +113,13 @@ async def async_setup_entry(
     # register listener for removed players
     async def handle_player_removed(event: MassEvent) -> None:
         """Handle Mass Player Removed event."""
+        if event.object_id is None:
+            return
         dev_reg = dr.async_get(hass)
-        if TYPE_CHECKING:
-            assert event.object_id is not None
         if hass_device := dev_reg.async_get_device({(DOMAIN, event.object_id)}):
-            dev_reg.async_remove_device(hass_device.id)
+            dev_reg.async_update_device(
+                hass_device.id, remove_config_entry_id=entry.entry_id
+            )
 
     entry.async_on_unload(
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
