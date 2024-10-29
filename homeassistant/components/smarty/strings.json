@@ -60,9 +60,6 @@
       },
       "filter_days_left": {
         "name": "Filter days left"
-      },
-      "system_state": {
-        "name": "System state"
       }
     }
   }

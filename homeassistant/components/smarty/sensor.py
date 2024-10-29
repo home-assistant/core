@@ -79,11 +79,6 @@ ENTITIES: tuple[SmartySensorDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=get_filter_days_left,
     ),
-    SmartySensorDescription(
-        key="system_state",
-        translation_key="system_state",
-        value_fn=lambda smarty: smarty.system_state,
-    ),
 )
 
 
