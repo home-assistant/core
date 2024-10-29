@@ -9,7 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
-_SETUP_TIMEOUT = 5
+_SETUP_TIMEOUT = 30
 _SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr=127.0.0.1:1984"
 
 # Default configuration for HA
