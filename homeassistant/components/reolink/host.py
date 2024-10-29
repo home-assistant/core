@@ -220,6 +220,15 @@ class ReolinkHost:
         else:
             self._unique_id = format_mac(self._api.mac_address)
 
+        try:
+            await self._api.baichuan.subscribe_events()
+        except ReolinkError:
+            # run tcp push check
+            pass
+        else:
+            # schedual tcp push check
+            pass
+
         if self._onvif_push_supported:
             try:
                 await self.subscribe()
@@ -391,6 +400,16 @@ class ReolinkHost:
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
+        try:
+            await self._api.baichuan.unsubscribe_events()
+        except ReolinkError as err:
+            _LOGGER.error(
+                "Reolink error while unsubscribing Baichuan from host %s:%s: %s",
+                self._api.host,
+                self._api.port,
+                err,
+            )
+
         try:
             await self._api.unsubscribe()
         except ReolinkError as err:
@@ -747,6 +766,8 @@ class ReolinkHost:
     @property
     def event_connection(self) -> str:
         """Type of connection to receive events."""
+        if self._api.baichuan.events_active:
+            return "TCP push"
         if self._webhook_reachable:
             return "ONVIF push"
         if self._long_poll_received:
