@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from functools import cache, partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol, cast, overload
 
 import voluptuous as vol
 from webrtc_models import RTCConfiguration, RTCIceServer
@@ -333,17 +333,45 @@ def async_register_ws(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_candidate)
 
 
-async def _async_get_supported_provider[
-    _T: CameraWebRTCLegacyProvider | CameraWebRTCProvider
-](hass: HomeAssistant, camera: Camera, key: HassKey[set[_T]]) -> _T | None:
+@overload
+async def _async_get_supported_provider(
+    hass: HomeAssistant,
+    camera: Camera,
+    key: HassKey[set[CameraWebRTCLegacyProvider]],
+    legacy: Literal[True],
+) -> CameraWebRTCLegacyProvider | None: ...
+
+
+@overload
+async def _async_get_supported_provider(
+    hass: HomeAssistant,
+    camera: Camera,
+    key: HassKey[set[CameraWebRTCProvider]],
+    legacy: Literal[False] = False,
+) -> CameraWebRTCProvider | None: ...
+
+
+async def _async_get_supported_provider(
+    hass: HomeAssistant,
+    camera: Camera,
+    key: HassKey[set[CameraWebRTCLegacyProvider]] | HassKey[set[CameraWebRTCProvider]],
+    legacy: bool = False,
+) -> CameraWebRTCLegacyProvider | CameraWebRTCProvider | None:
     """Return the first supported provider for the camera."""
     providers = hass.data.get(key)
     if not providers or not (stream_source := await camera.stream_source()):
         return None
 
-    for provider in providers:
-        if provider.async_is_supported(stream_source):
-            return provider
+    if legacy is False:
+        providers = cast(set[CameraWebRTCProvider], providers)
+        for provider in providers:
+            if provider.async_is_supported(stream_source):
+                return provider
+    else:
+        providers = cast(set[CameraWebRTCLegacyProvider], providers)
+        for legacy_provider in providers:
+            if await legacy_provider.async_is_supported(stream_source):
+                return legacy_provider
 
     return None
 
@@ -360,7 +388,7 @@ async def async_get_supported_legacy_provider(
 ) -> CameraWebRTCLegacyProvider | None:
     """Return the first supported provider for the camera."""
     return await _async_get_supported_provider(
-        hass, camera, DATA_WEBRTC_LEGACY_PROVIDERS
+        hass, camera, DATA_WEBRTC_LEGACY_PROVIDERS, True
     )
 
 

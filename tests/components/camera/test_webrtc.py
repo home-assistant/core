@@ -52,6 +52,8 @@ TEST_INTEGRATION_DOMAIN = "test"
 class TestProvider(CameraWebRTCProvider):
     """Test provider."""
 
+    __test__ = False  # prevent test collection of class by pytest
+
     def __init__(self) -> None:
         """Initialize the provider."""
         self._is_supported = True
