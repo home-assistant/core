@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.suez_water import SuezClient
 from homeassistant.components.suez_water.const import DOMAIN
-from homeassistant.components.suez_water.coordinator import SuezWaterCoordinator
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -18,21 +18,14 @@ MOCK_DATA = {
 }
 
 
-async def create_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create an entry in hass."""
-
-    entry = MockConfigEntry(
+@pytest.fixture(name="config_entry")
+def mock_config_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    return MockConfigEntry(
         domain=DOMAIN,
         title="Suez mock device",
         data=MOCK_DATA,
     )
-
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    return entry
 
 
 @pytest.fixture
@@ -44,12 +37,37 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture
-def mock_coordinator(hass: HomeAssistant) -> SuezWaterCoordinator:
-    """Create mock coordinator."""
+@pytest.fixture(name="suez_client")
+def mock_suez_client(hass: HomeAssistant) -> Generator[AsyncMock]:
+    """Create mock for suez_water external api."""
 
-    return SuezWaterCoordinator(
-        hass,
-        None,
-        MOCK_DATA["counter_id"],
-    )
+    mock = AsyncMock(spec=SuezClient)
+    mock.check_credentials.return_value = True
+    mock.update.return_value = None
+    mock.state = 160
+    mock.attributes = {
+        "thisMonthConsumption": {
+            "2024-01-01": 130,
+            "2024-01-02": 145,
+        },
+        "previousMonthConsumption": {
+            "2024-12-01": 154,
+            "2024-12-02": 166,
+        },
+        "highestMonthlyConsumption": 2558,
+        "lastYearOverAll": 1000,
+        "thisYearOverAll": 1500,
+        "history": {
+            "2024-01-01": 130,
+            "2024-01-02": 145,
+            "2024-12-01": 154,
+            "2024-12-02": 166,
+        },
+        "attribution": "suez water mock test",
+    }
+
+    with patch(
+        "homeassistant.components.suez_water.SuezClient",
+        return_value=mock,
+    ) as mock_client:
+        yield mock_client

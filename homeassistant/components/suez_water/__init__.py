@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 from pysuez import SuezClient
 from pysuez.client import PySuezError
 

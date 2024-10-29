@@ -1,17 +1,18 @@
 """Suez water update coordinator."""
 
 import asyncio
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 
 from pysuez import SuezClient
 from pysuez.client import PySuezError
-from dataclasses import dataclass
 
 from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+
 
 @dataclass
 class AggregatedSensorData:
@@ -51,7 +52,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
         async with asyncio.timeout(30):
             return await self.hass.async_add_executor_job(self._fetch_data)
 
-    def _fetch_data(self) -> None:
+    def _fetch_data(self) -> AggregatedSensorData:
         """Fetch latest data from Suez."""
         try:
             self._sync_client.update()
@@ -59,32 +60,32 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
             raise UpdateFailed(
                 f"Suez coordinator error communicating with API: {err}"
             ) from err
-        currentMonth = {}
+        current_month = {}
         for item in self._sync_client.attributes["thisMonthConsumption"]:
-            currentMonth[item] = self._sync_client.attributes[
-                "thisMonthConsumption"
-            ][item]
-        previousMonth = {}
+            current_month[item] = self._sync_client.attributes["thisMonthConsumption"][
+                item
+            ]
+        previous_month = {}
         for item in self._sync_client.attributes["previousMonthConsumption"]:
-            previousMonth[item] = self._sync_client.attributes[
+            previous_month[item] = self._sync_client.attributes[
                 "previousMonthConsumption"
             ][item]
-        highestMonthlyConsumption = self._sync_client.attributes[
+        highest_monthly_consumption = self._sync_client.attributes[
             "highestMonthlyConsumption"
         ]
-        previousYear = self._sync_client.attributes["lastYearOverAll"]
-        currentYear = self._sync_client.attributes["thisYearOverAll"]
+        previous_year = self._sync_client.attributes["lastYearOverAll"]
+        current_year = self._sync_client.attributes["thisYearOverAll"]
         history = {}
         for item in self._sync_client.attributes["history"]:
             history[item] = self._sync_client.attributes["history"][item]
         _LOGGER.debug("Retrieved consumption: " + str(self._sync_client.state))
         return AggregatedSensorData(
             self._sync_client.state,
-            currentMonth,
-            previousMonth,
-            previousYear,
-            currentYear,
+            current_month,
+            previous_month,
+            previous_year,
+            current_year,
             history,
-            highestMonthlyConsumption,
+            highest_monthly_consumption,
             self._sync_client.attributes["attribution"],
         )

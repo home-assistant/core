@@ -54,15 +54,11 @@ class SuezAggregatedSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity
     @property
     def attribution(self) -> None | str:
         """Return data attribution message."""
-        if self.coordinator.data is None:
-            return None
         return self.coordinator.data.attribution
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return aggregated data."""
-        if self.coordinator.data is None:
-            return None
         return {
             "this_month_consumption": self.coordinator.data.current_month,
             "previous_month_consumption": self.coordinator.data.previous_month,
