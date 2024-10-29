@@ -387,7 +387,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         media_type: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
-        # pylint: disable=too-many-arguments
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
         # work out (all) uri(s) to play
@@ -491,7 +490,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_media_artist = player.current_media.artist
             self._attr_media_album_name = player.current_media.album
             self._attr_media_duration = player.current_media.duration
-            # grab these from the player directly if it supports other sources than MA?
+            # shuffle and repeat are not (yet) supported for external sources
             self._attr_shuffle = None
             self._attr_repeat = None
             if TYPE_CHECKING:
@@ -508,12 +507,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             return
 
         if queue is None:
-            # player is completely idle without any source active
+            # player has no MA queue active
             self._attr_source = player.active_source
             self._attr_app_id = player.active_source
             return
 
-        # player has MA as active source (either a group player or the players own queue)
+        # player has an MA queue active (either its own queue or some group queue)
         self._attr_app_id = DOMAIN
         self._attr_shuffle = queue.shuffle_enabled
         self._attr_repeat = queue.repeat_mode.value
@@ -547,7 +546,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
 
         # queue is playing regular media item
         self._attr_media_title = media_item.name
-
+        # for tracks we can extract more info
         if media_item.media_type == MediaType.TRACK:
             if TYPE_CHECKING:
                 assert isinstance(media_item, Track)
