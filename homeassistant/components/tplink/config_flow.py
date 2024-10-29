@@ -320,22 +320,22 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     device = await self._async_try_connect_all(
                         self.host, credentials=credentials, raise_on_progress=False
                     )
-                    if not device:
-                        errors["base"] = "cannot_connect"
-                        placeholders["error"] = "try_connect_all failed"
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
             except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
-
-            if device:
-                await set_credentials(self.hass, username, password)
-                self.hass.async_create_task(
-                    self._async_reload_requires_auth_entries(), eager_start=False
-                )
-                return self._async_create_entry_from_device(device)
+            else:
+                if not device:
+                    errors["base"] = "cannot_connect"
+                    placeholders["error"] = "try_connect_all failed"
+                else:
+                    await set_credentials(self.hass, username, password)
+                    self.hass.async_create_task(
+                        self._async_reload_requires_auth_entries(), eager_start=False
+                    )
+                    return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
             step_id="user_auth_confirm",
