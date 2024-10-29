@@ -91,6 +91,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.config_entry = config_entries.current_entry.get()
             # This should be deprecated once all core integrations are updated
             # to pass in the config entry explicitly.
+            if self.config_entry is None:
+                raise KeyError("No config entry passed in and no current entry")
         else:
             self.config_entry = config_entry
         self.always_update = always_update
