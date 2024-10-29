@@ -141,12 +141,13 @@ async def test_bianry_sensors_fridge_door_states(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.usefixtures("bypass_throttle")
 async def test_create_issue(
+    hass: HomeAssistant,
     appliance: Mock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
     get_appliances: MagicMock,
-    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     entity_id = "binary_sensor.washer_door"
@@ -193,7 +194,6 @@ async def test_create_issue(
 
     assert automations_with_entity(hass, entity_id)[0] == "automation.test"
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
     assert len(issue_registry.issues) == 1
     assert issue_registry.async_get_issue(
