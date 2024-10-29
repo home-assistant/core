@@ -345,7 +345,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, media_id)
 
         if announce:
-            await self._async_play_announcement(
+            await self._async_handle_play_announcement(
                 media_id,
                 use_pre_announce=kwargs[ATTR_MEDIA_EXTRA].get("use_pre_announce"),
                 announce_volume=kwargs[ATTR_MEDIA_EXTRA].get("announce_volume"),
@@ -353,7 +353,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             return
 
         # forward to our advanced play_media handler
-        await self._async_play_media_advanced(
+        await self._async_handle_play_media(
             media_id=[media_id],
             enqueue=enqueue,
             media_type=media_type,
@@ -379,11 +379,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         await self.mass.players.player_command_unsync(self.player_id)
 
     @catch_musicassistant_error
-    async def _async_play_media_advanced(
+    async def _async_handle_play_media(
         self,
         media_id: list[str],
-        artist: str | None = None,
-        album: str | None = None,
         enqueue: MediaPlayerEnqueue | QueueOption | None = None,
         radio_mode: bool | None = None,
         media_type: str | None = None,
@@ -404,9 +402,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     item = await self.mass.music.get_item(
                         MediaType(media_type), media_id_str, "library"
                     )
-                    if isinstance(item, MediaItemType | ItemMapping):
-                        if TYPE_CHECKING:
-                            assert item.uri is not None
+                    if isinstance(item, MediaItemType | ItemMapping) and item.uri:
                         media_uris.append(item.uri)
                     continue
             # try local accessible filename
@@ -435,7 +431,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @catch_musicassistant_error
-    async def _async_play_announcement(
+    async def _async_handle_play_announcement(
         self,
         url: str,
         use_pre_announce: bool | None = None,
