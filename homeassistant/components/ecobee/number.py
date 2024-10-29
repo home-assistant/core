@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -105,3 +105,44 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
         """Set new ventilator Min On Time value."""
         self.entity_description.set_fn(self.data, self.thermostat_index, int(value))
         self.update_without_throttle = True
+
+
+class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
+    """A number class, representing  The minimum outdoor temperature at which the compressor can operate.
+    
+    This applies more to air source heat pumps than geothermal. This serves as a safety feature (compressors have a minimum operating temperature) as well as providing the ability to choose fuel in a dual-fuel system (i.e. choose between electrical heat pump and fossil auxiliary heat depending on Time of Use, Solar, etc.).
+    """
+    
+    _attr_native_min_value = -25
+    _attr_native_max_value = 65
+    _attr_native_step = 5
+    _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        data: EcobeeData,
+        thermostat_index: int,
+    ) -> None:
+        """Initialize ecobee compressor min temperature."""
+        super().__init__(data, thermostat_index)
+        self.set_fn=lambda data, id, min_temp: data.ecobee.set_aux_cutover_threshold(
+            id, min_temp
+        self._attr_unique_id = f"{self.base_unique_id}_aux_cutover_threshold"
+        self.update_without_throttle = False
+
+    async def async_update(self) -> None:
+        """Get the latest state from the thermostat."""
+        if self.update_without_throttle:
+            await self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            await self.data.update()
+        self._attr_native_value = self.thermostat["settings"][aux_cutover_threshold]/10
+
+    def set_native_value(self, value: float) -> None:
+        """Set new ventilator Min On Time value."""
+        self.entity_description.set_fn(self.data, self.thermostat_index, int(value))
+        self.update_without_throttle = True
+
+
