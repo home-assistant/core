@@ -60,6 +60,7 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel])
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=None,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL_GITHUB,
         )
