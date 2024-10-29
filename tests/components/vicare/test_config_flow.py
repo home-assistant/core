@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_MAC, MODULE, setup_integration
+from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry
 
@@ -214,14 +215,23 @@ async def test_options_flow(
 ) -> None:
     """Test config flow options."""
 
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.auto.value
+    fixtures: list[Fixture] = [
+        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
+    ]
+    with (
+        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", []),
+    ):
+        await setup_integration(hass, mock_config_entry)
+    assert (
+        mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.heatpump.value
+    )
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_HEATING_TYPE: HeatingType.gas.value}
+        result["flow_id"], user_input={CONF_HEATING_TYPE: HeatingType.auto.value}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.gas.value
+    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.auto.value
