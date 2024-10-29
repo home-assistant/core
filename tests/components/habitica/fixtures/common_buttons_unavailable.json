@@ -1,0 +1,39 @@
+{
+  "data": {
+    "api_user": "test-api-user",
+    "profile": { "name": "test-user" },
+    "stats": {
+      "buffs": {
+        "str": 0,
+        "int": 0,
+        "per": 0,
+        "con": 0,
+        "stealth": 0,
+        "streaks": true,
+        "seafoam": false,
+        "shinySeed": false,
+        "snowball": false,
+        "spookySparkles": false
+      },
+      "hp": 50,
+      "mp": 50,
+      "exp": 737,
+      "gp": 0,
+      "lvl": 5,
+      "class": "wizard",
+      "maxHealth": 50,
+      "maxMP": 166,
+      "toNextLevel": 880,
+      "points": 0
+    },
+    "preferences": {
+      "sleep": false,
+      "automaticAllocation": false,
+      "disableClasses": false
+    },
+    "flags": {
+      "classSelected": true
+    },
+    "needsCron": false
+  }
+}

@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.25
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.4
+DoorBirdPy==3.0.7
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -348,7 +348,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.0.0
+aioshelly==12.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1880,7 +1880,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.5
+python-kasa[speedups]==0.7.6
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.15

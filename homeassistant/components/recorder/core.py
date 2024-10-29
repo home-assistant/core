@@ -964,6 +964,7 @@ class Recorder(threading.Thread):
                 new_schema_status = migration.SchemaValidationStatus(
                     current_version=SCHEMA_VERSION,
                     migration_needed=False,
+                    non_live_data_migration_needed=False,
                     schema_errors=set(),
                     start_version=SCHEMA_VERSION,
                 )
