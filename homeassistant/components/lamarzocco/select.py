@@ -49,8 +49,7 @@ STANDBY_MODE_HA_TO_LM = {
 }
 
 STANDBY_MODE_LM_TO_HA = {
-    SmartStandbyMode.POWER_ON: "poweron",
-    SmartStandbyMode.LAST_BREWING: "lastbrewing",
+    value: key for key, value in STANDBY_MODE_HA_TO_LM.items()
 }
 
 
