@@ -1716,10 +1716,7 @@ async def test_mqtt_subscribes_topics_on_connect(
     assert ("still/pending", 1) in subscribe_calls
 
 
-@pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [ENTRY_DEFAULT_BIRTH_MESSAGE | {mqtt.CONF_DISCOVERY: False}],
-)
+@pytest.mark.parametrize("mqtt_config_entry_data", [ENTRY_DEFAULT_BIRTH_MESSAGE])
 async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
