@@ -385,8 +385,10 @@ def set_addon_options_fixture(
     set_addon_options_side_effect: Any | None,
 ) -> AsyncMock:
     """Mock set add-on options."""
-    supervisor_client.addons.addon_options.side_effect = set_addon_options_side_effect
-    return supervisor_client.addons.addon_options
+    supervisor_client.addons.set_addon_options.side_effect = (
+        set_addon_options_side_effect
+    )
+    return supervisor_client.addons.set_addon_options
 
 
 @pytest.fixture(name="uninstall_addon")

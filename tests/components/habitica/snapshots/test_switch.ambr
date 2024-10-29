@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_valves[valve][valve.valve-entry]
+# name: test_switch[switch.test_user_rest_in_the_inn-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9,9 +9,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'valve',
+    'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'valve.valve',
+    'entity_id': 'switch.test_user_rest_in_the_inn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,29 +21,28 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
+    'original_name': 'Rest in the inn',
+    'platform': 'habitica',
     'previous_unique_id': None,
-    'supported_features': <ValveEntityFeature: 3>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-MatterValve-129-4',
+    'supported_features': 0,
+    'translation_key': <HabiticaSwitchEntity.SLEEP: 'sleep'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_sleep',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_valves[valve][valve.valve-state]
+# name: test_switch[switch.test_user_rest_in_the_inn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Valve',
-      'supported_features': <ValveEntityFeature: 3>,
+      'device_class': 'switch',
+      'friendly_name': 'test-user Rest in the inn',
     }),
     'context': <ANY>,
-    'entity_id': 'valve.valve',
+    'entity_id': 'switch.test_user_rest_in_the_inn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'off',
   })
 # ---

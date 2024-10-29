@@ -13,15 +13,13 @@ from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
+from .coordinator import DevoloDataUpdateCoordinator
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -31,7 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device = entry.runtime_data.device
-    coordinators: dict[str, DataUpdateCoordinator[list[ConnectedStationInfo]]] = (
+    coordinators: dict[str, DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]] = (
         entry.runtime_data.coordinators
     )
     registry = er.async_get(hass)
@@ -84,13 +82,14 @@ async def async_setup_entry(
 
 
 class DevoloScannerEntity(
-    CoordinatorEntity[DataUpdateCoordinator[list[ConnectedStationInfo]]], ScannerEntity
+    CoordinatorEntity[DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]],
+    ScannerEntity,
 ):
     """Representation of a devolo device tracker."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[ConnectedStationInfo]],
+        coordinator: DevoloDataUpdateCoordinator[list[ConnectedStationInfo]],
         device: Device,
         mac: str,
     ) -> None:

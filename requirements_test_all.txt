@@ -244,7 +244,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.0b0
+aiohasupervisor==0.2.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.5
@@ -836,7 +836,7 @@ gios==5.0.0
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.0.1b1
+go2rtc-client==0.0.1b2
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -916,7 +916,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habitipy==0.3.1
+habitipy==0.3.3
 
 # homeassistant.components.bluetooth
 habluetooth==3.6.0
@@ -2247,7 +2247,7 @@ thermobeacon-ble==0.7.0
 thermopro-ble==0.10.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==0.9.8
+thinqconnect==0.9.9
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3

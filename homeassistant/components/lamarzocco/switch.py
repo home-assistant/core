@@ -46,6 +46,17 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         control_fn=lambda machine, state: machine.set_steam(state),
         is_on_fn=lambda config: config.boilers[BoilerType.STEAM].enabled,
     ),
+    LaMarzoccoSwitchEntityDescription(
+        key="smart_standby_enabled",
+        translation_key="smart_standby_enabled",
+        entity_category=EntityCategory.CONFIG,
+        control_fn=lambda machine, state: machine.set_smart_standby(
+            enabled=state,
+            mode=machine.config.smart_standby.mode,
+            minutes=machine.config.smart_standby.minutes,
+        ),
+        is_on_fn=lambda config: config.smart_standby.enabled,
+    ),
 )
 
 
