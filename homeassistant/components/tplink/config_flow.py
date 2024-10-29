@@ -276,13 +276,11 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 device = await self._async_try_discover_and_update(
                     host, credentials, raise_on_progress=False, raise_on_timeout=False
+                ) or await self._async_try_connect_all(
+                    host, credentials=credentials, raise_on_progress=False
                 )
                 if not device:
-                    device = await self._async_try_connect_all(
-                        host, credentials=credentials, raise_on_progress=False
-                    )
-                    if not device:
-                        return await self.async_step_user_auth_confirm()
+                    return await self.async_step_user_auth_confirm()
             except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
             except KasaException as ex:
@@ -543,14 +541,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     credentials=credentials,
                     raise_on_progress=False,
                     raise_on_timeout=False,
+                ) or await self._async_try_connect_all(
+                    host, credentials=credentials, raise_on_progress=False
                 )
                 if not device:
-                    device = await self._async_try_connect_all(
-                        host, credentials=credentials, raise_on_progress=False
-                    )
-                    if not device:
-                        errors["base"] = "cannot_connect"
-                        placeholders["error"] = "try_connect_all failed"
+                    errors["base"] = "cannot_connect"
+                    placeholders["error"] = "try_connect_all failed"
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
