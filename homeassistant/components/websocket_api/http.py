@@ -11,7 +11,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import WSMsgType, web
-from aiohttp.http_websocket import WebSocketWriter
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -41,6 +40,44 @@ if TYPE_CHECKING:
 
 
 _WS_LOGGER: Final = logging.getLogger(f"{__name__}.connection")
+
+
+#
+#
+# Our websocket implementation is backed by a deque
+#
+# As back-pressure builds, the queue will back up and use more memory
+# until we disconnect the client when the queue size reaches
+# MAX_PENDING_MSG. When we are generating a high volume of websocket messages,
+# we hit a bottleneck in aiohttp where it will wait for
+# the buffer to drain before sending the next message and messages
+# start backing up in the queue.
+#
+# https://github.com/aio-libs/aiohttp/issues/1367 added drains
+# to the websocket writer to handle malicious clients and network issues.
+# The drain causes multiple problems for us since the buffer cannot be
+# drained fast enough when we deliver a high volume or large messages:
+#
+# - We end up disconnecting the client. The client will then reconnect,
+# and the cycle repeats itself, which results in a significant amount of
+# CPU usage.
+#
+# - Messages latency increases because messages cannot be moved into
+# the TCP buffer because it is blocked waiting for the drain to happen because
+# of the low default limit of 16KiB. By increasing the limit, we instead
+# rely on the underlying TCP buffer and stack to deliver the messages which
+# can typically happen much faster.
+#
+# After the auth phase is completed, and we are not concerned about
+# the user being a malicious client, we set the limit to force a drain
+# to 1MiB. 1MiB is the maximum expected size of the serialized entity
+# registry, which is the largest message we usually send.
+#
+# https://github.com/aio-libs/aiohttp/commit/b3c80ee3f7d5d8f0b8bc27afe52e4d46621eaf99
+# added a way to set the limit, but there is no way to actually
+# reach the code to set the limit, so we have to set it directly.
+#
+WEBSOCKET_WRITER_LIMIT = 2**20
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -89,7 +126,9 @@ class WebSocketHandler:
         self._hass = hass
         self._loop = hass.loop
         self._request: web.Request = request
-        self._wsock = web.WebSocketResponse(heartbeat=55)
+        self._wsock = web.WebSocketResponse(
+            heartbeat=55, writer_limit=WEBSOCKET_WRITER_LIMIT
+        )
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
@@ -328,13 +367,7 @@ class WebSocketHandler:
         if TYPE_CHECKING:
             assert writer is not None
 
-        # aiohttp 3.11.0 changed the method name from _send_frame to send_frame
-        if hasattr(writer, "send_frame"):
-            send_frame = writer.send_frame  # pragma: no cover
-        else:
-            send_frame = writer._send_frame  # noqa: SLF001
-
-        send_bytes_text = partial(send_frame, opcode=WSMsgType.TEXT)
+        send_bytes_text = partial(writer.send_frame, opcode=WSMsgType.TEXT)
         auth = AuthPhase(
             logger, hass, self._send_message, self._cancel, request, send_bytes_text
         )
@@ -343,7 +376,6 @@ class WebSocketHandler:
 
         try:
             connection = await self._async_handle_auth_phase(auth, send_bytes_text)
-            self._async_increase_writer_limit(writer)
             await self._async_websocket_command_phase(connection, send_bytes_text)
         except asyncio.CancelledError:
             logger.debug("%s: Connection cancelled", self.description)
@@ -413,45 +445,6 @@ class WebSocketHandler:
 
         self._authenticated = True
         return connection
-
-    @callback
-    def _async_increase_writer_limit(self, writer: WebSocketWriter) -> None:
-        #
-        #
-        # Our websocket implementation is backed by a deque
-        #
-        # As back-pressure builds, the queue will back up and use more memory
-        # until we disconnect the client when the queue size reaches
-        # MAX_PENDING_MSG. When we are generating a high volume of websocket messages,
-        # we hit a bottleneck in aiohttp where it will wait for
-        # the buffer to drain before sending the next message and messages
-        # start backing up in the queue.
-        #
-        # https://github.com/aio-libs/aiohttp/issues/1367 added drains
-        # to the websocket writer to handle malicious clients and network issues.
-        # The drain causes multiple problems for us since the buffer cannot be
-        # drained fast enough when we deliver a high volume or large messages:
-        #
-        # - We end up disconnecting the client. The client will then reconnect,
-        # and the cycle repeats itself, which results in a significant amount of
-        # CPU usage.
-        #
-        # - Messages latency increases because messages cannot be moved into
-        # the TCP buffer because it is blocked waiting for the drain to happen because
-        # of the low default limit of 16KiB. By increasing the limit, we instead
-        # rely on the underlying TCP buffer and stack to deliver the messages which
-        # can typically happen much faster.
-        #
-        # After the auth phase is completed, and we are not concerned about
-        # the user being a malicious client, we set the limit to force a drain
-        # to 1MiB. 1MiB is the maximum expected size of the serialized entity
-        # registry, which is the largest message we usually send.
-        #
-        # https://github.com/aio-libs/aiohttp/commit/b3c80ee3f7d5d8f0b8bc27afe52e4d46621eaf99
-        # added a way to set the limit, but there is no way to actually
-        # reach the code to set the limit, so we have to set it directly.
-        #
-        writer._limit = 2**20  # noqa: SLF001
 
     async def _async_websocket_command_phase(
         self,
