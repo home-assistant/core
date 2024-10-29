@@ -22,10 +22,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, load_fixture
 
-VALID_CONFIG = {
-    CONF_URL: "http://localhost:8095",
-}
-
 SERVER_INFO = {
     "server_id": "1234",
     "base_url": "http://localhost:8095",
