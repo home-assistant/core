@@ -40,6 +40,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MusicAssistantConfigEntry
@@ -242,12 +243,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # e.g. by holding a lookup dict in memory on integration level
         group_members_entity_ids: list[str] = []
         if player.group_childs:
-            for state in self.hass.states.async_all("media_player"):
-                if not (mass_player_id := state.attributes.get("mass_player_id")):
-                    continue
-                if mass_player_id not in player.group_childs:
-                    continue
-                group_members_entity_ids.append(state.entity_id)
+            for child in player.group_childs:
+                entity_registry = er.async_get(self.hass)
+                child_player = entity_registry.async_get(child)
+                if child_player is not None:
+                    if child_player.unique_id not in group_members_entity_ids:
+                        continue
+                    group_members_entity_ids.append(child_player.unique_id)
         self._attr_group_members = group_members_entity_ids
 
         self._attr_volume_level = (
