@@ -226,9 +226,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_is_volume_muted = player.volume_muted
         self._update_media_attributes(player, active_queue)
         self._update_media_image_url(player, active_queue)
-        # some features can dynamically change
-        if PlayerFeature.SYNC in player.supported_features:
-            self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
 
     @catch_musicassistant_error
     async def async_media_play(self) -> None:
