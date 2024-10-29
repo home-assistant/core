@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import MachineModel, PrebrewMode, SteamLevel
+from lmcloud.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
 from lmcloud.exceptions import RequestNotSuccessful
 from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoMachineConfig
@@ -42,6 +42,13 @@ PREBREW_MODE_LM_TO_HA = {
     PrebrewMode.PREBREW: "prebrew",
     PrebrewMode.PREINFUSION: "preinfusion",
 }
+
+STANDBY_MODE_HA_TO_LM = {
+    "power_on": SmartStandbyMode.POWER_ON,
+    "last_brewing": SmartStandbyMode.LAST_BREWING,
+}
+
+STANDBY_MODE_LM_TO_HA = {value: key for key, value in STANDBY_MODE_HA_TO_LM.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,6 +89,20 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             MachineModel.LINEA_MICRA,
             MachineModel.LINEA_MINI,
         ),
+    ),
+    LaMarzoccoSelectEntityDescription(
+        key="smart_standby_mode",
+        translation_key="smart_standby_mode",
+        entity_category=EntityCategory.CONFIG,
+        options=["power_on", "last_brewing"],
+        select_option_fn=lambda machine, option: machine.set_smart_standby(
+            enabled=machine.config.smart_standby.enabled,
+            mode=STANDBY_MODE_HA_TO_LM[option],
+            minutes=machine.config.smart_standby.minutes,
+        ),
+        current_option_fn=lambda config: STANDBY_MODE_LM_TO_HA[
+            config.smart_standby.mode
+        ],
     ),
 )
 

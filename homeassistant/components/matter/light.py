@@ -89,6 +89,7 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color = False
     _supports_color_temperature = False
     _transitions_disabled = False
+    _platform_translation_key = "light"
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
@@ -443,7 +444,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterLight", translation_key="light"
+            key="MatterLight",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
@@ -470,7 +472,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterHSColorLightFallback", translation_key="light"
+            key="MatterHSColorLightFallback",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -490,7 +493,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterXYColorLightFallback", translation_key="light"
+            key="MatterXYColorLightFallback",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -510,7 +514,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterColorTemperatureLightFallback", translation_key="light"
+            key="MatterColorTemperatureLightFallback",
+            name=None,
         ),
         entity_class=MatterLight,
         required_attributes=(
