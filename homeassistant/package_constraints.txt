@@ -3,7 +3,7 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohasupervisor==0.2.0b0
+aiohasupervisor==0.2.0
 aiohttp-fast-zlib==0.1.1
 aiohttp==3.11.0b0
 aiohttp_cors==0.7.0
@@ -26,11 +26,11 @@ ciso8601==2.3.1
 cryptography==43.0.1
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
-go2rtc-client==0.0.1b1
+go2rtc-client==0.0.1b2
 ha-av==10.1.1
 ha-ffmpeg==3.2.1
 habluetooth==3.6.0
-hass-nabucasa==0.81.1
+hass-nabucasa==0.83.0
 hassil==1.7.4
 home-assistant-bluetooth==1.13.0
 home-assistant-frontend==20241002.4
@@ -61,11 +61,11 @@ SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
-uv==0.4.22
+uv==0.4.28
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-webrtc-models==0.0.0b2
+webrtc-models==0.1.0
 yarl==1.17.0
 zeroconf==0.136.0
 
@@ -141,7 +141,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.28.2
+protobuf==5.28.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

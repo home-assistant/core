@@ -34,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Update"
 
-CONF_ENTITY_PICTURE = "entity_picture"
 CONF_LATEST_VERSION_TEMPLATE = "latest_version_template"
 CONF_LATEST_VERSION_TOPIC = "latest_version_topic"
 CONF_PAYLOAD_INSTALL = "payload_install"
@@ -47,7 +46,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),

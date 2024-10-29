@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.25
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.4
+DoorBirdPy==3.0.7
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -259,7 +259,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.0b0
+aiohasupervisor==0.2.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.5
@@ -366,7 +366,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.0.0
+aioshelly==12.0.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -986,7 +986,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.0.1b1
+go2rtc-client==0.0.1b2
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1078,13 +1078,13 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habitipy==0.3.1
+habitipy==0.3.3
 
 # homeassistant.components.bluetooth
 habluetooth==3.6.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.81.1
+hass-nabucasa==0.83.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -2353,7 +2353,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.5
+python-kasa[speedups]==0.7.6
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.15
@@ -2825,7 +2825,7 @@ thermopro-ble==0.10.0
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==0.9.8
+thinqconnect==0.9.9
 
 # homeassistant.components.tikteck
 tikteck==0.4

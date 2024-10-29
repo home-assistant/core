@@ -1102,7 +1102,7 @@ jobs:
           ./script/check_dirty
 
   pytest-postgres:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1142,7 +1142,9 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
-            libturbojpeg \
+            libturbojpeg
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get -y install \
             postgresql-server-dev-14
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
