@@ -213,8 +213,6 @@ async def test_async_register_webrtc_provider_twice(
     register_test_provider: TestProvider,
 ) -> None:
     """Test registering a WebRTC provider twice should raise."""
-    await async_setup_component(hass, "camera", {})
-
     with pytest.raises(ValueError, match="Provider already registered"):
         async_register_webrtc_provider(hass, register_test_provider)
 
