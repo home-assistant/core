@@ -1,15 +1,18 @@
 """Cosntants for the Sense integration tests."""
 
+MONITOR_ID = "456"
+
 MOCK_CONFIG = {
     "timeout": 6,
     "email": "test-email",
     "password": "test-password",
     "access_token": "ABC",
     "user_id": "123",
-    "monitor_id": "456",
+    "monitor_id": MONITOR_ID,
     "device_id": "789",
     "refresh_token": "XYZ",
 }
+
 
 DEVICE_1_NAME = "Car"
 DEVICE_1_ID = "abc123"

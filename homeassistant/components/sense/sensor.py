@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SenseConfigEntry
 from .const import (
-    ACTIVE_NAME,
     ACTIVE_TYPE,
     CONSUMPTION_ID,
     CONSUMPTION_NAME,
@@ -130,12 +129,12 @@ class SensePowerSensor(SenseEntity, SensorEntity):
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(
+            gateway,
             realtime_coordinator,
             sense_monitor_id,
             f"{ACTIVE_TYPE}-{variant_id}",
-            gateway,
         )
-        self._attr_name = f"{ACTIVE_NAME} {variant_name}"
+        self._attr_name = variant_name
         self._variant_id = variant_id
 
     @property
@@ -164,7 +163,7 @@ class SenseVoltageSensor(SenseEntity, SensorEntity):
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(
-            realtime_coordinator, sense_monitor_id, f"L{index + 1}", gateway
+            gateway, realtime_coordinator, sense_monitor_id, f"L{index + 1}"
         )
         self._attr_name = f"L{index + 1} Voltage"
         self._voltage_index = index
@@ -189,10 +188,10 @@ class SenseTrendsSensor(SenseEntity, SensorEntity):
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(
+            gateway,
             trends_coordinator,
             sense_monitor_id,
             f"{TRENDS_SENSOR_TYPES[scale].lower()}-{variant_id}",
-            gateway,
         )
         self._attr_name = f"{TRENDS_SENSOR_TYPES[scale]} {variant_name}"
         self._scale = scale
@@ -236,11 +235,7 @@ class SenseDevicePowerSensor(SenseDeviceEntity, SensorEntity):
     ) -> None:
         """Initialize the Sense device sensor."""
         super().__init__(
-            coordinator,
-            sense_monitor_id,
-            f"{device.id}-{CONSUMPTION_ID}",
-            CONSUMPTION_NAME,
-            device,
+            device, coordinator, sense_monitor_id, f"{device.id}-{CONSUMPTION_ID}"
         )
 
     @property

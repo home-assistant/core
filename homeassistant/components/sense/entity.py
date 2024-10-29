@@ -20,13 +20,14 @@ class SenseEntity(CoordinatorEntity[SenseCoordinator]):
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
+        gateway: ASyncSenseable,
         coordinator: SenseCoordinator,
         sense_monitor_id: str,
         unique_id: str,
-        gateway: ASyncSenseable,
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(coordinator)
@@ -50,17 +51,15 @@ class SenseDeviceEntity(CoordinatorEntity[SenseCoordinator]):
 
     def __init__(
         self,
+        device: SenseDevice,
         coordinator: SenseCoordinator,
         sense_monitor_id: str,
         unique_id: str,
-        name: str,
-        device: SenseDevice,
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{sense_monitor_id}-{unique_id}"
         self._device = device
-        self._attr_name = name
         self._attr_icon = sense_to_mdi(device.icon)
         self._attr_device_info = DeviceInfo(
             name=device.name,

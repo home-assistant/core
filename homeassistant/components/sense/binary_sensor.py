@@ -30,7 +30,7 @@ async def async_setup_entry(
     realtime_coordinator = config_entry.runtime_data.rt
 
     devices = [
-        SenseBinarySensor(device, sense_monitor_id, realtime_coordinator)
+        SenseBinarySensor(device, realtime_coordinator, sense_monitor_id)
         for device in config_entry.runtime_data.data.devices
     ]
 
@@ -47,11 +47,11 @@ class SenseBinarySensor(SenseDeviceEntity, BinarySensorEntity):
     def __init__(
         self,
         device: SenseDevice,
-        sense_monitor_id: str,
         coordinator: SenseRealtimeCoordinator,
+        sense_monitor_id: str,
     ) -> None:
         """Initialize the Sense binary sensor."""
-        super().__init__(coordinator, sense_monitor_id, device.id, "", device)
+        super().__init__(device, coordinator, sense_monitor_id, device.id)
         self._id = device.id
 
     @property
