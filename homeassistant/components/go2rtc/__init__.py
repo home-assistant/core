@@ -127,12 +127,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client = Go2RtcRestClient(async_get_clientsession(hass), url)
         await client.streams.list()
     except Go2RtcClientError as err:
-        _LOGGER.info("Could not connect to go2rtc instance on %s, will retry", url)
         if isinstance(err.__cause__, _RETRYABLE_ERRORS):
+            _LOGGER.info("Could not connect to go2rtc instance on %s, will retry", url)
             raise ConfigEntryNotReady from err
+        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
-    except Exception:  # noqa: BLE001
-        _LOGGER.warning("Could not connect to go2rtc instance on %s", url)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
 
     provider = WebRTCProvider(hass, url)
