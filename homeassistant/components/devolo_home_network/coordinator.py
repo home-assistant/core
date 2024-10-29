@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from logging import Logger
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -17,6 +18,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         hass: HomeAssistant,
         logger: Logger,
         *,
+        config_entry: ConfigEntry,
         name: str,
         semaphore: Semaphore,
         update_interval: timedelta,
@@ -26,6 +28,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass,
             logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_interval,
             update_method=update_method,
