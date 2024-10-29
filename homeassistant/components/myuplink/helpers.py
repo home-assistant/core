@@ -50,6 +50,8 @@ def skip_entity(model: str, device_point: DevicePoint) -> bool:
             return False
         return True
     if "F730" in model:
+        # Entity names containing weekdays are used for advanced scheduling in the
+        # heat pump and should not be exposed in the integration
         if any(
             d in device_point.parameter_name.lower()
             for d in (
