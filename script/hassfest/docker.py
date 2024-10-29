@@ -111,7 +111,7 @@ LABEL "com.github.actions.icon"="terminal"
 LABEL "com.github.actions.color"="gray-dark"
 """
 
-_GO2RTC_VERSION = "1.9.4"
+_GO2RTC_VERSION = "1.9.5"
 
 
 def _get_package_versions(file: Path, packages: set[str]) -> dict[str, str]:
