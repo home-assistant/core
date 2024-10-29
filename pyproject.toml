@@ -620,6 +620,17 @@ filterwarnings = [
     # https://github.com/ssaenger/pyws66i/blob/v1.1/pyws66i/__init__.py#L2
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pyws66i",
 
+    # -- New in Python 3.13
+    # https://github.com/kurtmckee/feedparser/pull/389 - >6.0.11
+    # https://github.com/kurtmckee/feedparser/issues/481
+    "ignore:'count' is passed as positional argument:DeprecationWarning:feedparser.html",
+    # https://github.com/youknowone/python-deadlib - Backports for aifc, telnetlib
+    "ignore:aifc was removed in Python 3.13.*'standard-aifc':DeprecationWarning:speech_recognition",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:homeassistant.components.hddtemp.sensor",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:ndms2_client.connection",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:plumlightpad.lightpad",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:pyws66i",
+
     # -- unmaintained projects, last release about 2+ years
     # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:agent.a",
