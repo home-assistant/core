@@ -188,9 +188,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Return additional state attributes."""
         return {
             ATTR_MASS_PLAYER_TYPE: self.player.type.value,
-            ATTR_ACTIVE_QUEUE: self.active_queue.queue_id
-            if self.active_queue
-            else None,
+            ATTR_ACTIVE_QUEUE: (
+                self.active_queue.queue_id if self.active_queue else None
+            ),
         }
 
     async def async_on_update(self) -> None:
