@@ -106,15 +106,13 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
                     else:
-                        self._abort_if_unique_id_configured(updates=user_input)
+                        self._abort_if_unique_id_configured()
 
                     return await self.async_step_configure_receiver()
 
         suggested_values = user_input
-        if suggested_values is None:
-            suggested_values = {}
-            if entry_data is not None:
-                suggested_values[CONF_HOST] = entry_data[CONF_HOST]
+        if suggested_values is None and entry_data is not None:
+            suggested_values = {CONF_HOST: entry_data[CONF_HOST]}
 
         return self.async_show_form(
             step_id="manual",
@@ -233,20 +231,19 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         suggested_values = user_input
         if suggested_values is None:
-            suggested_values = {}
             if entry_options is None:
-                suggested_values[OPTION_VOLUME_RESOLUTION] = (
-                    OPTION_VOLUME_RESOLUTION_DEFAULT
-                )
-                suggested_values[OPTION_INPUT_SOURCES] = []
+                suggested_values = {
+                    OPTION_VOLUME_RESOLUTION: OPTION_VOLUME_RESOLUTION_DEFAULT,
+                    OPTION_INPUT_SOURCES: [],
+                }
             else:
-                suggested_values[OPTION_VOLUME_RESOLUTION] = entry_options[
-                    OPTION_VOLUME_RESOLUTION
-                ]
-                suggested_values[OPTION_INPUT_SOURCES] = [
-                    InputSource(input_source).value_meaning
-                    for input_source in entry_options[OPTION_INPUT_SOURCES]
-                ]
+                suggested_values = {
+                    OPTION_VOLUME_RESOLUTION: entry_options[OPTION_VOLUME_RESOLUTION],
+                    OPTION_INPUT_SOURCES: [
+                        InputSource(input_source).value_meaning
+                        for input_source in entry_options[OPTION_INPUT_SOURCES]
+                    ],
+                }
 
         return self.async_show_form(
             step_id="configure_receiver",
