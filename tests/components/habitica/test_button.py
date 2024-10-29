@@ -258,27 +258,48 @@ async def test_button_press_exceptions(
 
 
 @pytest.mark.parametrize(
-    ("fixture", "entity_id"),
+    ("fixture", "entity_ids"),
     [
-        ("common_buttons_unavailable", "button.test_user_allocate_all_stat_points"),
-        ("common_buttons_unavailable", "button.test_user_revive_from_death"),
-        ("common_buttons_unavailable", "button.test_user_buy_a_health_potion"),
-        ("common_buttons_unavailable", "button.test_user_start_my_day"),
-        # not enough mana
-        ("wizard_skills_unavailable", "button.test_user_chilling_frost"),
-        # streaks buff active
-        ("wizard_frost_unavailable", "button.test_user_chilling_frost"),
-        ("wizard_skills_unavailable", "button.test_user_earthquake"),
-        ("wizard_skills_unavailable", "button.test_user_ethereal_surge"),
-        ("rogue_skills_unavailable", "button.test_user_tools_of_the_trade"),
-        ("rogue_skills_unavailable", "button.test_user_stealth"),
-        ("rogue_stealth_unavailable", "button.test_user_stealth"),
-        ("warrior_skills_unavailable", "button.test_user_defensive_stance"),
-        ("warrior_skills_unavailable", "button.test_user_intimidating_gaze"),
-        ("healer_skills_unavailable", "button.test_user_healing_light"),
-        ("healer_skills_unavailable", "button.test_user_protective_aura"),
-        ("healer_skills_unavailable", "button.test_user_searing_brightness"),
-        ("healer_skills_unavailable", "button.test_user_blessing"),
+        (
+            "common_buttons_unavailable",
+            [
+                "button.test_user_allocate_all_stat_points",
+                "button.test_user_revive_from_death",
+                "button.test_user_buy_a_health_potion",
+                "button.test_user_start_my_day",
+            ],
+        ),
+        (
+            "wizard_skills_unavailable",
+            [
+                "button.test_user_chilling_frost",
+                "button.test_user_earthquake",
+                "button.test_user_ethereal_surge",
+            ],
+        ),
+        ("wizard_frost_unavailable", ["button.test_user_chilling_frost"]),
+        (
+            "rogue_skills_unavailable",
+            ["button.test_user_tools_of_the_trade", "button.test_user_stealth"],
+        ),
+        ("rogue_stealth_unavailable", ["button.test_user_stealth"]),
+        (
+            "warrior_skills_unavailable",
+            [
+                "button.test_user_defensive_stance",
+                "button.test_user_intimidating_gaze",
+                "button.test_user_valorous_presence",
+            ],
+        ),
+        (
+            "healer_skills_unavailable",
+            [
+                "button.test_user_healing_light",
+                "button.test_user_protective_aura",
+                "button.test_user_searing_brightness",
+                "button.test_user_blessing",
+            ],
+        ),
     ],
 )
 async def test_button_unavailable(
@@ -286,7 +307,7 @@ async def test_button_unavailable(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     fixture: str,
-    entity_id: str,
+    entity_ids: list[str],
 ) -> None:
     """Test buttons are unavailable if conditions are not met."""
 
@@ -306,5 +327,6 @@ async def test_button_unavailable(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNAVAILABLE
+    for entity_id in entity_ids:
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
