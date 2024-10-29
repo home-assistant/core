@@ -24,6 +24,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import vicare_login
 from .const import (
@@ -51,8 +52,12 @@ USER_SCHEMA = REAUTH_SCHEMA.extend(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
-            [e.value for e in HeatingType]
+        vol.Required(
+            CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=[e.value for e in HeatingType], multiple=False, sort=True
+            ),
         ),
     }
 )
@@ -164,8 +169,6 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA,
-                user_input
-                or dict(self.config_entry.options)
+                OPTIONS_SCHEMA, user_input or dict(self.config_entry.options)
             ),
         )
