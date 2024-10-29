@@ -249,7 +249,7 @@ async def test_configure_empty_source_list(hass: HomeAssistant) -> None:
 
         configure_result = await hass.config_entries.flow.async_configure(
             select_result["flow_id"],
-            user_input={"input_sources": []},
+            user_input={"volume_resolution": 200, "input_sources": []},
         )
 
         assert configure_result["errors"] == {
@@ -282,13 +282,11 @@ async def test_configure_no_resolution(hass: HomeAssistant) -> None:
             user_input={CONF_HOST: "sample-host-name"},
         )
 
-        configure_result = await hass.config_entries.flow.async_configure(
-            select_result["flow_id"],
-            user_input={"input_sources": ["TV"]},
-        )
-
-        assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-        assert configure_result["options"]["volume_resolution"] == 50
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
+                select_result["flow_id"],
+                user_input={"input_sources": ["TV"]},
+            )
 
 
 async def test_configure_resolution_set(hass: HomeAssistant) -> None:
@@ -376,7 +374,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         return_value=receiver_info,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"], user_input={"host": receiver_info.host}
         )
         await hass.async_block_till_done()
 
@@ -413,7 +411,7 @@ async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
         return_value=receiver_info_2,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+            result["flow_id"], user_input={"host": receiver_info_2.host}
         )
         await hass.async_block_till_done()
 
