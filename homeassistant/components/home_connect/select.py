@@ -12,7 +12,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from .api import ConfigEntryAuth, HomeConnectDevice
-from .const import APPLIANCES_WITH_PROGRAMS, ATTR_VALUE, BSH_SELECTED_PROGRAM, DOMAIN
+from .const import (
+    APPLIANCES_WITH_PROGRAMS,
+    ATTR_VALUE,
+    BSH_ACTIVE_PROGRAM,
+    BSH_SELECTED_PROGRAM,
+    DOMAIN,
+)
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,8 +40,11 @@ async def async_setup_entry(
                 with contextlib.suppress(HomeConnectError):
                     programs = device.appliance.get_programs_available()
                     if programs:
-                        entities.append(
-                            HomeConnectProgramSelectEntity(device, programs)
+                        entities.extend(
+                            HomeConnectProgramSelectEntity(
+                                device, programs, start_on_select
+                            )
+                            for start_on_select in (True, False)
                         )
         return entities
 
@@ -45,19 +54,24 @@ async def async_setup_entry(
 class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     """Select class for Home Connect programs."""
 
-    def __init__(self, device: HomeConnectDevice, programs: list[str]) -> None:
+    def __init__(
+        self, device: HomeConnectDevice, programs: list[str], start_on_select: bool
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
             device,
             SelectEntityDescription(
-                key=BSH_SELECTED_PROGRAM,
-                translation_key="program",
+                key=BSH_ACTIVE_PROGRAM if start_on_select else BSH_SELECTED_PROGRAM,
+                translation_key="active_program"
+                if start_on_select
+                else "selected_program",
             ),
         )
         self.options_map = {
             self.format_program(program): program for program in programs
         }
         self._attr_options = [key for key in self.options_map if key is not None]
+        self.start_on_select = start_on_select
 
     async def async_update(self) -> None:
         """Update the program selection status."""
@@ -69,13 +83,27 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
         bsh_key = self.options_map[option]
-        _LOGGER.debug("Tried to select program: %s", bsh_key)
+        _LOGGER.debug(
+            "Tried to start program: %s"
+            if self.start_on_select
+            else "Tried to select program: %s",
+            bsh_key,
+        )
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.select_program, bsh_key
+                self.device.appliance.start_program
+                if self.start_on_select
+                else self.device.appliance.select_program,
+                bsh_key,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to select program %s: %s", bsh_key, err)
+            _LOGGER.error(
+                "Error while trying to select program %s: %s"
+                if self.start_on_select
+                else "Error while trying to start program %s: %s",
+                bsh_key,
+                err,
+            )
         self.async_entity_update()
 
     def format_program(self, program: str | None) -> str | None:
