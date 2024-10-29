@@ -89,7 +89,7 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{node_id}-{container.id}-{description.key}"
         self.container = container
-        self._attr_translation_placeholders = {"container": container.names[0]}
+        self._attr_translation_placeholders = {"container": container.name}
 
     @property
     def native_value(self) -> StateType | datetime:
