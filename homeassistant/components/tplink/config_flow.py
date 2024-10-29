@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, Self
 
 from kasa import (
     AuthenticationError,
@@ -67,7 +67,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = CONF_CONFIG_ENTRY_MINOR_VERSION
-    reauth_entry: ConfigEntry | None = None
+
+    host: str | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -156,10 +157,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return result
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
-        self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self.host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         credentials = await get_credentials(self.hass)
         try:
             if device:
@@ -175,6 +175,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow.host == self.host
 
     async def async_step_discovery_auth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -263,7 +267,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             self._async_abort_entries_match({CONF_HOST: host})
-            self.context[CONF_HOST] = host
+            self.host = host
             credentials = await get_credentials(self.hass)
             try:
                 device = await self._async_try_discover_and_update(
@@ -289,8 +293,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that auth is required."""
         errors: dict[str, str] = {}
-        host = self.context[CONF_HOST]
-        placeholders: dict[str, str] = {CONF_HOST: host}
+        if TYPE_CHECKING:
+            # self.host is set by async_step_user and async_step_pick_device
+            assert self.host is not None
+        placeholders: dict[str, str] = {CONF_HOST: self.host}
 
         assert self._discovered_device is not None
         if user_input:
@@ -329,9 +335,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
             self._discovered_device = self._discovered_devices[mac]
-            host = self._discovered_device.host
-
-            self.context[CONF_HOST] = host
+            self.host = self._discovered_device.host
             credentials = await get_credentials(self.hass)
 
             try:
@@ -367,13 +371,13 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reload any in progress config flow that now have credentials."""
         _config_entries = self.hass.config_entries
 
-        if reauth_entry := self.reauth_entry:
-            await _config_entries.async_reload(reauth_entry.entry_id)
+        if self.source == SOURCE_REAUTH:
+            await _config_entries.async_reload(self._get_reauth_entry().entry_id)
 
         for flow in _config_entries.flow.async_progress_by_handler(
             DOMAIN, include_uninitialized=True
         ):
-            context: dict[str, Any] = flow["context"]
+            context = flow["context"]
             if context.get("source") != SOURCE_REAUTH:
                 continue
             entry_id: str = context["entry_id"]
@@ -468,9 +472,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Start the reauthentication flow if the device needs updated credentials."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -479,8 +480,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
-        reauth_entry = self.reauth_entry
-        assert reauth_entry is not None
+        reauth_entry = self._get_reauth_entry()
         entry_data = reauth_entry.data
         host = entry_data[CONF_HOST]
 

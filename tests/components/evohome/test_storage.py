@@ -55,20 +55,17 @@ ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(h
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
 
+_TEST_STORAGE_BASE: Final[_TokenStoreT] = {
+    SZ_USERNAME: USERNAME_SAME,
+    SZ_REFRESH_TOKEN: REFRESH_TOKEN,
+    SZ_ACCESS_TOKEN: ACCESS_TOKEN,
+    SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
+}
+
 TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
-    "sans_session_id": {
-        SZ_USERNAME: USERNAME_SAME,
-        SZ_REFRESH_TOKEN: REFRESH_TOKEN,
-        SZ_ACCESS_TOKEN: ACCESS_TOKEN,
-        SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
-    },
-    "with_session_id": {
-        SZ_USERNAME: USERNAME_SAME,
-        SZ_REFRESH_TOKEN: REFRESH_TOKEN,
-        SZ_ACCESS_TOKEN: ACCESS_TOKEN,
-        SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
-        SZ_USER_DATA: {"sessionId": SESSION_ID},
-    },
+    "sans_session_id": _TEST_STORAGE_BASE,
+    "null_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: None},  # type: ignore[dict-item]
+    "with_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: {"sessionId": SESSION_ID}},
 }
 
 TEST_STORAGE_NULL: Final[dict[str, _EmptyStoreT | None]] = {
@@ -96,12 +93,11 @@ async def test_auth_tokens_null(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_NULL[idx]}
 
-    mock_client = await setup_evohome(hass, config, install=install)
-
-    # Confirm client was instantiated without tokens, as cache was empty...
-    assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
-    assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
-    assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client.call_args.kwarg
+    async for mock_client in setup_evohome(hass, config, install=install):
+        # Confirm client was instantiated without tokens, as cache was empty...
+        assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
+        assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
+        assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client.call_args.kwarg
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
@@ -128,14 +124,13 @@ async def test_auth_tokens_same(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
-    mock_client = await setup_evohome(hass, config, install="minimal")
-
-    # Confirm client was instantiated with the cached tokens...
-    assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
-    assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN_EXPIRES] == dt_aware_to_naive(
-        ACCESS_TOKEN_EXP_DTM
-    )
+    async for mock_client in setup_evohome(hass, config, install=install):
+        # Confirm client was instantiated with the cached tokens...
+        assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
+        assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
+        assert mock_client.call_args.kwargs[
+            SZ_ACCESS_TOKEN_EXPIRES
+        ] == dt_aware_to_naive(ACCESS_TOKEN_EXP_DTM)
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
@@ -165,14 +160,13 @@ async def test_auth_tokens_past(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
-    mock_client = await setup_evohome(hass, config, install="minimal")
-
-    # Confirm client was instantiated with the cached tokens...
-    assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
-    assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN_EXPIRES] == dt_aware_to_naive(
-        dt_dtm
-    )
+    async for mock_client in setup_evohome(hass, config, install=install):
+        # Confirm client was instantiated with the cached tokens...
+        assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
+        assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
+        assert mock_client.call_args.kwargs[
+            SZ_ACCESS_TOKEN_EXPIRES
+        ] == dt_aware_to_naive(dt_dtm)
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
@@ -199,13 +193,13 @@ async def test_auth_tokens_diff(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
-    mock_client = await setup_evohome(
-        hass, config | {CONF_USERNAME: USERNAME_DIFF}, install="minimal"
-    )
-    # Confirm client was instantiated without tokens, as username was different...
-    assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
-    assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
-    assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client.call_args.kwarg
+    async for mock_client in setup_evohome(
+        hass, config | {CONF_USERNAME: USERNAME_DIFF}, install=install
+    ):
+        # Confirm client was instantiated without tokens, as username was different...
+        assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
+        assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
+        assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client.call_args.kwarg
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]

@@ -7,7 +7,11 @@ from typing import cast
 
 import pypck
 
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN as DOMAIN_SENSOR,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DOMAIN,
@@ -31,6 +35,17 @@ from .const import (
 )
 from .entity import LcnEntity
 from .helpers import InputType
+
+DEVICE_CLASS_MAPPING = {
+    pypck.lcn_defs.VarUnit.CELSIUS: SensorDeviceClass.TEMPERATURE,
+    pypck.lcn_defs.VarUnit.KELVIN: SensorDeviceClass.TEMPERATURE,
+    pypck.lcn_defs.VarUnit.FAHRENHEIT: SensorDeviceClass.TEMPERATURE,
+    pypck.lcn_defs.VarUnit.LUX_T: SensorDeviceClass.ILLUMINANCE,
+    pypck.lcn_defs.VarUnit.LUX_I: SensorDeviceClass.ILLUMINANCE,
+    pypck.lcn_defs.VarUnit.METERPERSECOND: SensorDeviceClass.SPEED,
+    pypck.lcn_defs.VarUnit.VOLT: SensorDeviceClass.VOLTAGE,
+    pypck.lcn_defs.VarUnit.AMPERE: SensorDeviceClass.CURRENT,
+}
 
 
 def add_lcn_entities(
@@ -87,7 +102,9 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         self.unit = pypck.lcn_defs.VarUnit.parse(
             config[CONF_DOMAIN_DATA][CONF_UNIT_OF_MEASUREMENT]
         )
+
         self._attr_native_unit_of_measurement = cast(str, self.unit.value)
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit, None)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

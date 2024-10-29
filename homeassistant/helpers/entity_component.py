@@ -65,10 +65,13 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
 
 
 class EntityComponent(Generic[_EntityT]):
-    """The EntityComponent manages platforms that manages entities.
+    """The EntityComponent manages platforms that manage entities.
+
+    An example of an entity component is 'light', which manages platforms such
+    as 'hue.light'.
 
     This class has the following responsibilities:
-     - Process the configuration and set up a platform based component.
+     - Process the configuration and set up a platform based component, for example light.
      - Manage the platforms and their entities.
      - Help extract the entities from a service call.
      - Listen for discovery events for platforms related to the domain.

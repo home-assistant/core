@@ -127,7 +127,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
 @patch("homeassistant.components.homeassistant._LOGGER.error")
-@patch("homeassistant.config.async_process_ha_core_config")
+@patch("homeassistant.core_config.async_process_ha_core_config")
 async def test_reload_core_with_wrong_conf(
     mock_process, mock_error, hass: HomeAssistant
 ) -> None:

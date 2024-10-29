@@ -535,7 +535,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self.category
 
         placeholders = self.context["title_placeholders"] = {
-            "name": self.name,
+            "name": self.name or "Homekit Device",
             "category": formatted_category(self.category),
         }
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
@@ -13,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -28,6 +28,8 @@ from .const import (
     INVALID_AUTH_ERRORS,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+    OPTION_DISABLE_KEEP_ALIVE,
+    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,14 +56,13 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reconnect_entry: ConfigEntry
+    _reauth_entry: ConfigEntry
 
     def __init__(self) -> None:
         """Initialize an envoy flow."""
         self.ip_address: str | None = None
         self.username = None
         self.protovers: str | None = None
-        self._reauth_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -78,7 +79,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
                 [self.ip_address]
             )
-        elif not self._reauth_entry:
+        elif self.source != SOURCE_REAUTH:
             schema[vol.Required(CONF_HOST)] = str
 
         default_username = ""
@@ -151,10 +152,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert self._reauth_entry is not None
+        self._reauth_entry = self._get_reauth_entry()
         if unique_id := self._reauth_entry.unique_id:
             await self.async_set_unique_id(unique_id, raise_on_progress=False)
         return await self.async_step_user()
@@ -170,7 +168,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
-        if self._reauth_entry:
+        if self.source == SOURCE_REAUTH:
             host = self._reauth_entry.data[CONF_HOST]
         else:
             host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
@@ -195,7 +193,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 name = self._async_envoy_name()
 
-                if self._reauth_entry:
+                if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         self._reauth_entry,
                         data=self._reauth_entry.data | user_input,
@@ -235,29 +233,17 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Add reconfigure step to allow to manually reconfigure a config entry."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-        self._reconnect_entry = entry
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to manually reconfigure a config entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
-        suggested_values: dict[str, Any] | MappingProxyType[str, Any] = (
-            user_input or self._reconnect_entry.data
-        )
-
-        host: Any = suggested_values.get(CONF_HOST)
-        username: Any = suggested_values.get(CONF_USERNAME)
-        password: Any = suggested_values.get(CONF_PASSWORD)
 
         if user_input is not None:
+            host: str = user_input[CONF_HOST]
+            username: str = user_input[CONF_USERNAME]
+            password: str = user_input[CONF_PASSWORD]
             try:
                 envoy = await validate_input(
                     self.hass,
@@ -275,31 +261,25 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.unique_id != envoy.serial_number:
-                    errors["base"] = "unexpected_envoy"
-                    description_placeholders = {
-                        "reason": f"target: {self.unique_id}, actual: {envoy.serial_number}"
-                    }
-                else:
-                    # If envoy exists in configuration update fields and exit
-                    self._abort_if_unique_id_configured(
-                        {
-                            CONF_HOST: host,
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        },
-                        error="reconfigure_successful",
-                    )
-        if not self.unique_id:
-            await self.async_set_unique_id(self._reconnect_entry.unique_id)
+                await self.async_set_unique_id(envoy.serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: host,
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                    },
+                )
 
         self.context["title_placeholders"] = {
-            CONF_SERIAL: self.unique_id or "-",
-            CONF_HOST: host,
+            CONF_SERIAL: reconfigure_entry.unique_id or "-",
+            CONF_HOST: reconfigure_entry.data[CONF_HOST],
         }
 
+        suggested_values: Mapping[str, Any] = user_input or reconfigure_entry.data
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 self._async_generate_schema(), suggested_values
             ),
@@ -330,6 +310,13 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         default=self.config_entry.options.get(
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+                        ),
+                    ): bool,
+                    vol.Required(
+                        OPTION_DISABLE_KEEP_ALIVE,
+                        default=self.config_entry.options.get(
+                            OPTION_DISABLE_KEEP_ALIVE,
+                            OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
                         ),
                     ): bool,
                 }

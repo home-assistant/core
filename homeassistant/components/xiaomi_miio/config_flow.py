@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
-    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -83,14 +82,7 @@ class OptionsFlowHandler(OptionsFlow):
                 not cloud_username or not cloud_password or not cloud_country
             ):
                 errors["base"] = "cloud_credentials_incomplete"
-                # trigger re-auth flow
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_REAUTH},
-                        data=self.config_entry.data,
-                    )
-                )
+                self.config_entry.async_start_reauth(self.hass)
 
             if not errors:
                 return self.async_create_entry(title="", data=user_input)

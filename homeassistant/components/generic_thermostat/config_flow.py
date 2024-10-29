@@ -62,7 +62,7 @@ OPTIONS_SCHEMA = {
 PRESETS_SCHEMA = {
     vol.Optional(v): selector.NumberSelector(
         selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     )
     for v in CONF_PRESETS.values()
