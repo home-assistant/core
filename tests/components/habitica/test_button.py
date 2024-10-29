@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -257,18 +257,46 @@ async def test_button_press_exceptions(
     assert mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/{api_url}")
 
 
+@pytest.mark.parametrize(
+    ("fixture", "entity_id"),
+    [
+        ("common_buttons_unavailable", "button.test_user_allocate_all_stat_points"),
+        ("common_buttons_unavailable", "button.test_user_revive_from_death"),
+        ("common_buttons_unavailable", "button.test_user_buy_a_health_potion"),
+        ("common_buttons_unavailable", "button.test_user_start_my_day"),
+        # not enough mana
+        ("wizard_skills_unavailable", "button.test_user_chilling_frost"),
+        # streaks buff active
+        ("wizard_frost_unavailable", "button.test_user_chilling_frost"),
+        ("wizard_skills_unavailable", "button.test_user_earthquake"),
+        ("wizard_skills_unavailable", "button.test_user_ethereal_surge"),
+        ("rogue_skills_unavailable", "button.test_user_tools_of_the_trade"),
+        ("rogue_skills_unavailable", "button.test_user_stealth"),
+        ("rogue_stealth_unavailable", "button.test_user_stealth"),
+        ("warrior_skills_unavailable", "button.test_user_defensive_stance"),
+        ("warrior_skills_unavailable", "button.test_user_intimidating_gaze"),
+        ("healer_skills_unavailable", "button.test_user_healing_light"),
+        ("healer_skills_unavailable", "button.test_user_protective_aura"),
+        ("healer_skills_unavailable", "button.test_user_searing_brightness"),
+        ("healer_skills_unavailable", "button.test_user_blessing"),
+    ],
+)
 async def test_button_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
+    fixture: str,
+    entity_id: str,
 ) -> None:
     """Test buttons are unavailable if conditions are not met."""
 
     aioclient_mock.get(
         f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture("user_buttons_unavailable.json", DOMAIN),
+        json=load_json_object_fixture(f"{fixture}.json", DOMAIN),
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        json=load_json_object_fixture("tasks.json", DOMAIN),
     )
     aioclient_mock.get(re.compile(r".*"), json={"data": []})
 
@@ -278,4 +306,5 @@ async def test_button_unavailable(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

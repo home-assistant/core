@@ -16,10 +16,10 @@
         "spookySparkles": false
       },
       "hp": 50,
-      "mp": 20,
+      "mp": 50,
       "exp": 737,
       "gp": 0,
-      "lvl": 38,
+      "lvl": 5,
       "class": "wizard",
       "maxHealth": 50,
       "maxMP": 166,
