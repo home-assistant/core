@@ -62,6 +62,7 @@ OPTIONS_SCHEMA = vol.Schema(
             SelectSelectorConfig(
                 options=[e.value for e in HeatingType],
                 mode=SelectSelectorMode.DROPDOWN,
+                translation_key="heating_type",
                 multiple=False,
                 sort=True,
             ),

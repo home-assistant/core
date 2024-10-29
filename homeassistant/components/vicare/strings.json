@@ -433,6 +433,19 @@
       }
     }
   },
+  "selector": {
+    "heating_type": {
+      "options": {
+        "auto": "auto detection",
+        "gas": "Gas",
+        "oil": "Oil",
+        "pellets": "Pellets",
+        "heatpump": "Heat pump",
+        "fuelcell": "Fuelcell",
+        "hybrid": "Hybrid"
+      }
+    }
+  },
   "services": {
     "set_vicare_mode": {
       "name": "Set ViCare mode",
