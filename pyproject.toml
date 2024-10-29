@@ -69,12 +69,12 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.4.22",
+    "uv==0.4.28",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
     "yarl==1.17.0",
-    "webrtc-models==0.0.0b2",
+    "webrtc-models==0.1.0",
 ]
 
 [project.urls]
