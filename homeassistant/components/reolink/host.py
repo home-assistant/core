@@ -273,7 +273,7 @@ class ReolinkHost:
             self._api.nvr_name,
             FIRST_TCP_PUSH_TIMEOUT,
         )
-        
+
         if self._onvif_push_supported:
             try:
                 await self.subscribe()
@@ -689,7 +689,11 @@ class ReolinkHost:
 
     async def _async_poll_all_motion(self, *_) -> None:
         """Poll motion and AI states until the first ONVIF push is received."""
-        if self._api.baichuan.events_active or self._webhook_reachable or self._long_poll_received:
+        if (
+            self._api.baichuan.events_active
+            or self._webhook_reachable
+            or self._long_poll_received
+        ):
             # TCP push, ONVIF push or long polling is working, stop fast polling
             self._cancel_poll = None
             return
