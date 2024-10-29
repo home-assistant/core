@@ -6,7 +6,11 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -65,6 +69,14 @@ async def async_setup_entry(
         ),
         True,
     )
+    async_add_entities(
+        (
+            EcobeeAuxCutoverThreshold(data, index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if thermostat["settings"]["hasHeatPump"]
+        ),
+        True,
+    )
 
 
 class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
@@ -114,11 +126,13 @@ class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
     Note that python-ecobee-api refers to this as Cutover Threshold, but Ecobee uses Compressor Protection Min Temp.
     """
 
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_name = "Aux Heat Cutover Threshold"
     _attr_native_min_value = -25
     _attr_native_max_value = 65
     _attr_native_step = 5
     _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
-    _attr_has_entity_name = True
+    _attr_translation_key = "aux_heat_only"
 
     def __init__(
         self,
