@@ -302,25 +302,24 @@ async def test_configure_resolution_set(hass: HomeAssistant) -> None:
         {"next_step_id": "manual"},
     )
 
-    mock_info = Mock()
-    mock_info.identifier = "mock_id"
+    receiver_info = create_receiver_info(1)
 
     with patch(
         "homeassistant.components.onkyo.config_flow.async_interview",
-        return_value=mock_info,
+        return_value=receiver_info,
     ):
         select_result = await hass.config_entries.flow.async_configure(
             form_result["flow_id"],
             user_input={CONF_HOST: "sample-host-name"},
         )
 
-        configure_result = await hass.config_entries.flow.async_configure(
-            select_result["flow_id"],
-            user_input={"volume_resolution": 200, "input_sources": ["TV"]},
-        )
+    configure_result = await hass.config_entries.flow.async_configure(
+        select_result["flow_id"],
+        user_input={"volume_resolution": 200, "input_sources": ["TV"]},
+    )
 
-        assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-        assert configure_result["options"]["volume_resolution"] == 200
+    assert configure_result["type"] is FlowResultType.CREATE_ENTRY
+    assert configure_result["options"]["volume_resolution"] == 200
 
 
 async def test_configure_invalid_resolution_set(hass: HomeAssistant) -> None:
