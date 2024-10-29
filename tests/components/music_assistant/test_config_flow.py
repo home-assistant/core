@@ -3,6 +3,7 @@
 from copy import deepcopy
 from ipaddress import ip_address
 from unittest import mock
+from unittest.mock import AsyncMock
 
 from music_assistant.client.exceptions import CannotConnect, InvalidServerVersion
 
@@ -21,9 +22,6 @@ from tests.common import MockConfigEntry
 DEFAULT_TITLE = "Music Assistant"
 
 VALID_CONFIG = {
-    CONF_URL: "http://localhost:8095",
-}
-VALID_OPTIONS_CONFIG = {
     CONF_URL: "http://localhost:8095",
 }
 
@@ -85,7 +83,7 @@ async def setup_music_assistant_integration(
 
 async def test_full_flow(
     hass: HomeAssistant,
-    mock_get_server_info,
+    mock_get_server_info: AsyncMock,
 ) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -109,9 +107,9 @@ async def test_full_flow(
     assert result["result"].unique_id == "1234"
 
 
-async def test_zeor_conf_flow(
+async def test_zero_conf_flow(
     hass: HomeAssistant,
-    mock_get_server_info,
+    mock_get_server_info: AsyncMock,
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -134,6 +132,33 @@ async def test_zeor_conf_flow(
         CONF_URL: "http://localhost:8095",
     }
     assert result["result"].unique_id == "1234"
+
+
+async def test_duplicate(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://localhost:8095"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_flow_user_init_connect_issue(
@@ -167,7 +192,7 @@ async def test_flow_user_init_server_version_invalid(
 
 
 async def test_flow_discovery_confirm_creates_config_entry(
-    mock_get_server_info, mock_music_assistant_client, hass: HomeAssistant
+    mock_get_server_info: AsyncMock, mock_music_assistant_client, hass: HomeAssistant
 ) -> None:
     """Test the config entry is successfully created."""
     config_flow.ConfigFlow.data = VALID_CONFIG

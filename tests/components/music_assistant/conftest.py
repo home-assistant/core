@@ -6,9 +6,10 @@ from unittest.mock import patch
 from music_assistant.common.models.api import ServerInfoMessage
 import pytest
 
+from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DOMAIN
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 from tests.components.smhi.common import AsyncMock
 
 
@@ -51,3 +52,14 @@ def mock_music_assistant_client() -> Generator[AsyncMock]:
         client.host = "127.0.0.1"
 
         yield client
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={CONF_URL: "http://localhost:8095"},
+        unique_id="1234",
+    )
