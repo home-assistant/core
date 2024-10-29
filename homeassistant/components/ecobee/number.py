@@ -10,6 +10,7 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
@@ -128,8 +129,9 @@ class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
 
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_name = "Aux Heat Cutover Threshold"
+    _attr_mode = NumberMode.BOX
     _attr_native_min_value = -25
-    _attr_native_max_value = 65
+    _attr_native_max_value = 66
     _attr_native_step = 5
     _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
     _attr_translation_key = "aux_heat_only"
