@@ -214,6 +214,10 @@ class SchemaCommonFlowHandler:
                         and key.description.get("advanced")
                         and not self._handler.show_advanced_options
                     )
+                    and not (
+                        # don't remove readonly keys
+                        key.description and key.description.get("disabled")
+                    )
                 ):
                     # Key not present, delete keys old value (if present) too
                     values.pop(key.schema, None)

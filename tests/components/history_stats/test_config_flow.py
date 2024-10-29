@@ -44,9 +44,6 @@ async def test_form(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
-            CONF_TYPE: "count",
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
@@ -80,9 +77,6 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
-            CONF_TYPE: "count",
             CONF_END: "{{ utcnow() }}",
             CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
         },
@@ -132,9 +126,6 @@ async def test_validation_options(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
-            CONF_TYPE: "count",
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
             CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
@@ -149,9 +140,6 @@ async def test_validation_options(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
-            CONF_TYPE: "count",
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
@@ -197,9 +185,6 @@ async def test_entry_already_exist(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
-            CONF_TYPE: "count",
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
             CONF_END: "{{ utcnow() }}",
         },
