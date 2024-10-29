@@ -125,6 +125,21 @@ def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> 
 
 
 @callback
+def get_origin_log_string(discovery_payload: MQTTDiscoveryPayload) -> str:
+    """Get the origin information from a discovery payload for logging."""
+    if CONF_ORIGIN not in discovery_payload:
+        return ""
+    origin_info: MqttOriginInfo = discovery_payload[CONF_ORIGIN]
+    sw_version_log = ""
+    if sw_version := origin_info.get("sw_version"):
+        sw_version_log = f", version: {sw_version}"
+    support_url_log = ""
+    if support_url := origin_info.get("support_url"):
+        support_url_log = f", support URL: {support_url}"
+    return f" from external application {origin_info["name"]}{sw_version_log}{support_url_log}"
+
+
+@callback
 def async_log_discovery_origin_info(
     message: str, discovery_payload: MQTTDiscoveryPayload, level: int = logging.INFO
 ) -> None:
@@ -133,24 +148,7 @@ def async_log_discovery_origin_info(
     if not _LOGGER.isEnabledFor(level):
         # bail out early if logging is disabled
         return
-    if CONF_ORIGIN not in discovery_payload:
-        _LOGGER.log(level, message)
-        return
-    origin_info: MqttOriginInfo = discovery_payload[CONF_ORIGIN]
-    sw_version_log = ""
-    if sw_version := origin_info.get("sw_version"):
-        sw_version_log = f", version: {sw_version}"
-    support_url_log = ""
-    if support_url := origin_info.get("support_url"):
-        support_url_log = f", support URL: {support_url}"
-    _LOGGER.log(
-        level,
-        "%s from external application %s%s%s",
-        message,
-        origin_info["name"],
-        sw_version_log,
-        support_url_log,
-    )
+    _LOGGER.log(level, "%s%s", message, get_origin_log_string(discovery_payload))
 
 
 @callback

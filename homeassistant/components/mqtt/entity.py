@@ -104,6 +104,7 @@ from .discovery import (
     MQTT_DISCOVERY_UPDATED,
     MQTTDiscoveryPayload,
     clear_discovery_hash,
+    get_origin_log_string,
     set_discovery_hash,
 )
 from .models import (
@@ -716,19 +717,30 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         ):
             self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
+            origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+            )
             if discovery_payload.device_discovery:
                 _LOGGER.info(
-                    "Rollback started for device based discovery migration "
+                    "Rollback started%s, of device based discovery migration, "
                     "on topic %s. Publish a component based "
-                    "discovery update for component %s to roll back",
+                    "discovery update for component %s to roll back "
+                    "the migration to a device based discovery, "
+                    "and clear %s with an empty (retained) payload after "
+                    "a successful migration to clean up",
+                    origin_info,
                     self._migrate_discovery,
                     discovery_hash,
+                    self._migrate_discovery,
                 )
             else:
                 _LOGGER.info(
-                    "Migration to device based discovery started "
+                    "Migration started to device based discovery%s, "
                     "on topic %s. Publish a device based discovery update "
-                    "including component %s",
+                    "including component %s. After successful migration of all "
+                    "components, publish an empty (retained) payload to all "
+                    "previous used discovery topics to clean up",
+                    origin_info,
                     self._migrate_discovery,
                     discovery_hash,
                 )
@@ -755,12 +767,15 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
             # Prevent illegal updates
             _LOGGER.warning(
-                "Illegal discovery payload "
+                "Unexpected discovery payload discovered "
                 "for %s on topic %s detected, "
-                "ignoring update, discovery registered to %s",
+                "ignoring update, discovery registered to %s. "
+                "It seems you are trying to migrate discovery, "
+                "but to support that you must unload component %s first",
                 discovery_hash,
                 new_discovery_topic,
                 self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                discovery_hash,
             )
             send_discovery_done(self.hass, self._discovery_data)
             return
@@ -963,20 +978,25 @@ class MqttDiscoveryUpdateMixin(Entity):
 
             self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
+            origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+            )
             if payload.device_discovery:
                 _LOGGER.info(
-                    "Rollback started for device based discovery migration "
+                    "Rollback started%s, of device based discovery migration "
                     "for entity %s on topic %s. Publish a component based "
                     "discovery update for component %s to roll back",
+                    origin_info,
                     self.entity_id,
                     self._migrate_discovery,
                     discovery_hash,
                 )
             else:
                 _LOGGER.info(
-                    "Migration to device based discovery started "
+                    "Migration started to device based discovery%s, "
                     "for entity %s on topic %s. Publish a device based discovery update "
                     "including component %s",
+                    origin_info,
                     self.entity_id,
                     self._migrate_discovery,
                     discovery_hash,
@@ -988,17 +1008,22 @@ class MqttDiscoveryUpdateMixin(Entity):
             payload,
         )
         new_discovery_topic = payload.discovery_data[ATTR_DISCOVERY_TOPIC]
-        # Abort early if there is no normal update
+        # Abort early if an update is not received via the registered discovery topic.
+        # This can happen if a device and single component discovery payload
+        # share the same discovery ID.
         if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
             # Prevent illegal updates
             _LOGGER.warning(
-                "Illegal discovery payload "
+                "Unexpected discovery payload discovered "
                 "for entity %s %s on topic %s detected, "
-                "ignoring update, discovery registered to %s",
+                "ignoring update, discovery registered to %s"
+                "It seems you are trying to migrate discovery, "
+                "but to support that you must unload component %s first",
                 self.entity_id,
                 discovery_hash,
                 new_discovery_topic,
                 self._discovery_data[ATTR_DISCOVERY_TOPIC],
+                discovery_hash,
             )
             send_discovery_done(self.hass, self._discovery_data)
             return

@@ -71,6 +71,7 @@ TEST_SINGLE_CONFIGS = [
         "homeassistant/device_automation/0AFFD2/bla1/config",
         {
             "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
+            "o": {"name": "foobar"},
             "automation_type": "trigger",
             "payload": "short_press",
             "topic": "foobar/triggers/button1",
@@ -82,6 +83,7 @@ TEST_SINGLE_CONFIGS = [
         "homeassistant/sensor/0AFFD2/bla2/config",
         {
             "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
+            "o": {"name": "foobar"},
             "state_topic": "foobar/sensors/bla2/state",
             "unique_id": "bla002",
         },
@@ -90,6 +92,7 @@ TEST_SINGLE_CONFIGS = [
         "homeassistant/tag/0AFFD2/bla3/config",
         {
             "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
+            "o": {"name": "foobar"},
             "topic": "foobar/tags/bla3/see",
         },
     ),
@@ -521,7 +524,7 @@ async def test_discovery_migration_to_device_base(
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
 
-    # Try to migrate to device based discovery without flag
+    # Try to migrate to device based discovery without migrate_discovery flag
     payload = json.dumps(device_config)
     async_fire_mqtt_message(
         hass,
@@ -530,14 +533,17 @@ async def test_discovery_migration_to_device_base(
     )
     await hass.async_block_till_done()
     assert (
-        "Illegal discovery payload for ('device_automation', '0AFFD2 bla1')"
+        "Unexpected discovery payload discovered for ('device_automation', '0AFFD2 bla1')"
         in caplog.text
     )
     assert (
-        "Illegal discovery payload for entity sensor.test_device_mqtt_sensor ('sensor', '0AFFD2 bla2')"
+        "Unexpected discovery payload discovered for entity sensor.test_device_mqtt_sensor ('sensor', '0AFFD2 bla2')"
         in caplog.text
     )
-    assert "Illegal discovery payload for ('tag', '0AFFD2 bla3')" in caplog.text
+    assert (
+        "Unexpected discovery payload discovered for ('tag', '0AFFD2 bla3')"
+        in caplog.text
+    )
 
     # Check we still have our mqtt items
     await help_check_discovered_items(hass, device_registry, tag_mock)
@@ -571,8 +577,8 @@ async def test_discovery_migration_to_device_base(
     assert entity_registry.async_is_registered("sensor.test_device_mqtt_sensor")
 
     assert (
-        "Migration to device based discovery started on "
-        "topic homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
+        "Migration started to device based discovery from external application foobar, "
+        "on topic homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
     )
 
     # Migrate to device based discovery
@@ -615,19 +621,19 @@ async def test_discovery_migration_to_device_base(
     await hass.async_block_till_done()
 
     assert (
-        "Illegal discovery payload for ('device_automation', '0AFFD2 bla1') "
+        "Unexpected discovery payload discovered for ('device_automation', '0AFFD2 bla1') "
         "on topic homeassistant/device_automation/0AFFD2/bla1/config detected, "
         "ignoring update, discovery registered to homeassistant/device/0AFFD2/config"
         in caplog.text
     )
     assert (
-        "Illegal discovery payload for entity sensor.test_device_mqtt_sensor "
+        "Unexpected discovery payload discovered for entity sensor.test_device_mqtt_sensor "
         "('sensor', '0AFFD2 bla2') on topic homeassistant/sensor/0AFFD2/bla2/config "
         "detected, ignoring update, discovery registered to "
         "homeassistant/device/0AFFD2/config" in caplog.text
     )
     assert (
-        "Illegal discovery payload for ('tag', '0AFFD2 bla3') "
+        "Unexpected discovery payload discovered for ('tag', '0AFFD2 bla3') "
         "on topic homeassistant/tag/0AFFD2/bla3/config detected, "
         "ignoring update, discovery registered to homeassistant/device/0AFFD2/config"
         in caplog.text
