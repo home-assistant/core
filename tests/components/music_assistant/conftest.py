@@ -14,16 +14,6 @@ from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.music_assistant.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        yield mock_setup_entry
-
-
-@pytest.fixture
 def mock_get_server_info() -> Generator[AsyncMock]:
     """Mock the function to get server info."""
     with patch(
@@ -33,21 +23,6 @@ def mock_get_server_info() -> Generator[AsyncMock]:
             load_fixture("server_info_message.json", DOMAIN)
         )
         yield mock_get_server_info
-
-
-@pytest.fixture
-def mock_music_assistant_client() -> Generator[AsyncMock]:
-    """Mock an Music Assistant client."""
-    with (
-        patch(
-            "homeassistant.components.music_assistant.MusicAssistantClient",
-            autospec=True,
-        ) as mock_client,
-    ):
-        client = mock_client.return_value
-        client.host = "127.0.0.1"
-
-        yield client
 
 
 @pytest.fixture

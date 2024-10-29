@@ -110,7 +110,6 @@ async def test_zero_conf_missing_server_id(
 async def test_duplicate_user(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate user flow."""
@@ -137,7 +136,6 @@ async def test_duplicate_user(
 async def test_duplicate_zeroconf(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate zeroconf flow."""
