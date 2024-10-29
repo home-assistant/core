@@ -29,7 +29,6 @@ from homeassistant.components import (
 from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
-from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
@@ -1029,16 +1028,9 @@ class PipelineRun:
                 context=self.context,
                 conversation_id=conversation_id,
                 device_id=device_id,
-                language=self.pipeline.conversation_language,
+                language=self.pipeline.language,
                 agent_id=self.intent_agent,
             )
-            if user_input.language == MATCH_ALL:
-                # We only load local intents for one language
-                user_input.language = (
-                    self.pipeline.stt_language
-                    or self.pipeline.tts_language
-                    or self.hass.config.language
-                )
 
             # Sentence triggers override conversation agent
             if (
