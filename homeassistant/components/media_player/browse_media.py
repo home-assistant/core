@@ -23,7 +23,7 @@ from homeassistant.helpers.network import (
 from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 
 # Paths that we don't need to sign
-PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)
+PATHS_WITHOUT_AUTH = ("/api/tts_proxy/", "/api/esphome/ffmpeg_proxy/")
 
 
 @callback
@@ -46,6 +46,8 @@ def async_process_play_media_url(
     elif media_content_id[0] != "/":
         return media_content_id
 
+    # https://github.com/pylint-dev/pylint/issues/3484
+    # pylint: disable-next=using-constant-test
     if parsed.query:
         logging.getLogger(__name__).debug(
             "Not signing path for content with query param"

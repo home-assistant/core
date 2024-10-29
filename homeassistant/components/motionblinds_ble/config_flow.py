@@ -67,9 +67,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info = discovery_info
         self._mac_code = get_mac_from_local_name(discovery_info.name)
-        self._display_name = DISPLAY_NAME.format(mac_code=self._mac_code)
-        self.context["local_name"] = discovery_info.name
-        self.context["title_placeholders"] = {"name": self._display_name}
+        self._display_name = display_name = DISPLAY_NAME.format(mac_code=self._mac_code)
+        self.context["title_placeholders"] = {"name": display_name}
 
         return await self.async_step_confirm()
 

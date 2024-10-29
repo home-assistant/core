@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -23,7 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import BSBLanData
+from . import BSBLanConfigEntry, BSBLanData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
 from .entity import BSBLanEntity
 
@@ -43,18 +42,12 @@ PRESET_MODES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BSBLanConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
-    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            BSBLANClimate(
-                data,
-            )
-        ]
-    )
+    data = entry.runtime_data
+    async_add_entities([BSBLANClimate(data)])
 
 
 class BSBLANClimate(BSBLanEntity, ClimateEntity):
@@ -126,15 +119,14 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        # only allow preset mode when hvac mode is auto
-        if self.hvac_mode == HVACMode.AUTO:
-            await self.async_set_data(preset_mode=preset_mode)
-        else:
+        if self.hvac_mode != HVACMode.AUTO and preset_mode != PRESET_NONE:
             raise ServiceValidationError(
+                "Preset mode can only be set when HVAC mode is set to 'auto'",
                 translation_domain=DOMAIN,
                 translation_key="set_preset_mode_error",
                 translation_placeholders={"preset_mode": preset_mode},
             )
+        await self.async_set_data(preset_mode=preset_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -148,11 +140,11 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         if ATTR_HVAC_MODE in kwargs:
             data[ATTR_HVAC_MODE] = kwargs[ATTR_HVAC_MODE]
         if ATTR_PRESET_MODE in kwargs:
-            # If preset mode is None, set hvac to auto
-            if kwargs[ATTR_PRESET_MODE] == PRESET_NONE:
-                data[ATTR_HVAC_MODE] = HVACMode.AUTO
-            else:
-                data[ATTR_HVAC_MODE] = kwargs[ATTR_PRESET_MODE]
+            if kwargs[ATTR_PRESET_MODE] == PRESET_ECO:
+                data[ATTR_HVAC_MODE] = PRESET_ECO
+            elif kwargs[ATTR_PRESET_MODE] == PRESET_NONE:
+                data[ATTR_HVAC_MODE] = PRESET_NONE
+
         try:
             await self.coordinator.client.thermostat(**data)
         except BSBLANError as err:

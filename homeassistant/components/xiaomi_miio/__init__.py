@@ -56,6 +56,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -118,6 +119,7 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P9: FanMiot,
     MODEL_FAN_P10: FanMiot,
     MODEL_FAN_P11: FanMiot,
+    MODEL_FAN_P18: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }
@@ -186,7 +188,9 @@ def _async_update_data_default(hass, device):
         except DeviceException as ex:
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
-            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+            _LOGGER.error(
+                "Got exception while fetching the state, trying again: %s", ex
+            )
         # Try to fetch the data a second time after error code -9999
         try:
             return await _async_fetch_data()
@@ -273,7 +277,9 @@ def _async_update_data_vacuum(
         except DeviceException as ex:
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
-            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+            _LOGGER.error(
+                "Got exception while fetching the state, trying again: %s", ex
+            )
 
         # Try to fetch the data a second time after error code -9999
         try:
@@ -302,6 +308,7 @@ async def async_create_miio_device_and_coordinator(
         "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
+        "dmaker.fan.1c": True,
     }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 

@@ -164,7 +164,7 @@ class ProtectData:
 
         self._auth_failures = 0
         if not was_success:
-            _LOGGER.info("%s: Connection restored", self._entry.title)
+            _LOGGER.warning("%s: Connection restored", self._entry.title)
             self._async_process_updates()
         elif force_update:
             self._async_process_updates()

@@ -305,7 +305,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": self.data[CONF_NAME],
-                "country": self.data.get(CONF_COUNTRY),
+                "country": self.data.get(CONF_COUNTRY, "-"),
             },
         )
 

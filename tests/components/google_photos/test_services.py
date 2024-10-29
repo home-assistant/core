@@ -1,68 +1,114 @@
 """Tests for Google Photos."""
 
-import http
+from collections.abc import Generator
+from dataclasses import dataclass
+import re
 from unittest.mock import Mock, patch
 
-from googleapiclient.errors import HttpError
-from httplib2 import Response
+from google_photos_library_api.exceptions import GooglePhotosApiError
+from google_photos_library_api.model import (
+    Album,
+    CreateMediaItemsResult,
+    MediaItem,
+    NewMediaItemResult,
+    Status,
+)
 import pytest
 
-from homeassistant.components.google_photos.api import UPLOAD_API
-from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPES
+from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPE
+from homeassistant.components.google_photos.services import (
+    CONF_ALBUM,
+    CONF_CONFIG_ENTRY_ID,
+    UPLOAD_SERVICE,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+
+TEST_FILENAME = "doorbell_snapshot.jpg"
+ALBUM_TITLE = "Album title"
+
+
+@dataclass
+class MockUploadFile:
+    """Dataclass used to configure the test with a fake file behavior."""
+
+    content: bytes = b"image bytes"
+    exists: bool = True
+    is_allowed_path: bool = True
+    size: int | None = None
+
+
+@pytest.fixture(name="upload_file")
+def upload_file_fixture() -> None:
+    """Fixture to set up test configuration with a fake file."""
+    return MockUploadFile()
+
+
+@pytest.fixture(autouse=True)
+def mock_upload_file(
+    hass: HomeAssistant, upload_file: MockUploadFile
+) -> Generator[None]:
+    """Fixture that mocks out the file calls using the FakeFile fixture."""
+    with (
+        patch(
+            "homeassistant.components.google_photos.services.Path.read_bytes",
+            return_value=upload_file.content,
+        ),
+        patch(
+            "homeassistant.components.google_photos.services.Path.exists",
+            return_value=upload_file.exists,
+        ),
+        patch.object(
+            hass.config, "is_allowed_path", return_value=upload_file.is_allowed_path
+        ),
+        patch("pathlib.Path.stat") as mock_stat,
+    ):
+        mock_stat.return_value = Mock()
+        mock_stat.return_value.st_size = (
+            upload_file.size if upload_file.size else len(upload_file.content)
+        )
+        yield
 
 
 @pytest.mark.usefixtures("setup_integration")
 async def test_upload_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    setup_api: Mock,
+    mock_api: Mock,
 ) -> None:
     """Test service call to upload content."""
     assert hass.services.has_service(DOMAIN, "upload")
 
-    aioclient_mock.post(UPLOAD_API, text="some-upload-token")
-    setup_api.return_value.mediaItems.return_value.batchCreate.return_value.execute.return_value = {
-        "newMediaItemResults": [
-            {
-                "status": {
-                    "code": 200,
-                },
-                "mediaItem": {
-                    "id": "new-media-item-id-1",
-                },
-            }
+    mock_api.create_media_items.return_value = CreateMediaItemsResult(
+        new_media_item_results=[
+            NewMediaItemResult(
+                upload_token="some-upload-token",
+                status=Status(code=200),
+                media_item=MediaItem(id="new-media-item-id-1"),
+            )
         ]
-    }
+    )
 
-    with (
-        patch(
-            "homeassistant.components.google_photos.services.Path.read_bytes",
-            return_value=b"image bytes",
-        ),
-        patch(
-            "homeassistant.components.google_photos.services.Path.exists",
-            return_value=True,
-        ),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-    ):
-        response = await hass.services.async_call(
-            DOMAIN,
-            "upload",
-            {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    assert response == {"media_items": [{"media_item_id": "new-media-item-id-1"}]}
+    response = await hass.services.async_call(
+        DOMAIN,
+        UPLOAD_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+            CONF_FILENAME: TEST_FILENAME,
+            CONF_ALBUM: ALBUM_TITLE,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "media_items": [{"media_item_id": "new-media-item-id-1"}],
+        "album_id": "album-media-id-1",
+    }
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -74,10 +120,11 @@ async def test_upload_service_config_entry_not_found(
     with pytest.raises(HomeAssistantError, match="not found in registry"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": "invalid-config-entry-id",
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -98,10 +145,11 @@ async def test_config_entry_not_loaded(
     with pytest.raises(HomeAssistantError, match="not found in registry"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.unique_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.unique_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -109,21 +157,22 @@ async def test_config_entry_not_loaded(
 
 
 @pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("upload_file", [MockUploadFile(is_allowed_path=False)])
 async def test_path_is_not_allowed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test upload service call with a filename path that is not allowed."""
     with (
-        patch.object(hass.config, "is_allowed_path", return_value=False),
         pytest.raises(HomeAssistantError, match="no access to path"),
     ):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -131,22 +180,20 @@ async def test_path_is_not_allowed(
 
 
 @pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("upload_file", [MockUploadFile(exists=False)])
 async def test_filename_does_not_exist(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test upload service call with a filename path that does not exist."""
-    with (
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("pathlib.Path.exists", return_value=False),
-        pytest.raises(HomeAssistantError, match="does not exist"),
-    ):
+    with pytest.raises(HomeAssistantError, match="does not exist"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -157,31 +204,20 @@ async def test_filename_does_not_exist(
 async def test_upload_service_upload_content_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    setup_api: Mock,
+    mock_api: Mock,
 ) -> None:
     """Test service call to upload content."""
 
-    aioclient_mock.post(UPLOAD_API, status=http.HTTPStatus.SERVICE_UNAVAILABLE)
+    mock_api.upload_content.side_effect = GooglePhotosApiError()
 
-    with (
-        patch(
-            "homeassistant.components.google_photos.services.Path.read_bytes",
-            return_value=b"image bytes",
-        ),
-        patch(
-            "homeassistant.components.google_photos.services.Path.exists",
-            return_value=True,
-        ),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        pytest.raises(HomeAssistantError, match="Failed to upload content"),
-    ):
+    with pytest.raises(HomeAssistantError, match="Failed to upload content"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -192,36 +228,22 @@ async def test_upload_service_upload_content_failure(
 async def test_upload_service_fails_create(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    setup_api: Mock,
+    mock_api: Mock,
 ) -> None:
     """Test service call to upload content."""
 
-    aioclient_mock.post(UPLOAD_API, text="some-upload-token")
-    setup_api.return_value.mediaItems.return_value.batchCreate.return_value.execute.side_effect = HttpError(
-        Response({"status": "403"}), b""
-    )
+    mock_api.create_media_items.side_effect = GooglePhotosApiError()
 
-    with (
-        patch(
-            "homeassistant.components.google_photos.services.Path.read_bytes",
-            return_value=b"image bytes",
-        ),
-        patch(
-            "homeassistant.components.google_photos.services.Path.exists",
-            return_value=True,
-        ),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        pytest.raises(
-            HomeAssistantError, match="Google Photos API responded with error"
-        ),
+    with pytest.raises(
+        HomeAssistantError, match="Google Photos API responded with error"
     ):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -232,24 +254,142 @@ async def test_upload_service_fails_create(
 @pytest.mark.parametrize(
     ("scopes"),
     [
-        READ_SCOPES,
+        [READ_SCOPE],
     ],
 )
 async def test_upload_service_no_scope(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    setup_api: Mock,
 ) -> None:
     """Test service call to upload content but the config entry is read-only."""
 
     with pytest.raises(HomeAssistantError, match="not granted permission"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("upload_file", [MockUploadFile(size=26 * 1024 * 1024)])
+async def test_upload_size_limit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test upload service call with a filename path that does not exist."""
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape(f"`{TEST_FILENAME}` is too large (27262976 > 20971520)"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: ALBUM_TITLE,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_upload_to_new_album(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+) -> None:
+    """Test service call to upload content to a new album."""
+    assert hass.services.has_service(DOMAIN, "upload")
+
+    mock_api.create_media_items.return_value = CreateMediaItemsResult(
+        new_media_item_results=[
+            NewMediaItemResult(
+                upload_token="some-upload-token",
+                status=Status(code=200),
+                media_item=MediaItem(id="new-media-item-id-1"),
+            )
+        ]
+    )
+    mock_api.create_album.return_value = Album(id="album-media-id-2", title="New Album")
+    response = await hass.services.async_call(
+        DOMAIN,
+        UPLOAD_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+            CONF_FILENAME: TEST_FILENAME,
+            CONF_ALBUM: "New Album",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    # Verify media item was created with the new album id
+    mock_api.create_album.assert_awaited()
+    assert response == {
+        "media_items": [{"media_item_id": "new-media-item-id-1"}],
+        "album_id": "album-media-id-2",
+    }
+
+    # Upload an additional item to the same album and assert that no new album is created
+    mock_api.create_album.reset_mock()
+    mock_api.create_media_items.reset_mock()
+    mock_api.create_media_items.return_value = CreateMediaItemsResult(
+        new_media_item_results=[
+            NewMediaItemResult(
+                upload_token="some-upload-token",
+                status=Status(code=200),
+                media_item=MediaItem(id="new-media-item-id-3"),
+            )
+        ]
+    )
+    response = await hass.services.async_call(
+        DOMAIN,
+        UPLOAD_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+            CONF_FILENAME: TEST_FILENAME,
+            CONF_ALBUM: "New Album",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    # Verify the album created last time is used
+    mock_api.create_album.assert_not_awaited()
+    assert response == {
+        "media_items": [{"media_item_id": "new-media-item-id-3"}],
+        "album_id": "album-media-id-2",
+    }
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_create_album_failed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+) -> None:
+    """Test service call to upload content to a new album but creating the album fails."""
+    assert hass.services.has_service(DOMAIN, "upload")
+
+    mock_api.create_album.side_effect = GooglePhotosApiError()
+
+    with pytest.raises(HomeAssistantError, match="Failed to create album"):
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
+                CONF_ALBUM: "New Album",
             },
             blocking=True,
             return_response=True,

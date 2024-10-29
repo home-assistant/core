@@ -322,6 +322,10 @@ def async_track_state_change_event(
     for each one, we keep a dict of entity ids that
     care about the state change events so we can
     do a fast dict lookup to route events.
+    The passed in entity_ids will be automatically lower cased.
+
+    EVENT_STATE_CHANGED is fired on each occasion the state is updated
+    and changed, opposite of EVENT_STATE_REPORTED.
     """
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
@@ -383,7 +387,10 @@ def _async_track_state_change_event(
     action: Callable[[Event[EventStateChangedData]], Any],
     job_type: HassJobType | None,
 ) -> CALLBACK_TYPE:
-    """async_track_state_change_event without lowercasing."""
+    """Faster version of async_track_state_change_event.
+
+    The passed in entity_ids will not be automatically lower cased.
+    """
     return _async_track_event(
         _KEYED_TRACK_STATE_CHANGE, hass, entity_ids, action, job_type
     )
@@ -403,7 +410,11 @@ def async_track_state_report_event(
     action: Callable[[Event[EventStateReportedData]], Any],
     job_type: HassJobType | None = None,
 ) -> CALLBACK_TYPE:
-    """Track EVENT_STATE_REPORTED by entity_id without lowercasing."""
+    """Track EVENT_STATE_REPORTED by entity_ids.
+
+    EVENT_STATE_REPORTED is fired on each occasion the state is updated
+    but not changed, opposite of EVENT_STATE_CHANGED.
+    """
     return _async_track_event(
         _KEYED_TRACK_STATE_REPORT, hass, entity_ids, action, job_type
     )
@@ -980,6 +991,22 @@ class TrackTemplateResultInfo:
         self._has_super_template = has_super_template
 
         self._last_result: dict[Template, bool | str | TemplateError] = {}
+
+        for track_template_ in track_templates:
+            if track_template_.template.hass:
+                continue
+
+            # pylint: disable-next=import-outside-toplevel
+            from .frame import report
+
+            report(
+                (
+                    "calls async_track_template_result with template without hass, "
+                    "which will stop working in HA Core 2025.10"
+                ),
+                error_if_core=False,
+            )
+            track_template_.template.hass = hass
 
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}

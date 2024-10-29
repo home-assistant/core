@@ -1,4 +1,4 @@
-"""Fixtures for Tessie."""
+"""Fixtures for Teslemetry."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import pytest
 
 from .const import (
     COMMAND_OK,
+    ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
     PRODUCTS,
@@ -95,3 +96,22 @@ def mock_site_info():
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_energy_history():
+    """Mock Teslemetry Energy Specific site_info method."""
+    with patch(
+        "homeassistant.components.teslemetry.EnergySpecific.energy_history",
+        return_value=ENERGY_HISTORY,
+    ) as mock_live_status:
+        yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_listen():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream.listen",
+    ) as mock_listen:
+        yield mock_listen

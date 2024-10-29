@@ -90,8 +90,10 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
         As we set the override, we report back the override. The actual set point is
         is returned at a later time.
+        Some older thermostats return 0.0 as override, in that case we fallback to
+        the actual setpoint.
         """
-        return self._room.override
+        return self._room.override or self._room.setpoint
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""

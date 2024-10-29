@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
+from .entity import WiffiEntity
 from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
     WIFFI_UOM_LUX,

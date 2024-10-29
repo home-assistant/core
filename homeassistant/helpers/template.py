@@ -9,8 +9,9 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
+from copy import deepcopy
 from datetime import date, datetime, time, timedelta
-from functools import cache, cached_property, lru_cache, partial, wraps
+from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -34,6 +35,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
+from propcache import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -81,6 +83,7 @@ from . import (
     label_registry,
     location as loc_helper,
 )
+from .deprecation import deprecated_function
 from .singleton import singleton
 from .translation import async_translate_state
 from .typing import TemplateVarsType
@@ -207,15 +210,24 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 
 @bind_hass
+@deprecated_function(
+    "automatic setting of Template.hass introduced by HA Core PR #89242",
+    breaks_in_ha_version="2025.10",
+)
 def attach(hass: HomeAssistant, obj: Any) -> None:
+    """Recursively attach hass to all template instances in list and dict."""
+    return _attach(hass, obj)
+
+
+def _attach(hass: HomeAssistant, obj: Any) -> None:
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
-            attach(hass, child)
+            _attach(hass, child)
     elif isinstance(obj, collections.abc.Mapping):
         for child_key, child_value in obj.items():
-            attach(hass, child_key)
-            attach(hass, child_value)
+            _attach(hass, child_key)
+            _attach(hass, child_value)
     elif isinstance(obj, Template):
         obj.hass = hass
 
@@ -497,9 +509,25 @@ class Template:
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
-        """Instantiate a template."""
+        """Instantiate a template.
+
+        Note: A valid hass instance should always be passed in. The hass parameter
+        will be non optional in Home Assistant Core 2025.10.
+        """
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
+
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
+
+        if not hass:
+            report(
+                (
+                    "creates a template object without passing hass, "
+                    "which will stop working in HA Core 2025.10"
+                ),
+                error_if_core=False,
+            )
 
         self.template: str = template.strip()
         self._compiled_code: CodeType | None = None
@@ -997,6 +1025,8 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
+    __slots__ = ("_hass", "_collect", "_entity_id", "_state")
+
     _state: State
 
     __setitem__ = _readonly
@@ -1009,6 +1039,7 @@ class TemplateStateBase(State):
         self._hass = hass
         self._collect = collect
         self._entity_id = entity_id
+        self._cache: dict[str, Any] = {}
 
     def _collect_state(self) -> None:
         if self._collect and (render_info := _render_info.get()):
@@ -1029,7 +1060,7 @@ class TemplateStateBase(State):
             return self.state_with_unit
         raise KeyError
 
-    @cached_property
+    @under_cached_property
     def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
@@ -1086,7 +1117,7 @@ class TemplateStateBase(State):
         return self._state.object_id
 
     @property
-    def name(self) -> str:
+    def name(self) -> str:  # type: ignore[override]
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -1123,7 +1154,7 @@ class TemplateStateBase(State):
 class TemplateState(TemplateStateBase):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_state",)
+    __slots__ = ()
 
     # Inheritance is done so functions that check against State keep working
     def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
@@ -1138,6 +1169,8 @@ class TemplateState(TemplateStateBase):
 
 class TemplateStateFromEntityId(TemplateStateBase):
     """Class to represent a state object in a template."""
+
+    __slots__ = ()
 
     def __init__(
         self, hass: HomeAssistant, entity_id: str, collect: bool = True
@@ -1248,7 +1281,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-
+    All other values are falsy
     """
     if template_result is None:
         return False
@@ -2140,7 +2173,8 @@ def merge_response(value: ServiceResponse) -> list[Any]:
 
     is_single_list = False
     response_items: list = []
-    for entity_id, entity_response in value.items():  # pylint: disable=too-many-nested-blocks
+    input_service_response = deepcopy(value)
+    for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
         if not isinstance(entity_response, dict):
             raise TypeError("Response is not a dictionary")
         for value_key, type_response in entity_response.items():

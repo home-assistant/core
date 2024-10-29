@@ -5,7 +5,7 @@ from unittest.mock import patch
 from epson_projector.const import PWR_OFF_STATE
 
 from homeassistant import config_entries
-from homeassistant.components.epson.const import DOMAIN
+from homeassistant.components.epson.const import CONF_CONNECTION_TYPE, DOMAIN, HTTP
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -33,6 +33,10 @@ async def test_form(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.epson.async_setup_entry",
             return_value=True,
+        ),
+        patch(
+            "homeassistant.components.epson.Projector.close",
+            return_value=True,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -43,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-epson"
-    assert result2["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result2["data"] == {CONF_CONNECTION_TYPE: HTTP, CONF_HOST: "1.1.1.1"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 

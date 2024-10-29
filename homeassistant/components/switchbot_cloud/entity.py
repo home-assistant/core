@@ -35,7 +35,7 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             model=device.device_type,
         )
 
-    async def send_command(
+    async def send_api_command(
         self,
         command: Commands,
         command_type: str = "command",

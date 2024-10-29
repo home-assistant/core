@@ -1,14 +1,7 @@
 """The tests for Switch as X platforms."""
 
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_LOCKED,
-    STATE_OFF,
-    STATE_ON,
-    STATE_OPEN,
-    STATE_UNLOCKED,
-    Platform,
-)
+from homeassistant.components.lock import LockState
+from homeassistant.const import STATE_CLOSED, STATE_OFF, STATE_ON, STATE_OPEN, Platform
 
 PLATFORMS_TO_TEST = (
     Platform.COVER,
@@ -24,7 +17,7 @@ STATE_MAP = {
         Platform.COVER: {STATE_ON: STATE_OPEN, STATE_OFF: STATE_CLOSED},
         Platform.FAN: {STATE_ON: STATE_ON, STATE_OFF: STATE_OFF},
         Platform.LIGHT: {STATE_ON: STATE_ON, STATE_OFF: STATE_OFF},
-        Platform.LOCK: {STATE_ON: STATE_UNLOCKED, STATE_OFF: STATE_LOCKED},
+        Platform.LOCK: {STATE_ON: LockState.UNLOCKED, STATE_OFF: LockState.LOCKED},
         Platform.SIREN: {STATE_ON: STATE_ON, STATE_OFF: STATE_OFF},
         Platform.VALVE: {STATE_ON: STATE_OPEN, STATE_OFF: STATE_CLOSED},
     },
@@ -32,7 +25,7 @@ STATE_MAP = {
         Platform.COVER: {STATE_ON: STATE_CLOSED, STATE_OFF: STATE_OPEN},
         Platform.FAN: {STATE_ON: STATE_ON, STATE_OFF: STATE_OFF},
         Platform.LIGHT: {STATE_ON: STATE_ON, STATE_OFF: STATE_OFF},
-        Platform.LOCK: {STATE_ON: STATE_LOCKED, STATE_OFF: STATE_UNLOCKED},
+        Platform.LOCK: {STATE_ON: LockState.LOCKED, STATE_OFF: LockState.UNLOCKED},
         Platform.SIREN: {STATE_ON: STATE_ON, STATE_OFF: STATE_OFF},
         Platform.VALVE: {STATE_ON: STATE_CLOSED, STATE_OFF: STATE_OPEN},
     },

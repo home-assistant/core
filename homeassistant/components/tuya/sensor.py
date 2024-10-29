@@ -27,7 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TuyaConfigEntry
-from .base import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -36,6 +35,7 @@ from .const import (
     DPType,
     UnitOfMeasurement,
 )
+from .entity import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
 
 
 @dataclass(frozen=True)

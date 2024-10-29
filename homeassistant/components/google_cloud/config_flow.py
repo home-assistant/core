@@ -26,7 +26,16 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_KEY_FILE, CONF_SERVICE_ACCOUNT_INFO, DEFAULT_LANG, DOMAIN, TITLE
+from .const import (
+    CONF_KEY_FILE,
+    CONF_SERVICE_ACCOUNT_INFO,
+    CONF_STT_MODEL,
+    DEFAULT_LANG,
+    DEFAULT_STT_MODEL,
+    DOMAIN,
+    SUPPORTED_STT_MODELS,
+    TITLE,
+)
 from .helpers import (
     async_tts_voices,
     tts_options_schema,
@@ -162,6 +171,15 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         **tts_options_schema(
                             self.options, voices, from_config_flow=True
                         ).schema,
+                        vol.Optional(
+                            CONF_STT_MODEL,
+                            default=DEFAULT_STT_MODEL,
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                mode=SelectSelectorMode.DROPDOWN,
+                                options=SUPPORTED_STT_MODELS,
+                            )
+                        ),
                     }
                 ),
                 self.options,

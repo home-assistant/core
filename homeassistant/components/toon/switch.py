@@ -19,8 +19,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
+from .entity import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 
 
 async def async_setup_entry(

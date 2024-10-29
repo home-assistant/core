@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from aiohttp import ClientError, ClientResponseError
+from google_photos_library_api.api import GooglePhotosLibraryApi
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import api
 from .const import DOMAIN
+from .coordinator import GooglePhotosUpdateCoordinator
 from .services import async_register_services
-
-type GooglePhotosConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
+from .types import GooglePhotosConfigEntry
 
 __all__ = [
     "DOMAIN",
@@ -29,8 +30,9 @@ async def async_setup_entry(
             hass, entry
         )
     )
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(hass, session)
+    web_session = async_get_clientsession(hass)
+    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    auth = api.AsyncConfigEntryAuth(web_session, oauth_session)
     try:
         await auth.async_get_access_token()
     except ClientResponseError as err:
@@ -41,7 +43,9 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    entry.runtime_data = auth
+    coordinator = GooglePhotosUpdateCoordinator(hass, GooglePhotosLibraryApi(auth))
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     async_register_services(hass)
 

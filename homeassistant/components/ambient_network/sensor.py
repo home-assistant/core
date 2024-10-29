@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -29,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import AmbientNetworkConfigEntry
 from .coordinator import AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
 
@@ -271,12 +270,12 @@ SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AmbientNetworkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ambient Network sensor entities."""
 
-    coordinator: AmbientNetworkDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     if coordinator.config_entry is not None:
         async_add_entities(
             AmbientNetworkSensor(

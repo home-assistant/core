@@ -19,8 +19,8 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
+class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
     """Representation of a Vera Thermostat."""
 
     _attr_hvac_modes = SUPPORT_HVAC
@@ -60,7 +60,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         self, vera_device: veraApi.VeraThermostat, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

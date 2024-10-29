@@ -29,12 +29,14 @@ from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
     EventEntityMixin,
+    PermRequired,
     ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectEventMixin,
     ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
 
 _KEY_DOOR = "door"
 

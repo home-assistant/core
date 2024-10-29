@@ -9,13 +9,14 @@ from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cached_property, partial
+from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -1132,7 +1133,11 @@ class _ScriptRun:
         self._step_log("wait for trigger", timeout)
 
         variables = {**self._variables}
-        self._variables["wait"] = {"remaining": timeout, "trigger": None}
+        self._variables["wait"] = {
+            "remaining": timeout,
+            "completed": False,
+            "trigger": None,
+        }
         trace_set_result(wait=self._variables["wait"])
 
         if timeout == 0:
@@ -1150,6 +1155,7 @@ class _ScriptRun:
             variables: dict[str, Any], context: Context | None = None
         ) -> None:
             self._async_set_remaining_time_var(timeout_handle)
+            self._variables["wait"]["completed"] = True
             self._variables["wait"]["trigger"] = variables["trigger"]
             _set_result_unless_done(done)
 
@@ -1349,7 +1355,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-type _VarsType = dict[str, Any] | MappingProxyType[str, Any]
+type _VarsType = dict[str, Any] | Mapping[str, Any] | MappingProxyType[str, Any]
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

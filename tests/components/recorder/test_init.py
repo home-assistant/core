@@ -17,6 +17,7 @@ from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
 from homeassistant.components import recorder
+from homeassistant.components.lock import LockState
 from homeassistant.components.recorder import (
     CONF_AUTO_PURGE,
     CONF_AUTO_REPACK,
@@ -69,8 +70,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.helpers import (
@@ -834,8 +833,8 @@ async def test_saving_state_and_removing_entity(
 ) -> None:
     """Test saving the state of a removed entity."""
     entity_id = "lock.mine"
-    hass.states.async_set(entity_id, STATE_LOCKED)
-    hass.states.async_set(entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entity_id, LockState.LOCKED)
+    hass.states.async_set(entity_id, LockState.UNLOCKED)
     hass.states.async_remove(entity_id)
 
     await async_wait_recording_done(hass)
@@ -848,9 +847,9 @@ async def test_saving_state_and_removing_entity(
         )
         assert len(states) == 3
         assert states[0].entity_id == entity_id
-        assert states[0].state == STATE_LOCKED
+        assert states[0].state == LockState.LOCKED
         assert states[1].entity_id == entity_id
-        assert states[1].state == STATE_UNLOCKED
+        assert states[1].state == LockState.UNLOCKED
         assert states[2].entity_id == entity_id
         assert states[2].state is None
 

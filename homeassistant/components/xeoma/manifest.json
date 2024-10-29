@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/xeoma",
   "iot_class": "local_polling",
   "loggers": ["pyxeoma"],
-  "requirements": ["pyxeoma==1.4.1"]
+  "requirements": ["pyxeoma==1.4.2"]
 }
