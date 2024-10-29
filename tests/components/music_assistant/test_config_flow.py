@@ -5,7 +5,11 @@ from ipaddress import ip_address
 from unittest import mock
 from unittest.mock import AsyncMock
 
-from music_assistant.client.exceptions import CannotConnect, InvalidServerVersion
+from music_assistant.client.exceptions import (
+    CannotConnect,
+    InvalidServerVersion,
+    MusicAssistantClientException,
+)
 
 from homeassistant.components.music_assistant import config_flow
 from homeassistant.components.music_assistant.config_flow import CONF_URL
@@ -165,7 +169,7 @@ async def test_zero_conf_missing_server_id(
     assert result["reason"] == "missing_server_id"
 
 
-async def test_duplicate_manual(
+async def test_duplicate_user(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
     mock_setup_entry: AsyncMock,
@@ -225,6 +229,21 @@ async def test_flow_user_init_connect_issue(
         _result["flow_id"], user_input={CONF_URL: "bad"}
     )
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_user_init_music_assistant_client_exception(
+    mock_get_server_info, hass: HomeAssistant
+) -> None:
+    """Test we advance to the next step when server url is invalid."""
+    mock_get_server_info.side_effect = MusicAssistantClientException("unknown")
+
+    _result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        _result["flow_id"], user_input={CONF_URL: "bad"}
+    )
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_flow_user_init_server_version_invalid(
