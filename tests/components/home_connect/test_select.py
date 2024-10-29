@@ -53,18 +53,16 @@ async def test_select(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "program_to_set"),
+    ("entity_id", "status", "program_to_set"),
     [
         (
             "select.washer_selected_program",
             {BSH_SELECTED_PROGRAM: {"value": PROGRAM}},
-            SERVICE_SELECT_OPTION,
             "eco50",
         ),
         (
             "select.washer_active_program",
             {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
-            SERVICE_SELECT_OPTION,
             "eco50",
         ),
     ],
@@ -72,7 +70,6 @@ async def test_select(
 async def test_select_functionality(
     entity_id: str,
     status: dict,
-    service: str,
     program_to_set: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
@@ -94,7 +91,7 @@ async def test_select_functionality(
     appliance.status.update(status)
     await hass.services.async_call(
         SELECT_DOMAIN,
-        service,
+        SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
         blocking=True,
     )
@@ -105,7 +102,6 @@ async def test_select_functionality(
     (
         "entity_id",
         "status",
-        "service",
         "program_to_set",
         "mock_attr",
         "exception_match",
@@ -114,7 +110,6 @@ async def test_select_functionality(
         (
             "select.washer_selected_program",
             {BSH_SELECTED_PROGRAM: {"value": PROGRAM}},
-            SERVICE_SELECT_OPTION,
             "eco50",
             "select_program",
             r"Error.*select.*program.*",
@@ -122,7 +117,6 @@ async def test_select_functionality(
         (
             "select.washer_active_program",
             {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
-            SERVICE_SELECT_OPTION,
             "eco50",
             "start_program",
             r"Error.*start.*program.*",
@@ -132,7 +126,6 @@ async def test_select_functionality(
 async def test_switch_exception_handling(
     entity_id: str,
     status: dict,
-    service: str,
     program_to_set: str,
     mock_attr: str,
     exception_match: str,
@@ -161,7 +154,7 @@ async def test_switch_exception_handling(
     with pytest.raises(ServiceValidationError, match=exception_match):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            service,
+            SERVICE_SELECT_OPTION,
             {"entity_id": entity_id, "option": program_to_set},
             blocking=True,
         )
