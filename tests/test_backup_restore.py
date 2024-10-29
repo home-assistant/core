@@ -53,7 +53,7 @@ def test_restoring_backup_that_does_not_exist() -> None:
                 backup_file_path=backup_file_path
             ),
         ),
-        mock.patch("pathlib.Path.exists", return_value=False),
+        mock.patch("pathlib.Path.read_text", side_effect=FileNotFoundError),
         pytest.raises(
             ValueError, match=f"Backup file {backup_file_path} does not exist"
         ),
