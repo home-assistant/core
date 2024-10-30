@@ -98,9 +98,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"section_1": {"bool": True, "int": 15}},
+        user_input={"section_1": {"bool": True, "int": 15, "select_power": "high"}},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {"section_1": {"bool": True, "int": 15}}
+    assert config_entry.options == {
+        "section_1": {"bool": True, "int": 15, "select_power": "high"}
+    }
 
     await hass.async_block_till_done()
