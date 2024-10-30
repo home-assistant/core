@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -23,7 +23,6 @@ from .const import (
     CONF_AREA_ID,
     CONF_LOCK_CODE_DIGITS,
     DEFAULT_AREA_ID,
-    DEFAULT_LOCK_CODE_DIGITS,
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
@@ -140,35 +139,27 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class YaleOptionsFlowHandler(OptionsFlow):
+class YaleOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Yale options."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Yale options flow."""
-        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage Yale options."""
-        errors: dict[str, Any] = {}
 
-        if user_input:
+        if user_input is not None:
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_LOCK_CODE_DIGITS,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
-                            )
-                        },
-                    ): int,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_LOCK_CODE_DIGITS,
+                        ): int,
+                    }
+                ),
+                self.config_entry.options,
             ),
-            errors=errors,
         )
