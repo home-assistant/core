@@ -112,6 +112,16 @@ class Server:
             await self._stop()
             raise Go2RTCServerStartError from err
 
+    async def _log_output(self, process: asyncio.subprocess.Process) -> None:
+        """Log the output of the process."""
+        assert process.stdout is not None
+
+        async for line in process.stdout:
+            msg = line[:-1].decode().strip()
+            _LOGGER.debug(msg)
+            if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
+                self._startup_complete.set()
+
     async def _watchdog(self) -> None:
         """Keep respawning go2rtc servers.
 
@@ -126,8 +136,6 @@ class Server:
             except ExceptionGroup as grp:
                 if not grp.subgroup(Go2RTCWatchdogError):
                     _LOGGER.exception("Watchdog got unexpected exception")
-                if self._stop_requested:
-                    continue  # type: ignore[unreachable]
                 await asyncio.sleep(_RESPAWN_COOLDOWN)
                 try:
                     await self._stop()
@@ -155,22 +163,11 @@ class Server:
                 await client.streams.list()
                 await asyncio.sleep(10)
         except Exception as err:
-            _LOGGER.debug("go2rtc API did not reply")
+            _LOGGER.debug("go2rtc API did not reply", exc_info=True)
             raise Go2RTCWatchdogError("API error") from err
 
-    async def _log_output(self, process: asyncio.subprocess.Process) -> None:
-        """Log the output of the process."""
-        assert process.stdout is not None
-
-        async for line in process.stdout:
-            msg = line[:-1].decode().strip()
-            _LOGGER.debug(msg)
-            if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
-                self._startup_complete.set()
-
     async def stop(self) -> None:
-        """Stop the server and set the stop_requested flag."""
-        self._stop_requested = True
+        """Stop the server and abort the watchdog task."""
         if self._watchdog_task:
             self._watchdog_task.cancel()
             self._watchdog_task = None
