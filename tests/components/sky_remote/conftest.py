@@ -1,7 +1,6 @@
 """Test mocks and fixtures."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,21 +10,13 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
-
-@pytest.fixture(name="sample_config")
-async def get_config_to_integration_load() -> dict[str, Any]:
-    """Return configuration.
-
-    To override the config, tests can be marked with:
-    @pytest.mark.parametrize("sample_config", [{...}])
-    """
-    return {CONF_HOST: "example.com", CONF_PORT: DEFAULT_PORT}
+SAMPLE_CONFIG = {CONF_HOST: "example.com", CONF_PORT: DEFAULT_PORT}
 
 
 @pytest.fixture
-def mock_config_entry(sample_config) -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
-    return MockConfigEntry(domain=DOMAIN, data=sample_config)
+    return MockConfigEntry(domain=DOMAIN, data=SAMPLE_CONFIG)
 
 
 @pytest.fixture

@@ -13,9 +13,11 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import SAMPLE_CONFIG
+
 
 async def test_user_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, sample_config, mock_remote_control
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_remote_control
 ) -> None:
     """Test we can setup an entry."""
 
@@ -27,11 +29,11 @@ async def test_user_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: sample_config[CONF_HOST]},
+        {CONF_HOST: SAMPLE_CONFIG[CONF_HOST]},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == sample_config
+    assert result["data"] == SAMPLE_CONFIG
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -56,7 +58,6 @@ async def test_device_exists_abort(
 async def test_user_flow_legacy_device(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    sample_config,
     mock_remote_control,
 ) -> None:
     """Test we can setup an entry with a legacy port."""
@@ -76,11 +77,11 @@ async def test_user_flow_legacy_device(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: sample_config[CONF_HOST]},
+        {CONF_HOST: SAMPLE_CONFIG[CONF_HOST]},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {**sample_config, CONF_PORT: LEGACY_PORT}
+    assert result["data"] == {**SAMPLE_CONFIG, CONF_PORT: LEGACY_PORT}
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -89,7 +90,6 @@ async def test_user_flow_legacy_device(
 async def test_user_flow_unconnectable(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    sample_config,
     mock_remote_control,
 ) -> None:
     """Test we can setup an entry."""
@@ -106,7 +106,7 @@ async def test_user_flow_unconnectable(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: sample_config[CONF_HOST]},
+        {CONF_HOST: SAMPLE_CONFIG[CONF_HOST]},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -117,9 +117,9 @@ async def test_user_flow_unconnectable(
     mock_remote_control._instance_mock.check_connectable = AsyncMock(True)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: sample_config[CONF_HOST]},
+        {CONF_HOST: SAMPLE_CONFIG[CONF_HOST]},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == sample_config
+    assert result["data"] == SAMPLE_CONFIG
 
     assert len(mock_setup_entry.mock_calls) == 1
