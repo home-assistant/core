@@ -72,11 +72,14 @@ class Server:
             # Listen on all interfaces for allowing access from all ips
             self._api_ip = ""
         self._stop_requested = False
+        self._watchdog_task: asyncio.Task | None = None
 
     async def start(self) -> None:
         """Start the server."""
         await self._start()
-        self._hass.async_create_background_task(self._watchdog(), "Go2rtc respawn")
+        self._watchdog_task = asyncio.create_task(
+            self._watchdog(), name="Go2rtc respawn"
+        )
 
     async def _start(self) -> None:
         """Start the server."""
@@ -168,6 +171,10 @@ class Server:
     async def stop(self) -> None:
         """Stop the server and set the stop_requested flag."""
         self._stop_requested = True
+        if self._watchdog_task:
+            self._watchdog_task.cancel()
+            await self._watchdog_task
+            self._watchdog_task = None
         await self._stop()
 
     async def _stop(self) -> None:
