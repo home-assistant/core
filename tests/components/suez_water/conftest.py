@@ -1,11 +1,10 @@
 """Common fixtures for the Suez Water tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.suez_water import SuezClient
 from homeassistant.components.suez_water.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -38,16 +37,17 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="suez_client")
-def mock_suez_client() -> Generator[AsyncMock]:
+def mock_suez_client() -> Generator[MagicMock]:
     """Create mock for suez_water external api."""
     with (
         patch("homeassistant.components.suez_water.coordinator.SuezClient", autospec=True) as mock_client,
         patch("homeassistant.components.suez_water.config_flow.SuezClient", new=mock_client)
     ):
-        mock_client.check_credentials.return_value = True
-        mock_client.update.return_value = None
-        mock_client.state = 160
-        mock_client.attributes = {
+        client = mock_client.return_value
+        client.check_credentials.return_value = True
+        client.update.return_value = None
+        client.state = 160
+        client.attributes = {
             "thisMonthConsumption": {
                 "2024-01-01": 130,
                 "2024-01-02": 145,
@@ -67,4 +67,4 @@ def mock_suez_client() -> Generator[AsyncMock]:
             },
             "attribution": "suez water mock test",
         }
-        yield mock_client
+        yield client

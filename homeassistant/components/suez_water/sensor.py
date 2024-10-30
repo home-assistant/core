@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_COUNTER_ID, DOMAIN
+from .const import AGGREGATED_SENSOR_ENTITY_SUFFIX, CONF_COUNTER_ID, DOMAIN
 from .coordinator import SuezWaterCoordinator
 
 
@@ -39,7 +39,7 @@ class SuezAggregatedSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity
         """Initialize the data object."""
         super().__init__(coordinator)
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = f"{counter_id}_water_usage_yesterday"
+        self._attr_unique_id = f"{counter_id}{AGGREGATED_SENSOR_ENTITY_SUFFIX}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(counter_id))},
             entry_type=DeviceEntryType.SERVICE,
@@ -47,17 +47,17 @@ class SuezAggregatedSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Return the current daily usage."""
         return self.coordinator.data.value
 
     @property
-    def attribution(self) -> str | None:
+    def attribution(self) -> str:
         """Return data attribution message."""
         return self.coordinator.data.attribution
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return aggregated data."""
         return {
             "this_month_consumption": self.coordinator.data.current_month,

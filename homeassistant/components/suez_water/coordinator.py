@@ -2,18 +2,17 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 
 from pysuez import SuezClient
 from pysuez.client import PySuezError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_COUNTER_ID, DOMAIN
+from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
 
 @dataclass
@@ -33,20 +32,15 @@ class AggregatedSensorData:
 class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
     """Suez water coordinator."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize suez water coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(hours=12),
+            update_interval=DATA_REFRESH_INTERVAL,
             always_update=True,
         )
-        self._entry = entry
 
     async def _async_setup(self) -> None:
         self._sync_client = await self.hass.async_add_executor_job(self._get_client)
@@ -97,9 +91,9 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
     def _get_client(self) -> SuezClient:
         try:
             client = SuezClient(
-                username=self._entry.data[CONF_USERNAME],
-                password=self._entry.data[CONF_PASSWORD],
-                counter_id=self._entry.data[CONF_COUNTER_ID],
+                username=self.config_entry.data[CONF_USERNAME],
+                password=self.config_entry.data[CONF_PASSWORD],
+                counter_id=self.config_entry.data[CONF_COUNTER_ID],
                 provider=None,
             )
             if not client.check_credentials():

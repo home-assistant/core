@@ -1,56 +1,91 @@
 """Test Suez_water sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.suez_water import PySuezError, SuezClient
+from homeassistant.components.suez_water.const import DATA_REFRESH_INTERVAL
+from homeassistant.components.suez_water.coordinator import PySuezError
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_suez_sensors_valid_state_update(
+async def test_suez_sensors_valid_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    suez_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that suez_water sensor plaform is loaded and in a valid state."""
+    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_suez_sensors_failed_update(
     hass: HomeAssistant,
     suez_client,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that suez_water sensor plaform is loaded and in a valid state.
+    """Test that suez_water sensor reflect failure when api fails."""
 
-    Always one entity with required values, as provided by the library
-    """
     with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(mock_config_entry, hass)
+        await setup_integration(hass, mock_config_entry)
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
-        await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+        entity_ids = await hass.async_add_executor_job(hass.states.entity_ids)
+        assert len(entity_ids) == 1
+
+        state = hass.states.get(entity_ids[0])
+        assert entity_ids[0]
+        assert state.state != STATE_UNAVAILABLE
+
+        suez_client.update.side_effect = PySuezError("Should fail to update")
+
+        freezer.tick(timedelta(hours=1) + DATA_REFRESH_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(True)
+
+        state = hass.states.get(entity_ids[0])
+        assert state
+        assert state.state == STATE_UNAVAILABLE
 
 
-async def test_update_failed(
+async def test_suez_sensors_invalid_credentials(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry
+    suez_client,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the state of the entity reflect failure."""
+    """Test that suez_water sensor can't be loaded with invalid credentials."""
 
-    mock = AsyncMock(spec=SuezClient)
-    mock.update.side_effect = PySuezError("Should fail to update")
-    mock.check_credentials.return_value = True
-    with (
-        patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]),
-        patch(
-            "homeassistant.components.suez_water.SuezClient", return_value=mock
-        ) as mock_client,
-    ):
-        await setup_integration(mock_client, mock_config_entry, hass)
+    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
+        suez_client.check_credentials.return_value = False
+        await setup_integration(hass, mock_config_entry)
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+async def test_suez_sensors_setup_api_error(
+    hass: HomeAssistant,
+    suez_client,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that suez_water sensor needs to retry loading if api failed to connect."""
+
+    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
+        suez_client.check_credentials.side_effect = PySuezError('Test failure')
+        await setup_integration(hass, mock_config_entry)
 
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-        state = hass.states.get("sensor.suez_mock_device_water_usage_yesterday")
-        assert state is None

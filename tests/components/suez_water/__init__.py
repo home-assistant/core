@@ -6,7 +6,8 @@ from tests.common import MockConfigEntry
 
 
 async def setup_integration(
-    mock_config_entry: MockConfigEntry, hass: HomeAssistant
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry
 ) -> None:
     """Init suez water integration."""
     mock_config_entry.add_to_hass(hass)
