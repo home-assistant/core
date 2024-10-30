@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Update"
 
+CONF_DISPLAY_PRECISION = "display_precision"
 CONF_LATEST_VERSION_TEMPLATE = "latest_version_template"
 CONF_LATEST_VERSION_TOPIC = "latest_version_topic"
 CONF_PAYLOAD_INSTALL = "payload_install"
@@ -46,6 +47,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
+        vol.Optional(CONF_DISPLAY_PRECISION, default=0): cv.positive_int,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
@@ -114,6 +116,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+        self._attr_display_precision = self._config[CONF_DISPLAY_PRECISION]
         self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
         self._attr_release_url = self._config.get(CONF_RELEASE_URL)
         self._attr_title = self._config.get(CONF_TITLE)

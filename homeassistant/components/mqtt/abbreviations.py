@@ -45,6 +45,7 @@ ABBREVIATIONS = {
     "dir_cmd_tpl": "direction_command_template",
     "dir_stat_t": "direction_state_topic",
     "dir_val_tpl": "direction_value_template",
+    "dsp_prc": "display_precision",
     "dock_cmd_t": "dock_command_topic",
     "dock_cmd_tpl": "dock_command_template",
     "e": "encoding",

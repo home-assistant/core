@@ -362,6 +362,7 @@ async def test_invalid_json_state_message(
                 update.DOMAIN: {
                     "state_topic": "test/state-topic",
                     "name": "Test Update",
+                    "display_precision": 1,
                 }
             }
         }
@@ -429,11 +430,12 @@ async def test_json_state_message(
     assert state.attributes.get("in_progress") is False
 
     # Test update_percentage status
-    async_fire_mqtt_message(hass, state_topic, '{"update_percentage":50}')
+    async_fire_mqtt_message(hass, state_topic, '{"update_percentage":51.75}')
     await hass.async_block_till_done()
     state = hass.states.get("update.test_update")
     assert state.attributes.get("in_progress") is True
-    assert state.attributes.get("update_percentage") == 50
+    assert state.attributes.get("update_percentage") == 51.75
+    assert state.attributes.get("display_precision") == 1
 
     async_fire_mqtt_message(hass, state_topic, '{"update_percentage":100}')
     await hass.async_block_till_done()
