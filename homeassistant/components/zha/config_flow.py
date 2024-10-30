@@ -72,6 +72,7 @@ REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 LEGACY_ZEROCONF_PORT = 6638
 LEGACY_ZEROCONF_ESPHOME_API_PORT = 6053
 
+ZEROCONF_SERVICE_TYPE = "_zigbee-gateway._tcp.local."
 ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
     {
         vol.Required("radio_type"): vol.All(str, vol.In([t.name for t in RadioType])),
@@ -624,7 +625,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
 
         # Transform legacy zeroconf discovery into the new format
-        if discovery_info.type != "_zigbee-gateway._tcp.local.":
+        if discovery_info.type != ZEROCONF_SERVICE_TYPE:
             local_name = discovery_info.hostname.removesuffix(".local.")
             port = discovery_info.port or LEGACY_ZEROCONF_PORT
 
@@ -649,8 +650,12 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 ip_addresses=discovery_info.ip_addresses,
                 port=port,
                 hostname=discovery_info.hostname,
-                type="_zigbee-gateway._tcp.local.",
-                name=discovery_info.properties.get("name", local_name),
+                type=ZEROCONF_SERVICE_TYPE,
+                name=(
+                    discovery_info.properties.get("name", local_name)
+                    + "."
+                    + ZEROCONF_SERVICE_TYPE
+                ),
                 properties={
                     "radio_type": radio_type.name,
                     "serial_number": local_name,  # To maintain backwards compatibility
@@ -664,14 +669,15 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         radio_type = self._radio_mgr.parse_radio_type(discovery_props["radio_type"])
         device_path = f"socket://{discovery_info.host}:{discovery_info.port}"
+        title = discovery_info.name.removesuffix("." + ZEROCONF_SERVICE_TYPE)
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=discovery_props["serial_number"],
             device_path=device_path,
         )
 
-        self.context["title_placeholders"] = {CONF_NAME: discovery_info.name}
-        self._title = device_path
+        self.context["title_placeholders"] = {CONF_NAME: title}
+        self._title = title
         self._radio_mgr.device_path = device_path
 
         return await self.async_step_confirm()
