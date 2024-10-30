@@ -82,10 +82,6 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle manual device entry."""
         errors = {}
 
-        entry_data = None
-        if self.source == SOURCE_RECONFIGURE:
-            entry_data = self._get_reconfigure_entry().data
-
         if user_input is not None:
             host = user_input[CONF_HOST]
             _LOGGER.debug("Config flow start manual: %s", host)
@@ -111,8 +107,10 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_configure_receiver()
 
         suggested_values = user_input
-        if suggested_values is None and entry_data is not None:
-            suggested_values = {CONF_HOST: entry_data[CONF_HOST]}
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = {
+                CONF_HOST: self._get_reconfigure_entry().data[CONF_HOST]
+            }
 
         return self.async_show_form(
             step_id="manual",
