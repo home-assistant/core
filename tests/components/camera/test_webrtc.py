@@ -347,7 +347,10 @@ async def test_ws_get_client_config(
     assert msg["success"]
     assert msg["result"] == {
         "configuration": {
-            "iceServers": [{"urls": "stun:stun.home-assistant.io:80"}],
+            "iceServers": [
+                {"urls": "stun:stun.home-assistant.io:80"},
+                {"urls": "stun:stun.home-assistant.io:3478"},
+            ],
         },
         "getCandidatesUpfront": False,
     }
@@ -376,6 +379,7 @@ async def test_ws_get_client_config(
         "configuration": {
             "iceServers": [
                 {"urls": "stun:stun.home-assistant.io:80"},
+                {"urls": "stun:stun.home-assistant.io:3478"},
                 {
                     "urls": ["stun:example2.com", "turn:example2.com"],
                     "username": "user",

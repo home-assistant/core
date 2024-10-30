@@ -420,7 +420,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def get_ice_servers() -> list[RTCIceServer]:
         if hass.config.webrtc.ice_servers:
             return hass.config.webrtc.ice_servers
-        return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
+        return [
+            RTCIceServer(urls="stun:stun.home-assistant.io:80"),
+            RTCIceServer(urls="stun:stun.home-assistant.io:3478"),
+        ]
 
     async_register_ice_servers(hass, get_ice_servers)
     return True
