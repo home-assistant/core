@@ -9,8 +9,7 @@ import pytest
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DOMAIN
 
-from tests.common import MockConfigEntry, load_fixture
-from tests.components.smhi.common import AsyncMock
+from tests.common import AsyncMock, MockConfigEntry, load_fixture
 
 
 @pytest.fixture

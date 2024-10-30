@@ -5,12 +5,12 @@ from ipaddress import ip_address
 from unittest import mock
 from unittest.mock import AsyncMock
 
-from music_assistant.client.exceptions import (
+from music_assistant_client.exceptions import (
     CannotConnect,
     InvalidServerVersion,
     MusicAssistantClientException,
 )
-from music_assistant.common.models.api import ServerInfoMessage
+from music_assistant_models.api import ServerInfoMessage
 import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
