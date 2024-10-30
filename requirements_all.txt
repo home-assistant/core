@@ -2903,7 +2903,7 @@ unifi_ap==0.0.1
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.23
+universal-silabs-flasher==0.0.24
 
 # homeassistant.components.upb
 upb-lib==0.5.8
@@ -3069,7 +3069,7 @@ zeroconf==0.136.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.36
+zha==0.0.37
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
