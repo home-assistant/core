@@ -210,7 +210,7 @@ async def test_legacy_zeroconf_discovery_zigate(
         hostname="_zigate-zigbee-gateway._tcp.local.",
         name="any",
         port=1234,
-        properties={"radio_type": "zigate"},
+        properties={},
         type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
@@ -249,6 +249,24 @@ async def test_legacy_zeroconf_discovery_zigate(
         },
         CONF_RADIO_TYPE: "zigate",
     }
+
+
+async def test_zeroconf_discovery_bad_payload(hass: HomeAssistant) -> None:
+    """Test zeroconf flow with a bad payload."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.200"),
+        ip_addresses=[ip_address("192.168.1.200")],
+        hostname="some.hostname",
+        name="any",
+        port=1234,
+        properties={"radio_type": "some bogus radio"},
+        type="_zigbee-gateway._tcp.local.",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_zeroconf_data"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
