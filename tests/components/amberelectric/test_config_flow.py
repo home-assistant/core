@@ -331,5 +331,9 @@ async def test_site_deduplication(single_site_rejoin_api: Mock) -> None:
     """Test site deduplication."""
     filtered = filter_sites(single_site_rejoin_api.get_sites())
     assert len(filtered) == 2
-    assert next(s for s in filtered if s.nmi == "11111111111").status == "active"
-    assert next(s for s in filtered if s.nmi == "11111111112").status == "closed"
+    assert (
+        next(s for s in filtered if s.nmi == "11111111111").status == SiteStatus.ACTIVE
+    )
+    assert (
+        next(s for s in filtered if s.nmi == "11111111112").status == SiteStatus.CLOSED
+    )

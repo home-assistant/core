@@ -29,7 +29,7 @@ def generate_site_selector_name(site: Site) -> str:
         if site.closed_on is None:
             return f"{nmi} (Closed)"
         return f"{nmi} (Closed: {site.closed_on.isoformat()})"
-    if site.status == "pending":
+    if site.status == SiteStatus.PENDING:
         return f"{nmi} (Pending)"
     return nmi
 
@@ -40,7 +40,7 @@ def filter_sites(sites: list[Site]) -> list[Site]:
     filtered_nmi: set[str] = set()
 
     for site in sorted(sites, key=lambda site: site.status):
-        if site.status == "active" or site.nmi not in filtered_nmi:
+        if site.status == SiteStatus.ACTIVE or site.nmi not in filtered_nmi:
             filtered.append(site)
             filtered_nmi.add(site.nmi)
 
