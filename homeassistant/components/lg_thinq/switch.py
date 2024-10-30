@@ -38,6 +38,7 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             translation_key=ThinQProperty.POWER_SAVE_ENABLED,
             on_key="true",
             off_key="false",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceType.AIR_PURIFIER_FAN: (
@@ -111,6 +112,7 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             translation_key=ThinQProperty.EXPRESS_MODE,
             on_key="true",
             off_key="false",
+            entity_category=EntityCategory.CONFIG,
         ),
         ThinQSwitchEntityDescription(
             key=ThinQProperty.RAPID_FREEZE,
@@ -126,6 +128,7 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             translation_key=ThinQProperty.HOT_WATER_MODE,
             on_key="on",
             off_key="off",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceType.WINE_CELLAR: (
@@ -134,6 +137,7 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             translation_key=ThinQProperty.OPTIMAL_HUMIDITY,
             on_key="on",
             off_key="off",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }
