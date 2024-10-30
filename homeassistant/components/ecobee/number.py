@@ -59,25 +59,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ecobee thermostat number entity."""
     data: EcobeeData = hass.data[DOMAIN]
-    _LOGGER.debug("Adding min time ventilators numbers (if present)")
 
-    async_add_entities(
-        (
-            EcobeeVentilatorMinTime(data, index, numbers)
-            for index, thermostat in enumerate(data.ecobee.thermostats)
-            if thermostat["settings"]["ventilatorType"] != "none"
-            for numbers in VENTILATOR_NUMBERS
-        ),
-        True,
-    )
-    async_add_entities(
-        (
-            EcobeeAuxCutoverThreshold(data, index)
-            for index, thermostat in enumerate(data.ecobee.thermostats)
-            if thermostat["settings"]["hasHeatPump"]
-        ),
-        True,
-    )
+    assert data is not None
+
+    entities: list[NumberEntity] = []
+    _LOGGER.debug("Adding min time ventilators numbers (if present)")
+    for index, thermostat in enumerate(data.ecobee.thermostats):
+        for numbers in VENTILATOR_NUMBERS:
+            if thermostat["settings"]["ventilatorType"] != "none":
+                entities.append(EcobeeVentilatorMinTime(data, index, numbers))  # noqa: PERF401: the advantages of a list comprehension seem offset by the additional work required when adding EcobeeAuxCutoverThreshold.
+
+    _LOGGER.debug("Adding aux cutover threshold number (if present)")
+    for index, thermostat in enumerate(data.ecobee.thermostats):
+        if thermostat["settings"]["hasHeatPump"]:
+            entities.append(EcobeeAuxCutoverThreshold(data, index))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
