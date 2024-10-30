@@ -90,7 +90,11 @@ def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
                     continue
                 member.name = member.name.replace("data/", "")
             _clear_configuration_directory(config_dir)
-            istf.extractall(config_dir)
+            istf.extractall(
+                path=config_dir,
+                members=securetar.secure_path(istf),
+                filter="fully_trusted",
+            )
 
 
 def restore_backup(config_dir_path: str) -> bool:
