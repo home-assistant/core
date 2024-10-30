@@ -11,15 +11,20 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
 from homeassistant.components.vicare.const import CONF_HEATING_TYPE, DOMAIN, HeatingType
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
+
+# from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_MAC, MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry
+
+# from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -209,29 +214,40 @@ async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_options_flow(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test config flow options."""
-
-    fixtures: list[Fixture] = [
-        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
-    ]
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
         patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
-        patch(f"{MODULE}.PLATFORMS", []),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)
-    assert (
-        mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.heatpump.value
-    )
+
+    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.auto.value
+    # state = hass.states.get("sensor.model0_heating_gas_consumption_today")
+    # assert state
+    # assert state.state == "0"
+
+    # await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_HEATING_TYPE: HeatingType.auto.value}
+        result["flow_id"], user_input={CONF_HEATING_TYPE: HeatingType.heatpump.value}
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.auto.value
+    assert (
+        mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.heatpump.value
+    )
+
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
