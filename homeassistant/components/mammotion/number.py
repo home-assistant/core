@@ -1,8 +1,5 @@
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from pymammotion.data.model.device_config import DeviceLimits
-from pymammotion.utility.device_type import DeviceType
+from typing import Callable
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -21,6 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from pymammotion.data.model.device_config import DeviceLimits
+from pymammotion.utility.device_type import DeviceType
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator
