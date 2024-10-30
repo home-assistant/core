@@ -200,11 +200,20 @@ async def async_setup_entry(
         """Get a list of entities."""
         entities: list[HomeConnectProgramSelectEntity] = []
         hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
+        programs_not_found = set()
         for device in hc_api.devices:
             if device.appliance.type in APPLIANCES_WITH_PROGRAMS:
                 with contextlib.suppress(HomeConnectError):
                     programs = device.appliance.get_programs_available()
                     if programs:
+                        for program in programs:
+                            if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
+                                if program not in programs_not_found:
+                                    _LOGGER.warning(
+                                        'The program "%s" is not part of the official Home Connect API specification',
+                                        program,
+                                    )
+                                    programs_not_found.add(program)
                         entities.extend(
                             HomeConnectProgramSelectEntity(
                                 device, programs, start_on_select
@@ -232,14 +241,11 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 else "selected_program",
             ),
         )
-        self._attr_options = []
-        for program in programs:
-            if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
-                _LOGGER.info(
-                    'The program "%s" is not contemplated on this integration', program
-                )
-            else:
-                self._attr_options.append(PROGRAMS_TRANSLATION_KEYS_MAP[program])
+        self._attr_options = [
+            program_translation_key
+            for program in programs
+            if (program_translation_key := PROGRAMS_TRANSLATION_KEYS_MAP.get(program))
+        ]
         self.start_on_select = start_on_select
 
     async def async_update(self) -> None:
