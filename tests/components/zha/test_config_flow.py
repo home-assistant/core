@@ -154,19 +154,47 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
     return port
 
 
+@pytest.mark.parametrize(
+    "service_info",
+    [
+        # Legacy format: no info, assumed to be ZNP
+        zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.200"),
+            ip_addresses=[ip_address("192.168.1.200")],
+            hostname="tube._tube_zb_gw._tcp.local.",
+            name="tube",
+            port=6053,
+            properties={"name": "tube_123456"},
+            type="mock_type",
+        ),
+        # Legacy format: explicit radio type
+        zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.200"),
+            ip_addresses=[ip_address("192.168.1.200")],
+            hostname="tube._tube_zb_gw._tcp.local.",
+            name="tube",
+            port=6053,
+            properties={"name": "tube_123456", "radio_type": "znp"},
+            type="mock_type",
+        ),
+        # New format
+        zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.200"),
+            ip_addresses=[ip_address("192.168.1.200")],
+            hostname="some-zigbee-gateway-12345.local.",
+            name="Some Zigbee Gateway",
+            port=6638,
+            properties={"radio_type": "znp", "serial_number": "aabbccddeeff"},
+            type="_zigbee-gateway._tcp.local.",
+        ),
+    ],
+)
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_legacy_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
+async def test_zeroconf_discovery_znp(
+    service_info: zeroconf.ZeroconfServiceInfo, hass: HomeAssistant
+) -> None:
     """Test zeroconf flow -- radio detected."""
-    service_info = zeroconf.ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.200"),
-        ip_addresses=[ip_address("192.168.1.200")],
-        hostname="tube._tube_zb_gw._tcp.local.",
-        name="tube",
-        port=6053,
-        properties={"name": "tube_123456"},
-        type="mock_type",
-    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
