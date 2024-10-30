@@ -26,6 +26,7 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
     async_register_webrtc_provider,
 )
+from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -84,15 +85,17 @@ _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
     url: str | None = None
+    if DOMAIN not in config and DEFAULT_CONFIG_DOMAIN not in config:
+        await _remove_go2rtc_entries(hass)
+        return True
+
     if not (configured_by_user := DOMAIN in config) or not (
         url := config[DOMAIN].get(CONF_URL)
     ):
         if not is_docker_env():
             if not configured_by_user:
                 # Remove config entry if it exists
-                if entries := hass.config_entries.async_entries(DOMAIN):
-                    for entry in entries:
-                        await hass.config_entries.async_remove(entry.entry_id)
+                await _remove_go2rtc_entries(hass)
                 return True
             _LOGGER.warning("Go2rtc URL required in non-docker installs")
             return False
@@ -116,6 +119,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
     return True
+
+
+async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
+    """Remove go2rtc config entries, if any."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.async_remove(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

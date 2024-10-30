@@ -29,6 +29,7 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
 )
+from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -264,6 +265,7 @@ async def _test_setup_and_signaling(
     "mock_is_docker_env",
     "mock_go2rtc_entry",
 )
+@pytest.mark.parametrize("config", [{DOMAIN: {}}, {DEFAULT_CONFIG_DOMAIN: {}}])
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
 async def test_setup_go_binary(
     hass: HomeAssistant,
@@ -274,6 +276,7 @@ async def test_setup_go_binary(
     server_stop: Mock,
     init_test_integration: MockCamera,
     has_go2rtc_entry: bool,
+    config: ConfigType,
 ) -> None:
     """Test the go2rtc config entry with binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
@@ -283,7 +286,7 @@ async def test_setup_go_binary(
         server_start.assert_called_once()
 
     await _test_setup_and_signaling(
-        hass, rest_client, ws_client, {DOMAIN: {}}, after_setup, init_test_integration
+        hass, rest_client, ws_client, config, after_setup, init_test_integration
     )
 
     await hass.async_stop()
@@ -494,7 +497,7 @@ async def test_non_user_setup_with_error(
 @pytest.mark.parametrize(
     ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
     [
-        ({}, None, True, ERR_BINARY_NOT_FOUND),
+        ({DEFAULT_CONFIG_DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
         ({DOMAIN: {}}, None, False, ERR_URL_REQUIRED),
         ({DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
         ({DOMAIN: {CONF_URL: "invalid"}}, None, True, ERR_INVALID_URL),
@@ -522,7 +525,7 @@ async def test_setup_with_setup_error(
 @pytest.mark.parametrize(
     ("config", "go2rtc_binary", "is_docker_env", "expected_log_message"),
     [
-        ({}, "/usr/bin/go2rtc", True, ERR_CONNECT),
+        ({DEFAULT_CONFIG_DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
         ({DOMAIN: {}}, "/usr/bin/go2rtc", True, ERR_CONNECT),
         ({DOMAIN: {CONF_URL: "http://localhost:1984/"}}, None, True, ERR_CONNECT),
     ],
@@ -547,6 +550,7 @@ async def test_setup_with_setup_entry_error(
     assert expected_log_message in caplog.text
 
 
+@pytest.mark.parametrize("config", [{DOMAIN: {}}, {DEFAULT_CONFIG_DOMAIN: {}}])
 @pytest.mark.parametrize(
     ("cause", "expected_config_entry_state", "expected_log_message"),
     [
@@ -564,6 +568,7 @@ async def test_setup_with_retryable_setup_entry_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     rest_client: AsyncMock,
+    config: ConfigType,
     cause: Exception,
     expected_config_entry_state: ConfigEntryState,
     expected_log_message: str,
@@ -572,9 +577,18 @@ async def test_setup_with_retryable_setup_entry_error(
     go2rtc_error = Go2RtcClientError()
     go2rtc_error.__cause__ = cause
     rest_client.streams.list.side_effect = go2rtc_error
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].state == expected_config_entry_state
     assert expected_log_message in caplog.text
+
+
+async def test_config_entry_remove(hass: HomeAssistant) -> None:
+    """Test config entry removed when neither default_config nor go2rtc is in config."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
