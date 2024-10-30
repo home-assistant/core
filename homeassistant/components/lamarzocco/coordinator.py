@@ -1,5 +1,7 @@
 """Coordinator for La Marzocco API."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
@@ -26,16 +28,18 @@ STATISTICS_UPDATE_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
 
+type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
+
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    config_entry: ConfigEntry
+    config_entry: LaMarzoccoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: LaMarzoccoConfigEntry,
         cloud_client: LaMarzoccoCloudClient,
         local_client: LaMarzoccoLocalClient | None,
         bluetooth_client: LaMarzoccoBluetoothClient | None,
