@@ -76,12 +76,18 @@ class SmartySwitch(SmartyEntity, SwitchEntity):
         """Return the state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.client)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._is_on = True
-        self.entity_description.turn_on_fn(self.coordinator.client)
+        await self.hass.async_add_executor_job(
+            self.entity_description.turn_on_fn, self.coordinator.client
+        )
+        await self.coordinator.async_refresh()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._is_on = False
-        self.entity_description.turn_off_fn(self.coordinator.client)
+        await self.hass.async_add_executor_job(
+            self.entity_description.turn_off_fn, self.coordinator.client
+        )
+        await self.coordinator.async_refresh()
