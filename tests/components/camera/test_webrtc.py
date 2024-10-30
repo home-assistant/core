@@ -1145,10 +1145,6 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     provider.async_close_session("session_id")
 
 
-@pytest.mark.usefixtures("mock_camera", "register_test_provider", "mock_rtsp_to_webrtc")
-@pytest.mark.usefixtures(
-    "mock_camera", "register_go2rtc_provider", "mock_rtsp_to_webrtc"
-)
 @pytest.mark.usefixtures("mock_camera")
 async def test_repair_issue_legacy_provider(
     hass: HomeAssistant,
