@@ -35,6 +35,14 @@ async def async_setup_entry(
     def async_add_light(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add light from Switcher device."""
         entities: list[LightEntity] = []
+        device_type_to_light_count = {
+            DeviceType.LIGHT_SL01: 1,
+            DeviceType.LIGHT_SL01_MINI: 1,
+            DeviceType.LIGHT_SL02: 2,
+            DeviceType.LIGHT_SL02_MINI: 2,
+            DeviceType.LIGHT_SL03: 3,
+        }
+
         if (
             coordinator.data.device_type.category
             == DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT
@@ -46,22 +54,15 @@ async def async_setup_entry(
         ):
             entities.append(SwitcherSingleLightEntity(coordinator, 0))
         if coordinator.data.device_type.category == DeviceCategory.LIGHT:
-            if coordinator.data.device_type == DeviceType.LIGHT_SL03:
-                entities.extend(
-                    SwitcherMultiLightEntity(coordinator, i) for i in range(3)
-                )
-            if coordinator.data.device_type in (
-                DeviceType.LIGHT_SL02,
-                DeviceType.LIGHT_SL02_MINI,
-            ):
-                entities.extend(
-                    SwitcherMultiLightEntity(coordinator, i) for i in range(2)
-                )
-            if coordinator.data.device_type in (
-                DeviceType.LIGHT_SL01,
-                DeviceType.LIGHT_SL01_MINI,
-            ):
+            if device_type_to_light_count[coordinator.data.device_type] == 1:
                 entities.append(SwitcherSingleLightEntity(coordinator, 0))
+            else:
+                entities.extend(
+                    SwitcherMultiLightEntity(coordinator, i)
+                    for i in range(
+                        device_type_to_light_count[coordinator.data.device_type]
+                    )
+                )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
