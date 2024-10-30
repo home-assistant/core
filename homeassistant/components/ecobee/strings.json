@@ -37,6 +37,9 @@
       },
       "ventilator_min_type_away": {
         "name": "Ventilator min time away"
+      },
+      "aux_heat_cutover": {
+        "name": "Aux Heat Cutover Threshold"
       }
     },
     "switch": {
