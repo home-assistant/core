@@ -6,7 +6,7 @@ import logging
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
+from aioswitcher.device import DeviceCategory, DeviceState, DeviceType, SwitcherLight
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -39,12 +39,29 @@ async def async_setup_entry(
             coordinator.data.device_type.category
             == DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT
         ):
-            entities.extend(SwitcherDualLightEntity(coordinator, i) for i in range(2))
+            entities.extend(SwitcherMultiLightEntity(coordinator, i) for i in range(2))
         if (
             coordinator.data.device_type.category
             == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
         ):
             entities.append(SwitcherSingleLightEntity(coordinator, 0))
+        if coordinator.data.device_type.category == DeviceCategory.LIGHT:
+            if coordinator.data.device_type == DeviceType.LIGHT_SL03:
+                entities.extend(
+                    SwitcherMultiLightEntity(coordinator, i) for i in range(3)
+                )
+            if coordinator.data.device_type in (
+                DeviceType.LIGHT_SL02,
+                DeviceType.LIGHT_SL02_MINI,
+            ):
+                entities.extend(
+                    SwitcherMultiLightEntity(coordinator, i) for i in range(2)
+                )
+            if coordinator.data.device_type in (
+                DeviceType.LIGHT_SL01,
+                DeviceType.LIGHT_SL01_MINI,
+            ):
+                entities.append(SwitcherSingleLightEntity(coordinator, 0))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -133,8 +150,8 @@ class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
 
 
-class SwitcherDualLightEntity(SwitcherBaseLightEntity):
-    """Representation of a Switcher dual light entity."""
+class SwitcherMultiLightEntity(SwitcherBaseLightEntity):
+    """Representation of a Switcher multiple light entity."""
 
     _attr_translation_key = "light"
 
