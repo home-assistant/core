@@ -19,13 +19,26 @@
           "section_1": {
             "data": {
               "bool": "Optional boolean",
-              "int": "Numeric input"
+              "int": "Numeric input",
+              "select_power": "Garbage disposal power mode"
+            },
+            "data_description": {
+              "select_power": "Select a mode of operation for the disposal"
             },
             "description": "This section allows input of some extra data",
             "name": "Collapsible section"
           }
         },
         "submit": "Save!"
+      }
+    }
+  },
+  "selector": {
+    "select_power": {
+      "options": {
+        "normal": "Normal power",
+        "high": "High power",
+        "awesome": "Awesome power"
       }
     }
   },
