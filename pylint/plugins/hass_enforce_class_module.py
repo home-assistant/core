@@ -135,6 +135,14 @@ class HassEnforceClassModule(BaseChecker):
 
         ancestors = list(node.ancestors())
 
+        if (
+            root_name == "homeassistant.components.devolo_home_network.device_tracker"
+            and node.name == "DevoloScannerEntity"
+        ):
+            print(  # noqa: T201
+                f"All ancestors for {root_name}.{node.name}: {[anc.name for anc in ancestors]}"
+            )
+
         if current_module != "entity" and current_integration not in _ENTITY_COMPONENTS:
             top_level_ancestors = list(node.ancestors(recurs=False))
 
@@ -142,9 +150,6 @@ class HassEnforceClassModule(BaseChecker):
                 if ancestor.name in _BASE_ENTITY_MODULES and not any(
                     anc.name in _MODULE_CLASSES for anc in ancestors
                 ):
-                    print(  # noqa: T201
-                        f"All ancestors for {root_name}.{node.name}: {[anc.name for anc in ancestors]}"
-                    )
                     self.add_message(
                         "hass-enforce-class-module",
                         node=node,
