@@ -8,12 +8,14 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BRIGHTNESS,
-    CONF_HOST,
+    CONF_DEVICE_ID,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import JsonObjectType
 
 from .const import (
     CONF_KEYS,
@@ -30,6 +32,7 @@ from .const import (
     CONF_TRANSITION,
     CONF_VALUE,
     CONF_VARIABLE,
+    DEVICE_CONNECTIONS,
     DOMAIN,
     LED_PORTS,
     LED_STATUS,
@@ -42,18 +45,14 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import (
-    DeviceConnectionType,
-    get_device_connection,
-    is_address,
-    is_states_string,
-)
+from .helpers import DeviceConnectionType, is_address, is_states_string
 
 
 class LcnServiceCall:
     """Parent class for all LCN service calls."""
 
-    schema = vol.Schema({vol.Required(CONF_ADDRESS): is_address})
+    schema = vol.Schema({vol.Required(CONF_DEVICE_ID): cv.string})
+    supports_response = SupportsResponse.NONE
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize service call."""
@@ -61,19 +60,16 @@ class LcnServiceCall:
 
     def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
         """Get address connection object."""
-        address, host_name = service.data[CONF_ADDRESS]
+        device_id = service.data[CONF_DEVICE_ID]
+        device_registry = dr.async_get(self.hass)
+        if not (device := device_registry.async_get(device_id)):
+            return None
 
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.data[CONF_HOST] == host_name:
-                device_connection = get_device_connection(
-                    self.hass, address, config_entry
-                )
-                if device_connection is None:
-                    raise ValueError("Wrong address.")
-                return device_connection
-        raise ValueError("Invalid host name.")
+        return self.hass.data[DOMAIN][device.primary_config_entry][DEVICE_CONNECTIONS][
+            device_id
+        ]
 
-    async def async_call_service(self, service: ServiceCall) -> None:
+    async def async_call_service(self, service: ServiceCall) -> JsonObjectType | None:
         """Execute service call."""
         raise NotImplementedError
 
@@ -396,6 +392,32 @@ class Pck(LcnServiceCall):
         await device_connection.pck(pck)
 
 
+class AddressToDeviceId(LcnServiceCall):
+    """Get device_id from LCN address string."""
+
+    schema = vol.Schema({vol.Required(CONF_ADDRESS): is_address})
+    supports_response = SupportsResponse.ONLY
+
+    async def async_call_service(self, service: ServiceCall) -> JsonObjectType:
+        """Execute service call."""
+        address, host_name = service.data[CONF_ADDRESS]
+
+        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (host_name is None) or (config_entry.title == host_name):
+                break
+        else:
+            return {CONF_DEVICE_ID: None}
+
+        device_connections = self.hass.data[DOMAIN][config_entry.entry_id][
+            DEVICE_CONNECTIONS
+        ]
+        for device_id, device_connection in device_connections.items():
+            if device_connection.addr == pypck.lcn_addr.LcnAddr(*address):
+                return {CONF_DEVICE_ID: device_id}
+
+        return {CONF_DEVICE_ID: None}
+
+
 class LcnService(StrEnum):
     """LCN service names."""
 
@@ -412,6 +434,7 @@ class LcnService(StrEnum):
     LOCK_KEYS = auto()
     DYN_TEXT = auto()
     PCK = auto()
+    ADDRESS_TO_DEVICE_ID = auto()
 
 
 SERVICES = (
@@ -428,6 +451,7 @@ SERVICES = (
     (LcnService.LOCK_KEYS, LockKeys),
     (LcnService.DYN_TEXT, DynText),
     (LcnService.PCK, Pck),
+    (LcnService.ADDRESS_TO_DEVICE_ID, AddressToDeviceId),
 )
 
 

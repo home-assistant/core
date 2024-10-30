@@ -2,9 +2,9 @@
 
 output_abs:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     output:
@@ -34,9 +34,9 @@ output_abs:
 
 output_rel:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     output:
@@ -58,9 +58,9 @@ output_rel:
 
 output_toggle:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     output:
@@ -83,9 +83,9 @@ output_toggle:
 
 relays:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     state:
@@ -96,9 +96,9 @@ relays:
 
 led:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     led:
@@ -130,9 +130,9 @@ led:
 
 var_abs:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     variable:
@@ -197,9 +197,9 @@ var_abs:
 
 var_reset:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     variable:
@@ -230,9 +230,9 @@ var_reset:
 
 var_rel:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     variable:
@@ -321,9 +321,9 @@ var_rel:
 
 lock_regulator:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     setpoint:
@@ -355,9 +355,9 @@ lock_regulator:
 
 send_keys:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     keys:
@@ -402,9 +402,9 @@ send_keys:
 
 lock_keys:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     table:
@@ -445,9 +445,9 @@ lock_keys:
 
 dyn_text:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     row:
@@ -464,13 +464,21 @@ dyn_text:
 
 pck:
   fields:
-    address:
+    device_id:
       required: true
-      example: "myhome.s0.m7"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
         text:
     pck:
       required: true
       example: "PIN4"
+      selector:
+        text:
+
+address_to_device_id:
+  fields:
+    address:
+      required: true
+      example: "myhome.s0.m7"
       selector:
         text:
