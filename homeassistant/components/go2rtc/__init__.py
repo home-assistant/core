@@ -3,7 +3,9 @@
 import logging
 import shutil
 
+from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from go2rtc_client import Go2RtcRestClient
+from go2rtc_client.exceptions import Go2RtcClientError
 from go2rtc_client.ws import (
     Go2RtcWsClient,
     ReceiveMessages,
@@ -24,11 +26,15 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
     async_register_webrtc_provider,
 )
+from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
 
 from .const import DOMAIN
@@ -72,15 +78,24 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_DATA_GO2RTC: HassKey[str] = HassKey(DOMAIN)
+_RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
     url: str | None = None
+    if DOMAIN not in config and DEFAULT_CONFIG_DOMAIN not in config:
+        await _remove_go2rtc_entries(hass)
+        return True
+
     if not (configured_by_user := DOMAIN in config) or not (
         url := config[DOMAIN].get(CONF_URL)
     ):
         if not is_docker_env():
             if not configured_by_user:
+                # Remove config entry if it exists
+                await _remove_go2rtc_entries(hass)
                 return True
             _LOGGER.warning("Go2rtc URL required in non-docker installs")
             return False
@@ -99,16 +114,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         url = "http://localhost:1984/"
 
+    hass.data[_DATA_GO2RTC] = url
+    discovery_flow.async_create_flow(
+        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+    )
+    return True
+
+
+async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
+    """Remove go2rtc config entries, if any."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.async_remove(entry.entry_id)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up go2rtc from a config entry."""
+    url = hass.data[_DATA_GO2RTC]
+
     # Validate the server URL
     try:
         client = Go2RtcRestClient(async_get_clientsession(hass), url)
         await client.streams.list()
-    except Exception:  # noqa: BLE001
-        _LOGGER.warning("Could not connect to go2rtc instance on %s", url)
+    except Go2RtcClientError as err:
+        if isinstance(err.__cause__, _RETRYABLE_ERRORS):
+            raise ConfigEntryNotReady(
+                f"Could not connect to go2rtc instance on {url}"
+            ) from err
+        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
+        return False
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
 
     provider = WebRTCProvider(hass, url)
     async_register_webrtc_provider(hass, provider)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a go2rtc config entry."""
     return True
 
 
