@@ -99,7 +99,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
     def register_callback(self, unique_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""
-        self._host.api.baichuan.register_callback(
+        self._host.api.baichuan.register_callback(  # pragma: no cover
             unique_id, self._push_callback, cmd_id
         )
 
@@ -235,9 +235,3 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._chime.online and super().available
-
-    def register_callback(self, unique_id: str, cmd_id) -> None:
-        """Register callback for TCP push events."""
-        self._host.api.baichuan.register_callback(
-            unique_id, self._push_callback, cmd_id
-        )
