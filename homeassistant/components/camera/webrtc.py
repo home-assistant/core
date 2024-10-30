@@ -135,6 +135,7 @@ class CameraWebRTCProvider(Protocol):
     @callback
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
+        return  ## This is an optional method so we need a default here.
 
 
 class CameraWebRTCLegacyProvider(Protocol):
