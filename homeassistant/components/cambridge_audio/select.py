@@ -31,8 +31,8 @@ async def _audio_output_set_value_fn(client: StreamMagicClient, value: str) -> N
         (output.id for output in client.audio_output.outputs if value == output.name),
         None,
     )
-    if audio_output_id:
-        await client.set_audio_output(audio_output_id)
+    assert audio_output_id is not None
+    await client.set_audio_output(audio_output_id)
 
 
 def _audio_output_value_fn(client: StreamMagicClient) -> str | None:
