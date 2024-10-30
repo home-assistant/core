@@ -24,11 +24,11 @@ async def test_media_player(
     )
 
 
-async def test_base_media_player_actions(
+async def test_media_player_actions(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test base media_player entity actions."""
+    """Test media_player entity actions."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_player_1"
     mass_player_id = "00:00:00:00:00:01"
@@ -57,3 +57,52 @@ async def test_base_media_player_actions(
             f"players/cmd/{cmd}", player_id=mass_player_id
         )
         music_assistant_client.send_command.reset_mock()
+
+    # test seek action
+    await hass.services.async_call(
+        "media_player",
+        "media_seek",
+        {
+            "entity_id": entity_id,
+            "seek_position": 100,
+        },
+        blocking=True,
+    )
+
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/seek", player_id=mass_player_id, position=100
+    )
+    music_assistant_client.send_command.reset_mock()
+
+    # test volume action
+    await hass.services.async_call(
+        "media_player",
+        "volume_set",
+        {
+            "entity_id": entity_id,
+            "volume_level": 0.5,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/volume_set", player_id=mass_player_id, volume_level=50
+    )
+    music_assistant_client.send_command.reset_mock()
+
+    # test volume mute action
+    await hass.services.async_call(
+        "media_player",
+        "volume_mute",
+        {
+            "entity_id": entity_id,
+            "is_volume_muted": True,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/volume_mute", player_id=mass_player_id, muted=True
+    )
+    music_assistant_client.send_command.reset_mock()
