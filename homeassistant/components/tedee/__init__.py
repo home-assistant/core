@@ -23,7 +23,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, NAME
-from .coordinator import TedeeApiCoordinator
+from .coordinator import TedeeApiCoordinator, TedeeConfigEntry
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -32,8 +32,6 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
