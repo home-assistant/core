@@ -81,6 +81,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "The device_id of the LCN module or group."
         },
+        "address": {
+          "name": "Address",
+          "description": "Module address."
+        },
         "output": {
           "name": "Output",
           "description": "Output port."
@@ -103,6 +107,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
         },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
         "output": {
           "name": "[%key:component::lcn::services::output_abs::fields::output::name%]",
           "description": "[%key:component::lcn::services::output_abs::fields::output::description%]"
@@ -120,6 +128,10 @@
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "output": {
           "name": "[%key:component::lcn::services::output_abs::fields::output::name%]",
@@ -139,6 +151,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
         },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
         "state": {
           "name": "State",
           "description": "Relays states as string (1=on, 2=off, t=toggle, -=no change)."
@@ -152,6 +168,10 @@
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "led": {
           "name": "[%key:component::lcn::services::led::name%]",
@@ -170,6 +190,10 @@
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "variable": {
           "name": "Variable",
@@ -193,6 +217,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
         },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
         "variable": {
           "name": "[%key:component::lcn::services::var_abs::fields::variable::name%]",
           "description": "[%key:component::lcn::services::var_abs::fields::variable::description%]"
@@ -206,6 +234,10 @@
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "variable": {
           "name": "[%key:component::lcn::services::var_abs::fields::variable::name%]",
@@ -233,6 +265,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
         },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
         "setpoint": {
           "name": "Setpoint",
           "description": "Setpoint name."
@@ -250,6 +286,10 @@
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "keys": {
           "name": "Keys",
@@ -277,6 +317,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
         },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
         "table": {
           "name": "Table",
           "description": "Table with keys to lock (must be A for interval)."
@@ -303,6 +347,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
         },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
         "row": {
           "name": "Row",
           "description": "Text row."
@@ -321,6 +369,10 @@
           "name": "[%key:common::config_flow::data::device%]",
           "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
         },
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
         "pck": {
           "name": "[%key:component::lcn::services::pck::name%]",
           "description": "PCK command (without address header)."
@@ -333,9 +385,20 @@
       "fields": {
         "address": {
           "name": "Address",
-          "description": "LCN address"
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "no_device_identifier": {
+      "message": "No device identifier provided. Please provide the device id."
+    },
+    "invalid_address": {
+      "message": "LCN device for given address has not been configured."
+    },
+    "invalid_device_id": {
+      "message": "LCN device for given device id has not been configured."
     }
   }
 }

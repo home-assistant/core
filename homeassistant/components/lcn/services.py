@@ -1,6 +1,7 @@
 """Service calls related dependencies for LCN component."""
 
 from enum import StrEnum, auto
+from typing import cast
 
 import pypck
 import voluptuous as vol
@@ -13,6 +14,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import JsonObjectType
@@ -45,25 +47,60 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import DeviceConnectionType, is_address, is_states_string
+from .helpers import (
+    DeviceConnectionType,
+    address_to_device_id,
+    is_address,
+    is_states_string,
+)
 
 
 class LcnServiceCall:
     """Parent class for all LCN service calls."""
 
-    schema = vol.Schema({vol.Required(CONF_DEVICE_ID): cv.string})
+    schema = vol.Schema(
+        {
+            vol.Exclusive(CONF_DEVICE_ID, "device"): cv.string,
+            vol.Exclusive(CONF_ADDRESS, "device"): is_address,
+        }
+    )
     supports_response = SupportsResponse.NONE
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize service call."""
         self.hass = hass
 
+    def get_device_id(self, service: ServiceCall) -> str:
+        """Get device_id from service.data."""
+        if CONF_DEVICE_ID not in service.data and CONF_ADDRESS not in service.data:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_device_identifier",
+            )
+
+        if CONF_ADDRESS in service.data:
+            address, host_name = service.data[CONF_ADDRESS]
+            device_id = address_to_device_id(self.hass, address, host_name)
+            if device_id is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_address",
+                )
+        else:
+            device_id = cast(str, service.data[CONF_DEVICE_ID])
+
+        return device_id
+
     def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
         """Get address connection object."""
-        device_id = service.data[CONF_DEVICE_ID]
+        device_id = self.get_device_id(service)
         device_registry = dr.async_get(self.hass)
         if not (device := device_registry.async_get(device_id)):
-            return None
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device_id",
+                translation_placeholders={"device_id": device_id},
+            )
 
         return self.hass.data[DOMAIN][device.primary_config_entry][DEVICE_CONNECTIONS][
             device_id
@@ -400,22 +437,8 @@ class AddressToDeviceId(LcnServiceCall):
 
     async def async_call_service(self, service: ServiceCall) -> JsonObjectType:
         """Execute service call."""
-        address, host_name = service.data[CONF_ADDRESS]
-
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (host_name is None) or (config_entry.title == host_name):
-                break
-        else:
-            return {CONF_DEVICE_ID: None}
-
-        device_connections = self.hass.data[DOMAIN][config_entry.entry_id][
-            DEVICE_CONNECTIONS
-        ]
-        for device_id, device_connection in device_connections.items():
-            if device_connection.addr == pypck.lcn_addr.LcnAddr(*address):
-                return {CONF_DEVICE_ID: device_id}
-
-        return {CONF_DEVICE_ID: None}
+        device_id = self.get_device_id(service)
+        return {CONF_DEVICE_ID: device_id}
 
 
 class LcnService(StrEnum):

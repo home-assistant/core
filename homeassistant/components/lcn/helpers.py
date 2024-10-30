@@ -345,6 +345,25 @@ def is_address(value: str) -> tuple[AddressType, str]:
     raise ValueError(f"{value} is not a valid address string")
 
 
+def address_to_device_id(
+    hass: HomeAssistant, address: AddressType, host_name: str
+) -> str | None:
+    """Convert LCN address to device_id."""
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if (host_name is None) or (config_entry.title == host_name):
+            break
+    else:
+        return None
+
+    device_connections: dict[str, DeviceConnectionType] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DEVICE_CONNECTIONS]
+    for device_id, device_connection in device_connections.items():
+        if device_connection.addr == pypck.lcn_addr.LcnAddr(*address):
+            return device_id
+    return None
+
+
 def is_states_string(states_string: str) -> list[str]:
     """Validate the given states string and return states list."""
     if len(states_string) != 8:
