@@ -1,17 +1,25 @@
 """Go2rtc server."""
 
 import asyncio
+from contextlib import suppress
 import logging
 from tempfile import NamedTemporaryFile
 
+from go2rtc_client import Go2RtcRestClient
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import DEFAULT_URL
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
 _SETUP_TIMEOUT = 30
 _SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr="
 _LOCALHOST_IP = "127.0.0.1"
+_RESPAWN_COOLDOWN = 1
+
 # Default configuration for HA
 # - Api is listening only on localhost
 # - Disable rtsp listener
@@ -27,6 +35,16 @@ rtsp:
 webrtc:
   ice_servers: []
 """
+
+
+class Go2RTCServerStartError(HomeAssistantError):
+    """Raised when server does not start."""
+
+    _message = "Go2rtc server didn't start correctly"
+
+
+class Go2RTCWatchdogError(HomeAssistantError):
+    """Raised on watchdog error."""
 
 
 def _create_temp_file(api_ip: str) -> str:
@@ -53,8 +71,14 @@ class Server:
         if enable_ui:
             # Listen on all interfaces for allowing access from all ips
             self._api_ip = ""
+        self._stop_requested = False
 
     async def start(self) -> None:
+        """Start the server."""
+        await self._start()
+        self._hass.async_create_background_task(self._watchdog(), "Go2rtc respawn")
+
+    async def _start(self) -> None:
         """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
         config_file = await self._hass.async_add_executor_job(
@@ -82,8 +106,54 @@ class Server:
         except TimeoutError as err:
             msg = "Go2rtc server didn't start correctly"
             _LOGGER.exception(msg)
-            await self.stop()
-            raise HomeAssistantError("Go2rtc server didn't start correctly") from err
+            await self._stop()
+            raise Go2RTCServerStartError from err
+
+    async def _watchdog(self) -> None:
+        """Keep respawning go2rtc servers.
+
+        A new go2rtc server is spawned if the process terminates or the API
+        stops responding.
+        """
+        while not self._stop_requested:
+            try:
+                async with asyncio.TaskGroup() as tg:
+                    tg.create_task(self._monitor_process())
+                    tg.create_task(self._monitor_api())
+            except ExceptionGroup as grp:
+                if not grp.subgroup(Go2RTCWatchdogError):
+                    _LOGGER.exception("Watchdog got unexpected exception")
+                if self._stop_requested:
+                    continue  # type: ignore[unreachable]
+                await asyncio.sleep(_RESPAWN_COOLDOWN)
+                try:
+                    await self._stop()
+                    _LOGGER.debug("Spawning new go2rtc server")
+                    with suppress(Go2RTCServerStartError):
+                        await self._start()
+                except Exception:
+                    _LOGGER.exception("Unexpected error when restarting go2rtc server")
+
+    async def _monitor_process(self) -> None:
+        """Raise if the go2rtc process terminates."""
+        _LOGGER.debug("Monitoring go2rtc server process")
+        if self._process:
+            await self._process.wait()
+        _LOGGER.debug("go2rtc server terminated")
+        raise Go2RTCWatchdogError("Process ended")
+
+    async def _monitor_api(self) -> None:
+        """Raise if the go2rtc process terminates."""
+        client = Go2RtcRestClient(async_get_clientsession(self._hass), DEFAULT_URL)
+
+        _LOGGER.debug("Monitoring go2rtc API")
+        try:
+            while True:
+                await client.streams.list()
+                await asyncio.sleep(10)
+        except Exception as err:
+            _LOGGER.debug("go2rtc API did not reply")
+            raise Go2RTCWatchdogError("API error") from err
 
     async def _log_output(self, process: asyncio.subprocess.Process) -> None:
         """Log the output of the process."""
@@ -96,16 +166,23 @@ class Server:
                 self._startup_complete.set()
 
     async def stop(self) -> None:
+        """Stop the server and set the stop_requested flag."""
+        self._stop_requested = True
+        await self._stop()
+
+    async def _stop(self) -> None:
         """Stop the server."""
         if self._process:
             _LOGGER.debug("Stopping go2rtc server")
             process = self._process
             self._process = None
-            process.terminate()
+            with suppress(ProcessLookupError):
+                process.terminate()
             try:
                 await asyncio.wait_for(process.wait(), timeout=_TERMINATE_TIMEOUT)
             except TimeoutError:
                 _LOGGER.warning("Go2rtc server didn't terminate gracefully. Killing it")
-                process.kill()
+                with suppress(ProcessLookupError):
+                    process.kill()
             else:
                 _LOGGER.debug("Go2rtc server has been stopped")
