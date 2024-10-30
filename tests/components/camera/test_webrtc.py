@@ -1112,6 +1112,11 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     class OnlyRequiredInterfaceProvider(CameraWebRTCProvider):
         """Test provider."""
 
+        @property
+        def domain(self) -> str:
+            """Return the domain of the provider."""
+            return "test"
+
         @callback
         def async_is_supported(self, stream_source: str) -> bool:
             """Determine if the provider supports the stream source."""
