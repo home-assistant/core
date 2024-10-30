@@ -62,10 +62,13 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
             homeassistant_addon=False,
             onboard_done=True,
         )
+        client.connection = MagicMock()
+        client.connection.connected = True
         client.players = Players(client)
         client.player_queues = PlayerQueues(client)
         client.music = Music(client)
         client.server_url = client.server_info.base_url
+        client.get_media_item_image_url = MagicMock(return_value=None)
 
         yield client
 

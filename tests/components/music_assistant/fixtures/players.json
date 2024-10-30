@@ -46,7 +46,7 @@
     "type": "player",
     "name": "Test Player 2",
     "available": true,
-    "powered": false,
+    "powered": true,
     "device_info": {
       "model": "Test Model",
       "address": "192.168.1.2",
@@ -98,7 +98,7 @@
     "type": "group",
     "name": "Test Group Player 1",
     "available": true,
-    "powered": false,
+    "powered": true,
     "device_info": {
       "model": "Sync Group",
       "address": "",
