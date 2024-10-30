@@ -9,6 +9,7 @@ from unittest.mock import patch
 from urllib.request import pathname2url
 import wave
 
+from aiohttp import client_exceptions
 import mutagen
 import pytest
 
@@ -286,3 +287,48 @@ async def test_max_conversions_per_device(
             for url in urls[1:]:
                 req = await client.get(url)
                 assert req.status == HTTPStatus.OK
+
+
+async def test_abort_on_shutdown(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test we abort on Home Assistant shutdown."""
+    device_id = "1234"
+
+    await async_setup_component(hass, esphome.DOMAIN, {esphome.DOMAIN: {}})
+    client = await hass_client()
+
+    with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as temp_file:
+        with wave.open(temp_file.name, "wb") as wav_file:
+            wav_file.setframerate(16000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(bytes(16000 * 2))  # 1s
+
+        wav_url = pathname2url(temp_file.name)
+        convert_id = "test-id"
+        url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.mp3"
+
+        wav_url = pathname2url(temp_file.name)
+        url = async_create_proxy_url(
+            hass,
+            device_id,
+            wav_url,
+            media_format="wav",
+            rate=22050,
+            channels=2,
+            width=2,
+        )
+
+        # Get URL and start reading
+        req = await client.get(url)
+        assert req.status == HTTPStatus.OK
+        initial_mp3_data = await req.content.read(4)
+        assert initial_mp3_data == b"RIFF"
+
+        # Shut down Home Assistant
+        await hass.async_stop()
+
+        with pytest.raises(client_exceptions.ClientPayloadError):
+            await req.content.read()
