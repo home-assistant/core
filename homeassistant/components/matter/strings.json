@@ -36,6 +36,7 @@
       "addon_start_failed": "Failed to start the Matter Server add-on.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_matter_addon": "Discovered add-on is not the official Matter Server add-on.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
     },
@@ -173,6 +174,9 @@
       }
     },
     "select": {
+      "clean_mode": {
+        "name": "Clean mode"
+      },
       "mode": {
         "name": "Mode"
       },
@@ -249,6 +253,11 @@
       },
       "power": {
         "name": "Power"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "name": "[%key:component::vacuum::title%]"
       }
     },
     "valve": {

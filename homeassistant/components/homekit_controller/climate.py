@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 import logging
 from typing import Any, Final
 
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
     CharacteristicsTypes,
+    CurrentFanStateValues,
     CurrentHeaterCoolerStateValues,
     HeatingCoolingCurrentValues,
     HeatingCoolingTargetValues,
@@ -17,6 +17,7 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
+from propcache import cached_property
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -484,6 +485,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
             CharacteristicsTypes.TEMPERATURE_TARGET,
             CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
+            CharacteristicsTypes.FAN_STATE_CURRENT,
         ]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -666,7 +668,19 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
             return HVACAction.IDLE
 
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_CURRENT)
-        return CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
+        current_hass_value = CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
+
+        # If a device has a fan state (such as an Ecobee thermostat)
+        # show the Fan state when the device is otherwise idle.
+        if (
+            current_hass_value == HVACAction.IDLE
+            and self.service.has(CharacteristicsTypes.FAN_STATE_CURRENT)
+            and self.service.value(CharacteristicsTypes.FAN_STATE_CURRENT)
+            == CurrentFanStateValues.ACTIVE
+        ):
+            return HVACAction.FAN
+
+        return current_hass_value
 
     @property
     def hvac_mode(self) -> HVACMode:

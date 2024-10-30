@@ -11,7 +11,7 @@ from homeassistant.components.feedreader.const import (
     DEFAULT_MAX_ENTRIES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_URL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -162,16 +162,9 @@ async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
     await hass.async_block_till_done()
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # success
     with patch(
@@ -201,16 +194,9 @@ async def test_reconfigure_errors(
     entry.add_to_hass(hass)
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # raise URLError
     feedparser.side_effect = urllib.error.URLError("Test")
@@ -222,7 +208,7 @@ async def test_reconfigure_errors(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "url_error"}
 
     # success

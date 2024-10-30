@@ -91,6 +91,7 @@ from .queries import (
     find_states_context_ids_to_migrate,
     find_unmigrated_short_term_statistics_rows,
     find_unmigrated_statistics_rows,
+    get_migration_changes,
     has_entity_ids_to_migrate,
     has_event_type_to_migrate,
     has_events_context_ids_to_migrate,
@@ -104,6 +105,7 @@ from .statistics import cleanup_statistics_timestamp_migration, get_start_time
 from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
+    database_job_retry_wrapper_method,
     execute_stmt_lambda_element,
     get_index_by_name,
     retryable_database_job_method,
@@ -198,12 +200,13 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
         return None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
     migration_needed: bool
+    non_live_data_migration_needed: bool
     schema_errors: set[str]
     start_version: int
 
@@ -233,8 +236,17 @@ def validate_db_schema(
         # columns may otherwise not exist etc.
         schema_errors = _find_schema_errors(hass, instance, session_maker)
 
+    schema_migration_needed = not is_current
+    _non_live_data_migration_needed = non_live_data_migration_needed(
+        instance, session_maker, current_version
+    )
+
     return SchemaValidationStatus(
-        current_version, not is_current, schema_errors, current_version
+        current_version=current_version,
+        non_live_data_migration_needed=_non_live_data_migration_needed,
+        migration_needed=schema_migration_needed or _non_live_data_migration_needed,
+        schema_errors=schema_errors,
+        start_version=current_version,
     )
 
 
@@ -251,7 +263,10 @@ def _find_schema_errors(
 
 def live_migration(schema_status: SchemaValidationStatus) -> bool:
     """Check if live migration is possible."""
-    return schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+    return (
+        schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+        and not schema_status.non_live_data_migration_needed
+    )
 
 
 def pre_migrate_schema(engine: Engine) -> None:
@@ -348,6 +363,68 @@ def migrate_schema_live(
         events_correct_db_schema(instance, schema_errors)
 
     return schema_status
+
+
+def _get_migration_changes(session: Session) -> dict[str, int]:
+    """Return migration changes as a dict."""
+    migration_changes: dict[str, int] = {
+        row[0]: row[1]
+        for row in execute_stmt_lambda_element(session, get_migration_changes())
+    }
+    return migration_changes
+
+
+def non_live_data_migration_needed(
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    schema_version: int,
+) -> bool:
+    """Return True if non-live data migration is needed.
+
+    This must only be called if database schema is current.
+    """
+    migration_needed = False
+    with session_scope(session=session_maker()) as session:
+        migration_changes = _get_migration_changes(session)
+        for migrator_cls in NON_LIVE_DATA_MIGRATORS:
+            migrator = migrator_cls(schema_version, migration_changes)
+            migration_needed |= migrator.needs_migrate(instance, session)
+
+    return migration_needed
+
+
+def migrate_data_non_live(
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    schema_status: SchemaValidationStatus,
+) -> None:
+    """Do non-live data migration.
+
+    This must be called after non-live schema migration is completed.
+    """
+    with session_scope(session=session_maker()) as session:
+        migration_changes = _get_migration_changes(session)
+
+    for migrator_cls in NON_LIVE_DATA_MIGRATORS:
+        migrator = migrator_cls(schema_status.start_version, migration_changes)
+        migrator.migrate_all(instance, session_maker)
+
+
+def migrate_data_live(
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    schema_status: SchemaValidationStatus,
+) -> None:
+    """Queue live schema migration tasks.
+
+    This must be called after live schema migration is completed.
+    """
+    with session_scope(session=session_maker()) as session:
+        migration_changes = _get_migration_changes(session)
+
+        for migrator_cls in LIVE_DATA_MIGRATORS:
+            migrator = migrator_cls(schema_status.start_version, migration_changes)
+            migrator.queue_migration(instance, session)
 
 
 def _create_index(
@@ -2196,29 +2273,24 @@ class DataMigrationStatus:
     migration_done: bool
 
 
-class BaseRunTimeMigration(ABC):
-    """Base class for run time migrations."""
+class BaseMigration(ABC):
+    """Base class for migrations."""
 
     index_to_drop: tuple[str, str] | None = None
     required_schema_version = 0
     migration_version = 1
     migration_id: str
-    task = MigrationTask
 
     def __init__(self, schema_version: int, migration_changes: dict[str, int]) -> None:
         """Initialize a new BaseRunTimeMigration."""
         self.schema_version = schema_version
         self.migration_changes = migration_changes
 
-    def do_migrate(self, instance: Recorder, session: Session) -> None:
-        """Start migration if needed."""
-        if self.needs_migrate(instance, session):
-            instance.queue_task(self.task(self))
-        else:
-            self.migration_done(instance, session)
-
-    @retryable_database_job_method("migrate data")
+    @abstractmethod
     def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, return True if migration is completed."""
+
+    def _migrate_data(self, instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
         status = self.migrate_data_impl(instance)
         if status.migration_done:
@@ -2273,7 +2345,45 @@ class BaseRunTimeMigration(ABC):
         return needs_migrate.needs_migrate
 
 
-class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
+class BaseOffLineMigration(BaseMigration):
+    """Base class for off line migrations."""
+
+    def migrate_all(
+        self, instance: Recorder, session_maker: Callable[[], Session]
+    ) -> None:
+        """Migrate all data."""
+        with session_scope(session=session_maker()) as session:
+            if not self.needs_migrate(instance, session):
+                self.migration_done(instance, session)
+                return
+        while not self.migrate_data(instance):
+            pass
+
+    @database_job_retry_wrapper_method("migrate data", 10)
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return self._migrate_data(instance)
+
+
+class BaseRunTimeMigration(BaseMigration):
+    """Base class for run time migrations."""
+
+    task = MigrationTask
+
+    def queue_migration(self, instance: Recorder, session: Session) -> None:
+        """Start migration if needed."""
+        if self.needs_migrate(instance, session):
+            instance.queue_task(self.task(self))
+        else:
+            self.migration_done(instance, session)
+
+    @retryable_database_job_method("migrate data")
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return self._migrate_data(instance)
+
+
+class BaseMigrationWithQuery(BaseMigration):
     """Base class for run time migrations."""
 
     @abstractmethod
@@ -2290,7 +2400,7 @@ class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
         )
 
 
-class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
+class StatesContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate states context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2333,7 +2443,7 @@ class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
         return has_states_context_ids_to_migrate()
 
 
-class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
+class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate events context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2376,7 +2486,7 @@ class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
+class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
@@ -2454,7 +2564,7 @@ class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseRunTimeMigrationWithQuery):
+class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
@@ -2542,7 +2652,7 @@ class EntityIDMigration(BaseRunTimeMigrationWithQuery):
         instance.states_meta_manager.active = True
         with contextlib.suppress(SQLAlchemyError):
             migrate = EntityIDPostMigration(self.schema_version, self.migration_changes)
-            migrate.do_migrate(instance, session)
+            migrate.queue_migration(instance, session)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2631,7 +2741,7 @@ class EventIDPostMigration(BaseRunTimeMigration):
         return DataMigrationStatus(needs_migrate=False, migration_done=True)
 
 
-class EntityIDPostMigration(BaseRunTimeMigrationWithQuery):
+class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
     """Migration to remove old entity_id strings from states."""
 
     migration_id = "entity_id_post_migration"
@@ -2648,9 +2758,19 @@ class EntityIDPostMigration(BaseRunTimeMigrationWithQuery):
         return has_used_states_entity_ids()
 
 
-def _mark_migration_done(
-    session: Session, migration: type[BaseRunTimeMigration]
-) -> None:
+NON_LIVE_DATA_MIGRATORS = (
+    StatesContextIDMigration,  # Introduced in HA Core 2023.4
+    EventsContextIDMigration,  # Introduced in HA Core 2023.4
+)
+
+LIVE_DATA_MIGRATORS = (
+    EventTypeIDMigration,
+    EntityIDMigration,
+    EventIDPostMigration,
+)
+
+
+def _mark_migration_done(session: Session, migration: type[BaseMigration]) -> None:
     """Mark a migration as done in the database."""
     session.merge(
         MigrationChanges(

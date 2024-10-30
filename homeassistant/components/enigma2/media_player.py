@@ -8,47 +8,19 @@ from typing import cast
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import Enigma2ConfigEntry
-from .const import (
-    CONF_DEEP_STANDBY,
-    CONF_MAC_ADDRESS,
-    CONF_SOURCE_BOUQUET,
-    CONF_USE_CHANNEL_ICON,
-    DEFAULT_DEEP_STANDBY,
-    DEFAULT_MAC_ADDRESS,
-    DEFAULT_NAME,
-    DEFAULT_PASSWORD,
-    DEFAULT_PORT,
-    DEFAULT_SOURCE_BOUQUET,
-    DEFAULT_SSL,
-    DEFAULT_USE_CHANNEL_ICON,
-    DEFAULT_USERNAME,
-    DOMAIN,
-)
 from .coordinator import Enigma2UpdateCoordinator
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
@@ -57,49 +29,6 @@ ATTR_MEDIA_END_TIME = "media_end_time"
 ATTR_MEDIA_START_TIME = "media_start_time"
 
 _LOGGER = getLogger(__name__)
-
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(
-            CONF_USE_CHANNEL_ICON, default=DEFAULT_USE_CHANNEL_ICON
-        ): cv.boolean,
-        vol.Optional(CONF_DEEP_STANDBY, default=DEFAULT_DEEP_STANDBY): cv.boolean,
-        vol.Optional(CONF_MAC_ADDRESS, default=DEFAULT_MAC_ADDRESS): cv.string,
-        vol.Optional(CONF_SOURCE_BOUQUET, default=DEFAULT_SOURCE_BOUQUET): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up of an enigma2 media player."""
-
-    entry_data = {
-        CONF_HOST: config[CONF_HOST],
-        CONF_PORT: config[CONF_PORT],
-        CONF_USERNAME: config[CONF_USERNAME],
-        CONF_PASSWORD: config[CONF_PASSWORD],
-        CONF_SSL: config[CONF_SSL],
-        CONF_USE_CHANNEL_ICON: config[CONF_USE_CHANNEL_ICON],
-        CONF_DEEP_STANDBY: config[CONF_DEEP_STANDBY],
-        CONF_SOURCE_BOUQUET: config[CONF_SOURCE_BOUQUET],
-    }
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_data
-        )
-    )
 
 
 async def async_setup_entry(

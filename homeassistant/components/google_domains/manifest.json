@@ -1,7 +1,0 @@
-{
-  "domain": "google_domains",
-  "name": "Google Domains",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/google_domains",
-  "iot_class": "cloud_polling"
-}

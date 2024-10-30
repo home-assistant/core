@@ -8,8 +8,8 @@ import pytest
 from yarl import URL
 
 from homeassistant.components import cloud
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers.network import (
     NoURLAvailableError,
     _get_cloud_url,

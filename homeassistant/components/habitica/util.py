@@ -5,6 +5,21 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING, Any
 
+from dateutil.rrule import (
+    DAILY,
+    FR,
+    MO,
+    MONTHLY,
+    SA,
+    SU,
+    TH,
+    TU,
+    WE,
+    WEEKLY,
+    YEARLY,
+    rrule,
+)
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
@@ -13,6 +28,9 @@ from homeassistant.util import dt as dt_util
 
 def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:
     """Calculate due date for dailies and yesterdailies."""
+
+    if task["everyX"] == 0 or not task.get("nextDue"):  # grey dailies never become due
+        return None
 
     today = to_date(last_cron)
     startdate = to_date(task["startDate"])
@@ -59,3 +77,65 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
     used_in = automations_with_entity(hass, entity_id)
     used_in += scripts_with_entity(hass, entity_id)
     return used_in
+
+
+FREQUENCY_MAP = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}
+WEEKDAY_MAP = {"m": MO, "t": TU, "w": WE, "th": TH, "f": FR, "s": SA, "su": SU}
+
+
+def build_rrule(task: dict[str, Any]) -> rrule:
+    """Build rrule string."""
+
+    rrule_frequency = FREQUENCY_MAP.get(task["frequency"], DAILY)
+    weekdays = [
+        WEEKDAY_MAP[day] for day, is_active in task["repeat"].items() if is_active
+    ]
+    bymonthday = (
+        task["daysOfMonth"]
+        if rrule_frequency == MONTHLY and task["daysOfMonth"]
+        else None
+    )
+
+    bysetpos = None
+    if rrule_frequency == MONTHLY and task["weeksOfMonth"]:
+        bysetpos = task["weeksOfMonth"]
+        weekdays = weekdays if weekdays else [MO]
+
+    return rrule(
+        freq=rrule_frequency,
+        interval=task["everyX"],
+        dtstart=dt_util.start_of_local_day(
+            datetime.datetime.fromisoformat(task["startDate"])
+        ),
+        byweekday=weekdays if rrule_frequency in [WEEKLY, MONTHLY] else None,
+        bymonthday=bymonthday,
+        bysetpos=bysetpos,
+    )
+
+
+def get_recurrence_rule(recurrence: rrule) -> str:
+    r"""Extract and return the recurrence rule portion of an RRULE.
+
+    This function takes an RRULE representing a task's recurrence pattern,
+    builds the RRULE string, and extracts the recurrence rule part.
+
+    'DTSTART:YYYYMMDDTHHMMSS\nRRULE:FREQ=YEARLY;INTERVAL=2'
+
+    Parameters
+    ----------
+    recurrence : rrule
+        An RRULE object.
+
+    Returns
+    -------
+    str
+        The recurrence rule portion of the RRULE string, starting with 'FREQ='.
+
+    Example
+    -------
+    >>> rule = get_recurrence_rule(task)
+    >>> print(rule)
+    'FREQ=YEARLY;INTERVAL=2'
+
+    """
+    return str(recurrence).split("RRULE:")[1]

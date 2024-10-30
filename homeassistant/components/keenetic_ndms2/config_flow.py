@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
@@ -118,7 +118,9 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         if not discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             return self.async_abort(reason="no_udn")
 
-        host = urlparse(discovery_info.ssdp_location).hostname
+        # We can cast the hostname to str because the ssdp_location is not bytes and
+        # not a relative url
+        host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 

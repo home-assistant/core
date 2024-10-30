@@ -14,7 +14,7 @@ from homeassistant.components.jewish_calendar.const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
@@ -72,6 +72,8 @@ async def test_import_no_options(hass: HomeAssistant, language, diaspora) -> Non
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
+    assert CONF_LANGUAGE in entries[0].data
+    assert CONF_DIASPORA in entries[0].data
     for entry_key, entry_val in entries[0].data.items():
         assert entry_val == conf[DOMAIN][entry_key]
 
@@ -166,6 +168,10 @@ async def test_options_reconfigure(
     )
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.jewish_calendar.config.abort.reconfigure_successful"],
+)
 async def test_reconfigure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -175,16 +181,9 @@ async def test_reconfigure(
     await hass.async_block_till_done()
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # success
     result = await hass.config_entries.flow.async_configure(
