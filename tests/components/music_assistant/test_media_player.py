@@ -2,9 +2,12 @@
 
 from unittest.mock import MagicMock, call
 
+from music_assistant_models.enums import MediaType, QueueOption
+from music_assistant_models.media_items import Track
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
@@ -12,6 +15,19 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
+)
+from homeassistant.components.music_assistant.const import DOMAIN as MASS_DOMAIN
+from homeassistant.components.music_assistant.media_player import (
+    ATTR_ALBUM,
+    ATTR_ANNOUNCE_VOLUME,
+    ATTR_ARTIST,
+    ATTR_MEDIA_ID,
+    ATTR_MEDIA_TYPE,
+    ATTR_RADIO_MODE,
+    ATTR_URL,
+    ATTR_USE_PRE_ANNOUNCE,
+    SERVICE_PLAY_ANNOUNCEMENT,
+    SERVICE_PLAY_MEDIA_ADVANCED,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,6 +50,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_integration_from_fixtures, snapshot_music_assistant_entities
+
+from tests.common import AsyncMock
+
+MOCK_TRACK = Track(
+    item_id="1",
+    provider="library",
+    name="Test Track",
+    provider_mappings={},
+)
 
 
 async def test_media_player(
@@ -110,11 +135,11 @@ async def test_media_player_seek_action(
     )
 
 
-async def test_media_player_volume_action(
+async def test_media_player_volume_set_action(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test media_player entity volume action."""
+    """Test media_player entity volume_set action."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_player_1"
     mass_player_id = "00:00:00:00:00:01"
@@ -260,4 +285,169 @@ async def test_media_player_clear_playlist_action(
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
         "player_queues/clear", queue_id=mass_player_id
+    )
+
+
+async def test_media_player_play_media_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player (advanced) play_media action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # test simple play_media call with URI as media_id and no media type
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+    )
+
+    # test simple play_media call with URI and enqueue specified
+    music_assistant_client.send_command.reset_mock()
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+            ATTR_MEDIA_ENQUEUE: "add",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=QueueOption.ADD,
+        radio_mode=False,
+        start_item=None,
+    )
+
+    # test basic play_media call with URL and radio mode specified
+    music_assistant_client.send_command.reset_mock()
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+            ATTR_RADIO_MODE: True,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=True,
+        start_item=None,
+    )
+
+    # test play_media call with media id and media type specified
+    music_assistant_client.send_command.reset_mock()
+    music_assistant_client.music.get_item = AsyncMock(return_value=MOCK_TRACK)
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "1",
+            ATTR_MEDIA_TYPE: "track",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.music.get_item.call_count == 1
+    assert music_assistant_client.music.get_item.call_args == call(
+        MediaType.TRACK, "1", "library"
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=[MOCK_TRACK.uri],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+    )
+
+    # test play_media call by name
+    music_assistant_client.send_command.reset_mock()
+    music_assistant_client.music.get_item_by_name = AsyncMock(return_value=MOCK_TRACK)
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "test",
+            ATTR_ARTIST: "artist",
+            ATTR_ALBUM: "album",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.music.get_item_by_name.call_count == 1
+    assert music_assistant_client.music.get_item_by_name.call_args == call(
+        name="test",
+        artist="artist",
+        album="album",
+        media_type=None,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=[MOCK_TRACK.uri],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+    )
+
+
+async def test_media_player_play_announcement_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player play_announcement action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_PLAY_ANNOUNCEMENT,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_URL: "http://blah.com/announcement.mp3",
+            ATTR_USE_PRE_ANNOUNCE: True,
+            ATTR_ANNOUNCE_VOLUME: 50,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/play_announcement",
+        player_id=mass_player_id,
+        url="http://blah.com/announcement.mp3",
+        use_pre_announce=True,
+        volume_level=50,
     )
