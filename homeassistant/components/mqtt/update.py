@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TypedDict, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -75,19 +75,6 @@ MQTT_JSON_UPDATE_SCHEMA = vol.Schema(
 )
 
 
-class _MqttUpdatePayloadType(TypedDict, total=False):
-    """Presentation of supported JSON payload to process state updates."""
-
-    installed_version: str
-    latest_version: str
-    title: str
-    release_summary: str
-    release_url: str
-    entity_picture: str
-    in_progress: bool
-    update_percentage: int | float | None
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -154,7 +141,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             )
             return
 
-        json_payload: _MqttUpdatePayloadType = {}
+        json_payload: dict[str, Any] = {}
         try:
             rendered_json_payload = json_loads(payload)
             if isinstance(rendered_json_payload, dict):
@@ -166,8 +153,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     rendered_json_payload,
                     msg.topic,
                 )
-                json_payload = cast(_MqttUpdatePayloadType, rendered_json_payload)
-                MQTT_JSON_UPDATE_SCHEMA(json_payload)
+                json_payload = MQTT_JSON_UPDATE_SCHEMA(rendered_json_payload)
             else:
                 _LOGGER.debug(
                     (
