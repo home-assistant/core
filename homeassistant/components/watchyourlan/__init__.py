@@ -15,12 +15,10 @@ async def async_setup_entry(
 ) -> bool:
     """Set up WatchYourLAN from a config entry."""
 
-    # Create and store the coordinator, passing the entire ConfigEntry
     coordinator = WatchYourLANUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    # If the setup is successful, forward the entry to other platforms (e.g., sensor)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

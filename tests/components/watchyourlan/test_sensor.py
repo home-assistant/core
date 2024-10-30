@@ -42,11 +42,21 @@ async def test_setup_sensors(hass: HomeAssistant, mock_config_entry) -> None:
         await hass.async_block_till_done()
 
         # Check device attributes (IP sensor)
-        state_ip_1 = hass.states.get("sensor.watchyourlan_1_ip")
+        state_ip_1 = hass.states.get("sensor.watchyourlan_11_22_33_44_55_66_ip")
         assert state_ip_1 is not None
         assert state_ip_1.state == "192.168.1.100"
 
-        # Check the MAC sensor
-        state_mac_1 = hass.states.get("sensor.watchyourlan_1_iface")
-        assert state_mac_1 is not None
-        assert state_mac_1.state == "eth0"
+        # Check the Interface sensor for Device 1
+        state_iface_1 = hass.states.get("sensor.watchyourlan_11_22_33_44_55_66_iface")
+        assert state_iface_1 is not None
+        assert state_iface_1.state == "eth0"
+
+        # Check device attributes (IP sensor) for Device 2
+        state_ip_2 = hass.states.get("sensor.watchyourlan_66_55_44_33_22_11_ip")
+        assert state_ip_2 is not None
+        assert state_ip_2.state == "192.168.1.101"
+
+        # Check the Interface sensor for Device 2
+        state_iface_2 = hass.states.get("sensor.watchyourlan_66_55_44_33_22_11_iface")
+        assert state_iface_2 is not None
+        assert state_iface_2.state == "eth1"

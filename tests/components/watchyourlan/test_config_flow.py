@@ -11,7 +11,7 @@ from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry  # Import MockConfigEntry
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry  # Import MockConfigEntry
     [
         (
             {CONF_URL: "http://127.0.0.1:8840", CONF_VERIFY_SSL: False},
-            {"title": "WatchYourLAN", "url": "http://127.0.0.1:8840"},
+            {"url": "http://127.0.0.1:8840"},
         ),
     ],
 )
@@ -27,7 +27,7 @@ async def test_form_happy_flow(
     hass: HomeAssistant,
     user_input: dict,
     api_response: dict,
-    mock_watchyourlan_client: AsyncMock,
+    mock_watchyourlan_client_fixture: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the happy flow for the form."""
@@ -41,7 +41,7 @@ async def test_form_happy_flow(
     assert result["errors"] == {}
 
     # Set the mock's return value
-    mock_watchyourlan_client.get_all_hosts.return_value = api_response
+    mock_watchyourlan_client_fixture.get_all_hosts.return_value = api_response
 
     # Provide the user input
     result = await hass.config_entries.flow.async_configure(
@@ -64,33 +64,49 @@ async def test_form_happy_flow(
     [
         (
             {CONF_URL: "http://127.0.0.1:8840", CONF_VERIFY_SSL: False},
-            ConnectError("test"),
+            ConnectError("Connection error"),
             {"base": "cannot_connect"},
         ),
         (
             {CONF_URL: "http://invalid-url", CONF_VERIFY_SSL: False},
-            ConnectError("test"),
-            {"base": "cannot_connect"},
+            ValueError("Invalid URL"),
+            {"base": "unknown"},
+        ),
+        (
+            {CONF_URL: "http://127.0.0.1:8840", CONF_VERIFY_SSL: False},
+            Exception("Unexpected error"),
+            {"base": "unknown"},
+        ),
+        (
+            {CONF_URL: "http://127.0.0.1:8840", CONF_VERIFY_SSL: False},
+            RuntimeError("Runtime error"),
+            {"base": "unknown"},
+        ),
+        (
+            {CONF_URL: "http://127.0.0.1:8840", CONF_VERIFY_SSL: False},
+            ValueError("Value error"),
+            {"base": "unknown"},
         ),
     ],
 )
-async def test_form_connection_errors(
+async def test_form_errors(
     hass: HomeAssistant,
     user_input: dict,
     side_effect: Exception,
     expected_errors: dict,
-    mock_watchyourlan_client: AsyncMock,
+    mock_watchyourlan_client_fixture: AsyncMock,
+    mock_watchyourlan_hosts,
 ) -> None:
-    """Test handling of connection errors."""
+    """Test handling of connection errors and unexpected exceptions."""
     # Initiate the flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     # Set the mock's side effect based on the test case
-    mock_watchyourlan_client.get_all_hosts.side_effect = side_effect
+    mock_watchyourlan_client_fixture.get_all_hosts.side_effect = side_effect
 
-    # Provide the user input
+    # Provide the user input and simulate the initial error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input,
@@ -98,47 +114,33 @@ async def test_form_connection_errors(
 
     # Ensure the form shows the expected errors
     assert result["type"] is FlowResultType.FORM
-    assert result.get("errors", {}) == expected_errors
+    assert result["errors"] == expected_errors
 
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        (Exception("TEST Unexpected error"), {"base": "unknown"}),
-        (RuntimeError("TEST Runtime error"), {"base": "unknown"}),
-        (ValueError("TEST Value error"), {"base": "unknown"}),
-    ],
-)
-async def test_form_generic_exception(
-    hass: HomeAssistant,
-    mock_watchyourlan_client: AsyncMock,
-    side_effect: Exception,
-    expected_error: dict,
-) -> None:
-    """Test handling of unexpected generic exceptions with parametrization."""
-    # Initiate the config flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    # Now patch the mock to return a successful response with the correct structure
+    mock_watchyourlan_client_fixture.get_all_hosts.side_effect = None
+    mock_watchyourlan_client_fixture.get_all_hosts.return_value = (
+        mock_watchyourlan_hosts  # Use the fixture response
     )
 
-    # Set the side effect to raise the specific exception from the parametrization
-    mock_watchyourlan_client.get_all_hosts.side_effect = side_effect
-
-    # Provide the user input
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "http://127.0.0.1:8840", CONF_VERIFY_SSL: False},
+    # Retry the configuration flow using the same flow_id
+    retry_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],  # Use the same flow ID from the previous call
+        user_input,
     )
 
-    # Ensure the form shows the unknown error
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == expected_error
+    # Ensure the retry results in a config entry being created
+    assert retry_result["type"] is FlowResultType.CREATE_ENTRY
+    assert retry_result["title"] == "WatchYourLAN"
+    assert retry_result["data"] == {
+        CONF_URL: user_input[CONF_URL],
+        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+    }
 
 
 async def test_form_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,  # Reuse the fixture here
-    mock_watchyourlan_client: AsyncMock,
+    mock_watchyourlan_client_fixture: AsyncMock,
 ) -> None:
     """Test if an already configured entry is detected and aborted."""
     # Initiate the config flow

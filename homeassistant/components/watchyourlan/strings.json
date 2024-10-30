@@ -21,10 +21,10 @@
   "entity": {
     "sensor": {
       "ip_address": {
-        "name": "IP Address"
+        "name": "IP address"
       },
       "iface": {
-        "name": "Network Interface"
+        "name": "Network interface"
       }
     }
   }

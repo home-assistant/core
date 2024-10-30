@@ -35,7 +35,6 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Abort if the unique ID is already configured
             self._async_abort_entries_match()
 
             # Use the WatchYourLANClient to validate the connection
@@ -55,7 +54,7 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during WatchYourLAN setup")
                 errors["base"] = "unknown"
 
-            if not hosts and not errors.get("base"):
+            if not hosts and not errors:
                 errors["base"] = "cannot_connect"
 
             if not errors:
