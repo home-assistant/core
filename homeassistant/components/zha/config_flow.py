@@ -635,15 +635,13 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
             # Determine the radio type
             if "radio_type" in discovery_info.properties:
-                radio_type = self._radio_mgr.parse_radio_type(
-                    discovery_info.properties["radio_type"]
-                )
+                radio_type = discovery_info.properties["radio_type"]
             elif "efr32" in name:
-                radio_type = RadioType.ezsp
+                radio_type = RadioType.ezsp.name
             elif "zigate" in name:
-                radio_type = RadioType.zigate
+                radio_type = RadioType.zigate.name
             else:
-                radio_type = RadioType.znp
+                radio_type = RadioType.znp.name
 
             fallback_title = name.split("._", 1)[0]
             title = discovery_info.properties.get("name", fallback_title)
@@ -656,7 +654,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 type=ZEROCONF_SERVICE_TYPE,
                 name=f"{title}.{ZEROCONF_SERVICE_TYPE}",
                 properties={
-                    "radio_type": radio_type.name,
+                    "radio_type": radio_type,
                     # To maintain backwards compatibility
                     "serial_number": discovery_info.hostname.removesuffix(".local."),
                 },
