@@ -658,17 +658,15 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            ZEROCONF_PROPERTIES_SCHEMA(discovery_info.properties)
+            discovery_props = ZEROCONF_PROPERTIES_SCHEMA(discovery_info.properties)
         except vol.Invalid:
             return self.async_abort(reason="invalid_zeroconf_data")
 
-        radio_type = self._radio_mgr.parse_radio_type(
-            discovery_info.properties["radio_type"]
-        )
+        radio_type = self._radio_mgr.parse_radio_type(discovery_props["radio_type"])
         device_path = f"socket://{discovery_info.host}:{port}"
 
         await self._set_unique_id_and_update_ignored_flow(
-            unique_id=discovery_info.properties["serial_number"],
+            unique_id=discovery_props["serial_number"],
             device_path=device_path,
         )
 
