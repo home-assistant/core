@@ -1611,8 +1611,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     def check_unique_id(self, entry: ConfigEntry) -> None:
         """Check config entry unique id.
 
-        For hashable return and log warning
-        For non-hashable raise error
+        For a string unique id (this is the correct case): return
+        For a hashable non string unique id: log warning
+        For a non-hashable unique id: raise error
         """
         if (unique_id := entry.unique_id) is None:
             return
@@ -1637,7 +1638,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             )
         else:
             # Guard against integrations using unhashable unique_id
-            # In HA Core 2024.10, the guard was changed from warning to failing
+            # In HA Core 2024.11, the guard was changed from warning to failing
             raise HomeAssistantError(
                 f"The entry unique id {unique_id} is not a string."
             )
