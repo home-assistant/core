@@ -938,6 +938,11 @@ async def _test_capabilities(
     class SomeTestProvider(CameraWebRTCProvider):
         """Test provider."""
 
+        @property
+        def domain(self) -> str:
+            """Return domain."""
+            return "test"
+
         @callback
         def async_is_supported(self, stream_source: str) -> bool:
             """Determine if the provider supports the stream source."""
