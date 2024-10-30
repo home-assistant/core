@@ -143,7 +143,7 @@ class HassEnforceClassModule(BaseChecker):
                     anc.name in _MODULE_CLASSES for anc in ancestors
                 ):
                     print(  # noqa: T201
-                        f"All ancestors for {node.name}: {[anc.name for anc in ancestors]}"
+                        f"All ancestors for {root_name}.{node.name}: {[anc.name for anc in ancestors]}"
                     )
                     self.add_message(
                         "hass-enforce-class-module",
