@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from asyncio import timeout
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -11,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -22,20 +20,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN, MANUFACTURER
 
+if TYPE_CHECKING:
+    from . import AccuWeatherConfigEntry
+
 EXCEPTIONS = (ApiError, ClientConnectorError, InvalidApiKeyError, RequestsExceededError)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class AccuWeatherData:
-    """Data for AccuWeather integration."""
-
-    coordinator_observation: AccuWeatherObservationDataUpdateCoordinator
-    coordinator_daily_forecast: AccuWeatherDailyForecastDataUpdateCoordinator
-
-
-type AccuWeatherConfigEntry = ConfigEntry[AccuWeatherData]
 
 
 class AccuWeatherObservationDataUpdateCoordinator(

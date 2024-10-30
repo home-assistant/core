@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .types import AirNowConfigEntry
+from . import AirNowConfigEntry
 
 ATTR_LATITUDE_CAP = "Latitude"
 ATTR_LONGITUDE_CAP = "Longitude"

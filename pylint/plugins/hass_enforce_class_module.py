@@ -139,17 +139,12 @@ class HassEnforceClassModule(BaseChecker):
             isinstance(subscript_node := node.value, nodes.Subscript)
             and isinstance(name_node := subscript_node.value, nodes.Name)
             and name_node.name == "ConfigEntry"
-            and (
-                # Check __init__.py
-                len(split_root_name := root_name.split(".")) == 3
-                # Check other.py
-                or (len(split_root_name) > 3 and split_root_name[3] != "types")
-            )
+            and (len(root_name.split(".")) != 3)
         ):
             self.add_message(
                 "hass-enforce-type-module",
                 node=node,
-                args=(node.name.name, "types"),
+                args=(node.name.name, "__init__"),
             )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:

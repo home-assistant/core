@@ -33,6 +33,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
+from . import AccuWeatherConfigEntry, AccuWeatherData
 from .const import (
     API_METRIC,
     ATTR_DIRECTION,
@@ -42,9 +43,7 @@ from .const import (
     CONDITION_MAP,
 )
 from .coordinator import (
-    AccuWeatherConfigEntry,
     AccuWeatherDailyForecastDataUpdateCoordinator,
-    AccuWeatherData,
     AccuWeatherObservationDataUpdateCoordinator,
 )
 

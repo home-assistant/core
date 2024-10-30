@@ -289,7 +289,7 @@ def test_enforce_entity_bad(
 @pytest.mark.parametrize(
     "path",
     [
-        "homeassistant.components.pylint_test.types",
+        "homeassistant.components.pylint_test",
     ],
 )
 def test_enforce_type_good(
@@ -312,7 +312,7 @@ def test_enforce_type_good(
 @pytest.mark.parametrize(
     "path",
     [
-        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.types",
         "homeassistant.components.pylint_test.coordinator",
     ],
 )
@@ -335,7 +335,7 @@ def test_enforce_type_bad(
             msg_id="hass-enforce-type-module",
             line=2,
             node=root_node.body[0],
-            args=("PylintTestConfigEntry", "types"),
+            args=("PylintTestConfigEntry", "__init__"),
             confidence=UNDEFINED,
             col_offset=0,
             end_line=2,

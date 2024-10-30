@@ -25,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AirNowConfigEntry, AirNowDataUpdateCoordinator
 from .const import (
     ATTR_API_AQI,
     ATTR_API_AQI_DESCRIPTION,
@@ -42,8 +43,6 @@ from .const import (
     DOMAIN,
     US_TZ_OFFSETS,
 )
-from .coordinator import AirNowDataUpdateCoordinator
-from .types import AirNowConfigEntry
 
 ATTRIBUTION = "Data provided by AirNow"
 
