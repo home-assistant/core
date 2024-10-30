@@ -4,6 +4,9 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
+from music_assistant_client.music import Music
+from music_assistant_client.player_queues import PlayerQueues
+from music_assistant_client.players import Players
 from music_assistant_models.api import ServerInfoMessage
 import pytest
 
@@ -59,6 +62,10 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
             homeassistant_addon=False,
             onboard_done=True,
         )
+        client.players = Players(client)
+        client.player_queues = PlayerQueues(client)
+        client.music = Music(client)
+        client.server_url = client.server_info.base_url
 
         yield client
 
