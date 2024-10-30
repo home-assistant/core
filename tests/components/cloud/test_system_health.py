@@ -50,7 +50,12 @@ async def test_cloud_system_health(
 
     await cloud.client.async_system_message({"region": "xx-earth-616"})
     await set_cloud_prefs(
-        {"alexa_enabled": True, "google_enabled": False, "remote_enabled": True}
+        {
+            "alexa_enabled": True,
+            "google_enabled": False,
+            "remote_enabled": True,
+            "cloud_ice_servers_enabled": True,
+        }
     )
 
     info = await get_system_health_info(hass, "cloud")
@@ -70,6 +75,7 @@ async def test_cloud_system_health(
         "remote_server": "us-west-1",
         "alexa_enabled": True,
         "google_enabled": False,
+        "cloud_ice_servers_enabled": True,
         "can_reach_cert_server": "ok",
         "can_reach_cloud_auth": {"type": "failed", "error": "unreachable"},
         "can_reach_cloud": "ok",

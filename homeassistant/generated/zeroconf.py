@@ -617,6 +617,12 @@ ZEROCONF = {
         {
             "domain": "lutron_caseta",
             "properties": {
+                "SYSTYPE": "hwqs*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
                 "SYSTYPE": "radiora3*",
             },
         },

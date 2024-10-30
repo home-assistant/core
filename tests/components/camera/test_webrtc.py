@@ -56,6 +56,7 @@ class TestProvider(CameraWebRTCProvider):
         """Initialize the provider."""
         self._is_supported = True
 
+    @callback
     def async_is_supported(self, stream_source: str) -> bool:
         """Determine if the provider supports the stream source."""
         return self._is_supported
@@ -1085,3 +1086,42 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
         "code": "webrtc_candidate_failed",
         "message": "Camera does not support WebRTC, frontend_stream_type=hls",
     }
+
+
+async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
+    """Test optional interface for WebRTC provider."""
+
+    class OnlyRequiredInterfaceProvider(CameraWebRTCProvider):
+        """Test provider."""
+
+        @callback
+        def async_is_supported(self, stream_source: str) -> bool:
+            """Determine if the provider supports the stream source."""
+            return True
+
+        async def async_handle_async_webrtc_offer(
+            self,
+            camera: Camera,
+            offer_sdp: str,
+            session_id: str,
+            send_message: WebRTCSendMessage,
+        ) -> None:
+            """Handle the WebRTC offer and return the answer via the provided callback.
+
+            Return value determines if the offer was handled successfully.
+            """
+            send_message(WebRTCAnswer(answer="answer"))
+
+        async def async_on_webrtc_candidate(
+            self, session_id: str, candidate: str
+        ) -> None:
+            """Handle the WebRTC candidate."""
+
+    provider = OnlyRequiredInterfaceProvider()
+    # Call all interface methods
+    assert provider.async_is_supported("stream_source") is True
+    await provider.async_handle_async_webrtc_offer(
+        Mock(), "offer_sdp", "session_id", Mock()
+    )
+    await provider.async_on_webrtc_candidate("session_id", "candidate")
+    provider.async_close_session("session_id")

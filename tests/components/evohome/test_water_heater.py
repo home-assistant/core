@@ -1,4 +1,4 @@
-"""The tests for water_heater entities of evohome.
+"""The tests for the water_heater platform of evohome.
 
 Not all evohome systems will have a DHW zone.
 """
@@ -27,9 +27,31 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from .conftest import setup_evohome
 from .const import TEST_INSTALLS_WITH_DHW
 
 DHW_ENTITY_ID = "water_heater.domestic_hot_water"
+
+
+@pytest.mark.parametrize("install", [*TEST_INSTALLS_WITH_DHW, "botched"])
+async def test_setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entities and their states after setup of evohome."""
+
+    # Cannot use the evohome fixture, as need to set dtm first
+    #  - some extended state attrs are relative the current time
+    freezer.move_to("2024-07-10T12:00:00Z")
+
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
+
+    for x in hass.states.async_all(Platform.WATER_HEATER):
+        assert x == snapshot(name=f"{x.entity_id}-state")
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)

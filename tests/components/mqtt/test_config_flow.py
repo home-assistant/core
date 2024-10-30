@@ -9,12 +9,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import Discovery
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.hassio import AddonError, HassioServiceInfo
+from homeassistant.components.hassio import AddonError
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -25,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -528,7 +530,19 @@ async def test_hassio_cannot_connect(
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "supervisor", "addon_info", "addon_running"
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_running(
     hass: HomeAssistant,
     mock_try_connection_success: MagicMock,
@@ -570,7 +584,19 @@ async def test_addon_flow_with_supervisor_addon_running(
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "supervisor", "addon_info", "addon_installed", "start_addon"
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_installed(
     hass: HomeAssistant,
     mock_try_connection_success: MagicMock,
@@ -625,7 +651,19 @@ async def test_addon_flow_with_supervisor_addon_installed(
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "supervisor", "addon_info", "addon_running"
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_running_connection_fails(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
@@ -780,7 +818,19 @@ async def test_addon_info_error(
     "install_addon",
     "start_addon",
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_not_installed(
     hass: HomeAssistant,
     mock_try_connection_success: MagicMock,
@@ -1576,7 +1626,19 @@ async def test_step_reauth(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "mock_reload_after_entry_update", "supervisor", "addon_running"
 )
@@ -1625,8 +1687,30 @@ async def test_step_hassio_reauth(
 @pytest.mark.parametrize(
     ("discovery_info", "discovery_info_side_effect", "broker"),
     [
-        ({"config": ADD_ON_DISCOVERY_INFO.copy()}, AddonError, "core-mosquitto"),
-        ({"config": ADD_ON_DISCOVERY_INFO.copy()}, None, "broker-not-addon"),
+        (
+            [
+                Discovery(
+                    addon="core_mosquitto",
+                    service="mqtt",
+                    uuid=uuid4(),
+                    config=ADD_ON_DISCOVERY_INFO.copy(),
+                )
+            ],
+            AddonError,
+            "core-mosquitto",
+        ),
+        (
+            [
+                Discovery(
+                    addon="core_mosquitto",
+                    service="mqtt",
+                    uuid=uuid4(),
+                    config=ADD_ON_DISCOVERY_INFO.copy(),
+                )
+            ],
+            None,
+            "broker-not-addon",
+        ),
     ],
 )
 @pytest.mark.usefixtures(

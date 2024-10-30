@@ -23,6 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmConfigEntry
+from .const import LOGGER
 from .coordinator import SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
@@ -153,18 +154,20 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         """Update install progress on event."""
 
         progress = int(progress.data)
-        if progress > 1:
-            self._attr_in_progress = progress
-            self.async_write_ha_state()
+        self._attr_update_percentage = progress
+        self.async_write_ha_state()
 
     def _update_done(self) -> None:
         """Handle cleanup for update done."""
         self._finished_event.set()
-        self.coordinator.in_progress = False
 
         for remove_cb in self._unload:
             remove_cb()
         self._unload.clear()
+
+        self._attr_in_progress = False
+        self._attr_update_percentage = None
+        self.async_write_ha_state()
 
     @callback
     def _update_finished(self, event: MessageEvent) -> None:
@@ -175,7 +178,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     @callback
     def _update_failed(self, event: MessageEvent) -> None:
         self._update_done()
-
+        self.coordinator.in_progress = False
         raise HomeAssistantError(f"Update failed for {self.name}")
 
     async def async_install(
@@ -186,6 +189,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         if not self.coordinator.in_progress and self._firmware:
             self.coordinator.in_progress = True
             self._attr_in_progress = True
+            self._attr_update_percentage = None
             self.register_callbacks()
 
             await self.coordinator.client.fw_update(self._firmware)
@@ -193,5 +197,20 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             # block until update finished event received
             await self._finished_event.wait()
 
-            await self.coordinator.async_refresh()
+            # allow time for SLZB-06 to reboot before updating coordinator data
+            try:
+                async with asyncio.timeout(180):
+                    while (
+                        self.coordinator.in_progress
+                        and self.installed_version != self._firmware.ver
+                    ):
+                        await self.coordinator.async_refresh()
+                        await asyncio.sleep(1)
+            except TimeoutError:
+                LOGGER.warning(
+                    "Timeout waiting for %s to reboot after update",
+                    self.coordinator.data.info.hostname,
+                )
+
+            self.coordinator.in_progress = False
             self._finished_event.clear()

@@ -14,7 +14,6 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
-    is_hassio,
 )
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
     probe_silabs_firmware_type,
@@ -29,6 +28,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.hassio import is_hassio
 
 from . import silabs_multiprotocol_addon
 from .const import ZHA_DOMAIN

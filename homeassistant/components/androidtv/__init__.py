@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+import logging
 import os
 from typing import Any
 
@@ -40,6 +41,7 @@ from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
+    CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     DEFAULT_ADB_SERVER_PORT,
     DEVICE_ANDROIDTV,
@@ -65,6 +67,8 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
 _INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -155,6 +159,32 @@ async def async_connect_androidtv(
         return None, error_message
 
     return aftv, None
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s", entry.version, entry.minor_version
+    )
+
+    if entry.version == 1:
+        new_options = {**entry.options}
+
+        # Migrate MinorVersion 1 -> MinorVersion 2: New option
+        if entry.minor_version < 2:
+            new_options = {**new_options, CONF_SCREENCAP_INTERVAL: 0}
+
+            hass.config_entries.async_update_entry(
+                entry, options=new_options, minor_version=2, version=1
+            )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
