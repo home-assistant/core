@@ -243,7 +243,13 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
-        bsh_key = PROGRAMS_MAP[option]
+        bsh_key = PROGRAMS_MAP.get(option)
+        if bsh_key is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="program_not_found",
+                translation_placeholders={"program": option},
+            )
         _LOGGER.debug(
             "Tried to start program: %s"
             if self.start_on_select
