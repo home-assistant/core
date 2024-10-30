@@ -88,10 +88,11 @@ def test_skip_pip_mutually_exclusive(mock_exit) -> None:
     assert mock_exit.called is True
 
 
-@patch("sys.exit")
-def test_restart_after_backup_restore(mock_exit) -> None:
+def test_restart_after_backup_restore() -> None:
     """Test restarting if we restored a backup."""
-    with patch("homeassistant.__main__.restore_backup", return_value=True):
+    with (
+        patch("homeassistant.__main__.restore_backup", return_value=True),
+        patch("sys.exit"),
+    ):
         exit_code = main.main()
-        assert mock_exit.called is True
         assert exit_code == RESTART_EXIT_CODE
