@@ -1270,7 +1270,7 @@ class ConfigEntriesFlowManager(
                 f"initialises a {source} flow for integration {handler} without "
                 "a link to the config entry. This will stop working in 2025.12",
                 error_if_integration=False,
-                error_if_core=False,
+                error_if_core=True,
             )
 
         flow_id = ulid_util.ulid_now()
