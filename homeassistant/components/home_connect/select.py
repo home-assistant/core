@@ -24,7 +24,7 @@ from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PROGRAMS_MAP = {
+TRANSLATION_KEYS_PROGRAMS_MAP = {
     bsh_key_to_translation_key(program): program
     for program in (
         "ConsumerProducts.CleaningRobot.Program.Cleaning.CleanAll",
@@ -184,6 +184,10 @@ PROGRAMS_MAP = {
     )
 }
 
+PROGRAMS_TRANSLATION_KEYS_MAP = {
+    value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -228,9 +232,14 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 else "selected_program",
             ),
         )
-        self._attr_options = [
-            bsh_key_to_translation_key(program) for program in programs
-        ]
+        self._attr_options = []
+        for program in programs:
+            if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
+                _LOGGER.info(
+                    'The program "%s" is not contemplated on this integration', program
+                )
+            else:
+                self._attr_options.append(PROGRAMS_TRANSLATION_KEYS_MAP[program])
         self.start_on_select = start_on_select
 
     async def async_update(self) -> None:
@@ -243,13 +252,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
-        bsh_key = PROGRAMS_MAP.get(option)
-        if bsh_key is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="program_not_found",
-                translation_placeholders={"program": option},
-            )
+        bsh_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
         _LOGGER.debug(
             "Tried to start program: %s"
             if self.start_on_select
