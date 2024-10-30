@@ -100,7 +100,7 @@ include = ["homeassistant*"]
 py-version = "3.12"
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
-jobs = 2
+# jobs = 2
 init-hook = """\
     from pathlib import Path; \
     import sys; \
