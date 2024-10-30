@@ -109,6 +109,22 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             MachineModel.GS3_MP,
         ),
     ),
+    LaMarzoccoNumberEntityDescription(
+        key="smart_standby_time",
+        translation_key="smart_standby_time",
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_step=10,
+        native_min_value=10,
+        native_max_value=240,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda machine, value: machine.set_smart_standby(
+            enabled=machine.config.smart_standby.enabled,
+            mode=machine.config.smart_standby.mode,
+            minutes=int(value),
+        ),
+        native_value_fn=lambda config: config.smart_standby.minutes,
+    ),
 )
 
 

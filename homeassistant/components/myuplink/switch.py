@@ -16,6 +16,16 @@ from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
+    "F730": {
+        "50004": SwitchEntityDescription(
+            key="temporary_lux",
+            translation_key="temporary_lux",
+        ),
+        "50005": SwitchEntityDescription(
+            key="boost_ventilation",
+            translation_key="boost_ventilation",
+        ),
+    },
     "NIBEF": {
         "50004": SwitchEntityDescription(
             key="temporary_lux",
