@@ -4808,9 +4808,9 @@ async def test_reauth_reconfigure_missing_entry(
     assert flows[0]["context"]["source"] == source
 
     assert (
-        f"Initialising a '{source}' flow without a link to the config entry,"
-        " which will stop working in 2025.11; please create a bug report at "
-        in caplog.text
+        f"Detected code that initialises a {source} flow for integration "
+        "test without a link to the config entry. This will stop working in 2025.11."
+        " Please report this issue." in caplog.text
     )
 
 

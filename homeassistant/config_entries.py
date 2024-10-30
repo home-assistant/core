@@ -1266,16 +1266,11 @@ class ConfigEntriesFlowManager(
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
             # Deprecated in 2024.11, should fail in 2025.11
-            report_issue = async_suggest_report_issue(
-                self.hass, integration_domain=handler
-            )
-            _LOGGER.error(
-                (
-                    "Initialising a '%s' flow without a link to the config entry,"
-                    " which will stop working in 2025.11; please %s"
-                ),
-                source,
-                report_issue,
+            report(
+                f"initialises a {source} flow for integration {handler} without "
+                "a link to the config entry. This will stop working in 2025.11",
+                error_if_integration=False,
+                error_if_core=False,
             )
 
         flow_id = ulid_util.ulid_now()
