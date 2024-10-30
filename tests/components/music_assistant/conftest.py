@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from music_assistant.common.models.api import ServerInfoMessage
+from music_assistant_models.api import ServerInfoMessage
 import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
