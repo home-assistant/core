@@ -69,9 +69,6 @@
     },
     "unable_to_retrieve_turn_off": {
       "message": "Unable to turn off {appliance_name} because its support for turning off or entering standby mode could not be determined."
-    },
-    "program_not_found": {
-      "message": "Program {program} not found in the map that contains the original keys."
     }
   },
   "issues": {
