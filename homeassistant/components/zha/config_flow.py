@@ -626,11 +626,13 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         # Transform legacy zeroconf discovery into the new format
         if discovery_info.type != ZEROCONF_SERVICE_TYPE:
-            local_name = discovery_info.hostname.removesuffix(".local.")
             port = discovery_info.port or LEGACY_ZEROCONF_PORT
 
             # Fix incorrect port for older TubesZB devices
-            if "tube" in local_name and port == LEGACY_ZEROCONF_ESPHOME_API_PORT:
+            if (
+                "tube" in discovery_info.name
+                and port == LEGACY_ZEROCONF_ESPHOME_API_PORT
+            ):
                 port = LEGACY_ZEROCONF_PORT
 
             # Determine the radio type
@@ -638,13 +640,14 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 radio_type = self._radio_mgr.parse_radio_type(
                     discovery_info.properties["radio_type"]
                 )
-            elif "efr32" in local_name:
+            elif "efr32" in discovery_info.name:
                 radio_type = RadioType.ezsp
-            elif "zigate" in local_name:
+            elif "zigate" in discovery_info.name:
                 radio_type = RadioType.zigate
             else:
                 radio_type = RadioType.znp
 
+            name = discovery_info.name.split("._", 1)[0]
             discovery_info = zeroconf.ZeroconfServiceInfo(
                 ip_address=discovery_info.ip_address,
                 ip_addresses=discovery_info.ip_addresses,
@@ -652,13 +655,14 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 hostname=discovery_info.hostname,
                 type=ZEROCONF_SERVICE_TYPE,
                 name=(
-                    discovery_info.properties.get("name", local_name)
+                    discovery_info.properties.get("name", name)
                     + "."
                     + ZEROCONF_SERVICE_TYPE
                 ),
                 properties={
                     "radio_type": radio_type.name,
-                    "serial_number": local_name,  # To maintain backwards compatibility
+                    # To maintain backwards compatibility
+                    "serial_number": discovery_info.hostname.removesuffix(".local."),
                 },
             )
 
@@ -679,6 +683,12 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {CONF_NAME: title}
         self._title = title
         self._radio_mgr.device_path = device_path
+        self._radio_mgr.radio_type = radio_type
+        self._radio_mgr.device_settings = {
+            CONF_DEVICE_PATH: device_path,
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: None,
+        }
 
         return await self.async_step_confirm()
 
