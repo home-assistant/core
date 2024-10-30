@@ -57,6 +57,7 @@ from homeassistant.helpers.service_info.hassio import (
 )
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
@@ -134,9 +135,6 @@ _LOGGER = logging.getLogger(__name__)
 get_supervisor_ip = deprecated_function(
     "homeassistant.helpers.hassio.get_supervisor_ip", breaks_in_ha_version="2025.11"
 )(_get_supervisor_ip)
-is_hassio = deprecated_function(
-    "homeassistant.helpers.hassio.is_hassio", breaks_in_ha_version="2025.11"
-)(_is_hassio)
 _DEPRECATED_HassioServiceInfo = DeprecatedConstant(
     _HassioServiceInfo,
     "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
@@ -294,6 +292,19 @@ HARDWARE_INTEGRATIONS = {
 def hostname_from_addon_slug(addon_slug: str) -> str:
     """Return hostname of add-on."""
     return addon_slug.replace("_", "-")
+
+
+@callback
+@deprecated_function(
+    "homeassistant.helpers.hassio.is_hassio", breaks_in_ha_version="2025.11"
+)
+@bind_hass
+def is_hassio(hass: HomeAssistant) -> bool:
+    """Return true if Hass.io is loaded.
+
+    Async friendly.
+    """
+    return _is_hassio(hass)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901

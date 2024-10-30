@@ -1104,7 +1104,7 @@ def test_deprecated_function_is_hassio(
     deprecated_is_hassio(hass)
     assert caplog.record_tuples == [
         (
-            "homeassistant.helpers.hassio",
+            "homeassistant.components.hassio",
             logging.WARNING,
             "is_hassio is a deprecated function which will be removed in HA Core 2025.11. Use homeassistant.helpers.hassio.is_hassio instead",
         )
