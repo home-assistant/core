@@ -142,6 +142,7 @@ class HassEnforceClassModule(BaseChecker):
                 if ancestor.name in _BASE_ENTITY_MODULES and not any(
                     anc.name in _MODULE_CLASSES for anc in ancestors
                 ):
+                    print(f"Second level ancestors {[anc.name for anc in ancestors]}")  # noqa: T201
                     self.add_message(
                         "hass-enforce-class-module",
                         node=node,
