@@ -7,6 +7,7 @@ from datetime import date
 from pysuez import SuezClient
 from pysuez.client import PySuezError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -32,7 +33,9 @@ class AggregatedSensorData:
 class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
     """Suez water coordinator."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    _sync_client: SuezClient
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize suez water coordinator."""
         super().__init__(
             hass,
@@ -40,6 +43,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
             name=DOMAIN,
             update_interval=DATA_REFRESH_INTERVAL,
             always_update=True,
+            config_entry=config_entry,
         )
 
     async def _async_setup(self) -> None:
@@ -90,6 +94,8 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
 
     def _get_client(self) -> SuezClient:
         try:
+            if self.config_entry is None:
+                raise ConfigEntryError
             client = SuezClient(
                 username=self.config_entry.data[CONF_USERNAME],
                 password=self.config_entry.data[CONF_PASSWORD],

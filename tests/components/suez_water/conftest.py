@@ -40,8 +40,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_suez_client() -> Generator[MagicMock]:
     """Create mock for suez_water external api."""
     with (
-        patch("homeassistant.components.suez_water.coordinator.SuezClient", autospec=True) as mock_client,
-        patch("homeassistant.components.suez_water.config_flow.SuezClient", new=mock_client)
+        patch(
+            "homeassistant.components.suez_water.coordinator.SuezClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.suez_water.config_flow.SuezClient",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.check_credentials.return_value = True

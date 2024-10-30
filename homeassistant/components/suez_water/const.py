@@ -8,4 +8,4 @@ CONF_COUNTER_ID = "counter_id"
 
 AGGREGATED_SENSOR_ENTITY_SUFFIX = "_water_usage_yesterday"
 
-DATA_REFRESH_INTERVAL=timedelta(hours=12)
+DATA_REFRESH_INTERVAL = timedelta(hours=12)
