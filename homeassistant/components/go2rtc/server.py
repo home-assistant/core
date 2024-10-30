@@ -173,7 +173,6 @@ class Server:
         self._stop_requested = True
         if self._watchdog_task:
             self._watchdog_task.cancel()
-            await self._watchdog_task
             self._watchdog_task = None
         await self._stop()
 
