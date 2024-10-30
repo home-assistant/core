@@ -1023,6 +1023,30 @@ async def test_dhcp_discovery_with_ip_change(
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
 
 
+async def test_dhcp_discovery_discover_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test dhcp discovery source cannot discover_single."""
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+
+    with override_side_effect(mock_discovery["discover_single"], TimeoutError):
+        discovery_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip="127.0.0.2", macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
+            ),
+        )
+    assert discovery_result["type"] is FlowResultType.ABORT
+    assert discovery_result["reason"] == "cannot_connect"
+
+
 async def test_reauth(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
@@ -1055,6 +1079,76 @@ async def test_reauth(
     assert result2["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
+
+
+async def test_reauth_try_connect_all(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    mock_added_config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    assert mock_added_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+
+    with override_side_effect(mock_discovery["discover_single"], TimeoutError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+    credentials = Credentials("fake_username", "fake_password")
+    mock_discovery["discover_single"].assert_called_once_with(
+        "127.0.0.1", credentials=credentials
+    )
+    mock_discovery["try_connect_all"].assert_called_once()
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+    await hass.async_block_till_done()
+
+
+async def test_reauth_try_connect_all_fail(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    mock_added_config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    assert mock_added_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        override_side_effect(mock_discovery["discover_single"], TimeoutError),
+        override_side_effect(mock_discovery["try_connect_all"], lambda *_, **__: None),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+    credentials = Credentials("fake_username", "fake_password")
+    mock_discovery["discover_single"].assert_called_once_with(
+        "127.0.0.1", credentials=credentials
+    )
+    mock_discovery["try_connect_all"].assert_called_once()
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reauth_update_with_encryption_change(
@@ -1398,7 +1492,7 @@ async def test_pick_device_errors(
         assert result4["context"]["unique_id"] == MAC_ADDRESS
 
 
-async def test_discovery_timeout_connect(
+async def test_discovery_timeout_try_connect_all(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -1424,7 +1518,7 @@ async def test_discovery_timeout_connect(
     assert mock_connect["connect"].call_count == 1
 
 
-async def test_discovery_timeout_connect_legacy_error(
+async def test_discovery_timeout_try_connect_all_needs_creds(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -1446,8 +1540,57 @@ async def test_discovery_timeout_connect_legacy_error(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
+    assert result2["step_id"] == "user_auth_confirm"
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["context"]["unique_id"] == MAC_ADDRESS
+    assert mock_connect["connect"].call_count == 1
+
+
+async def test_discovery_timeout_try_connect_all_fail(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+    mock_init,
+) -> None:
+    """Test discovery tries legacy connect on timeout."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_discovery["discover_single"].side_effect = TimeoutError
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+    assert mock_connect["connect"].call_count == 0
+
+    with override_side_effect(mock_connect["connect"], KasaException):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+    assert result2["step_id"] == "user_auth_confirm"
+    assert result2["type"] is FlowResultType.FORM
+
+    with override_side_effect(mock_discovery["try_connect_all"], lambda *_, **__: None):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result3["errors"] == {"base": "cannot_connect"}
     assert mock_connect["connect"].call_count == 1
 
 
