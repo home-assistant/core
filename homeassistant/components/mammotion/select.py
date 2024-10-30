@@ -1,6 +1,11 @@
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Callable
 
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from pymammotion.data.model.mowing_modes import (
     BorderPatrolMode,
     BypassStrategy,
@@ -10,12 +15,6 @@ from pymammotion.data.model.mowing_modes import (
     PathAngleSetting,
 )
 from pymammotion.utility.device_type import DeviceType
-
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator

@@ -20,5 +20,5 @@
   "loggers": ["pymammotion"],
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["pymammotion==0.2.77"]
+  "requirements": ["pymammotion==0.2.97"]
 }

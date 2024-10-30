@@ -2,23 +2,55 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_in_progress": "Configuration flow is already in progress",
       "no_devices_found": "Could not find devices",
+      "no_devices_found_in_account": "No devices present in your account",
+      "bluetooth_and_account_mismatch": "Bluetooth device not found in your account",
       "no_longer_present": "Device is no longer present",
       "not_supported": "Device not supported",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "Re-configure successful"
+    },
+    "flow_title": "Configure your Mammotion lawn mower",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Setup {name}",
+        "data": {
+          "stay_connected_bluetooth": "Keep bluetooth connected"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "use_wifi": "Use Wi-fi",
+          "account_name": "Mammotion email or account number",
+          "password": "Mammotion account password"
+        }
+      },
+      "user": {
+        "data": {
+          "address": "Device",
+          "stay_connected_bluetooth": "Keep bluetooth connected"
+        },
+        "description": "Select your mower"
+      },
+      "wifi": {
+        "data": {
+          "use_wifi": "Use Wi-fi (un-tick and submit to use bluetooth)",
+          "account_name": "Mammotion email or account number",
+          "password": "Mammotion account password"
+        },
+        "title": "Connect to Wi-Fi",
+        "description": "Enter your Mammotion account email or id and password"
+      }
     }
   },
-  "flow_title": "Configure your Mammotion lawn mower",
-  "step": {
-    "bluetooth_confirm": {
-      "description": "Setup {name}"
-    },
-    "user": {
-      "data": {
-        "address": "Device"
-      },
-      "description": "Select your mower"
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "stay_connected_bluetooth": "Keep bluetooth connected"
+        }
+      }
     }
   },
   "entity": {
@@ -31,6 +63,9 @@
       },
       "wifi_rssi": {
         "name": "WiFi RSSI"
+      },
+      "connect_type": {
+        "name": "Connection"
       },
       "gps_stars": {
         "name": "Satellites (Robot)"
@@ -70,6 +105,9 @@
       },
       "activity_mode": {
         "name": "Activity mode"
+      },
+      "work_area": {
+        "name": "Work area hash"
       }
     },
     "button": {
@@ -77,67 +115,136 @@
         "name": "Sync maps"
       },
       "resync_rtk_dock": {
-        "name": "Sync RTK and dock",
-        "description": "Syncs RTK and dock location for when you move them."
+        "name": "Sync RTK and dock"
+      },
+      "release_from_dock": {
+        "name": "Undock"
+      },
+      "emergency_nudge_forward": {
+        "name": "Emergency nudge forward"
+      },
+      "emergency_nudge_left": {
+        "name": "Emergency nudge left"
+      },
+      "emergency_nudge_right": {
+        "name": "Emergency nudge right"
+      },
+      "emergency_nudge_back": {
+        "name": "Emergency nudge back"
+      },
+      "cancel_task": {
+        "name": "Cancel current task"
+      },
+      "clear_all_mapdata": {
+        "name": "Clear maps and area names"
       }
     },
     "switch": {
       "blade_status": {
-        "name": "Blades On/Off",
-        "description": "Turn the blades on or off."
+        "name": "Blades on/off"
       },
       "is_mow": {
-        "name": "Mowing On/Off",
-        "description": "Start or stop mowing."
+        "name": "Mowing on/off"
       },
       "is_dump": {
-        "name": "Dump Grass On/Off",
-        "description": "Enable or disable grass dumping."
+        "name": "Dump grass on/off"
+      },
+      "is_edge": {
+        "name": "Edge cutting"
       },
       "rain_tactics": {
-        "name": "Rain Detection On/Off",
-        "description": "Turn rain detection on or off."
+        "name": "Rain detection On/Off"
       },
       "side_led": {
-        "name": "Side LED On/Off",
-        "description": "Enable or disable the side LED."
+        "name": "Side LED on/off"
       },
       "perimeter_first_on_off": {
-        "name": "Perimeter First",
-        "description": "Perimeter first or lines/zigzag first mowing."
+        "name": "Perimeter first"
+      },
+      "schedule_updates": {
+        "name": "Turn Updates On/Off"
       }
     },
     "select": {
       "channel_mode": {
-        "name": "Cutting Mode",
-        "description": "Select the cutting mode for the mower."
+        "name": "Cutting Path Mode",
+        "state": {
+          "single_grid": "Zigzag Path",
+          "double_grid": "Chessboard Path",
+          "segment_grid": "Adaptive Zigzag Path",
+          "no_grid": "Perimeter Only"
+        }
       },
       "mowing_laps": {
-        "name": "Border Patrol Mode",
-        "description": "Select the border patrol mode for the mower."
+        "name": "Perimeter Mowing Laps",
+        "state": {
+          "none": "None",
+          "one": "One",
+          "two": "Two",
+          "three": "Three",
+          "four": "Four"
+        }
       },
       "obstacle_laps": {
-        "name": "Obstacle Laps Mode",
-        "description": "Select the obstacle laps mode for the mower."
+        "name": "No-go Zone Mowing Laps",
+        "state": {
+          "none": "None",
+          "one": "One",
+          "two": "Two",
+          "three": "Three",
+          "four": "Four"
+        }
       },
-      "mowing_laps": {
+      "border_mode": {
         "name": "Mow Order",
-        "description": "Select the order in which the areas should be mowed."
+        "state": {
+          "border_first": "Perimeter first",
+          "grid_first": "ZigZag / Chessboard first"
+        }
+      },
+      "bypass_mode": {
+        "name": "Obstacle avoidance mode",
+        "state": {
+          "direct_touch": "Direct touch",
+          "slow_touch": "Slow touch",
+          "less_touch": "Less touch",
+          "no_touch": "No Touch"
+        }
+      },
+      "cutting_angle_mode": {
+        "name": "Cutting path angle mode",
+        "state": {
+          "relative_angle": "Relative angle",
+          "absolute_angle": "Absolute angle",
+          "random_angle": "Random angle"
+        }
       }
     },
     "number": {
       "start_progress": {
-        "name": "Start Progress",
-        "description": "Set the start progress percentage."
+        "name": "Start Progress"
       },
       "blade_height": {
-        "name": "Blade Height",
-        "description": "Adjust the height of the cutter in increments."
+        "name": "Blade Height"
       },
       "working_speed": {
-        "name": "Working Speed",
-        "description": "Set the working speed of the mower."
+        "name": "Working Speed"
+      },
+      "cutting_angle": {
+        "name": "Cutting Path Angle"
+      },
+      "path_spacing": {
+        "name": "Path Spacing"
+      },
+      "dumping_interval": {
+        "name": "Dumping Frequency"
+      },
+      "toward_included_angle": {
+        "name": "Crossing Angle"
       }
+    },
+    "device_tracker": {
+      "name": "Device Tracking"
     }
   },
   "services": {
@@ -150,24 +257,24 @@
       "description": "Start the mowing operation with custom settings.",
       "fields": {
         "is_mow": {
-          "name": "Is Mow",
-          "description": "Whether mowing is active."
+          "name": "Is Mowing",
+          "description": "Whether mowing is active. (Yuka)"
         },
         "is_dump": {
-          "name": "Is Dump",
-          "description": "Whether grass dumping is active."
+          "name": "Is Dumping",
+          "description": "Whether grass dumping is active. (Yuka)"
         },
         "is_edge": {
-          "name": "Is Edge",
-          "description": "Whether edge mode is active."
+          "name": "Edge mowing",
+          "description": "Whether edge mode is active. (Yuka)"
         },
         "collect_grass_frequency": {
           "name": "Grass Collection Frequency",
-          "description": "Frequency to collect grass (in minutes)."
+          "description": "Frequency to collect grass (in meters squared). (Yuka)"
         },
         "border_mode": {
           "name": "Mow Order",
-          "description": "Job mode for cutting."
+          "description": "Mowing path order (Perimeter first or grid first)."
         },
         "job_version": {
           "name": "Job Version",
@@ -182,55 +289,51 @@
           "description": "Mowing speed."
         },
         "ultra_wave": {
-          "name": "Ultra Wave",
-          "description": "Bypass strategy for mowing."
+          "name": "Obstacle Detection",
+          "description": "Obstacle Avoidance Mode."
         },
         "channel_mode": {
-          "name": "Channel Mode",
-          "description": "Channel mode (grid, single, double, or single2)."
+          "name": "Cutting Path Mode",
+          "description": "Cutting Path (zigzag, chessboard, adaptive zigzag, or perimeter only)."
         },
         "channel_width": {
-          "name": "Channel Width",
-          "description": "Width of the mowing channel (in cm)."
+          "name": "Path Width",
+          "description": "Width of the mowing path (in cm)."
         },
         "rain_tactics": {
-          "name": "Rain Tactics",
-          "description": "Rain handling tactics."
+          "name": "Rain Detection",
+          "description": "Rain detection."
         },
         "blade_height": {
           "name": "Blade Height",
           "description": "Height of the blade."
         },
-        "path_order": {
-          "name": "Path Order",
-          "description": "Mowing path order (border first or grid first)."
-        },
         "toward": {
-          "name": "Toward",
-          "description": "Direction angle for mowing."
+          "name": "Starting Path Angle",
+          "description": "Starting direction for mowing."
         },
         "toward_included_angle": {
-          "name": "Toward Included Angle",
-          "description": "Type of angle to use (relative, absolute, or random)."
+          "name": "Crossing Angle",
+          "description": "When selecting grid change the second angle (default is 90 degrees)."
         },
         "toward_mode": {
-          "name": "Toward Mode",
-          "description": "Toward mode."
+          "name": "Cutting Angle Mode",
+          "description": "Anglular direction of mow."
         },
         "mowing_laps": {
-          "name": "Border Patrol Mode",
-          "description": "Border patrol mode (number of laps)."
+          "name": "Perimeter Mowing Laps",
+          "description": "Number of laps around the mowing area perimeter."
         },
         "obstacle_laps": {
-          "name": "Obstacle Laps",
-          "description": "Number of laps around obstacles."
+          "name": "No-go zone Mowing Laps",
+          "description": "Number of laps around No-go zones."
         },
         "start_progress": {
           "name": "Start Progress",
           "description": "Starting progress percentage."
         },
         "areas": {
-          "name": "Areas",
+          "name": "Area Selection",
           "description": "List of areas to mow (represented as integers)."
         }
       }

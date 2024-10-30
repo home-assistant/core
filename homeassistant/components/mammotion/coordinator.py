@@ -7,11 +7,20 @@ from dataclasses import asdict
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientConnectorError
 import betterproto
+from aiohttp import ClientConnectorError
+from homeassistant.components import bluetooth
+from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from mashumaro.exceptions import InvalidFieldValue
 from pymammotion import CloudIOTGateway
-from pymammotion.aliyun.cloud_gateway import DeviceOfflineException
+from pymammotion.aliyun.cloud_gateway import (
+    DeviceOfflineException,
+)
 from pymammotion.aliyun.model.aep_response import AepResponse
 from pymammotion.aliyun.model.connect_response import ConnectResponse
 from pymammotion.aliyun.model.dev_by_account_response import ListingDevByAccountResponse
@@ -24,19 +33,16 @@ from pymammotion.data.model import GenerateRouteInformation, HashList
 from pymammotion.data.model.account import Credentials
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.data.model.device_config import OperationSettings, create_path_order
-from pymammotion.mammotion.devices.mammotion import ConnectionPreference, Mammotion
+from pymammotion.http.http import MammotionHTTP
+from pymammotion.http.model.http import LoginResponseData, Response
+from pymammotion.mammotion.devices.mammotion import (
+    ConnectionPreference,
+    Mammotion,
+)
 from pymammotion.proto import has_field
 from pymammotion.proto.luba_msg import LubaMsg
 from pymammotion.proto.mctrl_sys import RptAct, RptDevStatus, RptInfoType
 from pymammotion.utility.device_type import DeviceType
-
-from homeassistant.components import bluetooth
-from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     COMMAND_EXCEPTIONS,
@@ -46,6 +52,7 @@ from .const import (
     CONF_CONNECT_DATA,
     CONF_DEVICE_DATA,
     CONF_DEVICE_NAME,
+    CONF_MAMMOTION_DATA,
     CONF_REGION_DATA,
     CONF_SESSION_DATA,
     CONF_STAY_CONNECTED_BLUETOOTH,
@@ -63,6 +70,7 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Mammotion DataUpdateCoordinator."""
 
     manager: Mammotion = None
+    device_name: str | None = None
 
     def __init__(
         self,
@@ -77,7 +85,6 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             name=DOMAIN,
             update_interval=update_interval,
         )
-        self.device_name = None
         assert config_entry.unique_id
         self.config_entry = config_entry
         self._operation_settings = OperationSettings()
@@ -114,24 +121,30 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         await self.manager.login_and_initiate_cloud(account, password, True)
         self.store_cloud_credentials()
 
-    async def async_send_command(self, command: str, **kwargs: Any) -> None:
+    async def async_send_command(self, command: str, **kwargs: Any) -> bool:
         """Send command."""
         try:
             await self.manager.send_command_with_args(
                 self.device_name, command, **kwargs
             )
+            return True
         except EXPIRED_CREDENTIAL_EXCEPTIONS:
             self.update_failures += 1
             await self.async_login()
+            return False
         except DeviceOfflineException:
             """Device is offline try bluetooth if we have it."""
             try:
-                if self.manager.get_device_by_name(self.device_name).has_ble():
-                    await (
-                        self.manager.get_device_by_name(self.device_name)
-                        .ble()
-                        .queue_command(command, **kwargs)
-                    )
+                if device := self.manager.get_device_by_name(self.device_name):
+                    if device.has_ble():
+                        # if we don't do this it will stay connected and no longer update over wifi
+                        device.ble().set_disconnect_strategy(True)
+                        await (
+                            self.manager.get_device_by_name(self.device_name)
+                            .ble()
+                            .queue_command(command, **kwargs)
+                        )
+                return True
             except COMMAND_EXCEPTIONS as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="command_failed"
@@ -154,6 +167,7 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 CONF_AEP_DATA: cloud_client.aep_response,
                 CONF_SESSION_DATA: cloud_client.session_by_authcode_response,
                 CONF_DEVICE_DATA: cloud_client.devices_by_account_response,
+                CONF_MAMMOTION_DATA: cloud_client.mammotion_http.response,
             }
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data=config_updates
@@ -173,8 +187,9 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         session_data = self.config_entry.data.get(CONF_SESSION_DATA)
         device_data = self.config_entry.data.get(CONF_DEVICE_DATA)
         connect_data = self.config_entry.data.get(CONF_CONNECT_DATA)
+        mammotion_data = self.config_entry.data.get(CONF_MAMMOTION_DATA)
 
-        if all(
+        if any(
             data is None
             for data in [
                 auth_data,
@@ -183,6 +198,7 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 session_data,
                 device_data,
                 connect_data,
+                mammotion_data,
             ]
         ):
             return None
@@ -209,6 +225,11 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             if isinstance(auth_data, dict)
             else auth_data,
         )
+
+        if isinstance(mammotion_data, dict):
+            mammotion_data = Response[LoginResponseData].from_dict(mammotion_data)
+
+        cloud_client.set_http(MammotionHTTP(response=mammotion_data))
 
         await self.hass.async_add_executor_job(cloud_client.check_or_refresh_session)
 
@@ -270,12 +291,12 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
         if self.device_name is not None:
             device = self.manager.get_device_by_name(self.device_name)
+        elif device_name := next(iter(self.manager.devices.devices.keys())):
+            self.device_name = device_name
+            device = self.manager.get_device_by_name(device_name)
         else:
-            device_names = self.manager.devices.devices.keys()
-            if len(device_names) == 0:
-                raise ConfigEntryNotReady("no_devices")
-            self.device_name = device_names[0]
-            device = self.manager.get_device_by_name(device_names[0])
+            raise ConfigEntryNotReady("no_devices")
+
         device.preference = preference
 
         if ble_device and device:
@@ -286,6 +307,8 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             if preference is ConnectionPreference.WIFI and device.has_cloud():
                 self.store_cloud_credentials()
+                if mqtt_client := self.manager.mqtt_list.get(account):
+                    device.mower_state.error_codes = await mqtt_client.cloud_client.mammotion_http.get_all_error_codes()
                 device.cloud().set_notification_callback(
                     self._async_update_notification
                 )
@@ -379,36 +402,40 @@ class MammotionDataUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevice
 
     async def async_blade_height(self, height: int) -> int:
         """Set blade height."""
-        await self.async_send_command("set_blade_height", height=float(height))
+        await self.send_command_and_update("set_blade_height", height=float(height))
         return height
 
     async def async_leave_dock(self) -> None:
         """Leave dock."""
-        await self.async_send_command("leave_dock")
+        await self.send_command_and_update("leave_dock")
 
     async def async_cancel_task(self) -> None:
         """Cancel task."""
-        await self.async_send_command("cancel_job")
+        await self.send_command_and_update("cancel_job")
 
     async def async_move_forward(self, speed: float) -> None:
         """Move forward."""
-        await self.async_send_command("move_forward", linear=speed)
+        await self.send_command_and_update("move_forward", linear=speed)
 
     async def async_move_left(self, speed: float) -> None:
         """Move left."""
-        await self.async_send_command("move_left", angular=speed)
+        await self.send_command_and_update("move_left", angular=speed)
 
     async def async_move_right(self, speed: float) -> None:
         """Move right."""
-        await self.async_send_command("move_right", angular=speed)
+        await self.send_command_and_update("move_right", angular=speed)
 
     async def async_move_back(self, speed: float) -> None:
         """Move back."""
-        await self.async_send_command("move_back", linear=speed)
+        await self.send_command_and_update("move_back", linear=speed)
 
     async def async_rtk_dock_location(self) -> None:
         """RTK and dock location."""
         await self.async_send_command("allpowerfull_rw", id=5, rw=1, context=1)
+
+    async def send_command_and_update(self, command_str: str, **kwargs: Any) -> None:
+        await self.async_send_command(command_str, **kwargs)
+        await self.async_request_iot_sync()
 
     async def async_request_iot_sync(self, stop: bool = False) -> None:
         """Sync specific info from device."""
@@ -426,7 +453,7 @@ class MammotionDataUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevice
             count=0,
         )
 
-    async def async_plan_route(self, operation_settings: OperationSettings) -> None:
+    async def async_plan_route(self, operation_settings: OperationSettings) -> bool:
         """Plan mow."""
 
         if has_field(self.data.sys.toapp_report_data.dev):
@@ -461,7 +488,7 @@ class MammotionDataUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevice
             route_information.toward_mode = 0
             route_information.toward_included_angle = 0
 
-        await self.async_send_command(
+        return await self.async_send_command(
             "generate_route_information", generate_route_information=route_information
         )
 
@@ -471,7 +498,7 @@ class MammotionDataUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevice
         data.map = HashList()
 
     async def check_firmware_version(self) -> None:
-        """Check if firmware version is udpated."""
+        """Check if firmware version is updated."""
         mower = self.manager.mower(self.device_name)
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
@@ -522,19 +549,13 @@ class MammotionDataUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevice
             ):
                 device.ble().update_device(ble_device)
 
-        if (
-            len(device.mower_state.net.toapp_devinfo_resp.resp_ids) == 0
-            or device.mower_state.net.toapp_wifi_iot_status.productkey is None
-        ):
+        if len(device.mower_state.net.toapp_devinfo_resp.resp_ids) == 0:
             await self.manager.start_sync(self.device_name, 0)
 
-        if not device.mower_state.sys.todev_time_ctrl_light:
+        if not has_field(device.mower_state.sys.todev_time_ctrl_light):
             await self.async_read_sidelight()
 
-        if (
-            not has_field(device.mower_state.sys.device_product_type_info)
-            or device.mower_state.mqtt_properties is None
-        ):
+        if not has_field(device.mower_state.sys.device_product_type_info):
             await self.async_send_command("get_device_product_model")
 
         if (
