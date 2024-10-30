@@ -874,7 +874,7 @@ def url_no_path(value: Any) -> str:
     url_in = url(value)
 
     if urlparse(url_in).path not in ("", "/"):
-        raise vol.Invalid("url it not allowed to have a path component")
+        raise vol.Invalid("url is not allowed to have a path component")
 
     return url_in
 

@@ -117,7 +117,16 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
     DeviceType.WASHTOWER_DRYER: WASHER_NUMBERS,
     DeviceType.WASHTOWER: WASHER_NUMBERS,
     DeviceType.WASHTOWER_WASHER: WASHER_NUMBERS,
-    DeviceType.WATER_HEATER: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
+    DeviceType.WATER_HEATER: (
+        NumberEntityDescription(
+            key=ThinQProperty.TARGET_TEMPERATURE,
+            native_max_value=60,
+            native_min_value=35,
+            native_step=1,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            translation_key=ThinQProperty.TARGET_TEMPERATURE,
+        ),
+    ),
     DeviceType.WINE_CELLAR: (
         NUMBER_DESC[ThinQProperty.LIGHT_STATUS],
         NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],

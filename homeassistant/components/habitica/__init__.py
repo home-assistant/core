@@ -29,7 +29,13 @@ from .types import HabiticaConfigEntry
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH, Platform.TODO]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CALENDAR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TODO,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

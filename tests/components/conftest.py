@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohasupervisor.models import Repository, StoreAddon, StoreInfo
+from aiohasupervisor.models import Discovery, Repository, StoreAddon, StoreInfo
 import pytest
 
 from homeassistant.config_entries import (
@@ -205,12 +205,9 @@ def addon_manager_fixture(
 
 
 @pytest.fixture(name="discovery_info")
-def discovery_info_fixture() -> Any:
+def discovery_info_fixture() -> list[Discovery]:
     """Return the discovery info from the supervisor."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_discovery_info
-
-    return mock_discovery_info()
+    return []
 
 
 @pytest.fixture(name="discovery_info_side_effect")
@@ -221,13 +218,29 @@ def discovery_info_side_effect_fixture() -> Any | None:
 
 @pytest.fixture(name="get_addon_discovery_info")
 def get_addon_discovery_info_fixture(
-    discovery_info: dict[str, Any], discovery_info_side_effect: Any | None
-) -> Generator[AsyncMock]:
+    supervisor_client: AsyncMock,
+    discovery_info: list[Discovery],
+    discovery_info_side_effect: Any | None,
+) -> AsyncMock:
     """Mock get add-on discovery info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_get_addon_discovery_info
+    supervisor_client.discovery.list.return_value = discovery_info
+    supervisor_client.discovery.list.side_effect = discovery_info_side_effect
+    return supervisor_client.discovery.list
 
-    yield from mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect)
+
+@pytest.fixture(name="get_discovery_message_side_effect")
+def get_discovery_message_side_effect_fixture() -> Any | None:
+    """Side effect for getting a discovery message by uuid."""
+    return None
+
+
+@pytest.fixture(name="get_discovery_message")
+def get_discovery_message_fixture(
+    supervisor_client: AsyncMock, get_discovery_message_side_effect: Any | None
+) -> AsyncMock:
+    """Mock getting a discovery message by uuid."""
+    supervisor_client.discovery.get.side_effect = get_discovery_message_side_effect
+    return supervisor_client.discovery.get
 
 
 @pytest.fixture(name="addon_store_info_side_effect")
@@ -385,8 +398,10 @@ def set_addon_options_fixture(
     set_addon_options_side_effect: Any | None,
 ) -> AsyncMock:
     """Mock set add-on options."""
-    supervisor_client.addons.addon_options.side_effect = set_addon_options_side_effect
-    return supervisor_client.addons.addon_options
+    supervisor_client.addons.set_addon_options.side_effect = (
+        set_addon_options_side_effect
+    )
+    return supervisor_client.addons.set_addon_options
 
 
 @pytest.fixture(name="uninstall_addon")
@@ -451,11 +466,22 @@ def addon_changelog_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.store.addon_changelog
 
 
+@pytest.fixture(name="supervisor_is_connected")
+def supervisor_is_connected_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock supervisor is connected."""
+    supervisor_client.supervisor.ping.return_value = None
+    return supervisor_client.supervisor.ping
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
     supervisor_client = AsyncMock()
     supervisor_client.addons = AsyncMock()
+    supervisor_client.discovery = AsyncMock()
+    supervisor_client.homeassistant = AsyncMock()
+    supervisor_client.os = AsyncMock()
+    supervisor_client.supervisor = AsyncMock()
     with (
         patch(
             "homeassistant.components.hassio.get_supervisor_client",
