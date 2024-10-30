@@ -1124,10 +1124,10 @@ hole==0.8.0
 holidays==0.59
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241002.4
+home-assistant-frontend==20241030.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.10.2
+home-assistant-intents==2024.10.30
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1404,6 +1404,9 @@ mozart-api==4.1.1.116.0
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
+
+# homeassistant.components.music_assistant
+music-assistant-client==1.0.3
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -2547,7 +2550,7 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.10.0
+reolink-aio==0.10.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2885,7 +2888,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.3.1
+uiprotect==6.3.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2900,7 +2903,7 @@ unifi_ap==0.0.1
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.23
+universal-silabs-flasher==0.0.24
 
 # homeassistant.components.upb
 upb-lib==0.5.8
@@ -3066,7 +3069,7 @@ zeroconf==0.136.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.36
+zha==0.0.37
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
