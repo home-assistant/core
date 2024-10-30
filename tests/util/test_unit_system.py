@@ -329,6 +329,29 @@ def test_accumulated_precipitation_to_imperial() -> None:
     ) == pytest.approx(10, abs=1e-4)
 
 
+def test_area_same_unit() -> None:
+    """Test no conversion happens if to unit is same as from unit."""
+    assert METRIC_SYSTEM.area(5, METRIC_SYSTEM.area_unit) == 5
+
+
+def test_area_unknown_unit() -> None:
+    """Test no conversion happens if unknown unit."""
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+        METRIC_SYSTEM.area(5, "abc")
+
+
+def test_area_to_metric() -> None:
+    """Test area conversion to metric system."""
+    assert METRIC_SYSTEM.area(25, METRIC_SYSTEM.area_unit) == 25
+    assert round(METRIC_SYSTEM.area(10, IMPERIAL_SYSTEM.area_unit), 1) == 0.9
+
+
+def test_area_to_imperial() -> None:
+    """Test area conversion to imperial system."""
+    assert IMPERIAL_SYSTEM.area(77, IMPERIAL_SYSTEM.area_unit) == 77
+    assert IMPERIAL_SYSTEM.area(25, METRIC_SYSTEM.area_unit) == 269.09776041774313
+
+
 def test_properties() -> None:
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == UnitOfLength.KILOMETERS
@@ -390,6 +413,18 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.DISTANCE, UnitOfLength.YARDS, UnitOfLength.METERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test area conversion
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_FEET, UnitOfArea.SQUARE_METERS),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_INCHES,
+            UnitOfArea.SQUARE_MILLIMETERS,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, UnitOfArea.SQUARE_KILOMETERS),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_YARDS, UnitOfArea.SQUARE_METERS),
+        (SensorDeviceClass.AREA, UnitOfArea.ACRES, UnitOfArea.HECTARES),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, None),
+        (SensorDeviceClass.AREA, "very_long", None),
         # Test gas meter conversion
         (
             SensorDeviceClass.GAS,
@@ -523,6 +558,7 @@ def test_get_metric_converted_unit_(
 
 UNCONVERTED_UNITS_METRIC_SYSTEM = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
+    SensorDeviceClass.AREA: (),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.CENTIMETERS,
         UnitOfLength.KILOMETERS,
@@ -580,6 +616,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
+        SensorDeviceClass.AREA,
     ],
 )
 def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
