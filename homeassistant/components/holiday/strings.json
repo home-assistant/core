@@ -2,7 +2,7 @@
   "title": "Holiday",
   "config": {
     "abort": {
-      "already_configured": "Already configured. Only a single configuration for country/province combination possible.",
+      "already_configured": "Already configured. Only a single configuration for country/province/categories combination is possible.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
@@ -25,6 +25,26 @@
         "data": {
           "province": "[%key:component::holiday::config::step::options::data::province%]",
           "categories": "[%key:component::holiday::config::step::options::data::categories%]"
+        },
+        "data_description": {
+          "province": "[%key:component::holiday::config::step::options::data_description::province%]",
+          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:component::holiday::config::abort::already_configured%]",
+      "no_categories": "The country has no additional categories to configure."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "categories": "[%key:component::holiday::config::step::options::data::categories%]"
+        },
+        "data_description": {
+          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]"
         }
       }
     }
@@ -34,18 +54,18 @@
       "options": {
         "armed_forces": "Armed forces",
         "bank": "Bank",
-        "government": "Government",
-        "half_day": "Half day",
-        "optional": "Optional",
-        "school": "School",
-        "unofficial": "Unofficial",
-        "workday": "Workday",
         "catholic": "Catholic",
         "chinese": "Chinese",
         "christian": "Christian",
+        "government": "Government",
+        "half_day": "Half day",
         "hebrew": "Hebrew",
         "hindu": "Hindu",
-        "islamic": "Islamic"
+        "islamic": "Islamic",
+        "optional": "Optional",
+        "school": "School",
+        "unofficial": "Unofficial",
+        "workday": "Workday"
       }
     }
   }

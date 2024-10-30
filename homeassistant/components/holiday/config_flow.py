@@ -9,11 +9,13 @@ from holidays import PUBLIC, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_COUNTRY
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -35,7 +37,9 @@ def get_optional_categories(country: str) -> list[str]:
     don't need to be presented to the user.
     """
     country_data = country_holidays(country, years=dt_util.utcnow().year)
-    return [category for category in country_data.categories if category != PUBLIC]
+    return [
+        category for category in country_data.supported_categories if category != PUBLIC
+    ]
 
 
 def get_options_schema(country: str) -> vol.Schema:
@@ -52,6 +56,7 @@ def get_options_schema(country: str) -> vol.Schema:
         schema[vol.Optional(CONF_CATEGORIES)] = SelectSelector(
             SelectSelectorConfig(
                 options=categories,
+                multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key="categories",
             )
@@ -67,6 +72,12 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> HolidayOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return HolidayOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -196,18 +207,21 @@ class HolidayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage Holiday options."""
-
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
         categories = await self.hass.async_add_executor_job(
             get_optional_categories, self.config_entry.data[CONF_COUNTRY]
         )
+        if not categories:
+            return self.async_abort(reason="no_categories")
+
         options_schema = vol.Schema(
             {
                 vol.Optional(CONF_CATEGORIES): SelectSelector(
                     SelectSelectorConfig(
                         options=categories,
+                        multiple=True,
                         mode=SelectSelectorMode.DROPDOWN,
                         translation_key="categories",
                     )
@@ -216,7 +230,9 @@ class HolidayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         )
 
         return self.async_show_form(
-            data_schema=options_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                options_schema, self.config_entry.options
+            ),
             description_placeholders={
                 CONF_COUNTRY: self.config_entry.data[CONF_COUNTRY]
             },

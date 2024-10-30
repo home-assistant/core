@@ -1,18 +1,23 @@
 """Test the Holiday config flow."""
 
+from datetime import datetime
 from unittest.mock import AsyncMock
 
-import pytest
+from freezegun.api import FrozenDateTimeFactory
+from holidays import UNOFFICIAL
 
 from homeassistant import config_entries
-from homeassistant.components.holiday.const import CONF_PROVINCE, DOMAIN
+from homeassistant.components.holiday.const import (
+    CONF_CATEGORIES,
+    CONF_PROVINCE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -49,7 +54,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_no_subdivision(hass: HomeAssistant) -> None:
+async def test_form_no_subdivision(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the forms correctly without subdivision."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +78,9 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_translated_title(hass: HomeAssistant) -> None:
+async def test_form_translated_title(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test the title gets translated."""
     hass.config.language = "de"
 
@@ -90,7 +99,9 @@ async def test_form_translated_title(hass: HomeAssistant) -> None:
     assert result2["title"] == "Schweden"
 
 
-async def test_single_combination_country_province(hass: HomeAssistant) -> None:
+async def test_single_combination_country_province(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that configuring more than one instance is rejected."""
     data_de = {
         CONF_COUNTRY: "DE",
@@ -129,7 +140,9 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     assert result_de_step2["reason"] == "already_configured"
 
 
-async def test_form_babel_unresolved_language(hass: HomeAssistant) -> None:
+async def test_form_babel_unresolved_language(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test the config flow if using not babel supported language."""
     hass.config.language = "en-XX"
 
@@ -175,7 +188,9 @@ async def test_form_babel_unresolved_language(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_babel_replace_dash_with_underscore(hass: HomeAssistant) -> None:
+async def test_form_babel_replace_dash_with_underscore(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test the config flow if using language with dash."""
     hass.config.language = "en-GB"
 
@@ -248,6 +263,37 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert entry.data == {"country": "DE", "province": "NW"}
 
 
+async def test_reconfigure_with_categories(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfigure flow with categories."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unites States, TX",
+        data={"country": "US", "province": "TX"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "AL",
+            CONF_CATEGORIES: [UNOFFICIAL],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.title == "United States, AL"
+    assert entry.data == {CONF_COUNTRY: "US", CONF_PROVINCE: "AL"}
+    assert entry.options == {CONF_CATEGORIES: ["unofficial"]}
+
+
 async def test_reconfigure_incorrect_language(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -312,3 +358,93 @@ async def test_reconfigure_entry_exists(
     entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert entry.title == "Germany, BW"
     assert entry.data == {"country": "DE", "province": "BW"}
+
+
+async def test_form_with_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the flow with configuring options."""
+    await hass.config.async_set_time_zone("America/Chicago")
+    zone = await dt_util.async_get_time_zone("America/Chicago")
+    # Oct 31st is a Friday. Unofficial holiday as Halloween
+    freezer.move_to(datetime(2024, 10, 31, 12, 0, 0, tzinfo=zone))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "US",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "TX",
+            CONF_CATEGORIES: [UNOFFICIAL],
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "United States, TX"
+    assert result["data"] == {
+        CONF_COUNTRY: "US",
+        CONF_PROVINCE: "TX",
+    }
+    assert result["options"] == {
+        CONF_CATEGORIES: ["unofficial"],
+    }
+
+    state = hass.states.get("calendar.united_states_tx")
+    assert state
+    assert state.state == "on"
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    entry = entries[0]
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_CATEGORIES: []},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_CATEGORIES: [],
+    }
+
+    state = hass.states.get("calendar.united_states_tx")
+    assert state
+    assert state.state == "off"
+
+
+async def test_options_abort_no_categories(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the options flow abort if no categories to select."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "SE"},
+        title="Sweden",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_categories"
