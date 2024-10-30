@@ -627,12 +627,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         # Transform legacy zeroconf discovery into the new format
         if discovery_info.type != ZEROCONF_SERVICE_TYPE:
             port = discovery_info.port or LEGACY_ZEROCONF_PORT
+            name = discovery_info.name
 
             # Fix incorrect port for older TubesZB devices
-            if (
-                "tube" in discovery_info.name
-                and port == LEGACY_ZEROCONF_ESPHOME_API_PORT
-            ):
+            if "tube" in name and port == LEGACY_ZEROCONF_ESPHOME_API_PORT:
                 port = LEGACY_ZEROCONF_PORT
 
             # Determine the radio type
@@ -640,25 +638,23 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 radio_type = self._radio_mgr.parse_radio_type(
                     discovery_info.properties["radio_type"]
                 )
-            elif "efr32" in discovery_info.name:
+            elif "efr32" in name:
                 radio_type = RadioType.ezsp
-            elif "zigate" in discovery_info.name:
+            elif "zigate" in name:
                 radio_type = RadioType.zigate
             else:
                 radio_type = RadioType.znp
 
-            name = discovery_info.name.split("._", 1)[0]
+            fallback_title = name.split("._", 1)[0]
+            title = discovery_info.properties.get("name", fallback_title)
+
             discovery_info = zeroconf.ZeroconfServiceInfo(
                 ip_address=discovery_info.ip_address,
                 ip_addresses=discovery_info.ip_addresses,
                 port=port,
                 hostname=discovery_info.hostname,
                 type=ZEROCONF_SERVICE_TYPE,
-                name=(
-                    discovery_info.properties.get("name", name)
-                    + "."
-                    + ZEROCONF_SERVICE_TYPE
-                ),
+                name=f"{title}.{ZEROCONF_SERVICE_TYPE}",
                 properties={
                     "radio_type": radio_type.name,
                     # To maintain backwards compatibility
@@ -673,7 +669,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         radio_type = self._radio_mgr.parse_radio_type(discovery_props["radio_type"])
         device_path = f"socket://{discovery_info.host}:{discovery_info.port}"
-        title = discovery_info.name.removesuffix("." + ZEROCONF_SERVICE_TYPE)
+        title = discovery_info.name.removesuffix(f".{ZEROCONF_SERVICE_TYPE}")
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=discovery_props["serial_number"],
