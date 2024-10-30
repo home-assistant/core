@@ -9,6 +9,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
+from homeassistant.components.camera import (
+    Camera,
+    CameraWebRTCProvider,
+    WebRTCAnswer,
+    WebRTCSendMessage,
+    async_register_webrtc_provider,
+)
 from homeassistant.components.camera.const import (
     DOMAIN,
     PREF_ORIENTATION,
@@ -23,20 +30,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import (
-    EMPTY_8_6_JPEG,
-    STREAM_SOURCE,
-    WEBRTC_ANSWER,
-    add_webrtc_provider,
-    mock_turbo_jpeg,
-)
+from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, WEBRTC_ANSWER, mock_turbo_jpeg
 
 from tests.common import (
     MockConfigEntry,
@@ -933,7 +934,33 @@ async def _test_capabilities(
     await test(expected_stream_types)
 
     # Test with WebRTC provider
-    await add_webrtc_provider(hass)
+
+    class SomeTestProvider(CameraWebRTCProvider):
+        """Test provider."""
+
+        @callback
+        def async_is_supported(self, stream_source: str) -> bool:
+            """Determine if the provider supports the stream source."""
+            return True
+
+        async def async_handle_async_webrtc_offer(
+            self,
+            camera: Camera,
+            offer_sdp: str,
+            session_id: str,
+            send_message: WebRTCSendMessage,
+        ) -> None:
+            """Handle the WebRTC offer and return the answer via the provided callback."""
+            send_message(WebRTCAnswer("answer"))
+
+        async def async_on_webrtc_candidate(
+            self, session_id: str, candidate: str
+        ) -> None:
+            """Handle the WebRTC candidate."""
+
+    provider = SomeTestProvider()
+    async_register_webrtc_provider(hass, provider)
+    await hass.async_block_till_done()
     await test(expected_stream_types_with_webrtc_provider)
 
 
