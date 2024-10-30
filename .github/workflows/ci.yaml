@@ -949,7 +949,6 @@ jobs:
             --timeout=9 \
             --durations=10 \
             --numprocesses auto \
-            --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
             -o console_output_style=count \
@@ -1072,7 +1071,6 @@ jobs:
             -qq \
             --timeout=20 \
             --numprocesses 1 \
-            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=10 \
@@ -1104,7 +1102,7 @@ jobs:
           ./script/check_dirty
 
   pytest-postgres:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1144,7 +1142,9 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
-            libturbojpeg \
+            libturbojpeg
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get -y install \
             postgresql-server-dev-14
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
@@ -1199,7 +1199,6 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses 1 \
-            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
@@ -1346,7 +1345,6 @@ jobs:
             -qq \
             --timeout=9 \
             --numprocesses auto \
-            --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \

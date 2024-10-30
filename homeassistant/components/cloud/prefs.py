@@ -32,6 +32,7 @@ from .const import (
     PREF_CLOUD_USER,
     PREF_CLOUDHOOKS,
     PREF_ENABLE_ALEXA,
+    PREF_ENABLE_CLOUD_ICE_SERVERS,
     PREF_ENABLE_GOOGLE,
     PREF_ENABLE_REMOTE,
     PREF_GOOGLE_CONNECTED,
@@ -176,6 +177,7 @@ class CloudPreferences:
         google_settings_version: int | UndefinedType = UNDEFINED,
         google_connected: bool | UndefinedType = UNDEFINED,
         remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
+        cloud_ice_servers_enabled: bool | UndefinedType = UNDEFINED,
     ) -> None:
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -198,6 +200,7 @@ class CloudPreferences:
                     (PREF_REMOTE_DOMAIN, remote_domain),
                     (PREF_GOOGLE_CONNECTED, google_connected),
                     (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
+                    (PREF_ENABLE_CLOUD_ICE_SERVERS, cloud_ice_servers_enabled),
                 )
                 if value is not UNDEFINED
             }
@@ -246,6 +249,7 @@ class CloudPreferences:
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
+            PREF_ENABLE_CLOUD_ICE_SERVERS: self.cloud_ice_servers_enabled,
         }
 
     @property
@@ -362,6 +366,14 @@ class CloudPreferences:
         """
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
 
+    @property
+    def cloud_ice_servers_enabled(self) -> bool:
+        """Return if cloud ICE servers are enabled."""
+        cloud_ice_servers_enabled: bool = self._prefs.get(
+            PREF_ENABLE_CLOUD_ICE_SERVERS, True
+        )
+        return cloud_ice_servers_enabled
+
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
         user = await self._load_cloud_user()
@@ -409,6 +421,7 @@ class CloudPreferences:
             PREF_ENABLE_ALEXA: True,
             PREF_ENABLE_GOOGLE: True,
             PREF_ENABLE_REMOTE: False,
+            PREF_ENABLE_CLOUD_ICE_SERVERS: True,
             PREF_GOOGLE_CONNECTED: False,
             PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_GOOGLE_ENTITY_CONFIGS: {},

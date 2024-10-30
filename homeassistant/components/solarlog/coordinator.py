@@ -65,7 +65,8 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         _LOGGER.debug("Start async_setup")
         logged_in = False
         if self.solarlog.password != "":
-            logged_in = await self.renew_authentication()
+            if logged_in := await self.renew_authentication():
+                await self.solarlog.test_extended_data_available()
         if logged_in or await self.solarlog.test_extended_data_available():
             device_list = await self.solarlog.update_device_list()
             self.solarlog.set_enabled_devices({key: True for key in device_list})
