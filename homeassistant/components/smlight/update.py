@@ -207,7 +207,10 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                         await self.coordinator.async_refresh()
                         await asyncio.sleep(1)
             except TimeoutError:
-                LOGGER.warning("Timeout waiting for SLZB-06 to reboot after update")
+                LOGGER.warning(
+                    "Timeout waiting for %s to reboot after update",
+                    self.coordinator.data.info.hostname,
+                )
 
             self.coordinator.in_progress = False
             self._finished_event.clear()
