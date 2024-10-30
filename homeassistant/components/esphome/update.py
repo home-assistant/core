@@ -230,10 +230,8 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
         """Return if the update is in progress."""
-        if self._state.has_progress:
-            return int(self._state.progress)
         return self._state.in_progress
 
     @property
@@ -259,6 +257,14 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
     def title(self) -> str | None:
         """Return the title of the update."""
         return self._state.title
+
+    @property
+    @esphome_state_property
+    def update_percentage(self) -> int | None:
+        """Return if the update is in progress."""
+        if self._state.has_progress:
+            return int(self._state.progress)
+        return None
 
     @convert_api_error_ha_error
     async def async_update(self) -> None:

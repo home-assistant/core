@@ -139,6 +139,32 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 MARKER_FOR_UNKNOWN_VALUE = -32768
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
+    "F730": {
+        "43108": SensorEntityDescription(
+            key="fan_mode",
+            translation_key="fan_mode",
+        ),
+        "43427": SensorEntityDescription(
+            key="status_compressor",
+            translation_key="status_compressor",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "49993": SensorEntityDescription(
+            key="elect_add",
+            translation_key="elect_add",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "49994": SensorEntityDescription(
+            key="priority",
+            translation_key="priority",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "50095": SensorEntityDescription(
+            key="status",
+            translation_key="status",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+    },
     "NIBEF": {
         "43108": SensorEntityDescription(
             key="fan_mode",

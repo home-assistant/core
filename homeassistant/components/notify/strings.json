@@ -74,7 +74,7 @@
       }
     },
     "migrate_notify_service": {
-      "title": "Legacy action notify.{service_name} stll being used",
+      "title": "Legacy action notify.{service_name} still being used",
       "fix_flow": {
         "step": {
           "confirm": {

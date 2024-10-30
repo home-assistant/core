@@ -141,7 +141,7 @@ MQTT_ORIGIN_INFO_SCHEMA = vol.All(
 MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Optional(CONF_ENTITY_PICTURE): cv.string,
+        vol.Optional(CONF_ENTITY_PICTURE): cv.url,
         vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
