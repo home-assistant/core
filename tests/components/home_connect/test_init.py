@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.home_connect import (
     SCAN_INTERVAL,
     bsh_key_to_translation_key,
-    translation_key_to_bsh_key,
 )
 from homeassistant.components.home_connect.const import (
     BSH_CHILD_LOCK_STATE,
@@ -384,4 +383,3 @@ async def test_bsh_key_transformations() -> None:
     program = "Dishcare.Dishwasher.Program.Eco50"
     translation_key = bsh_key_to_translation_key(program)
     assert RE_TRANSLATION_KEY.match(translation_key)
-    assert translation_key_to_bsh_key(translation_key) == program

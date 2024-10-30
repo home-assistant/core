@@ -327,18 +327,6 @@ def bsh_key_to_translation_key(bsh_key: str) -> str:
     This function takes a BSH key, such as `Dishcare.Dishwasher.Program.Eco50`,
     and converts it to a translation key format, such as `dishcare_dishwasher_bsh_key_eco50`.
     """
-    return "-".join(
+    return "_".join(
         RE_CAMEL_CASE.sub("_", split) for split in bsh_key.split(".")
     ).lower()
-
-
-def translation_key_to_bsh_key(translation_key: str) -> str:
-    """Convert a translation key to a BSH key.
-
-    This function takes a translation key, such as `dishcare_dishwasher_bsh_key_eco50`,
-    and converts it to a BSH key format, such as `Dishcare.Dishwasher.Program.Eco50`.
-    """
-    processed_translation_key = (
-        translation_key.replace("bsh", "b_s_h").replace("-", ".").title()
-    )
-    return "".join(word.title() for word in processed_translation_key.split("_"))
