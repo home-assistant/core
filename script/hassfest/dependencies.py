@@ -121,6 +121,7 @@ ALLOWED_USED_COMPONENTS = {
     "alert",
     "automation",
     "conversation",
+    "default_config",
     "device_automation",
     "frontend",
     "group",
