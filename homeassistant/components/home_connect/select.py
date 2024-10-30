@@ -10,9 +10,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
-from . import get_dict_from_home_connect_error
+from . import (
+    bsh_key_to_translation_key,
+    get_dict_from_home_connect_error,
+    translation_key_to_bsh_key,
+)
 from .api import ConfigEntryAuth, HomeConnectDevice
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
@@ -69,22 +72,22 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 else "selected_program",
             ),
         )
-        self.options_map = {
-            self.format_program(program): program for program in programs
-        }
-        self._attr_options = [key for key in self.options_map if key is not None]
+        self._attr_options = [
+            bsh_key_to_translation_key(program) for program in programs
+        ]
         self.start_on_select = start_on_select
 
     async def async_update(self) -> None:
         """Update the program selection status."""
-        self._attr_current_option = self.format_program(
-            self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE, None)
+        program = self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE)
+        self._attr_current_option = (
+            bsh_key_to_translation_key(program) if program else None
         )
         _LOGGER.debug("Updated, new program: %s", self._attr_current_option)
 
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
-        bsh_key = self.options_map[option]
+        bsh_key = translation_key_to_bsh_key(option)
         _LOGGER.debug(
             "Tried to start program: %s"
             if self.start_on_select
@@ -110,9 +113,3 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 },
             ) from err
         self.async_entity_update()
-
-    def format_program(self, program: str | None) -> str | None:
-        """Format the program for display."""
-        if not program:
-            return None
-        return slugify(program.split(".Program.")[-1])
