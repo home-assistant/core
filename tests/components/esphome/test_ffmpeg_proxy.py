@@ -55,7 +55,6 @@ async def test_proxy_view(
             wav_file.setnchannels(1)
             wav_file.writeframes(bytes(16000 * 2))  # 1s
 
-        temp_file.seek(0)
         wav_url = pathname2url(temp_file.name)
         convert_id = "test-id"
         url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.mp3"
@@ -135,7 +134,6 @@ async def test_lingering_process(
             wav_file.setnchannels(1)
             wav_file.writeframes(bytes(16000 * 2))  # 1s
 
-        temp_file.seek(0)
         wav_url = pathname2url(temp_file.name)
         url1 = async_create_proxy_url(
             hass,
@@ -201,7 +199,6 @@ async def test_request_same_url_multiple_times(
             wav_file.setnchannels(1)
             wav_file.writeframes(bytes(16000 * 2 * 10))  # 10s
 
-        temp_file.seek(0)
         wav_url = pathname2url(temp_file.name)
         url = async_create_proxy_url(
             hass,
