@@ -1,4 +1,4 @@
-"""Tests for the Smarty sensor platform."""
+"""Tests for the Smarty switch platform."""
 
 from unittest.mock import AsyncMock, patch
 

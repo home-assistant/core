@@ -1,4 +1,4 @@
-"""Support for Salda Smarty XP/XV Ventilation Unit Sensors."""
+"""Platform to control a Salda Smarty XP/XV ventilation unit."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ ENTITIES: tuple[SmartySwitchDescription, ...] = (
     SmartySwitchDescription(
         key="boost",
         translation_key="boost",
-        is_on_fn=lambda smarty: bool(smarty.boost),
+        is_on_fn=lambda smarty: smarty.boost,
         turn_on_fn=lambda smarty: smarty.enable_boost(),
         turn_off_fn=lambda smarty: smarty.disable_boost(),
     ),
@@ -65,7 +65,6 @@ class SmartySwitch(SmartyEntity, SwitchEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._is_on = False
         self.entity_description = entity_description
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
@@ -78,7 +77,6 @@ class SmartySwitch(SmartyEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._is_on = True
         await self.hass.async_add_executor_job(
             self.entity_description.turn_on_fn, self.coordinator.client
         )
@@ -86,7 +84,6 @@ class SmartySwitch(SmartyEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._is_on = False
         await self.hass.async_add_executor_job(
             self.entity_description.turn_off_fn, self.coordinator.client
         )
