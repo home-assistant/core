@@ -105,6 +105,7 @@ from .discovery import (
     MQTTDiscoveryPayload,
     clear_discovery_hash,
     get_origin_log_string,
+    get_origin_support_url,
     set_discovery_hash,
 )
 from .models import (
@@ -718,32 +719,29 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
             origin_info = get_origin_log_string(
-                self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
             )
-            if discovery_payload.device_discovery:
-                _LOGGER.info(
-                    "Rollback started%s, of device based discovery migration, "
-                    "on topic %s. Publish a component based "
-                    "discovery update for component %s to roll back "
-                    "the migration to a device based discovery, "
-                    "and clear %s with an empty (retained) payload after "
-                    "a successful migration to clean up",
-                    origin_info,
-                    self._migrate_discovery,
-                    discovery_hash,
-                    self._migrate_discovery,
-                )
-            else:
-                _LOGGER.info(
-                    "Migration started to device based discovery%s, "
-                    "on topic %s. Publish a device based discovery update "
-                    "including component %s. After successful migration of all "
-                    "components, publish an empty (retained) payload to all "
-                    "previous used discovery topics to clean up",
-                    origin_info,
-                    self._migrate_discovery,
-                    discovery_hash,
-                )
+            action = "Rollback" if discovery_payload.device_discovery else "Migration"
+            schema_type = "platform" if discovery_payload.device_discovery else "device"
+            _LOGGER.info(
+                "%s to MQTT %s discovery schema started for %s '%s'"
+                "%s on topic %s. To complete %s, publish a %s discovery "
+                "message with %s '%s'. After completed %s, "
+                "publish an empty (retained) payload to %s",
+                action,
+                schema_type,
+                discovery_hash[0],
+                discovery_hash[1],
+                origin_info,
+                self._migrate_discovery,
+                action.lower(),
+                schema_type,
+                discovery_hash[0],
+                discovery_hash[1],
+                action.lower(),
+                self._migrate_discovery,
+            )
+
             # Cleanup platform resources
             await self.async_tear_down()
             # Unregister and clean discovery
@@ -766,16 +764,35 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         # share the same discovery ID.
         if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
             # Prevent illegal updates
+            old_origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            new_origin_info = get_origin_log_string(
+                discovery_payload.discovery_data[ATTR_DISCOVERY_PAYLOAD],
+                include_url=False,
+            )
+            new_origin_support_url = get_origin_support_url(
+                discovery_payload.discovery_data[ATTR_DISCOVERY_PAYLOAD]
+            )
+            if new_origin_support_url:
+                get_support = f"for support visit {new_origin_support_url}"
+            else:
+                get_support = (
+                    "for documentation on migration to device schema or rollback to "
+                    "discovery schema, visit https://www.home-assistant.io/integrations/"
+                    "mqtt/#migration-from-single-component-to-device-based-discovery"
+                )
             _LOGGER.warning(
-                "Unexpected discovery payload discovered "
-                "for %s on topic %s detected, "
-                "ignoring update, discovery registered to %s. "
-                "It seems you are trying to migrate discovery, "
-                "but to support that you must unload component %s first",
-                discovery_hash,
-                new_discovery_topic,
+                "Received a conflicting MQTT discovery message for %s '%s' which was "
+                "previously discovered on topic %s%s; the conflicting discovery "
+                "message was received on topic %s%s; %s",
+                discovery_hash[0],
+                discovery_hash[1],
                 self._discovery_data[ATTR_DISCOVERY_TOPIC],
-                discovery_hash,
+                old_origin_info,
+                new_discovery_topic,
+                new_origin_info,
+                get_support,
             )
             send_discovery_done(self.hass, self._discovery_data)
             return
@@ -979,28 +996,27 @@ class MqttDiscoveryUpdateMixin(Entity):
             self._migrate_discovery = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             discovery_hash = self._discovery_data[ATTR_DISCOVERY_HASH]
             origin_info = get_origin_log_string(
-                self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
             )
-            if payload.device_discovery:
-                _LOGGER.info(
-                    "Rollback started%s, of device based discovery migration "
-                    "for entity %s on topic %s. Publish a component based "
-                    "discovery update for component %s to roll back",
-                    origin_info,
-                    self.entity_id,
-                    self._migrate_discovery,
-                    discovery_hash,
-                )
-            else:
-                _LOGGER.info(
-                    "Migration started to device based discovery%s, "
-                    "for entity %s on topic %s. Publish a device based discovery update "
-                    "including component %s",
-                    origin_info,
-                    self.entity_id,
-                    self._migrate_discovery,
-                    discovery_hash,
-                )
+            action = "Rollback" if payload.device_discovery else "Migration"
+            schema_type = "platform" if payload.device_discovery else "device"
+            _LOGGER.info(
+                "%s to MQTT %s discovery schema started for entity %s"
+                "%s on topic %s. To complete %s, publish a %s discovery "
+                "message with %s entity '%s'. After completed %s, "
+                "publish an empty (retained) payload to %s",
+                action,
+                schema_type,
+                self.entity_id,
+                origin_info,
+                self._migrate_discovery,
+                action.lower(),
+                schema_type,
+                discovery_hash[0],
+                discovery_hash[1],
+                action.lower(),
+                self._migrate_discovery,
+            )
         old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
         _LOGGER.debug(
             "Got update for entity with hash: %s '%s'",
@@ -1013,17 +1029,33 @@ class MqttDiscoveryUpdateMixin(Entity):
         # share the same discovery ID.
         if self._discovery_data[ATTR_DISCOVERY_TOPIC] != new_discovery_topic:
             # Prevent illegal updates
+            old_origin_info = get_origin_log_string(
+                self._discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            new_origin_info = get_origin_log_string(
+                payload.discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+            )
+            new_origin_support_url = get_origin_support_url(
+                payload.discovery_data[ATTR_DISCOVERY_PAYLOAD]
+            )
+            if new_origin_support_url:
+                get_support = f"for support visit {new_origin_support_url}"
+            else:
+                get_support = (
+                    "for documentation on migration to device schema or rollback to "
+                    "discovery schema, visit https://www.home-assistant.io/integrations/"
+                    "mqtt/#migration-from-single-component-to-device-based-discovery"
+                )
             _LOGGER.warning(
-                "Unexpected discovery payload discovered "
-                "for entity %s %s on topic %s detected, "
-                "ignoring update, discovery registered to %s"
-                "It seems you are trying to migrate discovery, "
-                "but to support that you must unload component %s first",
+                "Received a conflicting MQTT discovery message for entity %s; the "
+                "entity was previously discovered on topic %s%s; the conflicting "
+                "discovery message was received on topic %s%s; %s",
                 self.entity_id,
-                discovery_hash,
-                new_discovery_topic,
                 self._discovery_data[ATTR_DISCOVERY_TOPIC],
-                discovery_hash,
+                old_origin_info,
+                new_discovery_topic,
+                new_origin_info,
+                get_support,
             )
             send_discovery_done(self.hass, self._discovery_data)
             return

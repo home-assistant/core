@@ -71,7 +71,7 @@ TEST_SINGLE_CONFIGS = [
         "homeassistant/device_automation/0AFFD2/bla1/config",
         {
             "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
-            "o": {"name": "foobar"},
+            "o": {"name": "Foo2Mqtt", "sw": "1.40.2", "url": "https://www.foo2mqtt.io"},
             "automation_type": "trigger",
             "payload": "short_press",
             "topic": "foobar/triggers/button1",
@@ -83,7 +83,7 @@ TEST_SINGLE_CONFIGS = [
         "homeassistant/sensor/0AFFD2/bla2/config",
         {
             "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
-            "o": {"name": "foobar"},
+            "o": {"name": "Foo2Mqtt", "sw": "1.40.2", "url": "https://www.foo2mqtt.io"},
             "state_topic": "foobar/sensors/bla2/state",
             "unique_id": "bla002",
         },
@@ -92,14 +92,14 @@ TEST_SINGLE_CONFIGS = [
         "homeassistant/tag/0AFFD2/bla3/config",
         {
             "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
-            "o": {"name": "foobar"},
+            "o": {"name": "Foo2Mqtt", "sw": "1.40.2", "url": "https://www.foo2mqtt.io"},
             "topic": "foobar/tags/bla3/see",
         },
     ),
 ]
 TEST_DEVICE_CONFIG = {
     "device": {"identifiers": ["0AFFD2"], "name": "test_device"},
-    "o": {"name": "foobar"},
+    "o": {"name": "Foo2Mqtt", "sw": "1.50.0", "url": "https://www.foo2mqtt.io"},
     "cmps": {
         "bla1": {
             "platform": "device_automation",
@@ -533,16 +533,28 @@ async def test_discovery_migration_to_device_base(
     )
     await hass.async_block_till_done()
     assert (
-        "Unexpected discovery payload discovered for ('device_automation', '0AFFD2 bla1')"
-        in caplog.text
+        "Received a conflicting MQTT discovery message for device_automation "
+        "'0AFFD2 bla1' which was previously discovered on topic homeassistant/"
+        "device_automation/0AFFD2/bla1/config from external application Foo2Mqtt, "
+        "version: 1.40.2; the conflicting discovery message was received on topic "
+        "homeassistant/device/0AFFD2/config from external application Foo2Mqtt, "
+        "version: 1.50.0; for support visit https://www.foo2mqtt.io" in caplog.text
     )
     assert (
-        "Unexpected discovery payload discovered for entity sensor.test_device_mqtt_sensor ('sensor', '0AFFD2 bla2')"
-        in caplog.text
+        "Received a conflicting MQTT discovery message for entity sensor."
+        "test_device_mqtt_sensor; the entity was previously discovered on topic "
+        "homeassistant/sensor/0AFFD2/bla2/config from external application Foo2Mqtt, "
+        "version: 1.40.2; the conflicting discovery message was received on topic "
+        "homeassistant/device/0AFFD2/config from external application Foo2Mqtt, "
+        "version: 1.50.0; for support visit https://www.foo2mqtt.io" in caplog.text
     )
     assert (
-        "Unexpected discovery payload discovered for ('tag', '0AFFD2 bla3')"
-        in caplog.text
+        "Received a conflicting MQTT discovery message for tag '0AFFD2 bla3' which "
+        "was previously discovered on topic homeassistant/tag/0AFFD2/bla3/config "
+        "from external application Foo2Mqtt, version: 1.40.2; the conflicting "
+        "discovery message was received on topic homeassistant/device/0AFFD2/config "
+        "from external application Foo2Mqtt, version: 1.50.0; for support visit "
+        "https://www.foo2mqtt.io" in caplog.text
     )
 
     # Check we still have our mqtt items
@@ -577,8 +589,20 @@ async def test_discovery_migration_to_device_base(
     assert entity_registry.async_is_registered("sensor.test_device_mqtt_sensor")
 
     assert (
-        "Migration started to device based discovery from external application foobar, "
-        "on topic homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
+        "Migration to MQTT device discovery schema started for device_automation "
+        "'0AFFD2 bla1' from external application Foo2Mqtt, version: 1.40.2 on topic "
+        "homeassistant/device_automation/0AFFD2/bla1/config. To complete migration, "
+        "publish a device discovery message with device_automation '0AFFD2 bla1'. "
+        "After completed migration, publish an empty (retained) payload to "
+        "homeassistant/device_automation/0AFFD2/bla1/config" in caplog.text
+    )
+    assert (
+        "Migration to MQTT device discovery schema started for entity sensor."
+        "test_device_mqtt_sensor from external application Foo2Mqtt, version: 1.40.2 "
+        "on topic homeassistant/sensor/0AFFD2/bla2/config. To complete migration, "
+        "publish a device discovery message with sensor entity '0AFFD2 bla2'. After "
+        "completed migration, publish an empty (retained) payload to "
+        "homeassistant/sensor/0AFFD2/bla2/config" in caplog.text
     )
 
     # Migrate to device based discovery
@@ -621,22 +645,28 @@ async def test_discovery_migration_to_device_base(
     await hass.async_block_till_done()
 
     assert (
-        "Unexpected discovery payload discovered for ('device_automation', '0AFFD2 bla1') "
-        "on topic homeassistant/device_automation/0AFFD2/bla1/config detected, "
-        "ignoring update, discovery registered to homeassistant/device/0AFFD2/config"
-        in caplog.text
+        "Received a conflicting MQTT discovery message for device_automation "
+        "'0AFFD2 bla1' which was previously discovered on topic homeassistant/device"
+        "/0AFFD2/config from external application Foo2Mqtt, version: 1.50.0; the "
+        "conflicting discovery message was received on topic homeassistant/"
+        "device_automation/0AFFD2/bla1/config from external application Foo2Mqtt, "
+        "version: 1.40.2; for support visit https://www.foo2mqtt.io" in caplog.text
     )
     assert (
-        "Unexpected discovery payload discovered for entity sensor.test_device_mqtt_sensor "
-        "('sensor', '0AFFD2 bla2') on topic homeassistant/sensor/0AFFD2/bla2/config "
-        "detected, ignoring update, discovery registered to "
-        "homeassistant/device/0AFFD2/config" in caplog.text
+        "Received a conflicting MQTT discovery message for entity sensor."
+        "test_device_mqtt_sensor; the entity was previously discovered on topic "
+        "homeassistant/device/0AFFD2/config from external application Foo2Mqtt, "
+        "version: 1.50.0; the conflicting discovery message was received on topic "
+        "homeassistant/sensor/0AFFD2/bla2/config from external application Foo2Mqtt, "
+        "version: 1.40.2; for support visit https://www.foo2mqtt.io" in caplog.text
     )
     assert (
-        "Unexpected discovery payload discovered for ('tag', '0AFFD2 bla3') "
-        "on topic homeassistant/tag/0AFFD2/bla3/config detected, "
-        "ignoring update, discovery registered to homeassistant/device/0AFFD2/config"
-        in caplog.text
+        "Received a conflicting MQTT discovery message for tag '0AFFD2 bla3' which was "
+        "previously discovered on topic homeassistant/device/0AFFD2/config from "
+        "external application Foo2Mqtt, version: 1.50.0; the conflicting discovery "
+        "message was received on topic homeassistant/tag/0AFFD2/bla3/config from "
+        "external application Foo2Mqtt, version: 1.40.2; for support visit "
+        "https://www.foo2mqtt.io" in caplog.text
     )
 
     caplog.clear()
@@ -722,7 +752,7 @@ async def test_discovery_migration_unique_id(
     ("single_configs", "device_discovery_topic", "device_config"),
     [(TEST_SINGLE_CONFIGS, TEST_DEVICE_DISCOVERY_TOPIC, TEST_DEVICE_CONFIG)],
 )
-async def test_discovery_migration_to_single_base(
+async def test_discovery_rollback_to_single_base(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -771,10 +801,28 @@ async def test_discovery_migration_to_single_base(
     )
     await hass.async_block_till_done()
 
+    # Check the log messages
+    assert (
+        "Rollback to MQTT platform discovery schema started for entity sensor."
+        "test_device_mqtt_sensor from external application Foo2Mqtt, version: 1.50.0 "
+        "on topic homeassistant/device/0AFFD2/config. To complete rollback, publish a "
+        "platform discovery message with sensor entity '0AFFD2 bla2'. After completed "
+        "rollback, publish an empty (retained) payload to "
+        "homeassistant/device/0AFFD2/config" in caplog.text
+    )
+    assert (
+        "Rollback to MQTT platform discovery schema started for device_automation "
+        "'0AFFD2 bla1' from external application Foo2Mqtt, version: 1.50.0 on topic "
+        "homeassistant/device/0AFFD2/config. To complete rollback, publish a platform "
+        "discovery message with device_automation '0AFFD2 bla1'. After completed "
+        "rollback, publish an empty (retained) payload to "
+        "homeassistant/device/0AFFD2/config" in caplog.text
+    )
+
     # Assert we still have our device entry
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
-    # Check our trigger was unloaden
+    # Check our trigger was unloaded
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
