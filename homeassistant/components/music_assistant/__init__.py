@@ -6,10 +6,10 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from music_assistant.client import MusicAssistantClient
-from music_assistant.client.exceptions import CannotConnect, InvalidServerVersion
-from music_assistant.common.models.enums import EventType
-from music_assistant.common.models.errors import MusicAssistantError
+from music_assistant_client import MusicAssistantClient
+from music_assistant_client.exceptions import CannotConnect, InvalidServerVersion
+from music_assistant_models.enums import EventType
+from music_assistant_models.errors import MusicAssistantError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
@@ -26,7 +26,7 @@ from homeassistant.helpers.issue_registry import (
 from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
-    from music_assistant.common.models.event import MassEvent
+    from music_assistant_models.event import MassEvent
 
 type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
 

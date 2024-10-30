@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from music_assistant.client import MusicAssistantClient
-from music_assistant.client.exceptions import (
+from music_assistant_client import MusicAssistantClient
+from music_assistant_client.exceptions import (
     CannotConnect,
     InvalidServerVersion,
     MusicAssistantClientException,
 )
-from music_assistant.common.models.api import ServerInfoMessage
+from music_assistant_models.api import ServerInfoMessage
 import voluptuous as vol
 
 from homeassistant.components import zeroconf

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from music_assistant.common.models.enums import EventType
-from music_assistant.common.models.event import MassEvent
-from music_assistant.common.models.player import Player
+from music_assistant_models.enums import EventType
+from music_assistant_models.event import MassEvent
+from music_assistant_models.player import Player
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from music_assistant.client import MusicAssistantClient
+    from music_assistant_client import MusicAssistantClient
 
 
 class MusicAssistantEntity(Entity):
@@ -69,7 +69,7 @@ class MusicAssistantEntity(Entity):
     @property
     def available(self) -> bool:
         """Return availability of entity."""
-        return self.player.available and self.mass.connection.connected
+        return self.player.available and bool(self.mass.connection.connected)
 
     async def __on_mass_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""

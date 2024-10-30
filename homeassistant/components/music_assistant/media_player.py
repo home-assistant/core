@@ -9,17 +9,16 @@ import functools
 import os
 from typing import TYPE_CHECKING, Any
 
-from music_assistant.common.helpers.datetime import from_utc_timestamp
-from music_assistant.common.models.enums import (
+from music_assistant_models.enums import (
     EventType,
     MediaType,
     PlayerFeature,
     QueueOption,
     RepeatMode as MassRepeatMode,
 )
-from music_assistant.common.models.errors import MediaNotFoundError, MusicAssistantError
-from music_assistant.common.models.event import MassEvent
-from music_assistant.common.models.media_items import ItemMapping, MediaItemType, Track
+from music_assistant_models.errors import MediaNotFoundError, MusicAssistantError
+from music_assistant_models.event import MassEvent
+from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -39,15 +38,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import MusicAssistantConfigEntry
 from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, DOMAIN
 from .entity import MusicAssistantEntity
 
 if TYPE_CHECKING:
-    from music_assistant.client import MusicAssistantClient
-    from music_assistant.common.models.player import Player
-    from music_assistant.common.models.player_queue import PlayerQueue
+    from music_assistant_client import MusicAssistantClient
+    from music_assistant_models.player import Player
+    from music_assistant_models.player_queue import PlayerQueue
 
 SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.PAUSE
@@ -245,26 +245,18 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     @catch_musicassistant_error
     async def async_media_next_track(self) -> None:
         """Send next track command to device."""
-        if not self.active_queue:
-            return
-        await self.mass.player_queues.queue_command_next(self.active_queue.queue_id)
+        await self.mass.players.player_command_next_track(self.player_id)
 
     @catch_musicassistant_error
     async def async_media_previous_track(self) -> None:
         """Send previous track command to device."""
-        if not self.active_queue:
-            return
-        await self.mass.player_queues.queue_command_previous(self.active_queue.queue_id)
+        await self.mass.players.player_command_previous_track(self.player_id)
 
     @catch_musicassistant_error
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         position = int(position)
-        if not self.active_queue:
-            return
-        await self.mass.player_queues.queue_command_seek(
-            self.active_queue.queue_id, position
-        )
+        await self.mass.players.player_command_seek(self.player_id, position)
 
     @catch_musicassistant_error
     async def async_mute_volume(self, mute: bool) -> None:
@@ -368,7 +360,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             if (mass_player_id := hass_state.attributes.get("mass_player_id")) is None:
                 continue
             player_ids.append(mass_player_id)
-        await self.mass.players.cmd_sync_many(self.player_id, player_ids)
+        await self.mass.players.player_command_sync_many(self.player_id, player_ids)
 
     @catch_musicassistant_error
     async def async_unjoin_player(self) -> None:
@@ -494,7 +486,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 assert player.elapsed_time is not None
             self._attr_media_position = int(player.elapsed_time)
             self._attr_media_position_updated_at = (
-                from_utc_timestamp(player.elapsed_time_last_updated)
+                utc_from_timestamp(player.elapsed_time_last_updated)
                 if player.elapsed_time_last_updated
                 else None
             )
@@ -520,7 +512,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_media_content_id = queue.current_item.uri
         self._attr_media_duration = queue.current_item.duration
         self._attr_media_position = int(queue.elapsed_time)
-        self._attr_media_position_updated_at = from_utc_timestamp(
+        self._attr_media_position_updated_at = utc_from_timestamp(
             queue.elapsed_time_last_updated
         )
         self._prev_time = queue.elapsed_time
