@@ -1718,6 +1718,39 @@ async def test_mqtt_subscribes_topics_on_connect(
 
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
+    [ENTRY_DEFAULT_BIRTH_MESSAGE | {mqtt.CONF_DISCOVERY: False}],
+)
+async def test_mqtt_discovery_not_subscribes_when_disabled(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test discovery subscriptions not performend when discovery is disabled."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+
+    await mock_debouncer.wait()
+
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
+    for component in SUPPORTED_COMPONENTS:
+        assert (f"homeassistant/{component}/+/config", 0) not in subscribe_calls
+        assert (f"homeassistant/{component}/+/+/config", 0) not in subscribe_calls
+
+    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+
+    mqtt_client_mock.reset_mock()
+
+    mock_debouncer.clear()
+    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    await mock_debouncer.wait()
+
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
+    for component in SUPPORTED_COMPONENTS:
+        assert (f"homeassistant/{component}/+/config", 0) not in subscribe_calls
+        assert (f"homeassistant/{component}/+/+/config", 0) not in subscribe_calls
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
     [ENTRY_DEFAULT_BIRTH_MESSAGE],
 )
 async def test_mqtt_subscribes_in_single_call(
