@@ -12,5 +12,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/???",
   "iot_class": "local_polling",
-  "requirements": ["automower-ble==0.1.35"]
+  "requirements": ["automower-ble==0.2.0"]
 }
