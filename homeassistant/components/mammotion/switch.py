@@ -1,14 +1,12 @@
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast
-
-from pymammotion.data.model.hash_list import AreaHashNameList
-from pymammotion.utility.device_type import DeviceType
+from typing import Any, Awaitable, Callable, cast
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
+from pymammotion.data.model.hash_list import AreaHashNameList
+from pymammotion.utility.device_type import DeviceType
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator

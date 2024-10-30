@@ -1,10 +1,9 @@
 """Base class for entities."""
 
-from pymammotion.proto import has_field
-from pymammotion.utility.device_type import DeviceType
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from pymammotion.proto import has_field
+from pymammotion.utility.device_type import DeviceType
 
 from .const import CONF_ACCOUNTNAME, CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
 from .coordinator import MammotionDataUpdateCoordinator

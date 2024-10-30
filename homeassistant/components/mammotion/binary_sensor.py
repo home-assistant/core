@@ -3,8 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pymammotion.proto.luba_msg import LubaMsg
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -12,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pymammotion.proto.luba_msg import LubaMsg
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator
