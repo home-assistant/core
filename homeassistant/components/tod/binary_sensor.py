@@ -109,6 +109,9 @@ class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
     _attr_should_poll = False
+    _time_before: datetime
+    _time_after: datetime
+    _next_update: datetime
 
     def __init__(
         self,
@@ -122,10 +125,6 @@ class TodSensor(BinarySensorEntity):
         """Init the ToD Sensor..."""
         self._attr_unique_id = unique_id
         self._attr_name = name
-        # Not correctly typed so we don't need to assert the typing everywhere
-        self._time_before: datetime = None  # type: ignore[assignment]
-        self._time_after: datetime = None  # type: ignore[assignment]
-        self._next_update: datetime = None  # type: ignore[assignment]
         self._after_offset = after_offset
         self._before_offset = before_offset
         self._before = before
