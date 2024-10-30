@@ -12,10 +12,11 @@ from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import PowerviewConfigEntry
 from .const import STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import HDEntity
-from .model import PowerviewConfigEntry, PowerviewDeviceInfo
+from .model import PowerviewDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -29,10 +29,11 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
+from . import PowerviewConfigEntry
 from .const import STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewConfigEntry, PowerviewDeviceInfo
+from .model import PowerviewDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

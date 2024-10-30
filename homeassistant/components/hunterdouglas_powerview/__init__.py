@@ -8,6 +8,7 @@ from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -15,9 +16,11 @@ import homeassistant.helpers.entity_registry as er
 
 from .const import DOMAIN, HUB_EXCEPTIONS
 from .coordinator import PowerviewShadeUpdateCoordinator
-from .model import PowerviewConfigEntry, PowerviewEntryData
+from .model import PowerviewEntryData
 from .shade_data import PowerviewShadeData
 from .util import async_connect_hub
+
+type PowerviewConfigEntry = ConfigEntry[PowerviewEntryData]
 
 PARALLEL_UPDATES = 1
 

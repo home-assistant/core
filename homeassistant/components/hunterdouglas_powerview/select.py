@@ -14,9 +14,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import PowerviewConfigEntry
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewConfigEntry, PowerviewDeviceInfo
+from .model import PowerviewDeviceInfo
 
 
 @dataclass(frozen=True)
