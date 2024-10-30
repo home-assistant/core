@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -16,24 +15,14 @@ from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import ATTR_ADDON, ATTR_UUID, DOMAIN
 from .handler import HassIO, get_supervisor_client
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(slots=True)
-class HassioServiceInfo(BaseServiceInfo):
-    """Prepared info from hassio entries."""
-
-    config: dict[str, Any]
-    name: str
-    slug: str
-    uuid: str
 
 
 @callback
