@@ -39,7 +39,7 @@ type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
 class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
-    config_entry: ConfigEntry
+    config_entry: TedeeConfigEntry
     bridge: TedeeBridge
 
     def __init__(self, hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
