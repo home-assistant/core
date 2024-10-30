@@ -26,7 +26,6 @@ from .const import (
     DEFAULT_LOCK_CODE_DIGITS,
     DEFAULT_NAME,
     DOMAIN,
-    LOGGER,
     YALE_BASE_ERRORS,
 )
 
@@ -43,6 +42,18 @@ DATA_SCHEMA_AUTH = vol.Schema(
         vol.Required(CONF_PASSWORD): cv.string,
     }
 )
+
+
+def validate_credentials(username: str, password: str) -> dict[str, Any]:
+    """Validate credentials."""
+    errors: dict[str, Any] = {}
+    try:
+        YaleSmartAlarmClient(username, password)
+    except AuthenticationError:
+        errors = {"base": "invalid_auth"}
+    except YALE_BASE_ERRORS:
+        errors = {"base": "cannot_connect"}
+    return errors
 
 
 class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -66,24 +77,16 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors = {}
+        errors: dict[str, Any] = {}
 
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
             username = reauth_entry.data[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            try:
-                await self.hass.async_add_executor_job(
-                    YaleSmartAlarmClient, username, password
-                )
-            except AuthenticationError as error:
-                LOGGER.error("Authentication failed. Check credentials %s", error)
-                errors = {"base": "invalid_auth"}
-            except YALE_BASE_ERRORS as error:
-                LOGGER.error("Connection to API failed %s", error)
-                errors = {"base": "cannot_connect"}
-
+            errors = await self.hass.async_add_executor_job(
+                validate_credentials, username, password
+            )
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
@@ -93,6 +96,37 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=DATA_SCHEMA_AUTH,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of existing entry."""
+        errors: dict[str, Any] = {}
+
+        if user_input is not None:
+            reconfigure_entry = self._get_reconfigure_entry()
+            username = user_input[CONF_USERNAME]
+
+            errors = await self.hass.async_add_executor_job(
+                validate_credentials, username, user_input[CONF_PASSWORD]
+            )
+            if (
+                username != reconfigure_entry.unique_id
+                and await self.async_set_unique_id(username)
+            ):
+                errors["base"] = "unique_id_exists"
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    unique_id=username,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=DATA_SCHEMA,
             errors=errors,
         )
 
@@ -108,17 +142,9 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
             name = DEFAULT_NAME
             area = user_input.get(CONF_AREA_ID, DEFAULT_AREA_ID)
 
-            try:
-                await self.hass.async_add_executor_job(
-                    YaleSmartAlarmClient, username, password
-                )
-            except AuthenticationError as error:
-                LOGGER.error("Authentication failed. Check credentials %s", error)
-                errors = {"base": "invalid_auth"}
-            except YALE_BASE_ERRORS as error:
-                LOGGER.error("Connection to API failed %s", error)
-                errors = {"base": "cannot_connect"}
-
+            errors = await self.hass.async_add_executor_job(
+                validate_credentials, username, password
+            )
             if not errors:
                 await self.async_set_unique_id(username)
                 self._abort_if_unique_id_configured()
