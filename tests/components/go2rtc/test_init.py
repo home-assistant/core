@@ -466,7 +466,7 @@ async def test_close_session(
 ERR_BINARY_NOT_FOUND = "Could not find go2rtc docker binary"
 ERR_CONNECT = "Could not connect to go2rtc instance"
 ERR_CONNECT_RETRY = (
-    "Could not connect to go2rtc instance on http://localhost:1984/, will retry"
+    "Could not connect to go2rtc instance on http://localhost:1984/; Retrying"
 )
 ERR_INVALID_URL = "Invalid config for 'go2rtc': invalid url"
 ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
