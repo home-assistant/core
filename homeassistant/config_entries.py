@@ -1265,10 +1265,10 @@ class ConfigEntriesFlowManager(
             SOURCE_REAUTH,
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
-            # Deprecated in 2024.11, should fail in 2025.11
+            # Deprecated in 2024.12, should fail in 2025.12
             report(
                 f"initialises a {source} flow for integration {handler} without "
-                "a link to the config entry. This will stop working in 2025.11",
+                "a link to the config entry. This will stop working in 2025.12",
                 error_if_integration=False,
                 error_if_core=False,
             )

@@ -4809,7 +4809,7 @@ async def test_reauth_reconfigure_missing_entry(
 
     assert (
         f"Detected code that initialises a {source} flow for integration "
-        "test without a link to the config entry. This will stop working in 2025.11."
+        "test without a link to the config entry. This will stop working in 2025.12."
         " Please report this issue." in caplog.text
     )
 
