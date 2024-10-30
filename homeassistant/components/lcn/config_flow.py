@@ -9,7 +9,7 @@ import pypck
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
     CONF_DEVICES,
@@ -110,10 +110,8 @@ async def validate_connection(data: ConfigType) -> str | None:
 class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
-
-    _context_entry: ConfigEntry
+    VERSION = 2
+    MINOR_VERSION = 1
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing configuration from LCN."""
@@ -198,36 +196,26 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
-        self._context_entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Reconfigure LCN configuration."""
+        reconfigure_entry = self._get_reconfigure_entry()
         errors = None
         if user_input is not None:
-            user_input[CONF_HOST] = self._context_entry.data[CONF_HOST]
+            user_input[CONF_HOST] = reconfigure_entry.data[CONF_HOST]
 
-            await self.hass.config_entries.async_unload(self._context_entry.entry_id)
+            await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
             if (error := await validate_connection(user_input)) is not None:
                 errors = {CONF_BASE: error}
 
             if errors is None:
-                data = self._context_entry.data.copy()
-                data.update(user_input)
-                self.hass.config_entries.async_update_entry(
-                    self._context_entry, data=data
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
                 )
-                await self.hass.config_entries.async_setup(self._context_entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
 
-            await self.hass.config_entries.async_setup(self._context_entry.entry_id)
+            await self.hass.config_entries.async_setup(reconfigure_entry.entry_id)
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA, self._context_entry.data
+                CONFIG_SCHEMA, reconfigure_entry.data
             ),
-            errors=errors or {},
+            errors=errors,
         )

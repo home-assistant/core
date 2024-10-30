@@ -10,7 +10,7 @@ from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -83,6 +83,24 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
+    # update the port info if needed for the next time
+    if (
+        host.api.port != config_entry.data[CONF_PORT]
+        or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
+    ):
+        _LOGGER.warning(
+            "HTTP(s) port of Reolink %s, changed from %s to %s",
+            host.api.nvr_name,
+            config_entry.data[CONF_PORT],
+            host.api.port,
+        )
+        data = {
+            **config_entry.data,
+            CONF_PORT: host.api.port,
+            CONF_USE_HTTPS: host.api.use_https,
+        }
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
@@ -134,6 +152,7 @@ async def async_setup_entry(
     device_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}",
         update_method=async_device_config_update,
         update_interval=DEVICE_UPDATE_INTERVAL,
@@ -141,6 +160,7 @@ async def async_setup_entry(
     firmware_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}.firmware",
         update_method=async_check_firmware_update,
         update_interval=FIRMWARE_UPDATE_INTERVAL,

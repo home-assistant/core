@@ -86,12 +86,11 @@ async def test_setup_communication_failure(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_camera", "rtsp_to_webrtc_client")
 async def test_offer_for_stream_source(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    mock_camera: Any,
-    rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test successful response from RTSPtoWebRTC server."""
@@ -103,21 +102,33 @@ async def test_offer_for_stream_source(
     )
 
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
-            "type": "camera/web_rtc_offer",
+            "type": "camera/webrtc/offer",
             "entity_id": "camera.demo_camera",
             "offer": OFFER_SDP,
         }
     )
+
     response = await client.receive_json()
-    assert response.get("id") == 1
-    assert response.get("type") == TYPE_RESULT
-    assert response.get("success")
-    assert "result" in response
-    assert response["result"].get("answer") == ANSWER_SDP
-    assert "error" not in response
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    subscription_id = response["id"]
+
+    # Session id
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"]["type"] == "session"
+
+    # Answer
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"] == {
+        "type": "answer",
+        "answer": ANSWER_SDP,
+    }
 
     # Validate request parameters were sent correctly
     assert len(aioclient_mock.mock_calls) == 1
@@ -127,12 +138,11 @@ async def test_offer_for_stream_source(
     }
 
 
+@pytest.mark.usefixtures("mock_camera", "rtsp_to_webrtc_client")
 async def test_offer_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    mock_camera: Any,
-    rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test a transient failure talking to RTSPtoWebRTC server."""
@@ -144,20 +154,31 @@ async def test_offer_failure(
     )
 
     client = await hass_ws_client(hass)
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
-            "type": "camera/web_rtc_offer",
+            "type": "camera/webrtc/offer",
             "entity_id": "camera.demo_camera",
             "offer": OFFER_SDP,
         }
     )
+
     response = await client.receive_json()
-    assert response.get("id") == 2
-    assert response.get("type") == TYPE_RESULT
-    assert "success" in response
-    assert not response.get("success")
-    assert "error" in response
-    assert response["error"].get("code") == "web_rtc_offer_failed"
-    assert "message" in response["error"]
-    assert "RTSPtoWebRTC server communication failure" in response["error"]["message"]
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    subscription_id = response["id"]
+
+    # Session id
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"]["type"] == "session"
+
+    # Answer
+    response = await client.receive_json()
+    assert response["id"] == subscription_id
+    assert response["type"] == "event"
+    assert response["event"] == {
+        "type": "error",
+        "code": "webrtc_offer_failed",
+        "message": "RTSPtoWebRTC server communication failure: ",
+    }

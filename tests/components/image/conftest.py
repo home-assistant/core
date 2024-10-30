@@ -88,6 +88,16 @@ class MockImageNoStateEntity(image.ImageEntity):
         return b"Test"
 
 
+class MockImageNoDataEntity(image.ImageEntity):
+    """Mock image entity."""
+
+    _attr_name = "Test"
+
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return None
+
+
 class MockImageSyncEntity(image.ImageEntity):
     """Mock image entity."""
 
