@@ -56,6 +56,7 @@ class TestProvider(CameraWebRTCProvider):
         """Initialize the provider."""
         self._is_supported = True
 
+    @callback
     def async_is_supported(self, stream_source: str) -> bool:
         """Determine if the provider supports the stream source."""
         return self._is_supported
