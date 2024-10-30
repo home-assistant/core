@@ -1,6 +1,7 @@
 {
   "domain": "zwave_js",
   "name": "Z-Wave",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/z-wave"],
   "config_flow": true,
   "dependencies": ["http", "repairs", "usb", "websocket_api"],
