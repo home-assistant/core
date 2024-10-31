@@ -42,6 +42,8 @@ async def test_media_player_actions(
         ("media_stop", "stop"),
         ("media_previous_track", "previous"),
         ("media_next_track", "next"),
+        ("volume_up", "volume_up"),
+        ("volume_down", "volume_down"),
     ):
         await hass.services.async_call(
             "media_player",
@@ -104,5 +106,71 @@ async def test_media_player_actions(
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/volume_mute", player_id=mass_player_id, muted=True
+    )
+    music_assistant_client.send_command.reset_mock()
+
+    # test turn_on /turn_off action
+    for action, pwr in (
+        ("turn_on", True),
+        ("turn_off", False),
+    ):
+        await hass.services.async_call(
+            "media_player",
+            action,
+            {
+                "entity_id": entity_id,
+            },
+            blocking=True,
+        )
+        assert music_assistant_client.send_command.call_count == 1
+        assert music_assistant_client.send_command.call_args == call(
+            "players/cmd/power", player_id=mass_player_id, powered=pwr
+        )
+        music_assistant_client.send_command.reset_mock()
+
+    # test shuffle action
+    await hass.services.async_call(
+        "media_player",
+        "shuffle_set",
+        {
+            "entity_id": entity_id,
+            "shuffle": True,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/shuffle", queue_id=mass_player_id, shuffle_enabled=True
+    )
+    music_assistant_client.send_command.reset_mock()
+
+    # test repeat action
+    await hass.services.async_call(
+        "media_player",
+        "repeat_set",
+        {
+            "entity_id": entity_id,
+            "repeat": "one",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/repeat", queue_id=mass_player_id, repeat_mode="one"
+    )
+    music_assistant_client.send_command.reset_mock()
+
+    # test clear playlist action
+    await hass.services.async_call(
+        "media_player",
+        "clear_playlist",
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/clear", queue_id=mass_player_id
     )
     music_assistant_client.send_command.reset_mock()
