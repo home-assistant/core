@@ -26,6 +26,10 @@ CONF_SOFTWARE_SERIAL = "software_serial"
 CONF_HARDWARE_TYPE = "hardware_type"
 CONF_DOMAIN_DATA = "domain_data"
 
+CONF_SEGMENT_ID = "segment_id"
+CONF_MODULE = "module"
+CONF_GROUP = "group"
+
 CONF_ACKNOWLEDGE = "acknowledge"
 CONF_CONNECTIONS = "connections"
 CONF_SK_NUM_TRIES = "sk_num_tries"

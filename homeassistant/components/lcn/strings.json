@@ -70,6 +70,10 @@
     "deprecated_keylock_sensor": {
       "title": "Deprecated LCN key lock binary sensor",
       "description": "Your LCN key lock binary sensor entity `{entity}` is beeing used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
+    },
+    "deprecated_address_parameter": {
+      "title": "Deprecated 'address' parameter",
+      "description": "The 'address' parameter in the LCN service calls is deprecated. The 'devide_id' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   },
   "services": {
@@ -383,9 +387,21 @@
       "name": "Address to device id",
       "description": "Convert LCN address to device id.",
       "fields": {
-        "address": {
-          "name": "Address",
-          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        "id": {
+          "name": "Module or group id",
+          "description": "Target module or group id."
+        },
+        "segment_id": {
+          "name": "Segment id",
+          "description": "Target segment id."
+        },
+        "type": {
+          "name": "Type",
+          "description": "Target type."
+        },
+        "host": {
+          "name": "Host name",
+          "description": "Host name as given in the integration panel."
         }
       }
     }

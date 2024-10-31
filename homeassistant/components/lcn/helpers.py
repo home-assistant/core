@@ -346,7 +346,7 @@ def is_address(value: str) -> tuple[AddressType, str]:
 
 
 def address_to_device_id(
-    hass: HomeAssistant, address: AddressType, host_name: str
+    hass: HomeAssistant, address: AddressType, host_name: str | None = None
 ) -> str | None:
     """Convert LCN address to device_id."""
     for config_entry in hass.config_entries.async_entries(DOMAIN):

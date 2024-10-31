@@ -516,8 +516,24 @@ pck:
 
 address_to_device_id:
   fields:
-    address:
+    id:
       required: true
-      example: "myhome.s0.m7"
+      selector:
+        number:
+          min: 0
+          max: 255
+    segment_id:
+      selector:
+        number:
+          min: 0
+          max: 255
+    type:
+      selector:
+        select:
+          options:
+            - "module"
+            - "group"
+    host:
+      example: "pchk"
       selector:
         text:
