@@ -47,6 +47,10 @@ class Go2RTCWatchdogError(HomeAssistantError):
     """Raised on watchdog error."""
 
 
+class _Go2RTCWatchdogStop(Exception):
+    """Raised to stop the watchdog."""
+
+
 def _create_temp_file(api_ip: str) -> str:
     """Create temporary config file."""
     # Set delete=False to prevent the file from being deleted when the file is closed
@@ -72,6 +76,7 @@ class Server:
             # Listen on all interfaces for allowing access from all ips
             self._api_ip = ""
         self._stop_requested = False
+        self._watchdog_stop = asyncio.Event()
         self._watchdog_task: asyncio.Task | None = None
 
     async def start(self) -> None:
@@ -127,15 +132,28 @@ class Server:
 
         A new go2rtc server is spawned if the process terminates or the API
         stops responding.
+
+        This method has an outer task group to allow stopping the watchdog.
         """
-        while not self._stop_requested:
+        try:
+            async with asyncio.TaskGroup() as tg:
+                tg.create_task(self._watchdog_impl())
+                tg.create_task(self._stop_watchdog())
+        except* _Go2RTCWatchdogStop:
+            _LOGGER.debug("Watchdog stopping")
+
+    async def _watchdog_impl(self) -> None:
+        """Keep respawning go2rtc servers.
+
+        A new go2rtc server is spawned if the process terminates or the API
+        stops responding.
+        """
+        while True:
             try:
                 async with asyncio.TaskGroup() as tg:
                     tg.create_task(self._monitor_process())
                     tg.create_task(self._monitor_api())
-            except ExceptionGroup as grp:
-                if not grp.subgroup(Go2RTCWatchdogError):
-                    _LOGGER.exception("Watchdog got unexpected exception")
+            except* Go2RTCWatchdogError:
                 await asyncio.sleep(_RESPAWN_COOLDOWN)
                 try:
                     await self._stop()
@@ -166,10 +184,16 @@ class Server:
             _LOGGER.debug("go2rtc API did not reply", exc_info=True)
             raise Go2RTCWatchdogError("API error") from err
 
+    async def _stop_watchdog(self) -> None:
+        """Handle watchdog stop request."""
+        await self._watchdog_stop.wait()
+        raise _Go2RTCWatchdogStop
+
     async def stop(self) -> None:
         """Stop the server and abort the watchdog task."""
+        self._watchdog_stop.set()
         if self._watchdog_task:
-            self._watchdog_task.cancel()
+            await self._watchdog_task
             self._watchdog_task = None
         await self._stop()
 
