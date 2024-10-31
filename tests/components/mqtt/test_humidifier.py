@@ -862,7 +862,9 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][humidifier.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(
+        DEFAULT_CONFIG[mqtt.DOMAIN][humidifier.DOMAIN]
+    )
     config["modes"] = ["eco", "auto"]
     config[CONF_MODE_COMMAND_TOPIC] = "humidifier/some_mode_command_topic"
     await help_test_encoding_subscribable_topics(
@@ -1473,7 +1475,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = humidifier.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "mode_command_topic":
         config[mqtt.DOMAIN][domain]["modes"] = ["auto", "eco"]
 
