@@ -3064,6 +3064,19 @@ class OptionsFlow(ConfigEntryBaseFlow):
             match_dict,
         )
 
+    @property
+    def _config_entry_id(self) -> str:
+        """Return config entry id."""
+        # This is the same as handler, but that's an implementation detail
+        return self.handler
+
+    @callback
+    def _get_config_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current options flow."""
+        if entry := self.hass.config_entries.async_get_entry(self._config_entry_id):
+            return entry
+        raise UnknownEntry
+
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
     """Base class for options flows with config entry and options."""

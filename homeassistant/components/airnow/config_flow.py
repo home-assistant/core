@@ -1,5 +1,7 @@
 """Config flow for AirNow integration."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -12,7 +14,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
@@ -120,12 +121,12 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> AirNowOptionsFlowHandler:
         """Return the options flow."""
-        return AirNowOptionsFlowHandler(config_entry)
+        return AirNowOptionsFlowHandler()
 
 
-class AirNowOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class AirNowOptionsFlowHandler(OptionsFlow):
     """Handle an options flow for AirNow."""
 
     async def async_step_init(
@@ -136,18 +137,13 @@ class AirNowOptionsFlowHandler(OptionsFlowWithConfigEntry):
             return self.async_create_entry(data=user_input)
 
         options_schema = vol.Schema(
-            {
-                vol.Optional(CONF_RADIUS): vol.All(
-                    int,
-                    vol.Range(min=5),
-                ),
-            }
+            {vol.Optional(CONF_RADIUS): vol.All(int, vol.Range(min=5))}
         )
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                options_schema, self.config_entry.options
+                options_schema, self._get_config_entry().options
             ),
         )
 
