@@ -134,7 +134,7 @@ class HassIODiscovery(HomeAssistantView):
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,
-                key=data.uuid,
+                key=str(data.uuid),
                 version=1,
             ),
         )
