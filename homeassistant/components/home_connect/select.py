@@ -208,6 +208,7 @@ async def async_setup_entry(
                     if programs:
                         for program in programs:
                             if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
+                                programs.remove(program)
                                 if program not in programs_not_found:
                                     _LOGGER.warning(
                                         'The program "%s" is not part of the official Home Connect API specification',
@@ -242,9 +243,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             ),
         )
         self._attr_options = [
-            program_translation_key
-            for program in programs
-            if (program_translation_key := PROGRAMS_TRANSLATION_KEYS_MAP.get(program))
+            PROGRAMS_TRANSLATION_KEYS_MAP[program] for program in programs
         ]
         self.start_on_select = start_on_select
 
