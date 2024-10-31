@@ -194,7 +194,11 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Only one conversion process per device is allowed
         self.convert_info.proc = proc
 
-        await self._write_ffmpeg_data(request, writer, proc)
+        # Create background task which will be cancelled when home assistant shuts down
+        write_task = self.hass.async_create_background_task(
+            self._write_ffmpeg_data(request, writer, proc), "ESPHome media proxy"
+        )
+        await write_task
 
     async def _write_ffmpeg_data(
         self,
@@ -215,6 +219,11 @@ class FFmpegConvertResponse(web.StreamResponse):
             ):
                 await self.write(chunk)
         except asyncio.CancelledError:
+            _LOGGER.debug("ffmpeg transcoding cancelled")
+            # Abort the transport, we don't wait for ESPHome to drain the write buffer;
+            # it may need a very long time or never finish if the player is paused.
+            if request.transport:
+                request.transport.abort()
             raise  # don't log error
         except:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
@@ -234,8 +243,9 @@ class FFmpegConvertResponse(web.StreamResponse):
             if proc.returncode is None:
                 proc.kill()
 
-            # Close connection
-            await writer.write_eof()
+            # Close connection by writing EOF unless already closing
+            if request.transport and not request.transport.is_closing():
+                await writer.write_eof()
 
 
 class FFmpegProxyView(HomeAssistantView):

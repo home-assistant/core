@@ -1,7 +1,7 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
-  "after_dependencies": ["onboarding", "usb"],
+  "after_dependencies": ["hassio", "onboarding", "usb"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
   "dependencies": ["file_upload"],
@@ -21,7 +21,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["universal-silabs-flasher==0.0.23", "zha==0.0.36"],
+  "requirements": ["universal-silabs-flasher==0.0.24", "zha==0.0.37"],
   "usb": [
     {
       "vid": "10C4",

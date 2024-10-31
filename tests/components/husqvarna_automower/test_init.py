@@ -255,6 +255,7 @@ async def test_add_and_remove_work_area(
     del values[TEST_MOWER_ID].work_area_dict[123456]
     del values[TEST_MOWER_ID].work_areas[123456]
     del values[TEST_MOWER_ID].calendar.tasks[:2]
+    values[TEST_MOWER_ID].mower.work_area_id = 654321
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

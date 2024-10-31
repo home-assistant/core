@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.11.0.dev0"
+version     = "2024.12.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -25,8 +25,9 @@ requires-python = ">=3.12.0"
 dependencies    = [
     "aiodns==3.2.0",
     # Integrations may depend on hassio integration without listing it to
-    # change behavior based on presence of supervisor
-    "aiohasupervisor==0.2.0",
+    # change behavior based on presence of supervisor. Deprecated with #127228
+    # Lib can be removed with 2025.11
+    "aiohasupervisor==0.2.1",
     "aiohttp==3.10.10",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
@@ -73,7 +74,7 @@ dependencies    = [
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.17.0",
+    "yarl==1.17.1",
     "webrtc-models==0.1.0",
 ]
 
