@@ -867,6 +867,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if (
                 type(self).async_handle_web_rtc_offer
                 != Camera.async_handle_web_rtc_offer
+                or type(self).async_handle_async_webrtc_offer
+                != Camera.async_handle_async_webrtc_offer
             ):
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)
