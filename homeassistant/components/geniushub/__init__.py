@@ -178,7 +178,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
             password=entry.data[CONF_PASSWORD],
             session=session,
         )
-        unique_id = entry.data[CONF_MAC]
+        assert entry.unique_id is not None
+        unique_id = entry.unique_id
     else:
         client = GeniusHub(entry.data[CONF_TOKEN], session=session)
         unique_id = entry.entry_id
