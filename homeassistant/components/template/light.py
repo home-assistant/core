@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable
 import logging
 from typing import Any
 
@@ -279,11 +279,11 @@ class TemplateLightEntity(LightEntity):
         self,
         hass: HomeAssistant,
         config: dict[str, Any],
-        async_run_script: Coroutine[Any, Any, None],
+        async_run_script: Callable[..., Awaitable[None]],
     ) -> None:
         """Initialize the entity."""
         self._async_run_script = async_run_script
-        friendly_name = self._attr_name
+        friendly_name = self._attr_name or DEFAULT_NAME
         self._template = config.get(CONF_STATE)
         self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
@@ -326,7 +326,7 @@ class TemplateLightEntity(LightEntity):
         self._min_mireds_template = config.get(CONF_MIN_MIREDS)
         self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
 
-        self._state = None
+        self._state: bool | None = None
         self._brightness = None
         self._temperature = None
         self._hs_color = None
@@ -562,7 +562,7 @@ class TemplateLightEntity(LightEntity):
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
-            if effect not in self._effect_list:
+            if self._effect_list is not None and effect not in self._effect_list:
                 _LOGGER.error(
                     "Received invalid effect: %s for entity %s. Expected one of: %s",
                     effect,
@@ -1198,7 +1198,7 @@ class TriggerLightEntity(TriggerEntity, TemplateLightEntity):
             return
 
         write_ha_state = False
-        for key, updater in [
+        for key, updater in (
             (CONF_LEVEL, self._update_brightness),
             (CONF_EFFECT_LIST, self._update_effect_list),
             (CONF_EFFECT, self._update_effect),
@@ -1210,7 +1210,7 @@ class TriggerLightEntity(TriggerEntity, TemplateLightEntity):
             (CONF_RGBWW, self._update_rgbww),
             (CONF_MAX_MIREDS, self._update_max_mireds),
             (CONF_MIN_MIREDS, self._update_min_mireds),
-        ]:
+        ):
             if (rendered := self._rendered.get(key)) is not None:
                 updater(rendered)
                 write_ha_state = True
