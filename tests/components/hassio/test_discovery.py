@@ -10,12 +10,12 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -91,7 +91,7 @@ async def test_hassio_discovery_startup(
             },
             name="Mosquitto Test",
             slug="mosquitto",
-            uuid=uuid,
+            uuid=str(uuid),
         )
     )
 
@@ -153,7 +153,7 @@ async def test_hassio_discovery_startup_done(
                 },
                 name="Mosquitto Test",
                 slug="mosquitto",
-                uuid=uuid,
+                uuid=str(uuid),
             )
         )
 
@@ -203,7 +203,7 @@ async def test_hassio_discovery_webhook(
             },
             name="Mosquitto Test",
             slug="mosquitto",
-            uuid=uuid,
+            uuid=str(uuid),
         )
     )
 
@@ -283,7 +283,7 @@ async def test_hassio_rediscover(
     )
 
     expected_context = {
-        "discovery_key": DiscoveryKey(domain="hassio", key=uuid, version=1),
+        "discovery_key": DiscoveryKey(domain="hassio", key=str(uuid), version=1),
         "source": config_entries.SOURCE_HASSIO,
     }
 
