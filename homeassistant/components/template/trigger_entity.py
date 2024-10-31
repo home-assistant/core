@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import TemplateStateFromEntityId
