@@ -13,26 +13,6 @@ LOGGER = logging.getLogger(__package__)
 DEFAULT_NAME = "Fluss +"
 
 
-class FlussButton(ButtonEntity):
-    """Representation of a Fluss cover device."""
-
-    def __init__(self, api: FlussApiClient, device: dict) -> None:
-        """Initialize the cover."""
-        self.api = api
-        self.device = device
-        self._name = device.get("deviceName", "Unknown Device")
-        self._attr_unique_id = f"fluss_{device.get('deviceId', 'unknown_id')}"
-
-    @property
-    def name(self) -> str:
-        """Return name of the cover."""
-        return self._name
-
-    async def async_press(self) -> None:
-        """Handle the button press."""
-        await self.api.async_trigger_device(self.device["deviceId"])
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -48,3 +28,33 @@ async def async_setup_entry(
     ]
     LOGGER.debug("Adding entities: %s", buttons)
     async_add_entities(buttons)
+
+
+def validate_device(device):
+    """Validate that a device has the required fields."""
+    if not isinstance(device, dict) or "deviceId" not in device:
+        raise ValueError(f"Invalid device data: 'deviceId' is required, got {device}")
+    return True
+
+
+class FlussButton(ButtonEntity):
+    """Representation of a Fluss cover device."""
+
+    def __init__(self, api: FlussApiClient, device: dict) -> None:
+        """Initialize the cover."""
+        if "deviceId" not in device:
+            raise ValueError("Device missing required 'deviceId' attribute.")
+
+        self.api = api
+        self.device = device
+        self._name = device.get("deviceName", "Unknown Device")
+        self._attr_unique_id = f"fluss_{device["deviceId"]}"
+
+    @property
+    def name(self) -> str:
+        """Return name of the cover."""
+        return self._name
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.api.async_trigger_device(self.device["deviceId"])
