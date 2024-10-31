@@ -5447,16 +5447,17 @@ async def test_string_unique_id_no_warning(
 
 
 @pytest.mark.parametrize(
-    "unique_id",
+    ("unique_id", "type_name"),
     [
-        (123),
-        (2.3),
+        (123, "int"),
+        (2.3, "float"),
     ],
 )
 async def test_hashable_unique_id(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     unique_id: Any,
+    type_name: str,
 ) -> None:
     """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
@@ -5477,6 +5478,7 @@ async def test_hashable_unique_id(
 
     assert (
         "Config entry 'title' from integration test has an invalid unique_id"
+        f" '{unique_id}' of type {type_name} when a string is expected"
     ) in caplog.text
 
     assert entry.entry_id in entries
