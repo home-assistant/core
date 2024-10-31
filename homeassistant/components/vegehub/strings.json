@@ -1,0 +1,47 @@
+{
+  "title": "VegeHub",
+  "config": {
+    "flow_title": "{host}",
+    "step": {
+      "user": {
+        "title": "Set up VegeHub",
+        "description": "Do you want to set up this VegeHub?",
+        "data": {
+          "ip_address": "Enter the IP address of target VegeHub"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device. Please try again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure VegeHub",
+        "data": {
+          "user_act_duration": "Default actuator duration (in seconds)"
+        },
+        "data_description": {
+          "user_act_duration": "Length of time that an actuator command will endure"
+        },
+        "sections": {
+          "data_types": {
+            "name": "Sensor data types",
+            "description": "Select types for connected sensors",
+            "data": {
+              "data_type_1": "Chan 1 Sensor Type",
+              "data_type_2": "Chan 2 Sensor Type",
+              "data_type_3": "Chan 3 Sensor Type",
+              "data_type_4": "Chan 4 Sensor Type",
+              "data_type_5": "Chan 5 Sensor Type",
+              "data_type_6": "Chan 6 Sensor Type",
+              "data_type_7": "Chan 7 Sensor Type",
+              "data_type_8": "Chan 8 Sensor Type"
+            }
+          }
+        }
+      }
+    }
+  }
+}
