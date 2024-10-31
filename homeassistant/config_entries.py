@@ -3054,8 +3054,8 @@ class OptionsFlow(ConfigEntryBaseFlow):
         _async_abort_entries_match(
             [
                 entry
-                for entry in self.hass.config_entries.async_entries(self._config_entry.domain)
-                if entry is not self._config_entry and entry.source != SOURCE_IGNORE
+                for entry in self.hass.config_entries.async_entries(self.config_entry.domain)
+                if entry is not self.config_entry and entry.source != SOURCE_IGNORE
             ],
             match_dict,
         )
@@ -3075,7 +3075,7 @@ class OptionsFlow(ConfigEntryBaseFlow):
         return self.handler
 
     @property
-    def _config_entry(self) -> ConfigEntry:
+    def config_entry(self) -> ConfigEntry:
         """Return the config entry linked to the current options flow.
 
         Please note that this is not available inside `__init__` method, and
@@ -3093,13 +3093,13 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.__config_entry = config_entry
+        self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
 
     @property
     def config_entry(self) -> ConfigEntry:
         """Return the config entry."""
-        return self.__config_entry
+        return self._config_entry
 
     @property
     def options(self) -> dict[str, Any]:
