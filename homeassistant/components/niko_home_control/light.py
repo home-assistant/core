@@ -43,17 +43,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create a smarty system."""
-    _LOGGER.warning(
-        "Loading Niko Home Control via platform setup is deprecated; The configuration has been migrated to a config entry and can be safely removed"
-    )
-
-    _LOGGER.debug("Setting up Niko Home Control via platform setup")
-
-    _LOGGER.debug(hass_config.get(DOMAIN))
-    _LOGGER.debug(hass_config.get("platform"))
-
-    _LOGGER.debug(hass_config.get("platform"))
+    """Set up the light platform."""
 
     if hass_config.get("platform") == DOMAIN:
         hass.async_create_task(_async_import(hass, hass_config))
@@ -61,14 +51,7 @@ async def async_setup_platform(
 
 # delete after 2025.5.0
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
-    """Set up the smarty environment."""
-
-    _LOGGER.warning(
-        "Loading Niko Home Control via platform setup is deprecated; The configuration has been migrated to a config entry and can be safely removed"
-    )
-
-    _LOGGER.warning(hass.config_entries.async_entries(DOMAIN))
-
+    """Set up the nhc environment."""
     if not hass.config_entries.async_entries(DOMAIN):
         # Start import flow
         result = await hass.config_entries.flow.async_init(
@@ -86,7 +69,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
                 translation_key=f"deprecated_yaml_import_issue_{result.get('reason', 'unknown')}",
                 translation_placeholders={
                     "domain": DOMAIN,
-                    "integration_title": "Niko Home Control",
+                    "integration_title": "niko_home_control",
                 },
             )
             return
@@ -102,7 +85,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
         translation_key="deprecated_yaml",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Niko Home Control",
+            "integration_title": "niko_home_control",
         },
     )
 
