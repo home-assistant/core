@@ -844,6 +844,9 @@ ebusdpy==0.0.17
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
 
+# homeassistant.components.ekeybionyx
+ekey-bionyxpy==0.0.3
+
 # homeassistant.components.eheimdigital
 eheimdigital==1.3.0
 

@@ -404,6 +404,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
+/homeassistant/components/ekeybionyx/ @richardpolzer
+/tests/components/ekeybionyx/ @richardpolzer
 /homeassistant/components/eheimdigital/ @autinerd
 /tests/components/eheimdigital/ @autinerd
 /homeassistant/components/electrasmart/ @jafar-atili
