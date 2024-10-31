@@ -839,7 +839,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_bill_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -851,7 +851,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_bill_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_bill_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -866,7 +866,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bill net production percentage',
+    'original_name': 'Bill net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -875,15 +875,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_bill_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Bill net production percentage',
+      'friendly_name': 'Sense 12345 Bill net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_bill_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_bill_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -946,7 +946,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_bill_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -958,7 +958,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_bill_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_bill_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -973,7 +973,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bill solar powered percentage',
+    'original_name': 'Bill solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -982,15 +982,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_bill_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_bill_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Bill solar powered percentage',
+      'friendly_name': 'Sense 12345 Bill solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_bill_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_bill_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1221,7 +1221,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_daily_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1233,7 +1233,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_daily_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_daily_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1248,7 +1248,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Daily net production percentage',
+    'original_name': 'Daily net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1257,15 +1257,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_daily_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Daily net production percentage',
+      'friendly_name': 'Sense 12345 Daily net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_daily_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_daily_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1328,7 +1328,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_daily_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1340,7 +1340,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_daily_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_daily_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1355,7 +1355,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Daily solar powered percentage',
+    'original_name': 'Daily solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1364,15 +1364,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_daily_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_daily_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Daily solar powered percentage',
+      'friendly_name': 'Sense 12345 Daily solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_daily_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_daily_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1768,7 +1768,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_monthly_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1780,7 +1780,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_monthly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1795,7 +1795,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Monthly net production percentage',
+    'original_name': 'Monthly net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1804,15 +1804,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_monthly_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Monthly net production percentage',
+      'friendly_name': 'Sense 12345 Monthly net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_monthly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1875,7 +1875,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_monthly_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1887,7 +1887,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_monthly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1902,7 +1902,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Monthly solar powered percentage',
+    'original_name': 'Monthly solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1911,15 +1911,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_monthly_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_monthly_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Monthly solar powered percentage',
+      'friendly_name': 'Sense 12345 Monthly solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_monthly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_monthly_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2205,7 +2205,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_weekly_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2217,7 +2217,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_weekly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2232,7 +2232,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Weekly net production percentage',
+    'original_name': 'Weekly net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2241,15 +2241,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_weekly_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Weekly net production percentage',
+      'friendly_name': 'Sense 12345 Weekly net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_weekly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2312,7 +2312,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_weekly_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2324,7 +2324,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_weekly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2339,7 +2339,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Weekly solar powered percentage',
+    'original_name': 'Weekly solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2348,15 +2348,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_weekly_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_weekly_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Weekly solar powered percentage',
+      'friendly_name': 'Sense 12345 Weekly solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_weekly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_weekly_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2587,7 +2587,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_net_production_percentage-entry]
+# name: test_sensors[sensor.sense_12345_yearly_net_production_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2599,7 +2599,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_yearly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_net_production_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2614,7 +2614,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Yearly net production percentage',
+    'original_name': 'Yearly net production ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2623,15 +2623,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_net_production_percentage-state]
+# name: test_sensors[sensor.sense_12345_yearly_net_production_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Yearly net production percentage',
+      'friendly_name': 'Sense 12345 Yearly net production ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_yearly_net_production_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_net_production_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2694,7 +2694,7 @@
     'state': '15',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_solar_powered_percentage-entry]
+# name: test_sensors[sensor.sense_12345_yearly_solar_powered_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2706,7 +2706,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sense_12345_yearly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_solar_powered_ratio',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2721,7 +2721,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Yearly solar powered percentage',
+    'original_name': 'Yearly solar powered ratio',
     'platform': 'sense',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2730,15 +2730,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.sense_12345_yearly_solar_powered_percentage-state]
+# name: test_sensors[sensor.sense_12345_yearly_solar_powered_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Sense.com',
-      'friendly_name': 'Sense 12345 Yearly solar powered percentage',
+      'friendly_name': 'Sense 12345 Yearly solar powered ratio',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sense_12345_yearly_solar_powered_percentage',
+    'entity_id': 'sensor.sense_12345_yearly_solar_powered_ratio',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
