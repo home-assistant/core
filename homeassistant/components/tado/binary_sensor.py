@@ -49,7 +49,9 @@ BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="connection state",
     translation_key="connection_state",
-    state_fn=lambda data: data.get("connectionState", {}).get("value", False),
+    state_fn=lambda data: data.get("connectionState", {}).get(
+        "value", data.get("connection", {}).get("state", False)
+    ),
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -59,7 +61,7 @@ POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 )
 LINK_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="link",
-    state_fn=lambda data: data.link == "ONLINE",
+    state_fn=lambda data: data.link in ("ONLINE", "CONNECTED"),
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -147,12 +149,26 @@ async def async_setup_entry(
             _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
             continue
 
-        entities.extend(
-            [
-                TadoZoneBinarySensor(tado, zone["name"], zone["id"], entity_description)
-                for entity_description in ZONE_SENSORS[zone_type]
-            ]
-        )
+        if tado.isX:
+            entities.extend(
+                [
+                    TadoZoneBinarySensor(
+                        tado, zone["name"], zone["id"], entity_description
+                    )
+                    for entity_description in ZONE_SENSORS[zone_type]
+                    if entity_description.key
+                    != "early start"  # early start is not available for TadoX
+                ]
+            )
+        else:
+            entities.extend(
+                [
+                    TadoZoneBinarySensor(
+                        tado, zone["name"], zone["id"], entity_description
+                    )
+                    for entity_description in ZONE_SENSORS[zone_type]
+                ]
+            )
 
     async_add_entities(entities, True)
 

@@ -19,6 +19,7 @@ from .const import (
     SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
+    TYPE_HEATING,
 )
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
@@ -53,6 +54,7 @@ class TadoConnector:
             "geofence": {},
             "zone": {},
         }
+        self.isX = False
 
     @property
     def fallback(self):
@@ -68,6 +70,12 @@ class TadoConnector:
         tado_home = self.tado.get_me()["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
+        self.isX = self.tado.http.isX
+        if self.isX:
+            for z in self.zones:
+                z["type"] = TYPE_HEATING
+                z["name"] = z["roomName"]
+                z["id"] = z["roomId"]
 
     def get_mobile_devices(self):
         """Return the Tado mobile devices."""
@@ -139,22 +147,29 @@ class TadoConnector:
             return
 
         for device in devices:
-            device_short_serial_no = device["shortSerialNo"]
+            if self.isX:
+                device_short_serial_no = device["serialNumber"]
+            else:
+                device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)
-            try:
-                if (
-                    INSIDE_TEMPERATURE_MEASUREMENT
-                    in device["characteristics"]["capabilities"]
-                ):
-                    device[TEMP_OFFSET] = self.tado.get_device_info(
-                        device_short_serial_no, TEMP_OFFSET
+
+            if self.isX:
+                device[TEMP_OFFSET] = device["temperatureOffset"]
+            else:
+                try:
+                    if (
+                        INSIDE_TEMPERATURE_MEASUREMENT
+                        in device["characteristics"]["capabilities"]
+                    ):
+                        device[TEMP_OFFSET] = self.tado.get_device_info(
+                            device_short_serial_no, TEMP_OFFSET
+                        )
+                except RuntimeError:
+                    _LOGGER.error(
+                        "Unable to connect to Tado while updating device %s",
+                        device_short_serial_no,
                     )
-            except RuntimeError:
-                _LOGGER.error(
-                    "Unable to connect to Tado while updating device %s",
-                    device_short_serial_no,
-                )
-                return
+                    return
 
             self.data["device"][device_short_serial_no] = device
 
@@ -174,13 +189,16 @@ class TadoConnector:
     def update_zones(self):
         """Update the zone data from Tado."""
         try:
-            zone_states = self.tado.get_zone_states()["zoneStates"]
+            if self.isX:
+                zone_states = self.tado.get_zone_states()
+            else:
+                zone_states = self.tado.get_zone_states()["zoneStates"]
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating zones")
             return
 
         for zone in zone_states:
-            self.update_zone(int(zone))
+            self.update_zone(int(zone if not self.isX else zone["id"]))
 
     def update_zone(self, zone_id):
         """Update the internal data from Tado."""
@@ -286,7 +304,7 @@ class TadoConnector:
                 zone_id,
                 overlay_mode,
                 temperature,
-                duration,
+                int(duration) if duration else None,
                 device_type,
                 "ON",
                 mode,
