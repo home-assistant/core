@@ -90,7 +90,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
         ),
         vol.Optional(LIGHT_DOMAIN): vol.All(
-            cv.ensure_list, [sensor_platform.SENSOR_SCHEMA]
+            cv.ensure_list, [light_platform.LIGHT_SCHEMA]
         ),
         vol.Optional(CONF_LIGHTS): cv.schema_with_slug_keys(
             light_platform.LEGACY_LIGHT_SCHEMA

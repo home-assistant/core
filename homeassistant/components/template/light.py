@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import logging
 from typing import Any
 
@@ -125,11 +126,6 @@ LIGHT_SCHEMA = (
             vol.Exclusive(CONF_COLOR, "hs_legacy_template"): cv.template,
             vol.Exclusive(CONF_HS_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
             vol.Exclusive(CONF_HS, "hs_legacy_template"): cv.template,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_RGB): cv.template,
@@ -140,14 +136,18 @@ LIGHT_SCHEMA = (
             vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
             vol.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
             vol.Inclusive(CONF_EFFECT, "effect"): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
             vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_LEVEL): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.template,
             vol.Optional(CONF_MIN_MIREDS): cv.template,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
             vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_TEMPERATURE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_STATE): cv.template,
         }
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
@@ -272,71 +272,61 @@ async def async_setup_platform(
     )
 
 
-class LightTemplate(TemplateEntity, LightEntity):
-    """Representation of a templated Light, including dimmable."""
-
-    _attr_should_poll = False
+class TemplateLightEntity(LightEntity):
+    """Representation of a templated Light entity."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         config: dict[str, Any],
-        unique_id: str | None,
+        async_run_script: Coroutine[Any, Any, None],
     ) -> None:
-        """Initialize the light."""
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
-        super().__init__(
-            hass, config=config, fallback_name=object_id, unique_id=unique_id
-        )
+        """Initialize the entity."""
+        self._async_run_script = async_run_script
         friendly_name = self._attr_name
-        self._template = config.get(CONF_VALUE_TEMPLATE)
+        self._template = config.get(CONF_STATE)
         self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
         self._level_script = None
         if (level_action := config.get(CONF_LEVEL_ACTION)) is not None:
             self._level_script = Script(hass, level_action, friendly_name, DOMAIN)
-        self._level_template = config.get(CONF_LEVEL_TEMPLATE)
+        self._level_template = config.get(CONF_LEVEL)
         self._temperature_script = None
         if (temperature_action := config.get(CONF_TEMPERATURE_ACTION)) is not None:
             self._temperature_script = Script(
                 hass, temperature_action, friendly_name, DOMAIN
             )
-        self._temperature_template = config.get(CONF_TEMPERATURE_TEMPLATE)
+        self._temperature_template = config.get(CONF_TEMPERATURE)
         self._color_script = None
         if (color_action := config.get(CONF_COLOR_ACTION)) is not None:
             self._color_script = Script(hass, color_action, friendly_name, DOMAIN)
-        self._color_template = config.get(CONF_COLOR_TEMPLATE)
+        self._color_template = config.get(CONF_COLOR)
         self._hs_script = None
         if (hs_action := config.get(CONF_HS_ACTION)) is not None:
             self._hs_script = Script(hass, hs_action, friendly_name, DOMAIN)
-        self._hs_template = config.get(CONF_HS_TEMPLATE)
+        self._hs_template = config.get(CONF_HS)
         self._rgb_script = None
         if (rgb_action := config.get(CONF_RGB_ACTION)) is not None:
             self._rgb_script = Script(hass, rgb_action, friendly_name, DOMAIN)
-        self._rgb_template = config.get(CONF_RGB_TEMPLATE)
+        self._rgb_template = config.get(CONF_RGB)
         self._rgbw_script = None
         if (rgbw_action := config.get(CONF_RGBW_ACTION)) is not None:
             self._rgbw_script = Script(hass, rgbw_action, friendly_name, DOMAIN)
-        self._rgbw_template = config.get(CONF_RGBW_TEMPLATE)
+        self._rgbw_template = config.get(CONF_RGBW)
         self._rgbww_script = None
         if (rgbww_action := config.get(CONF_RGBWW_ACTION)) is not None:
             self._rgbww_script = Script(hass, rgbww_action, friendly_name, DOMAIN)
-        self._rgbww_template = config.get(CONF_RGBWW_TEMPLATE)
+        self._rgbww_template = config.get(CONF_RGBWW)
         self._effect_script = None
         if (effect_action := config.get(CONF_EFFECT_ACTION)) is not None:
             self._effect_script = Script(hass, effect_action, friendly_name, DOMAIN)
-        self._effect_list_template = config.get(CONF_EFFECT_LIST_TEMPLATE)
-        self._effect_template = config.get(CONF_EFFECT_TEMPLATE)
-        self._max_mireds_template = config.get(CONF_MAX_MIREDS_TEMPLATE)
-        self._min_mireds_template = config.get(CONF_MIN_MIREDS_TEMPLATE)
-        self._supports_transition_template = config.get(
-            CONF_SUPPORTS_TRANSITION_TEMPLATE
-        )
+        self._effect_list_template = config.get(CONF_EFFECT_LIST)
+        self._effect_template = config.get(CONF_EFFECT)
+        self._max_mireds_template = config.get(CONF_MAX_MIREDS)
+        self._min_mireds_template = config.get(CONF_MIN_MIREDS)
+        self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
 
-        self._state = False
+        self._state = None
         self._brightness = None
         self._temperature = None
         self._hs_color = None
@@ -436,12 +426,12 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._effect_list
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode | str | None:
         """Return current color mode."""
         return self._color_mode
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
         """Flag supported color modes."""
         return self._supported_color_modes
 
@@ -449,111 +439,6 @@ class LightTemplate(TemplateEntity, LightEntity):
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template:
-            self.add_template_attribute(
-                "_state", self._template, None, self._update_state
-            )
-        if self._level_template:
-            self.add_template_attribute(
-                "_brightness",
-                self._level_template,
-                None,
-                self._update_brightness,
-                none_on_template_error=True,
-            )
-        if self._max_mireds_template:
-            self.add_template_attribute(
-                "_max_mireds_template",
-                self._max_mireds_template,
-                None,
-                self._update_max_mireds,
-                none_on_template_error=True,
-            )
-        if self._min_mireds_template:
-            self.add_template_attribute(
-                "_min_mireds_template",
-                self._min_mireds_template,
-                None,
-                self._update_min_mireds,
-                none_on_template_error=True,
-            )
-        if self._temperature_template:
-            self.add_template_attribute(
-                "_temperature",
-                self._temperature_template,
-                None,
-                self._update_temperature,
-                none_on_template_error=True,
-            )
-        if self._color_template:
-            self.add_template_attribute(
-                "_hs_color",
-                self._color_template,
-                None,
-                self._update_hs,
-                none_on_template_error=True,
-            )
-        if self._hs_template:
-            self.add_template_attribute(
-                "_hs_color",
-                self._hs_template,
-                None,
-                self._update_hs,
-                none_on_template_error=True,
-            )
-        if self._rgb_template:
-            self.add_template_attribute(
-                "_rgb_color",
-                self._rgb_template,
-                None,
-                self._update_rgb,
-                none_on_template_error=True,
-            )
-        if self._rgbw_template:
-            self.add_template_attribute(
-                "_rgbw_color",
-                self._rgbw_template,
-                None,
-                self._update_rgbw,
-                none_on_template_error=True,
-            )
-        if self._rgbww_template:
-            self.add_template_attribute(
-                "_rgbww_color",
-                self._rgbww_template,
-                None,
-                self._update_rgbww,
-                none_on_template_error=True,
-            )
-        if self._effect_list_template:
-            self.add_template_attribute(
-                "_effect_list",
-                self._effect_list_template,
-                None,
-                self._update_effect_list,
-                none_on_template_error=True,
-            )
-        if self._effect_template:
-            self.add_template_attribute(
-                "_effect",
-                self._effect_template,
-                None,
-                self._update_effect,
-                none_on_template_error=True,
-            )
-        if self._supports_transition_template:
-            self.add_template_attribute(
-                "_supports_transition_template",
-                self._supports_transition_template,
-                None,
-                self._update_supports_transition,
-                none_on_template_error=True,
-            )
-        super()._async_setup_templates()
 
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the light on."""
@@ -670,7 +555,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
 
-            await self.async_run_script(
+            await self._async_run_script(
                 self._temperature_script,
                 run_variables=common_params,
                 context=self._context,
@@ -688,7 +573,7 @@ class LightTemplate(TemplateEntity, LightEntity):
 
             common_params["effect"] = effect
 
-            await self.async_run_script(
+            await self._async_run_script(
                 self._effect_script, run_variables=common_params, context=self._context
             )
         elif ATTR_HS_COLOR in kwargs and self._color_script:
@@ -697,7 +582,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
-            await self.async_run_script(
+            await self._async_run_script(
                 self._color_script, run_variables=common_params, context=self._context
             )
         elif ATTR_HS_COLOR in kwargs and self._hs_script:
@@ -706,7 +591,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
-            await self.async_run_script(
+            await self._async_run_script(
                 self._hs_script, run_variables=common_params, context=self._context
             )
         elif ATTR_RGBWW_COLOR in kwargs and self._rgbww_script:
@@ -723,7 +608,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["cw"] = int(rgbww_value[3])
             common_params["ww"] = int(rgbww_value[4])
 
-            await self.async_run_script(
+            await self._async_run_script(
                 self._rgbww_script, run_variables=common_params, context=self._context
             )
         elif ATTR_RGBW_COLOR in kwargs and self._rgbw_script:
@@ -739,7 +624,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["b"] = int(rgbw_value[2])
             common_params["w"] = int(rgbw_value[3])
 
-            await self.async_run_script(
+            await self._async_run_script(
                 self._rgbw_script, run_variables=common_params, context=self._context
             )
         elif ATTR_RGB_COLOR in kwargs and self._rgb_script:
@@ -749,15 +634,15 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["g"] = int(rgb_value[1])
             common_params["b"] = int(rgb_value[2])
 
-            await self.async_run_script(
+            await self._async_run_script(
                 self._rgb_script, run_variables=common_params, context=self._context
             )
         elif ATTR_BRIGHTNESS in kwargs and self._level_script:
-            await self.async_run_script(
+            await self._async_run_script(
                 self._level_script, run_variables=common_params, context=self._context
             )
         else:
-            await self.async_run_script(
+            await self._async_run_script(
                 self._on_script, run_variables=common_params, context=self._context
             )
 
@@ -767,13 +652,13 @@ class LightTemplate(TemplateEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self.async_run_script(
+            await self._async_run_script(
                 self._off_script,
                 run_variables={"transition": kwargs[ATTR_TRANSITION]},
                 context=self._context,
             )
         else:
-            await self.async_run_script(self._off_script, context=self._context)
+            await self._async_run_script(self._off_script, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
@@ -843,33 +728,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             return
 
         self._effect = effect
-
-    @callback
-    def _update_state(self, result):
-        """Update the state from the template."""
-        if isinstance(result, TemplateError):
-            # This behavior is legacy
-            self._state = False
-            if not self._availability_template:
-                self._attr_available = True
-            return
-
-        if isinstance(result, bool):
-            self._state = result
-            return
-
-        state = str(result).lower()
-        if state in _VALID_STATES:
-            self._state = state in ("true", STATE_ON)
-            return
-
-        _LOGGER.error(
-            "Received invalid light is_on state: %s for entity %s. Expected: %s",
-            state,
-            self.entity_id,
-            ", ".join(_VALID_STATES),
-        )
-        self._state = None
 
     @callback
     def _update_temperature(self, render):
@@ -1127,7 +985,162 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
 
-class TriggerLightEntity(TriggerEntity, LightEntity):
+class LightTemplate(TemplateEntity, TemplateLightEntity):
+    """Representation of a templated Light, including dimmable."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        unique_id: str | None,
+    ) -> None:
+        """Initialize the light."""
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
+        TemplateLightEntity.__init__(self, hass, config, self.async_run_script)
+        self._state = False
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if self._template:
+            self.add_template_attribute(
+                "_state", self._template, None, self._update_state
+            )
+        if self._level_template:
+            self.add_template_attribute(
+                "_brightness",
+                self._level_template,
+                None,
+                self._update_brightness,
+                none_on_template_error=True,
+            )
+        if self._max_mireds_template:
+            self.add_template_attribute(
+                "_max_mireds_template",
+                self._max_mireds_template,
+                None,
+                self._update_max_mireds,
+                none_on_template_error=True,
+            )
+        if self._min_mireds_template:
+            self.add_template_attribute(
+                "_min_mireds_template",
+                self._min_mireds_template,
+                None,
+                self._update_min_mireds,
+                none_on_template_error=True,
+            )
+        if self._temperature_template:
+            self.add_template_attribute(
+                "_temperature",
+                self._temperature_template,
+                None,
+                self._update_temperature,
+                none_on_template_error=True,
+            )
+        if self._color_template:
+            self.add_template_attribute(
+                "_hs_color",
+                self._color_template,
+                None,
+                self._update_hs,
+                none_on_template_error=True,
+            )
+        if self._hs_template:
+            self.add_template_attribute(
+                "_hs_color",
+                self._hs_template,
+                None,
+                self._update_hs,
+                none_on_template_error=True,
+            )
+        if self._rgb_template:
+            self.add_template_attribute(
+                "_rgb_color",
+                self._rgb_template,
+                None,
+                self._update_rgb,
+                none_on_template_error=True,
+            )
+        if self._rgbw_template:
+            self.add_template_attribute(
+                "_rgbw_color",
+                self._rgbw_template,
+                None,
+                self._update_rgbw,
+                none_on_template_error=True,
+            )
+        if self._rgbww_template:
+            self.add_template_attribute(
+                "_rgbww_color",
+                self._rgbww_template,
+                None,
+                self._update_rgbww,
+                none_on_template_error=True,
+            )
+        if self._effect_list_template:
+            self.add_template_attribute(
+                "_effect_list",
+                self._effect_list_template,
+                None,
+                self._update_effect_list,
+                none_on_template_error=True,
+            )
+        if self._effect_template:
+            self.add_template_attribute(
+                "_effect",
+                self._effect_template,
+                None,
+                self._update_effect,
+                none_on_template_error=True,
+            )
+        if self._supports_transition_template:
+            self.add_template_attribute(
+                "_supports_transition_template",
+                self._supports_transition_template,
+                None,
+                self._update_supports_transition,
+                none_on_template_error=True,
+            )
+        super()._async_setup_templates()
+
+    @callback
+    def _update_state(self, result):
+        """Update the state from the template."""
+        if isinstance(result, TemplateError):
+            # This behavior is legacy
+            self._state = False
+            if not self._availability_template:
+                self._attr_available = True
+            return
+
+        if isinstance(result, bool):
+            self._state = result
+            return
+
+        state = str(result).lower()
+        if state in _VALID_STATES:
+            self._state = state in ("true", STATE_ON)
+            return
+
+        _LOGGER.error(
+            "Received invalid light is_on state: %s for entity %s. Expected: %s",
+            state,
+            self.entity_id,
+            ", ".join(_VALID_STATES),
+        )
+        self._state = None
+
+
+class TriggerLightEntity(TriggerEntity, TemplateLightEntity):
     """Light entity based on trigger data."""
 
     domain = LIGHT_DOMAIN
@@ -1139,50 +1152,16 @@ class TriggerLightEntity(TriggerEntity, LightEntity):
         config: ConfigType,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config)
-        friendly_name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-        self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
-        self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        # Render the _attr_name before initializing TemplateLightEntity
+        self._attr_name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+        TemplateLightEntity.__init__(self, hass, config, self.async_run_script)
 
-        self._supports_transition: bool = False
-        self._supported_color_modes: set[ColorMode] | None = None
-        self._state: bool | None = None
-        self._action_scripts: dict[str, Script | None] = {}
-        self._optimistic_values: dict[str, Any] = {}
-
-        if (tmpl := config.get(CONF_STATE)) is not None and isinstance(
-            tmpl, template.Template
-        ):
-            self._to_render_simple.append(CONF_STATE)
-            self._parse_result.add(CONF_STATE)
-            self._optimistic_state = False
-        else:
-            self._optimistic_state = True
-
-        color_modes = {ColorMode.ONOFF}
-        for key, color_mode in (
-            (CONF_LEVEL_ACTION, ColorMode.BRIGHTNESS),
-            (CONF_TEMPERATURE_ACTION, ColorMode.COLOR_TEMP),
-            (CONF_HS_ACTION, ColorMode.HS),
-            (CONF_COLOR_ACTION, ColorMode.HS),
-            (CONF_RGB_ACTION, ColorMode.RGB),
-            (CONF_RGBW_ACTION, ColorMode.RGBW),
-            (CONF_RGBWW_ACTION, ColorMode.RGBWW),
-            (CONF_EFFECT_ACTION, None),
-        ):
-            if (action := config.get(key)) is not None:
-                self._action_scripts[key] = Script(hass, action, friendly_name, DOMAIN)
-                if color_mode is not None:
-                    color_modes.add(color_mode)
-
-        self._supported_color_modes = filter_supported_color_modes(color_modes)
-        if len(self._supported_color_modes) > 1:
-            self._color_mode = ColorMode.UNKNOWN
-        if len(self._supported_color_modes) == 1:
-            self._color_mode = next(iter(self._supported_color_modes))
-
+        self._optimistic = True
         for key in (
+            CONF_STATE,
             CONF_LEVEL,
+            CONF_TEMPERATURE,
             CONF_RGB,
             CONF_RGBW,
             CONF_RGBWW,
@@ -1192,6 +1171,8 @@ class TriggerLightEntity(TriggerEntity, LightEntity):
             CONF_SUPPORTS_TRANSITION,
         ):
             if isinstance(config.get(key), template.Template):
+                if key == CONF_STATE:
+                    self._optimistic = False
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
@@ -1204,301 +1185,49 @@ class TriggerLightEntity(TriggerEntity, LightEntity):
             self._parse_result.add(CONF_HS)
 
         if isinstance(config.get(CONF_COLOR), template.Template):
-            self._to_render_complex.append(CONF_HS)
-            self._parse_result.add(CONF_HS)
+            self._to_render_complex.append(CONF_COLOR)
+            self._parse_result.add(CONF_COLOR)
 
-        self._attr_supported_features = LightEntityFeature(0)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
 
-        if self._action_scripts.get(CONF_EFFECT) is not None:
-            self._attr_supported_features |= LightEntityFeature.EFFECT
-        if self._supports_transition is True:
-            self._attr_supported_features |= LightEntityFeature.TRANSITION
-
-    def _get_rendered_value(self, key: str) -> Any | None:
-        """Return the rendered or optimistic value."""
-        if (rendered := self._rendered.get(key)) is not None:
-            return rendered
-
-        if (optimistic := self._optimistic_values.get(key)) is not None:
-            return optimistic
-
-        return None
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of the light."""
-        return self._get_rendered_value(CONF_LEVEL)
-
-    @property
-    def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
-        return self._get_rendered_value(CONF_TEMPERATURE)
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the max mireds value in mireds."""
-        if (rendered := self._get_rendered_value(CONF_MAX_MIREDS)) is not None:
-            return rendered
-
-        return super().min_mireds
-
-    @property
-    def min_mireds(self) -> int:
-        """Return the min mireds value in mireds."""
-        if (rendered := self._get_rendered_value(CONF_MIN_MIREDS)) is not None:
-            return rendered
-
-        return super().min_mireds
-
-    @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the hue and saturation color value [float, float]."""
-        return self._get_rendered_value(CONF_HS)
-
-    @property
-    def rgb_color(self) -> tuple[int, int, int] | None:
-        """Return the rgb color value."""
-        return self._get_rendered_value(CONF_RGB)
-
-    @property
-    def rgbw_color(self) -> tuple[int, int, int, int] | None:
-        """Return the rgbw color value."""
-        return self._get_rendered_value(CONF_RGBW)
-
-    @property
-    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
-        """Return the rgbww color value."""
-        return self._get_rendered_value(CONF_RGBWW)
-
-    @property
-    def effect(self) -> str | None:
-        """Return the effect."""
-        return self._rendered.get(CONF_EFFECT)
-
-    @property
-    def effect_list(self) -> list[str] | None:
-        """Return the effect list."""
-        return self._rendered.get(CONF_EFFECT_LIST)
-
-    @property
-    def color_mode(self) -> ColorMode | None:
-        """Return current color mode."""
-        return self._color_mode
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode] | None:
-        """Flag supported color modes."""
-        return self._supported_color_modes
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
-
-    def _set_optimistic_color(
-        self, key: str, color_mode: ColorMode, value: Any
-    ) -> None:
-        """Set the optimistic color mode."""
-        self._color_mode = color_mode
-        self._optimistic_values[key] = value
-        for color_key in (CONF_TEMPERATURE, CONF_HS, CONF_RGB, CONF_RGBW, CONF_RGBWW):
-            if color_key != key and self._rendered.get(color_key) is None:
-                self._optimistic_values[color_key] = None
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Fire the on action."""
-        optimistic_set = False
-        if self._optimistic_state:
-            self._state = True
-            optimistic_set = True
-
-        if self._rendered.get(CONF_LEVEL) is None and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
-            )
-            self._optimistic_values[CONF_LEVEL] = kwargs[ATTR_BRIGHTNESS]
-            optimistic_set = True
-
-        if self._rendered.get(CONF_TEMPERATURE) is None and ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting color temperature to %s",
-                kwargs[ATTR_COLOR_TEMP],
-            )
-            self._set_optimistic_color(
-                CONF_TEMPERATURE, ColorMode.COLOR_TEMP, kwargs[ATTR_COLOR_TEMP]
-            )
-            optimistic_set = True
-
-        if self._rendered.get(CONF_HS) is None and ATTR_HS_COLOR in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting hs color to %s",
-                kwargs[ATTR_HS_COLOR],
-            )
-            self._set_optimistic_color(CONF_HS, ColorMode.HS, kwargs[ATTR_HS_COLOR])
-            optimistic_set = True
-
-        if self._rendered.get(CONF_RGB) is None and ATTR_RGB_COLOR in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting rgb color to %s",
-                kwargs[ATTR_RGB_COLOR],
-            )
-            self._set_optimistic_color(CONF_RGB, ColorMode.RGB, kwargs[ATTR_RGB_COLOR])
-            optimistic_set = True
-
-        if self._rendered.get(CONF_RGBW) is None and ATTR_RGBW_COLOR in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting rgbw color to %s",
-                kwargs[ATTR_RGBW_COLOR],
-            )
-            self._set_optimistic_color(
-                CONF_RGBW, ColorMode.RGBW, kwargs[ATTR_RGBW_COLOR]
-            )
-            optimistic_set = True
-
-        if self._rendered.get(CONF_RGBWW) is None and ATTR_RGBWW_COLOR in kwargs:
-            _LOGGER.debug(
-                "Optimistically setting rgbw color to %s",
-                kwargs[ATTR_RGBWW_COLOR],
-            )
-            self._set_optimistic_color(
-                CONF_RGBWW, ColorMode.RGBWW, kwargs[ATTR_RGBWW_COLOR]
-            )
-            optimistic_set = True
-
-        common_params = {}
-
-        if ATTR_BRIGHTNESS in kwargs:
-            common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            common_params["transition"] = kwargs[ATTR_TRANSITION]
-
-        if (
-            ATTR_COLOR_TEMP in kwargs
-            and (script := self._action_scripts.get(CONF_TEMPERATURE_ACTION))
-            is not None
-        ):
-            common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
-
-            await self.async_run_script(
-                script,
-                run_variables=common_params,
-                context=self._context,
-            )
-        elif (
-            ATTR_EFFECT in kwargs
-            and (script := self._action_scripts.get(CONF_EFFECT_ACTION)) is not None
-        ):
-            effect = kwargs[ATTR_EFFECT]
-            if (
-                effect_list := self._rendered.get(CONF_EFFECT_LIST)
-            ) is not None and effect not in effect_list:
-                _LOGGER.error(
-                    "Received invalid effect: %s for entity %s. Expected one of: %s",
-                    effect,
-                    self.entity_id,
-                    effect_list,
-                    exc_info=True,
-                )
-
-            common_params["effect"] = effect
-
-            await self.async_run_script(
-                script, run_variables=common_params, context=self._context
-            )
-        elif (
-            ATTR_HS_COLOR in kwargs
-            and (
-                script := self._action_scripts.get(CONF_COLOR_ACTION)
-                or self._action_scripts.get(CONF_HS_ACTION)
-            )
-            is not None
-        ):
-            hs_value = kwargs[ATTR_HS_COLOR]
-            common_params["hs"] = hs_value
-            common_params["h"] = int(hs_value[0])
-            common_params["s"] = int(hs_value[1])
-
-            await self.async_run_script(
-                script, run_variables=common_params, context=self._context
-            )
-        elif (
-            ATTR_RGBWW_COLOR in kwargs
-            and (script := self._action_scripts.get(CONF_RGBWW)) is not None
-        ):
-            rgbww_value = kwargs[ATTR_RGBWW_COLOR]
-            common_params["rgbww"] = rgbww_value
-            common_params["rgb"] = (
-                int(rgbww_value[0]),
-                int(rgbww_value[1]),
-                int(rgbww_value[2]),
-            )
-            common_params["r"] = int(rgbww_value[0])
-            common_params["g"] = int(rgbww_value[1])
-            common_params["b"] = int(rgbww_value[2])
-            common_params["cw"] = int(rgbww_value[3])
-            common_params["ww"] = int(rgbww_value[4])
-
-            await self.async_run_script(
-                script, run_variables=common_params, context=self._context
-            )
-        elif (
-            ATTR_RGBW_COLOR in kwargs
-            and (script := self._action_scripts.get(CONF_RGBW)) is not None
-        ):
-            rgbw_value = kwargs[ATTR_RGBW_COLOR]
-            common_params["rgbw"] = rgbw_value
-            common_params["rgb"] = (
-                int(rgbw_value[0]),
-                int(rgbw_value[1]),
-                int(rgbw_value[2]),
-            )
-            common_params["r"] = int(rgbw_value[0])
-            common_params["g"] = int(rgbw_value[1])
-            common_params["b"] = int(rgbw_value[2])
-            common_params["w"] = int(rgbw_value[3])
-
-            await self.async_run_script(
-                script, run_variables=common_params, context=self._context
-            )
-        elif (
-            ATTR_RGB_COLOR in kwargs
-            and (script := self._action_scripts.get(CONF_RGB)) is not None
-        ):
-            rgb_value = kwargs[ATTR_RGB_COLOR]
-            common_params["rgb"] = rgb_value
-            common_params["r"] = int(rgb_value[0])
-            common_params["g"] = int(rgb_value[1])
-            common_params["b"] = int(rgb_value[2])
-
-            await self.async_run_script(
-                script, run_variables=common_params, context=self._context
-            )
-        elif (
-            ATTR_BRIGHTNESS in kwargs
-            and (script := self._action_scripts.get(CONF_LEVEL)) is not None
-        ):
-            await self.async_run_script(
-                script, run_variables=common_params, context=self._context
-            )
-        else:
-            await self.async_run_script(
-                self._on_script, run_variables=common_params, context=self._context
-            )
-
-        if optimistic_set:
+        if not self.available:
             self.async_write_ha_state()
+            return
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Fire the off action."""
-        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self.async_run_script(
-                self._off_script,
-                run_variables={"transition": kwargs[ATTR_TRANSITION]},
-                context=self._context,
-            )
-        else:
-            await self.async_run_script(self._off_script, context=self._context)
-        if self._optimistic_state:
-            self._state = False
+        write_ha_state = False
+        for key, updater in [
+            (CONF_LEVEL, self._update_brightness),
+            (CONF_EFFECT_LIST, self._update_effect_list),
+            (CONF_EFFECT, self._update_effect),
+            (CONF_TEMPERATURE, self._update_temperature),
+            (CONF_HS, self._update_hs),
+            (CONF_COLOR, self._update_hs),
+            (CONF_RGB, self._update_rgb),
+            (CONF_RGBW, self._update_rgbw),
+            (CONF_RGBWW, self._update_rgbww),
+            (CONF_MAX_MIREDS, self._update_max_mireds),
+            (CONF_MIN_MIREDS, self._update_min_mireds),
+        ]:
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if (rendered := self._rendered.get(CONF_SUPPORTS_TRANSITION)) is not None:
+            self._update_supports_transition(rendered)
+            write_ha_state = True
+
+        if not self._optimistic:
+            raw = self._rendered.get(CONF_STATE)
+            self._state = template.result_as_boolean(raw)
+
+            self.async_set_context(self.coordinator.data["context"])
+            write_ha_state = True
+        elif self._optimistic and len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
             self.async_write_ha_state()
