@@ -110,7 +110,7 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
-    BLOOD_SUGAR_LEVEL = "blood_sugar_level"
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
     """Blood sugar level.
 
     Unit of measurement: `mg/dL`, `mmol/L`
@@ -436,7 +436,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.AQI: {None},
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
-    NumberDeviceClass.BLOOD_SUGAR_LEVEL: set(UnitOfBloodGlucoseConcentration),
+    NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),

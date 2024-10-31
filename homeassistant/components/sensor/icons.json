@@ -12,7 +12,7 @@
     "atmospheric_pressure": {
       "default": "mdi:thermometer-lines"
     },
-    "blood_sugar_level": {
+    "blood_glucose_concentration": {
       "default": "mdi:spoon-sugar"
     },
     "carbon_dioxide": {

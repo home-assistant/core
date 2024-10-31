@@ -177,7 +177,7 @@ class DistanceConverter(BaseUnitConverter):
 class BloodSugarLevelConverter(BaseUnitConverter):
     """Utility to convert blood sugar level values."""
 
-    UNIT_CLASS = "blood_sugar_level"
+    UNIT_CLASS = "blood_glucose_concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
         UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER: 1,

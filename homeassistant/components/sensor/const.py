@@ -129,7 +129,7 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
-    BLOOD_SUGAR_LEVEL = "blood_sugar_level"
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
     """Blood sugar level.
 
     Unit of measurement: `mg/dL`, `mmol/L`
@@ -501,7 +501,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
-    SensorDeviceClass.BLOOD_SUGAR_LEVEL: BloodSugarLevelConverter,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodSugarLevelConverter,
     SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
@@ -533,7 +533,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.AQI: {None},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
-    SensorDeviceClass.BLOOD_SUGAR_LEVEL: set(UnitOfBloodGlucoseConcentration),
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
@@ -609,7 +609,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
-    SensorDeviceClass.BLOOD_SUGAR_LEVEL: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CONDUCTIVITY: {SensorStateClass.MEASUREMENT},

@@ -37,7 +37,7 @@ async def async_setup_entry(
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    _attr_device_class = SensorDeviceClass.BLOOD_SUGAR_LEVEL
+    _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
     _attr_native_unit_of_measurement = (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
     )
