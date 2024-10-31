@@ -3052,9 +3052,7 @@ class OptionsFlow(ConfigEntryBaseFlow):
         Requires `already_configured` in strings.json in user visible flows.
         """
 
-        config_entry = cast(
-            ConfigEntry, self.hass.config_entries.async_get_entry(self.handler)
-        )
+        config_entry = self._get_config_entry()
         _async_abort_entries_match(
             [
                 entry
