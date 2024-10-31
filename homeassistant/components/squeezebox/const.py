@@ -38,4 +38,3 @@ SIGNAL_PLAYER_DISCOVERED = "squeezebox_player_discovered"
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 DISCOVERY_INTERVAL = 60
 PLAYER_UPDATE_INTERVAL = 5
-
