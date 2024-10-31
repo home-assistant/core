@@ -2,4 +2,5 @@
 
 DOMAIN = "go2rtc"
 
-CONF_BINARY = "binary"
+CONF_DEBUG_UI = "debug_ui"
+EXCLUSE_ERROR_MESSAGE = "Url and debug_ui cannot be set at the same time."
