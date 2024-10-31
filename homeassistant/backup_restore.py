@@ -29,12 +29,13 @@ class RestoreBackupFileContent:
 def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | None:
     """Return the contents of the restore backup file."""
     instruction_path = config_dir.joinpath(RESTORE_BACKUP_FILE)
-    if instruction_path.exists():
+    try:
         instruction_content = instruction_path.read_text(encoding="utf-8")
         return RestoreBackupFileContent(
             backup_file_path=Path(instruction_content.split(";")[0])
         )
-    return None
+    except FileNotFoundError:
+        return None
 
 
 def _clear_configuration_directory(config_dir: Path) -> None:
@@ -63,7 +64,11 @@ def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
             mode="r",
         ) as ostf,
     ):
-        ostf.extractall(Path(tempdir, "extracted"))
+        ostf.extractall(
+            path=Path(tempdir, "extracted"),
+            members=securetar.secure_path(ostf),
+            filter="fully_trusted",
+        )
         backup_meta_file = Path(tempdir, "extracted", "backup.json")
         backup_meta = json.loads(backup_meta_file.read_text(encoding="utf8"))
 
@@ -92,7 +97,11 @@ def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
             _clear_configuration_directory(config_dir)
             istf.extractall(
                 path=config_dir,
-                members=securetar.secure_path(istf),
+                members=[
+                    member
+                    for member in securetar.secure_path(istf)
+                    if member.name != "data"
+                ],
                 filter="fully_trusted",
             )
 
