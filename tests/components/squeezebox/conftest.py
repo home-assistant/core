@@ -131,8 +131,6 @@ async def mock_async_browse(
         "title": "title",
         "playlists": "playlist",
         "playlist": "title",
-        "apps": "app",
-        "radios": "app",
     }
     fake_items = [
         {
