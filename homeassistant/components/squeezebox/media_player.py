@@ -429,14 +429,6 @@ class SqueezeBoxMediaPlayerEntity(
         await self._player.async_set_power(True)
         await self.coordinator.async_refresh()
 
-    async def async_play_announcement(self, media_id: str) -> None:
-        """Play announcement url."""
-        await self._player.async_command("playlist", "play", media_id, "Announcement")
-
-        await self._player.async_set_repeat("none")
-
-        await self._player._wait_for_property("mode", "stop", 120)
-
     async def async_play_media(
         self,
         media_type: MediaType | str,
@@ -498,7 +490,7 @@ class SqueezeBoxMediaPlayerEntity(
                 )  # Stop the current playlist before changing the volume
                 await self._player.async_set_volume(_announce_volume)
 
-            await self.async_play_announcement(media_id)
+            await self._player.async_play_announcement(media_id)
 
             await self._player.async_command(
                 "playlist",
