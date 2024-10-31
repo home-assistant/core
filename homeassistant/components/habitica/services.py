@@ -245,8 +245,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         coordinator = entry.runtime_data
         try:
-            task_id = next(
-                task["id"]
+            task_id, task_value = next(
+                (task["id"], task.get("value"))
                 for task in coordinator.data.tasks
                 if call.data[ATTR_TASK] in (task["id"], task.get("alias"))
                 or call.data[ATTR_TASK] == task["text"]
@@ -269,6 +269,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="setup_rate_limit_exception",
+                ) from e
+            if e.status == HTTPStatus.UNAUTHORIZED and task_value is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_enough_gold",
+                    translation_placeholders={
+                        "gold": f"{int(coordinator.data.user["stats"]["gp"])} GP",
+                        "cost": f"{task_value} GP",
+                    },
                 ) from e
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

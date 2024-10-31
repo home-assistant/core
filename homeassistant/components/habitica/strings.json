@@ -301,6 +301,9 @@
     "not_enough_mana": {
       "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."
     },
+    "not_enough_gold": {
+      "message": "Unable to buy reward, not enough gold. Your character has {gold}, but the reward costs {cost}."
+    },
     "skill_not_found": {
       "message": "Unable to cast skill, your character does not have the skill or spell {skill}."
     },

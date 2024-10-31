@@ -501,6 +501,15 @@ async def test_score_task(
             HomeAssistantError,
             "Unable to connect to Habitica, try again later",
         ),
+        (
+            {
+                ATTR_TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
+                ATTR_DIRECTION: "up",
+            },
+            HTTPStatus.UNAUTHORIZED,
+            HomeAssistantError,
+            "Unable to buy reward, not enough gold. Your character has 137 GP, but the reward costs 10 GP",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_habitica")
@@ -517,6 +526,11 @@ async def test_score_task_exceptions(
 
     mock_habitica.post(
         f"{DEFAULT_URL}/api/v3/tasks/e97659e0-2c42-4599-a7bb-00282adc410d/score/up",
+        json={"success": True, "data": {}},
+        status=http_status,
+    )
+    mock_habitica.post(
+        f"{DEFAULT_URL}/api/v3/tasks/5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b/score/up",
         json={"success": True, "data": {}},
         status=http_status,
     )
