@@ -3076,8 +3076,8 @@ class OptionsFlow(ConfigEntryBaseFlow):
             )
         return self.handler
 
-    @callback
-    def _get_config_entry(self) -> ConfigEntry:
+    @property
+    def _config_entry(self) -> ConfigEntry:
         """Return the config entry linked to the current options flow.
 
         Please note that this is not available inside `__init__` method, and
