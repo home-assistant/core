@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from functools import partial
 
 from sense_energy import ASyncSenseable, Scale
 from sense_energy.sense_api import SenseDevice
@@ -81,26 +82,6 @@ class SenseDeviceSensorEntityDescription(SensorEntityDescription):
     coordinator_type: CoordinatorType
 
 
-def value_fn_trend(scale, variant_id):
-    """Value of Trend."""
-    return lambda gateway: gateway.get_stat(scale, variant_id)
-
-
-def last_reset_fn_trend_start(scale):
-    """Last reset of Trend."""
-    return lambda gateway: gateway.trend_start(scale)
-
-
-def value_fn_voltage(i):
-    """Value of Voltage."""
-    return lambda gateway: gateway.active_voltage[i]
-
-
-def value_fn_dev_trend(scale):
-    """Value of Device Trend."""
-    return lambda device: device.energy_kwh[scale]
-
-
 ENTITY_DESCRIPTIONS = [
     SenseSensorEntityDescription(
         key=f"{ACTIVE_TYPE}-{PRODUCTION_ID}",
@@ -132,7 +113,7 @@ ENTITY_DESCRIPTIONS.extend(
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=value_fn_voltage(i),
+        value_fn=partial(lambda gateway, ind: gateway.active_voltage[ind], ind=i),
         coordinator_type=CoordinatorType.REALTIME,
     )
     for i in range(2)
@@ -146,8 +127,10 @@ ENTITY_DESCRIPTIONS.extend(
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
-        value_fn=value_fn_trend(scale, variant_id),
-        last_reset_fn=last_reset_fn_trend_start(scale),
+        value_fn=partial(
+            lambda gateway, s, vid: gateway.get_stat(s, vid), s=scale, vid=variant_id
+        ),
+        last_reset_fn=partial(lambda gateway, s: gateway.trend_start(s), s=scale),
         coordinator_type=CoordinatorType.TREND,
     )
     for scale in Scale
@@ -159,7 +142,10 @@ ENTITY_DESCRIPTIONS.extend(
         translation_key=f"{TRENDS_SENSOR_TYPES[scale]}_{variant_id}",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
-        value_fn=value_fn_trend(scale, variant_id),
+        entity_registry_enabled_default=False,
+        value_fn=partial(
+            lambda gateway, s, vid: gateway.get_stat(s, vid), s=scale, vid=variant_id
+        ),
         coordinator_type=CoordinatorType.TREND,
     )
     for scale in Scale
@@ -185,7 +171,7 @@ DEVICE_ENTITY_DESCRIPTIONS.extend(
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
-        value_fn=value_fn_dev_trend(scale),
+        value_fn=partial(lambda device, s: device.energy_kwh[s], s=scale),
         coordinator_type=CoordinatorType.TREND,
     )
     for scale in Scale

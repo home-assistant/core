@@ -138,34 +138,34 @@
         "name": "Bill to grid"
       },
       "daily_production_pct": {
-        "name": "Daily net production percentage"
+        "name": "Daily net production ratio"
       },
       "weekly_production_pct": {
-        "name": "Weekly net production percentage"
+        "name": "Weekly net production ratio"
       },
       "monthly_production_pct": {
-        "name": "Monthly net production percentage"
+        "name": "Monthly net production ratio"
       },
       "yearly_production_pct": {
-        "name": "Yearly net production percentage"
+        "name": "Yearly net production ratio"
       },
       "bill_production_pct": {
-        "name": "Bill net production percentage"
+        "name": "Bill net production ratio"
       },
       "daily_solar_powered": {
-        "name": "Daily solar powered percentage"
+        "name": "Daily solar powered ratio"
       },
       "weekly_solar_powered": {
-        "name": "Weekly solar powered percentage"
+        "name": "Weekly solar powered ratio"
       },
       "monthly_solar_powered": {
-        "name": "Monthly solar powered percentage"
+        "name": "Monthly solar powered ratio"
       },
       "yearly_solar_powered": {
-        "name": "Yearly solar powered percentage"
+        "name": "Yearly solar powered ratio"
       },
       "bill_solar_powered": {
-        "name": "Bill solar powered percentage"
+        "name": "Bill solar powered ratio"
       }
     }
   }
