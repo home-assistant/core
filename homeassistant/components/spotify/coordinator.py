@@ -3,44 +3,59 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
-from spotipy import Spotify, SpotifyException
+from spotifyaio import (
+    ContextType,
+    ItemType,
+    PlaybackState,
+    Playlist,
+    SpotifyClient,
+    SpotifyConnectionError,
+    UserProfile,
+)
+from spotifyaio.models import AudioFeatures
 
-from homeassistant.components.media_player import MediaType
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .models import SpotifyData
+
 _LOGGER = logging.getLogger(__name__)
+
+
+type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 @dataclass
 class SpotifyCoordinatorData:
     """Class to hold Spotify data."""
 
-    current_playback: dict[str, Any]
+    current_playback: PlaybackState | None
     position_updated_at: datetime | None
-    playlist: dict[str, Any] | None
+    playlist: Playlist | None
+    audio_features: AudioFeatures | None
+    dj_playlist: bool = False
 
 
 # This is a minimal representation of the DJ playlist that Spotify now offers
-# The DJ is not fully integrated with the playlist API, so needs to have the
-# playlist response mocked in order to maintain functionality
-SPOTIFY_DJ_PLAYLIST = {"uri": "spotify:playlist:37i9dQZF1EYkqdzj48dyYq", "name": "DJ"}
+# The DJ is not fully integrated with the playlist API, so we need to guard
+# against trying to fetch it as a regular playlist
+SPOTIFY_DJ_PLAYLIST_URI = "spotify:playlist:37i9dQZF1EYkqdzj48dyYq"
 
 
 class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
     """Class to manage fetching Spotify data."""
 
-    current_user: dict[str, Any]
+    current_user: UserProfile
+    config_entry: SpotifyConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, client: Spotify, session: OAuth2Session
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: SpotifyClient) -> None:
         """Initialize."""
         super().__init__(
             hass,
@@ -49,65 +64,58 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             update_interval=timedelta(seconds=30),
         )
         self.client = client
-        self._playlist: dict[str, Any] | None = None
-        self.session = session
+        self._playlist: Playlist | None = None
+        self._currently_loaded_track: str | None = None
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
-            self.current_user = await self.hass.async_add_executor_job(self.client.me)
-        except SpotifyException as err:
+            self.current_user = await self.client.get_current_user()
+        except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
-        if not self.current_user:
-            raise UpdateFailed("Could not retrieve user")
 
     async def _async_update_data(self) -> SpotifyCoordinatorData:
-        if not self.session.valid_token:
-            await self.session.async_ensure_token_valid()
-            await self.hass.async_add_executor_job(
-                self.client.set_auth, self.session.token["access_token"]
+        current = await self.client.get_playback()
+        if not current:
+            return SpotifyCoordinatorData(
+                current_playback=None,
+                position_updated_at=None,
+                playlist=None,
+                audio_features=None,
             )
-        return await self.hass.async_add_executor_job(self._sync_update_data)
-
-    def _sync_update_data(self) -> SpotifyCoordinatorData:
-        current = self.client.current_playback(additional_types=[MediaType.EPISODE])
-        currently_playing = current or {}
         # Record the last updated time, because Spotify's timestamp property is unreliable
         # and doesn't actually return the fetch time as is mentioned in the API description
-        position_updated_at = dt_util.utcnow() if current is not None else None
+        position_updated_at = dt_util.utcnow()
 
-        context = currently_playing.get("context") or {}
-
-        # For some users in some cases, the uri is formed like
-        # "spotify:user:{name}:playlist:{id}" and spotipy wants
-        # the type to be playlist.
-        uri = context.get("uri")
-        if uri is not None:
-            parts = uri.split(":")
-            if len(parts) == 5 and parts[1] == "user" and parts[3] == "playlist":
-                uri = ":".join([parts[0], parts[3], parts[4]])
-
-        if context and (self._playlist is None or self._playlist["uri"] != uri):
-            self._playlist = None
-            if context["type"] == MediaType.PLAYLIST:
-                # The Spotify API does not currently support doing a lookup for
-                # the DJ playlist,so just use the minimal mock playlist object
-                if uri == SPOTIFY_DJ_PLAYLIST["uri"]:
-                    self._playlist = SPOTIFY_DJ_PLAYLIST
-                else:
+        audio_features: AudioFeatures | None = None
+        if (item := current.item) is not None and item.type == ItemType.TRACK:
+            if item.uri != self._currently_loaded_track:
+                self._currently_loaded_track = item.uri
+                audio_features = await self.client.get_audio_features(item.uri)
+            else:
+                audio_features = self.data.audio_features
+        dj_playlist = False
+        if (context := current.context) is not None:
+            if self._playlist is None or self._playlist.uri != context.uri:
+                self._playlist = None
+                if context.uri == SPOTIFY_DJ_PLAYLIST_URI:
+                    dj_playlist = True
+                elif context.context_type == ContextType.PLAYLIST:
                     # Make sure any playlist lookups don't break the current
                     # playback state update
                     try:
-                        self._playlist = self.client.playlist(uri)
-                    except SpotifyException:
+                        self._playlist = await self.client.get_playlist(context.uri)
+                    except SpotifyConnectionError:
                         _LOGGER.debug(
                             "Unable to load spotify playlist '%s'. "
                             "Continuing without playlist data",
-                            uri,
+                            context.uri,
                         )
                         self._playlist = None
         return SpotifyCoordinatorData(
-            current_playback=currently_playing,
+            current_playback=current,
             position_updated_at=position_updated_at,
             playlist=self._playlist,
+            audio_features=audio_features,
+            dj_playlist=dj_playlist,
         )

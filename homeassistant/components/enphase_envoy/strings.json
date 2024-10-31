@@ -13,7 +13,7 @@
           "host": "The hostname or IP address of your Enphase Envoy gateway."
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "[%key:component::enphase_envoy::config::step::user::description%]",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

@@ -2,90 +2,146 @@
 
 import asyncio
 from collections.abc import Generator
+import logging
 import subprocess
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
 from homeassistant.components.go2rtc.server import Server
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 TEST_BINARY = "/bin/go2rtc"
 
 
 @pytest.fixture
-def server() -> Server:
+def server(hass: HomeAssistant) -> Server:
     """Fixture to initialize the Server."""
-    return Server(binary=TEST_BINARY)
+    return Server(hass, binary=TEST_BINARY)
 
 
 @pytest.fixture
-def mock_tempfile() -> Generator[MagicMock]:
+def mock_tempfile() -> Generator[Mock]:
     """Fixture to mock NamedTemporaryFile."""
     with patch(
-        "homeassistant.components.go2rtc.server.NamedTemporaryFile"
+        "homeassistant.components.go2rtc.server.NamedTemporaryFile", autospec=True
     ) as mock_tempfile:
-        mock_tempfile.return_value.__enter__.return_value.name = "test.yaml"
-        yield mock_tempfile
+        file = mock_tempfile.return_value.__enter__.return_value
+        file.name = "test.yaml"
+        yield file
 
 
-@pytest.fixture
-def mock_popen() -> Generator[MagicMock]:
-    """Fixture to mock subprocess.Popen."""
-    with patch("homeassistant.components.go2rtc.server.subprocess.Popen") as mock_popen:
-        yield mock_popen
-
-
-@pytest.mark.usefixtures("mock_tempfile")
-async def test_server_run_success(mock_popen: MagicMock, server: Server) -> None:
+async def test_server_run_success(
+    mock_create_subprocess: AsyncMock,
+    server_stdout: list[str],
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+    mock_tempfile: Mock,
+) -> None:
     """Test that the server runs successfully."""
-    mock_process = MagicMock()
-    mock_process.poll.return_value = None  # Simulate process running
-    # Simulate process output
-    mock_process.stdout.readline.side_effect = [
-        b"log line 1\n",
-        b"log line 2\n",
-        b"",
-    ]
-    mock_popen.return_value.__enter__.return_value = mock_process
-
-    server.start()
-    await asyncio.sleep(0)
+    await server.start()
 
     # Check that Popen was called with the right arguments
-    mock_popen.assert_called_once_with(
-        [TEST_BINARY, "-c", "webrtc.ice_servers=[]", "-c", "test.yaml"],
+    mock_create_subprocess.assert_called_once_with(
+        TEST_BINARY,
+        "-c",
+        "test.yaml",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        close_fds=False,
     )
 
-    # Check that server read the log lines
-    assert mock_process.stdout.readline.call_count == 3
+    # Verify that the config file was written
+    mock_tempfile.write.assert_called_once_with(b"""
+api:
+  listen: "127.0.0.1:1984"
 
-    server.stop()
-    mock_process.terminate.assert_called_once()
-    assert not server.is_alive()
+rtsp:
+  # ffmpeg needs rtsp for opus audio transcoding
+  listen: "127.0.0.1:8554"
+
+webrtc:
+  ice_servers: []
+""")
+
+    # Check that server read the log lines
+    for entry in server_stdout:
+        assert (
+            "homeassistant.components.go2rtc.server",
+            logging.DEBUG,
+            entry,
+        ) in caplog.record_tuples
+
+    await server.stop()
+    mock_create_subprocess.return_value.terminate.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_tempfile")
-def test_server_run_process_timeout(mock_popen: MagicMock, server: Server) -> None:
+async def test_server_timeout_on_stop(
+    mock_create_subprocess: MagicMock, server: Server
+) -> None:
     """Test server run where the process takes too long to terminate."""
-
-    mock_process = MagicMock()
-    mock_process.poll.return_value = None  # Simulate process running
-    # Simulate process output
-    mock_process.stdout.readline.side_effect = [
-        b"log line 1\n",
-        b"",
-    ]
-    # Simulate timeout
-    mock_process.wait.side_effect = subprocess.TimeoutExpired(cmd="go2rtc", timeout=5)
-    mock_popen.return_value.__enter__.return_value = mock_process
-
     # Start server thread
-    server.start()
-    server.stop()
+    await server.start()
+
+    async def sleep() -> None:
+        await asyncio.sleep(1)
+
+    # Simulate timeout
+    mock_create_subprocess.return_value.wait.side_effect = sleep
+
+    with patch("homeassistant.components.go2rtc.server._TERMINATE_TIMEOUT", new=0.1):
+        await server.stop()
 
     # Ensure terminate and kill were called due to timeout
-    mock_process.terminate.assert_called_once()
-    mock_process.kill.assert_called_once()
-    assert not server.is_alive()
+    mock_create_subprocess.return_value.terminate.assert_called_once()
+    mock_create_subprocess.return_value.kill.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "server_stdout",
+    [
+        [
+            "09:00:03.466 INF go2rtc platform=linux/amd64 revision=780f378 version=1.9.5",
+            "09:00:03.466 INF config path=/tmp/go2rtc.yaml",
+        ]
+    ],
+)
+@pytest.mark.usefixtures("mock_tempfile")
+async def test_server_failed_to_start(
+    mock_create_subprocess: MagicMock,
+    server_stdout: list[str],
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test server, where an exception is raised if the expected log entry was not received until the timeout."""
+    with (
+        patch("homeassistant.components.go2rtc.server._SETUP_TIMEOUT", new=0.1),
+        pytest.raises(HomeAssistantError, match="Go2rtc server didn't start correctly"),
+    ):
+        await server.start()
+
+    # Verify go2rtc binary stdout was logged
+    for entry in server_stdout:
+        assert (
+            "homeassistant.components.go2rtc.server",
+            logging.DEBUG,
+            entry,
+        ) in caplog.record_tuples
+
+    assert (
+        "homeassistant.components.go2rtc.server",
+        logging.ERROR,
+        "Go2rtc server didn't start correctly",
+    ) in caplog.record_tuples
+
+    # Check that Popen was called with the right arguments
+    mock_create_subprocess.assert_called_once_with(
+        TEST_BINARY,
+        "-c",
+        "test.yaml",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=False,
+    )

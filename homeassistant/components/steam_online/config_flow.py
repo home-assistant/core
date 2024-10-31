@@ -36,10 +36,6 @@ def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
 class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Steam."""
 
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self.entry: SteamConfigEntry | None = None
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -53,8 +49,8 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
-        if user_input is None and self.entry:
-            user_input = {CONF_ACCOUNT: self.entry.data[CONF_ACCOUNT]}
+        if user_input is None and self.source == SOURCE_REAUTH:
+            user_input = {CONF_ACCOUNT: self._get_reauth_entry().data[CONF_ACCOUNT]}
         elif user_input is not None:
             try:
                 res = await self.hass.async_add_executor_job(validate_input, user_input)
@@ -102,8 +98,6 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

@@ -85,6 +85,7 @@ async def test_unload_entry(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert hasattr(mock_config_entry, "runtime_data")
 
     # Unload entry
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -94,5 +95,5 @@ async def test_unload_entry(
     assert mock_mozart_client.close_api_client.call_count == 1
 
     # Ensure that the entry is not loaded and has been removed from hass
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+    assert not hasattr(mock_config_entry, "runtime_data")
     assert mock_config_entry.state == ConfigEntryState.NOT_LOADED

@@ -123,18 +123,12 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
         reconfigure_entry = self._get_reconfigure_entry()
         if not user_input:
             return self.show_user_form(
                 user_input={**reconfigure_entry.data},
                 description_placeholders={"name": reconfigure_entry.title},
-                step_id="reconfigure_confirm",
+                step_id="reconfigure",
             )
 
         feed = await async_fetch_feed(self.hass, user_input[CONF_URL])
@@ -145,7 +139,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.show_user_form(
                     user_input=user_input,
                     description_placeholders={"name": reconfigure_entry.title},
-                    step_id="reconfigure_confirm",
+                    step_id="reconfigure",
                     errors={"base": "url_error"},
                 )
 

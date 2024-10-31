@@ -284,16 +284,10 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform reconfiguration of the config entry."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm reconfiguration of the device."""
         if not user_input:
             reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
-                step_id="reconfigure_confirm",
+                step_id="reconfigure",
                 data_schema=vol.Schema(
                     {
                         vol.Required(

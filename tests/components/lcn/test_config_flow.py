@@ -206,7 +206,7 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with (
         patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
@@ -244,7 +244,7 @@ async def test_step_reconfigure_error(
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.lcn.PchkConnectionManager.async_connect",

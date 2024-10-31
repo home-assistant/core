@@ -1,5 +1,7 @@
 """Coordinator for Tedee locks."""
 
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -31,18 +33,21 @@ GET_LOCKS_INTERVAL_SECONDS = 3600
 
 _LOGGER = logging.getLogger(__name__)
 
+type TedeeConfigEntry = ConfigEntry[TedeeApiCoordinator]
+
 
 class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
-    config_entry: ConfigEntry
+    config_entry: TedeeConfigEntry
     bridge: TedeeBridge
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

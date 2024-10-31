@@ -75,7 +75,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
     }
 
 
-async def test_manual_configuration_update_configuration(
+async def test_manual_configuration_duplicate_fails(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
     mock_requests: Callable[[str], None],
@@ -105,7 +105,7 @@ async def test_manual_configuration_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry_setup.data[CONF_HOST] == "1.2.3.4"
 
 
 @pytest.mark.parametrize(
@@ -221,7 +221,7 @@ async def test_reauth_flow_update_configuration(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "reauth_successful"
     assert config_entry_setup.data[CONF_PROTOCOL] == "https"
     assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
     assert config_entry_setup.data[CONF_PORT] == 443
@@ -255,7 +255,7 @@ async def test_reconfiguration_flow_update_configuration(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "reconfigure_successful"
     assert config_entry_setup.data[CONF_PROTOCOL] == "http"
     assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
     assert config_entry_setup.data[CONF_PORT] == 80

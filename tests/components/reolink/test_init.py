@@ -15,10 +15,10 @@ from homeassistant.components.reolink import (
     NUM_CRED_ERRORS,
 )
 from homeassistant.components.reolink.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.const import CONF_PORT, STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -31,6 +31,7 @@ from .conftest import (
     TEST_HOST_MODEL,
     TEST_MAC,
     TEST_NVR_NAME,
+    TEST_PORT,
     TEST_UID,
     TEST_UID_CAM,
 )
@@ -623,3 +624,18 @@ async def test_new_device_discovered(
     await hass.async_block_till_done()
 
     assert reolink_connect.logout.call_count == 1
+
+
+async def test_port_changed(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config_entry port update when it has changed during initial login."""
+    assert config_entry.data[CONF_PORT] == TEST_PORT
+    reolink_connect.port = 4567
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_PORT] == 4567
