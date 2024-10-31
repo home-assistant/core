@@ -204,13 +204,6 @@ async def options_update_listener(
 ) -> None:
     """Handle options update."""
 
-    entry.runtime_data.options.browse_limit = entry.options.get(
-        CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
-    )
-    entry.runtime_data.options.volume_step = entry.options.get(
-        CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
-    )
-
     await hass.config_entries.async_reload(entry.entry_id)
 
 

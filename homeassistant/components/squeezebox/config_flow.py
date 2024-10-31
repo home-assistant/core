@@ -24,6 +24,11 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 from .const import (
     CONF_BROWSE_LIMIT,
@@ -244,6 +249,24 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BROWSE_LIMIT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(min=1, max=65534, mode=NumberSelectorMode.BOX)
+            ),
+            vol.Coerce(int),
+        ),
+        vol.Required(CONF_VOLUME_STEP): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(min=1, max=20, mode=NumberSelectorMode.SLIDER)
+            ),
+            vol.Coerce(int),
+        ),
+    }
+)
+
+
 class OptionsFlowHandler(OptionsFlow):
     """Options Flow Handler."""
 
@@ -256,41 +279,20 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Options Flow Steps."""
 
-        errors: dict[str, str] = {}
-
-        async def _validate_input(data: dict[str, Any]) -> str | None:
-            """Validate the user input allows us to connect."""
-
-            if data[CONF_BROWSE_LIMIT] < 1 or data[CONF_VOLUME_STEP] < 1:
-                raise ValueError
-
-            return None
-
         if user_input is not None:
-            try:
-                await _validate_input(user_input)
-            except ValueError:
-                errors["base"] = "value"
-            if not errors:
-                return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA,
                 {
-                    vol.Optional(
-                        CONF_BROWSE_LIMIT,
-                        default=self.config_entry.options.get(
-                            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
-                        ),
-                    ): int,
-                    vol.Optional(
-                        CONF_VOLUME_STEP,
-                        default=self.config_entry.options.get(
-                            CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
-                        ),
-                    ): int,
-                }
+                    CONF_BROWSE_LIMIT: self.config_entry.options.get(
+                        CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+                    ),
+                    CONF_VOLUME_STEP: self.config_entry.options.get(
+                        CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                    ),
+                },
             ),
-            errors=errors,
         )
