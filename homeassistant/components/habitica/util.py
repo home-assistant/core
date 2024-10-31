@@ -22,8 +22,12 @@ from dateutil.rrule import (
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 
 def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:
@@ -139,3 +143,18 @@ def get_recurrence_rule(recurrence: rrule) -> str:
 
     """
     return str(recurrence).split("RRULE:")[1]
+
+
+def get_config_entry(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
+    """Return config entry or raise if not found or not loaded."""
+    if not (entry := hass.config_entries.async_get_entry(entry_id)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_found",
+        )
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
+        )
+    return entry

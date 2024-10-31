@@ -33,6 +33,7 @@ from .const import (
     SERVICE_CAST_SKILL,
 )
 from .types import HabiticaConfigEntry
+from .util import get_config_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,14 +87,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def cast_skill(call: ServiceCall) -> ServiceResponse:
         """Skill action."""
-        entry: HabiticaConfigEntry | None
-        if not (
-            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
+        entry: HabiticaConfigEntry = get_config_entry(
+            hass, call.data[ATTR_CONFIG_ENTRY]
+        )
         coordinator = entry.runtime_data
         skill = {
             "pickpocket": {"spellId": "pickPocket", "cost": "10 MP"},
