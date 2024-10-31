@@ -33,9 +33,6 @@
     }
   },
   "options": {
-    "error": {
-      "value": "Values must be an integer greater than 0"
-    },
     "step": {
       "init": {
         "title": "LMS Configuration",
