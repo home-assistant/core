@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+from contextlib import suppress
 from types import MethodType
 from typing import Any
 
+from aiohasupervisor import SupervisorClient, SupervisorError
 import voluptuous as vol
 
 from homeassistant.components.repairs import RepairsFlow
@@ -22,7 +24,7 @@ from .const import (
     PLACEHOLDER_KEY_REFERENCE,
     SupervisorIssueContext,
 )
-from .handler import async_apply_suggestion
+from .handler import get_supervisor_client
 from .issues import Issue, Suggestion
 
 HELP_URLS = {
@@ -55,6 +57,11 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         """Initialize repair flow."""
         self._issue_id = issue_id
         super().__init__()
+
+    @property
+    def _supervisor_client(self) -> SupervisorClient:
+        """Supervisor client for API calls."""
+        return get_supervisor_client(self.hass)
 
     @property
     def issue(self) -> Issue | None:
@@ -124,7 +131,8 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 
-        if await async_apply_suggestion(self.hass, suggestion.uuid):
+        with suppress(SupervisorError):
+            await self._supervisor_client.resolution.apply_suggestion(suggestion.uuid)
             return self.async_create_entry(data={})
         return self.async_abort(reason="apply_suggestion_fail")
 

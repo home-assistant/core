@@ -8,6 +8,9 @@ from datetime import datetime
 import logging
 from typing import Any, NotRequired, TypedDict
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import Issue as SupervisorIssue
+
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_call_later
@@ -20,12 +23,8 @@ from homeassistant.helpers.issue_registry import (
 from .const import (
     ATTR_DATA,
     ATTR_HEALTHY,
-    ATTR_ISSUES,
-    ATTR_SUGGESTIONS,
     ATTR_SUPPORTED,
-    ATTR_UNHEALTHY,
     ATTR_UNHEALTHY_REASONS,
-    ATTR_UNSUPPORTED,
     ATTR_UNSUPPORTED_REASONS,
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
@@ -48,7 +47,7 @@ from .const import (
     SupervisorIssueContext,
 )
 from .coordinator import get_addons_info
-from .handler import HassIO, HassioAPIError
+from .handler import HassIO, get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
 ISSUE_KEY_UNSUPPORTED = "unsupported"
@@ -191,6 +190,7 @@ class SupervisorIssues:
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[str, Issue] = {}
+        self._supervisor_client = get_supervisor_client(hass)
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -292,19 +292,37 @@ class SupervisorIssues:
 
         self._issues[issue.uuid] = issue
 
-    async def add_issue_from_data(self, data: IssueDataType) -> None:
+    async def add_issue_from_data(self, data: SupervisorIssue) -> None:
         """Add issue from data to list after getting latest suggestions."""
         try:
-            data["suggestions"] = (
-                await self._client.get_suggestions_for_issue(data["uuid"])
-            )[ATTR_SUGGESTIONS]
-        except HassioAPIError:
+            suggestions = (
+                await self._supervisor_client.resolution.suggestions_for_issue(
+                    data.uuid
+                )
+            )
+        except SupervisorError:
             _LOGGER.error(
                 "Could not get suggestions for supervisor issue %s, skipping it",
-                data["uuid"],
+                data.uuid,
             )
             return
-        self.add_issue(Issue.from_dict(data))
+        self.add_issue(
+            Issue(
+                uuid=data.uuid.hex,
+                type=str(data.type),
+                context=data.context.value,
+                reference=data.reference,
+                suggestions=[
+                    Suggestion(
+                        uuid=suggestion.uuid,
+                        type=str(suggestion.type),
+                        context=suggestion.context.value,
+                        reference=suggestion.reference,
+                    )
+                    for suggestion in suggestions
+                ],
+            )
+        )
 
     def remove_issue(self, issue: Issue) -> None:
         """Remove an issue from the list. Delete a repair if necessary."""
@@ -331,8 +349,8 @@ class SupervisorIssues:
     async def _update(self, _: datetime | None = None) -> None:
         """Update issues from Supervisor resolution center."""
         try:
-            data = await self._client.get_resolution_info()
-        except HassioAPIError as err:
+            data = await self._supervisor_client.resolution.info()
+        except SupervisorError as err:
             _LOGGER.error("Failed to update supervisor issues: %r", err)
             async_call_later(
                 self._hass,
@@ -340,18 +358,18 @@ class SupervisorIssues:
                 HassJob(self._update, cancel_on_shutdown=True),
             )
             return
-        self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
-        self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
+        self.unhealthy_reasons = set(data.unhealthy)
+        self.unsupported_reasons = set(data.unsupported)
 
         # Remove any cached issues that weren't returned
         for issue_id in set(self._issues.keys()) - {
-            issue["uuid"] for issue in data[ATTR_ISSUES]
+            issue.uuid for issue in data.issues
         }:
             self.remove_issue(self._issues[issue_id])
 
         # Add/update any issues that came back
         await asyncio.gather(
-            *[self.add_issue_from_data(issue) for issue in data[ATTR_ISSUES]]
+            *[self.add_issue_from_data(issue) for issue in data.issues]
         )
 
     @callback
