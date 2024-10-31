@@ -1638,11 +1638,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             _LOGGER.error(
                 (
                     "Config entry '%s' from integration %s has an invalid unique_id"
-                    " '%s', please %s"
+                    " '%s' of type %s when a string is expected, please %s"
                 ),
                 entry.title,
                 entry.domain,
                 entry.unique_id,
+                type(entry.unique_id).__name__,
                 report_issue,
             )
         else:
