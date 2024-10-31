@@ -177,11 +177,6 @@ class APIInstance:
         else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
-        tool_input = ToolInput(
-            tool_name=tool_input.tool_name,
-            tool_args=tool.parameters(tool_input.tool_args),
-        )
-
         return await tool.async_call(self.api.hass, tool_input, self.llm_context)
 
 

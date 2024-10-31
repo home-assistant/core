@@ -171,19 +171,6 @@ async def test_subscriber_auth_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
-@pytest.mark.parametrize("subscriber_id", [(None)])
-async def test_setup_missing_subscriber_id(
-    hass: HomeAssistant, warning_caplog: pytest.LogCaptureFixture, setup_base_platform
-) -> None:
-    """Test missing subscriber id from configuration."""
-    await setup_base_platform()
-    assert "Configuration option" in warning_caplog.text
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_ERROR
-
-
 @pytest.mark.parametrize("subscriber_side_effect", [(ConfigurationException())])
 async def test_subscriber_configuration_failure(
     hass: HomeAssistant,

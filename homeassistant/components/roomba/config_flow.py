@@ -57,7 +57,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             address=data[CONF_HOST],
             blid=data[CONF_BLID],
             password=data[CONF_PASSWORD],
-            continuous=False,
+            continuous=True,
             delay=data[CONF_DELAY],
         )
     )

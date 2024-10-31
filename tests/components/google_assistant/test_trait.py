@@ -54,7 +54,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -77,6 +76,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 

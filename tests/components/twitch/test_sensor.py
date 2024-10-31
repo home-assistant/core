@@ -21,8 +21,8 @@ async def test_offline(
     hass: HomeAssistant, twitch_mock: AsyncMock, config_entry: MockConfigEntry
 ) -> None:
     """Test offline state."""
-    twitch_mock.return_value.get_streams.return_value = get_generator_from_data(
-        [], Stream
+    twitch_mock.return_value.get_followed_streams.return_value = (
+        get_generator_from_data([], Stream)
     )
     await setup_integration(hass, config_entry)
 

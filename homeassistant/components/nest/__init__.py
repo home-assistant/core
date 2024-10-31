@@ -59,6 +59,7 @@ from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
+    CONF_SUBSCRIPTION_NAME,
     DATA_DEVICE_MANAGER,
     DATA_SDM,
     DATA_SUBSCRIBER,
@@ -289,7 +290,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of pubsub subscriptions created during config flow."""
     if (
         DATA_SDM not in entry.data
-        or CONF_SUBSCRIBER_ID not in entry.data
+        or not (
+            CONF_SUBSCRIPTION_NAME in entry.data or CONF_SUBSCRIBER_ID in entry.data
+        )
         or CONF_SUBSCRIBER_ID_IMPORTED in entry.data
     ):
         return

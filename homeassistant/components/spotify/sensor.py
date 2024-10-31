@@ -5,21 +5,34 @@ from dataclasses import dataclass
 
 from spotifyaio.models import AudioFeatures
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, SpotifyConfigEntry
-from .coordinator import SpotifyCoordinator
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
+from .entity import SpotifyEntity
 
 
 @dataclass(frozen=True, kw_only=True)
 class SpotifyAudioFeaturesSensorEntityDescription(SensorEntityDescription):
     """Describes Spotify sensor entity."""
 
-    value_fn: Callable[[AudioFeatures], float]
+    value_fn: Callable[[AudioFeatures], float | str | None]
+
+
+def _get_key(audio_features: AudioFeatures) -> str | None:
+    if audio_features.key is None:
+        return None
+    key_name = audio_features.key.name
+    base = key_name[0]
+    if len(key_name) > 1:
+        base = f"{base}♯"
+    return base
 
 
 AUDIO_FEATURE_SENSORS: tuple[SpotifyAudioFeaturesSensorEntityDescription, ...] = (
@@ -29,6 +42,86 @@ AUDIO_FEATURE_SENSORS: tuple[SpotifyAudioFeaturesSensorEntityDescription, ...] =
         native_unit_of_measurement="bpm",
         suggested_display_precision=0,
         value_fn=lambda audio_features: audio_features.tempo,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="danceability",
+        translation_key="danceability",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda audio_features: audio_features.danceability * 100,
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="energy",
+        translation_key="energy",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda audio_features: audio_features.energy * 100,
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="mode",
+        translation_key="mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["major", "minor"],
+        value_fn=lambda audio_features: audio_features.mode.name.lower(),
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="speechiness",
+        translation_key="speechiness",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda audio_features: audio_features.speechiness * 100,
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="acousticness",
+        translation_key="acousticness",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda audio_features: audio_features.acousticness * 100,
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="instrumentalness",
+        translation_key="instrumentalness",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda audio_features: audio_features.instrumentalness * 100,
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="liveness",
+        translation_key="liveness",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda audio_features: audio_features.liveness * 100,
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="valence",
+        translation_key="valence",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda audio_features: audio_features.valence * 100,
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="time_signature",
+        translation_key="time_signature",
+        device_class=SensorDeviceClass.ENUM,
+        options=["3/4", "4/4", "5/4", "6/4", "7/4"],
+        value_fn=lambda audio_features: f"{audio_features.time_signature}/4",
+        entity_registry_enabled_default=False,
+    ),
+    SpotifyAudioFeaturesSensorEntityDescription(
+        key="key",
+        translation_key="key",
+        device_class=SensorDeviceClass.ENUM,
+        options=["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"],
+        value_fn=_get_key,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -41,44 +134,31 @@ async def async_setup_entry(
     """Set up Spotify sensor based on a config entry."""
     coordinator = entry.runtime_data.coordinator
 
-    user_id = entry.unique_id
-
-    assert user_id is not None
-
     async_add_entities(
-        SpotifyAudioFeatureSensor(coordinator, description, user_id, entry.title)
+        SpotifyAudioFeatureSensor(coordinator, description)
         for description in AUDIO_FEATURE_SENSORS
     )
 
 
-class SpotifyAudioFeatureSensor(CoordinatorEntity[SpotifyCoordinator], SensorEntity):
+class SpotifyAudioFeatureSensor(SpotifyEntity, SensorEntity):
     """Representation of a Spotify sensor."""
 
-    _attr_has_entity_name = True
     entity_description: SpotifyAudioFeaturesSensorEntityDescription
 
     def __init__(
         self,
         coordinator: SpotifyCoordinator,
         entity_description: SpotifyAudioFeaturesSensorEntityDescription,
-        user_id: str,
-        name: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{user_id}_{entity_description.key}"
-        self.entity_description = entity_description
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, user_id)},
-            manufacturer="Spotify AB",
-            model=f"Spotify {coordinator.current_user.product}",
-            name=f"Spotify {name}",
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://open.spotify.com",
+        self._attr_unique_id = (
+            f"{coordinator.current_user.user_id}_{entity_description.key}"
         )
+        self.entity_description = entity_description
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         if (audio_features := self.coordinator.data.audio_features) is None:
             return None
