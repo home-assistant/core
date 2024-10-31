@@ -7,7 +7,7 @@ from dataclasses import fields
 import logging
 from types import MethodType
 from typing import Any
-from unittest.mock import DEFAULT, AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor.models import (
     AddonsOptions,
@@ -73,23 +73,6 @@ def mock_to_dict(obj: Mock, fields: list[str]) -> dict[str, Any]:
 def mock_addon_manager(hass: HomeAssistant) -> AddonManager:
     """Return an AddonManager instance."""
     return AddonManager(hass, LOGGER, "Test", "test_addon")
-
-
-def mock_discovery_info() -> Any:
-    """Return the discovery info from the supervisor."""
-    return DEFAULT
-
-
-def mock_get_addon_discovery_info(
-    discovery_info: dict[str, Any], discovery_info_side_effect: Any | None
-) -> Generator[AsyncMock]:
-    """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
-        side_effect=discovery_info_side_effect,
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
 
 
 def mock_addon_store_info(

@@ -209,6 +209,7 @@ homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.glances.*
+homeassistant.components.go2rtc.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
@@ -323,6 +324,7 @@ homeassistant.components.moon.*
 homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
+homeassistant.components.music_assistant.*
 homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*

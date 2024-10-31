@@ -172,7 +172,7 @@
               "temperature_sensor_error": "Thermistor error",
               "time_to_run_the_tub_clean_cycle_error": "Tub clean recommendation",
               "timeout_error": "Timeout error",
-              "turbidity_sensor_error": "turbidity sensor error",
+              "turbidity_sensor_error": "Turbidity sensor error",
               "unable_to_lock_error": "Door lock error",
               "unbalanced_load_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::out_of_balance_error%]",
               "unknown_error": "Product requires attention",
@@ -274,6 +274,9 @@
       },
       "sleep_timer_relative_hour_to_stop_for_location": {
         "name": "{location} sleep timer"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
       }
     },
     "sensor": {

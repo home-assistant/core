@@ -46,6 +46,8 @@ def mock_smarty() -> Generator[AsyncMock]:
         client.supply_fan_speed = 66
         client.extract_fan_speed = 100
         client.filter_timer = 31
+        client.get_configuration_version.return_value = 111
+        client.get_software_version.return_value = 127
         yield client
 
 

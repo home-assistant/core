@@ -383,6 +383,7 @@ FLOWS = {
         "mpd",
         "mqtt",
         "mullvad",
+        "music_assistant",
         "mutesync",
         "mysensors",
         "mystrom",

@@ -483,7 +483,10 @@ async def async_setup_entry(
                         description.key,
                         (
                             ActiveMode.READABLE
-                            if coordinator.api.device.device_type == DeviceType.COOKTOP
+                            if (
+                                coordinator.api.device.device_type == DeviceType.COOKTOP
+                                or isinstance(description.key, TimerProperty)
+                            )
                             else ActiveMode.READ_ONLY
                         ),
                     )
