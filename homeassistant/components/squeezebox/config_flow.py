@@ -12,14 +12,28 @@ import voluptuous as vol
 
 from homeassistant.components import dhcp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_BROWSE_LIMIT,
+    CONF_HTTPS,
+    CONF_VOLUME_STEP,
+    DEFAULT_BROWSE_LIMIT,
+    DEFAULT_PORT,
+    DEFAULT_VOLUME_STEP,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +90,12 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
         self.discovery_info: dict[str, Any] | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
 
     async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
@@ -222,3 +242,55 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # if the player is unknown, then we likely need to configure its server
         return await self.async_step_user()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Options Flow Handler."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Options Flow Steps."""
+
+        errors: dict[str, str] = {}
+
+        async def _validate_input(data: dict[str, Any]) -> str | None:
+            """Validate the user input allows us to connect."""
+
+            if data[CONF_BROWSE_LIMIT] < 1 or data[CONF_VOLUME_STEP] < 1:
+                raise ValueError
+
+            return None
+
+        if user_input is not None:
+            try:
+                await _validate_input(user_input)
+            except ValueError:
+                errors["base"] = "value"
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_BROWSE_LIMIT,
+                        default=self.config_entry.options.get(
+                            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+                        ),
+                    ): int,
+                    vol.Optional(
+                        CONF_VOLUME_STEP,
+                        default=self.config_entry.options.get(
+                            CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                        ),
+                    ): int,
+                }
+            ),
+            errors=errors,
+        )

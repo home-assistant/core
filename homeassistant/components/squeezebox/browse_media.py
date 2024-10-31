@@ -81,11 +81,15 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "New Music": MediaType.ALBUM,
 }
 
-BROWSE_LIMIT = 1000
-
 
 async def build_item_response(
-    entity: MediaPlayerEntity, player: Player, payload: dict[str, str | None]
+    entity: MediaPlayerEntity,
+    player: Player,
+    payload: dict[
+        str,
+        str | None,
+    ],
+    browse_limit: int,
 ) -> BrowseMedia:
     """Create response payload for search described by payload."""
 
@@ -107,7 +111,7 @@ async def build_item_response(
 
     result = await player.async_browse(
         MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
-        limit=BROWSE_LIMIT,
+        limit=browse_limit,
         browse_id=browse_id,
     )
 
@@ -235,7 +239,11 @@ def media_source_content_filter(item: BrowseMedia) -> bool:
     return item.media_content_type.startswith("audio/")
 
 
-async def generate_playlist(player: Player, payload: dict[str, str]) -> list | None:
+async def generate_playlist(
+    player: Player,
+    payload: dict[str, str],
+    browse_limit: int,
+) -> list | None:
     """Generate playlist from browsing payload."""
     media_type = payload["search_type"]
     media_id = payload["search_id"]
@@ -245,7 +253,7 @@ async def generate_playlist(player: Player, payload: dict[str, str]) -> list | N
 
     browse_id = (SQUEEZEBOX_ID_BY_TYPE[media_type], media_id)
     result = await player.async_browse(
-        "titles", limit=BROWSE_LIMIT, browse_id=browse_id
+        "titles", limit=browse_limit, browse_id=browse_id
     )
     if result and "items" in result:
         items: list = result["items"]
