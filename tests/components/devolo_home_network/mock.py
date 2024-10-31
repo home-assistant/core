@@ -50,7 +50,7 @@ class MockDevice(Device):
         self, session_instance: httpx.AsyncClient | None = None
     ) -> None:
         """Give a mocked device the needed properties."""
-        self.mac = DISCOVERY_INFO.properties["PlcMacAddress"]
+        self.mac = DISCOVERY_INFO.properties["PlcMacAddress"] if self.plcnet else None
         self.mt_number = DISCOVERY_INFO.properties["MT"]
         self.product = DISCOVERY_INFO.properties["Product"]
         self.serial_number = DISCOVERY_INFO.properties["SN"]

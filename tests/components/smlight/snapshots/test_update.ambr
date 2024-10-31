@@ -37,6 +37,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
       'friendly_name': 'Mock Title Core firmware',
       'in_progress': False,
@@ -95,6 +96,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
       'friendly_name': 'Mock Title Zigbee firmware',
       'in_progress': False,

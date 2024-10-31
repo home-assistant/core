@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
-from dataclasses import dataclass, field
+from collections.abc import Awaitable, Callable, Iterable
+from dataclasses import asdict, dataclass, field
+from functools import cache, partial
+import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
+from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.ulid import ulid
 
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 from .helper import get_camera_from_entity_id
@@ -20,56 +26,70 @@ from .helper import get_camera_from_entity_id
 if TYPE_CHECKING:
     from . import Camera
 
+_LOGGER = logging.getLogger(__name__)
+
 
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
-    "camera_web_rtc_providers"
+    "camera_webrtc_providers"
 )
-DATA_ICE_SERVERS: HassKey[list[Callable[[], Coroutine[Any, Any, RTCIceServer]]]] = (
-    HassKey("camera_web_rtc_ice_servers")
+DATA_WEBRTC_LEGACY_PROVIDERS: HassKey[dict[str, CameraWebRTCLegacyProvider]] = HassKey(
+    "camera_webrtc_legacy_providers"
+)
+DATA_ICE_SERVERS: HassKey[list[Callable[[], Iterable[RTCIceServer]]]] = HassKey(
+    "camera_webrtc_ice_servers"
 )
 
 
-@dataclass
-class RTCIceServer:
-    """RTC Ice Server.
+_WEBRTC = "WebRTC"
 
-    See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
-    """
 
-    urls: list[str] | str
-    username: str | None = None
-    credential: str | None = None
+@dataclass(frozen=True)
+class WebRTCMessage:
+    """Base class for WebRTC messages."""
 
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
+    @classmethod
+    @cache
+    def _get_type(cls) -> str:
+        _, _, name = cls.__name__.partition(_WEBRTC)
+        return name.lower()
 
-        data = {
-            "urls": self.urls,
-        }
-        if self.username is not None:
-            data["username"] = self.username
-        if self.credential is not None:
-            data["credential"] = self.credential
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the message."""
+        data = asdict(self)
+        data["type"] = self._get_type()
         return data
 
 
-@dataclass
-class RTCConfiguration:
-    """RTC Configuration.
+@dataclass(frozen=True)
+class WebRTCSession(WebRTCMessage):
+    """WebRTC session."""
 
-    See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
-    """
+    session_id: str
 
-    ice_servers: list[RTCIceServer] = field(default_factory=list)
 
-    def to_frontend_dict(self) -> dict[str, Any]:
-        """Return a dict that can be used by the frontend."""
-        if not self.ice_servers:
-            return {}
+@dataclass(frozen=True)
+class WebRTCAnswer(WebRTCMessage):
+    """WebRTC answer."""
 
-        return {
-            "iceServers": [server.to_frontend_dict() for server in self.ice_servers]
-        }
+    answer: str
+
+
+@dataclass(frozen=True)
+class WebRTCCandidate(WebRTCMessage):
+    """WebRTC candidate."""
+
+    candidate: str
+
+
+@dataclass(frozen=True)
+class WebRTCError(WebRTCMessage):
+    """WebRTC error."""
+
+    code: str
+    message: str
+
+
+type WebRTCSendMessage = Callable[[WebRTCMessage], None]
 
 
 @dataclass(kw_only=True)
@@ -81,18 +101,53 @@ class WebRTCClientConfiguration:
 
     configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
     data_channel: str | None = None
+    get_candidates_upfront: bool = False
 
     def to_frontend_dict(self) -> dict[str, Any]:
         """Return a dict that can be used by the frontend."""
         data: dict[str, Any] = {
-            "configuration": self.configuration.to_frontend_dict(),
+            "configuration": self.configuration.to_dict(),
+            "getCandidatesUpfront": self.get_candidates_upfront,
         }
         if self.data_channel is not None:
             data["dataChannel"] = self.data_channel
         return data
 
 
-class CameraWebRTCProvider(Protocol):
+class CameraWebRTCProvider(ABC):
+    """WebRTC provider."""
+
+    @property
+    @abstractmethod
+    def domain(self) -> str:
+        """Return the integration domain of the provider."""
+
+    @callback
+    @abstractmethod
+    def async_is_supported(self, stream_source: str) -> bool:
+        """Determine if the provider supports the stream source."""
+
+    @abstractmethod
+    async def async_handle_async_webrtc_offer(
+        self,
+        camera: Camera,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+    ) -> None:
+        """Handle the WebRTC offer and return the answer via the provided callback."""
+
+    @abstractmethod
+    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+        """Handle the WebRTC candidate."""
+
+    @callback
+    def async_close_session(self, session_id: str) -> None:
+        """Close the session."""
+        return  ## This is an optional method so we need a default here.
+
+
+class CameraWebRTCLegacyProvider(Protocol):
     """WebRTC provider."""
 
     async def async_is_supported(self, stream_source: str) -> bool:
@@ -104,6 +159,7 @@ class CameraWebRTCProvider(Protocol):
         """Handle the WebRTC offer and return an answer."""
 
 
+@callback
 def async_register_webrtc_provider(
     hass: HomeAssistant,
     provider: CameraWebRTCProvider,
@@ -115,9 +171,7 @@ def async_register_webrtc_provider(
     if DOMAIN not in hass.data:
         raise ValueError("Unexpected state, camera not loaded")
 
-    providers: set[CameraWebRTCProvider] = hass.data.setdefault(
-        DATA_WEBRTC_PROVIDERS, set()
-    )
+    providers = hass.data.setdefault(DATA_WEBRTC_PROVIDERS, set())
 
     @callback
     def remove_provider() -> None:
@@ -134,11 +188,78 @@ def async_register_webrtc_provider(
 
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
+    _async_check_conflicting_legacy_provider(hass)
 
     component = hass.data[DATA_COMPONENT]
     await asyncio.gather(
         *(camera.async_refresh_providers() for camera in component.entities)
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/webrtc/offer",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("offer"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_webrtc_offer(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle the signal path for a WebRTC stream.
+
+    This signal path is used to route the offer created by the client to the
+    camera device through the integration for negotiation on initial setup.
+    The ws endpoint returns a subscription id, where ice candidates and the
+    final answer will be returned.
+    The actual streaming is handled entirely between the client and camera device.
+
+    Async friendly.
+    """
+    entity_id = msg["entity_id"]
+    offer = msg["offer"]
+    camera = get_camera_from_entity_id(hass, entity_id)
+    if camera.frontend_stream_type != StreamType.WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "webrtc_offer_failed",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
+        )
+        return
+
+    session_id = ulid()
+    connection.subscriptions[msg["id"]] = partial(
+        camera.close_webrtc_session, session_id
+    )
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
+
+    @callback
+    def send_message(message: WebRTCMessage) -> None:
+        """Push a value to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                message.as_dict(),
+            )
+        )
+
+    send_message(WebRTCSession(session_id))
+
+    try:
+        await camera.async_handle_async_webrtc_offer(offer, session_id, send_message)
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error handling WebRTC offer: %s", ex)
+        send_message(
+            WebRTCError(
+                "webrtc_offer_failed",
+                str(ex),
+            )
+        )
 
 
 @websocket_api.websocket_command(
@@ -157,7 +278,7 @@ async def ws_get_client_config(
     if camera.frontend_stream_type != StreamType.WEB_RTC:
         connection.send_error(
             msg["id"],
-            "web_rtc_offer_failed",
+            "webrtc_get_client_config_failed",
             (
                 "Camera does not support WebRTC,"
                 f" frontend_stream_type={camera.frontend_stream_type}"
@@ -165,32 +286,86 @@ async def ws_get_client_config(
         )
         return
 
-    config = (await camera.async_get_webrtc_client_configuration()).to_frontend_dict()
+    config = camera.async_get_webrtc_client_configuration().to_frontend_dict()
     connection.send_result(
         msg["id"],
         config,
     )
 
 
-async def async_get_supported_providers(
-    hass: HomeAssistant, camera: Camera
-) -> list[CameraWebRTCProvider]:
-    """Return a list of supported providers for the camera."""
-    providers = hass.data.get(DATA_WEBRTC_PROVIDERS)
-    if not providers or not (stream_source := await camera.stream_source()):
-        return []
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/webrtc/candidate",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("session_id"): str,
+        vol.Required("candidate"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_candidate(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle WebRTC candidate websocket command."""
+    entity_id = msg["entity_id"]
+    camera = get_camera_from_entity_id(hass, entity_id)
+    if camera.frontend_stream_type != StreamType.WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "webrtc_candidate_failed",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
+        )
+        return
 
-    return [
-        provider
-        for provider in providers
-        if await provider.async_is_supported(stream_source)
-    ]
+    await camera.async_on_webrtc_candidate(msg["session_id"], msg["candidate"])
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @callback
-def register_ice_server(
+def async_register_ws(hass: HomeAssistant) -> None:
+    """Register camera webrtc ws endpoints."""
+
+    websocket_api.async_register_command(hass, ws_webrtc_offer)
+    websocket_api.async_register_command(hass, ws_get_client_config)
+    websocket_api.async_register_command(hass, ws_candidate)
+
+
+async def async_get_supported_provider(
+    hass: HomeAssistant, camera: Camera
+) -> CameraWebRTCProvider | None:
+    """Return the first supported provider for the camera."""
+    providers = hass.data.get(DATA_WEBRTC_PROVIDERS)
+    if not providers or not (stream_source := await camera.stream_source()):
+        return None
+
+    for provider in providers:
+        if provider.async_is_supported(stream_source):
+            return provider
+
+    return None
+
+
+async def async_get_supported_legacy_provider(
+    hass: HomeAssistant, camera: Camera
+) -> CameraWebRTCLegacyProvider | None:
+    """Return the first supported provider for the camera."""
+    providers = hass.data.get(DATA_WEBRTC_LEGACY_PROVIDERS)
+    if not providers or not (stream_source := await camera.stream_source()):
+        return None
+
+    for provider in providers.values():
+        if await provider.async_is_supported(stream_source):
+            return provider
+
+    return None
+
+
+@callback
+def async_register_ice_servers(
     hass: HomeAssistant,
-    get_ice_server_fn: Callable[[], Coroutine[Any, Any, RTCIceServer]],
+    get_ice_server_fn: Callable[[], Iterable[RTCIceServer]],
 ) -> Callable[[], None]:
     """Register a ICE server.
 
@@ -219,7 +394,7 @@ _RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 type RtspToWebRtcProviderType = Callable[[str, str, str], Awaitable[str | None]]
 
 
-class _CameraRtspToWebRTCProvider(CameraWebRTCProvider):
+class _CameraRtspToWebRTCProvider(CameraWebRTCLegacyProvider):
     def __init__(self, fn: RtspToWebRtcProviderType) -> None:
         """Initialize the RTSP to WebRTC provider."""
         self._fn = fn
@@ -247,5 +422,49 @@ def async_register_rtsp_to_web_rtc_provider(
 
     The first provider to satisfy the offer will be used.
     """
+    if DOMAIN not in hass.data:
+        raise ValueError("Unexpected state, camera not loaded")
+
+    legacy_providers = hass.data.setdefault(DATA_WEBRTC_LEGACY_PROVIDERS, {})
+
+    if domain in legacy_providers:
+        raise ValueError("Provider already registered")
+
     provider_instance = _CameraRtspToWebRTCProvider(provider)
-    return async_register_webrtc_provider(hass, provider_instance)
+
+    @callback
+    def remove_provider() -> None:
+        legacy_providers.pop(domain)
+        hass.async_create_task(_async_refresh_providers(hass))
+
+    legacy_providers[domain] = provider_instance
+    hass.async_create_task(_async_refresh_providers(hass))
+
+    return remove_provider
+
+
+@callback
+def _async_check_conflicting_legacy_provider(hass: HomeAssistant) -> None:
+    """Check if a legacy provider is registered together with the builtin provider."""
+    builtin_provider_domain = "go2rtc"
+    if (
+        (legacy_providers := hass.data.get(DATA_WEBRTC_LEGACY_PROVIDERS))
+        and (providers := hass.data.get(DATA_WEBRTC_PROVIDERS))
+        and any(provider.domain == builtin_provider_domain for provider in providers)
+    ):
+        for domain in legacy_providers:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"legacy_webrtc_provider_{domain}",
+                is_fixable=False,
+                is_persistent=False,
+                issue_domain=domain,
+                learn_more_url="https://www.home-assistant.io/integrations/go2rtc/",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="legacy_webrtc_provider",
+                translation_placeholders={
+                    "legacy_integration": domain,
+                    "builtin_integration": builtin_provider_domain,
+                },
+            )

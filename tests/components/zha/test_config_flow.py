@@ -122,7 +122,9 @@ def backup(make_backup):
 
 
 @pytest.fixture(autouse=True)
-def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
+def mock_supervisor_client(
+    supervisor_client: AsyncMock, addon_store_info: AsyncMock
+) -> None:
     """Mock supervisor client."""
 
 
