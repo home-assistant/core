@@ -3051,13 +3051,11 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
         Requires `already_configured` in strings.json in user visible flows.
         """
-
-        config_entry = self._get_config_entry()
         _async_abort_entries_match(
             [
                 entry
-                for entry in self.hass.config_entries.async_entries(config_entry.domain)
-                if entry is not config_entry and entry.source != SOURCE_IGNORE
+                for entry in self.hass.config_entries.async_entries(self._config_entry.domain)
+                if entry is not self._config_entry and entry.source != SOURCE_IGNORE
             ],
             match_dict,
         )
@@ -3095,13 +3093,13 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self._config_entry = config_entry
+        self.__config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
 
     @property
     def config_entry(self) -> ConfigEntry:
         """Return the config entry."""
-        return self._config_entry
+        return self.__config_entry
 
     @property
     def options(self) -> dict[str, Any]:
