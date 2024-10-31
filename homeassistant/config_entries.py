@@ -3054,7 +3054,9 @@ class OptionsFlow(ConfigEntryBaseFlow):
         _async_abort_entries_match(
             [
                 entry
-                for entry in self.hass.config_entries.async_entries(self.config_entry.domain)
+                for entry in self.hass.config_entries.async_entries(
+                    self.config_entry.domain
+                )
                 if entry is not self.config_entry and entry.source != SOURCE_IGNORE
             ],
             match_dict,
