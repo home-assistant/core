@@ -129,11 +129,8 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle file sensor config flow."""
         return await self._async_handle_step(Platform.SENSOR.value, user_input)
 
-    async def async_step_import(
-        self, import_data: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import `file`` config from configuration.yaml."""
-        assert import_data is not None
         self._async_abort_entries_match(import_data)
         platform = import_data[CONF_PLATFORM]
         name: str = import_data.get(CONF_NAME, DEFAULT_NAME)

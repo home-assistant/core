@@ -18,7 +18,7 @@ from pydeconz.models.sensor.vibration import Vibration
 from pydeconz.models.sensor.water import Water
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DARK, ATTR_ON
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 ATTR_ORIENTATION = "orientation"
@@ -165,7 +165,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ binary sensor."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[BINARY_SENSOR_DOMAIN] = set()
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
@@ -189,7 +189,7 @@ async def async_setup_entry(
 class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
-    TYPE = DOMAIN
+    TYPE = BINARY_SENSOR_DOMAIN
     entity_description: DeconzBinarySensorDescription
 
     def __init__(

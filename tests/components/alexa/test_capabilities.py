@@ -5,13 +5,14 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
+from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import (
@@ -23,16 +24,9 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -70,6 +64,7 @@ async def test_discovery_remote(
         {
             "current_activity": current_activity,
             "activity_list": activity_list,
+            "supported_features": 4,
         },
     )
     msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
@@ -391,11 +386,11 @@ async def test_api_remote_set_power_state(
 
 async def test_report_lock_state(hass: HomeAssistant) -> None:
     """Test LockController implements lockState property."""
-    hass.states.async_set("lock.locked", STATE_LOCKED, {})
-    hass.states.async_set("lock.unlocked", STATE_UNLOCKED, {})
-    hass.states.async_set("lock.unlocking", STATE_UNLOCKING, {})
-    hass.states.async_set("lock.locking", STATE_LOCKING, {})
-    hass.states.async_set("lock.jammed", STATE_JAMMED, {})
+    hass.states.async_set("lock.locked", LockState.LOCKED, {})
+    hass.states.async_set("lock.unlocked", LockState.UNLOCKED, {})
+    hass.states.async_set("lock.unlocking", LockState.UNLOCKING, {})
+    hass.states.async_set("lock.locking", LockState.LOCKING, {})
+    hass.states.async_set("lock.jammed", LockState.JAMMED, {})
     hass.states.async_set("lock.unknown", STATE_UNKNOWN, {})
 
     properties = await reported_properties(hass, "lock.locked")
@@ -790,22 +785,37 @@ async def test_report_remote_activity(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "remote.unknown",
         "on",
-        {"current_activity": "UNKNOWN"},
+        {
+            "current_activity": "UNKNOWN",
+            "supported_features": 4,
+        },
     )
     hass.states.async_set(
         "remote.tv",
         "on",
-        {"current_activity": "TV", "activity_list": ["TV", "MUSIC", "DVD"]},
+        {
+            "current_activity": "TV",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
     )
     hass.states.async_set(
         "remote.music",
         "on",
-        {"current_activity": "MUSIC", "activity_list": ["TV", "MUSIC", "DVD"]},
+        {
+            "current_activity": "MUSIC",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
     )
     hass.states.async_set(
         "remote.dvd",
         "on",
-        {"current_activity": "DVD", "activity_list": ["TV", "MUSIC", "DVD"]},
+        {
+            "current_activity": "DVD",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
     )
 
     properties = await reported_properties(hass, "remote#unknown")
@@ -1337,15 +1347,23 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
 
 async def test_report_alarm_control_panel_state(hass: HomeAssistant) -> None:
     """Test SecurityPanelController implements armState property."""
-    hass.states.async_set("alarm_control_panel.armed_away", STATE_ALARM_ARMED_AWAY, {})
     hass.states.async_set(
-        "alarm_control_panel.armed_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS, {}
+        "alarm_control_panel.armed_away", AlarmControlPanelState.ARMED_AWAY, {}
     )
-    hass.states.async_set("alarm_control_panel.armed_home", STATE_ALARM_ARMED_HOME, {})
     hass.states.async_set(
-        "alarm_control_panel.armed_night", STATE_ALARM_ARMED_NIGHT, {}
+        "alarm_control_panel.armed_custom_bypass",
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        {},
     )
-    hass.states.async_set("alarm_control_panel.disarmed", STATE_ALARM_DISARMED, {})
+    hass.states.async_set(
+        "alarm_control_panel.armed_home", AlarmControlPanelState.ARMED_HOME, {}
+    )
+    hass.states.async_set(
+        "alarm_control_panel.armed_night", AlarmControlPanelState.ARMED_NIGHT, {}
+    )
+    hass.states.async_set(
+        "alarm_control_panel.disarmed", AlarmControlPanelState.DISARMED, {}
+    )
 
     properties = await reported_properties(hass, "alarm_control_panel.armed_away")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")

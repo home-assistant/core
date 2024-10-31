@@ -5,8 +5,12 @@ from unittest.mock import AsyncMock
 from ayla_iot_unofficial import AylaAuthError
 import pytest
 
-from homeassistant.components.fujitsu_fglair.const import CONF_EUROPE, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.components.fujitsu_fglair.const import (
+    CONF_REGION,
+    DOMAIN,
+    REGION_DEFAULT,
+)
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -28,7 +32,7 @@ async def _initial_step(hass: HomeAssistant) -> FlowResult:
         {
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_EUROPE: False,
+            CONF_REGION: REGION_DEFAULT,
         },
     )
 
@@ -45,7 +49,7 @@ async def test_full_flow(
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_EUROPE: False,
+        CONF_REGION: REGION_DEFAULT,
     }
 
 
@@ -94,7 +98,7 @@ async def test_form_exceptions(
         {
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_EUROPE: False,
+            CONF_REGION: REGION_DEFAULT,
         },
     )
 
@@ -103,7 +107,7 @@ async def test_form_exceptions(
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_EUROPE: False,
+        CONF_REGION: REGION_DEFAULT,
     }
 
 
@@ -116,20 +120,7 @@ async def test_reauth_success(
     """Test reauth flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-            "title_placeholders": {"name": "test"},
-        },
-        data={
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_EUROPE: False,
-        },
-    )
-
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -164,20 +155,7 @@ async def test_reauth_exceptions(
     """Test reauth flow when an exception occurs."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-            "title_placeholders": {"name": "test"},
-        },
-        data={
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_EUROPE: False,
-        },
-    )
-
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

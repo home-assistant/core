@@ -23,7 +23,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        NiceGOEventEntity(coordinator, device_id, device_data.name, "event")
+        NiceGOEventEntity(coordinator, device_id, device_data.name)
         for device_id, device_data in coordinator.data.items()
     )
 
@@ -40,7 +40,11 @@ class NiceGOEventEntity(NiceGOEntity, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Listen for events."""
         await super().async_added_to_hass()
-        self.coordinator.api.event(self.on_barrier_obstructed)
+        self.async_on_remove(
+            self.coordinator.api.listen(
+                "on_barrier_obstructed", self.on_barrier_obstructed
+            )
+        )
 
     async def on_barrier_obstructed(self, data: dict[str, Any]) -> None:
         """Handle barrier obstructed event."""
@@ -48,4 +52,4 @@ class NiceGOEventEntity(NiceGOEntity, EventEntity):
         if data["deviceId"] == self.data.id:
             _LOGGER.debug("Barrier obstructed event for %s, triggering", self.data.name)
             self._trigger_event(EVENT_BARRIER_OBSTRUCTED)
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()

@@ -9,6 +9,7 @@ import logging
 import os
 from typing import Any
 
+from aiohasupervisor import SupervisorClient
 import aiohttp
 from yarl import URL
 
@@ -20,11 +21,14 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
+from .const import ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
+
+KEY_SUPERVISOR_CLIENT = "supervisor_client"
 
 
 class HassioAPIError(RuntimeError):
@@ -63,28 +67,6 @@ def api_data[**_P](
 
 
 @bind_hass
-async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
-    """Return add-on info.
-
-    The add-on must be installed.
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    return await hassio.get_addon_info(slug)
-
-
-@api_data
-async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
-    """Return add-on store info.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/store/addons/{slug}"
-    return await hassio.send_command(command, method="get")
-
-
-@bind_hass
 async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
     """Update Supervisor diagnostics toggle.
 
@@ -92,109 +74,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
     """
     hassio: HassIO = hass.data[DOMAIN]
     return await hassio.update_diagnostics(diagnostics)
-
-
-@bind_hass
-@api_data
-async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Install add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/install"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Uninstall add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/uninstall"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
-async def async_update_addon(
-    hass: HomeAssistant,
-    slug: str,
-    backup: bool = False,
-) -> dict:
-    """Update add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/update"
-    return await hassio.send_command(
-        command,
-        payload={"backup": backup},
-        timeout=None,
-    )
-
-
-@bind_hass
-@api_data
-async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Start add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/start"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
-async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Restart add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/restart"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Stop add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/stop"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
-async def async_set_addon_options(
-    hass: HomeAssistant, slug: str, options: dict
-) -> dict:
-    """Set add-on options.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/options"
-    return await hassio.send_command(command, payload=options)
-
-
-@bind_hass
-async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
-    """Return discovery data for an add-on."""
-    hassio: HassIO = hass.data[DOMAIN]
-    data = await hassio.retrieve_discovery_messages()
-    discovered_addons = data[ATTR_DISCOVERY]
-    return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
 @bind_hass
@@ -210,52 +89,6 @@ async def async_create_backup(
     backup_type = "partial" if partial else "full"
     command = f"/backups/new/{backup_type}"
     return await hassio.send_command(command, payload=payload, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_update_os(hass: HomeAssistant, version: str | None = None) -> dict:
-    """Update Home Assistant Operating System.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/os/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version},
-        timeout=None,
-    )
-
-
-@bind_hass
-@api_data
-async def async_update_supervisor(hass: HomeAssistant) -> dict:
-    """Update Home Assistant Supervisor.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/supervisor/update"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_update_core(
-    hass: HomeAssistant, version: str | None = None, backup: bool = False
-) -> dict:
-    """Update Home Assistant Core.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/core/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version, "backup": backup},
-        timeout=None,
-    )
 
 
 @bind_hass
@@ -332,15 +165,13 @@ class HassIO:
         self.loop = loop
         self.websession = websession
         self._ip = ip
-        self._base_url = URL(f"http://{ip}")
+        base_url = f"http://{ip}"
+        self._base_url = URL(base_url)
 
-    @_api_bool
-    def is_connected(self) -> Coroutine:
-        """Return true if it connected to Hass.io supervisor.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/supervisor/ping", method="get", timeout=15)
+    @property
+    def base_url(self) -> URL:
+        """Return base url for Supervisor."""
+        return self._base_url
 
     @api_data
     def get_info(self) -> Coroutine:
@@ -391,28 +222,12 @@ class HassIO:
         return self.send_command("/network/info", method="get")
 
     @api_data
-    def get_addon_info(self, addon: str) -> Coroutine:
-        """Return data for a Add-on.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/addons/{addon}/info", method="get")
-
-    @api_data
     def get_core_stats(self) -> Coroutine:
         """Return stats for the core.
 
         This method returns a coroutine.
         """
         return self.send_command("/core/stats", method="get")
-
-    @api_data
-    def get_addon_stats(self, addon: str) -> Coroutine:
-        """Return stats for an Add-on.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/addons/{addon}/stats", method="get")
 
     @api_data
     def get_supervisor_stats(self) -> Coroutine:
@@ -422,23 +237,6 @@ class HassIO:
         """
         return self.send_command("/supervisor/stats", method="get")
 
-    def get_addon_changelog(self, addon: str) -> Coroutine:
-        """Return changelog for an Add-on.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(
-            f"/addons/{addon}/changelog", method="get", return_text=True
-        )
-
-    @api_data
-    def get_store(self) -> Coroutine:
-        """Return data from the store.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/store", method="get")
-
     @api_data
     def get_ingress_panels(self) -> Coroutine:
         """Return data for Add-on ingress panels.
@@ -446,46 +244,6 @@ class HassIO:
         This method returns a coroutine.
         """
         return self.send_command("/ingress/panels", method="get")
-
-    @_api_bool
-    def restart_homeassistant(self) -> Coroutine:
-        """Restart Home-Assistant container.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/homeassistant/restart")
-
-    @_api_bool
-    def stop_homeassistant(self) -> Coroutine:
-        """Stop Home-Assistant container.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/homeassistant/stop")
-
-    @_api_bool
-    def refresh_updates(self) -> Coroutine:
-        """Refresh available updates.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/refresh_updates", timeout=300)
-
-    @api_data
-    def retrieve_discovery_messages(self) -> Coroutine:
-        """Return all discovery data from Hass.io API.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/discovery", method="get", timeout=60)
-
-    @api_data
-    def get_discovery_message(self, uuid: str) -> Coroutine:
-        """Return a single discovery data message.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/discovery/{uuid}", method="get")
 
     @api_data
     def get_resolution_info(self) -> Coroutine:
@@ -568,14 +326,13 @@ class HassIO:
 
         This method is a coroutine.
         """
-        url = f"http://{self._ip}{command}"
-        joined_url = self._base_url.join(URL(command))
+        joined_url = self._base_url.with_path(command)
         # This check is to make sure the normalized URL string
         # is the same as the URL string that was passed in. If
         # they are different, then the passed in command URL
         # contained characters that were removed by the normalization
         # such as ../../../../etc/passwd
-        if url != str(joined_url):
+        if joined_url.raw_path != command:
             _LOGGER.error("Invalid request %s", command)
             raise HassioAPIError
 
@@ -618,3 +375,14 @@ class HassIO:
             _LOGGER.error("Client error on %s request %s", command, err)
 
         raise HassioAPIError
+
+
+@singleton(KEY_SUPERVISOR_CLIENT)
+def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
+    """Return supervisor client."""
+    hassio: HassIO = hass.data[DOMAIN]
+    return SupervisorClient(
+        hassio.base_url,
+        os.environ.get("SUPERVISOR_TOKEN", ""),
+        session=hassio.websession,
+    )

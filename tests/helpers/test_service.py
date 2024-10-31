@@ -39,7 +39,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     service,
-    template,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_integration
@@ -120,7 +119,6 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         id="test-area",
         name="Test area",
         aliases={},
-        normalized_name="test-area",
         floor_id="test-floor",
         icon=None,
         picture=None,
@@ -129,7 +127,6 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         id="area-a",
         name="Area A",
         aliases={},
-        normalized_name="area-a",
         floor_id="floor-a",
         icon=None,
         picture=None,
@@ -283,7 +280,6 @@ def label_mock(hass: HomeAssistant) -> None:
         id="area-with-labels",
         name="Area with labels",
         aliases={},
-        normalized_name="with_labels",
         floor_id=None,
         icon=None,
         labels={"label_area"},
@@ -293,7 +289,6 @@ def label_mock(hass: HomeAssistant) -> None:
         id="area-no-labels",
         name="Area without labels",
         aliases={},
-        normalized_name="without_labels",
         floor_id=None,
         icon=None,
         labels=set(),
@@ -352,6 +347,13 @@ def label_mock(hass: HomeAssistant) -> None:
         platform="test",
         device_id=device_has_label1.id,
     )
+    entity_with_label1_from_device_and_different_area = er.RegistryEntry(
+        entity_id="light.with_label1_from_device_diff_area",
+        unique_id="with_label1_from_device_diff_area",
+        platform="test",
+        device_id=device_has_label1.id,
+        area_id=area_without_labels.id,
+    )
     entity_with_label1_and_label2_from_device = er.RegistryEntry(
         entity_id="light.with_label1_and_label2_from_device",
         unique_id="with_label1_and_label2_from_device",
@@ -378,6 +380,7 @@ def label_mock(hass: HomeAssistant) -> None:
             config_entity_with_my_label.entity_id: config_entity_with_my_label,
             entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
             entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
+            entity_with_label1_from_device_and_different_area.entity_id: entity_with_label1_from_device_and_different_area,
             entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
             entity_with_my_label.entity_id: entity_with_my_label,
             entity_with_no_labels.entity_id: entity_with_no_labels,
@@ -564,9 +567,6 @@ async def test_not_mutate_input(hass: HomeAssistant) -> None:
     # Validate both the original and the copy
     config = cv.SERVICE_SCHEMA(config)
     orig = cv.SERVICE_SCHEMA(orig)
-
-    # Only change after call is each template getting hass attached
-    template.attach(hass, orig)
 
     await service.async_call_from_config(hass, config, validate_config=False)
     assert orig == config
@@ -762,6 +762,7 @@ async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
 
     assert {
         "light.with_label1_from_device",
+        "light.with_label1_from_device_diff_area",
         "light.with_labels_from_device",
         "light.with_label1_and_label2_from_device",
     } == await service.async_extract_entity_ids(hass, call)

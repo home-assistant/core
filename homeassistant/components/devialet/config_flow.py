@@ -23,12 +23,13 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _host: str
+    _model: str
+    _name: str
+    _serial: str
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host: str | None = None
-        self._name: str | None = None
-        self._model: str | None = None
-        self._serial: str | None = None
         self._errors: dict[str, str] = {}
 
     async def async_validate_input(self) -> ConfigFlowResult | None:
@@ -72,7 +73,7 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        LOGGER.info("Devialet device found via ZEROCONF: %s", discovery_info)
+        LOGGER.debug("Devialet device found via ZEROCONF: %s", discovery_info)
 
         self._host = discovery_info.host
         self._name = discovery_info.name.split(".", 1)[0]

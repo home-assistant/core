@@ -27,6 +27,8 @@ SCAN_INTERVAL = timedelta(minutes=8)
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
     """Class to manage fetching Husqvarna data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, api: AutomowerSession, entry: ConfigEntry
     ) -> None:

@@ -50,6 +50,63 @@ def mock_room() -> Mock:
 
 
 @pytest.fixture
+def mock_power_sensor() -> Mock:
+    """Fixture for an individual power sensor without value."""
+    sensor = Mock()
+    sensor.fibaro_id = 1
+    sensor.parent_fibaro_id = 0
+    sensor.name = "Test sensor"
+    sensor.room_id = 1
+    sensor.visible = True
+    sensor.enabled = True
+    sensor.type = "com.fibaro.powerMeter"
+    sensor.base_type = "com.fibaro.device"
+    sensor.properties = {
+        "zwaveCompany": "Goap",
+        "endPointId": "2",
+        "manufacturer": "",
+        "power": "6.60",
+    }
+    sensor.actions = {}
+    sensor.has_central_scene_event = False
+    value_mock = Mock()
+    value_mock.has_value = False
+    value_mock.is_bool_value = False
+    sensor.value = value_mock
+    return sensor
+
+
+@pytest.fixture
+def mock_cover() -> Mock:
+    """Fixture for a cover."""
+    cover = Mock()
+    cover.fibaro_id = 3
+    cover.parent_fibaro_id = 0
+    cover.name = "Test cover"
+    cover.room_id = 1
+    cover.dead = False
+    cover.visible = True
+    cover.enabled = True
+    cover.type = "com.fibaro.FGR"
+    cover.base_type = "com.fibaro.device"
+    cover.properties = {"manufacturer": ""}
+    cover.actions = {"open": 0, "close": 0}
+    cover.supported_features = {}
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    cover.value = value_mock
+    value2_mock = Mock()
+    value2_mock.has_value = False
+    cover.value_2 = value2_mock
+    state_mock = Mock()
+    state_mock.has_value = True
+    state_mock.str_value.return_value = "opening"
+    cover.state = state_mock
+    return cover
+
+
+@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     mock_config_entry = MockConfigEntry(

@@ -58,6 +58,7 @@ from .const import (
     CONF_KNX_TUNNELING_TCP_SECURE,
     DEFAULT_ROUTING_IA,
     DOMAIN,
+    KNX_MODULE_KEY,
     TELEGRAM_LOG_DEFAULT,
     TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
@@ -182,7 +183,9 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             CONF_KNX_ROUTING: CONF_KNX_ROUTING.capitalize(),
         }
 
-        if isinstance(self, OptionsFlow) and (knx_module := self.hass.data.get(DOMAIN)):
+        if isinstance(self, OptionsFlow) and (
+            knx_module := self.hass.data.get(KNX_MODULE_KEY)
+        ):
             xknx = knx_module.xknx
         else:
             xknx = XKNX()

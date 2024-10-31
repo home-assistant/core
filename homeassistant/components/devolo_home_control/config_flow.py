@@ -8,7 +8,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -22,13 +27,14 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _reauth_entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize devolo Home Control flow."""
         self.data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
         }
-        self._reauth_entry: ConfigEntry | None = None
         self._url = DEFAULT_MYDEVOLO
 
     async def async_step_user(
@@ -71,9 +77,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry = self._get_reauth_entry()
         self._url = entry_data[CONF_MYDEVOLO]
         self.data_schema = {
             vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
@@ -109,7 +113,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             raise CredentialsInvalid
         uuid = await self.hass.async_add_executor_job(mydevolo.uuid)
 
-        if not self._reauth_entry:
+        if self.source != SOURCE_REAUTH:
             await self.async_set_unique_id(uuid)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(

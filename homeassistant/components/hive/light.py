@@ -17,8 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from . import HiveEntity, refresh_system
+from . import refresh_system
 from .const import ATTR_MODE, DOMAIN
+from .entity import HiveEntity
 
 if TYPE_CHECKING:
     from apyhiveapi import Hive

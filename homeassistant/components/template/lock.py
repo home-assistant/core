@@ -8,10 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.lock import (
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
-    STATE_JAMMED,
-    STATE_LOCKING,
-    STATE_UNLOCKING,
     LockEntity,
+    LockState,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -19,9 +17,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_LOCKED,
     STATE_ON,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
@@ -102,22 +98,22 @@ class TemplateLock(TemplateEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._state in ("true", STATE_ON, STATE_LOCKED)
+        return self._state in ("true", STATE_ON, LockState.LOCKED)
 
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._state == STATE_JAMMED
+        return self._state == LockState.JAMMED
 
     @property
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
-        return self._state == STATE_UNLOCKING
+        return self._state == LockState.UNLOCKING
 
     @property
     def is_locking(self) -> bool:
         """Return true if lock is locking."""
-        return self._state == STATE_LOCKING
+        return self._state == LockState.LOCKING
 
     @callback
     def _update_state(self, result):
@@ -128,7 +124,7 @@ class TemplateLock(TemplateEntity, LockEntity):
             return
 
         if isinstance(result, bool):
-            self._state = STATE_LOCKED if result else STATE_UNLOCKED
+            self._state = LockState.LOCKED if result else LockState.UNLOCKED
             return
 
         if isinstance(result, str):

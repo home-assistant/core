@@ -258,7 +258,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a new bridge as a config entry.
 
         This flow is triggered by `async_setup` for both configured and
@@ -268,9 +268,9 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         This flow is also triggered by `async_step_discovery`.
         """
         # Check if host exists, abort if so.
-        self._async_abort_entries_match({"host": import_info["host"]})
+        self._async_abort_entries_match({"host": import_data["host"]})
 
-        bridge = await self._get_bridge(import_info["host"])
+        bridge = await self._get_bridge(import_data["host"])
         if bridge is None:
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge

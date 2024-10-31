@@ -15,8 +15,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeworksData, HomeworksEntity
+from . import HomeworksData
 from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_DIMMERS, CONF_RATE, DOMAIN
+from .entity import HomeworksEntity
 
 _LOGGER = logging.getLogger(__name__)
 

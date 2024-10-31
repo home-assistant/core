@@ -4,10 +4,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
-    async_get_entity_registry_entry_or_raise,
-)
-from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
+    async_get_entity_registry_entry_or_raise,
 )
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,

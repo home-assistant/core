@@ -80,7 +80,7 @@ def setup_platform(
     client.zones.sort(key=lambda zone: zone["number"])
 
     for zone in client.zones:
-        _LOGGER.info("Loading Zone found: %s", zone["name"])
+        _LOGGER.debug("Loading Zone found: %s", zone["name"])
         if zone["number"] not in exclude:
             sensors.append(
                 Concord232ZoneSensor(

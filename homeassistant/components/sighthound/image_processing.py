@@ -157,7 +157,7 @@ class SighthoundEntity(ImageProcessingEntity):
         if self._save_timestamped_file:
             timestamp_save_path = directory / f"{self._name}_{self._last_detection}.jpg"
             img.save(timestamp_save_path)
-            _LOGGER.info("Sighthound saved file %s", timestamp_save_path)
+            _LOGGER.debug("Sighthound saved file %s", timestamp_save_path)
 
     @property
     def camera_entity(self):

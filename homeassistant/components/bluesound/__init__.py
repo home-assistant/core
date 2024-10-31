@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
-import aiohttp
 from pyblu import Player, SyncStatus
+from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .media_player import setup_services
+from .services import setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -22,14 +22,14 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 @dataclass
-class BluesoundData:
+class BluesoundRuntimeData:
     """Bluesound data class."""
 
     player: Player
     sync_status: SyncStatus
 
 
-type BluesoundConfigEntry = ConfigEntry[BluesoundData]
+type BluesoundConfigEntry = ConfigEntry[BluesoundRuntimeData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -51,14 +51,10 @@ async def async_setup_entry(
     async with Player(host, port, session=session, default_timeout=10) as player:
         try:
             sync_status = await player.sync_status(timeout=1)
-        except TimeoutError as ex:
-            raise ConfigEntryNotReady(
-                f"Timeout while connecting to {host}:{port}"
-            ) from ex
-        except aiohttp.ClientError as ex:
+        except PlayerUnreachableError as ex:
             raise ConfigEntryNotReady(f"Error connecting to {host}:{port}") from ex
 
-    config_entry.runtime_data = BluesoundData(player, sync_status)
+    config_entry.runtime_data = BluesoundRuntimeData(player, sync_status)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

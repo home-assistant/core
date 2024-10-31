@@ -38,8 +38,8 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator[int]):
         )
 
         self.api = AuroraForecast(async_get_clientsession(hass))
-        self.latitude = int(self.config_entry.data[CONF_LATITUDE])
-        self.longitude = int(self.config_entry.data[CONF_LONGITUDE])
+        self.latitude = round(self.config_entry.data[CONF_LATITUDE])
+        self.longitude = round(self.config_entry.data[CONF_LONGITUDE])
         self.threshold = int(
             self.config_entry.options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
         )

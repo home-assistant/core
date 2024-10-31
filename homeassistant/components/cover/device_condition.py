@@ -12,10 +12,6 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -27,7 +23,7 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, CoverEntityFeature
+from . import DOMAIN, CoverEntityFeature, CoverState
 
 # mypy: disallow-any-generics
 
@@ -128,13 +124,13 @@ def async_condition_from_config(
 
     if config[CONF_TYPE] in STATE_CONDITION_TYPES:
         if config[CONF_TYPE] == "is_open":
-            state = STATE_OPEN
+            state = CoverState.OPEN
         elif config[CONF_TYPE] == "is_closed":
-            state = STATE_CLOSED
+            state = CoverState.CLOSED
         elif config[CONF_TYPE] == "is_opening":
-            state = STATE_OPENING
+            state = CoverState.OPENING
         elif config[CONF_TYPE] == "is_closing":
-            state = STATE_CLOSING
+            state = CoverState.CLOSING
 
         def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
             """Test if an entity is a certain state."""

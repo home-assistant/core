@@ -11,7 +11,7 @@ from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
@@ -122,7 +122,7 @@ async def test_heater_input_boolean(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -160,7 +160,7 @@ async def test_heater_switch(
 
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -192,7 +192,7 @@ async def test_unique_id(
     _setup_switch(hass, True)
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -221,7 +221,7 @@ async def setup_comp_2(hass: HomeAssistant) -> None:
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -248,7 +248,7 @@ async def test_setup_defaults_to_unknown(hass: HomeAssistant) -> None:
     hass.config.units = METRIC_SYSTEM
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -272,7 +272,7 @@ async def test_setup_gets_current_temp_from_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -618,7 +618,7 @@ async def setup_comp_3(hass: HomeAssistant) -> None:
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -774,7 +774,7 @@ async def _setup_thermostat_with_min_cycle_duration(
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -927,7 +927,7 @@ async def setup_comp_7(hass: HomeAssistant) -> None:
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1002,7 +1002,7 @@ async def setup_comp_8(hass: HomeAssistant) -> None:
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1076,7 +1076,7 @@ async def setup_comp_9(hass: HomeAssistant) -> None:
     """Initialize components."""
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1110,7 +1110,7 @@ async def test_custom_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with custom parameters."""
     result = await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1151,7 +1151,7 @@ async def test_restore_state(hass: HomeAssistant, hvac_mode) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1189,7 +1189,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1220,7 +1220,7 @@ async def test_initial_hvac_off_force_heater_off(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1274,7 +1274,7 @@ async def test_restore_will_turn_off_(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1319,7 +1319,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass: HomeAssistant) -> 
 
     await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1379,7 +1379,7 @@ async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
 async def _setup_climate(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",
@@ -1415,7 +1415,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        CLIMATE_DOMAIN,
         {
             "climate": {
                 "platform": "generic_thermostat",

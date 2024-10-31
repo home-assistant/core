@@ -32,9 +32,9 @@ GATEWAY_MANUAL_ENTRY = "manual"
 PENTAIR_OUI = "00-C0-33"
 
 
-async def async_discover_gateways_by_unique_id(hass):
+async def async_discover_gateways_by_unique_id() -> dict[str, dict[str, Any]]:
     """Discover gateways and return a dict of them by unique id."""
-    discovered_gateways = {}
+    discovered_gateways: dict[str, dict[str, Any]] = {}
     try:
         hosts = await discovery.async_discover()
         _LOGGER.debug("Discovered hosts: %s", hosts)
@@ -51,16 +51,16 @@ async def async_discover_gateways_by_unique_id(hass):
     return discovered_gateways
 
 
-def _extract_mac_from_name(name):
+def _extract_mac_from_name(name: str) -> str:
     return format_mac(f"{PENTAIR_OUI}-{name.split(':')[1].strip()}")
 
 
-def short_mac(mac):
+def short_mac(mac: str) -> str:
     """Short version of the mac as seen in the app."""
     return "-".join(mac.split(":")[3:]).upper()
 
 
-def name_for_mac(mac):
+def name_for_mac(mac: str) -> str:
     """Derive the gateway name from the mac."""
     return f"Pentair: {short_mac(mac)}"
 
@@ -83,9 +83,11 @@ class ScreenlogicConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for ScreenLogic."""
         return ScreenLogicOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
-        self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
+        self.discovered_gateways = await async_discover_gateways_by_unique_id()
         return await self.async_step_gateway_select()
 
     async def async_step_dhcp(

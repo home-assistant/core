@@ -154,17 +154,15 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
             options=self._options,
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from configuration.yaml."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        if CONF_SEND_INTERVAL in import_config:
-            self._options[CONF_SEND_INTERVAL] = import_config.pop(CONF_SEND_INTERVAL)
-        if CONF_MAX_DELAY in import_config:
-            self._options[CONF_MAX_DELAY] = import_config.pop(CONF_MAX_DELAY)
-        self._data = import_config
+        if CONF_SEND_INTERVAL in import_data:
+            self._options[CONF_SEND_INTERVAL] = import_data.pop(CONF_SEND_INTERVAL)
+        if CONF_MAX_DELAY in import_data:
+            self._options[CONF_MAX_DELAY] = import_data.pop(CONF_MAX_DELAY)
+        self._data = import_data
         errors = await validate_data(self._data)
         if errors:
             return self.async_abort(reason=errors["base"])

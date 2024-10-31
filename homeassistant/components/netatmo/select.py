@@ -72,7 +72,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
 
         self._attr_current_option = getattr(self.home.get_selected_schedule(), "name")
         self._attr_options = [
-            schedule.name for schedule in self.home.schedules.values()
+            schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
 
     async def async_added_to_hass(self) -> None:
@@ -128,5 +128,5 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             self.home.schedules
         )
         self._attr_options = [
-            schedule.name for schedule in self.home.schedules.values()
+            schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]

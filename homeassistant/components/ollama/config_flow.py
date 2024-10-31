@@ -33,17 +33,22 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
+    CONF_NUM_CTX,
     CONF_PROMPT,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
+    DEFAULT_NUM_CTX,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    MAX_NUM_CTX,
+    MIN_NUM_CTX,
     MODEL_NAMES,
 )
 
@@ -87,7 +92,9 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            self.client = ollama.AsyncClient(host=self.url)
+            self.client = ollama.AsyncClient(
+                host=self.url, verify=get_default_context()
+            )
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await self.client.list()
 
@@ -255,6 +262,14 @@ def ollama_config_option_schema(
             description={"suggested_value": options.get(CONF_LLM_HASS_API)},
             default="none",
         ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+        vol.Optional(
+            CONF_NUM_CTX,
+            description={"suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_NUM_CTX, max=MAX_NUM_CTX, step=1, mode=NumberSelectorMode.BOX
+            )
+        ),
         vol.Optional(
             CONF_MAX_HISTORY,
             description={

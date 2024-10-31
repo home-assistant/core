@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
-from homeassistant.components.button import DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,7 +19,7 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
+ENTITY_ID = f"{BUTTON_DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
@@ -43,7 +43,7 @@ async def test_apply_template(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert fritz().apply_template.call_count == 1
 
@@ -67,5 +67,5 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(f"{DOMAIN}.new_template")
+    state = hass.states.get(f"{BUTTON_DOMAIN}.new_template")
     assert state

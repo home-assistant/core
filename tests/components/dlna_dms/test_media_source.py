@@ -13,11 +13,11 @@ from homeassistant.components.dlna_dms.media_source import (
     DmsMediaSource,
     async_get_media_source,
 )
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSourceItem,
+    Unresolvable,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant

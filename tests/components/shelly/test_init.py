@@ -310,6 +310,52 @@ async def test_sleeping_rpc_device_online_new_firmware(
     assert entry.data["sleep_period"] == 1500
 
 
+async def test_sleeping_rpc_device_online_during_setup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is not None
+
+
+async def test_sleeping_rpc_device_offline_during_setup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+
+    # Init integration, should fail since device is offline
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is None
+
+    # Create an online event and verify that device is init successfully
+    monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock())
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.test_name_temperature") is not None
+
+
 @pytest.mark.parametrize(
     ("gen", "entity_id"),
     [

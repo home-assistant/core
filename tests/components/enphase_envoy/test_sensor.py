@@ -1,6 +1,7 @@
 """Test Enphase Envoy sensors."""
 
 from itertools import chain
+import logging
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -26,6 +27,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -59,6 +61,7 @@ PRODUCTION_NAMES: tuple[str, ...] = (
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -148,6 +151,7 @@ CONSUMPTION_NAMES: tuple[str, ...] = (
     ("mock_envoy"),
     [
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
     ],
@@ -175,6 +179,48 @@ async def test_sensor_consumption_data(
     )
 
     for name, target in list(zip(CONSUMPTION_NAMES, CONSUMPTION_TARGETS, strict=False)):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == target
+
+
+NET_CONSUMPTION_NAMES: tuple[str, ...] = (
+    "balanced_net_power_consumption",
+    "lifetime_balanced_net_energy_consumption",
+)
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_1p_metered",
+        "envoy_eu_batt",
+        "envoy_metered_batt_relay",
+        "envoy_nobatt_metered_3p",
+        "envoy_tot_cons_metered",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_net_consumption_data(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test net consumption entities values."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    sn = mock_envoy.serial_number
+    ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
+
+    data = mock_envoy.data.system_net_consumption
+    NET_CONSUMPTION_TARGETS = (
+        data.watts_now / 1000.0,
+        data.watt_hours_lifetime / 1000.0,
+    )
+    for name, target in list(
+        zip(NET_CONSUMPTION_NAMES, NET_CONSUMPTION_TARGETS, strict=False)
+    ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert float(entity_state.state) == target
 
@@ -219,6 +265,48 @@ async def test_sensor_consumption_phase_data(
 
     for name, target in list(
         zip(CONSUMPTION_PHASE_NAMES, CONSUMPTION_PHASE_TARGET, strict=False)
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
+        assert float(entity_state.state) == target
+
+
+NET_CONSUMPTION_PHASE_NAMES: list[str] = [
+    f"{name}_{phase.lower()}" for phase in PHASENAMES for name in NET_CONSUMPTION_NAMES
+]
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+        "envoy_nobatt_metered_3p",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_net_consumption_phase_data(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test consumption phase entities values."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    sn = mock_envoy.serial_number
+    ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
+
+    NET_CONSUMPTION_PHASE_TARGET = chain(
+        *[
+            (
+                phase_data.watts_now / 1000.0,
+                phase_data.watt_hours_lifetime / 1000.0,
+            )
+            for phase_data in mock_envoy.data.system_net_consumption_phases.values()
+        ]
+    )
+    for name, target in list(
+        zip(NET_CONSUMPTION_PHASE_NAMES, NET_CONSUMPTION_PHASE_TARGET, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert float(entity_state.state) == target
@@ -652,6 +740,7 @@ async def test_sensor_storage_phase_disabled_by_integration(
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -684,6 +773,7 @@ async def test_sensor_inverter_data(
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -877,6 +967,7 @@ async def test_sensor_missing_data(
     # force missing data to test 'if == none' code sections
     mock_envoy.data.system_production_phases["L2"] = None
     mock_envoy.data.system_consumption_phases["L2"] = None
+    mock_envoy.data.system_net_consumption_phases["L2"] = None
     mock_envoy.data.ctmeter_production = None
     mock_envoy.data.ctmeter_consumption = None
     mock_envoy.data.ctmeter_storage = None
@@ -912,3 +1003,36 @@ async def test_sensor_missing_data(
     # test the original inverter is now unknown
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_fw_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enphase_envoy sensor update over fw update."""
+    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.firmware = "0.0.0"
+
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "firmware changed from: " in caplog.text
+    assert "to: 0.0.0, reloading enphase envoy integration" in caplog.text

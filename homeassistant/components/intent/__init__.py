@@ -239,6 +239,8 @@ class GetStateIntentHandler(intent.IntentHandler):
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -280,7 +282,13 @@ class GetStateIntentHandler(intent.IntentHandler):
             device_classes=device_classes,
             assistant=intent_obj.assistant,
         )
-        match_result = intent.async_match_targets(hass, match_constraints)
+        match_preferences = intent.MatchTargetsPreferences(
+            area_id=slots.get("preferred_area_id", {}).get("value"),
+            floor_id=slots.get("preferred_floor_id", {}).get("value"),
+        )
+        match_result = intent.async_match_targets(
+            hass, match_constraints, match_preferences
+        )
         if (
             (not match_result.is_match)
             and (match_result.no_match_reason is not None)

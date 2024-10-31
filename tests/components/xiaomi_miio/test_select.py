@@ -12,7 +12,7 @@ import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
-    DOMAIN,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
@@ -143,7 +143,7 @@ async def test_select_coordinator_update(hass: HomeAssistant, setup_test) -> Non
 
 async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up component."""
-    entity_id = f"{DOMAIN}.{entity_name}"
+    entity_id = f"{SELECT_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
         domain=XIAOMI_DOMAIN,

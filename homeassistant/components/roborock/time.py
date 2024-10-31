@@ -15,11 +15,12 @@ from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RoborockConfigEntry
+from . import DOMAIN, RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntityV1
+from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,6 +173,12 @@ class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
 
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
-        await self.entity_description.update_value(
-            self.get_cache(self.entity_description.cache_key), value
-        )
+        try:
+            await self.entity_description.update_value(
+                self.get_cache(self.entity_description.cache_key), value
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err

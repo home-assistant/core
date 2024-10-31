@@ -124,12 +124,12 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="cloud_api", errors=errors, data_schema=CLOUD_API_SCHEMA
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
-        if CONF_HOST in user_input:
-            result = await self.async_step_local_api(user_input)
+        if CONF_HOST in import_data:
+            result = await self.async_step_local_api(import_data)
         else:
-            result = await self.async_step_cloud_api(user_input)
+            result = await self.async_step_cloud_api(import_data)
         if result["type"] is FlowResultType.FORM:
             assert result["errors"]
             return self.async_abort(reason=result["errors"]["base"])

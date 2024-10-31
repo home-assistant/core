@@ -22,7 +22,7 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
-from functools import cached_property
+from propcache import cached_property
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report
@@ -385,7 +385,7 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
         return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
-            f"{node.start_mark}: Unable to read file {fname}."
+            f"{node.start_mark}: Unable to read file {fname}"
         ) from exc
 
 

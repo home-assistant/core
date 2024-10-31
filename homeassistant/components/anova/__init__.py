@@ -13,22 +13,20 @@ from anova_wifi import (
     WebsocketFailure,
 )
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
 from .coordinator import AnovaCoordinator
-from .models import AnovaData
+from .models import AnovaConfigEntry, AnovaData
 
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Set up Anova from a config entry."""
     api = AnovaApi(
         aiohttp_client.async_get_clientsession(hass),
@@ -62,17 +60,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         assert api.websocket_handler is not None
     devices = list(api.websocket_handler.devices.values())
     coordinators = [AnovaCoordinator(hass, device) for device in devices]
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AnovaData(
-        api_jwt=api.jwt, coordinators=coordinators, api=api
-    )
+    entry.runtime_data = AnovaData(api_jwt=api.jwt, coordinators=coordinators, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        anova_data: AnovaData = hass.data[DOMAIN].pop(entry.entry_id)
         # Disconnect from WS
-        await anova_data.api.disconnect_websocket()
+        await entry.runtime_data.api.disconnect_websocket()
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+    """Migrate entry."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version == 1:
+        new_data = {**entry.data}
+        if CONF_DEVICES in new_data:
+            new_data.pop(CONF_DEVICES)
+
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True

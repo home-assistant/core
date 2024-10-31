@@ -103,7 +103,7 @@ def setup_platform(
 
     devices = []
     for zone_id, extra in config[CONF_ZONES].items():
-        _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
+        _LOGGER.debug("Adding zone %d - %s", zone_id, extra[CONF_NAME])
         unique_id = f"{connection}-{zone_id}"
         device = BlackbirdZone(blackbird, sources, zone_id, extra[CONF_NAME])
         hass.data[DATA_BLACKBIRD][unique_id] = device

@@ -65,10 +65,14 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
         except RequestException:
             return self.async_abort(reason="cannot_connect")
 
-        self.context["title_placeholders"] = {"name": self.name}
+        if self.name:
+            # If we have a name, use it as flow title
+            self.context["title_placeholders"] = {"name": self.name}
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             return await self._async_create_soundtouch_entry()

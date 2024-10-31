@@ -22,7 +22,7 @@
           "local_access_token": "[%key:component::tedee::config::step::user::data_description::local_access_token%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure Tedee",
         "description": "Update the settings of this integration.",
         "data": {
@@ -62,6 +62,17 @@
       "pullspring_duration": {
         "name": "Pullspring duration"
       }
+    }
+  },
+  "exceptions": {
+    "lock_failed": {
+      "message": "Failed to lock the door. Lock {lock_id}"
+    },
+    "unlock_failed": {
+      "message": "Failed to unlock the door. Lock {lock_id}"
+    },
+    "open_failed": {
+      "message": "Failed to unlatch the door. Lock {lock_id}"
     }
   }
 }

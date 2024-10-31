@@ -7,12 +7,18 @@ import logging
 from typing import Any
 
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
-from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    ApiError,
+    CredentialsInvalidError,
+    LoginFirmwareError,
+    ReolinkError,
+)
 import voluptuous as vol
 
 from homeassistant.components import dhcp
 from homeassistant.config_entries import (
-    ConfigEntry,
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -37,7 +43,7 @@ from .exceptions import (
     UserNotAdmin,
 )
 from .host import ReolinkHost
-from .util import is_connected
+from .util import ReolinkConfigEntry, is_connected
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +54,7 @@ DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 class ReolinkOptionsFlowHandler(OptionsFlow):
     """Handle Reolink options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ReolinkConfigEntry) -> None:
         """Initialize ReolinkOptionsFlowHandler."""
         self.config_entry = config_entry
 
@@ -99,12 +105,11 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._username: str = "admin"
         self._password: str | None = None
-        self._reauth: bool = False
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
     ) -> ReolinkOptionsFlowHandler:
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
@@ -116,11 +121,12 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = entry_data[CONF_HOST]
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
-        self._reauth = True
-        self.context["title_placeholders"]["ip_address"] = entry_data[CONF_HOST]
-        self.context["title_placeholders"]["hostname"] = self.context[
-            "title_placeholders"
-        ]["name"]
+        placeholders = {
+            **self.context["title_placeholders"],
+            "ip_address": entry_data[CONF_HOST],
+            "hostname": self.context["title_placeholders"]["name"],
+        }
+        self.context["title_placeholders"] = placeholders
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -133,6 +139,16 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", description_placeholders=placeholders
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Perform a reconfiguration."""
+        entry_data = self._get_reconfigure_entry().data
+        self._host = entry_data[CONF_HOST]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
+        return await self.async_step_user()
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -205,6 +221,11 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             if CONF_HOST not in user_input:
                 user_input[CONF_HOST] = self._host
 
+            # remember input in case of a error
+            self._username = user_input[CONF_USERNAME]
+            self._password = user_input[CONF_PASSWORD]
+            self._host = user_input[CONF_HOST]
+
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
                 await host.async_init()
@@ -217,6 +238,15 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 placeholders["special_chars"] = ALLOWED_SPECIAL_CHARS
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except LoginFirmwareError:
+                errors["base"] = "update_needed"
+                placeholders["current_firmware"] = host.api.sw_version
+                placeholders["needed_firmware"] = (
+                    host.api.sw_version_required.version_string
+                )
+                placeholders["download_center_url"] = (
+                    "https://reolink.com/download-center"
+                )
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
@@ -241,17 +271,17 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USE_HTTPS] = host.api.use_https
 
                 mac_address = format_mac(host.api.mac_address)
-                existing_entry = await self.async_set_unique_id(
-                    mac_address, raise_on_progress=False
-                )
-                if existing_entry and self._reauth:
-                    if self.hass.config_entries.async_update_entry(
-                        existing_entry, data=user_input
-                    ):
-                        await self.hass.config_entries.async_reload(
-                            existing_entry.entry_id
-                        )
-                    return self.async_abort(reason="reauth_successful")
+                await self.async_set_unique_id(mac_address, raise_on_progress=False)
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        entry=self._get_reauth_entry(), data=user_input
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        entry=self._get_reconfigure_entry(), data=user_input
+                    )
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(
@@ -266,7 +296,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD, default=self._password): str,
             }
         )
-        if self._host is None or errors:
+        if self._host is None or self.source == SOURCE_RECONFIGURE or errors:
             data_schema = data_schema.extend(
                 {
                     vol.Required(CONF_HOST, default=self._host): str,

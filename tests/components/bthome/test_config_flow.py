@@ -563,16 +563,7 @@ async def test_async_step_reauth_abort_early(hass: HomeAssistant) -> None:
 
     device = DeviceData()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "title_placeholders": {"name": entry.title},
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data | {"device": device},
-    )
+    result = await entry.start_reauth_flow(hass, data={"device": device})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

@@ -10,8 +10,8 @@ from uiprotect.exceptions import NvrError
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import (
-    STATE_IDLE,
     CameraEntityFeature,
+    CameraState,
     async_get_image,
     async_get_stream_source,
 )
@@ -32,7 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .utils import (
@@ -65,6 +65,14 @@ def validate_default_camera_entity(
     assert entity
     assert entity.disabled is False
     assert entity.unique_id == unique_id
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(entity.device_id)
+    assert device
+    assert device.manufacturer == "Ubiquiti"
+    assert device.name == camera_obj.name
+    assert device.model == camera_obj.market_name or camera_obj.type
+    assert device.model_id == camera_obj.type
 
     return entity_id
 
@@ -423,7 +431,7 @@ async def test_camera_websocket_disconnected(
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
-    assert state and state.state == STATE_IDLE
+    assert state and state.state == CameraState.IDLE
 
     # websocket disconnects
     ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
@@ -437,7 +445,7 @@ async def test_camera_websocket_disconnected(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state and state.state == STATE_IDLE
+    assert state and state.state == CameraState.IDLE
 
 
 async def test_camera_ws_update(

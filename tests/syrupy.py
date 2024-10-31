@@ -132,6 +132,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         """Prepare a Home Assistant area registry entry for serialization."""
         serialized = AreaRegistryEntrySnapshot(dataclasses.asdict(data) | {"id": ANY})
         serialized.pop("_json_repr")
+        serialized.pop("_cache")
         return serialized
 
     @classmethod
@@ -156,6 +157,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serialized["via_device_id"] = ANY
         if serialized["primary_config_entry"] is not None:
             serialized["primary_config_entry"] = ANY
+        serialized.pop("_cache")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
@@ -182,6 +184,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             }
         )
         serialized.pop("categories")
+        serialized.pop("_cache")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
@@ -194,7 +197,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         cls, data: ir.IssueEntry
     ) -> SerializableData:
         """Prepare a Home Assistant issue registry entry for serialization."""
-        return IssueRegistryItemSnapshot(data.to_json() | {"created": ANY})
+        return IssueRegistryItemSnapshot(dataclasses.asdict(data) | {"created": ANY})
 
     @classmethod
     def _serializable_state(cls, data: State) -> SerializableData:

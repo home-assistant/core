@@ -67,19 +67,17 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Attempt to import the existing configuration."""
-        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
         client = MPDClient()
         client.timeout = 30
         client.idletimeout = 10
         try:
             async with timeout(35):
-                await client.connect(import_config[CONF_HOST], import_config[CONF_PORT])
-                if CONF_PASSWORD in import_config:
-                    await client.password(import_config[CONF_PASSWORD])
+                await client.connect(import_data[CONF_HOST], import_data[CONF_PORT])
+                if CONF_PASSWORD in import_data:
+                    await client.password(import_data[CONF_PASSWORD])
                 with suppress(mpd.ConnectionError):
                     client.disconnect()
         except (
@@ -94,10 +92,10 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         return self.async_create_entry(
-            title=import_config.get(CONF_NAME, "Music Player Daemon"),
+            title=import_data.get(CONF_NAME, "Music Player Daemon"),
             data={
-                CONF_HOST: import_config[CONF_HOST],
-                CONF_PORT: import_config[CONF_PORT],
-                CONF_PASSWORD: import_config.get(CONF_PASSWORD),
+                CONF_HOST: import_data[CONF_HOST],
+                CONF_PORT: import_data[CONF_PORT],
+                CONF_PASSWORD: import_data.get(CONF_PASSWORD),
             },
         )

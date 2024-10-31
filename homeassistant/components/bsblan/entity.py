@@ -22,10 +22,10 @@ class BSBLanEntity(CoordinatorEntity[BSBLanUpdateCoordinator]):
     def __init__(self, coordinator: BSBLanUpdateCoordinator, data: BSBLanData) -> None:
         """Initialize BSBLan entity."""
         super().__init__(coordinator, data)
-        host = self.coordinator.config_entry.data["host"]
-        mac = self.coordinator.config_entry.data["mac"]
+        host = coordinator.config_entry.data["host"]
+        mac = data.device.MAC
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data.device.MAC)},
+            identifiers={(DOMAIN, mac)},
             connections={(CONNECTION_NETWORK_MAC, format_mac(mac))},
             name=data.device.name,
             manufacturer="BSBLAN Inc.",

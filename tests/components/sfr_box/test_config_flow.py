@@ -207,15 +207,7 @@ async def test_reauth(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) 
     """Test the start of the config flow."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry_with_auth.entry_id,
-            "unique_id": config_entry_with_auth.unique_id,
-        },
-        data=config_entry_with_auth.data,
-    )
+    result = await config_entry_with_auth.start_reauth_flow(hass)
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SchlageDataUpdateCoordinator
+from .coordinator import LockData, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 _SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
@@ -35,15 +35,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors based on a config entry."""
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        SchlageBatterySensor(
-            coordinator=coordinator,
-            description=description,
-            device_id=device_id,
+
+    def _add_new_locks(locks: dict[str, LockData]) -> None:
+        async_add_entities(
+            SchlageBatterySensor(
+                coordinator=coordinator,
+                description=description,
+                device_id=device_id,
+            )
+            for description in _SENSOR_DESCRIPTIONS
+            for device_id in locks
         )
-        for description in _SENSOR_DESCRIPTIONS
-        for device_id in coordinator.data.locks
-    )
+
+    _add_new_locks(coordinator.data.locks)
+    coordinator.new_locks_callbacks.append(_add_new_locks)
 
 
 class SchlageBatterySensor(SchlageEntity, SensorEntity):
@@ -64,5 +69,6 @@ class SchlageBatterySensor(SchlageEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = getattr(self._lock, self.entity_description.key)
-        return super()._handle_coordinator_update()
+        if self.device_id in self.coordinator.data.locks:
+            self._attr_native_value = getattr(self._lock, self.entity_description.key)
+        super()._handle_coordinator_update()
