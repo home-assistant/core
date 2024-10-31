@@ -3064,13 +3064,27 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
     @property
     def _config_entry_id(self) -> str:
-        """Return config entry id."""
+        """Return config entry id.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
         # This is the same as handler, but that's an implementation detail
+        if self.handler is None:
+            raise ValueError(
+                "The config entry id is not available during initialisation"
+            )
         return self.handler
 
     @callback
     def _get_config_entry(self) -> ConfigEntry:
-        """Return the config entry linked to the current options flow."""
+        """Return the config entry linked to the current options flow.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
+        if self.hass is None:
+            raise ValueError("The config entry is not available during initialisation")
         if entry := self.hass.config_entries.async_get_entry(self._config_entry_id):
             return entry
         raise UnknownEntry

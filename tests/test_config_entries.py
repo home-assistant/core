@@ -7259,6 +7259,17 @@ async def test_options_flow_config_entry(
             class _OptionsFlow(config_entries.OptionsFlow):
                 """Test flow."""
 
+                def __init__(self) -> None:
+                    """Test initialisation."""
+                    try:
+                        self.init_entry_id = self._config_entry_id
+                    except ValueError as err:
+                        self.init_entry_id = err
+                    try:
+                        self.init_entry = self._get_config_entry()
+                    except ValueError as err:
+                        self.init_entry = err
+
                 async def async_step_init(self, user_input=None):
                     """Test user step."""
                     errors = {}
@@ -7282,6 +7293,16 @@ async def test_options_flow_config_entry(
     options_flow = hass.config_entries.options._progress.get(result["flow_id"])
     assert isinstance(options_flow, config_entries.OptionsFlow)
     assert options_flow.handler == original_entry.entry_id
+    assert isinstance(options_flow.init_entry_id, ValueError)
+    assert (
+        str(options_flow.init_entry_id)
+        == "The config entry id is not available during initialisation"
+    )
+    assert isinstance(options_flow.init_entry, ValueError)
+    assert (
+        str(options_flow.init_entry)
+        == "The config entry is not available during initialisation"
+    )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
