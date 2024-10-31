@@ -32,6 +32,21 @@
       "no_server_found": "No LMS server found."
     }
   },
+  "options": {
+    "error": {
+      "value": "Values must be an integer greater than 0"
+    },
+    "step": {
+      "init": {
+        "title": "LMS Configuration",
+        "data": {
+          "browse_limit": "Number of items to return from media browser",
+          "volume_step": "Step when increasing or decreasing volume"
+        },
+        "description": "Configure settings for LMS"
+      }
+    }
+  },
   "services": {
     "call_method": {
       "name": "Call method",
@@ -101,21 +116,6 @@
       "other_player_count": {
         "name": "Player count off service",
         "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
-      }
-    }
-  },
-  "options": {
-    "error": {
-      "value": "Values must be an integer greater than 0"
-    },
-    "step": {
-      "init": {
-        "title": "LMS Configuration",
-        "data": {
-          "browse_limit": "Number of items to return from media browser",
-          "volume_step": "Step when increasing or decreasing volume"
-        },
-        "description": "Configure settings for LMS"
       }
     }
   }
