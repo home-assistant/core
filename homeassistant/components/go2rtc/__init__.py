@@ -37,7 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
 
-from .const import DOMAIN
+from .const import CONF_DEBUG_UI, DEBUG_UI_URL_MESSAGE, DOMAIN
 from .server import Server
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,9 +72,15 @@ _SUPPORTED_STREAMS = frozenset(
     )
 )
 
-
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Optional(CONF_URL): cv.url})},
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
+                vol.Exclusive(CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.boolean,
+            }
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -104,7 +110,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return False
 
         # HA will manage the binary
-        server = Server(hass, binary)
+        server = Server(
+            hass, binary, enable_ui=config.get(DOMAIN, {}).get(CONF_DEBUG_UI, False)
+        )
         await server.start()
 
         async def on_stop(event: Event) -> None:
