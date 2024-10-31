@@ -7266,7 +7266,7 @@ async def test_options_flow_config_entry(
                     except ValueError as err:
                         self.init_entry_id = err
                     try:
-                        self.init_entry = self._config_entry
+                        self.init_entry = self.config_entry
                     except ValueError as err:
                         self.init_entry = err
 
@@ -7279,7 +7279,7 @@ async def test_options_flow_config_entry(
 
                         errors["entry_id"] = self._config_entry_id
                         try:
-                            errors["entry"] = self._config_entry
+                            errors["entry"] = self.config_entry
                         except config_entries.UnknownEntry as err:
                             errors["entry"] = err
 
