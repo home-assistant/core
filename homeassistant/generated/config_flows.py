@@ -336,6 +336,7 @@ FLOWS = {
         "litterrobot",
         "livisi",
         "local_calendar",
+        "local_file",
         "local_ip",
         "local_todo",
         "locative",
