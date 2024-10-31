@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, Mock, patch
 from fluss_api import FlussApiClient
 import pytest
 
-from homeassistant.components.fluss.button import FlussButton, async_setup_entry
+from homeassistant.components.fluss.button import (
+    FlussButton,
+    async_setup_entry,
+    validate_device,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -112,3 +116,64 @@ async def test_async_setup_entry_exception(
 
     with pytest.raises(Exception):  # noqa: B017
         await async_setup_entry(mock_hass, mock_entry, async_add_entities)
+
+
+@pytest.mark.asyncio
+async def test_fluss_button_initialization_success() -> None:
+    """Test successful initialization of FlussButton."""
+    mock_api = Mock(spec=FlussApiClient)
+    device = {"deviceId": "123", "deviceName": "Test Device"}
+
+    button = FlussButton(api=mock_api, device=device)
+
+    assert button.name == "Test Device"
+    assert button._attr_unique_id == "fluss_123"
+
+
+@pytest.mark.asyncio
+async def test_fluss_button_initialization_missing_device_id() -> None:
+    """Test initialization of FlussButton with missing deviceId raises ValueError."""
+    mock_api = Mock(spec=FlussApiClient)
+    device = {"deviceName": "Test Device"}  # Missing 'deviceId'
+
+    with pytest.raises(
+        ValueError, match="Device missing required 'deviceId' attribute."
+    ):
+        FlussButton(api=mock_api, device=device)
+
+
+@pytest.mark.asyncio
+async def test_fluss_button_async_press_success() -> None:
+    """Test the async_press method of FlussButton."""
+    mock_api = Mock(spec=FlussApiClient)
+    device = {"deviceId": "123"}
+
+    button = FlussButton(api=mock_api, device=device)
+
+    # Mock the async_trigger_device method to ensure it gets called
+    mock_api.async_trigger_device = AsyncMock()
+
+    await button.async_press()
+
+    # Assert that the method was called with the correct deviceId
+    mock_api.async_trigger_device.assert_called_once_with("123")
+
+
+def test_validate_device_success() -> None:
+    """Test validate_device with valid device data."""
+    device = {"deviceId": "123", "deviceName": "Test Device"}
+    assert validate_device(device) is True  # Should return True
+
+
+def test_validate_device_failure_not_a_dict() -> None:
+    """Test validate_device with a non-dictionary device."""
+    device = ["deviceId", "123"]  # Invalid data type
+    with pytest.raises(ValueError, match="Invalid device data: 'deviceId' is required"):
+        validate_device(device)
+
+
+def test_validate_device_failure_missing_device_id() -> None:
+    """Test validate_device with missing deviceId."""
+    device = {"deviceName": "Test Device"}  # Missing 'deviceId'
+    with pytest.raises(ValueError, match="Invalid device data: 'deviceId' is required"):
+        validate_device(device)

@@ -31,8 +31,11 @@ class FlussEntity(Entity):
 
     def _update_entry_data(self) -> None:
         """Update the entry data if necessary."""
-        data = dict(self.entry.data)
-        self.hass.config_entries.async_update_entry(self.entry, data=data)
+        new_address = getattr(self.device, "unique_id", None)
+        new_data = {**self.entry.data, "address": new_address}
+
+        if new_data != self.entry.data:
+            self.hass.config_entries.async_update_entry(self.entry, data=new_data)
 
     async def async_update(self):
         """Fetch new state data for the entity."""
