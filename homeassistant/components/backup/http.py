@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-from .manager import BaseBackupManager
+from .manager import BackupManager
 
 
 @callback
@@ -36,7 +36,7 @@ class DownloadBackupView(HomeAssistantView):
         if not request["hass_user"].is_admin:
             return Response(status=HTTPStatus.UNAUTHORIZED)
 
-        manager: BaseBackupManager = request.app[KEY_HASS].data[DOMAIN]
+        manager: BackupManager = request.app[KEY_HASS].data[DOMAIN]
         backup = await manager.async_get_backup(slug=slug)
 
         if backup is None or not backup.path.exists():
