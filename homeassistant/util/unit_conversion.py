@@ -6,12 +6,11 @@ from collections.abc import Callable
 from functools import lru_cache
 
 from homeassistant.const import (
-    CONCENTRATION_MILLIGRAMS_PER_DECILITER,
-    CONCENTRATION_MILLIMOLS_PER_LITER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -180,13 +179,10 @@ class BloodSugarLevelConverter(BaseUnitConverter):
 
     UNIT_CLASS = "blood_sugar_level"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MILLIGRAMS_PER_DECILITER: 18,
-        CONCENTRATION_MILLIMOLS_PER_LITER: 1,
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
+        UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER: 1,
     }
-    VALID_UNITS = {
-        CONCENTRATION_MILLIGRAMS_PER_DECILITER,
-        CONCENTRATION_MILLIMOLS_PER_LITER,
-    }
+    VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
 
 
 class ConductivityConverter(BaseUnitConverter):

@@ -11,7 +11,7 @@ from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE, CONCENTRATION_MILLIGRAMS_PER_DECILITER
+from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -38,7 +38,9 @@ class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
     _attr_device_class = SensorDeviceClass.BLOOD_SUGAR_LEVEL
-    _attr_native_unit_of_measurement = CONCENTRATION_MILLIGRAMS_PER_DECILITER
+    _attr_native_unit_of_measurement = (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    )
     _attr_icon = "mdi:cloud-question"
 
     def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None) -> None:

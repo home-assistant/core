@@ -8,11 +8,10 @@ from itertools import chain
 import pytest
 
 from homeassistant.const import (
-    CONCENTRATION_MILLIGRAMS_PER_DECILITER,
-    CONCENTRATION_MILLIMOLS_PER_LITER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -85,8 +84,8 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
     BloodSugarLevelConverter: (
-        CONCENTRATION_MILLIGRAMS_PER_DECILITER,
-        CONCENTRATION_MILLIMOLS_PER_LITER,
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER,
         18,
     ),
     ConductivityConverter: (
@@ -142,15 +141,15 @@ _CONVERTED_VALUE: dict[
     BloodSugarLevelConverter: [
         (
             90,
-            CONCENTRATION_MILLIGRAMS_PER_DECILITER,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
             5,
-            CONCENTRATION_MILLIMOLS_PER_LITER,
+            UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER,
         ),
         (
             1,
-            CONCENTRATION_MILLIMOLS_PER_LITER,
+            UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER,
             18,
-            CONCENTRATION_MILLIGRAMS_PER_DECILITER,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         ),
     ],
     ConductivityConverter: [

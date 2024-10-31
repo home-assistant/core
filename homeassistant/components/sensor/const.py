@@ -10,8 +10,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_DECILITER,
-    CONCENTRATION_MILLIMOLS_PER_LITER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -19,6 +17,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -534,10 +533,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.AQI: {None},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
-    SensorDeviceClass.BLOOD_SUGAR_LEVEL: {
-        CONCENTRATION_MILLIGRAMS_PER_DECILITER,
-        CONCENTRATION_MILLIMOLS_PER_LITER,
-    },
+    SensorDeviceClass.BLOOD_SUGAR_LEVEL: set(UnitOfBloodGlucoseConcentration),
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
