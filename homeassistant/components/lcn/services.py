@@ -16,12 +16,16 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.util.json import JsonObjectType
 
 from .const import (
     CONF_GROUP,
@@ -123,7 +127,7 @@ class LcnServiceCall:
             device_id
         ]
 
-    async def async_call_service(self, service: ServiceCall) -> JsonObjectType | None:
+    async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""
         raise NotImplementedError
 
@@ -447,7 +451,7 @@ class Pck(LcnServiceCall):
 
 
 class AddressToDeviceId(LcnServiceCall):
-    """Get device_id from LCN address string."""
+    """Get device_id from LCN address."""
 
     schema = vol.Schema(
         {
@@ -461,7 +465,7 @@ class AddressToDeviceId(LcnServiceCall):
     )
     supports_response = SupportsResponse.ONLY
 
-    async def async_call_service(self, service: ServiceCall) -> JsonObjectType:
+    async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""
         address: AddressType = (
             service.data[CONF_SEGMENT_ID],
