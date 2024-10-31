@@ -30,13 +30,10 @@ async def setup_integration_from_fixtures(
     """Set up MusicAssistant integration with fixture data."""
     players = create_players_from_fixture()
     music_assistant_client.players._players = {x.player_id: x for x in players}
-    # music_assistant_client.players.__iter__.return_value = iter(players)
     player_queues = create_player_queues_from_fixture()
     music_assistant_client.player_queues._queues = {
         x.queue_id: x for x in player_queues
     }
-    # music_assistant_client.player_queues.__iter__.return_value = iter(player_queues)
-
     config_entry = MockConfigEntry(
         domain="music_assistant", data={"url": "http://mock-music_assistant-server-url"}
     )
