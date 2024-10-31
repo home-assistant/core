@@ -1,0 +1,13 @@
+{
+  "domain": "ekeybionyx",
+  "name": "Ekey Bionyx",
+  "codeowners": ["@richardpolzer"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "http"],
+  "documentation": "https://www.home-assistant.io/integrations/ekeybionyx",
+  "homekit": {},
+  "iot_class": "local_push",
+  "requirements": ["ekey-bionyxpy==0.0.3"],
+  "ssdp": [],
+  "zeroconf": []
+}
