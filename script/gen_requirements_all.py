@@ -205,6 +205,10 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# 5.0.0 breaks Timeout as a context manager
+# TypeError: 'Timeout' object does not support the context manager protocol
+async-timeout==4.0.3
 """
 
 GENERATED_MESSAGE = (
