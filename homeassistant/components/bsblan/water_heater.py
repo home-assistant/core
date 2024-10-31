@@ -88,9 +88,6 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-
         try:
             await self.coordinator.client.set_hot_water(nominal_setpoint=temperature)
         except BSBLANError as err:
@@ -105,13 +102,6 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         bsblan_mode = OPERATION_MODES_REVERSE.get(operation_mode)
-        if bsblan_mode is None:
-            raise HomeAssistantError(
-                f"Invalid operation mode: {operation_mode}",
-                translation_domain=DOMAIN,
-                translation_key="invalid_operation_mode",
-            )
-
         try:
             await self.coordinator.client.set_hot_water(operating_mode=bsblan_mode)
         except BSBLANError as err:
