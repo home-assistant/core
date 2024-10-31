@@ -33,8 +33,8 @@ from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOM
 from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
-    DOMAIN,
     DEBUG_UI_URL_MESSAGE,
+    DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
