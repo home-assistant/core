@@ -294,14 +294,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     async def transformation(call: ServiceCall) -> ServiceResponse:
         """User a transformation item on a player character."""
 
-        entry: HabiticaConfigEntry | None
-        if not (
-            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
         ITEMID_MAP = {
             "snowball": {"itemId": "snowball"},
