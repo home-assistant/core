@@ -37,7 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
 
-from .const import CONF_DEBUG_UI, DOMAIN, EXCLUSE_ERROR_MESSAGE
+from .const import CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
 from .server import Server
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,8 +76,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Exclusive(CONF_URL, DOMAIN, EXCLUSE_ERROR_MESSAGE): cv.url,
-                vol.Exclusive(CONF_DEBUG_UI, DOMAIN, EXCLUSE_ERROR_MESSAGE): cv.boolean,
+                vol.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
+                vol.Exclusive(CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.boolean,
             }
         )
     },

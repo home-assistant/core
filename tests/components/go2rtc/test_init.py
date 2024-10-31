@@ -34,7 +34,7 @@ from homeassistant.components.go2rtc import WebRTCProvider
 from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DOMAIN,
-    EXCLUSE_ERROR_MESSAGE,
+    DEBUG_UI_URL_MESSAGE,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
@@ -483,7 +483,7 @@ ERR_CONNECT_RETRY = (
 )
 _INVALID_CONFIG = "Invalid config for 'go2rtc': "
 ERR_INVALID_URL = _INVALID_CONFIG + "invalid url"
-ERR_EXLUSIVE = _INVALID_CONFIG + EXCLUSE_ERROR_MESSAGE
+ERR_EXCLUSIVE = _INVALID_CONFIG + DEBUG_UI_URL_MESSAGE
 ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
 
 
@@ -520,7 +520,7 @@ async def test_non_user_setup_with_error(
             {DOMAIN: {CONF_URL: "http://localhost:1984", CONF_DEBUG_UI: True}},
             None,
             True,
-            ERR_EXLUSIVE,
+            ERR_EXCLUSIVE,
         ),
     ],
 )
