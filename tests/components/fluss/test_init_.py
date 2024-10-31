@@ -89,7 +89,8 @@ async def test_async_setup_entry_success(mock_hass, mock_entry) -> None:
 
         # Verify FlussApiClient was initialized with correct parameters
         mock_api_client_class.assert_called_once_with(
-            mock_entry.data["api_key"], mock_hass
+            mock_entry.data["api_key"],
+            "https://zgekzokxrl.execute-api.eu-west-1.amazonaws.com/v1/api/",
         )
 
         assert result is True

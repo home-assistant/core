@@ -16,7 +16,7 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CONF_API_KEY, CONF_BASE_URL, DOMAIN  # noqa: F811
 
 LOGGER = logging.getLogger(__package__)
 
@@ -27,7 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fluss+ from a config entry."""
 
     try:
-        api = FlussApiClient(entry.data[CONF_API_KEY], hass)
+        api = FlussApiClient(
+            entry.data[CONF_API_KEY],
+            entry.data.get(
+                CONF_BASE_URL,
+                "https://zgekzokxrl.execute-api.eu-west-1.amazonaws.com/v1/api/",
+            ),
+        )
     except FlussApiClientAuthenticationError as e:
         LOGGER.error("Authentication error initializing FlussApiClient: %s", e)
         raise ConfigEntryAuthFailed from e
