@@ -4807,7 +4807,6 @@ async def test_reauth_reconfigure_missing_entry(
         await manager.flow.async_init("test", context={"source": source})
     await hass.async_block_till_done()
 
-    # Flow still created, but deprecation logged
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
 
