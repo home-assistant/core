@@ -85,10 +85,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
 async def build_item_response(
     entity: MediaPlayerEntity,
     player: Player,
-    payload: dict[
-        str,
-        str | None,
-    ],
+    payload: dict[str, str | None],
     browse_limit: int,
 ) -> BrowseMedia:
     """Create response payload for search described by payload."""
