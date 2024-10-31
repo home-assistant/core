@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
+from uuid import UUID
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
@@ -86,7 +87,7 @@ class HassIODiscovery(HomeAssistantView):
         """Handle new discovery requests."""
         # Fetch discovery data and prevent injections
         try:
-            data = await self._supervisor_client.discovery.get(uuid)
+            data = await self._supervisor_client.discovery.get(UUID(uuid))
         except SupervisorError as err:
             _LOGGER.error("Can't read discovery data: %s", err)
             raise HTTPServiceUnavailable from None
@@ -104,7 +105,7 @@ class HassIODiscovery(HomeAssistantView):
     async def async_rediscover(self, uuid: str) -> None:
         """Rediscover add-on when config entry is removed."""
         try:
-            data = await self._supervisor_client.discovery.get(uuid)
+            data = await self._supervisor_client.discovery.get(UUID(uuid))
         except SupervisorError as err:
             _LOGGER.debug("Can't read discovery data: %s", err)
         else:
@@ -130,11 +131,11 @@ class HassIODiscovery(HomeAssistantView):
                 config=data.config,
                 name=addon_info.name,
                 slug=data.addon,
-                uuid=data.uuid,
+                uuid=str(data.uuid),
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,
-                key=data.uuid,
+                key=str(data.uuid),
                 version=1,
             ),
         )
@@ -146,7 +147,7 @@ class HassIODiscovery(HomeAssistantView):
 
         # Check if really deletet / prevent injections
         try:
-            data = await self._supervisor_client.discovery.get(uuid)
+            await self._supervisor_client.discovery.get(UUID(uuid))
         except SupervisorError:
             pass
         else:

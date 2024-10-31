@@ -244,7 +244,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.0
+aiohasupervisor==0.2.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.5
@@ -396,7 +396,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.1.0
+aiowithings==3.1.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -950,7 +950,7 @@ hole==0.8.0
 holidays==0.59
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241030.0
+home-assistant-frontend==20241031.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.30
