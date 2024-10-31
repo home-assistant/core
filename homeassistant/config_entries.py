@@ -1267,8 +1267,7 @@ class ConfigEntriesFlowManager(
         } and "entry_id" not in context:
             # Deprecated in 2024.12, should fail in 2025.12
             report(
-                f"initialises a {source} flow for integration {handler} without "
-                "a link to the config entry. This will stop working in 2025.12",
+                f"initialises a {source} flow without a link to the config entry",
                 error_if_integration=False,
                 error_if_core=True,
             )
