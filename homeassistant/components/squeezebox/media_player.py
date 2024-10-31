@@ -62,7 +62,7 @@ from .const import (
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 
 if TYPE_CHECKING:
-    from . import SqueezeboxConfigEntry
+    from . import SqueezeboxConfigEntry, SqueezeboxOptions
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -120,7 +120,9 @@ async def async_setup_entry(
     # Add media player entities when discovered
     async def _player_discovered(player: SqueezeBoxPlayerUpdateCoordinator) -> None:
         _LOGGER.debug("Setting up media_player entity for player %s", player)
-        async_add_entities([SqueezeBoxMediaPlayerEntity(player)])
+        async_add_entities(
+            [SqueezeBoxMediaPlayerEntity(player, entry.runtime_data.options)]
+        )
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
@@ -185,8 +187,7 @@ class SqueezeBoxMediaPlayerEntity(
     _last_update: datetime | None = None
 
     def __init__(
-        self,
-        coordinator: SqueezeBoxPlayerUpdateCoordinator,
+        self, coordinator: SqueezeBoxPlayerUpdateCoordinator, options: SqueezeboxOptions
     ) -> None:
         """Initialize the SqueezeBox device."""
         super().__init__(coordinator)
@@ -214,6 +215,8 @@ class SqueezeBoxMediaPlayerEntity(
             model=player.model,
             manufacturer=_manufacturer,
         )
+        self._browse_limit = options.browse_limit
+        self._volume_step = options.volume_step
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -368,12 +371,12 @@ class SqueezeBoxMediaPlayerEntity(
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
-        await self._player.async_set_volume("+5")
+        await self._player.async_set_volume("+" + str(self._volume_step))
         await self.coordinator.async_refresh()
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        await self._player.async_set_volume("-5")
+        await self._player.async_set_volume("-" + str(self._volume_step))
         await self.coordinator.async_refresh()
 
     async def async_set_volume_level(self, volume: float) -> None:
@@ -466,7 +469,9 @@ class SqueezeBoxMediaPlayerEntity(
                     "search_id": media_id,
                     "search_type": MediaType.PLAYLIST,
                 }
-                playlist = await generate_playlist(self._player, payload)
+                playlist = await generate_playlist(
+                    self._player, payload, self._browse_limit
+                )
             except BrowseError:
                 # a list of urls
                 content = json.loads(media_id)
@@ -477,7 +482,9 @@ class SqueezeBoxMediaPlayerEntity(
                 "search_id": media_id,
                 "search_type": media_type,
             }
-            playlist = await generate_playlist(self._player, payload)
+            playlist = await generate_playlist(
+                self._player, payload, self._browse_limit
+            )
 
             _LOGGER.debug("Generated playlist: %s", playlist)
 
@@ -587,7 +594,9 @@ class SqueezeBoxMediaPlayerEntity(
             "search_id": media_content_id,
         }
 
-        return await build_item_response(self, self._player, payload)
+        return await build_item_response(
+            self, self._player, payload, self._browse_limit
+        )
 
     async def async_get_browse_image(
         self,
