@@ -83,8 +83,6 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.coordinator.data.dhw.nominal_setpoint.value == "---":
-            return None
         return float(self.coordinator.data.dhw.nominal_setpoint.value)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
