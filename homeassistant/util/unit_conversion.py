@@ -174,7 +174,7 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
-class BloodSugarLevelConverter(BaseUnitConverter):
+class BloodGlugoseConcentrationConverter(BaseUnitConverter):
     """Utility to convert blood sugar level values."""
 
     UNIT_CLASS = "blood_glucose_concentration"

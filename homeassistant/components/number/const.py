@@ -111,7 +111,7 @@ class NumberDeviceClass(StrEnum):
     """
 
     BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
-    """Blood sugar level.
+    """Blood glucose concentration.
 
     Unit of measurement: `mg/dL`, `mmol/L`
     """

@@ -152,7 +152,7 @@
       "name": "Battery"
     },
     "blood_glucose_concentration": {
-      "name": "Blood sugar level"
+      "name": "Blood glucose concentration"
     },
     "carbon_monoxide": {
       "name": "Carbon monoxide"

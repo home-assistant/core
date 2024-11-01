@@ -48,7 +48,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
-    BloodSugarLevelConverter,
+    BloodGlugoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -130,7 +130,7 @@ class SensorDeviceClass(StrEnum):
     """
 
     BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
-    """Blood sugar level.
+    """Blood glucose concentration.
 
     Unit of measurement: `mg/dL`, `mmol/L`
     """
@@ -501,7 +501,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
-    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodSugarLevelConverter,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlugoseConcentrationConverter,
     SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
