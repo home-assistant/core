@@ -60,7 +60,7 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
         self._attr_operation_list = list(OPERATION_MODES_REVERSE.keys())
 
         # Set temperature limits based on device capabilities
-        if data.coordinator.data.dhw.reduced_setpoint.unit in ("&deg;C", "°C"):
+        if data.static.min_temp.unit in ("&deg;C", "°C"):
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         else:
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT

@@ -3,11 +3,12 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError
+from bsblan import BSBLANError, StaticState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     STATE_ECO,
@@ -21,7 +22,12 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 
 ENTITY_ID = "water_heater.bsb_lan"
 
@@ -69,9 +75,9 @@ async def test_water_heater_entity_properties(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
 
-    # Test when nominal setpoint is "---"
+    # Test when nominal setpoint is "10"
     mock_setpoint = MagicMock()
-    mock_setpoint.value = "---"
+    mock_setpoint.value = 10
     mock_bsblan_with_methods.hot_water_state.return_value.nominal_setpoint = (
         mock_setpoint
     )
@@ -81,7 +87,7 @@ async def test_water_heater_entity_properties(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes.get("temperature") is None
+    assert state.attributes.get("temperature") == 10
 
 
 @pytest.mark.parametrize(
@@ -217,3 +223,31 @@ async def test_operation_mode_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("static_file"),
+    [
+        ("static.json"),
+        ("static_F.json"),
+    ],
+)
+async def test_temperature_unit(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    static_file: str,
+) -> None:
+    """Test Celsius and Fahrenheit temperature units."""
+
+    static_data = load_json_object_fixture(static_file, DOMAIN)
+
+    mock_bsblan.static_values.return_value = StaticState.from_dict(static_data)
+
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
