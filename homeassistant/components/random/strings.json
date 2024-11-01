@@ -83,6 +83,7 @@
     "sensor_device_class": {
       "options": {
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
+        "area": "[%key:component::sensor::entity_component::area::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
         "battery": "[%key:component::sensor::entity_component::battery::name%]",

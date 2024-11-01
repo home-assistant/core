@@ -3,6 +3,7 @@
   "device_automation": {
     "condition_type": {
       "is_apparent_power": "Current {entity_name} apparent power",
+      "is_area": "Current {entity_name} area",
       "is_aqi": "Current {entity_name} air quality index",
       "is_atmospheric_pressure": "Current {entity_name} atmospheric pressure",
       "is_battery_level": "Current {entity_name} battery level",
@@ -136,6 +137,9 @@
     },
     "duration": {
       "name": "Duration"
+    },
+    "area": {
+      "name": "Area"
     },
     "apparent_power": {
       "name": "Apparent power"

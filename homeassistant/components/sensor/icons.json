@@ -3,6 +3,9 @@
     "_": {
       "default": "mdi:eye"
     },
+    "area": {
+      "default": "mdi:flash"
+    },
     "apparent_power": {
       "default": "mdi:flash"
     },

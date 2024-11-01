@@ -34,6 +34,9 @@
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
     },
+    "area": {
+      "name": "[%key:component::sensor::entity_component::area::name%]"
+    },
     "aqi": {
       "name": "[%key:component::sensor::entity_component::aqi::name%]"
     },
