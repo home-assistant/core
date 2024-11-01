@@ -37,7 +37,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
@@ -7239,7 +7239,7 @@ async def test_context_no_leak(hass: HomeAssistant) -> None:
 async def test_options_flow_config_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test _get_context_entry behavior."""
+    """Test _config_entry_id and config_entry properties in options flow."""
     original_entry = MockConfigEntry(domain="test", data={})
     original_entry.add_to_hass(hass)
 
@@ -7330,6 +7330,66 @@ async def test_options_flow_config_entry(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "abort"
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_options_flow_deprecated_config_entry_setter(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setting config_entry explicitly still works."""
+    original_entry = MockConfigEntry(domain="test", data={})
+    original_entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlow):
+                """Test flow."""
+
+                def __init__(self, entry) -> None:
+                    """Test initialisation."""
+                    self.config_entry = entry
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    errors = {}
+                    if user_input is not None:
+                        if user_input.get("abort"):
+                            return self.async_abort(reason="abort")
+
+                        errors["entry_id"] = self._config_entry_id
+                        try:
+                            errors["entry"] = self.config_entry
+                        except config_entries.UnknownEntry as err:
+                            errors["entry"] = err
+
+                    return self.async_show_form(step_id="init", errors=errors)
+
+            return _OptionsFlow(config_entry)
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.options.async_init(original_entry.entry_id)
+
+    options_flow = hass.config_entries.options._progress.get(result["flow_id"])
+    assert options_flow.config_entry is original_entry
+
+    assert (
+        "Detected that integration 'hue' sets option flow config_entry explicitly, "
+        "which is deprecated and will stop working in 2025.12" in caplog.text
+    )
 
 
 async def test_add_description_placeholder_automatically(

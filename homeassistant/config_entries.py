@@ -3103,7 +3103,7 @@ class OptionsFlow(ConfigEntryBaseFlow):
             "sets option flow config_entry explicitly, which is deprecated "
             "and will stop working in 2025.12",
             error_if_integration=False,
-            error_if_core=False,
+            error_if_core=True,
         )
         self._config_entry = value
 
