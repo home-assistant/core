@@ -2,10 +2,10 @@
 
 import voluptuous as vol
 
-from homeassistant.components.hassio import is_hassio
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_MANAGER, DOMAIN, LOGGER
