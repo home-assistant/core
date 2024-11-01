@@ -108,19 +108,24 @@ def _extract_backup(
             key=password_to_key(password),
             mode="r",
         ) as istf:
-            for member in istf.getmembers():
-                if member.name == "data":
-                    continue
-                member.name = member.name.replace("data/", "")
-            _clear_configuration_directory(config_dir)
             istf.extractall(
-                path=config_dir,
-                members=[
-                    member
-                    for member in securetar.secure_path(istf)
-                    if member.name != "data"
-                ],
+                path=Path(
+                    tempdir,
+                    "homeassistant",
+                ),
+                members=securetar.secure_path(istf),
                 filter="fully_trusted",
+            )
+            _clear_configuration_directory(config_dir)
+            shutil.copytree(
+                Path(
+                    tempdir,
+                    "homeassistant",
+                    "data",
+                ),
+                config_dir,
+                dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns(*(KEEP_PATHS)),
             )
 
 
