@@ -37,7 +37,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -150,7 +150,6 @@ class MoldIndicator(SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        self._state: str | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._indoor_temp_sensor = indoor_temp_sensor
@@ -272,7 +271,7 @@ class MoldIndicator(SensorEntity):
                 # re-calculate dewpoint and mold indicator
                 self._calc_dewpoint()
                 self._calc_moldindicator()
-                if self._state is None:
+                if self._attr_native_value is None:
                     self._attr_available = False
                 else:
                     self._attr_available = True
@@ -401,7 +400,7 @@ class MoldIndicator(SensorEntity):
         # re-calculate dewpoint and mold indicator
         self._calc_dewpoint()
         self._calc_moldindicator()
-        if self._state is None:
+        if self._attr_native_value is None:
             self._attr_available = False
             self._dewpoint = None
             self._crit_temp = None
@@ -437,7 +436,7 @@ class MoldIndicator(SensorEntity):
                 self._dewpoint,
                 self._calib_factor,
             )
-            self._state = None
+            self._attr_native_value = None
             self._attr_available = False
             self._crit_temp = None
             return
@@ -468,18 +467,13 @@ class MoldIndicator(SensorEntity):
 
         # check bounds and format
         if crit_humidity > 100:
-            self._state = "100"
+            self._attr_native_value = "100"
         elif crit_humidity < 0:
-            self._state = "0"
+            self._attr_native_value = "0"
         else:
-            self._state = f"{int(crit_humidity):d}"
+            self._attr_native_value = f"{int(crit_humidity):d}"
 
-        _LOGGER.debug("Mold indicator humidity: %s", self._state)
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the entity."""
-        return self._state
+        _LOGGER.debug("Mold indicator humidity: %s", self.native_value)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

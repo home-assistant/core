@@ -3,14 +3,17 @@
 from dataclasses import dataclass
 import logging
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .api import HomeConnectDevice
 from .const import (
@@ -181,3 +184,25 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
         )
         self._attr_unique_id = f"{device.appliance.haId}-Door"
         self._attr_name = f"{device.appliance.name} Door"
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        items = entity_automations + entity_scripts
+        if not items:
+            return
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_binary_common_door_sensor_{self.entity_id}",
+            breaks_in_ha_version="2025.5.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_binary_common_door_sensor",
+            translation_placeholders={
+                "entity": self.entity_id,
+                "items": "\n".join([f"- {item}" for item in items]),
+            },
+        )

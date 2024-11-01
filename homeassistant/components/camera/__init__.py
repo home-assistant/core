@@ -6,7 +6,7 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import partial
@@ -18,7 +18,7 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
-from propcache import cached_property
+from propcache import cached_property, under_cached_property
 import voluptuous as vol
 from webrtc_models import RTCIceServer
 
@@ -175,6 +175,13 @@ class Image:
 
     content_type: str = attr.ib()
     content: bytes = attr.ib()
+
+
+@dataclass(frozen=True)
+class CameraCapabilities:
+    """Camera capabilities."""
+
+    frontend_stream_types: set[StreamType]
 
 
 @bind_hass
@@ -352,6 +359,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
+    websocket_api.async_register_command(hass, ws_camera_capabilities)
     async_register_ws(hass)
 
     await component.async_setup(config)
@@ -412,7 +420,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def get_ice_servers() -> list[RTCIceServer]:
         if hass.config.webrtc.ice_servers:
             return hass.config.webrtc.ice_servers
-        return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
+        return [
+            RTCIceServer(urls="stun:stun.home-assistant.io:80"),
+            RTCIceServer(urls="stun:stun.home-assistant.io:3478"),
+        ]
 
     async_register_ice_servers(hass, get_ice_servers)
     return True
@@ -463,6 +474,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def __init__(self) -> None:
         """Initialize a camera."""
+        self._cache: dict[str, Any] = {}
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
@@ -791,6 +803,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if old_provider != new_provider or old_legacy_provider != new_legacy_provider:
             self._webrtc_provider = new_provider
             self._legacy_webrtc_provider = new_legacy_provider
+            self._invalidate_camera_capabilities_cache()
             if write_state:
                 self.async_write_ha_state()
 
@@ -839,6 +852,33 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Close a WebRTC session."""
         if self._webrtc_provider:
             self._webrtc_provider.async_close_session(session_id)
+
+    @callback
+    def _invalidate_camera_capabilities_cache(self) -> None:
+        """Invalidate the camera capabilities cache."""
+        self._cache.pop("camera_capabilities", None)
+
+    @final
+    @under_cached_property
+    def camera_capabilities(self) -> CameraCapabilities:
+        """Return the camera capabilities."""
+        frontend_stream_types = set()
+        if CameraEntityFeature.STREAM in self.supported_features_compat:
+            if (
+                type(self).async_handle_web_rtc_offer
+                != Camera.async_handle_web_rtc_offer
+                or type(self).async_handle_async_webrtc_offer
+                != Camera.async_handle_async_webrtc_offer
+            ):
+                # The camera has a native WebRTC implementation
+                frontend_stream_types.add(StreamType.WEB_RTC)
+            else:
+                frontend_stream_types.add(StreamType.HLS)
+
+                if self._webrtc_provider:
+                    frontend_stream_types.add(StreamType.WEB_RTC)
+
+        return CameraCapabilities(frontend_stream_types)
 
 
 class CameraView(HomeAssistantView):
@@ -928,6 +968,24 @@ class CameraMjpegStream(CameraView):
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest from err
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/capabilities",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_capabilities(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get camera capabilities websocket command.
+
+    Async friendly.
+    """
+    camera = get_camera_from_entity_id(hass, msg["entity_id"])
+    connection.send_result(msg["id"], asdict(camera.camera_capabilities))
 
 
 @websocket_api.websocket_command(
