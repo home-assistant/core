@@ -46,7 +46,7 @@ DATA_SCHEMA_AUTH = vol.Schema(
 
 def validate_credentials(username: str, password: str) -> dict[str, Any]:
     """Validate credentials."""
-    errors: dict[str, Any] = {}
+    errors: dict[str, str] = {}
     try:
         YaleSmartAlarmClient(username, password)
     except AuthenticationError:
@@ -77,7 +77,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
@@ -103,7 +103,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of existing entry."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             reconfigure_entry = self._get_reconfigure_entry()
@@ -134,7 +134,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             username = user_input[CONF_USERNAME]
