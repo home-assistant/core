@@ -61,8 +61,8 @@ def mock_bsblan() -> Generator[MagicMock]:
         bsblan.hot_water_state.return_value = HotWaterState.from_json(
             load_fixture("dhw_state.json", DOMAIN)
         )
-        # mock get_temperature_unit
-        bsblan.get_temperature_unit.return_value = "°C"
+        # mock get_temperature_unit property
+        type(bsblan).get_temperature_unit = property(lambda self: "°C")
 
         yield bsblan
 
