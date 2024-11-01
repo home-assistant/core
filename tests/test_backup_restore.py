@@ -12,24 +12,24 @@ from .common import get_test_config_dir
 
 
 @pytest.mark.parametrize(
-    ("exists", "content", "expected"),
+    ("side_effect", "content", "expected"),
     [
-        (False, "", None),
-        (True, "", backup_restore.RestoreBackupFileContent(backup_file_path=Path(""))),
+        (FileNotFoundError, "", None),
+        (None, "", backup_restore.RestoreBackupFileContent(backup_file_path=Path(""))),
         (
-            True,
+            None,
             "test;",
             backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
         ),
         (
-            True,
+            None,
             "test;;;;",
             backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
         ),
     ],
 )
 def test_reading_the_instruction_contents(
-    exists: bool,
+    side_effect: Exception | None,
     content: str,
     expected: backup_restore.RestoreBackupFileContent | None,
 ) -> None:
@@ -38,7 +38,7 @@ def test_reading_the_instruction_contents(
         mock.patch(
             "pathlib.Path.read_text",
             return_value=content,
-            side_effect=FileNotFoundError if not exists else None,
+            side_effect=side_effect,
         ),
     ):
         read_content = backup_restore.restore_backup_file_content(
@@ -159,11 +159,11 @@ def test_removal_of_current_configuration_when_restoring() -> None:
             "pathlib.Path.iterdir",
             return_value=[x["path"] for x in mock_config_dir],
         ),
-        mock.patch("pathlib.Path.unlink") as unlinkmock,
+        mock.patch("pathlib.Path.unlink") as unlink_mock,
         mock.patch("shutil.rmtree") as rmtreemock,
     ):
         assert backup_restore.restore_backup(config_dir) is True
-        assert unlinkmock.call_count == 2
+        assert unlink_mock.call_count == 2
         assert (
             rmtreemock.call_count == 1
         )  # We have 2 directories in the config directory, but backups is kept
@@ -180,7 +180,7 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
     def _patched_path_read_text(path: Path, **kwargs):
         return '{"homeassistant": {"version": "2013.09.17"}, "compressed": false}'
 
-    getmembersmock = mock.MagicMock(
+    getmembers_mock = mock.MagicMock(
         return_value=[
             tarfile.TarInfo(name="data"),
             tarfile.TarInfo(name="data/../test"),
@@ -189,7 +189,7 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
             tarfile.TarInfo(name="data/www"),
         ]
     )
-    extractallmock = mock.MagicMock()
+    extractall_mock = mock.MagicMock()
 
     with (
         mock.patch(
@@ -201,9 +201,9 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         mock.patch(
             "tarfile.open",
             return_value=mock.MagicMock(
-                getmembers=getmembersmock,
-                extractall=extractallmock,
-                __iter__=lambda x: iter(getmembersmock.return_value),
+                getmembers=getmembers_mock,
+                extractall=extractall_mock,
+                __iter__=lambda x: iter(getmembers_mock.return_value),
             ),
         ),
         mock.patch("homeassistant.backup_restore.TemporaryDirectory"),
@@ -212,9 +212,9 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         mock.patch("pathlib.Path.iterdir", return_value=[]),
     ):
         assert backup_restore.restore_backup(config_dir) is True
-        assert getmembersmock.call_count == 1
-        assert extractallmock.call_count == 2
+        assert getmembers_mock.call_count == 1
+        assert extractall_mock.call_count == 2
 
         assert {
-            member.name for member in extractallmock.mock_calls[-1].kwargs["members"]
+            member.name for member in extractall_mock.mock_calls[-1].kwargs["members"]
         } == {".HA_VERSION", ".storage", "www"}
