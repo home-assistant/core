@@ -12,7 +12,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_ON, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
@@ -60,14 +60,9 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
         self._attr_operation_list = list(OPERATION_MODES_REVERSE.keys())
 
         # Set temperature limits based on device capabilities
-        if data.static.min_temp.unit in ("&deg;C", "°C"):
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        else:
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-        self._attr_min_temp = float(data.coordinator.data.dhw.reduced_setpoint.value)
-        self._attr_max_temp = float(
-            data.coordinator.data.dhw.nominal_setpoint_max.value
-        )
+        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit()
+        self._attr_min_temp = data.coordinator.data.dhw.reduced_setpoint.value
+        self._attr_max_temp = data.coordinator.data.dhw.nominal_setpoint_max.value
 
     @property
     def current_operation(self) -> str | None:
@@ -78,12 +73,12 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return float(self.coordinator.data.dhw.dhw_actual_value_top_temperature.value)
+        return self.coordinator.data.dhw.dhw_actual_value_top_temperature.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return float(self.coordinator.data.dhw.nominal_setpoint.value)
+        return self.coordinator.data.dhw.nominal_setpoint.value
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
