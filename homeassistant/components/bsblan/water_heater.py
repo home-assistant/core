@@ -47,7 +47,6 @@ async def async_setup_entry(
 class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     """Defines a BSBLAN water heater entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
