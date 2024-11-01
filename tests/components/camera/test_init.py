@@ -929,7 +929,8 @@ async def _test_capabilities(
         # Assert WebSocket response
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == {"frontend_stream_types": list(expected_types)}
+        assert msg["result"] == {"frontend_stream_types": ANY}
+        assert sorted(msg["result"]["frontend_stream_types"]) == sorted(expected_types)
 
     await test(expected_stream_types)
 
