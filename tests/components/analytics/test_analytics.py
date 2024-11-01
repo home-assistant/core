@@ -76,7 +76,7 @@ async def test_no_send(
     """Test send when no preferences are defined."""
     analytics = Analytics(hass)
     with patch(
-        "homeassistant.components.hassio.is_hassio",
+        "homeassistant.components.analytics.analytics.is_hassio",
         side_effect=Mock(return_value=False),
     ):
         assert not analytics.preferences[ATTR_BASE]
@@ -97,7 +97,7 @@ async def test_load_with_supervisor_diagnostics(hass: HomeAssistant) -> None:
             side_effect=Mock(return_value={"diagnostics": True}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
         ),
     ):
@@ -118,7 +118,7 @@ async def test_load_with_supervisor_without_diagnostics(hass: HomeAssistant) -> 
             side_effect=Mock(return_value={"diagnostics": False}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
         ),
     ):
@@ -219,8 +219,12 @@ async def test_send_base_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
+        ) as is_hassio_mock,
+        patch(
+            "homeassistant.helpers.system_info.is_hassio",
+            new=is_hassio_mock,
         ),
     ):
         await analytics.load()
@@ -314,8 +318,12 @@ async def test_send_usage_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
+        ) as is_hassio_mock,
+        patch(
+            "homeassistant.helpers.system_info.is_hassio",
+            new=is_hassio_mock,
         ),
     ):
         await analytics.send_analytics()
@@ -529,8 +537,12 @@ async def test_send_statistics_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
-            "homeassistant.components.hassio.is_hassio",
+            "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
+        ) as is_hassio_mock,
+        patch(
+            "homeassistant.helpers.system_info.is_hassio",
+            new=is_hassio_mock,
         ),
     ):
         await analytics.send_analytics()

@@ -1,0 +1,13 @@
+{
+  "domain": "music_assistant",
+  "name": "Music Assistant",
+  "after_dependencies": ["media_source", "media_player"],
+  "codeowners": ["@music-assistant"],
+  "config_flow": true,
+  "documentation": "https://music-assistant.io",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/music-assistant/hass-music-assistant/issues",
+  "loggers": ["music_assistant"],
+  "requirements": ["music-assistant-client==1.0.5"],
+  "zeroconf": ["_mass._tcp.local."]
+}
