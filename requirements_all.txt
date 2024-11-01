@@ -2626,6 +2626,7 @@ screenlogicpy==0.10.0
 scsgate==0.1.0
 
 # homeassistant.components.backup
+# homeassistant.components.cloud
 securetar==2024.11.0
 
 # homeassistant.components.sendgrid
