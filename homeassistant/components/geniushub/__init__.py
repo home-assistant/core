@@ -170,7 +170,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
                 )
 
     session = async_get_clientsession(hass)
-    unique_id: str
     if CONF_HOST in entry.data:
         client = GeniusHub(
             entry.data[CONF_HOST],
@@ -178,10 +177,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
             password=entry.data[CONF_PASSWORD],
             session=session,
         )
-        unique_id = entry.data[CONF_MAC]
     else:
         client = GeniusHub(entry.data[CONF_TOKEN], session=session)
-        unique_id = entry.entry_id
+
+    unique_id = entry.unique_id or entry.entry_id
 
     broker = entry.runtime_data = GeniusBroker(hass, client, unique_id)
 
