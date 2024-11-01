@@ -30,8 +30,14 @@ from .const import (
     ATTR_TASK,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
+    SERVICE_ABORT_QUEST,
+    SERVICE_ACCEPT_QUEST,
     SERVICE_API_CALL,
+    SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_LEAVE_QUEST,
+    SERVICE_REJECT_QUEST,
+    SERVICE_START_QUEST,
 )
 from .types import HabiticaConfigEntry
 
@@ -51,6 +57,12 @@ SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Required(ATTR_SKILL): cv.string,
         vol.Optional(ATTR_TASK): cv.string,
+    }
+)
+
+SERVICE_MANAGE_QUEST_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
     }
 )
 
@@ -159,6 +171,64 @@ def async_setup_services(hass: HomeAssistant) -> None:
         else:
             await coordinator.async_request_refresh()
             return response
+
+    async def manage_quests(call: ServiceCall) -> ServiceResponse:
+        """Accept, reject, start, leave or cancel quests."""
+        entry: HabiticaConfigEntry | None
+        if not (
+            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="entry_not_found",
+            )
+        coordinator = entry.runtime_data
+
+        COMMAND_MAP = {
+            SERVICE_ABORT_QUEST: "abort",
+            SERVICE_ACCEPT_QUEST: "accept",
+            SERVICE_CANCEL_QUEST: "cancel",
+            SERVICE_LEAVE_QUEST: "leave",
+            SERVICE_REJECT_QUEST: "reject",
+            SERVICE_START_QUEST: "force-start",
+        }
+        try:
+            return await coordinator.api.groups.party.quests[
+                COMMAND_MAP[call.service]
+            ].post()
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                ) from e
+            if e.status == HTTPStatus.UNAUTHORIZED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="quest_action_unallowed"
+                ) from e
+            if e.status == HTTPStatus.NOT_FOUND:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="quest_not_found"
+                ) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="service_call_exception"
+            ) from e
+
+    for service in (
+        SERVICE_ABORT_QUEST,
+        SERVICE_ACCEPT_QUEST,
+        SERVICE_CANCEL_QUEST,
+        SERVICE_LEAVE_QUEST,
+        SERVICE_REJECT_QUEST,
+        SERVICE_START_QUEST,
+    ):
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            manage_quests,
+            schema=SERVICE_MANAGE_QUEST_SCHEMA,
+            supports_response=SupportsResponse.ONLY,
+        )
 
     hass.services.async_register(
         DOMAIN,
