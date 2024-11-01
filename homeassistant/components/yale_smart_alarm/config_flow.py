@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -40,6 +40,14 @@ DATA_SCHEMA = vol.Schema(
 DATA_SCHEMA_AUTH = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_LOCK_CODE_DIGITS,
+        ): int,
     }
 )
 
@@ -139,7 +147,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class YaleOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class YaleOptionsFlowHandler(OptionsFlow):
     """Handle Yale options."""
 
     async def async_step_init(
@@ -153,13 +161,7 @@ class YaleOptionsFlowHandler(OptionsFlowWithConfigEntry):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Optional(
-                            CONF_LOCK_CODE_DIGITS,
-                        ): int,
-                    }
-                ),
+                OPTIONS_SCHEMA,
                 self.config_entry.options,
             ),
         )
