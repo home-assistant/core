@@ -45,7 +45,7 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
         contents = instruction_path.read_text(encoding="utf-8").split(";")
         return RestoreBackupFileContent(
             backup_file_path=Path(contents[0]),
-            password=contents[1] if len(contents) > 1 else None,
+            password=contents[1] or None if len(contents) > 1 else None,
         )
     except FileNotFoundError:
         return None

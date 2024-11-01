@@ -101,7 +101,10 @@ async def handle_restore(
     msg: dict[str, Any],
 ) -> None:
     """Restore a backup."""
-    await hass.data[DATA_MANAGER].async_restore_backup(msg["slug"])
+    await hass.data[DATA_MANAGER].async_restore_backup(
+        slug=msg["slug"],
+        password=msg.get("password"),
+    )
     connection.send_result(msg["id"])
 
 

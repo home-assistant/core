@@ -28,7 +28,7 @@ from .common import get_test_config_dir
             "test;",
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
-                password="",
+                password=None,
             ),
         ),
         (
@@ -44,7 +44,7 @@ from .common import get_test_config_dir
             "test;;;;",
             backup_restore.RestoreBackupFileContent(
                 backup_file_path=Path("test"),
-                password="",
+                password=None,
             ),
         ),
     ],
