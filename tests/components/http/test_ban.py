@@ -3,7 +3,7 @@
 from http import HTTPStatus
 from ipaddress import ip_address
 import os
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -34,14 +34,10 @@ BANNED_IPS_WITH_SUPERVISOR = [*BANNED_IPS, SUPERVISOR_IP]
 
 
 @pytest.fixture(name="hassio_env")
-def hassio_env_fixture():
+def hassio_env_fixture(supervisor_is_connected: AsyncMock):
     """Fixture to inject hassio env."""
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch(
-            "homeassistant.components.hassio.HassIO.is_connected",
-            return_value={"result": "ok", "data": {}},
-        ),
         patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}),
     ):
         yield

@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
 
@@ -21,11 +20,10 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,13 +33,13 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BleBoxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
     entities = [
-        BleBoxLightEntity(feature) for feature in product.features.get("lights", [])
+        BleBoxLightEntity(feature)
+        for feature in config_entry.runtime_data.features.get("lights", [])
     ]
     async_add_entities(entities, True)
 

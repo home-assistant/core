@@ -24,11 +24,11 @@ import logging
 from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 from rtsp_to_webrtc.interface import WebRTCClientInterface
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import camera
-from homeassistant.components.camera.webrtc import RTCIceServer, register_ice_server
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -59,10 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][CONF_STUN_SERVER] = entry.options.get(CONF_STUN_SERVER)
     if server := entry.options.get(CONF_STUN_SERVER):
 
-        async def get_server() -> RTCIceServer:
-            return RTCIceServer(urls=[server])
+        @callback
+        def get_servers() -> list[RTCIceServer]:
+            return [RTCIceServer(urls=[server])]
 
-        entry.async_on_unload(register_ice_server(hass, get_server))
+        entry.async_on_unload(camera.async_register_ice_servers(hass, get_servers))
 
     async def async_offer_for_stream_source(
         stream_source: str,
