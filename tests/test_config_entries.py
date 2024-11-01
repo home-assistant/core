@@ -7340,13 +7340,13 @@ async def test_options_flow_deprecated_config_entry_setter(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that setting config_entry explicitly still works."""
-    original_entry = MockConfigEntry(domain="test", data={})
+    original_entry = MockConfigEntry(domain="hue", data={})
     original_entry.add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)
 
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
-    mock_platform(hass, "test.config_flow", None)
+    mock_integration(hass, MockModule("hue", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "hue.config_flow", None)
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -7380,7 +7380,7 @@ async def test_options_flow_deprecated_config_entry_setter(
 
             return _OptionsFlow(config_entry)
 
-    with mock_config_flow("test", TestFlow):
+    with mock_config_flow("hue", TestFlow):
         result = await hass.config_entries.options.async_init(original_entry.entry_id)
 
     options_flow = hass.config_entries.options._progress.get(result["flow_id"])
