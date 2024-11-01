@@ -31,6 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
+THIRTY_SECONDS = 30 * 1000
+DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
+
 
 @dataclass
 class SpotifyCoordinatorData:
@@ -61,7 +64,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=DEFAULT_UPDATE_INTERVAL,
         )
         self.client = client
         self._playlist: Playlist | None = None
@@ -76,6 +79,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
 
     async def _async_update_data(self) -> SpotifyCoordinatorData:
         current = await self.client.get_playback()
+        self._calculate_next_update(current)
         if not current:
             return SpotifyCoordinatorData(
                 current_playback=None,
@@ -119,3 +123,20 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             audio_features=audio_features,
             dj_playlist=dj_playlist,
         )
+
+    def _calculate_next_update(self, state: PlaybackState | None) -> None:
+        """Calculate the next update time."""
+        if (
+            not state
+            or not state.is_playing
+            or state.progress_ms is None
+            or state.item is None
+        ):
+            self.update_interval = DEFAULT_UPDATE_INTERVAL
+            return
+        if (time_left := state.item.duration_ms - state.progress_ms) < THIRTY_SECONDS:
+            self.update_interval = timedelta(milliseconds=time_left) + timedelta(
+                seconds=1
+            )
+        else:
+            self.update_interval = DEFAULT_UPDATE_INTERVAL
