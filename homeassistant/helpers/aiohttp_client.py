@@ -44,12 +44,6 @@ SERVER_SOFTWARE = (
     f"aiohttp/{aiohttp.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
 )
 
-ENABLE_CLEANUP_CLOSED = not (3, 11, 1) <= sys.version_info < (3, 11, 4)
-# Enabling cleanup closed on python 3.11.1+ leaks memory relatively quickly
-# see https://github.com/aio-libs/aiohttp/issues/7252
-# aiohttp interacts poorly with https://github.com/python/cpython/pull/98540
-# The issue was fixed in 3.11.4 via https://github.com/python/cpython/pull/104485
-
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
 #
@@ -331,7 +325,7 @@ def _async_get_connector(
 
     connector = HomeAssistantTCPConnector(
         family=family,
-        enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
+        enable_cleanup_closed=True,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
