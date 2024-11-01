@@ -558,12 +558,18 @@ def test_get_metric_converted_unit_(
 
 UNCONVERTED_UNITS_METRIC_SYSTEM = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
-    SensorDeviceClass.AREA: (),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.CENTIMETERS,
         UnitOfLength.KILOMETERS,
         UnitOfLength.METERS,
         UnitOfLength.MILLIMETERS,
+    ),
+    SensorDeviceClass.AREA: (
+        UnitOfArea.SQUARE_MILLIMETERS,
+        UnitOfArea.SQUARE_CENTIMETERS,
+        UnitOfArea.SQUARE_METERS,
+        UnitOfArea.SQUARE_KILOMETERS,
+        UnitOfArea.HECTARES,
     ),
     SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
     SensorDeviceClass.PRECIPITATION: (
@@ -661,6 +667,21 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.DISTANCE, UnitOfLength.MILLIMETERS, UnitOfLength.INCHES),
         (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test area conversion
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_METERS, UnitOfArea.SQUARE_FEET),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_MILES),
+        (SensorDeviceClass.AREA, UnitOfArea.HECTARES, UnitOfArea.ACRES),
+        (SensorDeviceClass.AREA, "very_area", None),
         # Test gas meter conversion
         (SensorDeviceClass.GAS, UnitOfVolume.CENTUM_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
@@ -792,6 +813,13 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.MILES,
         UnitOfLength.YARDS,
+    ),
+    SensorDeviceClass.AREA: (
+        UnitOfArea.SQUARE_FEET,
+        UnitOfArea.SQUARE_INCHES,
+        UnitOfArea.SQUARE_MILES,
+        UnitOfArea.SQUARE_YARDS,
+        UnitOfArea.ACRES,
     ),
     SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
     SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
