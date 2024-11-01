@@ -32,6 +32,7 @@ def mock_discovery():
         "homeassistant.components.tplink.Discover",
         discover=DEFAULT,
         discover_single=DEFAULT,
+        try_connect_all=DEFAULT,
     ) as mock_discovery:
         device = _mocked_device(
             device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
@@ -47,6 +48,7 @@ def mock_discovery():
         }
         mock_discovery["discover"].return_value = devices
         mock_discovery["discover_single"].return_value = device
+        mock_discovery["try_connect_all"].return_value = device
         mock_discovery["mock_device"] = device
         yield mock_discovery
 

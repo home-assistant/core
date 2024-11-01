@@ -27,10 +27,16 @@ from typing import TYPE_CHECKING, Any, Generic, Self, cast
 from async_interrupt import interrupt
 from propcache import cached_property
 from typing_extensions import TypeVar
+import voluptuous as vol
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
-from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
+from .const import (
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from .core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -78,10 +84,10 @@ from .util.enum import try_parse_enum
 if TYPE_CHECKING:
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
-    from .components.hassio import HassioServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
+    from .helpers.service_info.hassio import HassioServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
 
@@ -122,6 +128,9 @@ STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
+
+ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
+UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
 
 _DataT = TypeVar("_DataT", default=Any)
 
@@ -1251,13 +1260,24 @@ class ConfigEntriesFlowManager(
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        # reauth/reconfigure flows should be linked to a config entry
+        if (source := context["source"]) in {
+            SOURCE_REAUTH,
+            SOURCE_RECONFIGURE,
+        } and "entry_id" not in context:
+            # Deprecated in 2024.12, should fail in 2025.12
+            report(
+                f"initialises a {source} flow without a link to the config entry",
+                error_if_integration=False,
+                error_if_core=True,
+            )
+
         flow_id = ulid_util.ulid_now()
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
-            context.get("source")
-            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
+            source not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
             and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
         ):
@@ -1271,7 +1291,7 @@ class ConfigEntriesFlowManager(
 
         loop = self.hass.loop
 
-        if context["source"] == SOURCE_IMPORT:
+        if source == SOURCE_IMPORT:
             self._pending_import_flows[handler][flow_id] = loop.create_future()
 
         cancel_init_future = loop.create_future()
@@ -1599,6 +1619,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
         data = self.data
+        self.check_unique_id(entry)
         if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
@@ -1607,34 +1628,49 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         data[entry_id] = entry
         self._index_entry(entry)
 
+    def check_unique_id(self, entry: ConfigEntry) -> None:
+        """Check config entry unique id.
+
+        For a string unique id (this is the correct case): return
+        For a hashable non string unique id: log warning
+        For a non-hashable unique id: raise error
+        """
+        if (unique_id := entry.unique_id) is None:
+            return
+        if isinstance(unique_id, str):
+            # Unique id should be a string
+            return
+        if isinstance(unique_id, Hashable):  # type: ignore[unreachable]
+            # Checks for other non-string was added in HA Core 2024.10
+            # In HA Core 2025.10, we should remove the error and instead fail
+            report_issue = async_suggest_report_issue(
+                self._hass, integration_domain=entry.domain
+            )
+            _LOGGER.error(
+                (
+                    "Config entry '%s' from integration %s has an invalid unique_id"
+                    " '%s' of type %s when a string is expected, please %s"
+                ),
+                entry.title,
+                entry.domain,
+                entry.unique_id,
+                type(entry.unique_id).__name__,
+                report_issue,
+            )
+        else:
+            # Guard against integrations using unhashable unique_id
+            # In HA Core 2024.11, the guard was changed from warning to failing
+            raise HomeAssistantError(
+                f"The entry unique id {unique_id} is not a string."
+            )
+
     def _index_entry(self, entry: ConfigEntry) -> None:
         """Index an entry."""
+        self.check_unique_id(entry)
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
-            unique_id_hash = entry.unique_id
-            if not isinstance(entry.unique_id, str):
-                # Guard against integrations using unhashable unique_id
-                # In HA Core 2024.9, we should remove the guard and instead fail
-                if not isinstance(entry.unique_id, Hashable):  # type: ignore[unreachable]
-                    unique_id_hash = str(entry.unique_id)
-                # Checks for other non-string was added in HA Core 2024.10
-                # In HA Core 2025.10, we should remove the error and instead fail
-                report_issue = async_suggest_report_issue(
-                    self._hass, integration_domain=entry.domain
-                )
-                _LOGGER.error(
-                    (
-                        "Config entry '%s' from integration %s has an invalid unique_id"
-                        " '%s', please %s"
-                    ),
-                    entry.title,
-                    entry.domain,
-                    entry.unique_id,
-                    report_issue,
-                )
-
             self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
-                unique_id_hash, []
+                entry.unique_id, []
             ).append(entry)
 
     def _unindex_entry(self, entry_id: str) -> None:
@@ -1645,9 +1681,6 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if not self._domain_index[domain]:
             del self._domain_index[domain]
         if (unique_id := entry.unique_id) is not None:
-            # Check type first to avoid expensive isinstance call
-            if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
-                unique_id = str(entry.unique_id)  # type: ignore[unreachable]
             self._domain_unique_id_index[domain][unique_id].remove(entry)
             if not self._domain_unique_id_index[domain][unique_id]:
                 del self._domain_unique_id_index[domain][unique_id]
@@ -1666,6 +1699,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """
         entry_id = entry.entry_id
         self._unindex_entry(entry_id)
+        self.check_unique_id(entry)
         object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
         entry.clear_state_cache()
@@ -1679,9 +1713,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:
         """Get entry by domain and unique id."""
-        # Check type first to avoid expensive isinstance call
-        if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
-            unique_id = str(unique_id)  # type: ignore[unreachable]
+        if unique_id is None:
+            return None  # type: ignore[unreachable]
+        if not isinstance(unique_id, Hashable):
+            raise HomeAssistantError(
+                f"The entry unique id {unique_id} is not a string."
+            )
         entries = self._domain_unique_id_index.get(domain, {}).get(unique_id)
         if not entries:
             return None
@@ -1850,6 +1887,7 @@ class ConfigEntries:
             )
 
         self._entries[entry.entry_id] = entry
+        self.async_update_issues()
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -1868,6 +1906,7 @@ class ConfigEntries:
             await entry.async_remove(self.hass)
 
             del self._entries[entry.entry_id]
+            self.async_update_issues()
             self._async_schedule_save()
 
         dev_reg = device_registry.async_get(self.hass)
@@ -1942,6 +1981,7 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
+        self.async_update_issues()
 
     async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.
@@ -2130,6 +2170,7 @@ class ConfigEntries:
                 )
             # Reindex the entry if the unique_id has changed
             self._entries.update_unique_id(entry, unique_id)
+            self.async_update_issues()
             changed = True
 
         for attr, value in (
@@ -2371,6 +2412,67 @@ class ConfigEntries:
         if entry.domain not in self.hass.config.components:
             return False
         return entry.state is ConfigEntryState.LOADED
+
+    @callback
+    def async_update_issues(self) -> None:
+        """Update unique id collision issues."""
+        issue_registry = ir.async_get(self.hass)
+        issues: set[str] = set()
+
+        for issue in issue_registry.issues.values():
+            if (
+                issue.domain != HOMEASSISTANT_DOMAIN
+                or not (issue_data := issue.data)
+                or issue_data.get("issue_type") != ISSUE_UNIQUE_ID_COLLISION
+            ):
+                continue
+            issues.add(issue.issue_id)
+
+        for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+            for unique_id, entries in unique_ids.items():
+                if len(entries) < 2:
+                    continue
+                issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
+                issues.discard(issue_id)
+                titles = [f"'{entry.title}'" for entry in entries]
+                translation_placeholders = {
+                    "domain": domain,
+                    "configure_url": f"/config/integrations/integration/{domain}",
+                    "unique_id": str(unique_id),
+                }
+                if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
+                    translation_key = "config_entry_unique_id_collision"
+                    translation_placeholders["titles"] = ", ".join(titles)
+                else:
+                    translation_key = "config_entry_unique_id_collision_many"
+                    translation_placeholders["number_of_entries"] = str(len(titles))
+                    translation_placeholders["titles"] = ", ".join(
+                        titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                    )
+                    translation_placeholders["title_limit"] = str(
+                        UNIQUE_ID_COLLISION_TITLE_LIMIT
+                    )
+
+                ir.async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    issue_id,
+                    breaks_in_ha_version="2025.11.0",
+                    data={
+                        "issue_type": ISSUE_UNIQUE_ID_COLLISION,
+                        "unique_id": unique_id,
+                    },
+                    is_fixable=False,
+                    issue_domain=domain,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
+
+                break  # Only create one issue per domain
+
+        for issue_id in issues:
+            ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
 
 @callback
@@ -2814,6 +2916,38 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 reason = "reconfigure_successful"
         return self.async_abort(reason=reason)
 
+    @callback
+    def async_show_form(
+        self,
+        *,
+        step_id: str | None = None,
+        data_schema: vol.Schema | None = None,
+        errors: dict[str, str] | None = None,
+        description_placeholders: Mapping[str, str | None] | None = None,
+        last_step: bool | None = None,
+        preview: str | None = None,
+    ) -> ConfigFlowResult:
+        """Return the definition of a form to gather user input.
+
+        The step_id parameter is deprecated and will be removed in a future release.
+        """
+        if self.source == SOURCE_REAUTH and "entry_id" in self.context:
+            # If the integration does not provide a name for the reauth title,
+            # we append it to the description placeholders.
+            # We also need to check entry_id as some integrations bypass the
+            # reauth helpers and create a flow without it.
+            description_placeholders = dict(description_placeholders or {})
+            if description_placeholders.get(CONF_NAME) is None:
+                description_placeholders[CONF_NAME] = self._get_reauth_entry().title
+        return super().async_show_form(
+            step_id=step_id,
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+            last_step=last_step,
+            preview=preview,
+        )
+
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         raise NotImplementedError
@@ -2921,6 +3055,9 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
     handler: str
 
+    _config_entry: ConfigEntry
+    """For compatibility only - to be removed in 2025.12"""
+
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
@@ -2929,18 +3066,58 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
         Requires `already_configured` in strings.json in user visible flows.
         """
-
-        config_entry = cast(
-            ConfigEntry, self.hass.config_entries.async_get_entry(self.handler)
-        )
         _async_abort_entries_match(
             [
                 entry
-                for entry in self.hass.config_entries.async_entries(config_entry.domain)
-                if entry is not config_entry and entry.source != SOURCE_IGNORE
+                for entry in self.hass.config_entries.async_entries(
+                    self.config_entry.domain
+                )
+                if entry is not self.config_entry and entry.source != SOURCE_IGNORE
             ],
             match_dict,
         )
+
+    @property
+    def _config_entry_id(self) -> str:
+        """Return config entry id.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
+        # This is the same as handler, but that's an implementation detail
+        if self.handler is None:
+            raise ValueError(
+                "The config entry id is not available during initialisation"
+            )
+        return self.handler
+
+    @property
+    def config_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current options flow.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
+        # For compatibility only - to be removed in 2025.12
+        if hasattr(self, "_config_entry"):
+            return self._config_entry
+
+        if self.hass is None:
+            raise ValueError("The config entry is not available during initialisation")
+        if entry := self.hass.config_entries.async_get_entry(self._config_entry_id):
+            return entry
+        raise UnknownEntry
+
+    @config_entry.setter
+    def config_entry(self, value: ConfigEntry) -> None:
+        """Set the config entry value."""
+        report(
+            "sets option flow config_entry explicitly, which is deprecated "
+            "and will stop working in 2025.12",
+            error_if_integration=False,
+            error_if_core=True,
+        )
+        self._config_entry = value
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
@@ -2950,11 +3127,6 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
         """Initialize options flow."""
         self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
-
-    @property
-    def config_entry(self) -> ConfigEntry:
-        """Return the config entry."""
-        return self._config_entry
 
     @property
     def options(self) -> dict[str, Any]:

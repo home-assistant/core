@@ -12,7 +12,6 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -24,6 +23,7 @@ from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
 from . import create_motioneye_client

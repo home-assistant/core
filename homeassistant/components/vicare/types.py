@@ -25,11 +25,14 @@ class HeatingProgram(enum.StrEnum):
 
     COMFORT = "comfort"
     COMFORT_HEATING = "comfortHeating"
+    COMFORT_COOLING = "comfortCooling"
     ECO = "eco"
     NORMAL = "normal"
     NORMAL_HEATING = "normalHeating"
+    NORMAL_COOLING = "normalCooling"
     REDUCED = "reduced"
     REDUCED_HEATING = "reducedHeating"
+    REDUCED_COOLING = "reducedCooling"
     STANDBY = "standby"
 
     @staticmethod

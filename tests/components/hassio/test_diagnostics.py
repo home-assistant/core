@@ -27,7 +27,6 @@ def mock_all(
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -144,7 +143,6 @@ def mock_all(
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/resolution/info",
         json={

@@ -6,38 +6,16 @@ from http import HTTPStatus
 import logging
 from unittest.mock import patch
 
-from evohomeasync2 import exceptions as exc
+from evohomeasync2 import EvohomeClient, exceptions as exc
 from evohomeasync2.broker import _ERR_MSG_LOOKUP_AUTH, _ERR_MSG_LOOKUP_BASE
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.evohome import DOMAIN
+from homeassistant.components.evohome import DOMAIN, EvoService
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import setup_evohome
 from .const import TEST_INSTALLS
-
-
-@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
-async def test_entities(
-    hass: HomeAssistant,
-    config: dict[str, str],
-    install: str,
-    snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test entities and state after setup of a Honeywell TCC-compatible system."""
-
-    # some extended state attrs are relative the current time
-    freezer.move_to("2024-07-10T12:00:00Z")
-
-    async for _ in setup_evohome(hass, config, install=install):
-        pass
-
-    assert hass.states.async_all() == snapshot
-
 
 SETUP_FAILED_ANTICIPATED = (
     "homeassistant.setup",
@@ -146,3 +124,59 @@ async def test_client_request_failure_v2(
     assert caplog.record_tuples == REQUEST_FAILED_LOOKUP.get(
         status, [SETUP_FAILED_UNEXPECTED]
     )
+
+
+@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
+async def test_setup(
+    hass: HomeAssistant,
+    evohome: EvohomeClient,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test services after setup of evohome.
+
+    Registered services vary by the type of system.
+    """
+
+    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_service_refresh_system(
+    hass: HomeAssistant,
+    evohome: EvohomeClient,
+) -> None:
+    """Test EvoService.REFRESH_SYSTEM of an evohome system."""
+
+    # EvoService.REFRESH_SYSTEM
+    with patch("evohomeasync2.location.Location.refresh_status") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.REFRESH_SYSTEM,
+            {},
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args == ()
+        assert mock_fcn.await_args.kwargs == {}
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_service_reset_system(
+    hass: HomeAssistant,
+    evohome: EvohomeClient,
+) -> None:
+    """Test EvoService.RESET_SYSTEM of an evohome system."""
+
+    # EvoService.RESET_SYSTEM (if SZ_AUTO_WITH_RESET in modes)
+    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.RESET_SYSTEM,
+            {},
+            blocking=True,
+        )
+
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args == ("AutoWithReset",)
+        assert mock_fcn.await_args.kwargs == {"until": None}

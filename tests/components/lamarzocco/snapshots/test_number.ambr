@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_coffee_boiler
+# name: test_general_numbers[coffee_target_temperature-94-set_temp-kwargs0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -18,7 +18,7 @@
     'state': '95',
   })
 # ---
-# name: test_coffee_boiler.1
+# name: test_general_numbers[coffee_target_temperature-94-set_temp-kwargs0].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -54,6 +54,63 @@
     'translation_key': 'coffee_temp',
     'unique_id': 'GS01234_coffee_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_general_numbers[smart_standby_time-23-set_smart_standby-kwargs1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'GS01234 Smart standby time',
+      'max': 240,
+      'min': 10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 10,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.gs01234_smart_standby_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_general_numbers[smart_standby_time-23-set_smart_standby-kwargs1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 240,
+      'min': 10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.gs01234_smart_standby_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Smart standby time',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_standby_time',
+    'unique_id': 'GS01234_smart_standby_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_gs3_exclusive[steam_target_temperature-131-set_temp-kwargs0-GS3 AV]

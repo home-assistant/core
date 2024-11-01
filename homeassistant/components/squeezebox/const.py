@@ -2,11 +2,14 @@
 
 CONF_HTTPS = "https"
 DISCOVERY_TASK = "discovery_task"
+DISCOVERY_INTERVAL = 60
 DOMAIN = "squeezebox"
 DEFAULT_PORT = 9000
 KNOWN_PLAYERS = "known_players"
+KNOWN_SERVERS = "known_servers"
 MANUFACTURER = "https://lyrion.org/"
 PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
+PLAYER_UPDATE_INTERVAL = 5
 SENSOR_UPDATE_INTERVAL = 60
 SERVER_MODEL = "Lyrion Music Server"
 STATUS_API_TIMEOUT = 10
@@ -27,5 +30,7 @@ STATUS_QUERY_VERSION = "version"
 STATUS_UPDATE_NEWVERSION = "newversion"
 STATUS_UPDATE_NEWPLUGINS = "newplugins"
 SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")
+SIGNAL_PLAYER_DISCOVERED = "squeezebox_player_discovered"
+SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 UPDATE_PLUGINS_RELEASE_SUMMARY = "update_plugins_release_summary"
 UPDATE_RELEASE_SUMMARY = "update_release_summary"
