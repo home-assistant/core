@@ -32,14 +32,6 @@ from tests.common import (
 ENTITY_ID = "water_heater.bsb_lan"
 
 
-@pytest.fixture
-def mock_bsblan_with_methods(mock_bsblan):
-    """Create a mock with proper method signatures."""
-    # Create an async mock for set_hot_water with the correct signature
-    mock_bsblan.set_hot_water = AsyncMock()
-    return mock_bsblan
-
-
 @pytest.mark.parametrize(
     ("dhw_file"),
     [
@@ -48,7 +40,7 @@ def mock_bsblan_with_methods(mock_bsblan):
 )
 async def test_water_heater_states(
     hass: HomeAssistant,
-    mock_bsblan_with_methods: AsyncMock,
+    mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -63,7 +55,7 @@ async def test_water_heater_states(
 
 async def test_water_heater_entity_properties(
     hass: HomeAssistant,
-    mock_bsblan_with_methods: AsyncMock,
+    mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -78,9 +70,7 @@ async def test_water_heater_entity_properties(
     # Test when nominal setpoint is "10"
     mock_setpoint = MagicMock()
     mock_setpoint.value = 10
-    mock_bsblan_with_methods.hot_water_state.return_value.nominal_setpoint = (
-        mock_setpoint
-    )
+    mock_bsblan.hot_water_state.return_value.nominal_setpoint = mock_setpoint
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -100,7 +90,7 @@ async def test_water_heater_entity_properties(
 )
 async def test_set_operation_mode(
     hass: HomeAssistant,
-    mock_bsblan_with_methods: AsyncMock,
+    mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mode: str,
     bsblan_mode: str,
@@ -120,14 +110,12 @@ async def test_set_operation_mode(
         blocking=True,
     )
 
-    mock_bsblan_with_methods.set_hot_water.assert_called_once_with(
-        operating_mode=bsblan_mode
-    )
+    mock_bsblan.set_hot_water.assert_called_once_with(operating_mode=bsblan_mode)
 
 
 async def test_set_invalid_operation_mode(
     hass: HomeAssistant,
-    mock_bsblan_with_methods: AsyncMock,
+    mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting invalid operation mode."""
@@ -152,7 +140,7 @@ async def test_set_invalid_operation_mode(
 
 async def test_set_temperature(
     hass: HomeAssistant,
-    mock_bsblan_with_methods: AsyncMock,
+    mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting temperature."""
@@ -170,12 +158,12 @@ async def test_set_temperature(
         blocking=True,
     )
 
-    mock_bsblan_with_methods.set_hot_water.assert_called_once_with(nominal_setpoint=50)
+    mock_bsblan.set_hot_water.assert_called_once_with(nominal_setpoint=50)
 
 
 async def test_set_temperature_failure(
     hass: HomeAssistant,
-    mock_bsblan_with_methods: AsyncMock,
+    mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting temperature with API failure."""
@@ -183,7 +171,7 @@ async def test_set_temperature_failure(
         hass, mock_config_entry, [Platform.WATER_HEATER]
     )
 
-    mock_bsblan_with_methods.set_hot_water.side_effect = BSBLANError("Test error")
+    mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
     with pytest.raises(
         HomeAssistantError, match="Failed to set target temperature for water heater"
@@ -201,7 +189,7 @@ async def test_set_temperature_failure(
 
 async def test_operation_mode_error(
     hass: HomeAssistant,
-    mock_bsblan_with_methods: AsyncMock,
+    mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test operation mode setting with API failure."""
@@ -209,7 +197,7 @@ async def test_operation_mode_error(
         hass, mock_config_entry, [Platform.WATER_HEATER]
     )
 
-    mock_bsblan_with_methods.set_hot_water.side_effect = BSBLANError("Test error")
+    mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
     with pytest.raises(
         HomeAssistantError, match="Failed to set operation mode for water heater"
