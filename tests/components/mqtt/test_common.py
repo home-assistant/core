@@ -69,6 +69,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 _SENTINEL = object()
 
 DISCOVERY_COUNT = len(MQTT)
+DEVICE_DISCOVERY_COUNT = 2
 
 type _MqttMessageType = list[tuple[str, str]]
 type _AttributesType = list[tuple[str, Any]]
@@ -1189,7 +1190,10 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     assert (
         mqtt_mock.async_subscribe.call_count
-        == len(topics) + 2 * len(SUPPORTED_COMPONENTS) + DISCOVERY_COUNT
+        == len(topics)
+        + 2 * len(SUPPORTED_COMPONENTS)
+        + DISCOVERY_COUNT
+        + DEVICE_DISCOVERY_COUNT
     )
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(

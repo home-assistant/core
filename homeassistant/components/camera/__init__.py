@@ -420,7 +420,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def get_ice_servers() -> list[RTCIceServer]:
         if hass.config.webrtc.ice_servers:
             return hass.config.webrtc.ice_servers
-        return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
+        return [
+            RTCIceServer(urls="stun:stun.home-assistant.io:80"),
+            RTCIceServer(urls="stun:stun.home-assistant.io:3478"),
+        ]
 
     async_register_ice_servers(hass, get_ice_servers)
     return True
@@ -864,6 +867,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if (
                 type(self).async_handle_web_rtc_offer
                 != Camera.async_handle_web_rtc_offer
+                or type(self).async_handle_async_webrtc_offer
+                != Camera.async_handle_async_webrtc_offer
             ):
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)

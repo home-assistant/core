@@ -314,6 +314,60 @@ async def test_empty_json_state_message(
         }
     ],
 )
+async def test_invalid_json_state_message(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an empty JSON payload."""
+    state_topic = "test/state-topic"
+    await mqtt_mock_entry()
+
+    async_fire_mqtt_message(
+        hass,
+        state_topic,
+        '{"installed_version":"1.9.0","latest_version":"1.9.0",'
+        '"title":"Test Update 1 Title","release_url":"https://example.com/release1",'
+        '"release_summary":"Test release summary 1",'
+        '"entity_picture": "https://example.com/icon1.png"}',
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "1.9.0"
+    assert state.attributes.get("latest_version") == "1.9.0"
+    assert state.attributes.get("release_summary") == "Test release summary 1"
+    assert state.attributes.get("release_url") == "https://example.com/release1"
+    assert state.attributes.get("title") == "Test Update 1 Title"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon1.png"
+
+    # Test update schema validation with invalid value in JSON update
+    async_fire_mqtt_message(hass, state_topic, '{"update_percentage":101}')
+
+    await hass.async_block_till_done()
+    assert (
+        "Schema violation after processing payload '{\"update_percentage\":101}' on "
+        "topic 'test/state-topic' for entity 'update.test_update': value must be at "
+        "most 100 for dictionary value @ data['update_percentage']" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: {
+                    "state_topic": "test/state-topic",
+                    "name": "Test Update",
+                    "display_precision": 1,
+                }
+            }
+        }
+    ],
+)
 async def test_json_state_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -355,6 +409,45 @@ async def test_json_state_message(
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "2.0.0"
     assert state.attributes.get("entity_picture") == "https://example.com/icon2.png"
+    assert state.attributes.get("in_progress") is False
+    assert state.attributes.get("update_percentage") is None
+
+    # Test in_progress status
+    async_fire_mqtt_message(hass, state_topic, '{"in_progress":true}')
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_ON
+    assert state.attributes.get("installed_version") == "1.9.0"
+    assert state.attributes.get("latest_version") == "2.0.0"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon2.png"
+    assert state.attributes.get("in_progress") is True
+    assert state.attributes.get("update_percentage") is None
+
+    async_fire_mqtt_message(hass, state_topic, '{"in_progress":false}')
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_update")
+    assert state.attributes.get("in_progress") is False
+
+    # Test update_percentage status
+    async_fire_mqtt_message(hass, state_topic, '{"update_percentage":51.75}')
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_update")
+    assert state.attributes.get("in_progress") is True
+    assert state.attributes.get("update_percentage") == 51.75
+    assert state.attributes.get("display_precision") == 1
+
+    async_fire_mqtt_message(hass, state_topic, '{"update_percentage":100}')
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_update")
+    assert state.attributes.get("in_progress") is True
+    assert state.attributes.get("update_percentage") == 100
+
+    async_fire_mqtt_message(hass, state_topic, '{"update_percentage":null}')
+    await hass.async_block_till_done()
+    state = hass.states.get("update.test_update")
+    assert state.attributes.get("in_progress") is False
+    assert state.attributes.get("update_percentage") is None
 
 
 @pytest.mark.parametrize(
@@ -725,6 +818,10 @@ async def test_reloadable(
             '{"entity_picture": "https://example.com/icon1.png"}',
             '{"entity_picture": "https://example.com/icon2.png"}',
         ),
+        ("test-topic", '{"in_progress": true}', '{"in_progress": false}'),
+        ("test-topic", '{"update_percentage": 0}', '{"update_percentage": 50}'),
+        ("test-topic", '{"update_percentage": 50}', '{"update_percentage": 100}'),
+        ("test-topic", '{"update_percentage": 100}', '{"update_percentage": null}'),
         ("availability-topic", "online", "offline"),
         ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
     ],

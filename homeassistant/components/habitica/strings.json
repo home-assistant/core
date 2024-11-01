@@ -1,4 +1,8 @@
 {
+  "common": {
+    "todos": "To-Do's",
+    "dailies": "Dailies"
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -84,6 +88,23 @@
         "name": "Blessing"
       }
     },
+    "calendar": {
+      "todos": {
+        "name": "[%key:component::habitica::common::todos%]"
+      },
+      "dailys": {
+        "name": "[%key:component::habitica::common::dailies%]",
+        "state_attributes": {
+          "yesterdaily": {
+            "name": "Yester-Daily",
+            "state": {
+              "true": "[%key:common::state::yes%]",
+              "false": "[%key:common::state::no%]"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name"
@@ -128,10 +149,10 @@
         }
       },
       "todos": {
-        "name": "To-Do's"
+        "name": "[%key:component::habitica::common::todos%]"
       },
       "dailys": {
-        "name": "Dailies"
+        "name": "[%key:component::habitica::common::dailies%]"
       },
       "habits": {
         "name": "Habits"
@@ -147,10 +168,10 @@
     },
     "todo": {
       "todos": {
-        "name": "To-Do's"
+        "name": "[%key:component::habitica::common::todos%]"
       },
       "dailys": {
-        "name": "Dailies"
+        "name": "[%key:component::habitica::common::dailies%]"
       }
     }
   },

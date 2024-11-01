@@ -382,7 +382,7 @@ def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
     """Return supervisor client."""
     hassio: HassIO = hass.data[DOMAIN]
     return SupervisorClient(
-        hassio.base_url,
+        str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),
         session=hassio.websession,
     )
