@@ -69,6 +69,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
     def __init__(self, controller, name, arm_home_mode, partition_id):
         """Initialize the alarm panel."""
         self._attr_name = name
+        self._attr_unique_id = f"satel_alarm_panel_{partition_id}"
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
         self._satel = controller
