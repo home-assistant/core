@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -69,6 +70,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = CONF_CONFIG_ENTRY_MINOR_VERSION
 
     host: str | None = None
+    port: int | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -270,14 +272,32 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
-            self._async_abort_entries_match({CONF_HOST: host})
+            host, _, port_str = host.partition(":")
+            match_dict = {CONF_HOST: host}
+            if port_str:
+                try:
+                    port = int(port_str)
+                    self.port = port
+                    match_dict[CONF_PORT] = port
+                except ValueError:
+                    port = None
+            else:
+                port = None
+            self._async_abort_entries_match(match_dict)
             self.host = host
             credentials = await get_credentials(self.hass)
             try:
                 device = await self._async_try_discover_and_update(
-                    host, credentials, raise_on_progress=False, raise_on_timeout=False
+                    host,
+                    credentials,
+                    raise_on_progress=False,
+                    raise_on_timeout=False,
+                    port=port,
                 ) or await self._async_try_connect_all(
-                    host, credentials=credentials, raise_on_progress=False
+                    host,
+                    credentials=credentials,
+                    raise_on_progress=False,
+                    port=port,
                 )
             except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
@@ -318,7 +338,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 else:
                     device = await self._async_try_connect_all(
-                        self.host, credentials=credentials, raise_on_progress=False
+                        self.host,
+                        credentials=credentials,
+                        raise_on_progress=False,
+                        port=self.port,
                     )
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
@@ -420,6 +443,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_AES_KEYS] = device.config.aes_keys
         if device.credentials_hash:
             data[CONF_CREDENTIALS_HASH] = device.credentials_hash
+        if port := device.config.port_override:
+            data[CONF_PORT] = port
         return self.async_create_entry(
             title=f"{device.alias} {device.model}",
             data=data,
@@ -430,6 +455,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str,
         credentials: Credentials | None,
         raise_on_progress: bool,
+        *,
+        port: int | None = None,
     ) -> Device | None:
         """Try to connect to the device speculatively.
 
@@ -441,12 +468,15 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 host,
                 credentials=credentials,
                 http_client=create_async_tplink_clientsession(self.hass),
+                port=port,
             )
         else:
             # This will just try the legacy protocol that doesn't require auth
             # and doesn't use http
             try:
-                device = await Device.connect(config=DeviceConfig(host))
+                device = await Device.connect(
+                    config=DeviceConfig(host, port_override=port)
+                )
             except Exception:  # noqa: BLE001
                 return None
         if device:
@@ -462,6 +492,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         credentials: Credentials | None,
         raise_on_progress: bool,
         raise_on_timeout: bool,
+        *,
+        port: int | None = None,
     ) -> Device | None:
         """Try to discover the device and call update.
 
@@ -470,7 +502,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device = None
         try:
             self._discovered_device = await Discover.discover_single(
-                host, credentials=credentials
+                host,
+                credentials=credentials,
+                port=port,
             )
         except TimeoutError as ex:
             if raise_on_timeout:
@@ -526,6 +560,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         entry_data = reauth_entry.data
         host = entry_data[CONF_HOST]
+        port = entry_data.get(CONF_PORT)
 
         if user_input:
             username = user_input[CONF_USERNAME]
@@ -537,8 +572,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     credentials=credentials,
                     raise_on_progress=False,
                     raise_on_timeout=False,
+                    port=port,
                 ) or await self._async_try_connect_all(
-                    host, credentials=credentials, raise_on_progress=False
+                    host,
+                    credentials=credentials,
+                    raise_on_progress=False,
+                    port=port,
                 )
             except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
