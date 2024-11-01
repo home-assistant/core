@@ -16,10 +16,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
+    WeatherEntityFeature,
 )
-from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.components.weatherkit.const import ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
@@ -81,10 +80,7 @@ async def test_hourly_forecast_missing(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_hourly_forecast(
     hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
@@ -107,10 +103,7 @@ async def test_hourly_forecast(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_daily_forecast(
     hass: HomeAssistant, snapshot: SnapshotAssertion, service: str

@@ -12,6 +12,17 @@
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway."
         }
+      },
+      "reconfigure": {
+        "description": "[%key:component::enphase_envoy::config::step::user::description%]",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]"
+        }
       }
     },
     "error": {
@@ -21,7 +32,20 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Envoy {serial} {host} options",
+        "data": {
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
+          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
+        }
+      }
     }
   },
   "entity": {
@@ -142,6 +166,162 @@
       },
       "lifetime_consumption_phase": {
         "name": "Lifetime energy consumption {phase_name}"
+      },
+      "balanced_net_consumption": {
+        "name": "balanced net power consumption"
+      },
+      "lifetime_balanced_net_consumption": {
+        "name": "Lifetime balanced net energy consumption"
+      },
+      "balanced_net_consumption_phase": {
+        "name": "balanced net power consumption {phase_name}"
+      },
+      "lifetime_balanced_net_consumption_phase": {
+        "name": "Lifetime balanced net energy consumption {phase_name}"
+      },
+      "lifetime_net_consumption": {
+        "name": "Lifetime net energy consumption"
+      },
+      "lifetime_net_production": {
+        "name": "Lifetime net energy production"
+      },
+      "net_consumption": {
+        "name": "Current net power consumption"
+      },
+      "net_ct_frequency": {
+        "name": "Frequency net consumption CT"
+      },
+      "net_ct_voltage": {
+        "name": "Voltage net consumption CT"
+      },
+      "net_ct_current": {
+        "name": "Net consumption CT current"
+      },
+      "net_ct_powerfactor": {
+        "name": "Powerfactor net consumption CT"
+      },
+      "net_ct_metering_status": {
+        "name": "Metering status net consumption CT"
+      },
+      "net_ct_status_flags": {
+        "name": "Meter status flags active net consumption CT"
+      },
+      "production_ct_frequency": {
+        "name": "Frequency production CT"
+      },
+      "production_ct_voltage": {
+        "name": "Voltage production CT"
+      },
+      "production_ct_current": {
+        "name": "Production CT current"
+      },
+      "production_ct_powerfactor": {
+        "name": "powerfactor production CT"
+      },
+      "production_ct_metering_status": {
+        "name": "Metering status production CT"
+      },
+      "production_ct_status_flags": {
+        "name": "Meter status flags active production CT"
+      },
+      "lifetime_battery_discharged": {
+        "name": "Lifetime battery energy discharged"
+      },
+      "lifetime_battery_charged": {
+        "name": "Lifetime battery energy charged"
+      },
+      "battery_discharge": {
+        "name": "Current battery discharge"
+      },
+      "storage_ct_frequency": {
+        "name": "Frequency storage CT"
+      },
+      "storage_ct_voltage": {
+        "name": "Voltage storage CT"
+      },
+      "storage_ct_current": {
+        "name": "Storage CT current"
+      },
+      "storage_ct_powerfactor": {
+        "name": "Powerfactor storage CT"
+      },
+      "storage_ct_metering_status": {
+        "name": "Metering status storage CT"
+      },
+      "storage_ct_status_flags": {
+        "name": "Meter status flags active storage CT"
+      },
+      "lifetime_net_consumption_phase": {
+        "name": "Lifetime net energy consumption {phase_name}"
+      },
+      "lifetime_net_production_phase": {
+        "name": "Lifetime net energy production {phase_name}"
+      },
+      "net_consumption_phase": {
+        "name": "Current net power consumption {phase_name}"
+      },
+      "net_ct_frequency_phase": {
+        "name": "Frequency net consumption CT {phase_name}"
+      },
+      "net_ct_voltage_phase": {
+        "name": "Voltage net consumption CT {phase_name}"
+      },
+      "net_ct_current_phase": {
+        "name": "Net consumption CT current {phase_name}"
+      },
+      "net_ct_powerfactor_phase": {
+        "name": "Powerfactor net consumption CT {phase_name}"
+      },
+      "net_ct_metering_status_phase": {
+        "name": "Metering status net consumption CT {phase_name}"
+      },
+      "net_ct_status_flags_phase": {
+        "name": "Meter status flags active net consumption CT {phase_name}"
+      },
+      "production_ct_frequency_phase": {
+        "name": "Frequency production CT {phase_name}"
+      },
+      "production_ct_voltage_phase": {
+        "name": "Voltage production CT {phase_name}"
+      },
+      "production_ct_current_phase": {
+        "name": "Production CT current {phase_name}"
+      },
+      "production_ct_powerfactor_phase": {
+        "name": "Powerfactor production CT {phase_name}"
+      },
+      "production_ct_metering_status_phase": {
+        "name": "Metering status production CT {phase_name}"
+      },
+      "production_ct_status_flags_phase": {
+        "name": "Meter status flags active production CT {phase_name}"
+      },
+      "lifetime_battery_discharged_phase": {
+        "name": "Lifetime battery energy discharged {phase_name}"
+      },
+      "lifetime_battery_charged_phase": {
+        "name": "Lifetime battery energy charged {phase_name}"
+      },
+      "battery_discharge_phase": {
+        "name": "Current battery discharge {phase_name}"
+      },
+      "storage_ct_frequency_phase": {
+        "name": "Frequency storage CT {phase_name}"
+      },
+      "storage_ct_voltage_phase": {
+        "name": "Voltage storage CT {phase_name}"
+      },
+      "storage_ct_current_phase": {
+        "name": "Storage CT current {phase_name}"
+      },
+      "storage_ct_powerfactor_phase": {
+        "name": "Powerfactor storage CT {phase_name}"
+      },
+      "storage_ct_metering_status_phase": {
+        "name": "Metering status storage CT {phase_name}"
+      },
+      "storage_ct_status_flags_phase": {
+        "name": "Meter status flags active storage CT {phase_name}"
       },
       "reserve_soc": {
         "name": "Reserve battery level"

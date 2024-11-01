@@ -1,4 +1,5 @@
 """Support for lights through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,8 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 
 async def async_setup_entry(

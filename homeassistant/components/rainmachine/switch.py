@@ -1,11 +1,12 @@
 """Component providing support for RainMachine programs and zones."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
@@ -17,8 +18,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
+from . import RainMachineConfigEntry, RainMachineData, async_update_programs_and_zones
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -29,16 +31,15 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
-    DOMAIN,
 )
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import RUN_STATE_MAP, key_exists
 
+ATTR_ACTIVITY_TYPE = "activity_type"
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
 ATTR_CURRENT_CYCLE = "current_cycle"
 ATTR_CYCLES = "cycles"
-ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
 ATTR_DELAY = "delay"
 ATTR_DELAY_ON = "delay_on"
 ATTR_FIELD_CAPACITY = "field_capacity"
@@ -54,6 +55,7 @@ ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
+ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -109,11 +111,7 @@ VEGETATION_MAP = {
 }
 
 
-_T = TypeVar("_T", bound="RainMachineBaseSwitch")
-_P = ParamSpec("_P")
-
-
-def raise_on_request_error(
+def raise_on_request_error[_T: RainMachineBaseSwitch, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a decorator to raise on a request error."""
@@ -141,6 +139,7 @@ class RainMachineSwitchDescription(
 class RainMachineActivitySwitchDescription(RainMachineSwitchDescription):
     """Describe a RainMachine activity (program/zone) switch."""
 
+    kind: str
     uid: int
 
 
@@ -173,13 +172,15 @@ RESTRICTIONS_SWITCH_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RainMachineConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
     platform = entity_platform.async_get_current_platform()
 
-    for service_name, schema, method in (
-        ("start_program", {}, "async_start_program"),
+    services: tuple[tuple[str, VolDictType | None, str], ...] = (
+        ("start_program", None, "async_start_program"),
         (
             "start_zone",
             {
@@ -189,12 +190,13 @@ async def async_setup_entry(
             },
             "async_start_zone",
         ),
-        ("stop_program", {}, "async_stop_program"),
-        ("stop_zone", {}, "async_stop_zone"),
-    ):
+        ("stop_program", None, "async_stop_program"),
+        ("stop_zone", None, "async_stop_zone"),
+    )
+    for service_name, schema, method in services:
         platform.async_register_entity_service(service_name, schema, method)
 
-    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[RainMachineBaseSwitch] = []
 
     for kind, api_category, switch_class, switch_enabled_class in (
@@ -214,6 +216,7 @@ async def async_setup_entry(
                         key=f"{kind}_{uid}",
                         name=name,
                         api_category=api_category,
+                        kind=kind,
                         uid=uid,
                     ),
                 )
@@ -228,6 +231,7 @@ async def async_setup_entry(
                         key=f"{kind}_{uid}_enabled",
                         name=f"{name} enabled",
                         api_category=api_category,
+                        kind=kind,
                         uid=uid,
                     ),
                 )
@@ -290,6 +294,19 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
     _attr_icon = "mdi:water"
     entity_description: RainMachineActivitySwitchDescription
 
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        data: RainMachineData,
+        description: RainMachineSwitchDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, data, description)
+
+        self._attr_extra_state_attributes[ATTR_ACTIVITY_TYPE] = (
+            self.entity_description.kind
+        )
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off.
 
@@ -337,6 +354,19 @@ class RainMachineEnabledSwitch(RainMachineBaseSwitch):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:cog"
     entity_description: RainMachineActivitySwitchDescription
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        data: RainMachineData,
+        description: RainMachineSwitchDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, data, description)
+
+        self._attr_extra_state_attributes[ATTR_ACTIVITY_TYPE] = (
+            self.entity_description.kind
+        )
 
     @callback
     def update_from_latest_data(self) -> None:

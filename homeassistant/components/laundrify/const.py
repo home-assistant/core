@@ -3,7 +3,7 @@
 DOMAIN = "laundrify"
 
 MANUFACTURER = "laundrify"
-MODEL = "WLAN-Adapter (SU02)"
+MODELS = {"SU02": "WLAN-Adapter classic", "M01": "WLAN-Adapter mini"}
 
 DEFAULT_POLL_INTERVAL = 60
 

@@ -1,4 +1,5 @@
 """The Tile component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -88,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed("Invalid credentials") from err
         except SessionExpiredError:
-            LOGGER.info("Tile session expired; creating a new one")
+            LOGGER.debug("Tile session expired; creating a new one")
             await client.async_init()
         except TileError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
@@ -100,6 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = coordinators[tile_uuid] = DataUpdateCoordinator(
             hass,
             LOGGER,
+            config_entry=entry,
             name=tile.name,
             update_interval=DEFAULT_UPDATE_INTERVAL,
             update_method=partial(async_update_tile, tile),

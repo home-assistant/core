@@ -1,4 +1,5 @@
 """The Wallbox integration."""
+
 from __future__ import annotations
 
 from wallbox import Wallbox
@@ -9,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import InvalidAuth, WallboxCoordinator, async_validate_input
 
 PLATFORMS = [Platform.LOCK, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
@@ -21,18 +22,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
         jwtTokenDrift=UPDATE_INTERVAL,
     )
+    try:
+        await async_validate_input(hass, wallbox)
+    except InvalidAuth as ex:
+        raise ConfigEntryAuthFailed from ex
+
     wallbox_coordinator = WallboxCoordinator(
         entry.data[CONF_STATION],
         wallbox,
         hass,
     )
-
-    try:
-        await wallbox_coordinator.async_validate_input()
-
-    except InvalidAuth as ex:
-        raise ConfigEntryAuthFailed from ex
-
     await wallbox_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = wallbox_coordinator

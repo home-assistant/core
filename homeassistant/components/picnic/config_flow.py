@@ -1,4 +1,5 @@
 """Config flow for Picnic integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,15 +11,15 @@ from python_picnic_api.session import PicnicAuthError
 import requests
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_COUNTRY_CODE,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import COUNTRY_CODES, DOMAIN
 
@@ -45,7 +46,7 @@ class PicnicHub:
         return picnic.session.auth_token, picnic.get_user()
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -67,7 +68,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     # Return the validation result
     address = (
         f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}'
-        + f'{user_data["address"]["house_number_ext"]}'
+        f'{user_data["address"]["house_number_ext"]}'
     )
     return auth_token, {
         "title": address,
@@ -75,16 +76,20 @@ async def validate_input(hass: core.HomeAssistant, data):
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Picnic."""
 
     VERSION = 1
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform the re-auth step upon an API authentication error."""
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the authentication step, this is the generic step for both `step_user` and `step_reauth`."""
         if user_input is None:
             return self.async_show_form(
@@ -99,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -128,9 +133,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

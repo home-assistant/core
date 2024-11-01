@@ -1,11 +1,11 @@
 """Advantage Air Update platform."""
 
 from homeassistant.components.update import UpdateEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AdvantageAirDataConfigEntry
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
 from .models import AdvantageAirData
@@ -13,12 +13,12 @@ from .models import AdvantageAirData
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AdvantageAirDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir update platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     async_add_entities([AdvantageAirApp(instance)])
 

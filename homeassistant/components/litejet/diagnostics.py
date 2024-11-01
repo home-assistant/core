@@ -1,4 +1,5 @@
 """Support for LiteJet diagnostics."""
+
 from typing import Any
 
 from pylitejet import LiteJet

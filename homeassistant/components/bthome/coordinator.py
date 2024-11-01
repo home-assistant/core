@@ -1,9 +1,9 @@
 """The BTHome Bluetooth integration."""
+
 from collections.abc import Callable
 from logging import Logger
-from typing import Any
 
-from bthome_ble import BTHomeBluetoothDeviceData
+from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -13,13 +13,15 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothProcessorCoordinator,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_SLEEPY_DEVICE
+from .types import BTHomeConfigEntry
 
 
-class BTHomePassiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator):
+class BTHomePassiveBluetoothProcessorCoordinator(
+    PassiveBluetoothProcessorCoordinator[SensorUpdate]
+):
     """Define a BTHome Bluetooth Passive Update Processor Coordinator."""
 
     def __init__(
@@ -28,10 +30,10 @@ class BTHomePassiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordi
         logger: Logger,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], Any],
+        update_method: Callable[[BluetoothServiceInfoBleak], SensorUpdate],
         device_data: BTHomeBluetoothDeviceData,
         discovered_event_classes: set[str],
-        entry: ConfigEntry,
+        entry: BTHomeConfigEntry,
         connectable: bool = False,
     ) -> None:
         """Initialize the BTHome Bluetooth Passive Update Processor Coordinator."""
@@ -46,7 +48,9 @@ class BTHomePassiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordi
         return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)
 
 
-class BTHomePassiveBluetoothDataProcessor(PassiveBluetoothDataProcessor):
+class BTHomePassiveBluetoothDataProcessor[_T](
+    PassiveBluetoothDataProcessor[_T, SensorUpdate]
+):
     """Define a BTHome Bluetooth Passive Update Data Processor."""
 
     coordinator: BTHomePassiveBluetoothProcessorCoordinator

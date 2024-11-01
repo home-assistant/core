@@ -1,4 +1,5 @@
 """Support for the light on the Sisyphus Kinetic Art Table."""
+
 from __future__ import annotations
 
 import logging
@@ -32,7 +33,7 @@ async def async_setup_platform(
         table_holder = hass.data[DATA_SISYPHUS][host]
         table = await table_holder.get_table()
     except aiohttp.ClientError as err:
-        raise PlatformNotReady() from err
+        raise PlatformNotReady from err
 
     add_entities([SisyphusLight(table_holder.name, table)], update_before_add=True)
 

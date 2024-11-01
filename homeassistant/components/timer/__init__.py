@@ -1,10 +1,11 @@
 """Support for Timers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Self, TypeVar
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -25,10 +26,9 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 import homeassistant.util.dt as dt_util
 
-_T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "timer"
@@ -66,7 +66,7 @@ SERVICE_FINISH = "finish"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
@@ -81,7 +81,7 @@ def _format_timedelta(delta: timedelta) -> str:
     return f"{int(hours)}:{int(minutes):02}:{int(seconds):02}"
 
 
-def _none_to_empty_dict(value: _T | None) -> _T | dict[Any, Any]:
+def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[Any, Any]:
     if value is None:
         return {}
     return value
@@ -159,9 +159,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_start",
     )
-    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
-    component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
-    component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
+    component.async_register_entity_service(SERVICE_PAUSE, None, "async_pause")
+    component.async_register_entity_service(SERVICE_CANCEL, None, "async_cancel")
+    component.async_register_entity_service(SERVICE_FINISH, None, "async_finish")
     component.async_register_entity_service(
         SERVICE_CHANGE,
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
@@ -324,12 +324,12 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self._end = start + self._remaining
 
+        self.async_write_ha_state()
         self.hass.bus.async_fire(event, {ATTR_ENTITY_ID: self.entity_id})
 
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )
-        self.async_write_ha_state()
 
     @callback
     def async_change(self, duration: timedelta) -> None:
@@ -338,7 +338,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
-        if self._remaining and (self._remaining + duration) > self._running_duration:
+        # Check against new remaining time before checking boundaries
+        new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
+        if self._remaining and new_remaining > self._running_duration:
             raise HomeAssistantError(
                 f"Not possible to change timer {self.entity_id} beyond duration"
             )
@@ -349,12 +351,12 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self._listener()
         self._end += duration
-        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self._remaining = new_remaining
+        self.async_write_ha_state()
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )
-        self.async_write_ha_state()
 
     @callback
     def async_pause(self) -> None:
@@ -367,8 +369,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_PAUSED
         self._end = None
-        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {ATTR_ENTITY_ID: self.entity_id})
         self.async_write_ha_state()
+        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {ATTR_ENTITY_ID: self.entity_id})
 
     @callback
     def async_cancel(self) -> None:
@@ -380,10 +382,10 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
+        self.async_write_ha_state()
         self.hass.bus.async_fire(
             EVENT_TIMER_CANCELLED, {ATTR_ENTITY_ID: self.entity_id}
         )
-        self.async_write_ha_state()
 
     @callback
     def async_finish(self) -> None:
@@ -399,11 +401,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
+        self.async_write_ha_state()
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
         )
-        self.async_write_ha_state()
 
     @callback
     def _async_finished(self, time: datetime) -> None:
@@ -417,11 +419,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
+        self.async_write_ha_state()
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
         )
-        self.async_write_ha_state()
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""

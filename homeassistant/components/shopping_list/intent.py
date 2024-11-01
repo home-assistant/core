@@ -1,4 +1,5 @@
 """Intents for the Shopping List integration."""
+
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
@@ -21,12 +22,14 @@ class AddItemIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
     intent_type = INTENT_ADD_ITEM
+    description = "Adds an item to the shopping list"
     slot_schema = {"item": cv.string}
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         await intent_obj.hass.data[DOMAIN].async_add(item)
 
         response = intent_obj.create_response()
@@ -38,7 +41,9 @@ class ListTopItemsIntent(intent.IntentHandler):
     """Handle AddItem intents."""
 
     intent_type = INTENT_LAST_ITEMS
+    description = "List the top five items on the shopping list"
     slot_schema = {"item": cv.string}
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
@@ -48,10 +53,8 @@ class ListTopItemsIntent(intent.IntentHandler):
         if not items:
             response.async_set_speech("There are no items on your shopping list")
         else:
+            items_list = ", ".join(itm["name"] for itm in reversed(items))
             response.async_set_speech(
-                "These are the top {} items on your shopping list: {}".format(
-                    min(len(items), 5),
-                    ", ".join(itm["name"] for itm in reversed(items)),
-                )
+                f"These are the top {min(len(items), 5)} items on your shopping list: {items_list}"
             )
         return response

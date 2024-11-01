@@ -1,7 +1,7 @@
 """Home Assistant Cast integration for Cast."""
+
 from __future__ import annotations
 
-from pychromecast.controllers.homeassistant import HomeAssistantController
 import voluptuous as vol
 
 from homeassistant import auth, config_entries, core
@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv, dispatcher, instance_
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
+from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW, HomeAssistantControllerData
 
 SERVICE_SHOW_VIEW = "show_lovelace_view"
 ATTR_VIEW_PATH = "view_path"
@@ -55,7 +55,7 @@ async def async_setup_ha_cast(
 
         hass_uuid = await instance_id.async_get(hass)
 
-        controller = HomeAssistantController(
+        controller_data = HomeAssistantControllerData(
             # If you are developing Home Assistant Cast, uncomment and set to
             # your dev app id.
             # app_id="5FE44367",
@@ -68,7 +68,7 @@ async def async_setup_ha_cast(
         dispatcher.async_dispatcher_send(
             hass,
             SIGNAL_HASS_CAST_SHOW_VIEW,
-            controller,
+            controller_data,
             call.data[ATTR_ENTITY_ID],
             call.data[ATTR_VIEW_PATH],
             call.data.get(ATTR_URL_PATH),

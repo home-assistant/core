@@ -31,7 +31,7 @@
           "apps": "Configure applications list",
           "get_sources": "Retrieve the running apps as the list of sources",
           "exclude_unnamed_apps": "Exclude apps with unknown name from the sources list",
-          "screencap": "Use screen capture for album art",
+          "screencap_interval": "Interval in minutes between screen capture for album art (set 0 to disable)",
           "state_detection_rules": "Configure state detection rules",
           "turn_off_command": "ADB shell turn off command (leave empty for default)",
           "turn_on_command": "ADB shell turn on command (leave empty for default)"
@@ -101,7 +101,12 @@
     },
     "learn_sendevent": {
       "name": "Learn sendevent",
-      "description": "Translates a key press on a remote into ADB 'sendevent' commands. You must press one button on the remote within 8 seconds of calling this service."
+      "description": "Translates a key press on a remote into ADB 'sendevent' commands. You must press one button on the remote within 8 seconds of performing this action."
+    }
+  },
+  "exceptions": {
+    "failed_send": {
+      "message": "Failed to send command {cmd}"
     }
   }
 }

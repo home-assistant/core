@@ -1,9 +1,9 @@
 """tplink conftest."""
 
 from collections.abc import Generator
-import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
+from kasa import DeviceConfig
 import pytest
 
 from homeassistant.components.tplink import DOMAIN
@@ -11,16 +11,18 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     CREATE_ENTRY_DATA_LEGACY,
-    CREDENTIALS_HASH_AUTH,
-    DEVICE_CONFIG_AUTH,
+    CREDENTIALS_HASH_AES,
+    CREDENTIALS_HASH_KLAP,
+    DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_KLAP,
     IP_ADDRESS,
     IP_ADDRESS2,
     MAC_ADDRESS,
     MAC_ADDRESS2,
-    _mocked_bulb,
+    _mocked_device,
 )
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -30,21 +32,23 @@ def mock_discovery():
         "homeassistant.components.tplink.Discover",
         discover=DEFAULT,
         discover_single=DEFAULT,
+        try_connect_all=DEFAULT,
     ) as mock_discovery:
-        device = _mocked_bulb(
-            device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-            credentials_hash=CREDENTIALS_HASH_AUTH,
+        device = _mocked_device(
+            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+            credentials_hash=CREDENTIALS_HASH_KLAP,
             alias=None,
         )
         devices = {
-            "127.0.0.1": _mocked_bulb(
-                device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+            "127.0.0.1": _mocked_device(
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+                credentials_hash=CREDENTIALS_HASH_KLAP,
                 alias=None,
             )
         }
         mock_discovery["discover"].return_value = devices
         mock_discovery["discover_single"].return_value = device
+        mock_discovery["try_connect_all"].return_value = device
         mock_discovery["mock_device"] = device
         yield mock_discovery
 
@@ -52,15 +56,18 @@ def mock_discovery():
 @pytest.fixture
 def mock_connect():
     """Mock python-kasa connect."""
-    with patch("homeassistant.components.tplink.SmartDevice.connect") as mock_connect:
+    with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
         devices = {
-            IP_ADDRESS: _mocked_bulb(
-                device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
+            IP_ADDRESS: _mocked_device(
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+                credentials_hash=CREDENTIALS_HASH_KLAP,
+                ip_address=IP_ADDRESS,
             ),
-            IP_ADDRESS2: _mocked_bulb(
-                device_config=DEVICE_CONFIG_AUTH,
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+            IP_ADDRESS2: _mocked_device(
+                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES.to_dict()),
+                credentials_hash=CREDENTIALS_HASH_AES,
                 mac=MAC_ADDRESS2,
+                ip_address=IP_ADDRESS2,
             ),
         }
 
@@ -72,25 +79,8 @@ def mock_connect():
         yield {"connect": mock_connect, "mock_devices": devices}
 
 
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
-
-
-@pytest.fixture(autouse=True)
-def tplink_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
-
-
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch.multiple(
         async_setup=DEFAULT,
@@ -102,7 +92,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_init() -> Generator[AsyncMock, None, None]:
+def mock_init() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch.multiple(
         "homeassistant.components.tplink",

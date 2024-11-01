@@ -1,4 +1,5 @@
 """Module that groups code required to handle state restore for component."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,6 @@ from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
-    ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
@@ -19,7 +19,6 @@ from .const import (
     ATTR_TARGET_TEMP_LOW,
     DOMAIN,
     HVAC_MODES,
-    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -55,9 +54,6 @@ async def _async_reproduce_states(
     if state.state in HVAC_MODES:
         await call_service(SERVICE_SET_HVAC_MODE, [], {ATTR_HVAC_MODE: state.state})
 
-    if ATTR_AUX_HEAT in state.attributes:
-        await call_service(SERVICE_SET_AUX_HEAT, [ATTR_AUX_HEAT])
-
     if (
         (ATTR_TEMPERATURE in state.attributes)
         or (ATTR_TARGET_TEMP_HIGH in state.attributes)
@@ -68,13 +64,22 @@ async def _async_reproduce_states(
             [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW],
         )
 
-    if ATTR_PRESET_MODE in state.attributes:
+    if (
+        ATTR_PRESET_MODE in state.attributes
+        and state.attributes[ATTR_PRESET_MODE] is not None
+    ):
         await call_service(SERVICE_SET_PRESET_MODE, [ATTR_PRESET_MODE])
 
-    if ATTR_SWING_MODE in state.attributes:
+    if (
+        ATTR_SWING_MODE in state.attributes
+        and state.attributes[ATTR_SWING_MODE] is not None
+    ):
         await call_service(SERVICE_SET_SWING_MODE, [ATTR_SWING_MODE])
 
-    if ATTR_FAN_MODE in state.attributes:
+    if (
+        ATTR_FAN_MODE in state.attributes
+        and state.attributes[ATTR_FAN_MODE] is not None
+    ):
         await call_service(SERVICE_SET_FAN_MODE, [ATTR_FAN_MODE])
 
     if ATTR_HUMIDITY in state.attributes:

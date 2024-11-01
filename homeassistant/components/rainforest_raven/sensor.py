@@ -1,4 +1,5 @@
 """Sensor entity for a Rainforest RAVEn device."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,9 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MAC,
     PERCENTAGE,
@@ -21,10 +20,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import RAVEnDataCoordinator
+from .coordinator import RAVEnConfigEntry, RAVEnDataCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,7 +69,6 @@ DIAGNOSTICS = (
         key="link_strength",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         attribute_keys=[
             "channel",
@@ -80,10 +78,12 @@ DIAGNOSTICS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RAVEnConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[RAVEnSensor] = [
         RAVEnSensor(coordinator, description) for description in DIAGNOSTICS
     ]
@@ -104,7 +104,6 @@ async def async_setup_entry(
                         translation_key="meter_price",
                         key="price",
                         native_unit_of_measurement=f"{meter_data['PriceCluster']['currency'].value}/{UnitOfEnergy.KILO_WATT_HOUR}",
-                        icon="mdi:cash",
                         state_class=SensorStateClass.MEASUREMENT,
                         attribute_keys=[
                             "tier",

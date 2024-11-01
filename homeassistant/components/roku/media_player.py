@@ -1,4 +1,5 @@
 """Support for the Roku media player."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -27,6 +28,7 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .browse_media import async_browse_media
 from .const import (
@@ -77,7 +79,7 @@ ATTRS_TO_PLAY_ON_ROKU_AUDIO_PARAMS = {
     ATTR_THUMBNAIL: "albumArtUrl",
 }
 
-SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
+SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
 
 
 async def async_setup_entry(
@@ -147,8 +149,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return None
 
         if (
-            self.coordinator.data.app.name == "Power Saver"
-            or self.coordinator.data.app.name == "Roku"
+            self.coordinator.data.app.name in {"Power Saver", "Roku"}
             or self.coordinator.data.app.screensaver
         ):
             return MediaPlayerState.IDLE
@@ -254,9 +255,12 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        return ["Home"] + sorted(
-            app.name for app in self.coordinator.data.apps if app.name is not None
-        )
+        return [
+            "Home",
+            *sorted(
+                app.name for app in self.coordinator.data.apps if app.name is not None
+            ),
+        ]
 
     @roku_exception_handler()
     async def search(self, keyword: str) -> None:
@@ -441,17 +445,25 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
                 if attr in extra
             }
 
-            params = {"t": "a", **params}
+            params = {"u": media_id, "t": "a", **params}
 
-            await self.coordinator.roku.play_on_roku(media_id, params)
+            await self.coordinator.roku.launch(
+                self.coordinator.play_media_app_id,
+                params,
+            )
         elif media_type in {MediaType.URL, MediaType.VIDEO}:
             params = {
                 param: extra[attr]
                 for (attr, param) in ATTRS_TO_PLAY_ON_ROKU_PARAMS.items()
                 if attr in extra
             }
+            params["u"] = media_id
+            params["t"] = "v"
 
-            await self.coordinator.roku.play_on_roku(media_id, params)
+            await self.coordinator.roku.launch(
+                self.coordinator.play_media_app_id,
+                params,
+            )
         else:
             _LOGGER.error("Media type %s is not supported", original_media_type)
             return

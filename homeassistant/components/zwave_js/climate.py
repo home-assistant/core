@@ -1,4 +1,5 @@
 """Representation of Z-Wave thermostats."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -23,8 +24,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
     ClimateEntity,
@@ -101,7 +100,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave climate from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
@@ -420,7 +419,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        min_temp = DEFAULT_MIN_TEMP
+        min_temp = 0.0  # Not using DEFAULT_MIN_TEMP to allow wider range
         base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
@@ -436,7 +435,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        max_temp = DEFAULT_MAX_TEMP
+        max_temp = 50.0  # Not using DEFAULT_MAX_TEMP to allow wider range
         base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])

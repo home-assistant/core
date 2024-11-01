@@ -1,4 +1,5 @@
 """Support for sensor data from RainMachine."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,9 +20,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
-from . import RainMachineData, RainMachineEntity
-from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES, DOMAIN
-from .model import RainMachineEntityDescription
+from . import RainMachineConfigEntry, RainMachineData
+from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import (
     RUN_STATE_MAP,
     EntityDomainReplacementStrategy,
@@ -66,7 +67,6 @@ SENSOR_DESCRIPTIONS = (
     RainMachineSensorDataDescription(
         key=TYPE_FLOW_SENSOR_CLICK_M3,
         translation_key=TYPE_FLOW_SENSOR_CLICK_M3,
-        icon="mdi:water-pump",
         native_unit_of_measurement=f"clicks/{UnitOfVolume.CUBIC_METERS}",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -77,7 +77,6 @@ SENSOR_DESCRIPTIONS = (
     RainMachineSensorDataDescription(
         key=TYPE_FLOW_SENSOR_CONSUMED_LITERS,
         translation_key=TYPE_FLOW_SENSOR_CONSUMED_LITERS,
-        icon="mdi:water-pump",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -89,7 +88,6 @@ SENSOR_DESCRIPTIONS = (
     RainMachineSensorDataDescription(
         key=TYPE_FLOW_SENSOR_LEAK_CLICKS,
         translation_key=TYPE_FLOW_SENSOR_LEAK_CLICKS,
-        icon="mdi:pipe-leak",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="clicks",
         entity_registry_enabled_default=False,
@@ -100,7 +98,6 @@ SENSOR_DESCRIPTIONS = (
     RainMachineSensorDataDescription(
         key=TYPE_FLOW_SENSOR_LEAK_VOLUME,
         translation_key=TYPE_FLOW_SENSOR_LEAK_VOLUME,
-        icon="mdi:pipe-leak",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -154,10 +151,12 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RainMachineConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up RainMachine sensors based on a config entry."""
-    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_finish_entity_domain_replacements(
         hass,

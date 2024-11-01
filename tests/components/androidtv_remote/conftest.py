@@ -1,4 +1,5 @@
 """Fixtures for the Android TV Remote integration tests."""
+
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.androidtv_remote.async_setup_entry",
@@ -21,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_unload_entry() -> Generator[AsyncMock, None, None]:
+def mock_unload_entry() -> Generator[AsyncMock]:
     """Mock unloading a config entry."""
     with patch(
         "homeassistant.components.androidtv_remote.async_unload_entry",
@@ -31,7 +32,7 @@ def mock_unload_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_api() -> Generator[None, MagicMock, None]:
+def mock_api() -> Generator[MagicMock]:
     """Return a mocked AndroidTVRemote."""
     with patch(
         "homeassistant.components.androidtv_remote.helpers.AndroidTVRemote",

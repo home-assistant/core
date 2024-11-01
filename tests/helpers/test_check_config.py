@@ -1,4 +1,5 @@
 """Test check_config helper."""
+
 import logging
 from unittest.mock import Mock, patch
 
@@ -42,11 +43,9 @@ BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
 
 def log_ha_config(conf):
     """Log the returned config."""
-    cnt = 0
     _LOGGER.debug("CONFIG - %s lines - %s errors", len(conf), len(conf.errors))
-    for key, val in conf.items():
-        _LOGGER.debug("#%s - %s: %s", cnt, key, val)
-        cnt += 1
+    for cnt, (key, val) in enumerate(conf.items()):
+        _LOGGER.debug("#%s - %s: %s", cnt + 1, key, val)
     for cnt, err in enumerate(conf.errors):
         _LOGGER.debug("error[%s] = %s", cnt, err)
 
@@ -122,10 +121,14 @@ async def test_integrationt_requirement_not_found(hass: HomeAssistant) -> None:
     """Test errors if integration with a requirement not found not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "test_custom_component:"}
-    with patch(
-        "homeassistant.helpers.check_config.async_get_integration_with_requirements",
-        side_effect=RequirementsNotFound("test_custom_component", ["any"]),
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.helpers.check_config.async_get_integration_with_requirements",
+            side_effect=RequirementsNotFound("test_custom_component", ["any"]),
+        ),
+        patch("os.path.isfile", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
@@ -171,10 +174,14 @@ async def test_integration_import_error(hass: HomeAssistant) -> None:
     """Test errors if integration with a requirement not found not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:"}
-    with patch(
-        "homeassistant.loader.Integration.get_component",
-        side_effect=ImportError("blablabla"),
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.loader.Integration.async_get_component",
+            side_effect=ImportError("blablabla"),
+        ),
+        patch("os.path.isfile", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
@@ -337,10 +344,15 @@ async def test_config_platform_import_error(hass: HomeAssistant) -> None:
     """Test errors if config platform fails to import."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
-    with patch(
-        "homeassistant.loader.Integration.get_platform",
-        side_effect=ImportError("blablabla"),
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.loader.Integration.async_get_platform",
+            side_effect=ImportError("blablabla"),
+        ),
+        patch("os.path.isfile", return_value=True),
+        patch("homeassistant.loader.Integration.platforms_exists", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
@@ -357,10 +369,15 @@ async def test_platform_import_error(hass: HomeAssistant) -> None:
     """Test errors if platform not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: demo"}
-    with patch(
-        "homeassistant.loader.Integration.get_platform",
-        side_effect=[None, ImportError("blablabla")],
-    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+    with (
+        patch(
+            "homeassistant.loader.Integration.async_get_platform",
+            side_effect=[None, ImportError("blablabla")],
+        ),
+        patch("homeassistant.loader.Integration.platforms_exists", return_value=True),
+        patch("os.path.isfile", return_value=True),
+        patch_yaml_files(files),
+    ):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 

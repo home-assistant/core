@@ -1,4 +1,5 @@
 """Support for switching devices via Pilight to on and off."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -17,8 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .base_class import SWITCHES_SCHEMA, PilightBaseDevice
 from .const import CONF_DIMLEVEL_MAX, CONF_DIMLEVEL_MIN
+from .entity import SWITCHES_SCHEMA, PilightBaseDevice
 
 LIGHTS_SCHEMA = SWITCHES_SCHEMA.extend(
     {
@@ -27,7 +28,7 @@ LIGHTS_SCHEMA = SWITCHES_SCHEMA.extend(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_LIGHTS): vol.Schema({cv.string: LIGHTS_SCHEMA})}
 )
 

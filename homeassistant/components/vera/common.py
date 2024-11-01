@@ -1,4 +1,5 @@
 """Common vera code."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -26,9 +27,7 @@ class ControllerData(NamedTuple):
 
 def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
     """Get configured platforms for a controller."""
-    platforms: list[Platform] = []
-    for platform in controller_data.devices:
-        platforms.append(platform)
+    platforms: list[Platform] = list(controller_data.devices)
 
     if controller_data.scenes:
         platforms.append(Platform.SCENE)

@@ -1,20 +1,105 @@
 """Test MQTT utils."""
 
+import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 from pathlib import Path
 from random import getrandbits
 import shutil
 import tempfile
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt.models import MessageCallbackType
+from homeassistant.components.mqtt.util import EnsureJobAfterCooldown
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import MqttMockHAClient, MqttMockPahoClient
+
+
+async def test_canceling_debouncer_on_shutdown(
+    hass: HomeAssistant,
+    record_calls: MessageCallbackType,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test canceling the debouncer when HA shuts down."""
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    # Mock we are past initial setup
+    await mock_debouncer.wait()
+    with patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 2):
+        mock_debouncer.clear()
+        await mqtt.async_subscribe(hass, "test/state1", record_calls)
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
+        # Stop HA so the scheduled debouncer task will be canceled
+        mqtt_client_mock.subscribe.reset_mock()
+        hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
+        await mqtt.async_subscribe(hass, "test/state2", record_calls)
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
+        await mqtt.async_subscribe(hass, "test/state3", record_calls)
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
+        await mqtt.async_subscribe(hass, "test/state4", record_calls)
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=0.1))
+        await mqtt.async_subscribe(hass, "test/state5", record_calls)
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        # Assert the debouncer subscribe job was not executed
+        assert not mock_debouncer.is_set()
+        mqtt_client_mock.subscribe.assert_not_called()
+
+        # Note thet the broker connection will not be disconnected gracefully
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+        await asyncio.sleep(0)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        mqtt_client_mock.subscribe.assert_not_called()
+        mqtt_client_mock.disconnect.assert_not_called()
+
+
+async def test_canceling_debouncer_normal(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test canceling the debouncer before completion."""
+
+    async def _async_myjob() -> None:
+        await asyncio.sleep(1.0)
+
+    debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
+    debouncer.async_schedule()
+    await asyncio.sleep(0.01)
+    assert debouncer._task is not None
+    await debouncer.async_cleanup()
+    assert debouncer._task is None
+
+
+async def test_canceling_debouncer_throws(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test canceling the debouncer when HA shuts down."""
+
+    async def _async_myjob() -> None:
+        await asyncio.sleep(1.0)
+
+    debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
+    debouncer.async_schedule()
+    await asyncio.sleep(0.01)
+    assert debouncer._task is not None
+    # let debouncer._task fail by mocking it
+    with patch.object(debouncer, "_task") as task:
+        task.cancel = MagicMock(return_value=True)
+        await debouncer.async_cleanup()
+        assert "Error cleaning up task" in caplog.text
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
 
 
 async def help_create_test_certificate_file(
@@ -129,12 +214,11 @@ async def test_return_default_get_file_path(
     with patch(
         "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
         f"home-assistant-mqtt-other-{getrandbits(10):03x}",
-    ) as mock_temp_dir:
-        tempdir = Path(tempfile.gettempdir()) / mock_temp_dir
+    ) as temp_dir_name:
+        tempdir = Path(tempfile.gettempdir()) / temp_dir_name
         assert await hass.async_add_executor_job(_get_file_path, tempdir)
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_waiting_for_client_not_loaded(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -152,27 +236,23 @@ async def test_waiting_for_client_not_loaded(
 
     unsubs: list[Callable[[], None]] = []
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
-        nonlocal unsub
+    async def _async_just_in_time_subscribe() -> None:
         assert await mqtt.async_wait_for_mqtt_client(hass)
         # Awaiting a second time should work too and return True
         assert await mqtt.async_wait_for_mqtt_client(hass)
         unsubs.append(await mqtt.async_subscribe(hass, "test_topic", lambda msg: None))
 
     # Simulate some integration waiting for the client to become available
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
-    hass.async_add_job(_async_just_in_time_subscribe)
+    for _ in range(4):
+        hass.async_create_task(_async_just_in_time_subscribe())
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert len(unsubs) == 4
     for unsub in unsubs:
         unsub()
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_waiting_for_client_loaded(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
@@ -180,13 +260,13 @@ async def test_waiting_for_client_loaded(
     """Test waiting for client where mqtt entry is loaded."""
     unsub: Callable[[], None] | None = None
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+    async def _async_just_in_time_subscribe() -> None:
         nonlocal unsub
         assert await mqtt.async_wait_for_mqtt_client(hass)
         unsub = await mqtt.async_subscribe(hass, "test_topic", lambda msg: None)
 
-    entry = hass.config_entries.async_entries(mqtt.DATA_MQTT)[0]
-    assert entry.state == ConfigEntryState.LOADED
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
 
     await _async_just_in_time_subscribe()
 
@@ -209,17 +289,17 @@ async def test_waiting_for_client_entry_fails(
     )
     entry.add_to_hass(hass)
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+    async def _async_just_in_time_subscribe() -> None:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
-    hass.async_add_job(_async_just_in_time_subscribe)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    hass.async_create_task(_async_just_in_time_subscribe())
+    assert entry.state is ConfigEntryState.NOT_LOADED
     with patch(
         "homeassistant.components.mqtt.async_setup_entry",
         side_effect=Exception,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR  # type:ignore[comparison-overlap]
 
 
 async def test_waiting_for_client_setup_fails(
@@ -237,16 +317,16 @@ async def test_waiting_for_client_setup_fails(
     )
     entry.add_to_hass(hass)
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+    async def _async_just_in_time_subscribe() -> None:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
-    hass.async_add_job(_async_just_in_time_subscribe)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    hass.async_create_task(_async_just_in_time_subscribe())
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
     # Simulate MQTT setup fails before the client would become available
     mqtt_client_mock.connect.side_effect = Exception
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR  # type:ignore[comparison-overlap]
 
 
 @patch("homeassistant.components.mqtt.util.AVAILABILITY_TIMEOUT", 0.01)
@@ -264,7 +344,7 @@ async def test_waiting_for_client_timeout(
     )
     entry.add_to_hass(hass)
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     # returns False after timeout
     assert not await mqtt.async_wait_for_mqtt_client(hass)
 
@@ -288,7 +368,7 @@ async def test_waiting_for_client_with_disabled_entry(
         entry.entry_id, ConfigEntryDisabler.USER
     )
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
     # returns False because entry is disabled
     assert not await mqtt.async_wait_for_mqtt_client(hass)

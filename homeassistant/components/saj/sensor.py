@@ -1,4 +1,5 @@
 """SAJ solar inverter interface."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -10,7 +11,7 @@ import pysaj
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -52,7 +53,7 @@ SAJ_UNIT_MAPPINGS = {
     "°C": UnitOfTemperature.CELSIUS,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
@@ -78,7 +79,7 @@ async def async_setup_platform(
     sensor_def = pysaj.Sensors(wifi)
 
     # Use all sensors by default
-    hass_sensors = []
+    hass_sensors: list[SAJsensor] = []
 
     kwargs = {}
     if wifi:
@@ -102,11 +103,11 @@ async def async_setup_platform(
     if not done:
         raise PlatformNotReady
 
-    for sensor in sensor_def:
-        if sensor.enabled:
-            hass_sensors.append(
-                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-            )
+    hass_sensors.extend(
+        SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+        for sensor in sensor_def
+        if sensor.enabled
+    )
 
     async_add_entities(hass_sensors)
 

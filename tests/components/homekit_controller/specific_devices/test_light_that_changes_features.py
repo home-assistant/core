@@ -1,6 +1,5 @@
 """Test for a Home Assistant bridge that changes light features at runtime."""
 
-
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

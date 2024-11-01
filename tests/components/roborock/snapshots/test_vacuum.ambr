@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_get_maps
+  dict({
+    'vacuum.roborock_s7_maxv': dict({
+      'maps': list([
+        dict({
+          'flag': 0,
+          'name': 'Upstairs',
+          'rooms': dict({
+            16: 'Example room 1',
+            17: 'Example room 2',
+            18: 'Example room 3',
+          }),
+        }),
+        dict({
+          'flag': 1,
+          'name': 'Downstairs',
+          'rooms': dict({
+            16: 'Example room 1',
+            17: 'Example room 2',
+            18: 'Example room 3',
+          }),
+        }),
+      ]),
+    }),
+  })
+# ---

@@ -1,4 +1,5 @@
 """The Wyoming integration."""
+
 from __future__ import annotations
 
 import logging
@@ -13,11 +14,11 @@ from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .models import DomainDataItem
-from .satellite import WyomingSatellite
 
 _LOGGER = logging.getLogger(__name__)
 
 SATELLITE_PLATFORMS = [
+    Platform.ASSIST_SATELLITE,
     Platform.BINARY_SENSOR,
     Platform.SELECT,
     Platform.SWITCH,
@@ -46,49 +47,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     if (satellite_info := service.info.satellite) is not None:
-        # Create satellite device, etc.
-        item.satellite = _make_satellite(hass, entry, service)
+        # Create satellite device
+        dev_reg = dr.async_get(hass)
 
-        # Set up satellite sensors, switches, etc.
-        await hass.config_entries.async_forward_entry_setups(entry, SATELLITE_PLATFORMS)
-
-        # Start satellite communication
-        entry.async_create_background_task(
-            hass,
-            item.satellite.run(),
-            f"Satellite {satellite_info.name}",
+        # Use config entry id since only one satellite per entry is supported
+        satellite_id = entry.entry_id
+        device = dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, satellite_id)},
+            name=satellite_info.name,
+            suggested_area=satellite_info.area,
         )
 
-        entry.async_on_unload(item.satellite.stop)
+        item.device = SatelliteDevice(
+            satellite_id=satellite_id,
+            device_id=device.id,
+        )
+
+        # Set up satellite entity, sensors, switches, etc.
+        await hass.config_entries.async_forward_entry_setups(entry, SATELLITE_PLATFORMS)
 
     return True
-
-
-def _make_satellite(
-    hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
-) -> WyomingSatellite:
-    """Create Wyoming satellite/device from config entry and Wyoming service."""
-    satellite_info = service.info.satellite
-    assert satellite_info is not None
-
-    dev_reg = dr.async_get(hass)
-
-    # Use config entry id since only one satellite per entry is supported
-    satellite_id = config_entry.entry_id
-
-    device = dev_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, satellite_id)},
-        name=satellite_info.name,
-        suggested_area=satellite_info.area,
-    )
-
-    satellite_device = SatelliteDevice(
-        satellite_id=satellite_id,
-        device_id=device.id,
-    )
-
-    return WyomingSatellite(hass, service, satellite_device)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
@@ -101,7 +80,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     item: DomainDataItem = hass.data[DOMAIN][entry.entry_id]
 
     platforms = list(item.service.platforms)
-    if item.satellite is not None:
+    if item.device is not None:
         platforms += SATELLITE_PLATFORMS
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)

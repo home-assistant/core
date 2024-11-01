@@ -1,11 +1,12 @@
 """The tests for the openalpr cloud platform."""
+
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events, load_fixture
@@ -14,13 +15,13 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-async def setup_homeassistant(hass: HomeAssistant):
+async def setup_homeassistant(hass: HomeAssistant) -> None:
     """Set up the homeassistant integration."""
     await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
-async def setup_openalpr_cloud(hass):
+async def setup_openalpr_cloud(hass: HomeAssistant) -> None:
     """Set up openalpr cloud."""
     config = {
         ip.DOMAIN: {
@@ -42,7 +43,7 @@ async def setup_openalpr_cloud(hass):
 
 
 @pytest.fixture
-async def alpr_events(hass):
+async def alpr_events(hass: HomeAssistant) -> list[Event]:
     """Listen for events."""
     return async_capture_events(hass, "image_processing.found_plate")
 
@@ -106,6 +107,7 @@ async def test_setup_platform_without_api_key(hass: HomeAssistant) -> None:
 
     with assert_setup_component(0, ip.DOMAIN):
         await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_platform_without_region(hass: HomeAssistant) -> None:
@@ -121,6 +123,7 @@ async def test_setup_platform_without_region(hass: HomeAssistant) -> None:
 
     with assert_setup_component(0, ip.DOMAIN):
         await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_openalpr_process_image(
@@ -133,7 +136,7 @@ async def test_openalpr_process_image(
     aioclient_mock.post(
         OPENALPR_API_URL,
         params=PARAMS,
-        text=load_fixture("alpr_cloud.json"),
+        text=load_fixture("alpr_cloud.json", "openalpr_cloud"),
         status=200,
     )
 

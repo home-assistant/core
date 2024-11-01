@@ -13,5 +13,6 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/gardena_bluetooth",
   "iot_class": "local_polling",
-  "requirements": ["gardena-bluetooth==1.4.1"]
+  "loggers": ["bleak", "bleak_esphome", "gardena_bluetooth"],
+  "requirements": ["gardena-bluetooth==1.4.4"]
 }

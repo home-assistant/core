@@ -1,13 +1,14 @@
 """Support for vacuum cleaner robots (botvacs)."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 from enum import IntFlag
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,26 +24,27 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from .const import DOMAIN, STATE_CLEANING, STATE_DOCKED, STATE_ERROR, STATE_RETURNING
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "vacuum"
+DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=20)
 
 ATTR_BATTERY_ICON = "battery_icon"
@@ -62,11 +64,6 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
 
-
-STATE_CLEANING = "cleaning"
-STATE_DOCKED = "docked"
-STATE_RETURNING = "returning"
-STATE_ERROR = "error"
 
 STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 
@@ -94,20 +91,38 @@ class VacuumEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the VacuumEntityFeature enum instead.
-SUPPORT_TURN_ON = 1
-SUPPORT_TURN_OFF = 2
-SUPPORT_PAUSE = 4
-SUPPORT_STOP = 8
-SUPPORT_RETURN_HOME = 16
-SUPPORT_FAN_SPEED = 32
-SUPPORT_BATTERY = 64
-SUPPORT_STATUS = 128
-SUPPORT_SEND_COMMAND = 256
-SUPPORT_LOCATE = 512
-SUPPORT_CLEAN_SPOT = 1024
-SUPPORT_MAP = 2048
-SUPPORT_STATE = 4096
-SUPPORT_START = 8192
+_DEPRECATED_SUPPORT_TURN_ON = DeprecatedConstantEnum(
+    VacuumEntityFeature.TURN_ON, "2025.10"
+)
+_DEPRECATED_SUPPORT_TURN_OFF = DeprecatedConstantEnum(
+    VacuumEntityFeature.TURN_OFF, "2025.10"
+)
+_DEPRECATED_SUPPORT_PAUSE = DeprecatedConstantEnum(VacuumEntityFeature.PAUSE, "2025.10")
+_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(VacuumEntityFeature.STOP, "2025.10")
+_DEPRECATED_SUPPORT_RETURN_HOME = DeprecatedConstantEnum(
+    VacuumEntityFeature.RETURN_HOME, "2025.10"
+)
+_DEPRECATED_SUPPORT_FAN_SPEED = DeprecatedConstantEnum(
+    VacuumEntityFeature.FAN_SPEED, "2025.10"
+)
+_DEPRECATED_SUPPORT_BATTERY = DeprecatedConstantEnum(
+    VacuumEntityFeature.BATTERY, "2025.10"
+)
+_DEPRECATED_SUPPORT_STATUS = DeprecatedConstantEnum(
+    VacuumEntityFeature.STATUS, "2025.10"
+)
+_DEPRECATED_SUPPORT_SEND_COMMAND = DeprecatedConstantEnum(
+    VacuumEntityFeature.SEND_COMMAND, "2025.10"
+)
+_DEPRECATED_SUPPORT_LOCATE = DeprecatedConstantEnum(
+    VacuumEntityFeature.LOCATE, "2025.10"
+)
+_DEPRECATED_SUPPORT_CLEAN_SPOT = DeprecatedConstantEnum(
+    VacuumEntityFeature.CLEAN_SPOT, "2025.10"
+)
+_DEPRECATED_SUPPORT_MAP = DeprecatedConstantEnum(VacuumEntityFeature.MAP, "2025.10")
+_DEPRECATED_SUPPORT_STATE = DeprecatedConstantEnum(VacuumEntityFeature.STATE, "2025.10")
+_DEPRECATED_SUPPORT_START = DeprecatedConstantEnum(VacuumEntityFeature.START, "2025.10")
 
 # mypy: disallow-any-generics
 
@@ -120,7 +135,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
-    component = hass.data[DOMAIN] = EntityComponent[StateVacuumEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[StateVacuumEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -128,37 +143,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_START,
-        {},
+        None,
         "async_start",
         [VacuumEntityFeature.START],
     )
     component.async_register_entity_service(
         SERVICE_PAUSE,
-        {},
+        None,
         "async_pause",
         [VacuumEntityFeature.PAUSE],
     )
     component.async_register_entity_service(
         SERVICE_RETURN_TO_BASE,
-        {},
+        None,
         "async_return_to_base",
         [VacuumEntityFeature.RETURN_HOME],
     )
     component.async_register_entity_service(
         SERVICE_CLEAN_SPOT,
-        {},
+        None,
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
     )
     component.async_register_entity_service(
         SERVICE_LOCATE,
-        {},
+        None,
         "async_locate",
         [VacuumEntityFeature.LOCATE],
     )
     component.async_register_entity_service(
         SERVICE_STOP,
-        {},
+        None,
         "async_stop",
         [VacuumEntityFeature.STOP],
     )
@@ -183,14 +198,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[StateVacuumEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[StateVacuumEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -238,7 +251,7 @@ class StateVacuumEntity(
         )
 
     @property
-    def capability_attributes(self) -> Mapping[str, Any] | None:
+    def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if VacuumEntityFeature.FAN_SPEED in self.supported_features_compat:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
@@ -294,7 +307,7 @@ class StateVacuumEntity(
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner.
@@ -305,7 +318,7 @@ class StateVacuumEntity(
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock.
@@ -316,7 +329,7 @@ class StateVacuumEntity(
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up.
@@ -327,7 +340,7 @@ class StateVacuumEntity(
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner.
@@ -338,7 +351,7 @@ class StateVacuumEntity(
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed.
@@ -356,7 +369,7 @@ class StateVacuumEntity(
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_send_command(
         self,
@@ -374,7 +387,7 @@ class StateVacuumEntity(
 
     def start(self) -> None:
         """Start or resume the cleaning task."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task.
@@ -385,7 +398,7 @@ class StateVacuumEntity(
 
     def pause(self) -> None:
         """Pause the cleaning task."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_pause(self) -> None:
         """Pause the cleaning task.
@@ -393,3 +406,13 @@ class StateVacuumEntity(
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

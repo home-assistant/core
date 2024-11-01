@@ -6,12 +6,14 @@ from advantage_air import ApiError
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -19,6 +21,7 @@ from homeassistant.components.climate import (
     FAN_LOW,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -26,7 +29,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import add_mock_config
@@ -37,6 +40,7 @@ async def test_climate_myzone_main(
     entity_registry: er.EntityRegistry,
     mock_get: AsyncMock,
     mock_update: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate platform main entity."""
 
@@ -124,6 +128,26 @@ async def test_climate_myzone_main(
     )
     mock_update.assert_called_once()
     mock_update.reset_mock()
+
+    # Change Preset
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: ADVANTAGE_AIR_MYAUTO},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    assert mock_update.call_args[0][0] == snapshot(name=f"{entity_id}-preset")
+    mock_update.reset_mock()
+
+    # Test setting HEAT COOL when its not supported
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            blocking=True,
+        )
 
 
 async def test_climate_myzone_zone(
@@ -230,13 +254,14 @@ async def test_climate_async_failed_update(
 ) -> None:
     """Test climate change failure."""
 
+    mock_update.side_effect = ApiError
+    await add_mock_config(hass)
     with pytest.raises(HomeAssistantError):
-        mock_update.side_effect = ApiError
-        await add_mock_config(hass)
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-        mock_update.assert_called_once()
+
+    mock_update.assert_called_once()

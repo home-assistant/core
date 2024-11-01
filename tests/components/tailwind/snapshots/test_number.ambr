@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Tailwind iQ3 Status LED brightness',
-      'icon': 'mdi:led-on',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -13,6 +12,7 @@
     'context': <ANY>,
     'entity_id': 'number.tailwind_iq3_status_led_brightness',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
@@ -39,11 +39,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:led-on',
+    'original_icon': None,
     'original_name': 'Status LED brightness',
     'platform': 'tailwind',
     'previous_unique_id': None,
@@ -75,10 +77,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
+    'model_id': None,
     'name': 'Tailwind iQ3',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',

@@ -1,4 +1,5 @@
 """Support for Repetier-Server sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -132,6 +133,7 @@ class RepetierRequiredKeysMixin:
 
 
 @dataclass(frozen=True)
+# pylint: disable-next=hass-enforce-class-module
 class RepetierSensorEntityDescription(
     SensorEntityDescription, RepetierRequiredKeysMixin
 ):

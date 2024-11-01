@@ -1,4 +1,5 @@
 """Support for Homekit motion sensors."""
+
 from __future__ import annotations
 
 from aiohomekit.model.characteristics import CharacteristicsTypes

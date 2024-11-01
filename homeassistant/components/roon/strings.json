@@ -11,7 +11,7 @@
       },
       "link": {
         "title": "Authorize HomeAssistant in Roon",
-        "description": "You must authorize Home Assistant in Roon. After you click submit, go to the Roon Core application, open Settings and enable HomeAssistant on the Extensions tab."
+        "description": "You must authorize Home Assistant in Roon. After you select **Submit**, go to the Roon Core application, open **Settings** and enable HomeAssistant on the **Extensions** tab."
       }
     },
     "error": {
@@ -29,7 +29,8 @@
           "event_type": {
             "state": {
               "volume_up": "Volume up",
-              "volume_down": "Volume down"
+              "volume_down": "Volume down",
+              "mute_toggle": "Mute toggle"
             }
           }
         }

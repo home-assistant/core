@@ -1,4 +1,5 @@
 """Test the Devialet diagnostics."""
+
 import json
 
 from homeassistant.core import HomeAssistant

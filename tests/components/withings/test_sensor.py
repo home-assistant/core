@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -7,12 +8,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.withings import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     load_activity_fixture,
+    load_device_fixture,
     load_goals_fixture,
     load_measurements_fixture,
     load_sleep_fixture,
@@ -20,7 +23,7 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-10-21")
@@ -35,15 +38,10 @@ async def test_all_entities(
     """Test all entities."""
     with patch("homeassistant.components.withings.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, polling_config_entry)
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, polling_config_entry.entry_id
-    )
 
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert (state := hass.states.get(entity_entry.entity_id))
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+    await snapshot_platform(
+        hass, entity_registry, snapshot, polling_config_entry.entry_id
+    )
 
 
 async def test_update_failed(
@@ -355,3 +353,83 @@ async def test_warning_if_no_entities_created(
     await setup_integration(hass, polling_config_entry, False)
 
     assert "No data found for Withings entry" in caplog.text
+
+
+async def test_device_sensors_created_when_device_data_received(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device sensors will be added if we receive device data."""
+    withings.get_devices.return_value = []
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get("sensor.body_battery") is None
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.body_battery") is None
+
+    withings.get_devices.return_value = load_device_fixture()
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.body_battery")
+    assert device_registry.async_get_device(
+        {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+    )
+
+    withings.get_devices.return_value = []
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.body_battery") is None
+    assert not device_registry.async_get_device(
+        {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+    )
+
+
+async def test_device_two_config_entries(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    second_polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device sensors will be added for one config entry only at a time."""
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get("sensor.body_battery") is not None
+
+    second_polling_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_polling_config_entry.entry_id)
+
+    assert hass.states.get("sensor.not_henk_temperature") is not None
+
+    assert "Platform withings does not generate unique IDs" not in caplog.text
+
+    await hass.config_entries.async_unload(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.body_battery").state == STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.body_battery").state != STATE_UNAVAILABLE
+
+    await hass.config_entries.async_setup(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Platform withings does not generate unique IDs" not in caplog.text

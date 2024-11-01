@@ -1,4 +1,5 @@
 """The A. O. Smith integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,6 +16,8 @@ from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
 
+type AOSmithConfigEntry = ConfigEntry[AOSmithData]
+
 
 @dataclass
 class AOSmithData:
@@ -25,7 +28,7 @@ class AOSmithData:
     energy_coordinator: AOSmithEnergyCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:
     """Set up A. O. Smith from a config entry."""
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
@@ -54,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await energy_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AOSmithData(
+    entry.runtime_data = AOSmithData(
         client,
         status_coordinator,
         energy_coordinator,
@@ -65,9 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

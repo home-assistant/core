@@ -1,6 +1,5 @@
 """Tests for the Bluetooth integration."""
 
-
 from collections.abc import Iterable
 from contextlib import contextmanager
 import itertools
@@ -59,13 +58,14 @@ BLE_DEVICE_DEFAULTS = {
 @contextmanager
 def patch_bluetooth_time(mock_time: float) -> None:
     """Patch the bluetooth time."""
-    with patch(
-        "homeassistant.components.bluetooth.MONOTONIC_TIME", return_value=mock_time
-    ), patch(
-        "habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time
-    ), patch(
-        "habluetooth.manager.monotonic_time_coarse", return_value=mock_time
-    ), patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time):
+    with (
+        patch(
+            "homeassistant.components.bluetooth.MONOTONIC_TIME", return_value=mock_time
+        ),
+        patch("habluetooth.base_scanner.monotonic_time_coarse", return_value=mock_time),
+        patch("habluetooth.manager.monotonic_time_coarse", return_value=mock_time),
+        patch("habluetooth.scanner.monotonic_time_coarse", return_value=mock_time),
+    ):
         yield
 
 
@@ -155,6 +155,7 @@ def inject_advertisement_with_time_and_source_connectable(
             advertisement=adv,
             connectable=connectable,
             time=time,
+            tx_power=adv.tx_power,
         )
     )
 
@@ -270,7 +271,7 @@ async def _async_setup_with_adapter(
 class MockBleakClient(BleakClient):
     """Mock bleak client."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock init."""
         super().__init__(*args, **kwargs)
         self._device_path = "/dev/test"

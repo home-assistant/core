@@ -1,10 +1,12 @@
 """Support for HomeKit Controller humidifier."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache import cached_property
 
 from homeassistant.components.humidifier import (
     DEFAULT_MAX_HUMIDITY,
@@ -24,12 +26,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 HK_MODE_TO_HA = {
     0: "off",
@@ -154,8 +150,9 @@ class HomeKitDehumidifier(HomeKitBaseHumidifier):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return super().get_characteristic_types() + [
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+        return [
+            *super().get_characteristic_types(),
+            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD,
         ]
 
     @property

@@ -1,41 +1,30 @@
 """The tests for Cover device conditions."""
+
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
-from homeassistant.components.cover import DOMAIN, CoverEntityFeature
+from homeassistant.components import automation
+from homeassistant.components.cover import DOMAIN, CoverEntityFeature, CoverState
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
-    CONF_PLATFORM,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PLATFORM, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
+
+from .common import MockCover
 
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    async_mock_service,
+    setup_test_component_platform,
 )
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.parametrize(
@@ -122,12 +111,12 @@ async def test_get_conditions(
 
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
-    (
+    [
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
     hass: HomeAssistant,
@@ -161,7 +150,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_open", "is_closed", "is_opening", "is_closing"]
+        for condition in ("is_open", "is_closed", "is_opening", "is_closing")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -173,12 +162,11 @@ async def test_get_condition_capabilities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -207,12 +195,11 @@ async def test_get_condition_capabilities_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[0]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -244,12 +231,11 @@ async def test_get_condition_capabilities_set_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -301,12 +287,12 @@ async def test_get_condition_capabilities_set_tilt_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test we get the expected capabilities from a cover condition."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[3]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+
+    ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -358,7 +344,7 @@ async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -371,7 +357,7 @@ async def test_if_state(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.states.async_set(entry.entity_id, CoverState.OPEN)
 
     assert await async_setup_component(
         hass,
@@ -472,36 +458,36 @@ async def test_if_state(
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_open - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_open - event - test_event1"
 
-    hass.states.async_set(entry.entity_id, STATE_CLOSED)
+    hass.states.async_set(entry.entity_id, CoverState.CLOSED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "is_closed - event - test_event2"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "is_closed - event - test_event2"
 
-    hass.states.async_set(entry.entity_id, STATE_OPENING)
+    hass.states.async_set(entry.entity_id, CoverState.OPENING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert calls[2].data["some"] == "is_opening - event - test_event3"
+    assert len(service_calls) == 3
+    assert service_calls[2].data["some"] == "is_opening - event - test_event3"
 
-    hass.states.async_set(entry.entity_id, STATE_CLOSING)
+    hass.states.async_set(entry.entity_id, CoverState.CLOSING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert calls[3].data["some"] == "is_closing - event - test_event4"
+    assert len(service_calls) == 4
+    assert service_calls[3].data["some"] == "is_closing - event - test_event4"
 
 
 async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -514,7 +500,7 @@ async def test_if_state_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.states.async_set(entry.entity_id, CoverState.OPEN)
 
     assert await async_setup_component(
         hass,
@@ -549,22 +535,21 @@ async def test_if_state_legacy(
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_open - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_open - event - test_event1"
 
 
 async def test_if_position(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for position conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -676,13 +661,13 @@ async def test_if_position(
     await hass.async_block_till_done()
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert calls[0].data["some"] == "is_pos_gt_45 - event - test_event1"
-    assert calls[1].data["some"] == "is_pos_lt_90 - event - test_event2"
-    assert calls[2].data["some"] == "is_pos_gt_45_lt_90 - event - test_event3"
+    assert len(service_calls) == 3
+    assert service_calls[0].data["some"] == "is_pos_gt_45 - event - test_event1"
+    assert service_calls[1].data["some"] == "is_pos_lt_90 - event - test_event2"
+    assert service_calls[2].data["some"] == "is_pos_gt_45_lt_90 - event - test_event3"
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_position": 45}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_position": 45}
     )
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
@@ -690,25 +675,25 @@ async def test_if_position(
     await hass.async_block_till_done()
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert len(calls) == 5
-    assert calls[3].data["some"] == "is_pos_not_gt_45 - event - test_event1"
-    assert calls[4].data["some"] == "is_pos_lt_90 - event - test_event2"
+    assert len(service_calls) == 5
+    assert service_calls[3].data["some"] == "is_pos_not_gt_45 - event - test_event1"
+    assert service_calls[4].data["some"] == "is_pos_lt_90 - event - test_event2"
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_position": 90}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_position": 90}
     )
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert len(calls) == 6
-    assert calls[5].data["some"] == "is_pos_gt_45 - event - test_event1"
+    assert len(service_calls) == 6
+    assert service_calls[5].data["some"] == "is_pos_gt_45 - event - test_event1"
 
     hass.states.async_set(ent.entity_id, STATE_UNAVAILABLE, attributes={})
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 7
-    assert calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
+    assert len(service_calls) == 7
+    assert service_calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
 
     for record in caplog.records:
         assert record.levelname in ("DEBUG", "INFO")
@@ -718,14 +703,13 @@ async def test_if_tilt_position(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for tilt position conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[3]
+    setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
+    ent = mock_cover_entities[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
@@ -837,13 +821,13 @@ async def test_if_tilt_position(
     await hass.async_block_till_done()
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert calls[0].data["some"] == "is_pos_gt_45 - event - test_event1"
-    assert calls[1].data["some"] == "is_pos_lt_90 - event - test_event2"
-    assert calls[2].data["some"] == "is_pos_gt_45_lt_90 - event - test_event3"
+    assert len(service_calls) == 3
+    assert service_calls[0].data["some"] == "is_pos_gt_45 - event - test_event1"
+    assert service_calls[1].data["some"] == "is_pos_lt_90 - event - test_event2"
+    assert service_calls[2].data["some"] == "is_pos_gt_45_lt_90 - event - test_event3"
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 45}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_tilt_position": 45}
     )
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
@@ -851,12 +835,12 @@ async def test_if_tilt_position(
     await hass.async_block_till_done()
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert len(calls) == 5
-    assert calls[3].data["some"] == "is_pos_not_gt_45 - event - test_event1"
-    assert calls[4].data["some"] == "is_pos_lt_90 - event - test_event2"
+    assert len(service_calls) == 5
+    assert service_calls[3].data["some"] == "is_pos_not_gt_45 - event - test_event1"
+    assert service_calls[4].data["some"] == "is_pos_lt_90 - event - test_event2"
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 90}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_tilt_position": 90}
     )
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
@@ -864,14 +848,14 @@ async def test_if_tilt_position(
     await hass.async_block_till_done()
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert len(calls) == 6
-    assert calls[5].data["some"] == "is_pos_gt_45 - event - test_event1"
+    assert len(service_calls) == 6
+    assert service_calls[5].data["some"] == "is_pos_gt_45 - event - test_event1"
 
     hass.states.async_set(ent.entity_id, STATE_UNAVAILABLE, attributes={})
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 7
-    assert calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
+    assert len(service_calls) == 7
+    assert service_calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
 
     for record in caplog.records:
         assert record.levelname in ("DEBUG", "INFO")

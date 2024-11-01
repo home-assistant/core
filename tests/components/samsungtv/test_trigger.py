@@ -1,27 +1,34 @@
 """The tests for WebOS TV automation triggers."""
+
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.samsungtv import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.components.samsungtv.const import DOMAIN
+from homeassistant.const import SERVICE_RELOAD, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
-from .test_media_player import ENTITY_ID, MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import MOCK_ENTRYDATA_ENCRYPTED_WS
 
 from tests.common import MockEntity, MockEntityPlatform
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_turn_on_trigger_device_id(
-    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    entity_domain: str,
 ) -> None:
     """Test for turn_on triggers by device_id firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+    entity_id = f"{entity_domain}.fake"
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
     assert device, repr(device_registry.devices)
@@ -49,38 +56,41 @@ async def test_turn_on_trigger_device_id(
     )
 
     await hass.services.async_call(
-        "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+        entity_domain, SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
 
     with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    calls.clear()
+    service_calls.clear()
 
     # Ensure WOL backup is called when trigger not present
     with patch(
-        "homeassistant.components.samsungtv.media_player.send_magic_packet"
+        "homeassistant.components.samsungtv.entity.send_magic_packet"
     ) as mock_send_magic_packet:
         await hass.services.async_call(
-            "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+            entity_domain, SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
         )
         await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(service_calls) == 1
     mock_send_magic_packet.assert_called()
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_turn_on_trigger_entity_id(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall], entity_domain: str
 ) -> None:
     """Test for turn_on triggers by entity_id firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+    entity_id = f"{entity_domain}.fake"
 
     assert await async_setup_component(
         hass,
@@ -90,12 +100,12 @@ async def test_turn_on_trigger_entity_id(
                 {
                     "trigger": {
                         "platform": "samsungtv.turn_on",
-                        "entity_id": ENTITY_ID,
+                        "entity_id": entity_id,
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": ENTITY_ID,
+                            "some": entity_id,
                             "id": "{{ trigger.id }}",
                         },
                     },
@@ -105,21 +115,23 @@ async def test_turn_on_trigger_entity_id(
     )
 
     await hass.services.async_call(
-        "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+        entity_domain, SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == ENTITY_ID
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == entity_id
+    assert service_calls[1].data["id"] == 0
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_wrong_trigger_platform_type(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, entity_domain: str
 ) -> None:
     """Test wrong trigger platform type."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entity_id = f"{entity_domain}.fake"
 
     await async_setup_component(
         hass,
@@ -129,12 +141,12 @@ async def test_wrong_trigger_platform_type(
                 {
                     "trigger": {
                         "platform": "samsungtv.wrong_type",
-                        "entity_id": ENTITY_ID,
+                        "entity_id": entity_id,
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": ENTITY_ID,
+                            "some": entity_id,
                             "id": "{{ trigger.id }}",
                         },
                     },
@@ -150,11 +162,13 @@ async def test_wrong_trigger_platform_type(
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_trigger_invalid_entity_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, entity_domain: str
 ) -> None:
     """Test turn on trigger using invalid entity_id."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    entity_id = f"{entity_domain}.fake"
 
     platform = MockEntityPlatform(hass)
 
@@ -174,7 +188,7 @@ async def test_trigger_invalid_entity_id(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": ENTITY_ID,
+                            "some": entity_id,
                             "id": "{{ trigger.id }}",
                         },
                     },

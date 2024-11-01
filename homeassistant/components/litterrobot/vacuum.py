@@ -1,4 +1,5 @@
 """Support for Litter-Robot "Vacuum"."""
+
 from __future__ import annotations
 
 from datetime import time
@@ -17,16 +18,13 @@ from homeassistant.components.vacuum import (
     StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity
-from .hub import LitterRobotHub
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 
@@ -34,12 +32,13 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
     LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
     LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+    LitterBoxStatus.CAT_DETECTED: STATE_DOCKED,
     LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
     LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
     LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
     LitterBoxStatus.READY: STATE_DOCKED,
     LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
-    LitterBoxStatus.OFF: STATE_OFF,
+    LitterBoxStatus.OFF: STATE_DOCKED,
 }
 
 LITTER_BOX_ENTITY = StateVacuumEntityDescription(
@@ -49,11 +48,11 @@ LITTER_BOX_ENTITY = StateVacuumEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LitterRobotConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
+    hub = entry.runtime_data
     entities = [
         LitterRobotCleaner(robot=robot, hub=hub, description=LITTER_BOX_ENTITY)
         for robot in hub.litter_robots()

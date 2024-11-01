@@ -1,14 +1,16 @@
 """The tests for the Apache Kafka component."""
+
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.apache_kafka as apache_kafka
+from homeassistant.components import apache_kafka
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -40,11 +42,13 @@ class MockKafkaClient:
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture():
+def mock_client_fixture() -> Generator[MockKafkaClient]:
     """Mock the apache kafka client."""
-    with patch(f"{PRODUCER_PATH}.start") as start, patch(
-        f"{PRODUCER_PATH}.send_and_wait"
-    ) as send_and_wait, patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init:
+    with (
+        patch(f"{PRODUCER_PATH}.start") as start,
+        patch(f"{PRODUCER_PATH}.send_and_wait") as send_and_wait,
+        patch(f"{PRODUCER_PATH}.__init__", return_value=None) as init,
+    ):
         yield MockKafkaClient(init, start, send_and_wait)
 
 
@@ -86,7 +90,7 @@ async def test_full_config(hass: HomeAssistant, mock_client: MockKafkaClient) ->
     mock_client.start.assert_called_once()
 
 
-async def _setup(hass, filter_config):
+async def _setup(hass: HomeAssistant, filter_config: dict[str, Any]) -> None:
     """Shared set up for filtering tests."""
     config = {apache_kafka.DOMAIN: {"filter": filter_config}}
     config[apache_kafka.DOMAIN].update(MIN_CONFIG)
@@ -95,7 +99,9 @@ async def _setup(hass, filter_config):
     await hass.async_block_till_done()
 
 
-async def _run_filter_tests(hass, tests, mock_client):
+async def _run_filter_tests(
+    hass: HomeAssistant, tests: list[FilterTest], mock_client: MockKafkaClient
+) -> None:
     """Run a series of filter tests on apache kafka."""
     for test in tests:
         hass.states.async_set(test.id, STATE_ON)

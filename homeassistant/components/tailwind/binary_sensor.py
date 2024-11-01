@@ -1,4 +1,5 @@
 """Binary sensor entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,14 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
 from .entity import TailwindDoorEntity
+from .typing import TailwindConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -34,7 +33,6 @@ DESCRIPTIONS: tuple[TailwindDoorBinarySensorEntityDescription, ...] = (
         translation_key="operational_problem",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
-        icon="mdi:garage-alert",
         is_on_fn=lambda door: door.locked_out,
     ),
 )
@@ -42,15 +40,14 @@ DESCRIPTIONS: tuple[TailwindDoorBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TailwindConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tailwind binary sensor based on a config entry."""
-    coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        TailwindDoorBinarySensorEntity(coordinator, door_id, description)
+        TailwindDoorBinarySensorEntity(entry.runtime_data, door_id, description)
         for description in DESCRIPTIONS
-        for door_id in coordinator.data.doors
+        for door_id in entry.runtime_data.data.doors
     )
 
 

@@ -1,4 +1,5 @@
 """Support for UK Met Office weather service."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -44,31 +45,24 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     hass_data = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        MetOfficeWeather(
-            hass_data[METOFFICE_DAILY_COORDINATOR],
-            hass_data[METOFFICE_HOURLY_COORDINATOR],
-            hass_data,
-            False,
-        )
-    ]
-
-    # Add hourly entity to legacy config entries
-    if entity_registry.async_get_entity_id(
+    # Remove hourly entity from legacy config entries
+    if entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
         _calculate_unique_id(hass_data[METOFFICE_COORDINATES], True),
     ):
-        entities.append(
+        entity_registry.async_remove(entity_id)
+
+    async_add_entities(
+        [
             MetOfficeWeather(
                 hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data[METOFFICE_HOURLY_COORDINATOR],
                 hass_data,
-                True,
             )
-        )
-
-    async_add_entities(entities, False)
+        ],
+        False,
+    )
 
 
 def _build_forecast_data(timestep: Timestep) -> Forecast:
@@ -97,8 +91,6 @@ class MetOfficeWeather(
     CoordinatorWeatherEntity[
         TimestampDataUpdateCoordinator[MetOfficeData],
         TimestampDataUpdateCoordinator[MetOfficeData],
-        TimestampDataUpdateCoordinator[MetOfficeData],
-        TimestampDataUpdateCoordinator[MetOfficeData],  # Can be removed in Python 3.12
     ]
 ):
     """Implementation of a Met Office weather condition."""
@@ -118,14 +110,9 @@ class MetOfficeWeather(
         coordinator_daily: TimestampDataUpdateCoordinator[MetOfficeData],
         coordinator_hourly: TimestampDataUpdateCoordinator[MetOfficeData],
         hass_data: dict[str, Any],
-        use_3hourly: bool,
     ) -> None:
         """Initialise the platform with a data instance."""
-        self._hourly = use_3hourly
-        if use_3hourly:
-            observation_coordinator = coordinator_hourly
-        else:
-            observation_coordinator = coordinator_daily
+        observation_coordinator = coordinator_daily
         super().__init__(
             observation_coordinator,
             daily_coordinator=coordinator_daily,
@@ -135,9 +122,9 @@ class MetOfficeWeather(
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = "3-Hourly" if use_3hourly else "Daily"
+        self._attr_name = "Daily"
         self._attr_unique_id = _calculate_unique_id(
-            hass_data[METOFFICE_COORDINATES], use_3hourly
+            hass_data[METOFFICE_COORDINATES], False
         )
 
     @property
@@ -191,14 +178,6 @@ class MetOfficeWeather(
             value = weather_now.wind_direction.value
             return str(value) if value is not None else None
         return None
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return [
-            _build_forecast_data(timestep)
-            for timestep in self.coordinator.data.forecast
-        ]
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:

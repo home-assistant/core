@@ -1,4 +1,5 @@
 """Provides the constants needed for component."""
+
 from enum import IntFlag, StrEnum
 from functools import partial
 from typing import Final
@@ -14,6 +15,21 @@ DOMAIN: Final = "alarm_control_panel"
 
 ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
+
+
+class AlarmControlPanelState(StrEnum):
+    """Alarm control panel entity states."""
+
+    DISARMED = "disarmed"
+    ARMED_HOME = "armed_home"
+    ARMED_AWAY = "armed_away"
+    ARMED_NIGHT = "armed_night"
+    ARMED_VACATION = "armed_vacation"
+    ARMED_CUSTOM_BYPASS = "armed_custom_bypass"
+    PENDING = "pending"
+    ARMING = "arming"
+    DISARMING = "disarming"
+    TRIGGERED = "triggered"
 
 
 class CodeFormat(StrEnum):

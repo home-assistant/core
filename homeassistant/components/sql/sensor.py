@@ -1,4 +1,5 @@
 """Sensor from an SQL Query."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -29,6 +30,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -79,9 +81,6 @@ async def async_setup_platform(
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
 
-    if value_template is not None:
-        value_template.hass = hass
-
     trigger_entity_config = {CONF_NAME: name}
     for key in TRIGGER_ENTITY_OPTIONS:
         if key not in conf:
@@ -115,12 +114,10 @@ async def async_setup_entry(
     value_template: Template | None = None
     if template is not None:
         try:
-            value_template = Template(template)
+            value_template = Template(template, hass)
             value_template.ensure_valid()
         except TemplateError:
             value_template = None
-        if value_template is not None:
-            value_template.hass = hass
 
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
@@ -184,10 +181,14 @@ async def async_setup_sensor(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
-    instance = get_instance(hass)
+    try:
+        instance = get_instance(hass)
+    except KeyError:  # No recorder loaded
+        uses_recorder_db = False
+    else:
+        uses_recorder_db = db_url == instance.db_url
     sessmaker: scoped_session | None
     sql_data = _async_get_or_init_domain_data(hass)
-    uses_recorder_db = db_url == instance.db_url
     use_database_executor = False
     if uses_recorder_db and instance.dialect_name == SupportedDialect.SQLITE:
         use_database_executor = True
@@ -302,6 +303,8 @@ def _generate_lambda_stmt(query: str) -> StatementLambdaElement:
 class SQLSensor(ManualTriggerSensorEntity):
     """Representation of an SQL sensor."""
 
+    _unrecorded_attributes = frozenset({MATCH_ALL})
+
     def __init__(
         self,
         trigger_entity_config: ConfigType,
@@ -364,7 +367,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             )
             sess.rollback()
             sess.close()
-            return
+            return None
 
         for res in result.mappings():
             _LOGGER.debug("Query %s result in %s", self._query, res.items())

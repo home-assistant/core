@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_setup
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.mock_title',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_setup.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.mock_title',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

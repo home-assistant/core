@@ -1,4 +1,5 @@
 """Provides device automations for Cover."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -18,10 +19,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -29,7 +26,7 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, CoverEntityFeature
+from . import DOMAIN, CoverEntityFeature, CoverState
 
 POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
 STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
@@ -146,13 +143,13 @@ async def async_attach_trigger(
     """Attach a trigger."""
     if config[CONF_TYPE] in STATE_TRIGGER_TYPES:
         if config[CONF_TYPE] == "opened":
-            to_state = STATE_OPEN
+            to_state = CoverState.OPEN
         elif config[CONF_TYPE] == "closed":
-            to_state = STATE_CLOSED
+            to_state = CoverState.CLOSED
         elif config[CONF_TYPE] == "opening":
-            to_state = STATE_OPENING
+            to_state = CoverState.OPENING
         elif config[CONF_TYPE] == "closing":
-            to_state = STATE_CLOSING
+            to_state = CoverState.CLOSING
 
         state_config = {
             CONF_PLATFORM: "state",

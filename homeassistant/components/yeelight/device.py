@@ -1,4 +1,5 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+
 from __future__ import annotations
 
 import logging
@@ -31,13 +32,13 @@ def async_format_model(model: str) -> str:
 
 
 @callback
-def async_format_id(id_: str) -> str:
+def async_format_id(id_: str | None) -> str:
     """Generate a more human readable id."""
     return hex(int(id_, 16)) if id_ else "None"
 
 
 @callback
-def async_format_model_id(model: str, id_: str) -> str:
+def async_format_model_id(model: str, id_: str | None) -> str:
     """Generate a more human readable name."""
     return f"{async_format_model(model)} {async_format_id(id_)}"
 

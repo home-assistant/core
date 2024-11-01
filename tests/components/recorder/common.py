@@ -1,4 +1,5 @@
 """Common test utils for working with recorder."""
+
 from __future__ import annotations
 
 import asyncio
@@ -19,7 +20,13 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, core, get_instance, statistics
+from homeassistant.components.recorder import (
+    Recorder,
+    core,
+    get_instance,
+    migration,
+    statistics,
+)
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
@@ -72,10 +79,18 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     await event.wait()
 
 
+def get_start_time(start: datetime) -> datetime:
+    """Calculate a valid start time for statistics."""
+    start_minutes = start.minute - start.minute % 5
+    return start.replace(minute=start_minutes, second=0, microsecond=0)
+
+
 def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
         start = statistics.get_start_time()
+    elif (start.minute % 5) != 0 or start.second != 0 or start.microsecond != 0:
+        raise ValueError(f"Statistics must start on 5 minute boundary got {start}")
     get_instance(hass).queue_task(StatisticsTask(start, False))
 
 
@@ -102,7 +117,9 @@ async def async_wait_recording_done(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def async_wait_purge_done(hass: HomeAssistant, max: int = None) -> None:
+async def async_wait_purge_done(
+    hass: HomeAssistant, max_number: int | None = None
+) -> None:
     """Wait for max number of purge events.
 
     Because a purge may insert another PurgeTask into
@@ -110,9 +127,9 @@ async def async_wait_purge_done(hass: HomeAssistant, max: int = None) -> None:
     a maximum number of WaitTasks that we will put into the
     queue.
     """
-    if not max:
-        max = DEFAULT_PURGE_TASKS
-    for _ in range(max + 1):
+    if not max_number:
+        max_number = DEFAULT_PURGE_TASKS
+    for _ in range(max_number + 1):
         await async_wait_recording_done(hass)
 
 
@@ -129,7 +146,7 @@ async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
 
 def corrupt_db_file(test_db_file):
     """Corrupt an sqlite3 database file."""
-    with open(test_db_file, "w+") as fhandle:
+    with open(test_db_file, "w+", encoding="utf8") as fhandle:
         fhandle.seek(200)
         fhandle.write("I am a corrupt db" * 100)
 
@@ -186,6 +203,7 @@ def assert_states_equal_without_context(state: State, other: State) -> None:
     """Assert that two states are equal, ignoring context."""
     assert_states_equal_without_context_and_last_changed(state, other)
     assert state.last_changed == other.last_changed
+    assert state.last_reported == other.last_reported
 
 
 def assert_states_equal_without_context_and_last_changed(
@@ -247,7 +265,16 @@ def assert_dict_of_states_equal_without_context_and_last_changed(
         )
 
 
-def record_states(hass):
+async def async_record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
+    """Record some test states."""
+    return await hass.async_add_executor_job(record_states, hass)
+
+
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.
@@ -276,11 +303,11 @@ def record_states(hass):
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     one = zero + timedelta(seconds=1 * 5)
     two = one + timedelta(seconds=15 * 5)
     three = two + timedelta(seconds=30 * 5)
-    four = three + timedelta(seconds=15 * 5)
+    four = three + timedelta(seconds=14 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
     with freeze_time(one) as freezer:
@@ -317,10 +344,10 @@ def convert_pending_states_to_meta(instance: Recorder, session: Session) -> None
     entity_ids: set[str] = set()
     states: set[States] = set()
     states_meta_objects: dict[str, StatesMeta] = {}
-    for object in session:
-        if isinstance(object, States):
-            entity_ids.add(object.entity_id)
-            states.add(object)
+    for session_object in session:
+        if isinstance(session_object, States):
+            entity_ids.add(session_object.entity_id)
+            states.add(session_object)
 
     entity_id_to_metadata_ids = instance.states_meta_manager.get_many(
         entity_ids, session, True
@@ -344,10 +371,10 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
     event_types: set[str] = set()
     events: set[Events] = set()
     event_types_objects: dict[str, EventTypes] = {}
-    for object in session:
-        if isinstance(object, Events):
-            event_types.add(object.event_type)
-            events.add(object)
+    for session_object in session:
+        if isinstance(session_object, Events):
+            event_types.add(session_object.event_type)
+            events.add(session_object)
 
     event_type_to_event_type_ids = instance.event_type_manager.get_many(
         event_types, session, True
@@ -401,6 +428,14 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
     return f"tests.components.recorder.db_schema_{schema_version_postfix}"
 
 
+@dataclass(slots=True)
+class MockMigrationTask(migration.MigrationTask):
+    """Mock migration task which does nothing."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run migration task."""
+
+
 @contextmanager
 def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
@@ -408,19 +443,23 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
     importlib.import_module(schema_module)
     old_db_schema = sys.modules[schema_module]
 
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(core, "EventData", old_db_schema.EventData), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(core, "Events", old_db_schema.Events), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(core, "EntityIDMigrationTask", core.RecorderTask), patch(
-        CREATE_ENGINE_TARGET,
-        new=partial(
-            create_engine_test_for_schema_version_postfix,
-            schema_version_postfix=schema_version_postfix,
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
+        patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
+        patch.object(core, "EventTypes", old_db_schema.EventTypes),
+        patch.object(core, "EventData", old_db_schema.EventData),
+        patch.object(core, "States", old_db_schema.States),
+        patch.object(core, "Events", old_db_schema.Events),
+        patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
+        patch.object(migration.EntityIDMigration, "task", MockMigrationTask),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=partial(
+                create_engine_test_for_schema_version_postfix,
+                schema_version_postfix=schema_version_postfix,
+            ),
         ),
     ):
         yield

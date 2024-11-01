@@ -1,0 +1,7 @@
+{
+  "services": {
+    "update": {
+      "service": "mdi:update"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Support for interface with a Gree climate systems."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -56,7 +57,6 @@ def _set_anion(device: Device, value: bool) -> None:
 
 GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     GreeSwitchEntityDescription(
-        icon="mdi:lightbulb",
         key="Panel Light",
         translation_key="light",
         get_value_fn=lambda d: d.light,
@@ -81,7 +81,6 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
         set_value_fn=_set_xfan,
     ),
     GreeSwitchEntityDescription(
-        icon="mdi:pine-tree",
         key="Health mode",
         translation_key="health_mode",
         get_value_fn=lambda d: d.anion,

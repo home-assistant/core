@@ -1,12 +1,14 @@
 """Intents for the todo integration."""
+
 from __future__ import annotations
+
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
 
-from . import DOMAIN, TodoItem, TodoItemStatus, TodoListEntity
+from . import TodoItem, TodoItemStatus, TodoListEntity
+from .const import DATA_COMPONENT, DOMAIN
 
 INTENT_LIST_ADD_ITEM = "HassListAddItem"
 
@@ -20,31 +22,38 @@ class ListAddItemIntent(intent.IntentHandler):
     """Handle ListAddItem intents."""
 
     intent_type = INTENT_LIST_ADD_ITEM
-    slot_schema = {"item": cv.string, "name": cv.string}
+    description = "Add item to a todo list"
+    slot_schema = {
+        vol.Required("item"): intent.non_empty_string,
+        vol.Required("name"): intent.non_empty_string,
+    }
+    platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
-        component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
         target_list: TodoListEntity | None = None
 
         # Find matching list
-        for list_state in intent.async_match_states(
-            hass, name=list_name, domains=[DOMAIN]
-        ):
-            target_list = component.get_entity(list_state.entity_id)
-            if target_list is not None:
-                break
+        match_constraints = intent.MatchTargetsConstraints(
+            name=list_name, domains=[DOMAIN], assistant=intent_obj.assistant
+        )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
 
+        target_list = hass.data[DATA_COMPONENT].get_entity(
+            match_result.states[0].entity_id
+        )
         if target_list is None:
             raise intent.IntentHandleError(f"No to-do list: {list_name}")
-
-        assert target_list is not None
 
         # Add to list
         await target_list.async_create_todo_item(
@@ -53,4 +62,13 @@ class ListAddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE
+        response.async_set_results(
+            [
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=list_name,
+                    id=match_result.states[0].entity_id,
+                )
+            ]
+        )
         return response

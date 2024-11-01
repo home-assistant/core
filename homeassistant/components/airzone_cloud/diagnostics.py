@@ -1,4 +1,5 @@
 """Support for the Airzone Cloud diagnostics."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -20,13 +21,11 @@ from aioairzone_cloud.const import (
     RAW_WEBSERVERS,
 )
 
-from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import AirzoneUpdateCoordinator
+from . import AirzoneCloudConfigEntry
 
 TO_REDACT_API = [
     API_CITY,
@@ -136,10 +135,10 @@ def redact_all(
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: AirzoneCloudConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     raw_data = coordinator.airzone.raw_data()
     ids = gather_ids(raw_data)
 

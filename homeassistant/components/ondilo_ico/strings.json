@@ -22,9 +22,6 @@
       "oxydo_reduction_potential": {
         "name": "Oxydo reduction potential"
       },
-      "ph": {
-        "name": "pH"
-      },
       "tds": {
         "name": "TDS"
       },

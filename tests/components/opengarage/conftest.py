@@ -1,4 +1,5 @@
 """Fixtures for the OpenGarage integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -30,7 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_opengarage() -> Generator[MagicMock, None, None]:
+def mock_opengarage() -> Generator[MagicMock]:
     """Return a mocked OpenGarage client."""
     with patch(
         "homeassistant.components.opengarage.opengarage.OpenGarage",

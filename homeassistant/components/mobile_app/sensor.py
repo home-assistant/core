@@ -1,4 +1,5 @@
 """Sensor platform for mobile_app."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -58,6 +59,8 @@ async def async_setup_entry(
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
+        if capabilities := entry.capabilities:
+            config[ATTR_SENSOR_STATE_CLASS] = capabilities.get(ATTR_SENSOR_STATE_CLASS)
         entities.append(MobileAppSensor(config, config_entry))
 
     async_add_entities(entities)
@@ -77,7 +80,7 @@ async def async_setup_entry(
 
 
 class MobileAppSensor(MobileAppEntity, RestoreSensor):
-    """Representation of an mobile app sensor."""
+    """Representation of a mobile app sensor."""
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
@@ -102,8 +105,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
 
         self._async_update_attr_from_config()
 
-    @property
-    def native_value(self) -> StateType | date | datetime:
+    def _calculate_native_value(self) -> StateType | date | datetime:
         """Return the state of the sensor."""
         if (state := self._config[ATTR_SENSOR_STATE]) in (None, STATE_UNKNOWN):
             return None
@@ -130,3 +132,4 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
         config = self._config
         self._attr_native_unit_of_measurement = config.get(ATTR_SENSOR_UOM)
         self._attr_state_class = config.get(ATTR_SENSOR_STATE_CLASS)
+        self._attr_native_value = self._calculate_native_value()

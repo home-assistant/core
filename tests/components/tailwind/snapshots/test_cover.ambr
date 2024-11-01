@@ -9,6 +9,7 @@
     'context': <ANY>,
     'entity_id': 'cover.door_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
@@ -30,6 +31,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -62,10 +65,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
+    'model_id': None,
     'name': 'Door 1',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',
@@ -82,6 +89,7 @@
     'context': <ANY>,
     'entity_id': 'cover.door_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
@@ -103,6 +111,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -135,10 +145,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
+    'model_id': None,
     'name': 'Door 2',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',

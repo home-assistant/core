@@ -1,4 +1,5 @@
 """Representation of a sensorBinary."""
+
 from __future__ import annotations
 
 from zwave_me_ws import ZWaveMeData
@@ -13,8 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeController, ZWaveMeEntity
+from . import ZWaveMeController
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 BINARY_SENSORS_MAP: dict[str, BinarySensorEntityDescription] = {
     "generic": BinarySensorEntityDescription(

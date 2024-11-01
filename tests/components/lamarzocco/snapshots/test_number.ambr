@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_coffee_boiler
+# name: test_general_numbers[coffee_target_temperature-94-set_temp-kwargs0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -13,11 +13,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_coffee_target_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95',
   })
 # ---
-# name: test_coffee_boiler.1
+# name: test_general_numbers[coffee_target_temperature-94-set_temp-kwargs0].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -39,6 +40,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -53,7 +56,64 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_gs3_exclusive[steam_target_temperature-131-set_steam_temp-kwargs0-GS3 AV]
+# name: test_general_numbers[smart_standby_time-23-set_smart_standby-kwargs1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'GS01234 Smart standby time',
+      'max': 240,
+      'min': 10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 10,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.gs01234_smart_standby_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_general_numbers[smart_standby_time-23-set_smart_standby-kwargs1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 240,
+      'min': 10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.gs01234_smart_standby_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Smart standby time',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_standby_time',
+    'unique_id': 'GS01234_smart_standby_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_gs3_exclusive[steam_target_temperature-131-set_temp-kwargs0-GS3 AV]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -67,11 +127,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_steam_target_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '128',
+    'state': '123.900001525879',
   })
 # ---
-# name: test_gs3_exclusive[steam_target_temperature-131-set_steam_temp-kwargs0-GS3 AV].1
+# name: test_gs3_exclusive[steam_target_temperature-131-set_temp-kwargs0-GS3 AV].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -93,6 +154,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -107,7 +170,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_gs3_exclusive[steam_target_temperature-131-set_steam_temp-kwargs0-GS3 MP]
+# name: test_gs3_exclusive[steam_target_temperature-131-set_temp-kwargs0-GS3 MP]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -121,11 +184,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_steam_target_temperature',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '128',
+    'state': '123.900001525879',
   })
 # ---
-# name: test_gs3_exclusive[steam_target_temperature-131-set_steam_temp-kwargs0-GS3 MP].1
+# name: test_gs3_exclusive[steam_target_temperature-131-set_temp-kwargs0-GS3 MP].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -147,6 +211,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -161,7 +227,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_gs3_exclusive[tea_water_duration-15-set_dose_hot_water-kwargs1-GS3 AV]
+# name: test_gs3_exclusive[tea_water_duration-15-set_dose_tea_water-kwargs1-GS3 AV]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -175,11 +241,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_tea_water_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1023',
+    'state': '8',
   })
 # ---
-# name: test_gs3_exclusive[tea_water_duration-15-set_dose_hot_water-kwargs1-GS3 AV].1
+# name: test_gs3_exclusive[tea_water_duration-15-set_dose_tea_water-kwargs1-GS3 AV].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -201,6 +268,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -215,7 +284,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_gs3_exclusive[tea_water_duration-15-set_dose_hot_water-kwargs1-GS3 MP]
+# name: test_gs3_exclusive[tea_water_duration-15-set_dose_tea_water-kwargs1-GS3 MP]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -229,11 +298,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_tea_water_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1023',
+    'state': '8',
   })
 # ---
-# name: test_gs3_exclusive[tea_water_duration-15-set_dose_hot_water-kwargs1-GS3 MP].1
+# name: test_gs3_exclusive[tea_water_duration-15-set_dose_tea_water-kwargs1-GS3 MP].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -255,6 +325,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -269,7 +341,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[dose-6-set_dose-kwargs3-GS3 AV][GS01234_dose_key_1-state]
+# name: test_pre_brew_infusion_key_numbers[dose-6-Disabled-set_dose-kwargs3-GS3 AV][GS01234_dose_key_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 1',
@@ -282,11 +354,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1023',
+    'state': '135',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[dose-6-set_dose-kwargs3-GS3 AV][GS01234_dose_key_2-state]
+# name: test_pre_brew_infusion_key_numbers[dose-6-Disabled-set_dose-kwargs3-GS3 AV][GS01234_dose_key_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 2',
@@ -299,11 +372,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1023',
+    'state': '97',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[dose-6-set_dose-kwargs3-GS3 AV][GS01234_dose_key_3-state]
+# name: test_pre_brew_infusion_key_numbers[dose-6-Disabled-set_dose-kwargs3-GS3 AV][GS01234_dose_key_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 3',
@@ -316,11 +390,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1023',
+    'state': '108',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[dose-6-set_dose-kwargs3-GS3 AV][GS01234_dose_key_4-state]
+# name: test_pre_brew_infusion_key_numbers[dose-6-Disabled-set_dose-kwargs3-GS3 AV][GS01234_dose_key_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 4',
@@ -333,11 +408,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_dose_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1023',
+    'state': '121',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-configure_prebrew-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_1-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-Enabled-set_prebrew_time-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -351,11 +427,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-configure_prebrew-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_2-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-Enabled-set_prebrew_time-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -369,11 +446,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-configure_prebrew-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_3-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-Enabled-set_prebrew_time-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -387,11 +465,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '3.29999995231628',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-configure_prebrew-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_4-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_off_time-6-Enabled-set_prebrew_time-kwargs0-GS3 AV][GS01234_prebrew_off_time_key_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -405,11 +484,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_off_time_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '2',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-configure_prebrew-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_1-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-Enabled-set_prebrew_time-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -423,11 +503,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-configure_prebrew-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_2-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-Enabled-set_prebrew_time-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -441,11 +522,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-configure_prebrew-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_3-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-Enabled-set_prebrew_time-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -459,11 +541,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '3.29999995231628',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-configure_prebrew-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_4-state]
+# name: test_pre_brew_infusion_key_numbers[prebrew_on_time-6-Enabled-set_prebrew_time-kwargs1-GS3 AV][GS01234_prebrew_on_time_key_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -477,11 +560,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_prebrew_on_time_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '2',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-configure_prebrew-kwargs2-GS3 AV][GS01234_preinfusion_time_key_1-state]
+# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-TypeB-set_preinfusion_time-kwargs2-GS3 AV][GS01234_preinfusion_time_key_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -495,11 +579,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_1',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-configure_prebrew-kwargs2-GS3 AV][GS01234_preinfusion_time_key_2-state]
+# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-TypeB-set_preinfusion_time-kwargs2-GS3 AV][GS01234_preinfusion_time_key_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -513,11 +598,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_2',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-configure_prebrew-kwargs2-GS3 AV][GS01234_preinfusion_time_key_3-state]
+# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-TypeB-set_preinfusion_time-kwargs2-GS3 AV][GS01234_preinfusion_time_key_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -531,11 +617,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_3',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '3.29999995231628',
   })
 # ---
-# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-configure_prebrew-kwargs2-GS3 AV][GS01234_preinfusion_time_key_4-state]
+# name: test_pre_brew_infusion_key_numbers[preinfusion_time-7-TypeB-set_preinfusion_time-kwargs2-GS3 AV][GS01234_preinfusion_time_key_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -549,11 +636,12 @@
     'context': <ANY>,
     'entity_id': 'number.gs01234_preinfusion_time_key_4',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '2',
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_off_time-6-kwargs0-Linea Mini]
+# name: test_pre_brew_infusion_numbers[prebrew_off_time-set_prebrew_time-Enabled-6-kwargs0-Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -567,11 +655,12 @@
     'context': <ANY>,
     'entity_id': 'number.lm01234_prebrew_off_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_off_time-6-kwargs0-Linea Mini].1
+# name: test_pre_brew_infusion_numbers[prebrew_off_time-set_prebrew_time-Enabled-6-kwargs0-Linea Mini].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -593,6 +682,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -607,7 +698,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_off_time-6-kwargs0-Micra]
+# name: test_pre_brew_infusion_numbers[prebrew_off_time-set_prebrew_time-Enabled-6-kwargs0-Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -621,11 +712,12 @@
     'context': <ANY>,
     'entity_id': 'number.mr01234_prebrew_off_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_off_time-6-kwargs0-Micra].1
+# name: test_pre_brew_infusion_numbers[prebrew_off_time-set_prebrew_time-Enabled-6-kwargs0-Micra].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -647,6 +739,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -661,7 +755,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_on_time-6-kwargs1-Linea Mini]
+# name: test_pre_brew_infusion_numbers[prebrew_on_time-set_prebrew_time-Enabled-6-kwargs1-Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -675,11 +769,12 @@
     'context': <ANY>,
     'entity_id': 'number.lm01234_prebrew_on_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_on_time-6-kwargs1-Linea Mini].1
+# name: test_pre_brew_infusion_numbers[prebrew_on_time-set_prebrew_time-Enabled-6-kwargs1-Linea Mini].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -701,6 +796,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -715,7 +812,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_on_time-6-kwargs1-Micra]
+# name: test_pre_brew_infusion_numbers[prebrew_on_time-set_prebrew_time-Enabled-6-kwargs1-Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -729,11 +826,12 @@
     'context': <ANY>,
     'entity_id': 'number.mr01234_prebrew_on_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_numbers[prebrew_on_time-6-kwargs1-Micra].1
+# name: test_pre_brew_infusion_numbers[prebrew_on_time-set_prebrew_time-Enabled-6-kwargs1-Micra].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -755,6 +853,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -769,7 +869,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_pre_brew_infusion_numbers[preinfusion_time-7-kwargs2-Linea Mini]
+# name: test_pre_brew_infusion_numbers[preinfusion_time-set_preinfusion_time-TypeB-7-kwargs2-Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -783,11 +883,12 @@
     'context': <ANY>,
     'entity_id': 'number.lm01234_preinfusion_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_numbers[preinfusion_time-7-kwargs2-Linea Mini].1
+# name: test_pre_brew_infusion_numbers[preinfusion_time-set_preinfusion_time-TypeB-7-kwargs2-Linea Mini].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -809,6 +910,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -823,7 +926,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_pre_brew_infusion_numbers[preinfusion_time-7-kwargs2-Micra]
+# name: test_pre_brew_infusion_numbers[preinfusion_time-set_preinfusion_time-TypeB-7-kwargs2-Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -837,11 +940,12 @@
     'context': <ANY>,
     'entity_id': 'number.mr01234_preinfusion_time',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1',
   })
 # ---
-# name: test_pre_brew_infusion_numbers[preinfusion_time-7-kwargs2-Micra].1
+# name: test_pre_brew_infusion_numbers[preinfusion_time-set_preinfusion_time-TypeB-7-kwargs2-Micra].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -863,6 +967,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),

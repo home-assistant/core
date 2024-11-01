@@ -1,4 +1,5 @@
 """The JuiceNet integration."""
+
 from datetime import timedelta
 import logging
 
@@ -71,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not juicenet.devices:
         _LOGGER.error("No JuiceNet devices found for this account")
         return False
-    _LOGGER.info("%d JuiceNet device(s) found", len(juicenet.devices))
+    _LOGGER.debug("%d JuiceNet device(s) found", len(juicenet.devices))
 
     async def async_update_data():
         """Update all device states from the JuiceNet API."""
@@ -82,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="JuiceNet",
         update_method=async_update_data,
         update_interval=timedelta(seconds=30),

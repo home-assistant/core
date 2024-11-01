@@ -1,0 +1,99 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-d87a3bfffe5d844a",
+      "feature": "device.messages.errors.raw",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "entries": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "timestamp": "2024-03-01T04:40:59.911Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/zigbee-d87a3bfffe5d844a/features/device.messages.errors.raw"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {
+        "setName": {
+          "isExecutable": true,
+          "name": "setName",
+          "params": {
+            "name": {
+              "constraints": {
+                "maxLength": 40,
+                "minLength": 1,
+                "regEx": "^[\\p{L}0-9]+( [\\p{L}0-9]+)*$"
+              },
+              "required": true,
+              "type": "string"
+            }
+          },
+          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/zigbee-d87a3bfffe5d844a/features/device.name/commands/setName"
+        }
+      },
+      "deviceId": "zigbee-d87a3bfffe5d844a",
+      "feature": "device.name",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Office"
+        }
+      },
+      "timestamp": "2024-03-01T04:40:59.911Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/zigbee-d87a3bfffe5d844a/features/device.name"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-d87a3bfffe5d844a",
+      "feature": "device.sensors.humidity",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "percent",
+          "value": 53
+        }
+      },
+      "timestamp": "2024-03-02T07:51:07.303Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/zigbee-d87a3bfffe5d844a/features/device.sensors.humidity"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-d87a3bfffe5d844a",
+      "feature": "device.sensors.temperature",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "celsius",
+          "value": 17.5
+        }
+      },
+      "timestamp": "2024-03-02T07:52:42.043Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/zigbee-d87a3bfffe5d844a/features/device.sensors.temperature"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 """Test the ThermoBeacon sensors."""
+
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermobeacon.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT

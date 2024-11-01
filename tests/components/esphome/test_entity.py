@@ -1,4 +1,6 @@
 """Test ESPHome binary sensors."""
+
+import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock
@@ -21,14 +23,16 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .conftest import MockESPHomeDevice
 
 
 async def test_entities_removed(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
     mock_esphome_device: Callable[
@@ -37,7 +41,6 @@ async def test_entities_removed(
     ],
 ) -> None:
     """Test entities are removed when static info changes."""
-    ent_reg = er.async_get(hass)
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -83,7 +86,9 @@ async def test_entities_removed(
     assert state.attributes[ATTR_RESTORED] is True
     state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
     assert state is not None
-    reg_entry = ent_reg.async_get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
     assert reg_entry is not None
     assert state.attributes[ATTR_RESTORED] is True
 
@@ -111,7 +116,9 @@ async def test_entities_removed(
     assert state.state == STATE_ON
     state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
     assert state is None
-    reg_entry = ent_reg.async_get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
     assert reg_entry is None
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -120,6 +127,7 @@ async def test_entities_removed(
 
 async def test_entities_removed_after_reload(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
     mock_esphome_device: Callable[
@@ -128,7 +136,6 @@ async def test_entities_removed_after_reload(
     ],
 ) -> None:
     """Test entities and their registry entry are removed when static info changes after a reload."""
-    ent_reg = er.async_get(hass)
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -164,7 +171,9 @@ async def test_entities_removed_after_reload(
     assert state is not None
     assert state.state == STATE_ON
 
-    reg_entry = ent_reg.async_get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
     assert reg_entry is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -179,7 +188,9 @@ async def test_entities_removed_after_reload(
     assert state is not None
     assert state.attributes[ATTR_RESTORED] is True
 
-    reg_entry = ent_reg.async_get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
     assert reg_entry is not None
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -193,7 +204,9 @@ async def test_entities_removed_after_reload(
     state = hass.states.get("binary_sensor.test_mybinary_sensor_to_be_removed")
     assert state is not None
     assert ATTR_RESTORED not in state.attributes
-    reg_entry = ent_reg.async_get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
     assert reg_entry is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -215,7 +228,19 @@ async def test_entities_removed_after_reload(
     )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
+    on_future = hass.loop.create_future()
+
+    @callback
+    def _async_wait_for_on(event: Event[EventStateChangedData]) -> None:
+        if event.data["new_state"].state == STATE_ON:
+            on_future.set_result(None)
+
+    async_track_state_change_event(
+        hass, ["binary_sensor.test_mybinary_sensor"], _async_wait_for_on
+    )
     await hass.async_block_till_done()
+    async with asyncio.timeout(2):
+        await on_future
 
     assert mock_device.entry.entry_id == entry_id
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
@@ -226,7 +251,9 @@ async def test_entities_removed_after_reload(
 
     await hass.async_block_till_done()
 
-    reg_entry = ent_reg.async_get("binary_sensor.test_mybinary_sensor_to_be_removed")
+    reg_entry = entity_registry.async_get(
+        "binary_sensor.test_mybinary_sensor_to_be_removed"
+    )
     assert reg_entry is None
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Config flow to configure the Lutron integration."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from urllib.error import HTTPError
 from pylutron import Lutron
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -24,13 +24,8 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """First step in the config flow."""
-
-        # Check if a configuration entry already exists
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:
@@ -47,7 +42,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             except HTTPError:
                 _LOGGER.exception("Http error")
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
@@ -73,35 +68,3 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Attempt to import the existing configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        main_repeater = Lutron(
-            import_config[CONF_HOST],
-            import_config[CONF_USERNAME],
-            import_config[CONF_PASSWORD],
-        )
-
-        def _load_db() -> None:
-            main_repeater.load_xml_db()
-
-        try:
-            await self.hass.async_add_executor_job(_load_db)
-        except HTTPError:
-            _LOGGER.exception("Http error")
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error")
-            return self.async_abort(reason="unknown")
-
-        guid = main_repeater.guid
-
-        if len(guid) <= 10:
-            return self.async_abort(reason="cannot_connect")
-        _LOGGER.debug("Main Repeater GUID: %s", main_repeater.guid)
-
-        await self.async_set_unique_id(guid)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(title="Lutron", data=import_config)

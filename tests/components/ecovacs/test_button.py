@@ -6,7 +6,7 @@ from deebot_client.events import LifeSpan
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -42,13 +42,26 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
-                    "button.ozmo_950_reset_side_brushes_lifespan",
+                    "button.ozmo_950_reset_side_brush_lifespan",
                     ResetLifeSpan(LifeSpan.SIDE_BRUSH),
                 ),
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                (
+                    "button.goat_g1_reset_blade_lifespan",
+                    ResetLifeSpan(LifeSpan.BLADE),
+                ),
+                (
+                    "button.goat_g1_reset_lens_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.LENS_BRUSH),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_buttons(
     hass: HomeAssistant,
@@ -83,7 +96,7 @@ async def test_buttons(
 
         assert entity_entry.device_id
         assert (device_entry := device_registry.async_get(entity_entry.device_id))
-        assert device_entry.identifiers == {(DOMAIN, device.device_info.did)}
+        assert device_entry.identifiers == {(DOMAIN, device.device_info["did"])}
 
 
 @pytest.mark.parametrize(
@@ -94,7 +107,14 @@ async def test_buttons(
             [
                 "button.ozmo_950_reset_main_brush_lifespan",
                 "button.ozmo_950_reset_filter_lifespan",
-                "button.ozmo_950_reset_side_brushes_lifespan",
+                "button.ozmo_950_reset_side_brush_lifespan",
+            ],
+        ),
+        (
+            "5xu9h3",
+            [
+                "button.goat_g1_reset_blade_lifespan",
+                "button.goat_g1_reset_lens_brush_lifespan",
             ],
         ),
     ],

@@ -1,14 +1,16 @@
 """Helper methods to handle the time in Home Assistant."""
+
 from __future__ import annotations
 
 import bisect
 from contextlib import suppress
 import datetime as dt
-from functools import partial
+from functools import lru_cache, partial
 import re
 from typing import Any, Literal, overload
 import zoneinfo
 
+from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
 
 DATE_STR_FORMAT = "%Y-%m-%d"
@@ -73,6 +75,12 @@ POSTGRES_INTERVAL_RE = re.compile(
 )
 
 
+@lru_cache(maxsize=1)
+def get_default_time_zone() -> dt.tzinfo:
+    """Get the default time zone."""
+    return DEFAULT_TIME_ZONE
+
+
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """Set a default time zone to be used when none is specified.
 
@@ -84,12 +92,14 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     assert isinstance(time_zone, dt.tzinfo)
 
     DEFAULT_TIME_ZONE = time_zone
+    get_default_time_zone.cache_clear()
 
 
-def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
+def get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
     """Get time zone from string. Return None if unable to determine.
 
-    Async friendly.
+    Must be run in the executor if the ZoneInfo is not already
+    in the cache. If you are not sure, use async_get_time_zone.
     """
     try:
         return zoneinfo.ZoneInfo(time_zone_str)
@@ -97,9 +107,20 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
         return None
 
 
+async def async_get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
+    """Get time zone from string. Return None if unable to determine.
+
+    Async friendly.
+    """
+    try:
+        return await _async_get_time_zone(time_zone_str)
+    except zoneinfo.ZoneInfoNotFoundError:
+        return None
+
+
 # We use a partial here since it is implemented in native code
 # and avoids the global lookup of UTC
-utcnow: partial[dt.datetime] = partial(dt.datetime.now, UTC)
+utcnow = partial(dt.datetime.now, UTC)
 utcnow.__doc__ = "Get now in UTC time."
 
 
@@ -178,20 +199,17 @@ def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datet
 # All rights reserved.
 # https://github.com/django/django/blob/main/LICENSE
 @overload
-def parse_datetime(dt_str: str) -> dt.datetime | None:
-    ...
+def parse_datetime(dt_str: str) -> dt.datetime | None: ...
 
 
 @overload
-def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime:
-    ...
+def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime: ...
 
 
 @overload
 def parse_datetime(
-    dt_str: str, *, raise_on_error: Literal[False] | bool
-) -> dt.datetime | None:
-    ...
+    dt_str: str, *, raise_on_error: Literal[False]
+) -> dt.datetime | None: ...
 
 
 def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime | None:
@@ -288,36 +306,78 @@ def parse_time(time_str: str) -> dt.time | None:
         return None
 
 
-def get_age(date: dt.datetime) -> str:
-    """Take a datetime and return its "age" as a string.
-
-    The age can be in second, minute, hour, day, month or year. Only the
-    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
-    be returned.
-    Make sure date is not in the future, or else it won't work.
-    """
+def _get_timestring(timediff: float, precision: int = 1) -> str:
+    """Return a string representation of a time diff."""
 
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return f"1 {unit}"
-        return f"{number:d} {unit}s"
+            return f"1 {unit} "
+        return f"{number:d} {unit}s "
+
+    if timediff == 0.0:
+        return "0 seconds"
+
+    units = ("year", "month", "day", "hour", "minute", "second")
+
+    factors = (365 * 24 * 60 * 60, 30 * 24 * 60 * 60, 24 * 60 * 60, 60 * 60, 60, 1)
+
+    result_string: str = ""
+    current_precision = 0
+
+    for i, current_factor in enumerate(factors):
+        selected_unit = units[i]
+        if timediff < current_factor:
+            continue
+        current_precision = current_precision + 1
+        if current_precision == precision:
+            return (
+                result_string + formatn(round(timediff / current_factor), selected_unit)
+            ).rstrip()
+        curr_diff = int(timediff // current_factor)
+        result_string += formatn(curr_diff, selected_unit)
+        timediff -= (curr_diff) * current_factor
+
+    return result_string.rstrip()
+
+
+def get_age(date: dt.datetime, precision: int = 1) -> str:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month and year.
+
+    depth number of units will be returned, with the last unit rounded
+
+    The date must be in the past or a ValueException will be raised.
+    """
 
     delta = (now() - date).total_seconds()
+
     rounded_delta = round(delta)
 
-    units = ["second", "minute", "hour", "day", "month"]
-    factors = [60, 60, 24, 30, 12]
-    selected_unit = "year"
+    if rounded_delta < 0:
+        raise ValueError("Time value is in the future")
+    return _get_timestring(rounded_delta, precision)
 
-    for i, next_factor in enumerate(factors):
-        if rounded_delta < next_factor:
-            selected_unit = units[i]
-            break
-        delta /= next_factor
-        rounded_delta = round(delta)
 
-    return formatn(rounded_delta, selected_unit)
+def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
+    """Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month and year.
+
+    depth number of units will be returned, with the last unit rounded
+
+    The date must be in the future or a ValueException will be raised.
+    """
+
+    delta = (date - now()).total_seconds()
+
+    rounded_delta = round(delta)
+
+    if rounded_delta < 0:
+        raise ValueError("Time value is in the past")
+
+    return _get_timestring(rounded_delta, precision)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:

@@ -1,4 +1,5 @@
 """The Twinkly light component."""
+
 from __future__ import annotations
 
 import logging
@@ -66,7 +67,7 @@ class TwinklyLight(LightEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_icon = "mdi:string-lights"
+    _attr_translation_key = "light"
 
     def __init__(
         self,
@@ -129,10 +130,7 @@ class TwinklyLight(LightEntity):
     @property
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
-        effect_list = []
-        for movie in self._movies:
-            effect_list.append(f"{movie['id']} {movie['name']}")
-        return effect_list
+        return [f"{movie['id']} {movie['name']}" for movie in self._movies]
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""
@@ -282,7 +280,7 @@ class TwinklyLight(LightEntity):
                 await self.async_update_current_movie()
 
             if not self._attr_available:
-                _LOGGER.info("Twinkly '%s' is now available", self._client.host)
+                _LOGGER.warning("Twinkly '%s' is now available", self._client.host)
 
             # We don't use the echo API to track the availability since
             # we already have to pull the device to get its state.
@@ -291,7 +289,7 @@ class TwinklyLight(LightEntity):
             # We log this as "info" as it's pretty common that the Christmas
             # light are not reachable in July
             if self._attr_available:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Twinkly '%s' is not reachable (client error)", self._client.host
                 )
             self._attr_available = False

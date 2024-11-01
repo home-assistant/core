@@ -1,0 +1,10 @@
+{
+  "domain": "epic_games_store",
+  "name": "Epic Games Store",
+  "codeowners": ["@hacf-fr", "@Quentame"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/epic_games_store",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["epicstore-api==0.1.7"]
+}

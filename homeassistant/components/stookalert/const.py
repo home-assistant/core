@@ -1,4 +1,5 @@
 """Constants for the Stookalert integration."""
+
 import logging
 from typing import Final
 

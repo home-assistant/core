@@ -1,4 +1,5 @@
 """Weather component that handles meteorological data for your location."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -36,7 +37,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import dt as dt_util
 
-from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
     CLEAR_CONDITIONS,
     CONDITIONS,
@@ -59,6 +59,8 @@ from .const import (
     TMRW_ATTR_WIND_DIRECTION,
     TMRW_ATTR_WIND_SPEED,
 )
+from .coordinator import TomorrowioDataUpdateCoordinator
+from .entity import TomorrowioEntity
 
 
 async def async_setup_entry(
@@ -296,11 +298,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
                 break
 
         return forecasts
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast(self.forecast_type)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:

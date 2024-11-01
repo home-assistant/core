@@ -1,11 +1,13 @@
 """Test the Airthings Wave sensor."""
+
 import logging
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.components.airthings_ble import (
+from . import (
     CO2_V1,
     CO2_V2,
     HUMIDITY_V2,
@@ -19,22 +21,25 @@ from tests.components.airthings_ble import (
     create_entry,
     patch_airthings_device_update,
 )
+
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
+async def test_migration_from_v1_to_v3_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Verify that we can migrate from v1 (pre 2023.9.0) to the latest unique id format."""
     entry = create_entry(hass)
-    device = create_device(hass, entry)
+    device = create_device(entry, device_registry)
 
     assert entry is not None
     assert device is not None
 
     new_unique_id = f"{WAVE_DEVICE_INFO.address}_temperature"
-
-    entity_registry = hass.helpers.entity_registry.async_get(hass)
 
     sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
@@ -63,17 +68,17 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
     assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
 
 
-async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
+async def test_migration_from_v2_to_v3_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Verify that we can migrate from v2 (introduced in 2023.9.0) to the latest unique id format."""
     entry = create_entry(hass)
-    device = create_device(hass, entry)
+    device = create_device(entry, device_registry)
 
     assert entry is not None
     assert device is not None
-
-    entity_registry = hass.helpers.entity_registry.async_get(hass)
-
-    await hass.async_block_till_done()
 
     sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
@@ -104,17 +109,17 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
     assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
 
 
-async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
+async def test_migration_from_v1_and_v2_to_v3_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test if migration works when we have both v1 (pre 2023.9.0) and v2 (introduced in 2023.9.0) unique ids."""
     entry = create_entry(hass)
-    device = create_device(hass, entry)
+    device = create_device(entry, device_registry)
 
     assert entry is not None
     assert device is not None
-
-    entity_registry = hass.helpers.entity_registry.async_get(hass)
-
-    await hass.async_block_till_done()
 
     v2 = entity_registry.async_get_or_create(
         domain=DOMAIN,
@@ -154,17 +159,17 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
     assert entity_registry.async_get(v2.entity_id).unique_id == CO2_V2.unique_id
 
 
-async def test_migration_with_all_unique_ids(hass: HomeAssistant):
+async def test_migration_with_all_unique_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test if migration works when we have all unique ids."""
     entry = create_entry(hass)
-    device = create_device(hass, entry)
+    device = create_device(entry, device_registry)
 
     assert entry is not None
     assert device is not None
-
-    entity_registry = hass.helpers.entity_registry.async_get(hass)
-
-    await hass.async_block_till_done()
 
     v1 = entity_registry.async_get_or_create(
         domain=DOMAIN,

@@ -1,10 +1,12 @@
 """Support for Homekit covers."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache import cached_property
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -12,15 +14,10 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,25 +25,27 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 STATE_STOPPED = "stopped"
 
 CURRENT_GARAGE_STATE_MAP = {
-    0: STATE_OPEN,
-    1: STATE_CLOSED,
-    2: STATE_OPENING,
-    3: STATE_CLOSING,
+    0: CoverState.OPEN,
+    1: CoverState.CLOSED,
+    2: CoverState.OPENING,
+    3: CoverState.CLOSING,
     4: STATE_STOPPED,
 }
 
-TARGET_GARAGE_STATE_MAP = {STATE_OPEN: 0, STATE_CLOSED: 1, STATE_STOPPED: 2}
+TARGET_GARAGE_STATE_MAP = {
+    CoverState.OPEN: 0,
+    CoverState.CLOSED: 1,
+    STATE_STOPPED: 2,
+}
 
-CURRENT_WINDOW_STATE_MAP = {0: STATE_CLOSING, 1: STATE_OPENING, 2: STATE_STOPPED}
+CURRENT_WINDOW_STATE_MAP = {
+    0: CoverState.CLOSING,
+    1: CoverState.OPENING,
+    2: STATE_STOPPED,
+}
 
 
 async def async_setup_entry(
@@ -96,25 +95,25 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
-        return self._state == STATE_CLOSED
+        return self._state == CoverState.CLOSED
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state == STATE_CLOSING
+        return self._state == CoverState.CLOSING
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state == STATE_OPENING
+        return self._state == CoverState.OPENING
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send open command."""
-        await self.set_door_state(STATE_OPEN)
+        await self.set_door_state(CoverState.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send close command."""
-        await self.set_door_state(STATE_CLOSED)
+        await self.set_door_state(CoverState.CLOSED)
 
     async def set_door_state(self, state: str) -> None:
         """Send state command."""
@@ -192,14 +191,14 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         """Return if the cover is closing or not."""
         value = self.service.value(CharacteristicsTypes.POSITION_STATE)
         state = CURRENT_WINDOW_STATE_MAP[value]
-        return state == STATE_CLOSING
+        return state == CoverState.CLOSING
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         value = self.service.value(CharacteristicsTypes.POSITION_STATE)
         state = CURRENT_WINDOW_STATE_MAP[value]
-        return state == STATE_OPENING
+        return state == CoverState.OPENING
 
     @property
     def is_horizontal_tilt(self) -> bool:
@@ -216,34 +215,34 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         )
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
-        tilt_position = self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
-        if not tilt_position:
-            tilt_position = self.service.value(
-                CharacteristicsTypes.HORIZONTAL_TILT_CURRENT
-            )
-        # Recalculate to convert from arcdegree scale to percentage scale.
         if self.is_vertical_tilt:
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].minValue == -90
-                and self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position / scale)
+            char = self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT]
         elif self.is_horizontal_tilt:
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
-                == -90
-                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position / scale)
-        return tilt_position
+            char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_CURRENT]
+        else:
+            return None
+
+        # Recalculate tilt_position. Convert arc to percent scale based on min/max values.
+        tilt_position = char.value
+        min_value = char.minValue
+        max_value = char.maxValue
+        total_range = int(max_value or 0) - int(min_value or 0)
+
+        if (
+            tilt_position is None
+            or min_value is None
+            or max_value is None
+            or total_range <= 0
+        ):
+            return None
+
+        # inverted scale
+        if min_value == -90 and max_value == 0:
+            return abs(int(100 / total_range * (tilt_position - max_value)))
+        # normal scale
+        return abs(int(100 / total_range * (tilt_position - min_value)))
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Send hold command."""
@@ -267,33 +266,31 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
+
         if self.is_vertical_tilt:
-            # Recalculate to convert from percentage scale to arcdegree scale.
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].minValue == -90
-                and self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position * scale)
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.VERTICAL_TILT_TARGET: tilt_position}
-            )
+            char = self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET]
         elif self.is_horizontal_tilt:
-            # Recalculate to convert from percentage scale to arcdegree scale.
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
-                == -90
-                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position * scale)
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.HORIZONTAL_TILT_TARGET: tilt_position}
+            char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET]
+
+        # Calculate tilt_position. Convert from 1-100 scale to arc degree scale respecting possible min/max Values.
+        min_value = char.minValue
+        max_value = char.maxValue
+        if min_value is None or max_value is None:
+            raise ValueError(
+                "Entity does not provide minValue and maxValue for the tilt"
             )
+
+        # inverted scale
+        if min_value == -90 and max_value == 0:
+            tilt_position = int(
+                tilt_position / 100 * (min_value - max_value) + max_value
+            )
+        else:
+            tilt_position = int(
+                tilt_position / 100 * (max_value - min_value) + min_value
+            )
+
+        await self.async_put_characteristics({char.type: tilt_position})
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

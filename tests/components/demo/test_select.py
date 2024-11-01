@@ -1,4 +1,5 @@
 """The tests for the demo select component."""
+
 from unittest.mock import patch
 
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
-    DOMAIN,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -30,7 +31,9 @@ async def select_only() -> None:
 @pytest.fixture(autouse=True)
 async def setup_demo_select(hass: HomeAssistant, select_only) -> None:
     """Initialize setup demo select entity."""
-    assert await async_setup_component(hass, DOMAIN, {"select": {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, SELECT_DOMAIN, {"select": {"platform": "demo"}}
+    )
     await hass.async_block_till_done()
 
 
@@ -54,7 +57,7 @@ async def test_select_option_bad_attr(hass: HomeAssistant) -> None:
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {ATTR_OPTION: "slow_speed", ATTR_ENTITY_ID: ENTITY_SPEED},
             blocking=True,
@@ -73,7 +76,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
     assert state.state == "ridiculous_speed"
 
     await hass.services.async_call(
-        DOMAIN,
+        SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_OPTION: "light_speed", ATTR_ENTITY_ID: ENTITY_SPEED},
         blocking=True,

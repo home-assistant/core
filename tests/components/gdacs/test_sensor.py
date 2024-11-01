@@ -1,4 +1,5 @@
 """The tests for the GDACS Feed integration."""
+
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -15,7 +16,6 @@ from homeassistant.components.gdacs.sensor import (
     ATTR_UPDATED,
 )
 from homeassistant.const import (
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -57,9 +57,10 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         latitude = 32.87336
         longitude = -117.22743
@@ -101,7 +102,6 @@ async def test_setup(hass: HomeAssistant) -> None:
         assert attributes[ATTR_LAST_UPDATE_SUCCESSFUL].tzinfo == dt_util.UTC
         assert attributes[ATTR_LAST_UPDATE] == attributes[ATTR_LAST_UPDATE_SUCCESSFUL]
         assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "alerts"
-        assert attributes[ATTR_ICON] == "mdi:alert"
 
         # Simulate an update - two existing, one new entry, one outdated entry
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_4, mock_entry_3]

@@ -1,0 +1,51 @@
+[
+  {
+    "data_type": "temperature",
+    "value": 19,
+    "value_time": "2024-01-01 01:00:00",
+    "is_valid": true,
+    "exclusion_reason": null
+  },
+  {
+    "data_type": "ph",
+    "value": 9.29,
+    "value_time": "2024-01-01 01:00:00",
+    "is_valid": true,
+    "exclusion_reason": null
+  },
+  {
+    "data_type": "orp",
+    "value": 647,
+    "value_time": "2024-01-01 01:00:00",
+    "is_valid": true,
+    "exclusion_reason": null
+  },
+  {
+    "data_type": "salt",
+    "value": null,
+    "value_time": "2024-01-01 01:00:00",
+    "is_valid": true,
+    "exclusion_reason": null
+  },
+  {
+    "data_type": "battery",
+    "value": 50,
+    "value_time": "2024-01-01 01:00:00",
+    "is_valid": true,
+    "exclusion_reason": null
+  },
+  {
+    "data_type": "tds",
+    "value": 845,
+    "value_time": "2024-01-01 01:00:00",
+    "is_valid": true,
+    "exclusion_reason": null
+  },
+  {
+    "data_type": "rssi",
+    "value": 60,
+    "value_time": "2024-01-01 01:00:00",
+    "is_valid": true,
+    "exclusion_reason": null
+  }
+]

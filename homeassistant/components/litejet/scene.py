@@ -1,4 +1,5 @@
 """Support for LiteJet scenes."""
+
 import logging
 from typing import Any
 
@@ -76,4 +77,4 @@ class LiteJetScene(Scene):
         try:
             await self._lj.activate_scene(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc

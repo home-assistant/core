@@ -1,11 +1,14 @@
 """The todo integration."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
@@ -20,11 +23,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -36,22 +35,22 @@ from .const import (
     ATTR_DUE,
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DATA_COMPONENT,
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServices,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 
 @dataclasses.dataclass
@@ -107,7 +106,6 @@ def _validate_supported_features(
             continue
         if not supported_features or not supported_features & desc.required_feature:
             raise ServiceValidationError(
-                f"Entity does not support setting field '{desc.service_field}'",
                 translation_domain=DOMAIN,
                 translation_key="update_field_not_supported",
                 translation_placeholders={"service_field": desc.service_field},
@@ -116,7 +114,7 @@ def _validate_supported_features(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Todo entities."""
-    component = hass.data[DOMAIN] = EntityComponent[TodoListEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TodoListEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -127,11 +125,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
-        "add_item",
+        TodoServices.ADD_ITEM,
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -141,13 +139,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional("rename"): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional("status"): vol.In(
+                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_STATUS): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
@@ -155,27 +153,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             *TODO_ITEM_FIELD_VALIDATIONS,
             cv.has_at_least_one_key(
-                "rename", "status", *[desc.service_field for desc in TODO_ITEM_FIELDS]
+                ATTR_RENAME,
+                ATTR_STATUS,
+                *[desc.service_field for desc in TODO_ITEM_FIELDS],
             ),
         ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "remove_item",
+        TodoServices.REMOVE_ITEM,
         cv.make_entity_service_schema(
             {
-                vol.Required("item"): vol.All(cv.ensure_list, [cv.string]),
+                vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
             }
         ),
         _async_remove_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "get_items",
+        TodoServices.GET_ITEMS,
         cv.make_entity_service_schema(
             {
-                vol.Optional("status"): vol.All(
+                vol.Optional(ATTR_STATUS): vol.All(
                     cv.ensure_list,
                     [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
                 ),
@@ -185,8 +185,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
-        "remove_completed_items",
-        {},
+        TodoServices.REMOVE_COMPLETED_ITEMS,
+        None,
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
@@ -197,14 +197,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @dataclasses.dataclass
@@ -261,15 +259,15 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -280,7 +278,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         in the list after the specified by `previous_uid` or `None` for the first
         position in the To-do list.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     @callback
@@ -334,10 +332,9 @@ async def websocket_handle_subscribe_todo_items(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to To-do list item updates."""
-    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     entity_id: str = msg["entity_id"]
 
-    if not (entity := component.get_entity(entity_id)):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
         connection.send_error(
             msg["id"],
             "invalid_entity_id",
@@ -390,10 +387,9 @@ async def websocket_handle_todo_item_list(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle the list of To-do items in a To-do- list."""
-    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     if (
         not (entity_id := msg[CONF_ENTITY_ID])
-        or not (entity := component.get_entity(entity_id))
+        or not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id))
         or not isinstance(entity, TodoListEntity)
     ):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
@@ -426,8 +422,7 @@ async def websocket_handle_todo_item_move(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle move of a To-do item within a To-do list."""
-    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -485,7 +480,6 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     found = _find_by_uid_or_summary(item, entity.todo_items)
     if not found:
         raise ServiceValidationError(
-            f"Unable to find To-do item '{item}'",
             translation_domain=DOMAIN,
             translation_key="item_not_found",
             translation_placeholders={"item": item},
@@ -518,7 +512,6 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
             raise ServiceValidationError(
-                f"Unable to find To-do item '{item}'",
                 translation_domain=DOMAIN,
                 translation_key="item_not_found",
                 translation_placeholders={"item": item},

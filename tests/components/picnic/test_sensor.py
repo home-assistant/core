@@ -1,4 +1,5 @@
 """The tests for the Picnic sensor platform."""
+
 import copy
 from datetime import timedelta
 import unittest

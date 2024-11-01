@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri lights."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,9 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
 async def async_setup_entry(

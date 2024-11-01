@@ -1,4 +1,5 @@
 """Tests for the Luftdaten integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from luftdaten.exceptions import LuftdatenError

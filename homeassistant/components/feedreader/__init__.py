@@ -1,296 +1,122 @@
 """Support for RSS/Atom feeds."""
+
 from __future__ import annotations
 
-from calendar import timegm
-from datetime import datetime, timedelta
-from logging import getLogger
-import os
-import pickle
-from time import gmtime, struct_time
-
-import feedparser
 import voluptuous as vol
 
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_URL, Platform
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.storage import Store
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
-_LOGGER = getLogger(__name__)
+from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .coordinator import FeedReaderCoordinator, StoredData
+
+type FeedReaderConfigEntry = ConfigEntry[FeedReaderCoordinator]
 
 CONF_URLS = "urls"
-CONF_MAX_ENTRIES = "max_entries"
 
-DEFAULT_MAX_ENTRIES = 20
-DEFAULT_SCAN_INTERVAL = timedelta(hours=1)
-DELAY_SAVE = 30
-
-DOMAIN = "feedreader"
-
-EVENT_FEEDREADER = "feedreader"
-STORAGE_VERSION = 1
+MY_KEY: HassKey[StoredData] = HassKey(DOMAIN)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: {
-            vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.time_period,
-            vol.Optional(
-                CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES
-            ): cv.positive_int,
-        }
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                    vol.Optional(
+                        CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES
+                    ): cv.positive_int,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Feedreader component."""
-    urls: list[str] = config[DOMAIN][CONF_URLS]
-    if not urls:
-        return False
+    if DOMAIN in config:
+        for url in config[DOMAIN][CONF_URLS]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={
+                        CONF_URL: url,
+                        CONF_MAX_ENTRIES: config[DOMAIN][CONF_MAX_ENTRIES],
+                    },
+                )
+            )
 
-    scan_interval: timedelta = config[DOMAIN][CONF_SCAN_INTERVAL]
-    max_entries: int = config[DOMAIN][CONF_MAX_ENTRIES]
-    old_data_file = hass.config.path(f"{DOMAIN}.pickle")
-    storage = StoredData(hass, old_data_file)
-    await storage.async_setup()
-    feeds = [
-        FeedManager(hass, url, scan_interval, max_entries, storage) for url in urls
-    ]
-
-    for feed in feeds:
-        feed.async_setup()
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2025.1.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Feedreader",
+            },
+        )
 
     return True
 
 
-class FeedManager:
-    """Abstraction over Feedparser module."""
+async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
+    """Set up Feedreader from a config entry."""
+    storage = hass.data.setdefault(MY_KEY, StoredData(hass))
+    if not storage.is_initialized:
+        await storage.async_setup()
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        url: str,
-        scan_interval: timedelta,
-        max_entries: int,
-        storage: StoredData,
-    ) -> None:
-        """Initialize the FeedManager object, poll as per scan interval."""
-        self._hass = hass
-        self._url = url
-        self._scan_interval = scan_interval
-        self._max_entries = max_entries
-        self._feed: feedparser.FeedParserDict | None = None
-        self._firstrun = True
-        self._storage = storage
-        self._last_entry_timestamp: struct_time | None = None
-        self._has_published_parsed = False
-        self._has_updated_parsed = False
-        self._event_type = EVENT_FEEDREADER
-        self._feed_id = url
+    coordinator = FeedReaderCoordinator(
+        hass,
+        entry.data[CONF_URL],
+        entry.options[CONF_MAX_ENTRIES],
+        storage,
+    )
 
-    @callback
-    def async_setup(self) -> None:
-        """Set up the feed manager."""
-        self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, self._async_update)
-        async_track_time_interval(
-            self._hass, self._async_update, self._scan_interval, cancel_on_shutdown=True
-        )
+    await coordinator.async_setup()
 
-    def _log_no_entries(self) -> None:
-        """Send no entries log at debug level."""
-        _LOGGER.debug("No new entries to be published in feed %s", self._url)
+    entry.runtime_data = coordinator
 
-    async def _async_update(self, _: datetime | Event) -> None:
-        """Update the feed and publish new entries to the event bus."""
-        last_entry_timestamp = await self._hass.async_add_executor_job(self._update)
-        if last_entry_timestamp:
-            self._storage.async_put_timestamp(self._feed_id, last_entry_timestamp)
+    # we need to setup event entities before the first coordinator data fetch
+    # so that the event entities can already fetch the events during the first fetch
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.EVENT])
 
-    def _update(self) -> struct_time | None:
-        """Update the feed and publish new entries to the event bus."""
-        _LOGGER.debug("Fetching new data from feed %s", self._url)
-        self._feed: feedparser.FeedParserDict = feedparser.parse(  # type: ignore[no-redef]
-            self._url,
-            etag=None if not self._feed else self._feed.get("etag"),
-            modified=None if not self._feed else self._feed.get("modified"),
-        )
-        if not self._feed:
-            _LOGGER.error("Error fetching feed data from %s", self._url)
-            return None
-        # The 'bozo' flag really only indicates that there was an issue
-        # during the initial parsing of the XML, but it doesn't indicate
-        # whether this is an unrecoverable error. In this case the
-        # feedparser lib is trying a less strict parsing approach.
-        # If an error is detected here, log warning message but continue
-        # processing the feed entries if present.
-        if self._feed.bozo != 0:
-            _LOGGER.warning(
-                "Possible issue parsing feed %s: %s",
-                self._url,
-                self._feed.bozo_exception,
-            )
-        # Using etag and modified, if there's no new data available,
-        # the entries list will be empty
-        _LOGGER.debug(
-            "%s entri(es) available in feed %s",
-            len(self._feed.entries),
-            self._url,
-        )
-        if not self._feed.entries:
-            self._log_no_entries()
-            return None
+    await coordinator.async_config_entry_first_refresh()
 
-        self._filter_entries()
-        self._publish_new_entries()
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-        _LOGGER.debug("Fetch from feed %s completed", self._url)
-
-        if (
-            self._has_published_parsed or self._has_updated_parsed
-        ) and self._last_entry_timestamp:
-            return self._last_entry_timestamp
-
-        return None
-
-    def _filter_entries(self) -> None:
-        """Filter the entries provided and return the ones to keep."""
-        assert self._feed is not None
-        if len(self._feed.entries) > self._max_entries:
-            _LOGGER.debug(
-                "Processing only the first %s entries in feed %s",
-                self._max_entries,
-                self._url,
-            )
-            self._feed.entries = self._feed.entries[0 : self._max_entries]
-
-    def _update_and_fire_entry(self, entry: feedparser.FeedParserDict) -> None:
-        """Update last_entry_timestamp and fire entry."""
-        # Check if the entry has a updated or published date.
-        # Start from a updated date because generally `updated` > `published`.
-        if "updated_parsed" in entry and entry.updated_parsed:
-            # We are lucky, `updated_parsed` data available, let's make use of
-            # it to publish only new available entries since the last run
-            self._has_updated_parsed = True
-            self._last_entry_timestamp = max(
-                entry.updated_parsed, self._last_entry_timestamp
-            )
-        elif "published_parsed" in entry and entry.published_parsed:
-            # We are lucky, `published_parsed` data available, let's make use of
-            # it to publish only new available entries since the last run
-            self._has_published_parsed = True
-            self._last_entry_timestamp = max(
-                entry.published_parsed, self._last_entry_timestamp
-            )
-        else:
-            self._has_updated_parsed = False
-            self._has_published_parsed = False
-            _LOGGER.debug(
-                "No updated_parsed or published_parsed info available for entry %s",
-                entry,
-            )
-        entry.update({"feed_url": self._url})
-        self._hass.bus.fire(self._event_type, entry)
-        _LOGGER.debug("New event fired for entry %s", entry.get("link"))
-
-    def _publish_new_entries(self) -> None:
-        """Publish new entries to the event bus."""
-        assert self._feed is not None
-        new_entry_count = 0
-        self._last_entry_timestamp = self._storage.get_timestamp(self._feed_id)
-        if self._last_entry_timestamp:
-            self._firstrun = False
-        else:
-            # Set last entry timestamp as epoch time if not available
-            self._last_entry_timestamp = dt_util.utc_from_timestamp(0).timetuple()
-        # locally cache self._last_entry_timestamp so that entries published at identical times can be processed
-        last_entry_timestamp = self._last_entry_timestamp
-        for entry in self._feed.entries:
-            if (
-                self._firstrun
-                or (
-                    "published_parsed" in entry
-                    and entry.published_parsed > last_entry_timestamp
-                )
-                or (
-                    "updated_parsed" in entry
-                    and entry.updated_parsed > last_entry_timestamp
-                )
-            ):
-                self._update_and_fire_entry(entry)
-                new_entry_count += 1
-            else:
-                _LOGGER.debug("Already processed entry %s", entry.get("link"))
-        if new_entry_count == 0:
-            self._log_no_entries()
-        else:
-            _LOGGER.debug("%d entries published in feed %s", new_entry_count, self._url)
-        self._firstrun = False
+    return True
 
 
-class StoredData:
-    """Represent a data storage."""
+async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
+    """Unload a config entry."""
+    entries = hass.config_entries.async_entries(
+        DOMAIN, include_disabled=False, include_ignore=False
+    )
+    # if this is the last entry, remove the storage
+    if len(entries) == 1:
+        hass.data.pop(MY_KEY)
+    return await hass.config_entries.async_unload_platforms(entry, Platform.EVENT)
 
-    def __init__(self, hass: HomeAssistant, legacy_data_file: str) -> None:
-        """Initialize data storage."""
-        self._legacy_data_file = legacy_data_file
-        self._data: dict[str, struct_time] = {}
-        self._hass = hass
-        self._store: Store[dict[str, str]] = Store(hass, STORAGE_VERSION, DOMAIN)
 
-    async def async_setup(self) -> None:
-        """Set up storage."""
-        if not os.path.exists(self._store.path):
-            # Remove the legacy store loading after deprecation period.
-            data = await self._hass.async_add_executor_job(self._legacy_fetch_data)
-        else:
-            if (store_data := await self._store.async_load()) is None:
-                return
-            # Make sure that dst is set to 0, by using gmtime() on the timestamp.
-            data = {
-                feed_id: gmtime(datetime.fromisoformat(timestamp_string).timestamp())
-                for feed_id, timestamp_string in store_data.items()
-            }
-
-        self._data = data
-
-    def _legacy_fetch_data(self) -> dict[str, struct_time]:
-        """Fetch data stored in pickle file."""
-        _LOGGER.debug("Fetching data from legacy file %s", self._legacy_data_file)
-        try:
-            with open(self._legacy_data_file, "rb") as myfile:
-                return pickle.load(myfile) or {}
-        except FileNotFoundError:
-            pass
-        except (OSError, pickle.PickleError) as err:
-            _LOGGER.error(
-                "Error loading data from pickled file %s: %s",
-                self._legacy_data_file,
-                err,
-            )
-
-        return {}
-
-    def get_timestamp(self, feed_id: str) -> struct_time | None:
-        """Return stored timestamp for given feed id."""
-        return self._data.get(feed_id)
-
-    @callback
-    def async_put_timestamp(self, feed_id: str, timestamp: struct_time) -> None:
-        """Update timestamp for given feed id."""
-        self._data[feed_id] = timestamp
-        self._store.async_delay_save(self._async_save_data, DELAY_SAVE)
-
-    @callback
-    def _async_save_data(self) -> dict[str, str]:
-        """Save feed data to storage."""
-        return {
-            feed_id: dt_util.utc_from_timestamp(timegm(struct_utc)).isoformat()
-            for feed_id, struct_utc in self._data.items()
-        }
+async def _async_update_listener(
+    hass: HomeAssistant, entry: FeedReaderConfigEntry
+) -> None:
+    """Handle reconfiguration."""
+    await hass.config_entries.async_reload(entry.entry_id)

@@ -1,4 +1,7 @@
 """Config flow to configure ecobee."""
+
+from typing import Any
+
 from pyecobee import (
     ECOBEE_API_KEY,
     ECOBEE_CONFIG_FILENAME,
@@ -7,7 +10,7 @@ from pyecobee import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import load_json_object
@@ -15,21 +18,17 @@ from homeassistant.util.json import load_json_object
 from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 
 
-class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an ecobee config flow."""
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the ecobee flow."""
-        self._ecobee = None
+    _ecobee: Ecobee
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            # Config entry already exists, only one allowed.
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
         stored_api_key = (
             self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
@@ -54,7 +53,9 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_authorize(self, user_input=None):
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Present the user with the PIN so that the app can be authorized on ecobee.com."""
         errors = {}
 
@@ -75,7 +76,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"pin": self._ecobee.pin},
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Import ecobee config from configuration.yaml.
 
         Triggered by async_setup only if a config entry doesn't already exist.

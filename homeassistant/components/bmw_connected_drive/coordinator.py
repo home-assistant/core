@@ -1,4 +1,5 @@
 """Coordinator for BMW."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -14,6 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.ssl import get_default_context
 
 from .const import CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN, SCAN_INTERVALS
 
@@ -32,6 +34,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             entry.data[CONF_PASSWORD],
             get_region_from_name(entry.data[CONF_REGION]),
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
+            verify=get_default_context(),
         )
         self.read_only = entry.options[CONF_READ_ONLY]
         self._entry = entry
@@ -48,6 +51,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=f"{DOMAIN}-{entry.data['username']}",
             update_interval=timedelta(seconds=SCAN_INTERVALS[entry.data[CONF_REGION]]),
         )
+
+        # Default to false on init so _async_update_data logic works
+        self.last_update_success = False
 
     async def _async_update_data(self) -> None:
         """Fetch data from BMW."""

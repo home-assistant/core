@@ -1,4 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,7 +12,6 @@ from typing import Any, cast
 
 import jwt
 
-from homeassistant import data_entry_flow
 from homeassistant.core import (
     CALLBACK_TYPE,
     HassJob,
@@ -19,22 +19,24 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
+from .models import AuthFlowContext, AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
+from .providers.homeassistant import HassAuthProvider
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
-_MfaModuleDict = dict[str, MultiFactorAuthModule]
-_ProviderKey = tuple[str, str | None]
-_ProviderDict = dict[_ProviderKey, AuthProvider]
+type _MfaModuleDict = dict[str, MultiFactorAuthModule]
+type _ProviderKey = tuple[str, str | None]
+type _ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
 class InvalidAuthError(Exception):
@@ -52,7 +54,7 @@ async def auth_manager_from_config(
 ) -> AuthManager:
     """Initialize an auth manager from config.
 
-    CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
+    CORE_CONFIG_SCHEMA will make sure no duplicated auth providers or
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
@@ -72,6 +74,13 @@ async def auth_manager_from_config(
         key = (provider.type, provider.id)
         provider_hash[key] = provider
 
+        if isinstance(provider, HassAuthProvider):
+            # Can be removed in 2026.7 with the legacy mode of homeassistant auth provider
+            # We need to initialize the provider to create the repair if needed as otherwise
+            # the provider will be initialized on first use, which could be rare as users
+            # don't frequently change auth settings
+            await provider.async_initialize()
+
     if module_configs:
         modules = await asyncio.gather(
             *(auth_mfa_module_from_config(hass, config) for config in module_configs)
@@ -84,12 +93,16 @@ async def auth_manager_from_config(
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
-    manager.async_setup()
+    await manager.async_setup()
     return manager
 
 
-class AuthManagerFlowManager(data_entry_flow.FlowManager):
+class AuthManagerFlowManager(
+    FlowManager[AuthFlowContext, AuthFlowResult, tuple[str, str]]
+):
     """Manage authentication flows."""
+
+    _flow_result = AuthFlowResult
 
     def __init__(self, hass: HomeAssistant, auth_manager: AuthManager) -> None:
         """Init auth manager flows."""
@@ -98,11 +111,11 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: tuple[str, str],
         *,
-        context: dict[str, Any] | None = None,
+        context: AuthFlowContext | None = None,
         data: dict[str, Any] | None = None,
-    ) -> data_entry_flow.FlowHandler:
+    ) -> LoginFlow:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:
@@ -110,12 +123,18 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: FlowResult
-    ) -> FlowResult:
-        """Return a user as result of login flow."""
+        self,
+        flow: FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
+        result: AuthFlowResult,
+    ) -> AuthFlowResult:
+        """Return a user as result of login flow.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
         flow = cast(LoginFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] != FlowResultType.CREATE_ENTRY:
             return result
 
         # we got final result
@@ -174,8 +193,7 @@ class AuthManager:
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
         )
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up the auth manager."""
         hass = self.hass
         hass.async_add_shutdown_job(
@@ -349,15 +367,15 @@ class AuthManager:
         local_only: bool | None = None,
     ) -> None:
         """Update a user."""
-        kwargs: dict[str, Any] = {}
-
-        for attr_name, value in (
-            ("name", name),
-            ("group_ids", group_ids),
-            ("local_only", local_only),
-        ):
-            if value is not None:
-                kwargs[attr_name] = value
+        kwargs: dict[str, Any] = {
+            attr_name: value
+            for attr_name, value in (
+                ("name", name),
+                ("group_ids", group_ids),
+                ("local_only", local_only),
+            )
+            if value is not None
+        }
         await self._store.async_update_user(user, **kwargs)
 
         if is_active is not None:
@@ -367,6 +385,13 @@ class AuthManager:
                 await self.async_deactivate_user(user)
 
         self.hass.bus.async_fire(EVENT_USER_UPDATED, {"user_id": user.id})
+
+    @callback
+    def async_update_user_credentials_data(
+        self, credentials: models.Credentials, data: dict[str, Any]
+    ) -> None:
+        """Update credentials data."""
+        self._store.async_update_user_credentials_data(credentials, data=data)
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""
@@ -509,6 +534,13 @@ class AuthManager:
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def async_set_expiry(
+        self, refresh_token: models.RefreshToken, *, enable_expiry: bool
+    ) -> None:
+        """Enable or disable expiry of a refresh token."""
+        self._store.async_set_expiry(refresh_token, enable_expiry=enable_expiry)
 
     @callback
     def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:

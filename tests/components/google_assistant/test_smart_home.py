@@ -1,4 +1,5 @@
 """Test Google Smart Home."""
+
 import asyncio
 from types import SimpleNamespace
 from unittest.mock import ANY, patch
@@ -8,10 +9,20 @@ from pytest_unordered import unordered
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.cover import DemoCover
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.switch import DemoSwitch
 from homeassistant.components.google_assistant import (
     EVENT_COMMAND_RECEIVED,
@@ -21,14 +32,15 @@ from homeassistant.components.google_assistant import (
     smart_home as sh,
     trait,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_CALL_SERVICE,
     Platform,
     UnitOfTemperature,
     __version__,
 )
-from homeassistant.core import EVENT_CALL_SERVICE, HomeAssistant, State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -84,6 +96,7 @@ async def test_async_handle_message(hass: HomeAssistant) -> None:
         hass,
         config,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -103,6 +116,7 @@ async def test_async_handle_message(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         config,
+        "test-agent",
         "test-agent",
         {
             "requestId": REQ_ID,
@@ -169,6 +183,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
         hass,
         config,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -194,7 +209,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -299,6 +314,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
         hass,
         config,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -313,7 +329,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
                     "name": {"name": "Demo Light"},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -407,6 +423,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -493,6 +510,7 @@ async def test_execute(
     result = await sh.async_handle_message(
         hass,
         MockConfig(should_report_state=report_state),
+        None,
         None,
         {
             "requestId": REQ_ID,
@@ -654,6 +672,7 @@ async def test_execute_times_out(
             hass,
             MockConfig(should_report_state=report_state),
             None,
+            None,
             {
                 "requestId": REQ_ID,
                 "inputs": [
@@ -800,6 +819,7 @@ async def test_raising_error_trait(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -891,6 +911,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -905,7 +926,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
                     "name": {"name": "Demo Light"},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -984,6 +1005,7 @@ async def test_device_class_switch(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1033,6 +1055,7 @@ async def test_device_class_binary_sensor(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1064,7 +1087,7 @@ async def test_device_class_binary_sensor(
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
         ("garage", "action.devices.types.GARAGE"),
-        ("gate", "action.devices.types.GARAGE"),
+        ("gate", "action.devices.types.GATE"),
         ("awning", "action.devices.types.AWNING"),
         ("shutter", "action.devices.types.SHUTTER"),
         ("curtain", "action.devices.types.CURTAIN"),
@@ -1085,6 +1108,7 @@ async def test_device_class_cover(
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -1133,6 +1157,7 @@ async def test_device_media_player(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1171,6 +1196,7 @@ async def test_query_disconnect(hass: HomeAssistant) -> None:
             hass,
             config,
             "test-agent",
+            "test-agent",
             {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
             const.SOURCE_CLOUD,
         )
@@ -1197,6 +1223,7 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
         result = await sh.async_handle_message(
             hass,
             BASIC_CONFIG,
+            None,
             None,
             {
                 "requestId": REQ_ID,
@@ -1256,6 +1283,7 @@ async def test_identify(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         user_agent_id,
+        user_agent_id,
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -1264,7 +1292,7 @@ async def test_identify(hass: HomeAssistant) -> None:
                     "payload": {
                         "device": {
                             "mdnsScanData": {
-                                "additionals": [
+                                "additionals": [  # codespell:ignore additionals
                                     {
                                         "type": "TXT",
                                         "class": "IN",
@@ -1343,6 +1371,7 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         config,
+        user_agent_id,
         user_agent_id,
         {
             "requestId": REQ_ID,
@@ -1430,6 +1459,7 @@ async def test_sync_message_recovery(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1490,6 +1520,7 @@ async def test_query_recover(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -1530,6 +1561,7 @@ async def test_proxy_selected(
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {
             "requestId": REQ_ID,

@@ -1,0 +1,496 @@
+# serializer version: 1
+# name: test_custom_sentences
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en-us',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'You ordered a stout',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_custom_sentences.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en-us',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'You ordered a lager',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_custom_sentences_config
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Stealth mode engaged',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_alias_added_removed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_alias_added_removed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_alias_added_removed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called late added alias',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_conversion_not_expose_new
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, kitchen light is not exposed',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_conversion_not_expose_new.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_added_removed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_added_removed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.late',
+            'name': 'friendly light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_added_removed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.late',
+            'name': 'friendly light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_added_removed.3
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called late added light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_exposed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_fail_if_unexposed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, kitchen light is not exposed',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_remove_custom_name
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_remove_custom_name.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_remove_custom_name.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I am not aware of any device called renamed light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_renamed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_intent_entity_renamed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'renamed light',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---

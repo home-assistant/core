@@ -1,4 +1,5 @@
 """Base class for Tado entity."""
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -42,7 +43,7 @@ class TadoHomeEntity(Entity):
         self.home_id = tado.home_id
         self._attr_device_info = DeviceInfo(
             configuration_url="https://app.tado.com",
-            identifiers={(DOMAIN, tado.home_id)},
+            identifiers={(DOMAIN, str(tado.home_id))},
             manufacturer=DEFAULT_NAME,
             model=TADO_HOME,
             name=tado.home_name,

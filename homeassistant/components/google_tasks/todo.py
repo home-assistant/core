@@ -1,4 +1,5 @@
 """Google Tasks todo platform."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
@@ -105,7 +106,7 @@ class GoogleTaskTodoListEntity(
         config_entry_id: str,
         task_list_id: str,
     ) -> None:
-        """Initialize LocalTodoListEntity."""
+        """Initialize GoogleTaskTodoListEntity."""
         super().__init__(coordinator)
         self._attr_name = name.capitalize()
         self._attr_unique_id = f"{config_entry_id}-{task_list_id}"
@@ -152,9 +153,9 @@ class GoogleTaskTodoListEntity(
 def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Order the task items response.
 
-    All tasks have an order amongst their sibblings based on position.
+    All tasks have an order amongst their siblings based on position.
 
-        Home Assistant To-do items do not support the Google Task parent/sibbling
+    Home Assistant To-do items do not support the Google Task parent/sibling
     relationships and the desired behavior is for them to be filtered.
     """
     parents = [task for task in tasks if task.get("parent") is None]

@@ -1,4 +1,5 @@
 """Common test tools for Traccar Server."""
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

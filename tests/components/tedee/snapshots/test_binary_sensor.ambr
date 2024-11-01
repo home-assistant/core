@@ -16,6 +16,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -27,6 +29,39 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[entry-lock_uncalibrated]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.lock_1a2b_lock_uncalibrated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Lock uncalibrated',
+    'platform': 'tedee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'uncalibrated',
+    'unique_id': '12345-uncalibrated',
     'unit_of_measurement': None,
   })
 # ---
@@ -47,6 +82,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -78,6 +115,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -101,6 +140,21 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_1a2b_charging',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[state-lock_uncalibrated]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Lock-1A2B Lock uncalibrated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.lock_1a2b_lock_uncalibrated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -113,6 +167,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_1a2b_pullspring_enabled',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -125,6 +180,7 @@
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_1a2b_semi_locked',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

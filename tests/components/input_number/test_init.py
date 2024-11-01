@@ -1,4 +1,6 @@
 """The tests for the Input number component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -28,7 +30,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -63,7 +65,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def set_value(hass, entity_id, value):
+async def set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     """Set input_number to value.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -76,7 +78,7 @@ async def set_value(hass, entity_id, value):
     )
 
 
-async def increment(hass, entity_id):
+async def increment(hass: HomeAssistant, entity_id: str) -> None:
     """Increment value of entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -86,7 +88,7 @@ async def increment(hass, entity_id):
     )
 
 
-async def decrement(hass, entity_id):
+async def decrement(hass: HomeAssistant, entity_id: str) -> None:
     """Decrement value of entity.
 
     This is a legacy helper method. Do not use it for new tests.

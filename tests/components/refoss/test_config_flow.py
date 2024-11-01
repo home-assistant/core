@@ -1,9 +1,11 @@
 """Tests for the refoss Integration."""
+
 from unittest.mock import AsyncMock, patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.refoss.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import FakeDiscovery, build_base_device_mock
 
@@ -13,26 +15,30 @@ async def test_creating_entry_sets_up(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test setting up refoss."""
-    with patch(
-        "homeassistant.components.refoss.util.Discovery",
-        return_value=FakeDiscovery(),
-    ), patch(
-        "homeassistant.components.refoss.bridge.async_build_base_device",
-        return_value=build_base_device_mock(),
-    ), patch(
-        "homeassistant.components.refoss.switch.isinstance",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.refoss.util.Discovery",
+            return_value=FakeDiscovery(),
+        ),
+        patch(
+            "homeassistant.components.refoss.bridge.async_build_base_device",
+            return_value=build_base_device_mock(),
+        ),
+        patch(
+            "homeassistant.components.refoss.switch.isinstance",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -55,10 +61,10 @@ async def test_creating_entry_has_no_devices(
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
 
         await hass.async_block_till_done()
 

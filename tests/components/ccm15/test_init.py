@@ -1,5 +1,6 @@
 """Tests for the ccm15 component."""
-from unittest.mock import AsyncMock
+
+import pytest
 
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -9,7 +10,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_load_unload(hass: HomeAssistant, ccm15_device: AsyncMock) -> None:
+@pytest.mark.usefixtures("ccm15_device")
+async def test_load_unload(hass: HomeAssistant) -> None:
     """Test options flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,

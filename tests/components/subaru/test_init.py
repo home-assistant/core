@@ -1,4 +1,5 @@
 """Test Subaru component setup and updates."""
+
 from unittest.mock import patch
 
 from subarulink import InvalidCredentials, SubaruException
@@ -125,12 +126,15 @@ async def test_update_skip_unsubscribed(
 
 async def test_update_disabled(hass: HomeAssistant, ev_entry) -> None:
     """Test update function disable option."""
-    with patch(
-        MOCK_API_FETCH,
-        side_effect=SubaruException("403 Error"),
-    ), patch(
-        MOCK_API_UPDATE,
-    ) as mock_update:
+    with (
+        patch(
+            MOCK_API_FETCH,
+            side_effect=SubaruException("403 Error"),
+        ),
+        patch(
+            MOCK_API_UPDATE,
+        ) as mock_update,
+    ):
         await hass.services.async_call(
             HA_DOMAIN,
             SERVICE_UPDATE_ENTITY,

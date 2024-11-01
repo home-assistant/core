@@ -1,4 +1,5 @@
 """Support for Homekit switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -42,31 +43,31 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
     CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE,
         name="Pairing Mode",
-        icon="mdi:lock-open",
+        translation_key="pairing_mode",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
         name="Pairing Mode",
-        icon="mdi:lock-open",
+        translation_key="pairing_mode",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
         name="Lock Physical Controls",
-        icon="mdi:lock-open",
+        translation_key="lock_physical_controls",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.MUTE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.MUTE,
         name="Mute",
-        icon="mdi:volume-mute",
+        translation_key="mute",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE,
         name="Sleep Mode",
-        icon="mdi:power-sleep",
+        translation_key="sleep_mode",
         entity_category=EntityCategory.CONFIG,
     ),
 }
@@ -101,8 +102,31 @@ class HomeKitSwitch(HomeKitEntity, SwitchEntity):
         return None
 
 
+class HomeKitFaucet(HomeKitEntity, SwitchEntity):
+    """Representation of a Homekit faucet."""
+
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity cares about."""
+        return [CharacteristicsTypes.ACTIVE]
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return self.service.value(CharacteristicsTypes.ACTIVE)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the specified faucet on."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the specified faucet off."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
+
+
 class HomeKitValve(HomeKitEntity, SwitchEntity):
     """Represents a valve in an irrigation system."""
+
+    _attr_translation_key = "valve"
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
@@ -120,11 +144,6 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:water"
 
     @property
     def is_on(self) -> bool:
@@ -194,9 +213,10 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         )
 
 
-ENTITY_TYPES: dict[str, type[HomeKitSwitch] | type[HomeKitValve]] = {
+ENTITY_TYPES: dict[str, type[HomeKitSwitch | HomeKitFaucet | HomeKitValve]] = {
     ServicesTypes.SWITCH: HomeKitSwitch,
     ServicesTypes.OUTLET: HomeKitSwitch,
+    ServicesTypes.FAUCET: HomeKitFaucet,
     ServicesTypes.VALVE: HomeKitValve,
 }
 
@@ -215,7 +235,7 @@ async def async_setup_entry(
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        entity: HomeKitSwitch | HomeKitValve = entity_class(conn, info)
+        entity: HomeKitSwitch | HomeKitFaucet | HomeKitValve = entity_class(conn, info)
         conn.async_migrate_unique_id(
             entity.old_unique_id, entity.unique_id, Platform.SWITCH
         )

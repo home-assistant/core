@@ -1,0 +1,38 @@
+[
+  {
+    "title": "66 - Watercolors",
+    "parent_id": "FV:2",
+    "item_id": "FV:2/4",
+    "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce\" parentID=\"10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe\" restricted=\"false\"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>",
+    "resources": [
+      {
+        "uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
+        "protocol_info": "a:b:c:d"
+      }
+    ]
+  },
+  {
+    "title": "James Taylor Radio",
+    "parent_id": "FV:2",
+    "item_id": "FV:2/13",
+    "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"100c2068ST%3a1683194971234567890\" parentID=\"10fe2064myStations\" restricted=\"true\"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>",
+    "resources": [
+      {
+        "uri": "x-sonosapi-radio:ST%3aetc",
+        "protocol_info": "a:b:c:d"
+      }
+    ]
+  },
+  {
+    "title": "1984",
+    "parent_id": "FV:2",
+    "item_id": "FV:2/8",
+    "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"A:ALBUMARTIST/Aerosmith/1984\" parentID=\"A:ALBUMARTIST/Aerosmith\" restricted=\"true\"><dc:title>1984</dc:title><upnp:class>object.container.album.musicAlbum</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">RINCON_AssociatedZPUDN</desc></item></DIDL-Lite>",
+    "resources": [
+      {
+        "uri": "x-rincon-playlist:RINCON_test#A:ALBUMARTIST/Aerosmith/1984",
+        "protocol_info": "a:b:c:d"
+      }
+    ]
+  }
+]

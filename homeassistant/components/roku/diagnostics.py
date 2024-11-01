@@ -1,4 +1,5 @@
 """Diagnostics support for Roku."""
+
 from __future__ import annotations
 
 from typing import Any

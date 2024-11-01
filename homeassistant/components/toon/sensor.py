@@ -1,4 +1,5 @@
 """Support for Toon sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CURRENCY_EUR, DOMAIN, VOLUME_CM3, VOLUME_LMIN
 from .coordinator import ToonDataUpdateCoordinator
-from .models import (
+from .entity import (
     ToonBoilerDeviceEntity,
     ToonDisplayDeviceEntity,
     ToonElectricityMeterDeviceEntity,

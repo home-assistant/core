@@ -1,7 +1,9 @@
 """Tests for cover entities provided by the Tailwind integration."""
+
 from unittest.mock import ANY, MagicMock
 
 from gotailwind import (
+    TailwindDoorAlreadyInStateError,
     TailwindDoorDisabledError,
     TailwindDoorLockedOutError,
     TailwindDoorOperationCommand,
@@ -85,7 +87,7 @@ async def test_cover_operations(
     # Test door disabled error handling
     mock_tailwind.operate.side_effect = TailwindDoorDisabledError("Door disabled")
 
-    with pytest.raises(HomeAssistantError, match="Door disabled") as excinfo:
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -94,11 +96,12 @@ async def test_cover_operations(
             },
             blocking=True,
         )
+    assert str(excinfo.value) == "The door is disabled and cannot be operated"
 
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "door_disabled"
 
-    with pytest.raises(HomeAssistantError, match="Door disabled") as excinfo:
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -108,13 +111,14 @@ async def test_cover_operations(
             blocking=True,
         )
 
+    assert str(excinfo.value) == "The door is disabled and cannot be operated"
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "door_disabled"
 
     # Test door locked out error handling
     mock_tailwind.operate.side_effect = TailwindDoorLockedOutError("Door locked out")
 
-    with pytest.raises(HomeAssistantError, match="Door locked out") as excinfo:
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -124,10 +128,11 @@ async def test_cover_operations(
             blocking=True,
         )
 
+    assert str(excinfo.value) == "The door is locked out and cannot be operated"
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "door_locked_out"
 
-    with pytest.raises(HomeAssistantError, match="Door locked out") as excinfo:
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -137,13 +142,14 @@ async def test_cover_operations(
             blocking=True,
         )
 
+    assert str(excinfo.value) == "The door is locked out and cannot be operated"
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "door_locked_out"
 
     # Test door error handling
     mock_tailwind.operate.side_effect = TailwindError("Some error")
 
-    with pytest.raises(HomeAssistantError, match="Some error") as excinfo:
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -153,10 +159,14 @@ async def test_cover_operations(
             blocking=True,
         )
 
+    assert (
+        str(excinfo.value)
+        == "An error occurred while communicating with the Tailwind device"
+    )
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "communication_error"
 
-    with pytest.raises(HomeAssistantError, match="Some error") as excinfo:
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -166,5 +176,34 @@ async def test_cover_operations(
             blocking=True,
         )
 
+    assert (
+        str(excinfo.value)
+        == "An error occurred while communicating with the Tailwind device"
+    )
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "communication_error"
+
+    # Test door already in state
+    mock_tailwind.operate.side_effect = TailwindDoorAlreadyInStateError(
+        "Door is already in the requested state"
+    )
+
+    # This call should not raise an exception
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {
+            ATTR_ENTITY_ID: "cover.door_1",
+        },
+        blocking=True,
+    )
+
+    # This call should not raise an exception
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {
+            ATTR_ENTITY_ID: "cover.door_1",
+        },
+        blocking=True,
+    )

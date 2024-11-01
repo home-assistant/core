@@ -1,4 +1,5 @@
 """The tests for the Binary sensor component."""
+
 from collections.abc import Generator
 from unittest import mock
 
@@ -10,6 +11,8 @@ from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import MockBinarySensor
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -20,7 +23,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
 
 TEST_DOMAIN = "test"
 
@@ -46,7 +48,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -61,8 +63,8 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, binary_sensor.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [binary_sensor.DOMAIN]
         )
         return True
 
@@ -141,8 +143,8 @@ async def test_entity_category_config_raises_error(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, binary_sensor.DOMAIN
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [binary_sensor.DOMAIN]
         )
         return True
 

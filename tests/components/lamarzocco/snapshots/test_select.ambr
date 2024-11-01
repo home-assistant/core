@@ -12,8 +12,9 @@
     'context': <ANY>,
     'entity_id': 'select.gs01234_prebrew_infusion_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[GS3 AV].1
@@ -33,12 +34,14 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'select.gs01234_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -66,8 +69,9 @@
     'context': <ANY>,
     'entity_id': 'select.lm01234_prebrew_infusion_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[Linea Mini].1
@@ -87,12 +91,14 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'select.lm01234_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -120,8 +126,9 @@
     'context': <ANY>,
     'entity_id': 'select.mr01234_prebrew_infusion_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[Micra].1
@@ -141,12 +148,14 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'select.mr01234_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -158,6 +167,61 @@
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
     'unique_id': 'MR01234_prebrew_infusion_select',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_smart_standby_mode
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GS01234 Smart standby mode',
+      'options': list([
+        'power_on',
+        'last_brewing',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.gs01234_smart_standby_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'last_brewing',
+  })
+# ---
+# name: test_smart_standby_mode.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'power_on',
+        'last_brewing',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.gs01234_smart_standby_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart standby mode',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_standby_mode',
+    'unique_id': 'GS01234_smart_standby_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -174,8 +238,9 @@
     'context': <ANY>,
     'entity_id': 'select.mr01234_steam_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '1',
   })
 # ---
 # name: test_steam_boiler_level[Micra].1
@@ -201,6 +266,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),

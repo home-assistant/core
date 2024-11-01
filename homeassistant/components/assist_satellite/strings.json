@@ -1,0 +1,30 @@
+{
+  "title": "Assist satellite",
+  "entity_component": {
+    "_": {
+      "name": "Assist satellite",
+      "state": {
+        "idle": "[%key:common::state::idle%]",
+        "listening": "Listening",
+        "responding": "Responding",
+        "processing": "Processing"
+      }
+    }
+  },
+  "services": {
+    "announce": {
+      "name": "Announce",
+      "description": "Let the satellite announce a message.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "The message to announce."
+        },
+        "media_id": {
+          "name": "Media ID",
+          "description": "The media ID to announce instead of using text-to-speech."
+        }
+      }
+    }
+  }
+}

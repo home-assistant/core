@@ -1,4 +1,5 @@
 """Entity for Surepetcare."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -9,8 +10,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SurePetcareDataCoordinator
 from .const import DOMAIN
+from .coordinator import SurePetcareDataCoordinator
 
 
 class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):

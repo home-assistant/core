@@ -1,4 +1,5 @@
 """Support for Nexia / Trane XL Thermostats."""
+
 from __future__ import annotations
 
 from nexia.const import UNIT_CELSIUS
@@ -9,25 +10,23 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
+from .types import NexiaConfigEntry
 from .util import percent_conv
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NexiaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for a Nexia device."""
 
-    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
     entities: list[NexiaThermostatEntity] = []
 

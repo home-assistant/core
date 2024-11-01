@@ -1,4 +1,5 @@
 """Support for EnOcean sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,7 +9,7 @@ from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntityDescription,
@@ -29,7 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .device import EnOceanEntity
+from .entity import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -44,25 +45,17 @@ SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
 
-@dataclass(frozen=True)
-class EnOceanSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnOceanSensorEntityDescription(SensorEntityDescription):
+    """Describes EnOcean sensor entity."""
 
     unique_id: Callable[[list[int]], str | None]
-
-
-@dataclass(frozen=True)
-class EnOceanSensorEntityDescription(
-    SensorEntityDescription, EnOceanSensorEntityDescriptionMixin
-):
-    """Describes EnOcean sensor entity."""
 
 
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     name="Temperature",
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    icon="mdi:thermometer",
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_TEMPERATURE}",
@@ -72,7 +65,6 @@ SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     name="Humidity",
     native_unit_of_measurement=PERCENTAGE,
-    icon="mdi:water-percent",
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_HUMIDITY}",
@@ -82,7 +74,6 @@ SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
     native_unit_of_measurement=UnitOfPower.WATT,
-    icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_POWER}",
@@ -91,12 +82,12 @@ SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
 SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_WINDOWHANDLE,
     name="WindowHandle",
-    icon="mdi:window-open-variant",
+    translation_key="window_handle",
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

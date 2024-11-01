@@ -22,6 +22,7 @@
       "invalid_code": "The code you entered was incorrect, please check it and try again.",
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
+      "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
       "unknown_roborock": "There was an unknown roborock exception - please check your logs.",
       "unknown_url": "There was an issue determining the correct url for your roborock account - please check your logs.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -29,6 +30,32 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "drawables": {
+        "description": "Specify which features to draw on the map.",
+        "data": {
+          "charger": "Charger",
+          "cleaned_area": "Cleaned area",
+          "goto_path": "Go-to path",
+          "ignored_obstacles": "Ignored obstacles",
+          "ignored_obstacles_with_photo": "Ignored obstacles with photo",
+          "mop_path": "Mop path",
+          "no_carpet_zones": "No carpet zones",
+          "no_go_zones": "No-go zones",
+          "no_mopping_zones": "No mopping zones",
+          "obstacles": "Obstacles",
+          "obstacles_with_photo": "Obstacles with photo",
+          "path": "Path",
+          "predicted_path": "Predicted path",
+          "room_names": "Room names",
+          "vacuum_position": "Vacuum position",
+          "virtual_walls": "Virtual walls",
+          "zones": "Zones"
+        }
+      }
     }
   },
   "entity": {
@@ -69,6 +96,54 @@
       }
     },
     "sensor": {
+      "a01_error": {
+        "name": "Error",
+        "state": {
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "dirty_tank_full": "Dirty tank full",
+          "water_level_sensor_stuck": "Water level sensor stuck.",
+          "clean_tank_empty": "Clean tank empty",
+          "clean_head_entangled": "Cleaning head entangled",
+          "clean_head_too_hot": "Cleaning head too hot.",
+          "fan_protection_e5": "Fan protection",
+          "cleaning_head_blocked": "Cleaning head blocked",
+          "temperature_protection": "Temperature protection",
+          "fan_protection_e4": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "fan_protection_e9": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "battery_temperature_protection_e0": "[%key:component::roborock::entity::sensor::a01_error::state::temperature_protection%]",
+          "battery_temperature_protection": "Battery temperature protection",
+          "battery_temperature_protection_2": "[%key:component::roborock::entity::sensor::a01_error::state::battery_temperature_protection%]",
+          "power_adapter_error": "Power adapter error",
+          "dirty_charging_contacts": "Clean charging contacts",
+          "low_battery": "[%key:component::roborock::entity::sensor::vacuum_error::state::low_battery%]",
+          "battery_under_10": "Battery under 10%"
+        }
+      },
+      "a01_status": {
+        "name": "Status",
+        "state": {
+          "unknown": "[%key:component::roborock::entity::sensor::status::state::unknown%]",
+          "fetching": "Fetching",
+          "fetch_failed": "Fetch failed",
+          "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
+          "washing": "Washing",
+          "ready": "Ready",
+          "charging": "[%key:component::roborock::entity::sensor::status::state::charging%]",
+          "mop_washing": "Washing mop",
+          "self_clean_cleaning": "Self clean cleaning",
+          "self_clean_deep_cleaning": "Self clean deep cleaning",
+          "self_clean_rinsing": "Self clean rinsing",
+          "self_clean_dehydrating": "Self clean drying",
+          "drying": "Drying",
+          "ventilating": "Ventilating",
+          "reserving": "Reserving",
+          "mop_washing_paused": "Mop washing paused",
+          "dusting_mode": "Dusting mode"
+        }
+      },
+      "brush_remaining": {
+        "name": "Roller left"
+      },
       "cleaning_area": {
         "name": "Cleaning area"
       },
@@ -77,6 +152,9 @@
       },
       "clean_percent": {
         "name": "Cleaning progress"
+      },
+      "countdown": {
+        "name": "Countdown"
       },
       "dock_error": {
         "name": "Dock error",
@@ -140,7 +218,8 @@
           "unknown": "Unknown",
           "locked": "Locked",
           "air_drying_stopping": "Air drying stopping",
-          "egg_attack": "Cupid mode"
+          "egg_attack": "Cupid mode",
+          "mapping": "Mapping"
         }
       },
       "total_cleaning_time": {
@@ -198,6 +277,47 @@
           "mopping_roller_2": "[%key:component::roborock::entity::sensor::vacuum_error::state::mopping_roller_1%]",
           "temperature_protection": "Unit temperature protection"
         }
+      },
+      "washing_left": {
+        "name": "Washing left"
+      },
+      "zeo_error": {
+        "name": "Error",
+        "state": {
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "refill_error": "Refill error",
+          "drain_error": "Drain error",
+          "door_lock_error": "Door lock error",
+          "water_level_error": "Water level error",
+          "inverter_error": "Inverter error",
+          "heating_error": "Heating error",
+          "temperature_error": "Temperature error",
+          "communication_error": "Communication error",
+          "drying_error": "Drying error",
+          "drying_error_e_12": "Drying error E12",
+          "drying_error_e_13": "Drying error E13",
+          "drying_error_e_14": "Drying error E14",
+          "drying_error_e_15": "Drying error E15",
+          "drying_error_e_16": "Drying error E16",
+          "drying_error_water_flow": "Check water flow",
+          "drying_error_restart": "Restart the washer",
+          "spin_error": "Re-arrange clothes"
+        }
+      },
+      "zeo_state": {
+        "name": "State",
+        "state": {
+          "standby": "Standby",
+          "weighing": "Weighing",
+          "soaking": "Soaking",
+          "washing": "Washing",
+          "rinsing": "Rinsing",
+          "spinning": "Spinning",
+          "drying": "Drying",
+          "cooling": "Cooling",
+          "under_delay_start": "Delayed start",
+          "done": "Done"
+        }
       }
     },
     "select": {
@@ -208,7 +328,8 @@
           "deep": "Deep",
           "deep_plus": "Deep+",
           "custom": "Custom",
-          "fast": "Fast"
+          "fast": "Fast",
+          "smart_mode": "SmartPlan"
         }
       },
       "mop_intensity": {
@@ -219,11 +340,16 @@
           "mild": "Mild",
           "medium": "Medium",
           "moderate": "Moderate",
+          "max": "Max",
           "high": "High",
           "intense": "Intense",
           "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
-          "custom_water_flow": "Custom water flow"
+          "custom_water_flow": "Custom water flow",
+          "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
         }
+      },
+      "selected_map": {
+        "name": "Selected map"
       }
     },
     "switch": {
@@ -264,13 +390,14 @@
               "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
               "off": "[%key:common::state::off%]",
-              "max": "Max",
+              "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
               "max_plus": "Max plus",
               "medium": "Medium",
               "quiet": "Quiet",
               "silent": "Silent",
               "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
-              "turbo": "Turbo"
+              "turbo": "Turbo",
+              "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
             }
           }
         }
@@ -292,6 +419,15 @@
     },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
+    },
+    "update_options_failed": {
+      "message": "Failed to update Roborock options"
+    }
+  },
+  "services": {
+    "get_maps": {
+      "name": "Get maps",
+      "description": "Get the map and room information of your device."
     }
   }
 }

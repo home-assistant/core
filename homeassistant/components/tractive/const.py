@@ -23,10 +23,6 @@ ATTR_TRACKER_STATE = "tracker_state"
 # Please do not use it anywhere else.
 CLIENT_ID = "625e5349c3c3b41c28a669f1"
 
-CLIENT = "client"
-TRACKABLES = "trackables"
-
-TRACKER_ACTIVITY_STATUS_UPDATED = f"{DOMAIN}_tracker_activity_updated"
 TRACKER_HARDWARE_STATUS_UPDATED = f"{DOMAIN}_tracker_hardware_status_updated"
 TRACKER_POSITION_UPDATED = f"{DOMAIN}_tracker_position_updated"
 TRACKER_SWITCH_STATUS_UPDATED = f"{DOMAIN}_tracker_switch_updated"

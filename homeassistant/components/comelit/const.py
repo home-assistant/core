@@ -1,4 +1,5 @@
 """Comelit constants."""
+
 import logging
 
 from aiocomelit.const import BRIDGE, VEDO

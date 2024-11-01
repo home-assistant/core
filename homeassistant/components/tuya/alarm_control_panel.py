@@ -1,4 +1,5 @@
 """Support for Tuya Alarm."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -9,21 +10,15 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
     AlarmControlPanelEntityFeature,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantTuyaData
-from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from . import TuyaConfigEntry
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import TuyaEntity
 
 
 class Mode(StrEnum):
@@ -35,11 +30,11 @@ class Mode(StrEnum):
     SOS = "sos"
 
 
-STATE_MAPPING: dict[str, str] = {
-    Mode.DISARMED: STATE_ALARM_DISARMED,
-    Mode.ARM: STATE_ALARM_ARMED_AWAY,
-    Mode.HOME: STATE_ALARM_ARMED_HOME,
-    Mode.SOS: STATE_ALARM_TRIGGERED,
+STATE_MAPPING: dict[str, AlarmControlPanelState] = {
+    Mode.DISARMED: AlarmControlPanelState.DISARMED,
+    Mode.ARM: AlarmControlPanelState.ARMED_AWAY,
+    Mode.HOME: AlarmControlPanelState.ARMED_HOME,
+    Mode.SOS: AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -58,10 +53,10 @@ ALARM: dict[str, tuple[AlarmControlPanelEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya alarm dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -70,11 +65,11 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := ALARM.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaAlarmEntity(device, hass_data.manager, description)
-                        )
+                entities.extend(
+                    TuyaAlarmEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
         async_add_entities(entities)
 
     async_discover_device([*hass_data.manager.device_map])
@@ -87,8 +82,8 @@ async def async_setup_entry(
 class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
-    _attr_icon = "mdi:security"
     _attr_name = None
+    _attr_code_arm_required = False
 
     def __init__(
         self,
@@ -115,7 +110,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if not (status := self.device.status.get(self.entity_description.key)):
             return None

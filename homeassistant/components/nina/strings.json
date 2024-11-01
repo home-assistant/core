@@ -15,9 +15,6 @@
         }
       }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "no_selection": "Please select at least one city/county",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -41,10 +38,12 @@
         }
       }
     },
+    "abort": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "error": {
       "no_selection": "[%key:component::nina::config::error::no_selection%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

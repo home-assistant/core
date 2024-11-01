@@ -1,4 +1,5 @@
 """Support for SUPLA switch."""
+
 from __future__ import annotations
 
 import logging

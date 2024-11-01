@@ -1,4 +1,5 @@
 """Support for KNX/IP select entities."""
+
 from __future__ import annotations
 
 from xknx import XKNX
@@ -19,16 +20,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
+from . import KNXModule
 from .const import (
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
-    DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
-from .knx_entity import KnxEntity
+from .entity import KnxYamlEntity
 from .schema import SelectSchema
 
 
@@ -38,10 +39,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SELECT]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.SELECT]
 
-    async_add_entities(KNXSelect(xknx, entity_config) for entity_config in config)
+    async_add_entities(KNXSelect(knx_module, entity_config) for entity_config in config)
 
 
 def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
@@ -57,14 +58,17 @@ def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
     )
 
 
-class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
+class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
     """Representation of a KNX select."""
 
     _device: RawValue
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX select."""
-        super().__init__(_create_raw_value(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_raw_value(knx_module.xknx, config),
+        )
         self._option_payloads: dict[str, int] = {
             option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
             for option in config[SelectSchema.CONF_OPTIONS]
@@ -80,17 +84,18 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
         if not self._device.remote_value.readable and (
             last_state := await self.async_get_last_state()
         ):
-            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                await self._device.remote_value.update_value(
-                    self._option_payloads.get(last_state.state)
-                )
+            if (
+                last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                and (option := self._option_payloads.get(last_state.state)) is not None
+            ):
+                self._device.remote_value.update_value(option)
 
-    async def after_update_callback(self, device: XknxDevice) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self._attr_current_option = self.option_from_payload(
             self._device.remote_value.value
         )
-        await super().after_update_callback(device)
+        super().after_update_callback(device)
 
     def option_from_payload(self, payload: int | None) -> str | None:
         """Return the option a given payload is assigned to."""

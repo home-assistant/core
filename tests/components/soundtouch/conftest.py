@@ -1,4 +1,5 @@
 """Fixtures for Bose SoundTouch integration tests."""
+
 import pytest
 from requests_mock import Mocker
 
@@ -46,97 +47,97 @@ def device2_config() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_info() -> str:
     """Load SoundTouch device 1 info response and return it."""
     return load_fixture("soundtouch/device1_info.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_now_playing_aux() -> str:
     """Load SoundTouch device 1 now_playing response and return it."""
     return load_fixture("soundtouch/device1_now_playing_aux.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_now_playing_bluetooth() -> str:
     """Load SoundTouch device 1 now_playing response and return it."""
     return load_fixture("soundtouch/device1_now_playing_bluetooth.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_now_playing_radio() -> str:
     """Load SoundTouch device 1 now_playing response and return it."""
     return load_fixture("soundtouch/device1_now_playing_radio.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_now_playing_standby() -> str:
     """Load SoundTouch device 1 now_playing response and return it."""
     return load_fixture("soundtouch/device1_now_playing_standby.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_now_playing_upnp() -> str:
     """Load SoundTouch device 1 now_playing response and return it."""
     return load_fixture("soundtouch/device1_now_playing_upnp.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_now_playing_upnp_paused() -> str:
     """Load SoundTouch device 1 now_playing response and return it."""
     return load_fixture("soundtouch/device1_now_playing_upnp_paused.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_presets() -> str:
     """Load SoundTouch device 1 presets response and return it."""
     return load_fixture("soundtouch/device1_presets.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_volume() -> str:
     """Load SoundTouch device 1 volume response and return it."""
     return load_fixture("soundtouch/device1_volume.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_volume_muted() -> str:
     """Load SoundTouch device 1 volume response and return it."""
     return load_fixture("soundtouch/device1_volume_muted.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device1_zone_master() -> str:
     """Load SoundTouch device 1 getZone response and return it."""
     return load_fixture("soundtouch/device1_getZone_master.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device2_info() -> str:
     """Load SoundTouch device 2 info response and return it."""
     return load_fixture("soundtouch/device2_info.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device2_volume() -> str:
     """Load SoundTouch device 2 volume response and return it."""
     return load_fixture("soundtouch/device2_volume.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device2_now_playing_standby() -> str:
     """Load SoundTouch device 2 now_playing response and return it."""
     return load_fixture("soundtouch/device2_now_playing_standby.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def device2_zone_slave() -> str:
     """Load SoundTouch device 2 getZone response and return it."""
     return load_fixture("soundtouch/device2_getZone_slave.xml")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def zone_empty() -> str:
     """Load empty SoundTouch getZone response and return it."""
     return load_fixture("soundtouch/getZone_empty.xml")

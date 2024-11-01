@@ -1,4 +1,5 @@
 """Helpers for script and condition tracing."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -6,15 +7,12 @@ from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, TypeVar, TypeVarTuple
+from typing import Any
 
 from homeassistant.core import ServiceResponse
 import homeassistant.util.dt as dt_util
 
 from .typing import TemplateVarsType
-
-_T = TypeVar("_T")
-_Ts = TypeVarTuple("_Ts")
 
 
 class TraceElement:
@@ -36,7 +34,7 @@ class TraceElement:
         """Container for trace data."""
         self._child_key: str | None = None
         self._child_run_id: str | None = None
-        self._error: Exception | None = None
+        self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
         self.reuse_by_child = False
@@ -54,7 +52,7 @@ class TraceElement:
         self._child_key = child_key
         self._child_run_id = child_run_id
 
-    def set_error(self, ex: Exception) -> None:
+    def set_error(self, ex: BaseException | None) -> None:
         """Set error."""
         self._error = ex
 
@@ -134,7 +132,9 @@ def trace_id_get() -> tuple[str, str] | None:
     return trace_id_cv.get()
 
 
-def trace_stack_push(trace_stack_var: ContextVar[list[_T] | None], node: _T) -> None:
+def trace_stack_push[_T](
+    trace_stack_var: ContextVar[list[_T] | None], node: _T
+) -> None:
     """Push an element to the top of a trace stack."""
     trace_stack: list[_T] | None
     if (trace_stack := trace_stack_var.get()) is None:
@@ -150,7 +150,7 @@ def trace_stack_pop(trace_stack_var: ContextVar[list[Any] | None]) -> None:
         trace_stack.pop()
 
 
-def trace_stack_top(trace_stack_var: ContextVar[list[_T] | None]) -> _T | None:
+def trace_stack_top[_T](trace_stack_var: ContextVar[list[_T] | None]) -> _T | None:
     """Return the element at the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     return trace_stack[-1] if trace_stack else None
@@ -248,7 +248,7 @@ def script_execution_get() -> str | None:
 
 
 @contextmanager
-def trace_path(suffix: str | list[str]) -> Generator[None, None, None]:
+def trace_path(suffix: str | list[str]) -> Generator[None]:
     """Go deeper in the config tree.
 
     Can not be used as a decorator on couroutine functions.
@@ -260,7 +260,7 @@ def trace_path(suffix: str | list[str]) -> Generator[None, None, None]:
         trace_path_pop(count)
 
 
-def async_trace_path(
+def async_trace_path[*_Ts](
     suffix: str | list[str],
 ) -> Callable[
     [Callable[[*_Ts], Coroutine[Any, Any, None]]],

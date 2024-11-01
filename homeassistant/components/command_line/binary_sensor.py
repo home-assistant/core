@@ -1,37 +1,29 @@
 """Support for custom shell commands to retrieve values."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
 from typing import cast
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_COMMAND,
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_SCAN_INTERVAL,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import (
-    CONF_AVAILABILITY,
-    ManualTriggerEntity,
-)
+from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -48,35 +40,28 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
+    if not discovery_info:
+        return
 
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     binary_sensor_config = discovery_info
 
-    name: str = binary_sensor_config.get(CONF_NAME, DEFAULT_NAME)
     command: str = binary_sensor_config[CONF_COMMAND]
     payload_off: str = binary_sensor_config[CONF_PAYLOAD_OFF]
     payload_on: str = binary_sensor_config[CONF_PAYLOAD_ON]
-    device_class: BinarySensorDeviceClass | None = binary_sensor_config.get(
-        CONF_DEVICE_CLASS
-    )
-    icon: Template | None = binary_sensor_config.get(CONF_ICON)
-    value_template: Template | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = binary_sensor_config[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = binary_sensor_config.get(CONF_UNIQUE_ID)
     scan_interval: timedelta = binary_sensor_config.get(
         CONF_SCAN_INTERVAL, SCAN_INTERVAL
     )
-    availability: Template | None = binary_sensor_config.get(CONF_AVAILABILITY)
-    if value_template is not None:
-        value_template.hass = hass
+    value_template: Template | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
+
     data = CommandSensorData(hass, command, command_timeout)
 
     trigger_entity_config = {
-        CONF_UNIQUE_ID: unique_id,
-        CONF_NAME: Template(name, hass),
-        CONF_DEVICE_CLASS: device_class,
-        CONF_ICON: icon,
-        CONF_AVAILABILITY: availability,
+        CONF_NAME: Template(binary_sensor_config.get(CONF_NAME, DEFAULT_NAME), hass),
+        **{
+            k: v for k, v in binary_sensor_config.items() if k in TRIGGER_ENTITY_OPTIONS
+        },
     }
 
     async_add_entities(
@@ -148,7 +133,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
 
     async def _async_update(self) -> None:
         """Get the latest data and updates the state."""
-        await self.hass.async_add_executor_job(self.data.update)
+        await self.data.async_update()
         value = self.data.value
 
         if self._value_template is not None:

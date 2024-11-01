@@ -1,4 +1,5 @@
 """Constants for the Fronius integration."""
+
 from enum import StrEnum
 from typing import Final, NamedTuple, TypedDict
 
@@ -7,7 +8,7 @@ from homeassistant.helpers.typing import StateType
 
 DOMAIN: Final = "fronius"
 
-SolarNetId = str
+type SolarNetId = str
 SOLAR_NET_DISCOVERY_NEW: Final = "fronius_discovery_new"
 SOLAR_NET_ID_POWER_FLOW: SolarNetId = "power_flow"
 SOLAR_NET_ID_SYSTEM: SolarNetId = "system"

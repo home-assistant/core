@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network sensors."""
+
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable
@@ -6,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.devolo_home_network.const import (
     CONNECTED_TO_ROUTER,
     LONG_UPDATE_INTERVAL,
@@ -30,7 +31,10 @@ async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}") is None
+    assert (
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}")
+        is None
+    )
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -46,7 +50,7 @@ async def test_update_attached_to_router(
     """Test state change of a attached_to_router binary sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}"
+    state_key = f"{BINARY_SENSOR_DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

@@ -1,7 +1,11 @@
 """The tests for the UniFi Network update platform."""
+
 from copy import deepcopy
+from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
+import pytest
+from syrupy import SnapshotAssertion
 from yarl import URL
 
 from homeassistant.components.unifi.const import CONF_SITE_ID
@@ -11,24 +15,28 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
-    UpdateDeviceClass,
-    UpdateEntityFeature,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .test_controller import SITE, setup_unifi_integration
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
 
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+# Device with new firmware available
 DEVICE_1 = {
     "board_rev": 3,
     "device_id": "mock-id",
@@ -45,6 +53,7 @@ DEVICE_1 = {
     "upgrade_to_firmware": "4.3.17.11279",
 }
 
+# Device without new firmware available
 DEVICE_2 = {
     "board_rev": 3,
     "device_id": "mock-id",
@@ -59,55 +68,41 @@ DEVICE_2 = {
 }
 
 
-async def test_no_entities(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize("device_payload", [[DEVICE_1, DEVICE_2]])
+@pytest.mark.parametrize(
+    "site_payload",
+    [
+        [{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}],
+        [{"desc": "Site name", "name": "site_id", "role": "not admin", "_id": "1"}],
+    ],
+)
+async def test_entity_and_device_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the update_clients function when no clients are found."""
-    await setup_unifi_integration(hass, aioclient_mock)
+    """Validate entity and device data with and without admin rights."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.UPDATE]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 0
 
-
+@pytest.mark.parametrize("device_payload", [[DEVICE_1]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_updates(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
 ) -> None:
     """Test the update_items function with some devices."""
-    device_1 = deepcopy(DEVICE_1)
-    await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        devices_response=[device_1, DEVICE_2],
-    )
-
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 2
-
     device_1_state = hass.states.get("update.device_1")
     assert device_1_state.state == STATE_ON
-    assert device_1_state.attributes[ATTR_INSTALLED_VERSION] == "4.0.42.10433"
-    assert device_1_state.attributes[ATTR_LATEST_VERSION] == "4.3.17.11279"
     assert device_1_state.attributes[ATTR_IN_PROGRESS] is False
-    assert device_1_state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
-    assert (
-        device_1_state.attributes[ATTR_SUPPORTED_FEATURES]
-        == UpdateEntityFeature.PROGRESS | UpdateEntityFeature.INSTALL
-    )
-
-    device_2_state = hass.states.get("update.device_2")
-    assert device_2_state.state == STATE_OFF
-    assert device_2_state.attributes[ATTR_INSTALLED_VERSION] == "4.0.42.10433"
-    assert device_2_state.attributes[ATTR_LATEST_VERSION] == "4.0.42.10433"
-    assert device_2_state.attributes[ATTR_IN_PROGRESS] is False
-    assert device_2_state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
-    assert (
-        device_2_state.attributes[ATTR_SUPPORTED_FEATURES]
-        == UpdateEntityFeature.PROGRESS | UpdateEntityFeature.INSTALL
-    )
 
     # Simulate start of update
 
+    device_1 = deepcopy(DEVICE_1)
     device_1["state"] = 4
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
-    await hass.async_block_till_done()
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
 
     device_1_state = hass.states.get("update.device_1")
     assert device_1_state.state == STATE_ON
@@ -121,8 +116,7 @@ async def test_device_updates(
     device_1["version"] = "4.3.17.11279"
     device_1["upgradable"] = False
     del device_1["upgrade_to_firmware"]
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
-    await hass.async_block_till_done()
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
 
     device_1_state = hass.states.get("update.device_1")
     assert device_1_state.state == STATE_OFF
@@ -131,38 +125,20 @@ async def test_device_updates(
     assert device_1_state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_not_admin(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that the INSTALL feature is not available on a non-admin account."""
-    site = deepcopy(SITE)
-    site[0]["role"] = "not admin"
-
-    await setup_unifi_integration(
-        hass, aioclient_mock, sites=site, devices_response=[DEVICE_1]
-    )
-
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
-    device_state = hass.states.get("update.device_1")
-    assert device_state.state == STATE_ON
-    assert (
-        device_state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature.PROGRESS
-    )
-
-
+@pytest.mark.parametrize("device_payload", [[DEVICE_1]])
 async def test_install(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test the device update install call."""
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, devices_response=[DEVICE_1]
-    )
-
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
     device_state = hass.states.get("update.device_1")
     assert device_state.state == STATE_ON
 
-    url = f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr"
+    url = (
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/devmgr"
+    )
     aioclient_mock.clear_requests()
     aioclient_mock.post(url)
 
@@ -183,19 +159,18 @@ async def test_install(
     )
 
 
-async def test_controller_state_change(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
+@pytest.mark.parametrize("device_payload", [[DEVICE_1]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_hub_state_change(
+    hass: HomeAssistant, mock_websocket_state: WebsocketStateManager
 ) -> None:
-    """Verify entities state reflect on controller becoming unavailable."""
-    await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
-
-    assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
+    """Verify entities state reflect on hub becoming unavailable."""
     assert hass.states.get("update.device_1").state == STATE_ON
 
     # Controller unavailable
-    await websocket_mock.disconnect()
+    await mock_websocket_state.disconnect()
     assert hass.states.get("update.device_1").state == STATE_UNAVAILABLE
 
     # Controller available
-    await websocket_mock.reconnect()
+    await mock_websocket_state.reconnect()
     assert hass.states.get("update.device_1").state == STATE_ON

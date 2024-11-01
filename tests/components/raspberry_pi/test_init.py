@@ -1,4 +1,5 @@
 """Test the Raspberry Pi integration."""
+
 from unittest.mock import patch
 
 import pytest
@@ -36,11 +37,12 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     assert not hass.config_entries.async_entries("rpi_power")
-    with patch(
-        "homeassistant.components.raspberry_pi.get_os_info",
-        return_value={"board": "rpi"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
+    with (
+        patch(
+            "homeassistant.components.raspberry_pi.get_os_info",
+            return_value={"board": "rpi"},
+        ) as mock_get_os_info,
+        patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -116,4 +118,4 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert len(mock_get_os_info.mock_calls) == 1
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

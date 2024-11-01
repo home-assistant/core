@@ -1,0 +1,29 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "active": {
+        "default": "mdi:camera-outline"
+      }
+    },
+    "sensor": {
+      "direction": {
+        "default": "mdi:sign-direction"
+      },
+      "modified": {
+        "default": "mdi:camera-retake-outline"
+      },
+      "photo_time": {
+        "default": "mdi:camera-timer"
+      },
+      "photo_url": {
+        "default": "mdi:camera-outline"
+      },
+      "status": {
+        "default": "mdi:camera-outline"
+      },
+      "camera_type": {
+        "default": "mdi:camera-iris"
+      }
+    }
+  }
+}

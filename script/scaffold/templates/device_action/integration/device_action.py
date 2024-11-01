@@ -1,4 +1,5 @@
 """Provides device actions for NEW_NAME."""
+
 from __future__ import annotations
 
 import voluptuous as vol

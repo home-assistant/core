@@ -1,6 +1,6 @@
 """Provides data updates from the Control4 controller for platforms."""
+
 from collections import defaultdict
-from collections.abc import Set
 import logging
 from typing import Any
 
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _update_variables_for_config_entry(
-    hass: HomeAssistant, entry: ConfigEntry, variable_names: Set[str]
+    hass: HomeAssistant, entry: ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
     """Retrieve data from the Control4 director."""
     director: C4Director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
@@ -31,13 +31,13 @@ async def _update_variables_for_config_entry(
 
 
 async def update_variables_for_config_entry(
-    hass: HomeAssistant, entry: ConfigEntry, variable_names: Set[str]
+    hass: HomeAssistant, entry: ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
     """Try to Retrieve data from the Control4 director for update_coordinator."""
     try:
         return await _update_variables_for_config_entry(hass, entry, variable_names)
     except BadToken:
-        _LOGGER.info("Updating Control4 director token")
+        _LOGGER.debug("Updating Control4 director token")
         await refresh_tokens(hass, entry)
         return await _update_variables_for_config_entry(hass, entry, variable_names)
 

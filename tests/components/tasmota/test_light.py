@@ -1,6 +1,8 @@
 """The tests for the Tasmota light platform."""
+
 import copy
 import json
+from typing import Any
 from unittest.mock import patch
 
 from hatasmota.const import CONF_MAC
@@ -1477,7 +1479,13 @@ async def test_relay_as_light(
     assert state is not None
 
 
-async def _test_split_light(hass, mqtt_mock, config, num_lights, num_switches):
+async def _test_split_light(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    config: dict[str, Any],
+    num_lights: int,
+    num_switches: int,
+) -> None:
     """Test multi-channel light split to single-channel dimmers."""
     mac = config["mac"]
 
@@ -1552,7 +1560,12 @@ async def test_split_light2(
     await _test_split_light(hass, mqtt_mock, config, 5, 2)
 
 
-async def _test_unlinked_light(hass, mqtt_mock, config, num_switches):
+async def _test_unlinked_light(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    config: dict[str, Any],
+    num_switches: int,
+) -> None:
     """Test rgbww light split to rgb+ww."""
     mac = config["mac"]
     num_lights = 2

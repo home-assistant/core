@@ -1,4 +1,5 @@
 """Base entity for the Fully Kiosk Browser integration."""
+
 from __future__ import annotations
 
 import json

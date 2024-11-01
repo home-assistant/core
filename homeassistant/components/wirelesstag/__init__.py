@@ -1,53 +1,27 @@
 """Support for Wireless Sensor Tags."""
+
 import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 from wirelesstagpy import WirelessTags
 from wirelesstagpy.exceptions import WirelessTagsException
-from wirelesstagpy.sensortag import SensorTag
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_VOLTAGE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    UnitOfElectricPotential,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN, SIGNAL_BINARY_EVENT_UPDATE, SIGNAL_TAG_UPDATE
+
 _LOGGER = logging.getLogger(__name__)
-
-
-# Strength of signal in dBm
-ATTR_TAG_SIGNAL_STRENGTH = "signal_strength"
-# Indicates if tag is out of range or not
-ATTR_TAG_OUT_OF_RANGE = "out_of_range"
-# Number in percents from max power of tag receiver
-ATTR_TAG_POWER_CONSUMPTION = "power_consumption"
-
 
 NOTIFICATION_ID = "wirelesstag_notification"
 NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
 
-DOMAIN = "wirelesstag"
 DEFAULT_ENTITY_NAMESPACE = "wirelesstag"
-
-# Template for signal - first parameter is tag_id,
-# second, tag manager mac address
-SIGNAL_TAG_UPDATE = "wirelesstag.tag_info_updated_{}_{}"
-
-# Template for signal - tag_id, sensor type and
-# tag manager mac address
-SIGNAL_BINARY_EVENT_UPDATE = "wirelesstag.binary_event_updated_{}_{}_{}"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -118,7 +92,7 @@ class WirelessTagPlatform:
                                 ),
                                 tag,
                             )
-                except Exception as ex:  # pylint: disable=broad-except
+                except Exception as ex:  # noqa: BLE001
                     _LOGGER.error(
                         "Unable to handle tag update: %s error: %s",
                         str(tag),
@@ -126,22 +100,6 @@ class WirelessTagPlatform:
                     )
 
         self.api.start_monitoring(push_callback)
-
-
-def async_migrate_unique_id(
-    hass: HomeAssistant, tag: SensorTag, domain: str, key: str
-) -> None:
-    """Migrate old unique id to new one with use of tag's uuid."""
-    registry = er.async_get(hass)
-    new_unique_id = f"{tag.uuid}_{key}"
-
-    if registry.async_get_entity_id(domain, DOMAIN, new_unique_id):
-        return
-
-    old_unique_id = f"{tag.tag_id}_{key}"
-    if entity_id := registry.async_get_entity_id(domain, DOMAIN, old_unique_id):
-        _LOGGER.debug("Updating unique id for %s %s", key, entity_id)
-        registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -168,76 +126,3 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     return True
-
-
-class WirelessTagBaseSensor(Entity):
-    """Base class for HA implementation for Wireless Sensor Tag."""
-
-    def __init__(self, api, tag):
-        """Initialize a base sensor for Wireless Sensor Tag platform."""
-        self._api = api
-        self._tag = tag
-        self._uuid = self._tag.uuid
-        self.tag_id = self._tag.tag_id
-        self.tag_manager_mac = self._tag.tag_manager_mac
-        self._name = self._tag.name
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def principal_value(self):
-        """Return base value.
-
-        Subclasses need override based on type of sensor.
-        """
-        return 0
-
-    def updated_state_value(self):
-        """Return formatted value.
-
-        The default implementation formats principal value.
-        """
-        return self.decorate_value(self.principal_value)
-
-    def decorate_value(self, value):
-        """Decorate input value to be well presented for end user."""
-        return f"{value:.1f}"
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._tag.is_alive
-
-    def update(self):
-        """Update state."""
-        if not self.should_poll:
-            return
-
-        updated_tags = self._api.load_tags()
-        if (updated_tag := updated_tags[self._uuid]) is None:
-            _LOGGER.error('Unable to update tag: "%s"', self.name)
-            return
-
-        self._tag = updated_tag
-        self._state = self.updated_state_value()
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
-            ATTR_VOLTAGE: (
-                f"{self._tag.battery_volts:.2f}{UnitOfElectricPotential.VOLT}"
-            ),
-            ATTR_TAG_SIGNAL_STRENGTH: (
-                f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}"
-            ),
-            ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: (
-                f"{self._tag.power_consumption:.2f}{PERCENTAGE}"
-            ),
-        }

@@ -1,4 +1,5 @@
 """Support for Big Ass Fans sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,7 +8,6 @@ from typing import cast
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,24 +23,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .entity import BAFEntity
-from .models import BAFData
+from . import BAFConfigEntry
+from .entity import BAFDescriptionEntity
 
 
-@dataclass(frozen=True)
-class BAFSensorDescriptionMixin:
-    """Required values for BAF sensors."""
-
-    value_fn: Callable[[Device], int | float | str | None]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BAFSensorDescription(
     SensorEntityDescription,
-    BAFSensorDescriptionMixin,
 ):
     """Class describing BAF sensor entities."""
+
+    value_fn: Callable[[Device], int | float | str | None]
 
 
 AUTO_COMFORT_SENSORS = (
@@ -99,16 +92,16 @@ FAN_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF fan sensors."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
-    sensors_descriptions: list[BAFSensorDescription] = []
-    for description in DEFINED_ONLY_SENSORS:
-        if getattr(device, description.key):
-            sensors_descriptions.append(description)
+    device = entry.runtime_data
+    sensors_descriptions: list[BAFSensorDescription] = [
+        description
+        for description in DEFINED_ONLY_SENSORS
+        if getattr(device, description.key)
+    ]
     if device.has_auto_comfort:
         sensors_descriptions.extend(AUTO_COMFORT_SENSORS)
     if device.has_fan:
@@ -118,19 +111,12 @@ async def async_setup_entry(
     )
 
 
-class BAFSensor(BAFEntity, SensorEntity):
+class BAFSensor(BAFDescriptionEntity, SensorEntity):
     """BAF sensor."""
 
     entity_description: BAFSensorDescription
 
-    def __init__(self, device: Device, description: BAFSensorDescription) -> None:
-        """Initialize the entity."""
-        self.entity_description = description
-        super().__init__(device)
-        self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
-
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        description = self.entity_description
-        self._attr_native_value = description.value_fn(self._device)
+        self._attr_native_value = self.entity_description.value_fn(self._device)

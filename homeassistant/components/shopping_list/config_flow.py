@@ -1,10 +1,10 @@
 """Config flow to configure the shopping list integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
 
@@ -16,7 +16,7 @@ class ShoppingListFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         # Check if already configured
         await self.async_set_unique_id(DOMAIN)
@@ -31,6 +31,6 @@ class ShoppingListFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_onboarding(
         self, _: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by onboarding."""
         return await self.async_step_user(user_input={})

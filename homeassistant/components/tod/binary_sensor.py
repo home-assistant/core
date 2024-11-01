@@ -1,15 +1,16 @@
 """Support for representing current time of the day as binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Literal, TypeGuard
+from typing import Any, Literal, TypeGuard
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +36,7 @@ from .const import (
     CONF_BEFORE_TIME,
 )
 
-SunEventType = Literal["sunrise", "sunset"]
+type SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ ATTR_AFTER = "after"
 ATTR_BEFORE = "before"
 ATTR_NEXT_UPDATE = "next_update"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
         vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
@@ -108,6 +109,9 @@ class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
     _attr_should_poll = False
+    _time_before: datetime
+    _time_after: datetime
+    _next_update: datetime
 
     def __init__(
         self,
@@ -121,9 +125,6 @@ class TodSensor(BinarySensorEntity):
         """Init the ToD Sensor..."""
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self._time_before: datetime | None = None
-        self._time_after: datetime | None = None
-        self._next_update: datetime | None = None
         self._after_offset = after_offset
         self._before_offset = before_offset
         self._before = before
@@ -133,9 +134,6 @@ class TodSensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True is sensor is on."""
-        if TYPE_CHECKING:
-            assert self._time_after is not None
-            assert self._time_before is not None
         if self._time_after < self._time_before:
             return self._time_after <= dt_util.utcnow() < self._time_before
         return False
@@ -143,11 +141,7 @@ class TodSensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        if TYPE_CHECKING:
-            assert self._time_after is not None
-            assert self._time_before is not None
-            assert self._next_update is not None
-        if time_zone := dt_util.get_time_zone(self.hass.config.time_zone):
+        if time_zone := dt_util.get_default_time_zone():
             return {
                 ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
                 ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
@@ -159,9 +153,7 @@ class TodSensor(BinarySensorEntity):
         """Convert naive time from config to utc_datetime with current day."""
         # get the current local date from utc time
         current_local_date = (
-            dt_util.utcnow()
-            .astimezone(dt_util.get_time_zone(self.hass.config.time_zone))
-            .date()
+            dt_util.utcnow().astimezone(dt_util.get_default_time_zone()).date()
         )
         # calculate utc datetime corresponding to local time
         return dt_util.as_utc(datetime.combine(current_local_date, naive_time))
@@ -245,9 +237,6 @@ class TodSensor(BinarySensorEntity):
 
     def _turn_to_next_day(self) -> None:
         """Turn to to the next day."""
-        if TYPE_CHECKING:
-            assert self._time_after is not None
-            assert self._time_before is not None
         if _is_sun_event(self._after):
             self._time_after = get_astral_event_next(
                 self.hass, self._after, self._time_after - self._after_offset
@@ -283,17 +272,12 @@ class TodSensor(BinarySensorEntity):
 
         self.async_on_remove(_clean_up_listener)
 
-        if TYPE_CHECKING:
-            assert self._next_update is not None
         self._unsub_update = event.async_track_point_in_utc_time(
             self.hass, self._point_in_time_listener, self._next_update
         )
 
     def _calculate_next_update(self) -> None:
         """Datetime when the next update to the state."""
-        if TYPE_CHECKING:
-            assert self._time_after is not None
-            assert self._time_before is not None
         now = dt_util.utcnow()
         if now < self._time_after:
             self._next_update = self._time_after
@@ -309,9 +293,6 @@ class TodSensor(BinarySensorEntity):
         """Run when the state of the sensor should be updated."""
         self._calculate_next_update()
         self.async_write_ha_state()
-
-        if TYPE_CHECKING:
-            assert self._next_update is not None
 
         self._unsub_update = event.async_track_point_in_utc_time(
             self.hass, self._point_in_time_listener, self._next_update

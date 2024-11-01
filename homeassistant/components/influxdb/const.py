@@ -1,4 +1,5 @@
 """Constants for InfluxDB integration."""
+
 from datetime import timedelta
 import re
 

@@ -1,4 +1,5 @@
 """Config flow for Homeassistant Analytics integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,11 +14,11 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -26,6 +27,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_TRACKED_ADDONS,
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
@@ -50,13 +52,16 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._async_abort_entries_match()
         errors: dict[str, str] = {}
         if user_input is not None:
-            if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(
-                CONF_TRACKED_CUSTOM_INTEGRATIONS
+            if all(
+                [
+                    not user_input.get(CONF_TRACKED_ADDONS),
+                    not user_input.get(CONF_TRACKED_INTEGRATIONS),
+                    not user_input.get(CONF_TRACKED_CUSTOM_INTEGRATIONS),
+                ]
             ):
                 errors["base"] = "no_integrations_selected"
             else:
@@ -64,6 +69,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Home Assistant Analytics Insights",
                     data={},
                     options={
+                        CONF_TRACKED_ADDONS: user_input.get(CONF_TRACKED_ADDONS, []),
                         CONF_TRACKED_INTEGRATIONS: user_input.get(
                             CONF_TRACKED_INTEGRATIONS, []
                         ),
@@ -77,11 +83,15 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass)
         )
         try:
+            addons = await client.get_addons()
             integrations = await client.get_integrations()
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error")
+            return self.async_abort(reason="unknown")
 
         options = [
             SelectOptionDict(
@@ -96,6 +106,13 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
+                    vol.Optional(CONF_TRACKED_ADDONS): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(addons),
+                            multiple=True,
+                            sort=True,
+                        )
+                    ),
                     vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
@@ -120,18 +137,23 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(
-                CONF_TRACKED_CUSTOM_INTEGRATIONS
+            if all(
+                [
+                    not user_input.get(CONF_TRACKED_ADDONS),
+                    not user_input.get(CONF_TRACKED_INTEGRATIONS),
+                    not user_input.get(CONF_TRACKED_CUSTOM_INTEGRATIONS),
+                ]
             ):
                 errors["base"] = "no_integrations_selected"
             else:
                 return self.async_create_entry(
                     title="",
                     data={
+                        CONF_TRACKED_ADDONS: user_input.get(CONF_TRACKED_ADDONS, []),
                         CONF_TRACKED_INTEGRATIONS: user_input.get(
                             CONF_TRACKED_INTEGRATIONS, []
                         ),
@@ -145,6 +167,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
             session=async_get_clientsession(self.hass)
         )
         try:
+            addons = await client.get_addons()
             integrations = await client.get_integrations()
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
@@ -165,6 +188,13 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
+                        vol.Optional(CONF_TRACKED_ADDONS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=list(addons),
+                                multiple=True,
+                                sort=True,
+                            )
+                        ),
                         vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                             SelectSelectorConfig(
                                 options=options,

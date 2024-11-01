@@ -1,0 +1,11 @@
+{
+  "domain": "test_package_loaded_loop",
+  "name": "Test Package that loads in the loop",
+  "documentation": "http://test-package.io",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "config_flow": true,
+  "import_executor": false,
+  "version": "1.2.3"
+}

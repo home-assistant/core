@@ -1,4 +1,5 @@
 """Support for Toon binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
-from .models import (
+from .entity import (
     ToonBoilerDeviceEntity,
     ToonBoilerModuleDeviceEntity,
     ToonDisplayDeviceEntity,

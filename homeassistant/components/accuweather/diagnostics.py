@@ -1,30 +1,25 @@
 """Diagnostics support for AccuWeather."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from . import AccuWeatherDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import AccuWeatherConfigEntry, AccuWeatherData
 
 TO_REDACT = {CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: AccuWeatherConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    accuweather_data: AccuWeatherData = config_entry.runtime_data
 
-    diagnostics_data = {
+    return {
         "config_entry_data": async_redact_data(dict(config_entry.data), TO_REDACT),
-        "coordinator_data": coordinator.data,
+        "observation_data": accuweather_data.coordinator_observation.data,
     }
-
-    return diagnostics_data

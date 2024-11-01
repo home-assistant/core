@@ -1,4 +1,5 @@
 """The data update coordinator for the A. O. Smith integration."""
+
 import logging
 
 from py_aosmith import (

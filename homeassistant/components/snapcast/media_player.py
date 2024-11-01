@@ -1,4 +1,5 @@
 """Support for interacting with Snapcast clients."""
+
 from __future__ import annotations
 
 from snapcast.control.server import Snapserver
@@ -41,12 +42,12 @@ def register_services():
     """Register snapcast services."""
     platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(SERVICE_SNAPSHOT, {}, "snapshot")
-    platform.async_register_entity_service(SERVICE_RESTORE, {}, "async_restore")
+    platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "snapshot")
+    platform.async_register_entity_service(SERVICE_RESTORE, None, "async_restore")
     platform.async_register_entity_service(
         SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, handle_async_join
     )
-    platform.async_register_entity_service(SERVICE_UNJOIN, {}, handle_async_unjoin)
+    platform.async_register_entity_service(SERVICE_UNJOIN, None, handle_async_unjoin)
     platform.async_register_entity_service(
         SERVICE_SET_LATENCY,
         {vol.Required(ATTR_LATENCY): cv.positive_int},

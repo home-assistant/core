@@ -1,4 +1,5 @@
 """Calendar platform for Withings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,25 +8,24 @@ from datetime import datetime
 from aiowithings import WithingsClient, WorkoutCategory
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
-from . import DOMAIN, WithingsData
+from . import DOMAIN, WithingsConfigEntry
 from .coordinator import WithingsWorkoutDataUpdateCoordinator
 from .entity import WithingsEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WithingsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
     ent_reg = er.async_get(hass)
-    withings_data: WithingsData = hass.data[DOMAIN][entry.entry_id]
+    withings_data = entry.runtime_data
 
     workout_coordinator = withings_data.workout_coordinator
 

@@ -1,10 +1,11 @@
 """Test APCUPSd config flow setup process."""
+
 from copy import copy
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.apcupsd import DOMAIN
+from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -32,19 +33,8 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data=CONF_DATA,
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_config_flow_no_status(hass: HomeAssistant) -> None:
-    """Test config flow setup with successful connection but no status is reported."""
-    with patch("aioapcaccess.request_status", return_value={}):  # Returns no status.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "no_status"
 
 
 async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
@@ -73,7 +63,7 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data=CONF_DATA,
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
         # Then, we create the integration once again using a different port. However,
@@ -88,7 +78,7 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data=another_host,
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
         # Now we change the serial number and add it again. This should be successful.
@@ -101,7 +91,7 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data=another_host,
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == another_host
 
 
@@ -115,14 +105,14 @@ async def test_flow_works(hass: HomeAssistant) -> None:
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONF_DATA
         )
         await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_STATUS["UPSNAME"]
         assert result["data"] == CONF_DATA
 
@@ -157,7 +147,7 @@ async def test_flow_minimal_status(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
         await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == CONF_DATA
         assert result["title"] == expected_title
         mock_setup.assert_called_once()

@@ -17,14 +17,22 @@
         "data": {
           "phonebook": "Phonebook"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "insufficient_permissions": "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks."
+      "insufficient_permissions": "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "insufficient_permissions": "[%key:component::fritzbox_callmonitor::config::abort::insufficient_permissions%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
@@ -50,6 +58,27 @@
           "dialing": "Dialing",
           "talking": "Talking",
           "idle": "[%key:common::state::idle%]"
+        },
+        "state_attributes": {
+          "prefixes": { "name": "Prefixes" },
+          "type": {
+            "name": "Type",
+            "state": {
+              "incoming": "Incoming",
+              "outgoing": "Outgoing"
+            }
+          },
+          "from": { "name": "Caller number" },
+          "to": { "name": "Number called" },
+          "device": { "name": "[%key:common::config_flow::data::device%]" },
+          "initiated": { "name": "Initiated" },
+          "from_name": { "name": "Caller name" },
+          "to_name": { "name": "Called name" },
+          "with": { "name": "With number" },
+          "accepted": { "name": "Accepted" },
+          "with_name": { "name": "With name" },
+          "duration": { "name": "Duration" },
+          "closed": { "name": "Closed" }
         }
       }
     }

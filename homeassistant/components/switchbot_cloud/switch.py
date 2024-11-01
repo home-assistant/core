@@ -1,4 +1,5 @@
 """Support for SwitchBot switch."""
+
 from typing import Any
 
 from switchbot_api import CommonCommands, Device, PowerState, Remote, SwitchBotAPI
@@ -35,13 +36,13 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.send_command(CommonCommands.ON)
+        await self.send_api_command(CommonCommands.ON)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.send_command(CommonCommands.OFF)
+        await self.send_api_command(CommonCommands.OFF)
         self._attr_is_on = False
         self.async_write_ha_state()
 

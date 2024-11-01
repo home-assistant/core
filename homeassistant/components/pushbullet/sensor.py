@@ -1,4 +1,5 @@
 """Pushbullet platform for sensor component."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription

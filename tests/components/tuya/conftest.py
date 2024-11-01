@@ -1,8 +1,9 @@
 """Fixtures for the Tuya integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -34,14 +35,14 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.tuya.async_setup_entry", return_value=True):
         yield
 
 
 @pytest.fixture
-def mock_tuya_login_control() -> Generator[MagicMock, None, None]:
+def mock_tuya_login_control() -> Generator[MagicMock]:
     """Return a mocked Tuya login control."""
     with patch(
         "homeassistant.components.tuya.config_flow.LoginControl", autospec=True

@@ -3,13 +3,15 @@
 This module enabled a non-breaking transition from mutable to frozen dataclasses
 derived from EntityDescription and sub classes thereof.
 """
+
 from __future__ import annotations
 
 import dataclasses
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast, dataclass_transform
 
-from typing_extensions import dataclass_transform
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
 
 def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
@@ -17,7 +19,6 @@ def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
 
     Extracted from dataclasses._process_class.
     """
-    # pylint: disable=protected-access
     cls_annotations = cls.__dict__.get("__annotations__", {})
 
     cls_fields: list[dataclasses.Field[Any]] = []
@@ -25,20 +26,20 @@ def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
     _dataclasses = sys.modules[dataclasses.__name__]
     for name, _type in cls_annotations.items():
         # See if this is a marker to change the value of kw_only.
-        if dataclasses._is_kw_only(type, _dataclasses) or (  # type: ignore[attr-defined]
+        if dataclasses._is_kw_only(type, _dataclasses) or (  # type: ignore[attr-defined]  # noqa: SLF001
             isinstance(_type, str)
-            and dataclasses._is_type(  # type: ignore[attr-defined]
+            and dataclasses._is_type(  # type: ignore[attr-defined]  # noqa: SLF001
                 _type,
                 cls,
                 _dataclasses,
                 dataclasses.KW_ONLY,
-                dataclasses._is_kw_only,  # type: ignore[attr-defined]
+                dataclasses._is_kw_only,  # type: ignore[attr-defined]  # noqa: SLF001
             )
         ):
             kw_only = True
         else:
             # Otherwise it's a field of some type.
-            cls_fields.append(dataclasses._get_field(cls, name, _type, kw_only))  # type: ignore[attr-defined]
+            cls_fields.append(dataclasses._get_field(cls, name, _type, kw_only))  # type: ignore[attr-defined]  # noqa: SLF001
 
     return [(field.name, field.type, field) for field in cls_fields]
 
@@ -56,9 +57,7 @@ class FrozenOrThawed(type):
 
     def _make_dataclass(cls, name: str, bases: tuple[type, ...], kw_only: bool) -> None:
         class_fields = _class_fields(cls, kw_only)
-        dataclass_bases = []
-        for base in bases:
-            dataclass_bases.append(getattr(base, "_dataclass", base))
+        dataclass_bases = [getattr(base, "_dataclass", base) for base in bases]
         cls._dataclass = dataclasses.make_dataclass(
             name, class_fields, bases=tuple(dataclass_bases), frozen=True
         )
@@ -115,6 +114,8 @@ class FrozenOrThawed(type):
             """
             cls, *_args = args
             if dataclasses.is_dataclass(cls):
+                if TYPE_CHECKING:
+                    cls = cast(type[DataclassInstance], cls)
                 return object.__new__(cls)
             return cls._dataclass(*_args, **kwargs)
 

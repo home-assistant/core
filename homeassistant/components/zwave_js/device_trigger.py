@@ -1,4 +1,5 @@
 """Provides device triggers for Z-Wave JS."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,8 +7,8 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event, state

@@ -1,0 +1,16 @@
+{
+  "services": {
+    "add_torrent": {
+      "service": "mdi:download"
+    },
+    "remove_torrent": {
+      "service": "mdi:download-off"
+    },
+    "start_torrent": {
+      "service": "mdi:play"
+    },
+    "stop_torrent": {
+      "service": "mdi:stop"
+    }
+  }
+}

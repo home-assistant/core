@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -32,27 +33,20 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN, KM, MILES
 from .coordinator import MyPermobilCoordinator
+from .entity import PermobilEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PermobilRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PermobilSensorEntityDescription(SensorEntityDescription):
+    """Describes Permobil sensor entity."""
 
     value_fn: Callable[[Any], float | int]
     available_fn: Callable[[Any], bool]
-
-
-@dataclass(frozen=True)
-class PermobilSensorEntityDescription(
-    SensorEntityDescription, PermobilRequiredKeysMixin
-):
-    """Describes Permobil sensor entity."""
 
 
 SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
@@ -72,7 +66,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: BATTERY_STATE_OF_HEALTH[0] in data.battery,
         key="state_of_health",
         translation_key="state_of_health",
-        icon="mdi:battery-heart-variant",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -82,7 +75,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: BATTERY_CHARGE_TIME_LEFT[0] in data.battery,
         key="charge_time_left",
         translation_key="charge_time_left",
-        icon="mdi:battery-clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
     ),
@@ -92,7 +84,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: BATTERY_DISTANCE_LEFT[0] in data.battery,
         key="distance_left",
         translation_key="distance_left",
-        icon="mdi:map-marker-distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
     ),
@@ -112,7 +103,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: BATTERY_MAX_AMPERE_HOURS[0] in data.battery,
         key="max_watt_hours",
         translation_key="max_watt_hours",
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -124,7 +114,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: BATTERY_AMPERE_HOURS_LEFT[0] in data.battery,
         key="watt_hours_left",
         translation_key="watt_hours_left",
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -135,7 +124,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: BATTERY_MAX_DISTANCE_LEFT[0] in data.battery,
         key="max_distance_left",
         translation_key="max_distance_left",
-        icon="mdi:map-marker-distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
     ),
@@ -145,7 +133,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: USAGE_DISTANCE[0] in data.daily_usage,
         key="usage_distance",
         translation_key="usage_distance",
-        icon="mdi:map-marker-distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -156,7 +143,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: USAGE_ADJUSTMENTS[0] in data.daily_usage,
         key="usage_adjustments",
         translation_key="usage_adjustments",
-        icon="mdi:seat-recline-extra",
         native_unit_of_measurement="adjustments",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -166,7 +152,6 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: RECORDS_SEATING[0] in data.records,
         key="record_adjustments",
         translation_key="record_adjustments",
-        icon="mdi:seat-recline-extra",
         native_unit_of_measurement="adjustments",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -176,7 +161,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         available_fn=lambda data: RECORDS_DISTANCE[0] in data.records,
         key="record_distance",
         translation_key="record_distance",
-        icon="mdi:map-marker-distance",
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
@@ -202,28 +187,14 @@ async def async_setup_entry(
     )
 
 
-class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
+class PermobilSensor(PermobilEntity, SensorEntity):
     """Representation of a Sensor.
 
     This implements the common functions of all sensors.
     """
 
-    _attr_has_entity_name = True
     _attr_suggested_display_precision = 0
     entity_description: PermobilSensorEntityDescription
-    _available = True
-
-    def __init__(
-        self,
-        coordinator: MyPermobilCoordinator,
-        description: PermobilSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.p_api.email}_{self.entity_description.key}"
-        )
 
     @property
     def native_unit_of_measurement(self) -> str | None:

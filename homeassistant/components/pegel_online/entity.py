@@ -1,7 +1,8 @@
 """The PEGELONLINE base entity."""
+
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -28,4 +29,5 @@ class PegelOnlineEntity(CoordinatorEntity[PegelOnlineDataUpdateCoordinator]):
             name=f"{self.station.name} {self.station.water_name}",
             manufacturer=self.station.agency,
             configuration_url=self.station.base_data_url,
+            entry_type=DeviceEntryType.SERVICE,
         )

@@ -1,4 +1,5 @@
 """Demo platform that offers a fake date/time entity."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime

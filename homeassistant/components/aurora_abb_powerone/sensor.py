@@ -1,4 +1,5 @@
 """Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,11 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_SERIAL_NUMBER,
     EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -27,7 +30,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AuroraAbbDataUpdateCoordinator
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
@@ -36,11 +38,56 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
+from .coordinator import AuroraAbbConfigEntry, AuroraAbbDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_STATES = list(AuroraMapping.ALARM_STATES.values())
 
 SENSOR_TYPES = [
+    SensorEntityDescription(
+        key="grid_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="grid_voltage",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="grid_current",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="grid_current",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="grid_frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="i_leak_dcdc",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="i_leak_dcdc",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="i_leak_inverter",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="i_leak_inverter",
+        entity_registry_enabled_default=False,
+    ),
     SensorEntityDescription(
         key="alarm",
         device_class=SensorDeviceClass.ENUM,
@@ -63,6 +110,14 @@ SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="r_iso",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement="MOhms",
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="r_iso",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="totalenergy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -74,17 +129,15 @@ SENSOR_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AuroraAbbConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
-    entities = []
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     data = config_entry.data
 
-    for sens in SENSOR_TYPES:
-        entities.append(AuroraSensor(coordinator, data, sens))
+    entities = [AuroraSensor(coordinator, data, sens) for sens in SENSOR_TYPES]
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)

@@ -1,4 +1,5 @@
 """Allow users to set and activate scenes."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping, ValuesView
@@ -22,13 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-    State,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
@@ -39,6 +34,8 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
+
+from .const import DOMAIN
 
 
 def _convert_states(states: dict[str, Any]) -> dict[str, State]:
@@ -91,7 +88,7 @@ STATES_SCHEMA = vol.All(dict, _convert_states)
 
 PLATFORM_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): HA_DOMAIN,
+        vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(STATES): vol.All(
             cv.ensure_list,
             [
@@ -205,7 +202,7 @@ async def async_setup_platform(
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
         for p_type, p_config in conf_util.config_per_platform(conf, SCENE_DOMAIN):
-            if p_type != HA_DOMAIN:
+            if p_type != DOMAIN:
                 continue
 
             _process_scenes_config(hass, async_add_entities, p_config)
@@ -281,7 +278,6 @@ async def async_setup_platform(
             scene = platform.entities.get(entity_id)
             if scene is None:
                 raise ServiceValidationError(
-                    f"{entity_id} is not a valid scene entity_id",
                     translation_domain=SCENE_DOMAIN,
                     translation_key="entity_not_scene",
                     translation_placeholders={
@@ -291,7 +287,6 @@ async def async_setup_platform(
             assert isinstance(scene, HomeAssistantScene)
             if not scene.from_service:
                 raise ServiceValidationError(
-                    f"The scene {entity_id} is not created with service `scene.create`",
                     translation_domain=SCENE_DOMAIN,
                     translation_key="entity_not_dynamically_created",
                     translation_placeholders={

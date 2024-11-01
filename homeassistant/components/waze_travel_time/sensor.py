@@ -1,4 +1,5 @@
 """Support for Waze travel time sensor."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,7 @@ import logging
 from typing import Any
 
 import httpx
-from pywaze.route_calculator import WazeRouteCalculator, WRCError
+from pywaze.route_calculator import WazeRouteCalculator
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,6 +30,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util.unit_conversion import DistanceConverter
 
+from . import async_get_travel_times
 from .const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
@@ -90,6 +92,7 @@ class WazeTravelTime(SensorEntity):
         identifiers={(DOMAIN, DOMAIN)},
         configuration_url="https://www.waze.com",
     )
+    _attr_translation_key = "waze_travel_time"
 
     def __init__(
         self,
@@ -105,7 +108,6 @@ class WazeTravelTime(SensorEntity):
         self._attr_name = name
         self._origin = origin
         self._destination = destination
-        self._attr_icon = "mdi:car"
         self._state = None
 
     async def async_added_to_hass(self) -> None:
@@ -181,64 +183,42 @@ class WazeTravelTimeData:
         )
         if self.origin is not None and self.destination is not None:
             # Grab options on every update
-            incl_filter = self.config_entry.options.get(CONF_INCL_FILTER)
-            excl_filter = self.config_entry.options.get(CONF_EXCL_FILTER)
+            incl_filter = self.config_entry.options[CONF_INCL_FILTER]
+            excl_filter = self.config_entry.options[CONF_EXCL_FILTER]
             realtime = self.config_entry.options[CONF_REALTIME]
             vehicle_type = self.config_entry.options[CONF_VEHICLE_TYPE]
-            vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
             avoid_toll_roads = self.config_entry.options[CONF_AVOID_TOLL_ROADS]
             avoid_subscription_roads = self.config_entry.options[
                 CONF_AVOID_SUBSCRIPTION_ROADS
             ]
             avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
-            units = self.config_entry.options[CONF_UNITS]
+            routes = await async_get_travel_times(
+                self.client,
+                self.origin,
+                self.destination,
+                vehicle_type,
+                avoid_toll_roads,
+                avoid_subscription_roads,
+                avoid_ferries,
+                realtime,
+                incl_filter,
+                excl_filter,
+            )
+            if routes:
+                route = routes[0]
+            else:
+                _LOGGER.warning("No routes found")
+                return
 
-            routes = {}
-            try:
-                routes = await self.client.calc_all_routes_info(
-                    self.origin,
-                    self.destination,
-                    vehicle_type=vehicle_type,
-                    avoid_toll_roads=avoid_toll_roads,
-                    avoid_subscription_roads=avoid_subscription_roads,
-                    avoid_ferries=avoid_ferries,
-                    real_time=realtime,
+            self.duration = route.duration
+            distance = route.distance
+
+            if self.config_entry.options[CONF_UNITS] == IMPERIAL_UNITS:
+                # Convert to miles.
+                self.distance = DistanceConverter.convert(
+                    distance, UnitOfLength.KILOMETERS, UnitOfLength.MILES
                 )
+            else:
+                self.distance = distance
 
-                if incl_filter not in {None, ""}:
-                    routes = {
-                        k: v
-                        for k, v in routes.items()
-                        if incl_filter.lower() in k.lower()
-                    }
-
-                if excl_filter not in {None, ""}:
-                    routes = {
-                        k: v
-                        for k, v in routes.items()
-                        if excl_filter.lower() not in k.lower()
-                    }
-
-                if routes:
-                    route = list(routes)[0]
-                else:
-                    _LOGGER.warning("No routes found")
-                    return
-
-                self.duration, distance = routes[route]
-
-                if units == IMPERIAL_UNITS:
-                    # Convert to miles.
-                    self.distance = DistanceConverter.convert(
-                        distance, UnitOfLength.KILOMETERS, UnitOfLength.MILES
-                    )
-                else:
-                    self.distance = distance
-
-                self.route = route
-            except WRCError as exp:
-                _LOGGER.warning("Error on retrieving data: %s", exp)
-                return
-            except KeyError:
-                _LOGGER.error("Error retrieving data from server")
-                return
+            self.route = route.name

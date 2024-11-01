@@ -1,0 +1,115 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'api_data': dict({
+    }),
+    'config_entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'name': 'AEMET',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'aemet',
+      'entry_id': '7442b231f139e813fc1939281123f220',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'coord_data': dict({
+      'forecast': dict({
+        'forecast-daily': list([
+        ]),
+        'forecast-hourly': list([
+        ]),
+      }),
+      'lib': dict({
+        'station': dict({
+          'altitude': 667.0,
+          'coordinates': '**REDACTED**',
+          'datetime': '2021-01-09T13:00:00+01:00',
+          'dew-point': -0.7,
+          'distance': 12.746,
+          'humidity': 99.0,
+          'id': '3195',
+          'name': 'MADRID RETIRO',
+          'outdated': True,
+          'precipitation': 7.0,
+          'pressure': 1004.4,
+          'temperature': -0.7,
+          'temperature-max': -0.6,
+          'temperature-min': -1.0,
+          'timestamp-utc': '2021-01-09T13:00:00+01:00',
+          'timezone': dict({
+            '__type': "<class 'zoneinfo.ZoneInfo'>",
+            'repr': "zoneinfo.ZoneInfo(key='Europe/Madrid')",
+          }),
+          'wind-direction': 122.0,
+          'wind-speed': 3.2,
+          'wind-speed-max': 12.2,
+        }),
+        'timestamp-utc': '2024-02-23T18:00:00+00:00',
+        'town': dict({
+          'altitude': 622,
+          'coordinates': '**REDACTED**',
+          'distance': 0.0,
+          'forecast-daily': dict({
+            'forecast': list([
+            ]),
+            'timestamp-local': '2021-01-09T11:54:00+00:00',
+            'timestamp-utc': '2021-01-09T11:54:00+00:00',
+            'timezone': dict({
+              '__type': "<class 'zoneinfo.ZoneInfo'>",
+              'repr': "zoneinfo.ZoneInfo(key='Europe/Madrid')",
+            }),
+          }),
+          'forecast-hourly': dict({
+            'forecast': list([
+            ]),
+            'timestamp-local': '2021-01-09T11:47:45+00:00',
+            'timestamp-utc': '2021-01-09T11:47:45+00:00',
+            'timezone': dict({
+              '__type': "<class 'zoneinfo.ZoneInfo'>",
+              'repr': "zoneinfo.ZoneInfo(key='Europe/Madrid')",
+            }),
+          }),
+          'id': 'id28065',
+          'name': 'Getafe',
+          'residents': 173057,
+          'timezone': dict({
+            '__type': "<class 'zoneinfo.ZoneInfo'>",
+            'repr': "zoneinfo.ZoneInfo(key='Europe/Madrid')",
+          }),
+        }),
+        'weather': dict({
+          'condition': None,
+          'dew-point': None,
+          'feel-temperature': None,
+          'humidity': None,
+          'precipitation': None,
+          'precipitation-probability': None,
+          'pressure': None,
+          'rain': None,
+          'rain-probability': None,
+          'snow': None,
+          'snow-probability': None,
+          'storm-probability': None,
+          'temperature': None,
+          'uv-index': None,
+          'wind-direction': None,
+          'wind-speed': None,
+          'wind-speed-max': None,
+        }),
+      }),
+    }),
+  })
+# ---

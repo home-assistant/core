@@ -1,12 +1,17 @@
 """Camera entity for PrusaLink."""
+
 from __future__ import annotations
+
+from pyprusalink.types import PrinterState
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, JobUpdateCoordinator, PrusaLinkEntity
+from .const import DOMAIN
+from .coordinator import JobUpdateCoordinator
+from .entity import PrusaLinkEntity
 
 
 async def async_setup_entry(
@@ -37,6 +42,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         """Get if camera is available."""
         return (
             super().available
+            and self.coordinator.data.get("state") != PrinterState.IDLE.value
             and (file := self.coordinator.data.get("file"))
             and file.get("refs", {}).get("thumbnail")
         )

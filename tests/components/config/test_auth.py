@@ -1,4 +1,5 @@
 """Test config entries API."""
+
 import pytest
 
 from homeassistant.auth import models as auth_models
@@ -6,13 +7,15 @@ from homeassistant.components.config import auth as auth_config
 from homeassistant.core import HomeAssistant
 
 from tests.common import CLIENT_ID, MockGroup, MockUser
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def setup_config(hass, aiohttp_client):
+async def setup_config(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Fixture that sets up the auth provider homeassistant module."""
-    hass.loop.run_until_complete(auth_config.async_setup(hass))
+    auth_config.async_setup(hass)
 
 
 async def test_list_requires_admin(

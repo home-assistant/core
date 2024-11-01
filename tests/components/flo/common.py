@@ -1,4 +1,5 @@
 """Define common test utilities."""
+
 TEST_ACCOUNT_ID = "aabbccdd"
 TEST_DEVICE_ID = "98765"
 TEST_EMAIL_ADDRESS = "email@address.com"

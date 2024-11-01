@@ -1,4 +1,5 @@
 """Constants for the Holiday integration."""
+
 from typing import Final
 
 DOMAIN: Final = "holiday"

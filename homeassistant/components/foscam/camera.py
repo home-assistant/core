@@ -1,4 +1,5 @@
 """Component providing basic support for Foscam IP cameras."""
+
 from __future__ import annotations
 
 import asyncio
@@ -128,7 +129,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
         )
 
         if ret == -3:
-            LOGGER.info(
+            LOGGER.warning(
                 (
                     "Can't get motion detection status, camera %s configured with"
                     " non-admin user"
@@ -170,7 +171,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
 
             if ret != 0:
                 if ret == -3:
-                    LOGGER.info(
+                    LOGGER.warning(
                         (
                             "Can't set motion detection status, camera %s configured"
                             " with non-admin user"
@@ -196,7 +197,7 @@ class HassFoscamCamera(FoscamEntity, Camera):
 
             if ret != 0:
                 if ret == -3:
-                    LOGGER.info(
+                    LOGGER.warning(
                         (
                             "Can't set motion detection status, camera %s configured"
                             " with non-admin user"

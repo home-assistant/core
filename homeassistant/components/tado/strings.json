@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
       "user": {
@@ -10,6 +11,16 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "Connect to your Tado account"
+      },
+      "reconfigure": {
+        "title": "Reconfigure your Tado",
+        "description": "Reconfigure the entry, for your account: `{username}`.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the (new) password for Tado."
+        }
       }
     },
     "error": {
@@ -122,24 +133,26 @@
           "description": "Offset you would like (depending on your device)."
         }
       }
+    },
+    "add_meter_reading": {
+      "name": "Add meter readings",
+      "description": "Add meter readings to Tado Energy IQ.",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "Config entry to add meter readings to."
+        },
+        "reading": {
+          "name": "Reading",
+          "description": "Reading in m³ or kWh without decimals."
+        }
+      }
     }
   },
   "issues": {
-    "deprecated_yaml_import_device_tracker": {
-      "title": "Tado YAML device tracker configuration imported",
-      "description": "Configuring the Tado Device Tracker using YAML is being removed.\nRemove the YAML device tracker configuration and restart Home Assistant."
-    },
-    "import_aborted": {
-      "title": "Import aborted",
-      "description": "Configuring the Tado Device Tracker using YAML is being removed.\n The import was aborted, due to an existing config entry being the same as the data being imported in the YAML. Remove the YAML device tracker configuration and restart Home Assistant. Please use the UI to configure Tado."
-    },
-    "import_failed": {
-      "title": "Failed to import",
-      "description": "Failed to import the configuration for the Tado Device Tracker. Please use the UI to configure Tado. Don't forget to delete the YAML configuration."
-    },
-    "import_failed_invalid_auth": {
-      "title": "Failed to import, invalid credentials",
-      "description": "Failed to import the configuration for the Tado Device Tracker, due to invalid credentials. Please fix the YAML configuration and restart Home Assistant. Alternatively you can use the UI to configure Tado. Don't forget to delete the YAML configuration, once the import is successful."
+    "water_heater_fallback": {
+      "title": "Tado Water Heater entities now support fallback options",
+      "description": "Due to added support for water heaters entities, these entities may use different overlay. Please configure integration entity and tado app water heater zone overlay options. Otherwise, please configure the integration entity and Tado app water heater zone overlay options (under Settings -> Rooms & Devices -> Hot Water)."
     }
   }
 }

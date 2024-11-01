@@ -1,4 +1,5 @@
 """Blink Coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,6 +8,7 @@ from typing import Any
 
 from blinkpy.blinkpy import Blink
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -14,6 +16,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = 300
+
+type BlinkConfigEntry = ConfigEntry[BlinkUpdateCoordinator]
 
 
 class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

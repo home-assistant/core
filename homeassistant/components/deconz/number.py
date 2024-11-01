@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydeconz.gateway import DeconzSession
 from pydeconz.interfaces.sensors import SensorResources
@@ -13,7 +13,7 @@ from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 from pydeconz.models.sensor.presence import Presence
 
 from homeassistant.components.number import (
-    DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
 )
@@ -21,25 +21,22 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 
-from .const import DOMAIN as DECONZ_DOMAIN
-from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
-from .util import serial_from_unique_id
-
-T = TypeVar("T", Presence, PydeconzSensorBase)
+from .entity import DeconzDevice
+from .hub import DeconzHub
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzNumberDescription(Generic[T], NumberEntityDescription):
+class DeconzNumberDescription[_T: (Presence, PydeconzSensorBase)](
+    NumberEntityDescription
+):
     """Class describing deCONZ number entities."""
 
-    instance_check: type[T]
+    instance_check: type[_T]
     name_suffix: str
     set_fn: Callable[[DeconzSession, str, int], Coroutine[Any, Any, dict[str, Any]]]
     update_key: str
-    value_fn: Callable[[T], float | None]
+    value_fn: Callable[[_T], float | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (
@@ -70,38 +67,19 @@ ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(
-    hass: HomeAssistant, unique_id: str, description: DeconzNumberDescription
-) -> None:
-    """Update unique ID base to be on full unique ID rather than device serial.
-
-    Introduced with release 2022.11.
-    """
-    ent_reg = er.async_get(hass)
-
-    new_unique_id = f"{unique_id}-{description.key}"
-    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
-        return
-
-    unique_id = f"{serial_from_unique_id(unique_id)}-{description.key}"
-    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ number entity."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[NUMBER_DOMAIN] = set()
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
-        sensor = gateway.api.sensors.presence[sensor_id]
+        sensor = hub.api.sensors.presence[sensor_id]
 
         for description in ENTITY_DESCRIPTIONS:
             if (
@@ -109,13 +87,11 @@ async def async_setup_entry(
                 or description.value_fn(sensor) is None
             ):
                 continue
-            if description.key == "delay":
-                async_update_unique_id(hass, sensor.unique_id, description)
-            async_add_entities([DeconzNumber(sensor, gateway, description)])
+            async_add_entities([DeconzNumber(sensor, hub, description)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors.presence,
+        hub.api.sensors.presence,
         always_ignore_clip_sensors=True,
     )
 
@@ -123,13 +99,13 @@ async def async_setup_entry(
 class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     """Representation of a deCONZ number entity."""
 
-    TYPE = DOMAIN
+    TYPE = NUMBER_DOMAIN
     entity_description: DeconzNumberDescription
 
     def __init__(
         self,
         device: SensorResources,
-        gateway: DeconzGateway,
+        hub: DeconzHub,
         description: DeconzNumberDescription,
     ) -> None:
         """Initialize deCONZ number entity."""
@@ -137,7 +113,7 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
         self.unique_id_suffix = description.key
         self._name_suffix = description.name_suffix
         self._update_key = description.update_key
-        super().__init__(device, gateway)
+        super().__init__(device, hub)
 
     @property
     def native_value(self) -> float | None:
@@ -147,7 +123,7 @@ class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
         await self.entity_description.set_fn(
-            self.gateway.api,
+            self.hub.api,
             self._device.resource_id,
             int(value),
         )

@@ -1,4 +1,5 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
+
 from __future__ import annotations
 
 from concurrent import futures
@@ -14,7 +15,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -31,7 +32,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 _LOGGER = logging.getLogger(__name__)
 

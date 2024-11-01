@@ -1,4 +1,5 @@
 """Config flow for Plum Lightpad."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from aiohttp import ContentTypeError
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .utils import load_plum
@@ -18,7 +18,7 @@ from .utils import load_plum
 _LOGGER = logging.getLogger(__name__)
 
 
-class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PlumLightpadConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Plum Lightpad integration."""
 
     VERSION = 1
@@ -37,7 +37,7 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user or redirected to by import."""
         if not user_input:
             return self._show_form()

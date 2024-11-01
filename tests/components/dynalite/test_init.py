@@ -1,4 +1,5 @@
 """Test Dynalite __init__."""
+
 from unittest.mock import call, patch
 
 import pytest
@@ -84,13 +85,16 @@ async def test_async_setup(hass: HomeAssistant) -> None:
 
 async def test_service_request_area_preset(hass: HomeAssistant) -> None:
     """Test requesting and area preset via service call."""
-    with patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
-        return_value=True,
-    ), patch(
-        "dynalite_devices_lib.dynalite.Dynalite.request_area_preset",
-        return_value=True,
-    ) as mock_req_area_pres:
+    with (
+        patch(
+            "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "dynalite_devices_lib.dynalite.Dynalite.request_area_preset",
+            return_value=True,
+        ) as mock_req_area_pres,
+    ):
         assert await async_setup_component(
             hass,
             dynalite.DOMAIN,
@@ -156,13 +160,16 @@ async def test_service_request_area_preset(hass: HomeAssistant) -> None:
 
 async def test_service_request_channel_level(hass: HomeAssistant) -> None:
     """Test requesting the level of a channel via service call."""
-    with patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
-        return_value=True,
-    ), patch(
-        "dynalite_devices_lib.dynalite.Dynalite.request_channel_level",
-        return_value=True,
-    ) as mock_req_chan_lvl:
+    with (
+        patch(
+            "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "dynalite_devices_lib.dynalite.Dynalite.request_channel_level",
+            return_value=True,
+        ) as mock_req_chan_lvl,
+    ):
         assert await async_setup_component(
             hass,
             dynalite.DOMAIN,

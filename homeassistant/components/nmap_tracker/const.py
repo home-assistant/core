@@ -1,4 +1,5 @@
 """The Nmap Tracker integration."""
+
 from typing import Final
 
 from homeassistant.const import Platform

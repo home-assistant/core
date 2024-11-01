@@ -1,0 +1,12 @@
+get_prices:
+  fields:
+    start:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2024-01-01 23:00:00"
+      selector:
+        datetime:

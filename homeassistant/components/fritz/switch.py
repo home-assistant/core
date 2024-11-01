@@ -1,4 +1,5 @@
 """Switches for AVM Fritz!Box functions."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -16,15 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .common import (
-    AvmWrapper,
-    FritzBoxBaseEntity,
-    FritzData,
-    FritzDevice,
-    FritzDeviceBase,
-    SwitchInfo,
-    device_filter_out_from_trackers,
-)
 from .const import (
     DATA_FRITZ,
     DOMAIN,
@@ -35,6 +27,14 @@ from .const import (
     WIFI_STANDARD,
     MeshRoles,
 )
+from .coordinator import (
+    AvmWrapper,
+    FritzData,
+    FritzDevice,
+    SwitchInfo,
+    device_filter_out_from_trackers,
+)
+from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +46,7 @@ async def _async_deflection_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
-    if (
-        call_deflections := avm_wrapper.data.get("call_deflections")
-    ) is None or not isinstance(call_deflections, dict):
+    if not (call_deflections := avm_wrapper.data["call_deflections"]):
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
@@ -72,7 +70,7 @@ async def _async_port_entities_list(
     # Query port forwardings and setup a switch for each forward for the current device
     resp = await avm_wrapper.async_get_num_port_mapping(avm_wrapper.device_conn_type)
     if not resp:
-        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
+        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
         return []
 
     port_forwards_count: int = resp["NewPortMappingNumberOfEntries"]
@@ -242,7 +240,6 @@ async def async_setup_entry(
 
     async_add_entities(entities_list)
 
-    @callback
     async def async_update_avm_device() -> None:
         """Update the values of the AVM device."""
         async_add_entities(await _async_profile_entities_list(avm_wrapper, data_fritz))
@@ -288,7 +285,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
     @property
     def data(self) -> dict[str, Any]:
         """Return entity data from coordinator data."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def available(self) -> bool:
@@ -297,7 +294,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
@@ -331,7 +328,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         self._name = f"{self._friendly_name} {self._description}"
         self._unique_id = f"{self._avm_wrapper.unique_id}-{slugify(self._description)}"
 
-        self._attributes: dict[str, str] = {}
+        self._attributes: dict[str, str | None] = {}
         self._is_available = True
 
     @property
@@ -355,7 +352,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         return self._is_available
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return device attributes."""
         return self._attributes
 

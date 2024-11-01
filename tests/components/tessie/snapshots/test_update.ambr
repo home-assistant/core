@@ -16,6 +16,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -34,6 +36,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/tessie/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
@@ -44,10 +47,12 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.test_update',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

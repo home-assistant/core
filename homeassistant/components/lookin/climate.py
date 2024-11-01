@@ -1,4 +1,5 @@
 """The lookin integration climate platform."""
+
 from __future__ import annotations
 
 import logging

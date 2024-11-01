@@ -1,0 +1,80 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hvac_status": {
+        "default": "mdi:fan-off",
+        "state": {
+          "on": "mdi:fan"
+        }
+      }
+    },
+    "button": {
+      "start_air_conditioner": {
+        "default": "mdi:air-conditioner"
+      },
+      "start_charge": {
+        "default": "mdi:ev-station"
+      },
+      "stop_charge": {
+        "default": "mdi:ev-station"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:car"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "default": "mdi:calendar-remove",
+        "state": {
+          "schedule_mode": "mdi:calendar-clock",
+          "scheduled": "mdi:calendar-clock"
+        }
+      }
+    },
+    "sensor": {
+      "charge_state": {
+        "default": "mdi:mdi:flash-off",
+        "state": {
+          "charge_in_progress": "mdi:flash"
+        }
+      },
+      "charging_remaining_time": {
+        "default": "mdi:timer"
+      },
+      "plug_state": {
+        "default": "mdi:power-plug-off",
+        "state": {
+          "plugged": "mdi:power-plug"
+        }
+      },
+      "battery_autonomy": {
+        "default": "mdi:ev-station"
+      },
+      "mileage": {
+        "default": "mdi:sign-direction"
+      },
+      "fuel_autonomy": {
+        "default": "mdi:gas-station"
+      },
+      "fuel_quantity": {
+        "default": "mdi:fuel"
+      }
+    }
+  },
+  "services": {
+    "ac_start": {
+      "service": "mdi:hvac"
+    },
+    "ac_cancel": {
+      "service": "mdi:hvac-off"
+    },
+    "charge_set_schedules": {
+      "service": "mdi:calendar-clock"
+    },
+    "ac_set_schedules": {
+      "service": "mdi:calendar-clock"
+    }
+  }
+}

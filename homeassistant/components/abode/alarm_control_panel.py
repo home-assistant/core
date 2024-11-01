@@ -1,21 +1,21 @@
 """Support for Abode Security System alarm control panels."""
+
 from __future__ import annotations
 
-from jaraco.abode.devices.alarm import Alarm as AbodeAl
+from jaraco.abode.devices.alarm import Alarm
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeDevice
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
+class AbodeAlarm(AbodeDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
     _attr_name = None
@@ -37,17 +37,17 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
-    _device: AbodeAl
+    _device: Alarm
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._device.is_standby:
-            return STATE_ALARM_DISARMED
+            return AlarmControlPanelState.DISARMED
         if self._device.is_away:
-            return STATE_ALARM_ARMED_AWAY
+            return AlarmControlPanelState.ARMED_AWAY
         if self._device.is_home:
-            return STATE_ALARM_ARMED_HOME
+            return AlarmControlPanelState.ARMED_HOME
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:

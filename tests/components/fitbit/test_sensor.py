@@ -1,6 +1,5 @@
 """Tests for the fitbit sensor platform."""
 
-
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any

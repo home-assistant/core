@@ -1,4 +1,5 @@
 """Support for Xiaomi Miio."""
+
 from __future__ import annotations
 
 import asyncio
@@ -55,6 +56,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -117,6 +119,7 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P9: FanMiot,
     MODEL_FAN_P10: FanMiot,
     MODEL_FAN_P11: FanMiot,
+    MODEL_FAN_P18: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }
@@ -185,7 +188,9 @@ def _async_update_data_default(hass, device):
         except DeviceException as ex:
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
-            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+            _LOGGER.error(
+                "Got exception while fetching the state, trying again: %s", ex
+            )
         # Try to fetch the data a second time after error code -9999
         try:
             return await _async_fetch_data()
@@ -247,7 +252,7 @@ def _async_update_data_vacuum(
 
         fan_speeds = device.fan_speed_presets()
 
-        data = VacuumCoordinatorData(
+        return VacuumCoordinatorData(
             device.status(),
             device.dnd_status(),
             device.last_clean_details(),
@@ -257,8 +262,6 @@ def _async_update_data_vacuum(
             fan_speeds,
             {v: k for k, v in fan_speeds.items()},
         )
-
-        return data
 
     async def update_async() -> VacuumCoordinatorData:
         """Fetch data from the device using async_add_executor_job."""
@@ -274,7 +277,9 @@ def _async_update_data_vacuum(
         except DeviceException as ex:
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
-            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+            _LOGGER.error(
+                "Got exception while fetching the state, trying again: %s", ex
+            )
 
         # Try to fetch the data a second time after error code -9999
         try:
@@ -300,8 +305,10 @@ async def async_create_miio_device_and_coordinator(
 
     # List of models requiring specific lazy_discover setting
     LAZY_DISCOVER_FOR_MODEL = {
+        "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
+        "dmaker.fan.1c": True,
     }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
@@ -339,10 +346,8 @@ async def async_create_miio_device_and_coordinator(
         device = AirFreshA1(host, token, lazy_discover=lazy_discover)
     elif model == MODEL_AIRFRESH_T2017:
         device = AirFreshT2017(host, token, lazy_discover=lazy_discover)
-    elif (
-        model in MODELS_VACUUM
-        or model.startswith(ROBOROCK_GENERIC)
-        or model.startswith(ROCKROBO_GENERIC)
+    elif model in MODELS_VACUUM or model.startswith(
+        (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
     ):
         # TODO: add lazy_discover as argument when python-miio add support # pylint: disable=fixme
         device = RoborockVacuum(host, token)
@@ -383,6 +388,7 @@ async def async_create_miio_device_and_coordinator(
     coordinator = coordinator_class(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=name,
         update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
@@ -411,9 +417,9 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     try:
         await gateway.async_connect_gateway(host, token)
     except AuthException as error:
-        raise ConfigEntryAuthFailed() from error
+        raise ConfigEntryAuthFailed from error
     except SetupException as error:
-        raise ConfigEntryNotReady() from error
+        raise ConfigEntryNotReady from error
     gateway_info = gateway.gateway_info
 
     device_registry = dr.async_get(hass)
@@ -448,6 +454,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         coordinator_dict[sub_device.sid] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=name,
             update_method=update_data_factory(sub_device),
             # Polling interval. Will only be polled if there are subscribers.

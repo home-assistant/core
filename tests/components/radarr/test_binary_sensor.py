@@ -1,4 +1,5 @@
 """The tests for Radarr binary sensor platform."""
+
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass

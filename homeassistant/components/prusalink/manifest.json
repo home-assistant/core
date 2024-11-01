@@ -1,7 +1,7 @@
 {
   "domain": "prusalink",
   "name": "PrusaLink",
-  "codeowners": ["@balloob", "@Skaronator"],
+  "codeowners": ["@balloob"],
   "config_flow": true,
   "dhcp": [
     {
@@ -10,5 +10,5 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/prusalink",
   "iot_class": "local_polling",
-  "requirements": ["pyprusalink==2.0.0"]
+  "requirements": ["pyprusalink==2.1.1"]
 }

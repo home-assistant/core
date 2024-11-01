@@ -31,21 +31,23 @@ from . import (
 )
 
 
-async def test_light_unique_id(hass: HomeAssistant) -> None:
+async def test_light_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a light unique id."""
     await async_setup_integration(hass)
     entity_id = "light.mock_title"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == FAKE_MAC
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
 
-async def test_light_operation(hass: HomeAssistant) -> None:
+async def test_light_operation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a light operation."""
     bulb, _ = await async_setup_integration(hass)
     entity_id = "light.mock_title"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == FAKE_MAC
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON

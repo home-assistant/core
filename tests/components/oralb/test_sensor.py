@@ -3,6 +3,8 @@
 from datetime import timedelta
 import time
 
+import pytest
+
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     async_address_present,
@@ -27,9 +29,8 @@ from tests.components.bluetooth import (
 )
 
 
-async def test_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
     start_monotonic = time.monotonic()
     entry = MockConfigEntry(
@@ -58,9 +59,12 @@ async def test_sensors(
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -76,9 +80,8 @@ async def test_sensors(
     assert toothbrush_sensor.state == "running"
 
 
-async def test_sensors_io_series_4(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_io_series_4(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors with an io series 4."""
     start_monotonic = time.monotonic()
 
@@ -107,9 +110,12 @@ async def test_sensors_io_series_4(
     # Fast-forward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

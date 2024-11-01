@@ -1,4 +1,5 @@
 """Websocket constants."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -7,14 +8,14 @@ from typing import TYPE_CHECKING, Any, Final
 from homeassistant.core import HomeAssistant
 
 if TYPE_CHECKING:
-    from .connection import ActiveConnection  # noqa: F401
+    from .connection import ActiveConnection
 
 
-WebSocketCommandHandler = Callable[
-    [HomeAssistant, "ActiveConnection", dict[str, Any]], None
+type WebSocketCommandHandler = Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], None
 ]
-AsyncWebSocketCommandHandler = Callable[
-    [HomeAssistant, "ActiveConnection", dict[str, Any]], Awaitable[None]
+type AsyncWebSocketCommandHandler = Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]
 ]
 
 DOMAIN: Final = "websocket_api"
@@ -24,7 +25,14 @@ PENDING_MSG_PEAK_TIME: Final = 5
 # Maximum number of messages that can be pending at any given time.
 # This is effectively the upper limit of the number of entities
 # that can fire state changes within ~1 second.
+# Ideally we would use homeassistant.const.MAX_EXPECTED_ENTITY_IDS
+# but since chrome will lock up with too many messages we need to
+# limit it to a lower number.
 MAX_PENDING_MSG: Final = 4096
+
+# Maximum number of messages that are pending before we force
+# resolve the ready future.
+PENDING_MSG_MAX_FORCE_READY: Final = 256
 
 ERR_ID_REUSE: Final = "id_reuse"
 ERR_INVALID_FORMAT: Final = "invalid_format"

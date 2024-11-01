@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_climate[climate.fakespa-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 40.0,
+      'min_temp': 10.0,
+      'preset_modes': list([
+        'ready',
+        'rest',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.fakespa',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'balboa',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'balboa',
+    'unique_id': 'FakeSpa-Climate-c0ffee',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate[climate.fakespa-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 10.0,
+      'friendly_name': 'FakeSpa',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 40.0,
+      'min_temp': 10.0,
+      'preset_mode': 'ready',
+      'preset_modes': list([
+        'ready',
+        'rest',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 40.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.fakespa',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---

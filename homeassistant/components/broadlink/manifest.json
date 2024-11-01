@@ -38,5 +38,5 @@
   "documentation": "https://www.home-assistant.io/integrations/broadlink",
   "iot_class": "local_polling",
   "loggers": ["broadlink"],
-  "requirements": ["broadlink==0.18.3"]
+  "requirements": ["broadlink==0.19.0"]
 }

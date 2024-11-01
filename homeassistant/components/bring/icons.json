@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "sensor": {
+      "urgent": {
+        "default": "mdi:run-fast"
+      },
+      "discounted": {
+        "default": "mdi:brightness-percent"
+      },
+      "convenient": {
+        "default": "mdi:fridge-outline"
+      },
+      "list_language": {
+        "default": "mdi:earth"
+      },
+      "list_access": {
+        "default": "mdi:account-lock",
+        "state": {
+          "shared": "mdi:account-group"
+        }
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "default": "mdi:cart"
+      }
+    }
+  },
+  "services": {
+    "send_message": {
+      "service": "mdi:cellphone-message"
+    }
+  }
+}

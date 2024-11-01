@@ -1,4 +1,5 @@
 """Number platform for V2C settings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -12,11 +13,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import V2CConfigEntry
 from .coordinator import V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
@@ -24,19 +25,12 @@ MIN_INTENSITY = 6
 MAX_INTENSITY = 32
 
 
-@dataclass(frozen=True)
-class V2CSettingsRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class V2CSettingsNumberEntityDescription(NumberEntityDescription):
+    """Describes V2C EVSE number entity."""
 
     value_fn: Callable[[TrydanData], int]
     update_fn: Callable[[Trydan, int], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
-class V2CSettingsNumberEntityDescription(
-    NumberEntityDescription, V2CSettingsRequiredKeysMixin
-):
-    """Describes V2C EVSE number entity."""
 
 
 TRYDAN_NUMBER_SETTINGS = (
@@ -44,21 +38,44 @@ TRYDAN_NUMBER_SETTINGS = (
         key="intensity",
         translation_key="intensity",
         device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         native_min_value=MIN_INTENSITY,
         native_max_value=MAX_INTENSITY,
         value_fn=lambda evse_data: evse_data.intensity,
         update_fn=lambda evse, value: evse.intensity(value),
+    ),
+    V2CSettingsNumberEntityDescription(
+        key="min_intensity",
+        translation_key="min_intensity",
+        device_class=NumberDeviceClass.CURRENT,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_min_value=MIN_INTENSITY,
+        native_max_value=MAX_INTENSITY,
+        value_fn=lambda evse_data: evse_data.min_intensity,
+        update_fn=lambda evse, value: evse.min_intensity(value),
+    ),
+    V2CSettingsNumberEntityDescription(
+        key="max_intensity",
+        translation_key="max_intensity",
+        device_class=NumberDeviceClass.CURRENT,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_min_value=MIN_INTENSITY,
+        native_max_value=MAX_INTENSITY,
+        value_fn=lambda evse_data: evse_data.max_intensity,
+        update_fn=lambda evse, value: evse.max_intensity(value),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: V2CConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up V2C Trydan number platform."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CSettingsNumberEntity(coordinator, description, config_entry.entry_id)

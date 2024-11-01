@@ -1,7 +1,10 @@
 """Constants for Camera component."""
+
+from __future__ import annotations
+
 from enum import StrEnum
 from functools import partial
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
@@ -9,11 +12,18 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import Camera
+    from .prefs import CameraPreferences
 
 DOMAIN: Final = "camera"
+DATA_COMPONENT: HassKey[EntityComponent[Camera]] = HassKey(DOMAIN)
 
-DATA_CAMERA_PREFS: Final = "camera_prefs"
-DATA_RTSP_TO_WEB_RTC: Final = "rtsp_to_web_rtc"
+DATA_CAMERA_PREFS: HassKey[CameraPreferences] = HassKey("camera_prefs")
 
 PREF_PRELOAD_STREAM: Final = "preload_stream"
 PREF_ORIENTATION: Final = "orientation"
@@ -25,6 +35,14 @@ CONF_DURATION: Final = "duration"
 
 CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
+
+
+class CameraState(StrEnum):
+    """Camera entity states."""
+
+    RECORDING = "recording"
+    STREAMING = "streaming"
+    IDLE = "idle"
 
 
 class StreamType(StrEnum):

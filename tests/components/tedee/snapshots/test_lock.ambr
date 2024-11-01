@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'lock.lock_1a2b',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unlocked',
   })
@@ -29,6 +30,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -61,10 +64,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tedee',
     'model': 'Tedee PRO',
+    'model_id': 'Tedee PRO',
     'name': 'Lock-1A2B',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -80,6 +87,7 @@
     'context': <ANY>,
     'entity_id': 'lock.lock_2c3d',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unlocked',
   })
@@ -101,6 +109,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -133,10 +143,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tedee',
     'model': 'Tedee GO',
+    'model_id': 'Tedee GO',
     'name': 'Lock-2C3D',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,

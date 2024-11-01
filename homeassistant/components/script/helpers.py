@@ -1,5 +1,6 @@
 """Helpers for automation integration."""
-from homeassistant.components.blueprint import DomainBlueprints
+
+from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, DomainBlueprints
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
@@ -26,5 +27,10 @@ async def _reload_blueprint_scripts(hass: HomeAssistant, blueprint_path: str) ->
 def async_get_blueprints(hass: HomeAssistant) -> DomainBlueprints:
     """Get script blueprints."""
     return DomainBlueprints(
-        hass, DOMAIN, LOGGER, _blueprint_in_use, _reload_blueprint_scripts
+        hass,
+        DOMAIN,
+        LOGGER,
+        _blueprint_in_use,
+        _reload_blueprint_scripts,
+        BLUEPRINT_SCHEMA,
     )

@@ -1,4 +1,5 @@
 """Support for Buienradar.nl weather service."""
+
 import logging
 
 from buienradar.constants import (
@@ -38,7 +39,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -53,8 +53,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# Reuse data and API logic from the sensor implementation
-from .const import DEFAULT_TIMEFRAME, DOMAIN
+from . import BuienRadarConfigEntry
+from .const import DEFAULT_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +92,9 @@ CONDITION_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BuienRadarConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the buienradar platform."""
     config = entry.data
@@ -112,7 +114,7 @@ async def async_setup_entry(
 
     # create weather data:
     data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, entities)
-    hass.data[DOMAIN][entry.entry_id][Platform.WEATHER] = data
+    entry.runtime_data[Platform.WEATHER] = data
     await data.async_update()
 
     async_add_entities(entities)
@@ -129,21 +131,22 @@ class BrWeather(WeatherEntity):
     _attr_should_poll = False
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
-    def __init__(self, config, coordinates):
+    def __init__(self, config, coordinates) -> None:
         """Initialize the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME, "Buienradar")
         self._attr_name = self._stationname or f"BR {'(unknown station)'}"
 
-        self._attr_unique_id = "{:2.6f}{:2.6f}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
+        self._attr_unique_id = (
+            f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
         )
+        self._forecast: list | None = None
 
     @callback
     def data_updated(self, data: BrData) -> None:
         """Update data."""
         self._attr_attribution = data.attribution
         self._attr_condition = self._calc_condition(data)
-        self._attr_forecast = self._calc_forecast(data)
+        self._forecast = self._calc_forecast(data)
         self._attr_humidity = data.humidity
         self._attr_name = (
             self._stationname or f"BR {data.stationname or '(unknown station)'}"
@@ -195,4 +198,4 @@ class BrWeather(WeatherEntity):
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self._attr_forecast
+        return self._forecast

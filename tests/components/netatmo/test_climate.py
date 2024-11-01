@@ -1,4 +1,5 @@
 """The tests for the Netatmo climate platform."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -281,7 +282,7 @@ async def test_service_preset_mode_frost_guard_thermostat(
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Frost Guard"
+        == "frost_guard"
     )
 
     # Test service setting the preset mode to "frost guard"
@@ -749,7 +750,6 @@ async def test_service_preset_mode_with_end_time_thermostats(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without an end datetime
     with pytest.raises(MultipleInvalid):
@@ -762,7 +762,6 @@ async def test_service_preset_mode_with_end_time_thermostats(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_service_preset_mode_already_boost_valves(
@@ -780,7 +779,7 @@ async def test_service_preset_mode_already_boost_valves(
     assert hass.states.get(climate_entity_entrada).state == "auto"
     assert (
         hass.states.get(climate_entity_entrada).attributes["preset_mode"]
-        == "Frost Guard"
+        == "frost_guard"
     )
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 7
 
@@ -913,7 +912,6 @@ async def test_service_preset_mode_invalid(
             {ATTR_ENTITY_ID: "climate.cocina", ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_valves_service_turn_off(

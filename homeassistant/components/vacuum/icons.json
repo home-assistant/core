@@ -5,17 +5,41 @@
     }
   },
   "services": {
-    "clean_spot": "mdi:target-variant",
-    "locate": "mdi:map-marker",
-    "pause": "mdi:pause",
-    "return_to_base": "mdi:home-import-outline",
-    "send_command": "mdi:send",
-    "set_fan_speed": "mdi:fan",
-    "start": "mdi:play",
-    "start_pause": "mdi:play-pause",
-    "stop": "mdi:stop",
-    "toggle": "mdi:play-pause",
-    "turn_off": "mdi:stop",
-    "turn_on": "mdi:play"
+    "clean_spot": {
+      "service": "mdi:target-variant"
+    },
+    "locate": {
+      "service": "mdi:map-marker"
+    },
+    "pause": {
+      "service": "mdi:pause"
+    },
+    "return_to_base": {
+      "service": "mdi:home-import-outline"
+    },
+    "send_command": {
+      "service": "mdi:send"
+    },
+    "set_fan_speed": {
+      "service": "mdi:fan"
+    },
+    "start": {
+      "service": "mdi:play"
+    },
+    "start_pause": {
+      "service": "mdi:play-pause"
+    },
+    "stop": {
+      "service": "mdi:stop"
+    },
+    "toggle": {
+      "service": "mdi:play-pause"
+    },
+    "turn_off": {
+      "service": "mdi:stop"
+    },
+    "turn_on": {
+      "service": "mdi:play"
+    }
   }
 }

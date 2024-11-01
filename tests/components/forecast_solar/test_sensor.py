@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Forecast.Solar integration."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -166,11 +167,11 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.power_production_next_12hours",
         "sensor.power_production_next_24hours",
         "sensor.power_production_next_hour",
-    ),
+    ],
 )
 async def test_disabled_by_default(
     hass: HomeAssistant,

@@ -1,4 +1,5 @@
 """Support for Lutron switches."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -43,6 +44,7 @@ class LutronSwitch(LutronDevice, SwitchEntity):
     """Representation of a Lutron Switch."""
 
     _lutron_device: Output
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -59,7 +61,7 @@ class LutronSwitch(LutronDevice, SwitchEntity):
 
     def _request_state(self) -> None:
         """Request the state from the device."""
-        self._lutron_device.level  # pylint: disable=pointless-statement
+        _ = self._lutron_device.level
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""
@@ -103,7 +105,7 @@ class LutronLed(LutronKeypad, SwitchEntity):
 
     def _request_state(self) -> None:
         """Request the state from the device."""
-        self._lutron_device.state  # pylint: disable=pointless-statement
+        _ = self._lutron_device.state
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""

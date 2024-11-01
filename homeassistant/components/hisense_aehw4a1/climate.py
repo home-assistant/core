@@ -1,4 +1,5 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
+
 from __future__ import annotations
 
 import logging

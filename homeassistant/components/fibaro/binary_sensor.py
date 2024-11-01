@@ -1,4 +1,5 @@
 """Support for Fibaro binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -16,8 +17,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", BinarySensorDeviceClass.MOISTURE],
@@ -55,7 +57,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
+class FibaroBinarySensor(FibaroEntity, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:
@@ -75,9 +77,9 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
             self._attr_icon = SENSOR_TYPES[self._fibaro_sensor_type][1]
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the extra state attributes of the device."""
-        return super().extra_state_attributes | self._own_extra_state_attributes
+        return {**super().extra_state_attributes, **self._own_extra_state_attributes}
 
     def update(self) -> None:
         """Get the latest data and update the state."""

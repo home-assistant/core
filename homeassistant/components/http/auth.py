@@ -1,4 +1,5 @@
 """Authentication for HTTP component."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -20,20 +21,20 @@ from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.http import current_request
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
-from .request_context import current_request
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
-SAFE_QUERY_PARAMS: Final = ["height", "width"]
+SAFE_QUERY_PARAMS: Final = frozenset(("height", "width"))
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
@@ -47,13 +48,16 @@ def async_sign_path(
     expiration: timedelta,
     *,
     refresh_token_id: str | None = None,
+    use_content_user: bool = False,
 ) -> str:
     """Sign a path for temporary access without auth header."""
     if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     if refresh_token_id is None:
-        if connection := websocket_api.current_connection.get():
+        if use_content_user:
+            refresh_token_id = hass.data[STORAGE_KEY]
+        elif connection := websocket_api.current_connection.get():
             refresh_token_id = connection.refresh_token_id
         elif (
             request := current_request.get()
@@ -113,7 +117,10 @@ def async_user_not_allowed_do_auth(
     return "User cannot authenticate remotely"
 
 
-async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(
+    hass: HomeAssistant,
+    app: Application,
+) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:

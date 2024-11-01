@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "button": {
+      "panic": {
+        "default": "mdi:alarm-light"
+      }
+    },
+    "select": {
+      "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "high": "mdi:volume-high",
+          "low": "mdi:volume-low",
+          "off": "mdi:volume-off"
+        }
+      }
+    }
+  }
+}

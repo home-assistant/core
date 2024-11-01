@@ -1,4 +1,5 @@
 """Support for Huawei LTE sensors."""
+
 from __future__ import annotations
 
 from bisect import bisect
@@ -29,7 +30,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HuaweiLteBaseEntityWithDevice, Router
+from . import Router
 from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
@@ -43,6 +44,7 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     SENSOR_KEYS,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     if value is not None:
         # Clean up value and infer unit, e.g. -71dBm, 15 dB
         if match := re.match(
-            r"([>=<]*)(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
+            r"((&[gl]t;|[><])=?)?(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
         ):
             try:
                 value = float(match.group("value"))
@@ -78,9 +80,9 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     try:
         last_reset = datetime.now() - timedelta(seconds=int(value))
         last_reset.replace(microsecond=0)
-        return last_reset
     except ValueError:
         return None
+    return last_reset
 
 
 def signal_icon(limits: Sequence[int], value: StateType) -> str:
@@ -192,6 +194,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="cqi1",
                 translation_key="cqi1",
                 icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "dl_mcs": HuaweiSensorEntityDescription(
                 key="dl_mcs",
@@ -267,6 +270,97 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
+            "nrbler": HuaweiSensorEntityDescription(
+                key="nrbler",
+                translation_key="nrbler",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrcqi0": HuaweiSensorEntityDescription(
+                key="nrcqi0",
+                translation_key="nrcqi0",
+                icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrcqi1": HuaweiSensorEntityDescription(
+                key="nrcqi1",
+                translation_key="nrcqi1",
+                icon="mdi:speedometer",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrdlbandwidth": HuaweiSensorEntityDescription(
+                key="nrdlbandwidth",
+                translation_key="nrdlbandwidth",
+                # Could add icon_fn like we have for dlbandwidth,
+                # if we find a good source what to use as 5G thresholds.
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrdlmcs": HuaweiSensorEntityDescription(
+                key="nrdlmcs",
+                translation_key="nrdlmcs",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrearfcn": HuaweiSensorEntityDescription(
+                key="nrearfcn",
+                translation_key="nrearfcn",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrrank": HuaweiSensorEntityDescription(
+                key="nrrank",
+                translation_key="nrrank",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrrsrp": HuaweiSensorEntityDescription(
+                key="nrrsrp",
+                translation_key="nrrsrp",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in rsrp, source for 5G thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrrsrq": HuaweiSensorEntityDescription(
+                key="nrrsrq",
+                translation_key="nrrsrq",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in rsrq, source for 5G thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrsinr": HuaweiSensorEntityDescription(
+                key="nrsinr",
+                translation_key="nrsinr",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # Could add icon_fn as in sinr, source for thresholds?
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=True,
+            ),
+            "nrtxpower": HuaweiSensorEntityDescription(
+                key="nrtxpower",
+                translation_key="nrtxpower",
+                # The value we get from the API tends to consist of several, e.g.
+                #     PPusch:21dBm PPucch:2dBm PSrs:0dBm PPrach:10dBm
+                # Present as SIGNAL_STRENGTH only if it was parsed to a number.
+                # We could try to parse this to separate component sensors sometime.
+                device_class_fn=lambda x: (
+                    SensorDeviceClass.SIGNAL_STRENGTH
+                    if isinstance(x, (float, int))
+                    else None
+                ),
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrulbandwidth": HuaweiSensorEntityDescription(
+                key="nrulbandwidth",
+                translation_key="nrulbandwidth",
+                # Could add icon_fn as in ulbandwidth, source for 5G thresholds?
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrulmcs": HuaweiSensorEntityDescription(
+                key="nrulmcs",
+                translation_key="nrulmcs",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
             "pci": HuaweiSensorEntityDescription(
                 key="pci",
                 translation_key="pci",
@@ -302,7 +396,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrp",
                 translation_key="rsrp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrp.php
+                # http://www.lte-anbieter.info/technik/rsrp.php  # codespell:ignore technik
                 icon_fn=lambda x: signal_icon((-110, -95, -80), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -312,7 +406,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrq",
                 translation_key="rsrq",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrq.php
+                # http://www.lte-anbieter.info/technik/rsrq.php  # codespell:ignore technik
                 icon_fn=lambda x: signal_icon((-11, -8, -5), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -332,7 +426,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="sinr",
                 translation_key="sinr",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/sinr.php
+                # http://www.lte-anbieter.info/technik/sinr.php  # codespell:ignore technik
                 icon_fn=lambda x: signal_icon((0, 5, 10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -673,17 +767,17 @@ async def async_setup_entry(
                 items = filter(key_meta.include.search, items)
             if key_meta.exclude:
                 items = [x for x in items if not key_meta.exclude.search(x)]
-        for item in items:
-            sensors.append(
-                HuaweiLteSensor(
-                    router,
-                    key,
-                    item,
-                    SENSOR_META[key].descriptions.get(
-                        item, HuaweiSensorEntityDescription(key=item)
-                    ),
-                )
+        sensors.extend(
+            HuaweiLteSensor(
+                router,
+                key,
+                item,
+                SENSOR_META[key].descriptions.get(
+                    item, HuaweiSensorEntityDescription(key=item)
+                ),
             )
+            for item in items
+        )
 
     async_add_entities(sensors, True)
 

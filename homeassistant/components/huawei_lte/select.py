@@ -1,4 +1,5 @@
 """Support for Huawei LTE selects."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -20,22 +21,18 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
 
-from . import HuaweiLteBaseEntityWithDevice, Router
+from . import Router
 from .const import DOMAIN, KEY_NET_NET_MODE
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class HuaweiSelectEntityMixin:
-    """Mixin for Huawei LTE select entities, to ensure required fields are set."""
+@dataclass(frozen=True, kw_only=True)
+class HuaweiSelectEntityDescription(SelectEntityDescription):
+    """Class describing Huawei LTE select entities."""
 
     setter_fn: Callable[[str], None]
-
-
-@dataclass(frozen=True)
-class HuaweiSelectEntityDescription(SelectEntityDescription, HuaweiSelectEntityMixin):
-    """Class describing Huawei LTE select entities."""
 
 
 async def async_setup_entry(
@@ -50,7 +47,6 @@ async def async_setup_entry(
     desc = HuaweiSelectEntityDescription(
         key=KEY_NET_NET_MODE,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:transmission-tower",
         name="Preferred network mode",
         translation_key="preferred_network_mode",
         options=[

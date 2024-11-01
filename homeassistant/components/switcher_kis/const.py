@@ -1,12 +1,6 @@
 """Constants for the Switcher integration."""
+
 DOMAIN = "switcher_kis"
-
-CONF_DEVICE_PASSWORD = "device_password"
-CONF_PHONE_ID = "phone_id"
-
-DATA_BRIDGE = "bridge"
-DATA_DEVICE = "device"
-DATA_DISCOVERY = "discovery"
 
 DISCOVERY_TIME_SEC = 12
 

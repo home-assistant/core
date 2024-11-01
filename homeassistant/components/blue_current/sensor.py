@@ -1,4 +1,5 @@
 """Support for Blue Current sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -7,7 +8,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CURRENCY_EURO,
     UnitOfElectricCurrent,
@@ -18,11 +18,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Connector
+from . import BlueCurrentConfigEntry, Connector
 from .const import DOMAIN
 from .entity import BlueCurrentEntity, ChargepointEntity
-
-TIMESTAMP_KEYS = ("start_datetime", "stop_datetime", "offline_since")
 
 SENSORS = (
     SensorEntityDescription(
@@ -102,21 +100,6 @@ SENSORS = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key="start_datetime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        translation_key="start_datetime",
-    ),
-    SensorEntityDescription(
-        key="stop_datetime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        translation_key="stop_datetime",
-    ),
-    SensorEntityDescription(
-        key="offline_since",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        translation_key="offline_since",
-    ),
-    SensorEntityDescription(
         key="total_cost",
         native_unit_of_measurement=CURRENCY_EURO,
         device_class=SensorDeviceClass.MONETARY,
@@ -124,14 +107,12 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="vehicle_status",
-        icon="mdi:car",
         device_class=SensorDeviceClass.ENUM,
         options=["standby", "vehicle_detected", "ready", "no_power", "vehicle_error"],
         translation_key="vehicle_status",
     ),
     SensorEntityDescription(
         key="activity",
-        icon="mdi:ev-station",
         device_class=SensorDeviceClass.ENUM,
         options=["available", "charging", "unavailable", "error", "offline"],
         translation_key="activity",
@@ -139,7 +120,6 @@ SENSORS = (
     SensorEntityDescription(
         key="max_usage",
         translation_key="max_usage",
-        icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -147,7 +127,6 @@ SENSORS = (
     SensorEntityDescription(
         key="smartcharging_max_usage",
         translation_key="smartcharging_max_usage",
-        icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
@@ -156,7 +135,6 @@ SENSORS = (
     SensorEntityDescription(
         key="max_offline",
         translation_key="max_offline",
-        icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
@@ -165,11 +143,25 @@ SENSORS = (
     SensorEntityDescription(
         key="current_left",
         translation_key="current_left",
-        icon="mdi:gauge",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+TIMESTAMP_SENSORS = (
+    SensorEntityDescription(
+        key="start_datetime",
+        translation_key="start_datetime",
+    ),
+    SensorEntityDescription(
+        key="stop_datetime",
+        translation_key="stop_datetime",
+    ),
+    SensorEntityDescription(
+        key="offline_since",
+        translation_key="offline_since",
     ),
 )
 
@@ -218,17 +210,27 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BlueCurrentConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Blue Current sensors."""
-    connector: Connector = hass.data[DOMAIN][entry.entry_id]
-    sensor_list: list[SensorEntity] = []
-    for evse_id in connector.charge_points:
-        for sensor in SENSORS:
-            sensor_list.append(ChargePointSensor(connector, sensor, evse_id))
+    connector = entry.runtime_data
+    sensor_list: list[SensorEntity] = [
+        ChargePointSensor(connector, sensor, evse_id)
+        for evse_id in connector.charge_points
+        for sensor in SENSORS
+    ]
 
-    for grid_sensor in GRID_SENSORS:
-        sensor_list.append(GridSensor(connector, grid_sensor))
+    sensor_list.extend(
+        [
+            ChargePointTimestampSensor(connector, sensor, evse_id)
+            for evse_id in connector.charge_points
+            for sensor in TIMESTAMP_SENSORS
+        ]
+    )
+
+    sensor_list.extend(GridSensor(connector, sensor) for sensor in GRID_SENSORS)
 
     async_add_entities(sensor_list)
 
@@ -256,15 +258,29 @@ class ChargePointSensor(ChargepointEntity, SensorEntity):
         new_value = self.connector.charge_points[self.evse_id].get(self.key)
 
         if new_value is not None:
-            if self.key in TIMESTAMP_KEYS and not (
-                self._attr_native_value is None or self._attr_native_value < new_value
-            ):
-                return
             self.has_value = True
             self._attr_native_value = new_value
 
-        elif self.key not in TIMESTAMP_KEYS:
+        else:
             self.has_value = False
+
+
+class ChargePointTimestampSensor(ChargePointSensor):
+    """Define a timestamp sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the sensor from the latest data."""
+        new_value = self.connector.charge_points[self.evse_id].get(self.key)
+
+        # only update if the new_value is a newer timestamp.
+        if new_value is not None and (
+            self.has_value is False or self._attr_native_value < new_value
+        ):
+            self.has_value = True
+            self._attr_native_value = new_value
 
 
 class GridSensor(BlueCurrentEntity, SensorEntity):

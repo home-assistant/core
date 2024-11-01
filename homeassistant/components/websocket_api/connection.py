@@ -1,20 +1,27 @@
 """Connection session."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.http import current_request
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
+from .messages import (
+    error_message,
+    event_message,
+    message_to_json_bytes,
+    result_message,
+)
 from .util import describe_request
 
 if TYPE_CHECKING:
@@ -25,8 +32,8 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
-MessageHandler = Callable[[HomeAssistant, "ActiveConnection", dict[str, Any]], None]
-BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
+type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
+type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
 
 class ActiveConnection:
@@ -64,9 +71,9 @@ class ActiveConnection:
         self.last_id = 0
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
-        self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
-            const.DOMAIN
-        ]
+        self.handlers: dict[str, tuple[MessageHandler, vol.Schema | Literal[False]]] = (
+            self.hass.data[const.DOMAIN]
+        )
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
@@ -125,12 +132,12 @@ class ActiveConnection:
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
-        self.send_message(messages.result_message(msg_id, result))
+        self.send_message(message_to_json_bytes(result_message(msg_id, result)))
 
     @callback
     def send_event(self, msg_id: int, event: Any | None = None) -> None:
         """Send a event message."""
-        self.send_message(messages.event_message(msg_id, event))
+        self.send_message(message_to_json_bytes(event_message(msg_id, event)))
 
     @callback
     def send_error(
@@ -144,13 +151,15 @@ class ActiveConnection:
     ) -> None:
         """Send an error message."""
         self.send_message(
-            messages.error_message(
-                msg_id,
-                code,
-                message,
-                translation_key=translation_key,
-                translation_domain=translation_domain,
-                translation_placeholders=translation_placeholders,
+            message_to_json_bytes(
+                error_message(
+                    msg_id,
+                    code,
+                    message,
+                    translation_key=translation_key,
+                    translation_domain=translation_domain,
+                    translation_placeholders=translation_placeholders,
+                )
             )
         )
 
@@ -170,7 +179,7 @@ class ActiveConnection:
 
         try:
             handler(self.hass, self, payload)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Error handling binary message")
             self.binary_handlers[index] = None
 
@@ -184,6 +193,7 @@ class ActiveConnection:
             or (
                 not (cur_id := msg.get("id"))
                 or type(cur_id) is not int  # noqa: E721
+                or cur_id < 0
                 or not (type_ := msg.get("type"))
                 or type(type_) is not str  # noqa: E721
             )
@@ -219,8 +229,13 @@ class ActiveConnection:
         handler, schema = handler_schema
 
         try:
-            handler(self.hass, self, schema(msg))
-        except Exception as err:  # pylint: disable=broad-except
+            if schema is False:
+                if len(msg) > 2:
+                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
+                handler(self.hass, self, msg)
+            else:
+                handler(self.hass, self, schema(msg))
+        except Exception as err:  # noqa: BLE001
             self.async_handle_exception(msg, err)
 
         self.last_id = cur_id
@@ -231,7 +246,7 @@ class ActiveConnection:
         for unsub in self.subscriptions.values():
             try:
                 unsub()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If one fails, make sure we still try the rest
                 self.logger.exception(
                     "Error unsubscribing from subscription: %s", unsub

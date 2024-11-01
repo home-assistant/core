@@ -2,6 +2,7 @@
 
 The number component allows control of charging current.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -20,6 +21,7 @@ from .const import (
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
@@ -38,20 +40,13 @@ def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
     return 6
 
 
-@dataclass(frozen=True)
-class WallboxNumberEntityDescriptionMixin:
-    """Load entities from different handlers."""
+@dataclass(frozen=True, kw_only=True)
+class WallboxNumberEntityDescription(NumberEntityDescription):
+    """Describes Wallbox number entity."""
 
     max_value_fn: Callable[[WallboxCoordinator], float]
     min_value_fn: Callable[[WallboxCoordinator], float]
     set_value_fn: Callable[[WallboxCoordinator], Callable[[float], Awaitable[None]]]
-
-
-@dataclass(frozen=True)
-class WallboxNumberEntityDescription(
-    NumberEntityDescription, WallboxNumberEntityDescriptionMixin
-):
-    """Describes Wallbox number entity."""
 
 
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
@@ -73,6 +68,16 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
         set_value_fn=lambda coordinator: coordinator.async_set_energy_cost,
         native_step=0.01,
     ),
+    CHARGER_MAX_ICP_CURRENT_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_MAX_ICP_CURRENT_KEY,
+        translation_key="maximum_icp_current",
+        max_value_fn=lambda coordinator: cast(
+            float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
+        ),
+        min_value_fn=lambda _: 6,
+        set_value_fn=lambda coordinator: coordinator.async_set_icp_current,
+        native_step=1,
+    ),
 }
 
 
@@ -92,11 +97,9 @@ async def async_setup_entry(
         raise PlatformNotReady from exc
 
     async_add_entities(
-        [
-            WallboxNumber(coordinator, entry, description)
-            for ent in coordinator.data
-            if (description := NUMBER_TYPES.get(ent))
-        ]
+        WallboxNumber(coordinator, entry, description)
+        for ent in coordinator.data
+        if (description := NUMBER_TYPES.get(ent))
     )
 
 

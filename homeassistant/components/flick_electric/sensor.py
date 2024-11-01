@@ -1,4 +1,5 @@
 """Support for Flick Electric Pricing data."""
+
 import asyncio
 from datetime import timedelta
 import logging

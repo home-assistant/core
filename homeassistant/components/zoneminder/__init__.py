@@ -1,4 +1,5 @@
 """Support for ZoneMinder."""
+
 import logging
 
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -54,7 +55,7 @@ SET_RUN_STATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ZoneMinder component."""
 
     hass.data[DOMAIN] = {}
@@ -77,7 +78,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN][host_name] = zm_client
 
         try:
-            success = zm_client.login() and success
+            success = await hass.async_add_executor_job(zm_client.login) and success
         except RequestsConnectionError as ex:
             _LOGGER.error(
                 "ZoneMinder connection failure to %s: %s",
@@ -98,7 +99,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 state_name,
             )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SET_RUN_STATE, set_active_state, schema=SET_RUN_STATE_SCHEMA
     )
 

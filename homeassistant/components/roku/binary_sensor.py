@@ -1,4 +1,5 @@
 """Support for Roku binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,45 +20,34 @@ from .const import DOMAIN
 from .entity import RokuEntity
 
 
-@dataclass(frozen=True)
-class RokuBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RokuBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Roku binary sensor entity."""
 
     value_fn: Callable[[RokuDevice], bool | None]
-
-
-@dataclass(frozen=True)
-class RokuBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RokuBinarySensorEntityDescriptionMixin
-):
-    """Describes a Roku binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     RokuBinarySensorEntityDescription(
         key="headphones_connected",
         translation_key="headphones_connected",
-        icon="mdi:headphones",
         value_fn=lambda device: device.info.headphones_connected,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_airplay",
         translation_key="supports_airplay",
-        icon="mdi:cast-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.supports_airplay,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_ethernet",
         translation_key="supports_ethernet",
-        icon="mdi:ethernet",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.ethernet_support,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_find_remote",
         translation_key="supports_find_remote",
-        icon="mdi:remote",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.supports_find_remote,
     ),

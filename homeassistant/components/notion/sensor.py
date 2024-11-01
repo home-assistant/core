@@ -1,4 +1,5 @@
 """Support for Notion sensors."""
+
 from dataclasses import dataclass
 
 from aionotion.listener.models import ListenerKind
@@ -14,9 +15,9 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NotionEntity
 from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
-from .model import NotionEntityDescription
+from .coordinator import NotionDataUpdateCoordinator
+from .entity import NotionEntity, NotionEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,7 +29,6 @@ SENSOR_DESCRIPTIONS = (
     NotionSensorDescription(
         key=SENSOR_MOLD,
         translation_key="mold_risk",
-        icon="mdi:liquid-spot",
         listener_kind=ListenerKind.MOLD,
     ),
     NotionSensorDescription(
@@ -45,7 +45,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -54,7 +54,6 @@ async def async_setup_entry(
                 listener_id,
                 sensor.uuid,
                 sensor.bridge.id,
-                sensor.system_id,
                 description,
             )
             for listener_id, listener in coordinator.data.listeners.items()

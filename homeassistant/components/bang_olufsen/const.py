@@ -7,30 +7,56 @@ from typing import Final
 
 from mozart_api.models import Source, SourceArray, SourceTypeEnum
 
-from homeassistant.components.media_player import MediaPlayerState, MediaType
+from homeassistant.components.media_player import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+)
 
 
-class SOURCE_ENUM(StrEnum):
-    """Enum used for associating device source ids with friendly names. May not include all sources."""
+class BangOlufsenSource:
+    """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    uriStreamer = "Audio Streamer"  # noqa: N815
-    bluetooth = "Bluetooth"
-    airPlay = "AirPlay"  # noqa: N815
-    chromeCast = "Chromecast built-in"  # noqa: N815
-    spotify = "Spotify Connect"
-    generator = "Tone Generator"
-    lineIn = "Line-In"  # noqa: N815
-    spdif = "Optical"
-    netRadio = "B&O Radio"  # noqa: N815
-    local = "Local"
-    dlna = "DLNA"
-    qplay = "QPlay"
-    wpl = "Wireless Powerlink"
-    pl = "Powerlink"
-    tv = "TV"
-    deezer = "Deezer"
-    beolink = "Networklink"
-    tidalConnect = "Tidal Connect"  # noqa: N815
+    URI_STREAMER: Final[Source] = Source(
+        name="Audio Streamer",
+        id="uriStreamer",
+        is_seekable=False,
+    )
+    BLUETOOTH: Final[Source] = Source(
+        name="Bluetooth",
+        id="bluetooth",
+        is_seekable=False,
+    )
+    CHROMECAST: Final[Source] = Source(
+        name="Chromecast built-in",
+        id="chromeCast",
+        is_seekable=False,
+    )
+    LINE_IN: Final[Source] = Source(
+        name="Line-In",
+        id="lineIn",
+        is_seekable=False,
+    )
+    SPDIF: Final[Source] = Source(
+        name="Optical",
+        id="spdif",
+        is_seekable=False,
+    )
+    NET_RADIO: Final[Source] = Source(
+        name="B&O Radio",
+        id="netRadio",
+        is_seekable=False,
+    )
+    DEEZER: Final[Source] = Source(
+        name="Deezer",
+        id="deezer",
+        is_seekable=True,
+    )
+    TIDAL: Final[Source] = Source(
+        name="Tidal",
+        id="tidal",
+        is_seekable=True,
+    )
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -46,20 +72,34 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "unknown": MediaPlayerState.IDLE,
 }
 
+# Dict used for translating Home Assistant settings to device repeat settings.
+BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
+    RepeatMode.ALL: "all",
+    RepeatMode.ONE: "track",
+    RepeatMode.OFF: "none",
+}
+# Dict used for translating device repeat settings to Home Assistant settings.
+BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
+    value: key for key, value in BANG_OLUFSEN_REPEAT_FROM_HA.items()
+}
+
 
 # Media types for play_media
-class BANG_OLUFSEN_MEDIA_TYPE(StrEnum):
+class BangOlufsenMediaType(StrEnum):
     """Bang & Olufsen specific media types."""
 
     FAVOURITE = "favourite"
     DEEZER = "deezer"
     RADIO = "radio"
+    TIDAL = "tidal"
     TTS = "provider"
+    OVERLAY_TTS = "overlay_tts"
 
 
-class MODEL_ENUM(StrEnum):
+class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
+    BEOCONNECT_CORE = "Beoconnect Core"
     BEOLAB_8 = "BeoLab 8"
     BEOLAB_28 = "BeoLab 28"
     BEOSOUND_2 = "Beosound 2 3rd Gen"
@@ -72,36 +112,42 @@ class MODEL_ENUM(StrEnum):
 
 
 # Dispatcher events
-class WEBSOCKET_NOTIFICATION(StrEnum):
+class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
-    PLAYBACK_ERROR: Final[str] = "playback_error"
-    PLAYBACK_METADATA: Final[str] = "playback_metadata"
-    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
-    PLAYBACK_SOURCE: Final[str] = "playback_source"
-    PLAYBACK_STATE: Final[str] = "playback_state"
-    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
-    SOURCE_CHANGE: Final[str] = "source_change"
-    VOLUME: Final[str] = "volume"
+    ACTIVE_LISTENING_MODE = "active_listening_mode"
+    PLAYBACK_ERROR = "playback_error"
+    PLAYBACK_METADATA = "playback_metadata"
+    PLAYBACK_PROGRESS = "playback_progress"
+    PLAYBACK_SOURCE = "playback_source"
+    PLAYBACK_STATE = "playback_state"
+    SOFTWARE_UPDATE_STATE = "software_update_state"
+    SOURCE_CHANGE = "source_change"
+    VOLUME = "volume"
 
     # Sub-notifications
-    NOTIFICATION: Final[str] = "notification"
-    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
+    BEOLINK = "beolink"
+    BEOLINK_PEERS = "beolinkPeers"
+    BEOLINK_LISTENERS = "beolinkListeners"
+    BEOLINK_AVAILABLE_LISTENERS = "beolinkAvailableListeners"
+    CONFIGURATION = "configuration"
+    NOTIFICATION = "notification"
+    REMOTE_MENU_CHANGED = "remoteMenuChanged"
 
-    ALL: Final[str] = "all"
+    ALL = "all"
 
 
 DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
-DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE
+DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
 
 # Configuration.
 CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
 # Models to choose from in manual configuration.
-COMPATIBLE_MODELS: list[str] = [x.value for x in MODEL_ENUM]
+COMPATIBLE_MODELS: list[str] = [x.value for x in BangOlufsenModel]
 
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
@@ -113,10 +159,12 @@ ATTR_FRIENDLY_NAME: Final[str] = "fn"
 BANG_OLUFSEN_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    BANG_OLUFSEN_MEDIA_TYPE.FAVOURITE,
-    BANG_OLUFSEN_MEDIA_TYPE.DEEZER,
-    BANG_OLUFSEN_MEDIA_TYPE.RADIO,
-    BANG_OLUFSEN_MEDIA_TYPE.TTS,
+    BangOlufsenMediaType.FAVOURITE,
+    BangOlufsenMediaType.DEEZER,
+    BangOlufsenMediaType.RADIO,
+    BangOlufsenMediaType.TTS,
+    BangOlufsenMediaType.TIDAL,
+    BangOlufsenMediaType.OVERLAY_TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,
@@ -146,6 +194,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=False,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
+            is_seekable=False,
         ),
         Source(
             id="bluetooth",
@@ -153,6 +202,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=False,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
+            is_seekable=False,
         ),
         Source(
             id="spotify",
@@ -160,6 +210,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=False,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
+            is_seekable=True,
         ),
         Source(
             id="lineIn",
@@ -167,6 +218,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Line-In",
             type=SourceTypeEnum(value="lineIn"),
+            is_seekable=False,
         ),
         Source(
             id="spdif",
@@ -174,6 +226,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Optical",
             type=SourceTypeEnum(value="spdif"),
+            is_seekable=False,
         ),
         Source(
             id="netRadio",
@@ -181,6 +234,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="B&O Radio",
             type=SourceTypeEnum(value="netRadio"),
+            is_seekable=False,
         ),
         Source(
             id="deezer",
@@ -188,6 +242,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Deezer",
             type=SourceTypeEnum(value="deezer"),
+            is_seekable=True,
         ),
         Source(
             id="tidalConnect",
@@ -195,6 +250,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Tidal Connect",
             type=SourceTypeEnum(value="tidalConnect"),
+            is_seekable=True,
         ),
     ]
 )

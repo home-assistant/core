@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .home_base import FreeboxHomeEntity
+from .entity import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)

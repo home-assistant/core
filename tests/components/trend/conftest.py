@@ -1,4 +1,5 @@
 """Fixtures for the trend component tests."""
+
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -9,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-ComponentSetup = Callable[[dict[str, Any]], Awaitable[None]]
+type ComponentSetup = Callable[[dict[str, Any]], Awaitable[None]]
 
 
 @pytest.fixture(name="config_entry")

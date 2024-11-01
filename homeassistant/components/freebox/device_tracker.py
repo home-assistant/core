@@ -1,10 +1,11 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -96,11 +97,6 @@ class FreeboxDevice(ScannerEntity):
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._active
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.ROUTER
 
     @callback
     def async_on_demand_update(self) -> None:

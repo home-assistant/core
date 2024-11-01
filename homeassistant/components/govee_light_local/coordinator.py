@@ -1,10 +1,12 @@
 """Coordinator for Govee light local."""
 
+import asyncio
 from collections.abc import Callable
 import logging
 
 from govee_local_api import GoveeController, GoveeDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -17,6 +19,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
@@ -54,9 +58,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """Set discovery callback for automatic Govee light discovery."""
         self._controller.set_device_discovered_callback(callback)
 
-    def cleanup(self) -> None:
+    def cleanup(self) -> asyncio.Event:
         """Stop and cleanup the cooridinator."""
-        self._controller.cleanup()
+        return self._controller.cleanup()
 
     async def turn_on(self, device: GoveeDevice) -> None:
         """Turn on the light."""

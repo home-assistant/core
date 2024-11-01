@@ -1,4 +1,5 @@
 """Support for Microsoft face recognition."""
+
 from __future__ import annotations
 
 import asyncio
@@ -243,11 +244,7 @@ class MicrosoftFaceGroupEntity(Entity):
     @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attr = {}
-        for name, p_id in self._api.store[self._id].items():
-            attr[name] = p_id
-
-        return attr
+        return dict(self._api.store[self._id])
 
 
 class MicrosoftFace:

@@ -1,4 +1,5 @@
 """Homematic base entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -115,7 +116,7 @@ class HMDevice(Entity):
 
             # Link events from pyhomematic
             self._available = not self._hmdevice.UNREACH
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s", self._address, str(err))
 

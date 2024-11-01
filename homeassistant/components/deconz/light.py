@@ -1,13 +1,13 @@
 """Support for deCONZ lights."""
+
 from __future__ import annotations
 
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict, cast
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
-from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
-from pydeconz.models.group import Group
+from pydeconz.models.group import Group, TypedGroupAction
 from pydeconz.models.light.light import Light, LightAlert, LightColorMode, LightEffect
 
 from homeassistant.components.light import (
@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
@@ -28,19 +28,33 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
-from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .entity import DeconzDevice
+from .hub import DeconzHub
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {
     EFFECT_COLORLOOP: LightEffect.COLOR_LOOP,
-    "None": LightEffect.NONE,
+    "none": LightEffect.NONE,
+    # Specific to Philips Hue
+    "candle": LightEffect.CANDLE,
+    "cosmos": LightEffect.COSMOS,
+    "enchant": LightEffect.ENCHANT,
+    "fire": LightEffect.FIRE,
+    "fireplace": LightEffect.FIREPLACE,
+    "glisten": LightEffect.GLISTEN,
+    "loop": LightEffect.LOOP,
+    "opal": LightEffect.OPAL,
+    "prism": LightEffect.PRISM,
+    "sparkle": LightEffect.SPARKLE,
+    "sunbeam": LightEffect.SUNBEAM,
+    "sunrise": LightEffect.SUNRISE,
+    "sunset": LightEffect.SUNSET,
+    "underwater": LightEffect.UNDERWATER,
     # Specific to Lidl christmas light
     "carnival": LightEffect.CARNIVAL,
     "collide": LightEffect.COLLIDE,
@@ -63,6 +77,7 @@ FLASH_TO_DECONZ = {FLASH_SHORT: LightAlert.SHORT, FLASH_LONG: LightAlert.LONG}
 
 DECONZ_TO_COLOR_MODE = {
     LightColorMode.CT: ColorMode.COLOR_TEMP,
+    LightColorMode.GRADIENT: ColorMode.XY,
     LightColorMode.HS: ColorMode.HS,
     LightColorMode.XY: ColorMode.XY,
 }
@@ -86,8 +101,6 @@ XMAS_LIGHT_EFFECTS = [
     "waves",
 ]
 
-_LightDeviceT = TypeVar("_LightDeviceT", bound=Group | Light)
-
 
 class SetStateAttributes(TypedDict, total=False):
     """Attributes available with set state call."""
@@ -103,38 +116,44 @@ class SetStateAttributes(TypedDict, total=False):
     xy: tuple[float, float]
 
 
+def update_color_state(
+    group: Group, lights: list[Light], override: bool = False
+) -> None:
+    """Sync group color state with light."""
+    data = {
+        attribute: light_attribute
+        for light in lights
+        for attribute in ("bri", "ct", "hue", "sat", "xy", "colormode", "effect")
+        if (light_attribute := light.raw["state"].get(attribute)) is not None
+    }
+
+    if override:
+        group.raw["action"] = cast(TypedGroupAction, data)
+    else:
+        group.update(cast(dict[str, dict[str, Any]], {"action": data}))
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    gateway.entities[DOMAIN] = set()
-
-    entity_registry = er.async_get(hass)
-
-    # On/Off Output should be switch not light 2022.5
-    for light in gateway.api.lights.lights.values():
-        if light.type == ResourceType.ON_OFF_OUTPUT.value and (
-            entity_id := entity_registry.async_get_entity_id(
-                DOMAIN, DECONZ_DOMAIN, light.unique_id
-            )
-        ):
-            entity_registry.async_remove(entity_id)
+    hub = DeconzHub.get_hub(hass, config_entry)
+    hub.entities[LIGHT_DOMAIN] = set()
 
     @callback
     def async_add_light(_: EventType, light_id: str) -> None:
         """Add light from deCONZ."""
-        light = gateway.api.lights.lights[light_id]
+        light = hub.api.lights.lights[light_id]
         if light.type in POWER_PLUGS:
             return
 
-        async_add_entities([DeconzLight(light, gateway)])
+        async_add_entities([DeconzLight(light, hub)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_light,
-        gateway.api.lights.lights,
+        hub.api.lights.lights,
     )
 
     @callback
@@ -143,37 +162,41 @@ async def async_setup_entry(
 
         Update group states based on its sum of related lights.
         """
-        if (group := gateway.api.groups[group_id]) and not group.lights:
+        if (group := hub.api.groups[group_id]) and not group.lights:
             return
 
-        first = True
-        for light_id in group.lights:
-            if (light := gateway.api.lights.lights.get(light_id)) and light.reachable:
-                group.update_color_state(light, update_all_attributes=first)
-                first = False
+        lights = [
+            light
+            for light_id in group.lights
+            if (light := hub.api.lights.lights.get(light_id)) and light.reachable
+        ]
+        update_color_state(group, lights, True)
 
-        async_add_entities([DeconzGroup(group, gateway)])
+        async_add_entities([DeconzGroup(group, hub)])
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_group,
-        gateway.api.groups,
+        hub.api.groups,
     )
 
 
-class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
+class DeconzBaseLight[_LightDeviceT: Group | Light](
+    DeconzDevice[_LightDeviceT], LightEntity
+):
     """Representation of a deCONZ light."""
 
-    TYPE = DOMAIN
+    TYPE = LIGHT_DOMAIN
+    _attr_color_mode = ColorMode.UNKNOWN
 
-    def __init__(self, device: _LightDeviceT, gateway: DeconzGateway) -> None:
+    def __init__(self, device: _LightDeviceT, hub: DeconzHub) -> None:
         """Set up light."""
-        super().__init__(device, gateway)
+        super().__init__(device, hub)
 
         self.api: GroupHandler | LightHandler
         if isinstance(self._device, Light):
-            self.api = self.gateway.api.lights.lights
+            self.api = self.hub.api.lights.lights
         elif isinstance(self._device, Group):
-            self.api = self.gateway.api.groups
+            self.api = self.hub.api.groups
 
         self._attr_supported_color_modes: set[ColorMode] = set()
 
@@ -200,8 +223,17 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
-            if device.model_id in ("HG06467", "TS0601"):
-                self._attr_effect_list = XMAS_LIGHT_EFFECTS
+
+            # For lights that report supported effects.
+            if isinstance(device, Light):
+                if device.supported_effects is not None:
+                    self._attr_effect_list = [
+                        EFFECT_TO_DECONZ[el]
+                        for el in device.supported_effects
+                        if el in EFFECT_TO_DECONZ
+                    ]
+                if device.model_id in ("HG06467", "TS0601"):
+                    self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
     def color_mode(self) -> str | None:
@@ -321,9 +353,9 @@ class DeconzLight(DeconzBaseLight[Light]):
         super().async_update_callback()
 
         if self._device.reachable and "attr" not in self._device.changed_keys:
-            for group in self.gateway.api.groups.values():
+            for group in self.hub.api.groups.values():
                 if self._device.resource_id in group.lights:
-                    group.update_color_state(self._device)
+                    update_color_state(group, [self._device])
 
 
 class DeconzGroup(DeconzBaseLight[Group]):
@@ -331,10 +363,10 @@ class DeconzGroup(DeconzBaseLight[Group]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device: Group, gateway: DeconzGateway) -> None:
+    def __init__(self, device: Group, hub: DeconzHub) -> None:
         """Set up group and create an unique id."""
-        self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
-        super().__init__(device, gateway)
+        self._unique_id = f"{hub.bridgeid}-{device.deconz_id}"
+        super().__init__(device, hub)
 
         self._attr_name = None
 
@@ -351,7 +383,7 @@ class DeconzGroup(DeconzBaseLight[Group]):
             manufacturer="Dresden Elektronik",
             model="deCONZ group",
             name=self._device.name,
-            via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
+            via_device=(DECONZ_DOMAIN, self.hub.api.config.bridge_id),
         )
 
     @property

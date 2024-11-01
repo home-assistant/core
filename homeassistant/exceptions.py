@@ -1,16 +1,41 @@
 """The exceptions used by Home Assistant."""
+
 from __future__ import annotations
 
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from .util.event_type import EventType
 
 if TYPE_CHECKING:
     from .core import Context
 
 
+_function_cache: dict[str, Callable[[str, str, dict[str, str] | None], str]] = {}
+
+
+def import_async_get_exception_message() -> (
+    Callable[[str, str, dict[str, str] | None], str]
+):
+    """Return a method that can fetch a translated exception message.
+
+    Defaults to English, requires translations to already be cached.
+    """
+
+    # pylint: disable-next=import-outside-toplevel
+    from .helpers.translation import (
+        async_get_exception_message as async_get_exception_message_import,
+    )
+
+    return async_get_exception_message_import
+
+
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
+
+    _message: str | None = None
+    generate_message: bool = False
 
     def __init__(
         self,
@@ -20,10 +45,43 @@ class HomeAssistantError(Exception):
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
+        if not args and translation_key and translation_domain:
+            self.generate_message = True
+            args = (translation_key,)
+
         super().__init__(*args)
         self.translation_domain = translation_domain
         self.translation_key = translation_key
         self.translation_placeholders = translation_placeholders
+
+    def __str__(self) -> str:
+        """Return exception message.
+
+        If no message was passed to `__init__`, the exception message is generated from
+        the translation_key. The message will be in English, regardless of the configured
+        language.
+        """
+
+        if self._message:
+            return self._message
+
+        if not self.generate_message:
+            self._message = super().__str__()
+            return self._message
+
+        if TYPE_CHECKING:
+            assert self.translation_key is not None
+            assert self.translation_domain is not None
+
+        if "async_get_exception_message" not in _function_cache:
+            _function_cache["async_get_exception_message"] = (
+                import_async_get_exception_message()
+            )
+
+        self._message = _function_cache["async_get_exception_message"](
+            self.translation_domain, self.translation_key, self.translation_placeholders
+        )
+        return self._message
 
 
 class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
@@ -31,24 +89,19 @@ class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
 
     def __init__(
         self,
-        message: str,
+        message_translation_key: str,
         exceptions: list[Exception],
         translation_domain: str | None = None,
-        translation_key: str | None = None,
         translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Initialize exception."""
         super().__init__(
-            *(message, exceptions),
+            *(message_translation_key, exceptions),
             translation_domain=translation_domain,
-            translation_key=translation_key,
+            translation_key=message_translation_key,
             translation_placeholders=translation_placeholders,
         )
-        self._message = message
-
-    def __str__(self) -> str:
-        """Return exception message string."""
-        return self._message
+        self.generate_message = True
 
 
 class ServiceValidationError(HomeAssistantError):
@@ -85,9 +138,9 @@ class ConditionError(HomeAssistantError):
         """Return indentation."""
         return "  " * indent + message
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __str__(self) -> str:
         """Return string representation."""
@@ -101,7 +154,7 @@ class ConditionErrorMessage(ConditionError):
     # A message describing this error
     message: str
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
@@ -117,7 +170,7 @@ class ConditionErrorIndex(ConditionError):
     # The error that this error wraps
     error: ConditionError
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         if self.total > 1:
             yield self._indent(
@@ -136,7 +189,7 @@ class ConditionErrorContainer(ConditionError):
     # List of ConditionErrors that this error wraps
     errors: Sequence[ConditionError]
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         for item in self.errors:
             yield from item.output(indent)
@@ -202,41 +255,43 @@ class UnknownUser(Unauthorized):
     """When call is made with user ID that doesn't exist."""
 
 
-class ServiceNotFound(HomeAssistantError):
+class ServiceNotFound(ServiceValidationError):
     """Raised when a service is not found."""
 
     def __init__(self, domain: str, service: str) -> None:
         """Initialize error."""
         super().__init__(
-            self,
-            f"Service {domain}.{service} not found.",
             translation_domain="homeassistant",
             translation_key="service_not_found",
             translation_placeholders={"domain": domain, "service": service},
         )
         self.domain = domain
         self.service = service
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"Service {self.domain}.{self.service} not found."
+        self.generate_message = True
 
 
 class MaxLengthExceeded(HomeAssistantError):
     """Raised when a property value has exceeded the max character length."""
 
-    def __init__(self, value: str, property_name: str, max_length: int) -> None:
+    def __init__(
+        self, value: EventType[Any] | str, property_name: str, max_length: int
+    ) -> None:
         """Initialize error."""
+        if TYPE_CHECKING:
+            value = str(value)
         super().__init__(
-            self,
-            (
-                f"Value {value} for property {property_name} has a max length of "
-                f"{max_length} characters"
-            ),
+            translation_domain="homeassistant",
+            translation_key="max_length_exceeded",
+            translation_placeholders={
+                "value": value,
+                "property_name": property_name,
+                "max_length": str(max_length),
+            },
         )
         self.value = value
         self.property_name = property_name
         self.max_length = max_length
+        self.generate_message = True
 
 
 class DependencyError(HomeAssistantError):
@@ -245,7 +300,6 @@ class DependencyError(HomeAssistantError):
     def __init__(self, failed_dependencies: list[str]) -> None:
         """Initialize error."""
         super().__init__(
-            self,
             f"Could not setup dependencies: {', '.join(failed_dependencies)}",
         )
         self.failed_dependencies = failed_dependencies

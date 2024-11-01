@@ -20,7 +20,7 @@
           "auto": "Search automatically"
         },
         "title": "ONVIF device setup",
-        "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration."
+        "description": "By selecting **Submit**, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration."
       },
       "device": {
         "data": {
@@ -68,6 +68,19 @@
           "enable_webhooks": "Enable Webhooks"
         },
         "title": "ONVIF Device Options"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "autofocus": {
+        "name": "Autofocus"
+      },
+      "ir_lamp": {
+        "name": "IR lamp"
+      },
+      "wiper": {
+        "name": "Wiper"
       }
     }
   },

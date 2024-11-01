@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -30,11 +33,20 @@
     "number": {
       "intensity": {
         "name": "Intensity"
+      },
+      "max_intensity": {
+        "name": "Max intensity"
+      },
+      "min_intensity": {
+        "name": "Min intensity"
       }
     },
     "sensor": {
       "charge_power": {
         "name": "Charge power"
+      },
+      "voltage_installation": {
+        "name": "Installation voltage"
       },
       "charge_energy": {
         "name": "Charge energy"
@@ -47,6 +59,58 @@
       },
       "fv_power": {
         "name": "Photovoltaic power"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "meter_error": {
+        "name": "Meter error",
+        "state": {
+          "no_error": "No error",
+          "communication": "Communication",
+          "reading": "Reading",
+          "meter": "Meter",
+          "waiting_wifi": "Waiting for Wi-Fi",
+          "waiting_communication": "Waiting communication",
+          "wrong_ip": "Wrong IP",
+          "meter_not_found": "Meter not found",
+          "wrong_meter": "Wrong meter",
+          "no_response": "No response",
+          "clamp_not_connected": "Clamp not connected",
+          "illegal_function": "Illegal function",
+          "illegal_data_address": "Illegal data address",
+          "illegal_data_value": "Illegal data value",
+          "server_device_failure": "Server device failure",
+          "acknowledge": "Acknowledge",
+          "server_device_busy": "Server device busy",
+          "negative_acknowledge": "Negative acknowledge",
+          "memory_parity_error": "Memory parity error",
+          "gateway_path_unavailable": "Gateway path unavailable",
+          "gateway_target_no_resp": "Gateway target no response",
+          "server_rtu_inactive244_timeout": "Server RTU inactive/timeout",
+          "invalid_server": "Invalid server",
+          "crc_error": "CRC error",
+          "fc_mismatch": "FC mismatch",
+          "server_id_mismatch": "Server id mismatch",
+          "packet_length_error": "Packet length error",
+          "parameter_count_error": "Parameter count error",
+          "parameter_limit_error": "Parameter limit error",
+          "request_queue_full": "Request queue full",
+          "illegal_ip_or_port": "Illegal IP or port",
+          "ip_connection_failed": "IP connection failed",
+          "tcp_head_mismatch": "TCP head mismatch",
+          "empty_message": "Empty message",
+          "undefined_error": "Undefined error"
+        }
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "ip_address": {
+        "name": "IP address"
+      },
+      "signal_status": {
+        "name": "Signal status"
       }
     },
     "switch": {

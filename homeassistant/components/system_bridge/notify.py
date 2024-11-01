@@ -1,4 +1,5 @@
 """Support for System Bridge notification service."""
+
 from __future__ import annotations
 
 import logging
@@ -71,6 +72,6 @@ class SystemBridgeNotificationService(BaseNotificationService):
             title=kwargs.get(ATTR_TITLE, data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)),
         )
 
-        _LOGGER.debug("Sending notification: %s", notification.json())
+        _LOGGER.debug("Sending notification: %s", notification)
 
         await self._coordinator.websocket_client.send_notification(notification)

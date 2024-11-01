@@ -1,4 +1,5 @@
 """Support for Met.no weather service."""
+
 from __future__ import annotations
 
 from types import MappingProxyType
@@ -12,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
@@ -20,7 +22,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -36,6 +37,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from . import MetWeatherConfigEntry
 from .const import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -52,11 +54,11 @@ DEFAULT_NAME = "Met.no"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MetWeatherConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator: MetDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
     name: str | None
@@ -68,16 +70,15 @@ async def async_setup_entry(
         if TYPE_CHECKING:
             assert isinstance(name, str)
 
-    entities = [MetWeather(coordinator, config_entry, False, name, is_metric)]
+    entities = [MetWeather(coordinator, config_entry, name, is_metric)]
 
-    # Add hourly entity to legacy config entries
-    if entity_registry.async_get_entity_id(
+    # Remove hourly entity from legacy config entries
+    if hourly_entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
         _calculate_unique_id(config_entry.data, True),
     ):
-        name = f"{name} hourly"
-        entities.append(MetWeather(coordinator, config_entry, True, name, is_metric))
+        entity_registry.async_remove(hourly_entity_id)
 
     async_add_entities(entities)
 
@@ -120,18 +121,15 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: MetDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        hourly: bool,
+        config_entry: MetWeatherConfigEntry,
         name: str,
         is_metric: bool,
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._attr_unique_id = _calculate_unique_id(config_entry.data, hourly)
+        self._attr_unique_id = _calculate_unique_id(config_entry.data, False)
         self._config = config_entry.data
         self._is_metric = is_metric
-        self._hourly = hourly
-        self._attr_entity_registry_enabled_default = not hourly
         self._attr_device_info = DeviceInfo(
             name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
@@ -211,6 +209,13 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
             ATTR_MAP[ATTR_WEATHER_DEW_POINT]
         )
 
+    @property
+    def uv_index(self) -> float | None:
+        """Return the uv index."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_UV_INDEX]
+        )
+
     def _forecast(self, hourly: bool) -> list[Forecast] | None:
         """Return the forecast array."""
         if hourly:
@@ -233,11 +238,6 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
                 )
             ha_forecast.append(ha_item)  # type: ignore[arg-type]
         return ha_forecast
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast array."""
-        return self._forecast(self._hourly)
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:

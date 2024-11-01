@@ -1,4 +1,5 @@
 """Test the data redation helper."""
+
 from homeassistant.helpers.redact import REDACTED, async_redact_data, partial_redact
 
 

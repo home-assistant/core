@@ -1,4 +1,5 @@
 """The tests for the Demo vacuum platform."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -18,7 +19,7 @@ from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     ATTR_PARAMS,
-    DOMAIN,
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     STATE_CLEANING,
@@ -41,11 +42,11 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.components.vacuum import common
 
-ENTITY_VACUUM_BASIC = f"{DOMAIN}.{DEMO_VACUUM_BASIC}".lower()
-ENTITY_VACUUM_COMPLETE = f"{DOMAIN}.{DEMO_VACUUM_COMPLETE}".lower()
-ENTITY_VACUUM_MINIMAL = f"{DOMAIN}.{DEMO_VACUUM_MINIMAL}".lower()
-ENTITY_VACUUM_MOST = f"{DOMAIN}.{DEMO_VACUUM_MOST}".lower()
-ENTITY_VACUUM_NONE = f"{DOMAIN}.{DEMO_VACUUM_NONE}".lower()
+ENTITY_VACUUM_BASIC = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_BASIC}".lower()
+ENTITY_VACUUM_COMPLETE = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_COMPLETE}".lower()
+ENTITY_VACUUM_MINIMAL = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_MINIMAL}".lower()
+ENTITY_VACUUM_MOST = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_MOST}".lower()
+ENTITY_VACUUM_NONE = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_NONE}".lower()
 
 
 @pytest.fixture
@@ -61,7 +62,9 @@ async def vacuum_only() -> None:
 @pytest.fixture(autouse=True)
 async def setup_demo_vacuum(hass: HomeAssistant, vacuum_only: None):
     """Initialize setup demo vacuum."""
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "demo"}})
+    assert await async_setup_component(
+        hass, VACUUM_DOMAIN, {VACUUM_DOMAIN: {CONF_PLATFORM: "demo"}}
+    )
     await hass.async_block_till_done()
 
 
@@ -188,7 +191,7 @@ async def test_unsupported_methods(hass: HomeAssistant) -> None:
 async def test_services(hass: HomeAssistant) -> None:
     """Test vacuum services."""
     # Test send_command
-    send_command_calls = async_mock_service(hass, DOMAIN, SERVICE_SEND_COMMAND)
+    send_command_calls = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_SEND_COMMAND)
 
     params = {"rotate": 150, "speed": 20}
     await common.async_send_command(
@@ -197,20 +200,20 @@ async def test_services(hass: HomeAssistant) -> None:
     assert len(send_command_calls) == 1
     call = send_command_calls[-1]
 
-    assert call.domain == DOMAIN
+    assert call.domain == VACUUM_DOMAIN
     assert call.service == SERVICE_SEND_COMMAND
     assert call.data[ATTR_ENTITY_ID] == ENTITY_VACUUM_BASIC
     assert call.data[ATTR_COMMAND] == "test_command"
     assert call.data[ATTR_PARAMS] == params
 
     # Test set fan speed
-    set_fan_speed_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_FAN_SPEED)
+    set_fan_speed_calls = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_SET_FAN_SPEED)
 
     await common.async_set_fan_speed(hass, FAN_SPEEDS[0], ENTITY_VACUUM_COMPLETE)
     assert len(set_fan_speed_calls) == 1
     call = set_fan_speed_calls[-1]
 
-    assert call.domain == DOMAIN
+    assert call.domain == VACUUM_DOMAIN
     assert call.service == SERVICE_SET_FAN_SPEED
     assert call.data[ATTR_ENTITY_ID] == ENTITY_VACUUM_COMPLETE
     assert call.data[ATTR_FAN_SPEED] == FAN_SPEEDS[0]
@@ -218,7 +221,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
 async def test_set_fan_speed(hass: HomeAssistant) -> None:
     """Test vacuum service to set the fan speed."""
-    group_vacuums = ",".join([ENTITY_VACUUM_COMPLETE, ENTITY_VACUUM_MOST])
+    group_vacuums = f"{ENTITY_VACUUM_COMPLETE},{ENTITY_VACUUM_MOST}"
     old_state_complete = hass.states.get(ENTITY_VACUUM_COMPLETE)
     old_state_most = hass.states.get(ENTITY_VACUUM_MOST)
 
@@ -238,7 +241,7 @@ async def test_set_fan_speed(hass: HomeAssistant) -> None:
 
 async def test_send_command(hass: HomeAssistant) -> None:
     """Test vacuum service to send a command."""
-    group_vacuums = ",".join([ENTITY_VACUUM_COMPLETE])
+    group_vacuums = f"{ENTITY_VACUUM_COMPLETE}"
     old_state_complete = hass.states.get(ENTITY_VACUUM_COMPLETE)
 
     await common.async_send_command(

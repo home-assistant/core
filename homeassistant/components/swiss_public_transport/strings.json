@@ -3,6 +3,7 @@
     "error": {
       "cannot_connect": "Cannot connect to server",
       "bad_config": "Request failed due to bad config: Check at [stationboard]({stationboard_url}) if your station names are valid",
+      "too_many_via_stations": "Too many via stations, only up to 5 via stations are allowed per connection.",
       "unknown": "An unknown error was raised by python-opendata-transport"
     },
     "abort": {
@@ -15,32 +16,73 @@
       "user": {
         "data": {
           "from": "Start station",
-          "to": "End station"
+          "to": "End station",
+          "via": "List of up to 5 via stations"
         },
-        "description": "Provide start and end station for your connection\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
         "title": "Swiss Public Transport"
       }
     }
   },
   "entity": {
     "sensor": {
-      "departure": {
+      "departure0": {
         "name": "Departure"
+      },
+      "departure1": {
+        "name": "Departure +1"
+      },
+      "departure2": {
+        "name": "Departure +2"
+      },
+      "duration": {
+        "name": "Duration"
+      },
+      "transfers": {
+        "name": "Transfers"
+      },
+      "platform": {
+        "name": "Platform"
+      },
+      "delay": {
+        "name": "Delay"
+      },
+      "line": {
+        "name": "Line"
       }
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The swiss public transport YAML configuration import cannot connect to server",
-      "description": "Configuring swiss public transport using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the [opendata server]({opendata_url}). In case the server is down, try again later."
+  "services": {
+    "fetch_connections": {
+      "name": "Fetch Connections",
+      "description": "Fetch a list of connections from the swiss public transport.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Instance",
+          "description": "Swiss public transport instance to fetch connections for."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Number of connections to fetch from [1-15]"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_data": {
+      "message": "Setup failed for entry {config_title} with invalid data, check at the [stationboard]({stationboard_url}) if your station names are valid.\n{error}"
     },
-    "deprecated_yaml_import_issue_bad_config": {
-      "title": "The swiss public transport YAML configuration import request failed due to bad config",
-      "description": "Configuring swiss public transport using YAML is being removed but there was bad config imported in your YAML configuration.\n\nCheck the [stationboard]({stationboard_url}) for valid stations."
+    "request_timeout": {
+      "message": "Timeout while connecting for entry {config_title}.\n{error}"
     },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The swiss public transport YAML configuration import failed with unknown error raised by python-opendata-transport",
-      "description": "Configuring swiss public transport using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
+    "cannot_connect": {
+      "message": "Cannot connect to server.\n{error}"
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "config_entry_not_found": {
+      "message": "Swiss public transport integration instance \"{target}\" not found."
     }
   }
 }

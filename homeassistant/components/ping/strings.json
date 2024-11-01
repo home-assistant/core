@@ -1,4 +1,20 @@
 {
+  "entity": {
+    "sensor": {
+      "round_trip_time_avg": {
+        "name": "Round Trip Time Average"
+      },
+      "round_trip_time_max": {
+        "name": "Round Trip Time Maximum"
+      },
+      "round_trip_time_mdev": {
+        "name": "Round Trip Time Mean Deviation"
+      },
+      "round_trip_time_min": {
+        "name": "Round Trip Time Minimum"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {

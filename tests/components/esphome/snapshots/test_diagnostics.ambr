@@ -10,6 +10,8 @@
         'port': 6053,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'esphome',
       'entry_id': '08d821dc059cf4f645cb024d32c8e708',
       'minor_version': 1,

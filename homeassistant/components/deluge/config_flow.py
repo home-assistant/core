@@ -1,4 +1,5 @@
 """Config flow for the Deluge integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,15 +9,8 @@ from typing import Any
 from deluge_client.client import DelugeRPCClient
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SOURCE,
-    CONF_USERNAME,
-)
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -33,7 +27,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -44,12 +38,10 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_HOST] == entry.data[CONF_HOST]
                         and user_input[CONF_PORT] == entry.data[CONF_PORT]
                     ):
-                        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH:
-                            self.hass.config_entries.async_update_entry(
+                        if self.source == SOURCE_REAUTH:
+                            return self.async_update_reload_and_abort(
                                 entry, data=user_input
                             )
-                            await self.hass.config_entries.async_reload(entry.entry_id)
-                            return self.async_abort(reason="reauth_successful")
                         return self.async_abort(reason="already_configured")
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
@@ -75,7 +67,9 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_user()
 
@@ -92,7 +86,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(api.connect)
         except (ConnectionRefusedError, TimeoutError, SSLError):
             return "cannot_connect"
-        except Exception as ex:  # pylint:disable=broad-except
+        except Exception as ex:  # noqa: BLE001
             if type(ex).__name__ == "BadLoginError":
                 return "invalid_auth"
             return "unknown"

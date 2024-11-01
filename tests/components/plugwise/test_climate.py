@@ -3,13 +3,19 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from plugwise.exceptions import PlugwiseError
 import pytest
 
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
+    HVACMode,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.dt import utcnow
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -84,11 +90,13 @@ async def test_adam_2_climate_entity_attributes(
 
 
 async def test_adam_3_climate_entity_attributes(
-    hass: HomeAssistant, mock_smile_adam_3: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_adam_3: MagicMock,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test creation of adam climate device environment."""
     state = hass.states.get("climate.anna")
-
     assert state
     assert state.state == HVACMode.COOL
     assert state.attributes["hvac_action"] == "cooling"
@@ -98,9 +106,9 @@ async def test_adam_3_climate_entity_attributes(
         HVACMode.COOL,
     ]
     data = mock_smile_adam_3.async_update.return_value
-    data.devices["da224107914542988a88561b4452b0f6"][
-        "select_regulation_mode"
-    ] = "heating"
+    data.devices["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = (
+        "heating"
+    )
     data.devices["ad4838d7d35c4d6ea796ee12ae5aedf8"]["control_state"] = "heating"
     data.devices["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
         "cooling_state"
@@ -109,21 +117,24 @@ async def test_adam_3_climate_entity_attributes(
         "heating_state"
     ] = True
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
-        async_fire_time_changed(hass, utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
-    state = hass.states.get("climate.anna")
-    assert state
-    assert state.state == HVACMode.HEAT
-    assert state.attributes["hvac_action"] == "heating"
-    assert state.attributes["hvac_modes"] == [
-        HVACMode.OFF,
-        HVACMode.AUTO,
-        HVACMode.HEAT,
-    ]
+
+        state = hass.states.get("climate.anna")
+        assert state
+        assert state.state == HVACMode.HEAT
+        assert state.attributes["hvac_action"] == "heating"
+        assert state.attributes["hvac_modes"] == [
+            HVACMode.OFF,
+            HVACMode.AUTO,
+            HVACMode.HEAT,
+        ]
+
     data = mock_smile_adam_3.async_update.return_value
-    data.devices["da224107914542988a88561b4452b0f6"][
-        "select_regulation_mode"
-    ] = "cooling"
+    data.devices["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = (
+        "cooling"
+    )
     data.devices["ad4838d7d35c4d6ea796ee12ae5aedf8"]["control_state"] = "cooling"
     data.devices["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
         "cooling_state"
@@ -132,29 +143,31 @@ async def test_adam_3_climate_entity_attributes(
         "heating_state"
     ] = False
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
-        async_fire_time_changed(hass, utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
-    state = hass.states.get("climate.anna")
-    assert state
-    assert state.state == HVACMode.COOL
-    assert state.attributes["hvac_action"] == "cooling"
-    assert state.attributes["hvac_modes"] == [
-        HVACMode.OFF,
-        HVACMode.AUTO,
-        HVACMode.COOL,
-    ]
+
+        state = hass.states.get("climate.anna")
+        assert state
+        assert state.state == HVACMode.COOL
+        assert state.attributes["hvac_action"] == "cooling"
+        assert state.attributes["hvac_modes"] == [
+            HVACMode.OFF,
+            HVACMode.AUTO,
+            HVACMode.COOL,
+        ]
 
 
 async def test_adam_climate_adjust_negative_testing(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test exceptions of climate entities."""
+    """Test PlugwiseError exception."""
     mock_smile_adam.set_temperature.side_effect = PlugwiseError
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "climate",
-            "set_temperature",
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
             {"entity_id": "climate.zone_lisa_wk", "temperature": 25},
             blocking=True,
         )
@@ -165,8 +178,8 @@ async def test_adam_climate_entity_climate_changes(
 ) -> None:
     """Test handling of user requests in adam climate device environment."""
     await hass.services.async_call(
-        "climate",
-        "set_temperature",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
         {"entity_id": "climate.zone_lisa_wk", "temperature": 25},
         blocking=True,
     )
@@ -176,8 +189,8 @@ async def test_adam_climate_entity_climate_changes(
     )
 
     await hass.services.async_call(
-        "climate",
-        "set_temperature",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.zone_lisa_wk",
             "hvac_mode": "heat",
@@ -190,17 +203,17 @@ async def test_adam_climate_entity_climate_changes(
         "c50f167537524366a5af7aa3942feb1e", {"setpoint": 25.0}
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            "climate",
-            "set_temperature",
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
             {"entity_id": "climate.zone_lisa_wk", "temperature": 150},
             blocking=True,
         )
 
     await hass.services.async_call(
-        "climate",
-        "set_preset_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
         {"entity_id": "climate.zone_lisa_wk", "preset_mode": "away"},
         blocking=True,
     )
@@ -210,8 +223,8 @@ async def test_adam_climate_entity_climate_changes(
     )
 
     await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.zone_lisa_wk", "hvac_mode": "heat"},
         blocking=True,
     )
@@ -222,8 +235,8 @@ async def test_adam_climate_entity_climate_changes(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "climate",
-            "set_hvac_mode",
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
             {
                 "entity_id": "climate.zone_thermostat_jessie",
                 "hvac_mode": "dry",
@@ -242,8 +255,8 @@ async def test_adam_climate_off_mode_change(
     assert state
     assert state.state == HVACMode.OFF
     await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
         {
             "entity_id": "climate.slaapkamer",
             "hvac_mode": "heat",
@@ -258,8 +271,8 @@ async def test_adam_climate_off_mode_change(
     assert state
     assert state.state == HVACMode.HEAT
     await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
         {
             "entity_id": "climate.kinderkamer",
             "hvac_mode": "off",
@@ -274,8 +287,8 @@ async def test_adam_climate_off_mode_change(
     assert state
     assert state.state == HVACMode.HEAT
     await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
         {
             "entity_id": "climate.logeerkamer",
             "hvac_mode": "heat",
@@ -350,11 +363,12 @@ async def test_anna_climate_entity_climate_changes(
     hass: HomeAssistant,
     mock_smile_anna: MagicMock,
     init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling of user requests in anna climate device environment."""
     await hass.services.async_call(
-        "climate",
-        "set_temperature",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
         {"entity_id": "climate.anna", "target_temp_high": 30, "target_temp_low": 20},
         blocking=True,
     )
@@ -365,8 +379,8 @@ async def test_anna_climate_entity_climate_changes(
     )
 
     await hass.services.async_call(
-        "climate",
-        "set_preset_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
         {"entity_id": "climate.anna", "preset_mode": "away"},
         blocking=True,
     )
@@ -376,8 +390,8 @@ async def test_anna_climate_entity_climate_changes(
     )
 
     await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.anna", "hvac_mode": "auto"},
         blocking=True,
     )
@@ -385,8 +399,8 @@ async def test_anna_climate_entity_climate_changes(
     assert mock_smile_anna.set_schedule_state.call_count == 0
 
     await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.anna", "hvac_mode": "heat_cool"},
         blocking=True,
     )
@@ -394,11 +408,14 @@ async def test_anna_climate_entity_climate_changes(
     mock_smile_anna.set_schedule_state.assert_called_with(
         "c784ee9fdab44e1395b8dee7d7a497d5", "off"
     )
+
     data = mock_smile_anna.async_update.return_value
-    data.devices["3cb70739631c4d17a86b8b12e8a5161b"]["available_schedules"] = ["None"]
+    data.devices["3cb70739631c4d17a86b8b12e8a5161b"].pop("available_schedules")
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
-        async_fire_time_changed(hass, utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
+
         state = hass.states.get("climate.anna")
         assert state.state == HVACMode.HEAT
         assert state.attributes["hvac_modes"] == [HVACMode.HEAT_COOL]

@@ -1,4 +1,5 @@
 """Constants for the LCN component."""
+
 from itertools import product
 
 from homeassistant.const import Platform
@@ -17,12 +18,14 @@ DOMAIN = "lcn"
 DATA_LCN = "lcn"
 DEFAULT_NAME = "pchk"
 
+ADD_ENTITIES_CALLBACKS = "add_entities_callbacks"
 CONNECTION = "connection"
 CONF_HARDWARE_SERIAL = "hardware_serial"
 CONF_SOFTWARE_SERIAL = "software_serial"
 CONF_HARDWARE_TYPE = "hardware_type"
 CONF_DOMAIN_DATA = "domain_data"
 
+CONF_ACKNOWLEDGE = "acknowledge"
 CONF_CONNECTIONS = "connections"
 CONF_SK_NUM_TRIES = "sk_num_tries"
 CONF_OUTPUT = "output"
@@ -39,6 +42,7 @@ CONF_LED = "led"
 CONF_KEYS = "keys"
 CONF_TIME = "time"
 CONF_TIME_UNIT = "time_unit"
+CONF_LOCK_TIME = "lock_time"
 CONF_TABLE = "table"
 CONF_ROW = "row"
 CONF_TEXT = "text"

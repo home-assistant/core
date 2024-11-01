@@ -1,4 +1,5 @@
 """Constants for Nuki."""
+
 DOMAIN = "nuki"
 
 # Attributes

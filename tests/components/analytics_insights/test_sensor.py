@@ -1,8 +1,10 @@
 """Test the Home Assistant analytics sensor module."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsConnectionError,
     HomeassistantAnalyticsNotModifiedError,
@@ -15,9 +17,10 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -31,16 +34,9 @@ async def test_all_entities(
         [Platform.SENSOR],
     ):
         await setup_integration(hass, mock_config_entry)
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
-
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            )
-            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
 
 
 async def test_connection_error(

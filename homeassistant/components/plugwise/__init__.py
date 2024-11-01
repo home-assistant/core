@@ -1,4 +1,5 @@
 """Plugwise platform for Home Assistant Core."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,16 +12,18 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseDataUpdateCoordinator
 
+type PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:
     """Set up Plugwise components from a config entry."""
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
-    coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
+    coordinator = PlugwiseDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     migrate_sensor_entities(hass, coordinator)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -28,28 +31,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         identifiers={(DOMAIN, str(coordinator.api.gateway_id))},
         manufacturer="Plugwise",
         model=coordinator.api.smile_model,
+        model_id=coordinator.api.smile_model_id,
         name=coordinator.api.smile_name,
-        sw_version=coordinator.api.smile_version[0],
-    )
+        sw_version=str(coordinator.api.smile_version),
+    )  # required for adding the entity-less P1 Gateway
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:
     """Unload the Plugwise components."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    - Migrates unique ID from old relay switches to the new unique ID
+    - Migrates old unique ID's from old binary_sensors and switches to the new unique ID's
     """
+    if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
+        "-slave_boiler_state"
+    ):
+        return {
+            "new_unique_id": entry.unique_id.replace(
+                "-slave_boiler_state", "-secondary_boiler_state"
+            )
+        }
+    if entry.domain == Platform.SENSOR and entry.unique_id.endswith(
+        "-relative_humidity"
+    ):
+        return {
+            "new_unique_id": entry.unique_id.replace("-relative_humidity", "-humidity")
+        }
     if entry.domain == Platform.SWITCH and entry.unique_id.endswith("-plug"):
         return {"new_unique_id": entry.unique_id.replace("-plug", "-relay")}
 

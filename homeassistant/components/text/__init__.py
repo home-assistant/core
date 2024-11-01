@@ -1,4 +1,5 @@
 """Component to allow setting text as platforms."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -6,22 +7,20 @@ from datetime import timedelta
 from enum import StrEnum
 import logging
 import re
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_MAX,
@@ -33,25 +32,23 @@ from .const import (
     SERVICE_SET_VALUE,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+_LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
-
+DATA_COMPONENT: HassKey[EntityComponent[TextEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-_LOGGER = logging.getLogger(__name__)
 
 __all__ = ["DOMAIN", "TextEntity", "TextEntityDescription", "TextMode"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Text entities."""
-    component = hass.data[DOMAIN] = EntityComponent[TextEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[TextEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -86,14 +83,12 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TextEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TextEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class TextMode(StrEnum):
@@ -236,7 +231,7 @@ class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def set_value(self, value: str) -> None:
         """Change the value."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: str) -> None:
         """Change the value."""

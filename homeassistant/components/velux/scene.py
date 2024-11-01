@@ -1,4 +1,5 @@
 """Support for VELUX scenes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 1
 

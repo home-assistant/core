@@ -1,4 +1,5 @@
 """The lock tests for the august platform."""
+
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import HomeAssistant
 
@@ -38,7 +39,7 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("climate.kitchen")
@@ -71,5 +72,5 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )

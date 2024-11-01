@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_get_all_packages
+  dict({
+    'packages': list([
+      dict({
+        'destination_country': 'Belgium',
+        'friendly_name': 'friendly name 3',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'origin_country': 'Belgium',
+        'package_type': 'Registered Parcel',
+        'status': 'Expired',
+        'timestamp': '2020-08-10T10:32:00+00:00',
+        'tracking_info_language': 'Unknown',
+        'tracking_number': '123',
+      }),
+      dict({
+        'destination_country': 'Belgium',
+        'friendly_name': 'friendly name 1',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'origin_country': 'Belgium',
+        'package_type': 'Registered Parcel',
+        'status': 'In Transit',
+        'timestamp': '2020-08-10T10:32:00+00:00',
+        'tracking_info_language': 'Unknown',
+        'tracking_number': '456',
+      }),
+      dict({
+        'destination_country': 'Belgium',
+        'friendly_name': 'friendly name 2',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'origin_country': 'Belgium',
+        'package_type': 'Registered Parcel',
+        'status': 'Delivered',
+        'timestamp': '2020-08-10T10:32:00+00:00',
+        'tracking_info_language': 'Unknown',
+        'tracking_number': '789',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_packages_from_list
+  dict({
+    'packages': list([
+      dict({
+        'destination_country': 'Belgium',
+        'friendly_name': 'friendly name 1',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'origin_country': 'Belgium',
+        'package_type': 'Registered Parcel',
+        'status': 'In Transit',
+        'timestamp': '2020-08-10T10:32:00+00:00',
+        'tracking_info_language': 'Unknown',
+        'tracking_number': '456',
+      }),
+      dict({
+        'destination_country': 'Belgium',
+        'friendly_name': 'friendly name 2',
+        'info_text': 'info text 1',
+        'location': 'location 1',
+        'origin_country': 'Belgium',
+        'package_type': 'Registered Parcel',
+        'status': 'Delivered',
+        'timestamp': '2020-08-10T10:32:00+00:00',
+        'tracking_info_language': 'Unknown',
+        'tracking_number': '789',
+      }),
+    ]),
+  })
+# ---

@@ -1,0 +1,46 @@
+{
+  "entity": {
+    "button": {
+      "abort_downloads": {
+        "default": "mdi:stop"
+      },
+      "restart_failed": {
+        "default": "mdi:cached"
+      },
+      "delete_finished": {
+        "default": "mdi:trash-can"
+      },
+      "restart": {
+        "default": "mdi:restart"
+      }
+    },
+    "sensor": {
+      "speed": {
+        "default": "mdi:speedometer"
+      },
+      "active": {
+        "default": "mdi:cloud-download"
+      },
+      "queue": {
+        "default": "mdi:cloud-clock"
+      },
+      "total": {
+        "default": "mdi:cloud-alert"
+      }
+    },
+    "switch": {
+      "download": {
+        "default": "mdi:play",
+        "state": {
+          "off": "mdi:pause"
+        }
+      },
+      "reconnect": {
+        "default": "mdi:restart",
+        "state": {
+          "off": "mdi:restart-off"
+        }
+      }
+    }
+  }
+}

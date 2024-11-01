@@ -17,16 +17,16 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     """Validate that setup entry also configure the client."""
     client = ClientMock()
 
-    id = str(uuid4())
+    device_id = str(uuid4())
     config_entry = MockConfigEntry(
         domain=TWINKLY_DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_ID: id,
+            CONF_ID: device_id,
             CONF_NAME: TEST_NAME_ORIGINAL,
             CONF_MODEL: TEST_MODEL,
         },
-        entry_id=id,
+        entry_id=device_id,
     )
 
     config_entry.add_to_hass(hass)
@@ -34,11 +34,11 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.twinkly.Twinkly", return_value=client):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_not_ready(hass: HomeAssistant) -> None:

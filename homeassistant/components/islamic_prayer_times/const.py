@@ -1,4 +1,5 @@
 """Constants for the Islamic Prayer component."""
+
 from typing import Final
 
 DOMAIN: Final = "islamic_prayer_times"
@@ -22,6 +23,14 @@ CALC_METHODS: Final = [
     "turkey",
     "russia",
     "moonsighting",
+    "dubai",
+    "jakim",
+    "tunisia",
+    "algeria",
+    "kemenag",
+    "morocco",
+    "portugal",
+    "jordan",
     "custom",
 ]
 DEFAULT_CALC_METHOD: Final = "isna"

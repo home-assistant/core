@@ -1,4 +1,5 @@
 """Support for Genius Hub sensor devices."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,10 +9,10 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, GeniusDevice, GeniusEntity
+from . import GeniusHubConfigEntry
+from .entity import GeniusDevice, GeniusEntity
 
 GH_STATE_ATTR = "batteryLevel"
 
@@ -22,17 +23,14 @@ GH_LEVEL_MAPPING = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: GeniusHubConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub sensor entities."""
-    if discovery_info is None:
-        return
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
     entities: list[GeniusBattery | GeniusIssue] = [
         GeniusBattery(broker, d, GH_STATE_ATTR)
@@ -41,7 +39,7 @@ async def async_setup_platform(
     ]
     entities.extend([GeniusIssue(broker, i) for i in list(GH_LEVEL_MAPPING)])
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class GeniusBattery(GeniusDevice, SensorEntity):
@@ -84,7 +82,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
         return icon
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         level = self._device.data["state"][self._state_attr]
         return level if level != 255 else 0

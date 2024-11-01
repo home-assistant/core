@@ -1,4 +1,5 @@
 """CalDAV todo platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,14 +18,13 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import CalDavConfigEntry
 from .api import async_get_calendars, get_attr_value
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,12 +45,11 @@ TODO_STATUS_MAP_INV: dict[TodoItemStatus, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CalDavConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
-    client: caldav.DAVClient = hass.data[DOMAIN][entry.entry_id]
-    calendars = await async_get_calendars(hass, client, SUPPORTED_COMPONENT)
+    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavTodoListEntity(

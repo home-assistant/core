@@ -1,7 +1,9 @@
 """The tests for the Home Assistant API component."""
+
 import asyncio
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ServerDisconnectedError, web
@@ -11,9 +13,6 @@ import voluptuous as vol
 
 from homeassistant import const
 from homeassistant.auth.models import Credentials
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
@@ -305,7 +304,7 @@ async def test_api_get_services(
     for serv_domain in data:
         local = local_services.pop(serv_domain["domain"])
 
-        assert serv_domain["services"] == local
+        assert serv_domain["services"].keys() == local.keys()
 
 
 async def test_api_call_service_no_data(
@@ -355,6 +354,67 @@ async def test_api_call_service_with_data(
     assert state["entity_id"] == "test.data"
     assert state["state"] == "on"
     assert state["attributes"] == {"data": 1}
+
+
+SERVICE_DICT = {"changed_states": [], "service_response": {"foo": "bar"}}
+RESP_REQUIRED = {
+    "message": (
+        "Service call requires responses but caller did not ask for "
+        "responses. Add ?return_response to query parameters."
+    )
+}
+RESP_UNSUPPORTED = {
+    "message": "Service does not support responses. Remove return_response from request."
+}
+
+
+@pytest.mark.parametrize(
+    (
+        "supports_response",
+        "requested_response",
+        "expected_number_of_service_calls",
+        "expected_status",
+        "expected_response",
+    ),
+    [
+        (ha.SupportsResponse.ONLY, True, 1, HTTPStatus.OK, SERVICE_DICT),
+        (ha.SupportsResponse.ONLY, False, 0, HTTPStatus.BAD_REQUEST, RESP_REQUIRED),
+        (ha.SupportsResponse.OPTIONAL, True, 1, HTTPStatus.OK, SERVICE_DICT),
+        (ha.SupportsResponse.OPTIONAL, False, 1, HTTPStatus.OK, []),
+        (ha.SupportsResponse.NONE, True, 0, HTTPStatus.BAD_REQUEST, RESP_UNSUPPORTED),
+        (ha.SupportsResponse.NONE, False, 1, HTTPStatus.OK, []),
+    ],
+)
+async def test_api_call_service_returns_response_requested_response(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    supports_response: ha.SupportsResponse,
+    requested_response: bool,
+    expected_number_of_service_calls: int,
+    expected_status: int,
+    expected_response: Any,
+) -> None:
+    """Test if the API allows us to call a service."""
+    test_value = []
+
+    @ha.callback
+    def listener(service_call):
+        """Record that our service got called."""
+        test_value.append(1)
+        return {"foo": "bar"}
+
+    hass.services.async_register(
+        "test_domain", "test_service", listener, supports_response=supports_response
+    )
+
+    resp = await mock_api_client.post(
+        "/api/services/test_domain/test_service"
+        + ("?return_response" if requested_response else "")
+    )
+    assert resp.status == expected_status
+    await hass.async_block_till_done()
+    assert len(test_value) == expected_number_of_service_calls
+    assert await resp.json() == expected_response
 
 
 async def test_api_call_service_client_closed(
@@ -730,22 +790,6 @@ async def test_rendering_template_admin(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_rendering_template_legacy_user(
-    hass: HomeAssistant,
-    mock_api_client: TestClient,
-    aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
-) -> None:
-    """Test rendering a template with legacy API password."""
-    hass.states.async_set("sensor.temperature", 10)
-    client = await aiohttp_client(hass.http.app)
-    resp = await client.post(
-        const.URL_API_TEMPLATE,
-        json={"template": "{{ states.sensor.temperature.state }}"},
-    )
-    assert resp.status == HTTPStatus.UNAUTHORIZED
-
-
 async def test_api_call_service_not_found(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -788,4 +832,43 @@ async def test_api_core_state(hass: HomeAssistant, mock_api_client: TestClient) 
     resp = await mock_api_client.get("/api/core/state")
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
-    assert json["state"] == "RUNNING"
+    assert json == {
+        "state": "RUNNING",
+        "recorder_state": {"migration_in_progress": False, "migration_is_live": False},
+    }
+
+
+@pytest.mark.parametrize(
+    ("migration_in_progress", "migration_is_live"),
+    [
+        (False, False),
+        (False, True),
+        (True, False),
+        (True, True),
+    ],
+)
+async def test_api_core_state_recorder_migrating(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    migration_in_progress: bool,
+    migration_is_live: bool,
+) -> None:
+    """Test getting core status."""
+    with (
+        patch(
+            "homeassistant.helpers.recorder.async_migration_in_progress",
+            return_value=migration_in_progress,
+        ),
+        patch(
+            "homeassistant.helpers.recorder.async_migration_is_live",
+            return_value=migration_is_live,
+        ),
+    ):
+        resp = await mock_api_client.get("/api/core/state")
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    expected_recorder_state = {
+        "migration_in_progress": migration_in_progress,
+        "migration_is_live": migration_is_live,
+    }
+    assert json == {"state": "RUNNING", "recorder_state": expected_recorder_state}

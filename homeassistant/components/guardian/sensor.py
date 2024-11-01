@@ -1,4 +1,5 @@
 """Sensors for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,12 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import (
-    GuardianData,
-    PairedSensorEntity,
-    ValveControllerEntity,
-    ValveControllerEntityDescription,
-)
+from . import GuardianData
 from .const import (
     API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
@@ -37,6 +33,11 @@ from .const import (
     CONF_UID,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
+)
+from .entity import (
+    PairedSensorEntity,
+    ValveControllerEntity,
+    ValveControllerEntityDescription,
 )
 
 SENSOR_KIND_AVG_CURRENT = "average_current"
@@ -119,7 +120,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
         key=SENSOR_KIND_UPTIME,
         translation_key="uptime",
-        icon="mdi:timer",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         api_category=API_SYSTEM_DIAGNOSTICS,
@@ -128,7 +128,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
         key=SENSOR_KIND_TRAVEL_COUNT,
         translation_key="travel_count",
-        icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="revolutions",
         api_category=API_VALVE_STATUS,

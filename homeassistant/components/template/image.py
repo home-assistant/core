@@ -1,4 +1,5 @@
 """Support for image which integrates with other components."""
+
 from __future__ import annotations
 
 import logging
@@ -7,10 +8,18 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
-from homeassistant.const import CONF_UNIQUE_ID, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -32,6 +41,16 @@ IMAGE_SCHEMA = vol.Schema(
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(make_template_entity_common_schema(DEFAULT_NAME).schema)
+
+
+IMAGE_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.template,
+        vol.Required(CONF_URL): cv.template,
+        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
+)
 
 
 async def _async_create_entities(
@@ -74,6 +93,20 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = IMAGE_CONFIG_SCHEMA(_options)
+    async_add_entities(
+        [StateImageEntity(hass, validated_config, config_entry.entry_id)]
+    )
+
+
 class StateImageEntity(TemplateEntity, ImageEntity):
     """Representation of a template image."""
 
@@ -90,6 +123,10 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            hass,
+            config.get(CONF_DEVICE_ID),
+        )
 
     @property
     def entity_picture(self) -> str | None:

@@ -1,4 +1,5 @@
 """Config flow for Discovergy integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,10 +11,13 @@ from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -48,16 +52,16 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discovergy."""
 
     VERSION = 1
 
-    _existing_entry: ConfigEntry | None = None
+    _existing_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -67,14 +71,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_save(user_input)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])
-        return await self._validate_and_save(entry_data, step_id="reauth")
+        self._existing_entry = self._get_reauth_entry()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reauth step."""
+        return await self._validate_and_save(user_input, step_id="reauth_confirm")
 
     async def _validate_and_save(
         self, user_input: Mapping[str, Any] | None = None, step_id: str = "user"
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate user input and create config entry."""
         errors = {}
 
@@ -90,11 +102,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
-                if self._existing_entry:
+                if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         entry=self._existing_entry,
                         data={
@@ -115,7 +127,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 CONFIG_SCHEMA,
-                self._existing_entry.data if self._existing_entry else user_input,
+                self._existing_entry.data
+                if self.source == SOURCE_REAUTH
+                else user_input,
             ),
             errors=errors,
         )

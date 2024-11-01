@@ -52,6 +52,9 @@
           "effect_show_list": "Hyperion effects to show"
         }
       }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -79,6 +82,11 @@
       },
       "usb_capture": {
         "name": "Component USB capture"
+      }
+    },
+    "sensor": {
+      "visible_priority": {
+        "name": "Visible priority"
       }
     }
   }

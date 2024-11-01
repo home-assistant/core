@@ -17,16 +17,18 @@
     'domain': 'select',
     'entity_category': None,
     'entity_id': 'select.myhome',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'MYHOME',
+    'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -48,6 +50,7 @@
     'context': <ANY>,
     'entity_id': 'select.myhome',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Default',
   })

@@ -1,4 +1,5 @@
 """Tests for the Backup integration."""
+
 from typing import Any
 from unittest.mock import patch
 
@@ -15,14 +16,18 @@ async def test_setup_with_hassio(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setup of the integration with hassio enabled."""
-    assert not await setup_backup_integration(hass=hass, with_hassio=True)
+    assert await setup_backup_integration(
+        hass=hass,
+        with_hassio=True,
+        configuration={DOMAIN: {}},
+    )
     assert (
         "The backup integration is not supported on this installation method, please"
         " remove it from your configuration"
     ) in caplog.text
 
 
-@pytest.mark.parametrize("service_data", (None, {}, {"password": "abc123"}))
+@pytest.mark.parametrize("service_data", [None, {}, {"password": "abc123"}])
 async def test_create_service(
     hass: HomeAssistant,
     service_data: dict[str, Any] | None,
@@ -31,7 +36,7 @@ async def test_create_service(
     await setup_backup_integration(hass)
 
     with patch(
-        "homeassistant.components.backup.websocket.BackupManager.generate_backup",
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
     ) as generate_backup:
         await hass.services.async_call(
             DOMAIN,

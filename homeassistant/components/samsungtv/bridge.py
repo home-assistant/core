@@ -1,4 +1,5 @@
 """samsungctl and samsungtvws bridge classes."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -7,7 +8,7 @@ from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable, Iterable, Mapping
 import contextlib
 from datetime import datetime, timedelta
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -83,9 +84,6 @@ ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400", "H6410"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
-
-_RemoteT = TypeVar("_RemoteT", SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote)
-_CommandT = TypeVar("_CommandT", SamsungTVCommand, SamsungTVEncryptedCommand)
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -167,6 +165,7 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.token: str | None = None
         self.session_id: str | None = None
+        self.auth_failed: bool = False
         self._reauth_callback: CALLBACK_TYPE | None = None
         self._update_config_entry: Callable[[Mapping[str, Any]], None] | None = None
         self._app_list_callback: Callable[[dict[str, str]], None] | None = None
@@ -322,9 +321,14 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
-    async def async_device_info(self) -> None:
+    async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this device."""
         return None
+
+    def _notify_reauth_callback(self) -> None:
+        """Notify access denied callback."""
+        if self._reauth_callback is not None:
+            self.hass.loop.call_soon_threadsafe(self._reauth_callback)
 
     def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
@@ -337,6 +341,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # A removed auth will lead to socket timeout because waiting
             # for auth popup is just an open socket
             except AccessDenied:
+                self.auth_failed = True
                 self._notify_reauth_callback()
                 raise
             except (ConnectionClosed, OSError):
@@ -392,7 +397,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Could not establish connection")
 
 
-class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
+class SamsungTVWSBaseBridge[
+    _RemoteT: (SamsungTVWSAsyncRemote, SamsungTVEncryptedWSAsyncRemote),
+    _CommandT: (SamsungTVCommand, SamsungTVEncryptedCommand),
+](SamsungTVBridge):
     """The Bridge for WebSocket TVs (v1/v2)."""
 
     def __init__(
@@ -528,7 +536,7 @@ class SamsungTVWSBridge(
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
             except ConnectionClosedError as err:
-                LOGGER.info(
+                LOGGER.warning(
                     (
                         "Working but unsupported config: %s, error: '%s'; this may be"
                         " an indication that access to the TV has been denied. Please"
@@ -601,15 +609,16 @@ class SamsungTVWSBridge(
             try:
                 await self._remote.start_listening(self._remote_event)
             except UnauthorizedError as err:
-                LOGGER.info(
+                LOGGER.warning(
                     "Failed to get remote for %s, re-authentication required: %s",
                     self.host,
                     repr(err),
                 )
+                self.auth_failed = True
                 self._notify_reauth_callback()
                 self._remote = None
             except ConnectionClosedError as err:
-                LOGGER.info(
+                LOGGER.warning(
                     "Failed to get remote for %s: %s",
                     self.host,
                     repr(err),
@@ -634,7 +643,7 @@ class SamsungTVWSBridge(
                     # Initialise device info on first connect
                     await self.async_device_info()
                 if self.token != self._remote.token:
-                    LOGGER.info(
+                    LOGGER.warning(
                         "SamsungTVWSBridge has provided a new token %s",
                         self._remote.token,
                     )

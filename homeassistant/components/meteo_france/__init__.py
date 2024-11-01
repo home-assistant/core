@@ -1,4 +1,5 @@
 """Support for Meteo-France weather data."""
+
 from datetime import timedelta
 import logging
 
@@ -53,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_update_data_alert() -> CurrentPhenomenons:
         """Fetch data from API endpoint."""
+        assert isinstance(department, str)
         return await hass.async_add_executor_job(
             client.get_warning_current_phenomenoms, department, 0, True
         )
@@ -73,24 +75,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator_forecast.last_update_success:
         raise ConfigEntryNotReady
 
-    # Check if rain forecast is available.
-    if coordinator_forecast.data.position.get("rain_product_available") == 1:
-        coordinator_rain = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"Météo-France rain for city {entry.title}",
-            update_method=_async_update_data_rain,
-            update_interval=SCAN_INTERVAL_RAIN,
-        )
-        await coordinator_rain.async_refresh()
-
-        if not coordinator_rain.last_update_success:
-            raise ConfigEntryNotReady
-    else:
-        _LOGGER.warning(
-            "1 hour rain forecast not available. %s is not in covered zone",
-            entry.title,
-        )
+    # Check rain forecast.
+    coordinator_rain = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"Météo-France rain for city {entry.title}",
+        update_method=_async_update_data_rain,
+        update_interval=SCAN_INTERVAL_RAIN,
+    )
+    await coordinator_rain.async_config_entry_first_refresh()
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(

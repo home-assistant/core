@@ -1,4 +1,5 @@
 """Test the Advantage Air Cover Platform."""
+
 from unittest.mock import AsyncMock
 
 from homeassistant.components.cover import (
@@ -8,8 +9,9 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     CoverDeviceClass,
+    CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,7 +32,7 @@ async def test_ac_cover(
     entity_id = "cover.myauto_zone_y"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
     assert state.attributes.get("current_position") == 100
 
@@ -119,7 +121,7 @@ async def test_things_cover(
     thing_id = "200"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get("device_class") == CoverDeviceClass.BLIND
 
     entry = entity_registry.async_get(entity_id)

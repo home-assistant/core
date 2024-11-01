@@ -1,4 +1,5 @@
 """The Flux LED/MagicLight integration coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta

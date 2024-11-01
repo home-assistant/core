@@ -1,0 +1,220 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::url%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The URL of your Mealie instance."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please reauthenticate with Mealie.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      },
+      "reconfigure": {
+        "description": "Please reconfigure with Mealie.",
+        "data": {
+          "host": "[%key:common::config_flow::data::url%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "You have to use the same account that was used to configure the integration."
+    }
+  },
+  "entity": {
+    "calendar": {
+      "breakfast": {
+        "name": "Breakfast"
+      },
+      "dinner": {
+        "name": "Dinner"
+      },
+      "lunch": {
+        "name": "Lunch"
+      },
+      "side": {
+        "name": "Side"
+      }
+    },
+    "sensor": {
+      "recipes": {
+        "name": "Recipes"
+      },
+      "users": {
+        "name": "Users"
+      },
+      "categories": {
+        "name": "Categories"
+      },
+      "tags": {
+        "name": "Tags"
+      },
+      "tools": {
+        "name": "Tools"
+      }
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "end_date_before_start_date": {
+      "message": "End date must be after start date."
+    },
+    "connection_error": {
+      "message": "Error connecting to Mealie instance."
+    },
+    "recipe_not_found": {
+      "message": "Recipe with ID or slug `{recipe_id}` not found."
+    },
+    "could_not_import_recipe": {
+      "message": "Mealie could not import the recipe from the URL."
+    },
+    "add_item_error": {
+      "message": "An error occurred adding an item to {shopping_list_name}."
+    },
+    "update_item_error": {
+      "message": "An error occurred updating an item in {shopping_list_name}."
+    },
+    "delete_item_error": {
+      "message": "An error occurred deleting an item in {shopping_list_name}."
+    },
+    "item_not_found_error": {
+      "message": "Item {shopping_list_item} not found."
+    },
+    "version_error": {
+      "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
+    }
+  },
+  "services": {
+    "get_mealplan": {
+      "name": "Get mealplan",
+      "description": "Get mealplan from Mealie",
+      "fields": {
+        "config_entry_id": {
+          "name": "Mealie instance",
+          "description": "Select the Mealie instance to get mealplan from"
+        },
+        "start_date": {
+          "name": "Start date",
+          "description": "The startdate of the data to get (default: today)."
+        },
+        "end_date": {
+          "name": "End date",
+          "description": "The enddate of the data to get (default: today)."
+        }
+      }
+    },
+    "get_recipe": {
+      "name": "Get recipe",
+      "description": "Get recipe from Mealie",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "recipe_id": {
+          "name": "Recipe ID or slug",
+          "description": "The recipe ID or the slug of the recipe to get."
+        }
+      }
+    },
+    "import_recipe": {
+      "name": "Import recipe",
+      "description": "Import recipe from an URL",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "url": {
+          "name": "URL to the recipe",
+          "description": "The URL to the recipe to import."
+        },
+        "include_tags": {
+          "name": "Include tags",
+          "description": "Include tags from the website to the recipe."
+        }
+      }
+    },
+    "set_random_mealplan": {
+      "name": "Set random mealplan",
+      "description": "Set a random mealplan for a specific date",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "date": {
+          "name": "Date",
+          "description": "The date to set the mealplan for."
+        },
+        "entry_type": {
+          "name": "Entry type",
+          "description": "The type of dish to randomize."
+        }
+      }
+    },
+    "set_mealplan": {
+      "name": "Set a mealplan",
+      "description": "Set a mealplan for a specific date",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "date": {
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::date::name%]",
+          "description": "[%key:component::mealie::services::set_random_mealplan::fields::date::description%]"
+        },
+        "entry_type": {
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::entry_type::name%]",
+          "description": "The type of dish to set the recipe to."
+        },
+        "recipe_id": {
+          "name": "[%key:component::mealie::services::get_recipe::fields::recipe_id::name%]",
+          "description": "[%key:component::mealie::services::get_recipe::fields::recipe_id::description%]"
+        },
+        "note_title": {
+          "name": "Meal note title",
+          "description": "Meal note title for when planning without recipe."
+        },
+        "note_text": {
+          "name": "Note text",
+          "description": "Meal note text for when planning without recipe."
+        }
+      }
+    }
+  },
+  "selector": {
+    "mealplan_entry_type": {
+      "options": {
+        "breakfast": "[%key:component::mealie::entity::calendar::breakfast::name%]",
+        "lunch": "[%key:component::mealie::entity::calendar::lunch::name%]",
+        "dinner": "[%key:component::mealie::entity::calendar::dinner::name%]",
+        "side": "[%key:component::mealie::entity::calendar::side::name%]"
+      }
+    }
+  }
+}

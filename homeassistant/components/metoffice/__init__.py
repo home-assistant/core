@@ -1,4 +1,5 @@
 """The Met Office integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -93,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         fetch_site, connection, latitude, longitude
     )
     if site is None:
-        raise ConfigEntryNotReady()
+        raise ConfigEntryNotReady
 
     async def async_update_3hourly() -> MetOfficeData:
         return await hass.async_add_executor_job(
@@ -108,6 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"MetOffice Hourly Coordinator for {site_name}",
         update_method=async_update_3hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
@@ -116,6 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"MetOffice Daily Coordinator for {site_name}",
         update_method=async_update_daily,
         update_interval=DEFAULT_SCAN_INTERVAL,

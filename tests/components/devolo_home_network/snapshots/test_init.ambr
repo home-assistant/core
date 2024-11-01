@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_entry
+# name: test_setup_entry[mock_device]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -21,10 +21,46 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'devolo',
     'model': 'dLAN pro 1200+ WiFi ac',
+    'model_id': '2730',
     'name': 'Mock Title',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '1234567890',
+    'suggested_area': None,
+    'sw_version': '5.6.1',
+    'via_device_id': None,
+  })
+# ---
+# name: test_setup_entry[mock_repeater_device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://192.0.2.1',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'devolo_home_network',
+        '1234567890',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'devolo',
+    'model': 'dLAN pro 1200+ WiFi ac',
+    'model_id': '2730',
+    'name': 'Mock Title',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': '1234567890',
     'suggested_area': None,
     'sw_version': '5.6.1',

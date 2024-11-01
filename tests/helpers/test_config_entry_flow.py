@@ -1,19 +1,20 @@
 """Tests for the Config Entry Flow helper."""
+
 from collections.abc import Generator
 from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 
 @pytest.fixture
-def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool], None, None]:
+def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool]]:
     """Register a handler."""
     handler_conf = {"discovered": False}
 
@@ -29,7 +30,7 @@ def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool], None,
 
 
 @pytest.fixture
-def webhook_flow_conf(hass: HomeAssistant) -> Generator[None, None, None]:
+def webhook_flow_conf(hass: HomeAssistant) -> Generator[None]:
     """Register a handler."""
     with patch.dict(config_entries.HANDLERS):
         config_entry_flow.register_webhook_flow("test_single", "Test Single", {}, False)
@@ -375,18 +376,23 @@ async def test_webhook_create_cloudhook(
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
 
-    with patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
-        return_value={"cloudhook_url": "https://example.com"},
-    ) as mock_create, patch(
-        "hass_nabucasa.Cloud.subscription_expired",
-        new_callable=PropertyMock(return_value=False),
-    ), patch(
-        "hass_nabucasa.Cloud.is_logged_in",
-        new_callable=PropertyMock(return_value=True),
-    ), patch(
-        "hass_nabucasa.iot_base.BaseIoT.connected",
-        new_callable=PropertyMock(return_value=True),
+    with (
+        patch(
+            "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+            return_value={"cloudhook_url": "https://example.com"},
+        ) as mock_create,
+        patch(
+            "hass_nabucasa.Cloud.subscription_expired",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch(
+            "hass_nabucasa.Cloud.is_logged_in",
+            new_callable=PropertyMock(return_value=True),
+        ),
+        patch(
+            "hass_nabucasa.iot_base.BaseIoT.connected",
+            new_callable=PropertyMock(return_value=True),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -403,6 +409,7 @@ async def test_webhook_create_cloudhook(
 
     assert len(mock_delete.mock_calls) == 1
     assert result["require_restart"] is False
+    await hass.async_block_till_done()
 
 
 async def test_webhook_create_cloudhook_aborts_not_connected(
@@ -430,18 +437,23 @@ async def test_webhook_create_cloudhook_aborts_not_connected(
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
 
-    with patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
-        return_value={"cloudhook_url": "https://example.com"},
-    ), patch(
-        "hass_nabucasa.Cloud.subscription_expired",
-        new_callable=PropertyMock(return_value=False),
-    ), patch(
-        "hass_nabucasa.Cloud.is_logged_in",
-        new_callable=PropertyMock(return_value=True),
-    ), patch(
-        "hass_nabucasa.iot_base.BaseIoT.connected",
-        new_callable=PropertyMock(return_value=False),
+    with (
+        patch(
+            "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+            return_value={"cloudhook_url": "https://example.com"},
+        ),
+        patch(
+            "hass_nabucasa.Cloud.subscription_expired",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch(
+            "hass_nabucasa.Cloud.is_logged_in",
+            new_callable=PropertyMock(return_value=True),
+        ),
+        patch(
+            "hass_nabucasa.iot_base.BaseIoT.connected",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

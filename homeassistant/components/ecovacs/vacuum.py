@@ -1,11 +1,12 @@
 """Support for Ecovacs Ecovacs Vacuums."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from deebot_client.capabilities import Capabilities
+from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
 from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
@@ -22,45 +23,58 @@ from homeassistant.components.vacuum import (
     StateVacuumEntityDescription,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
+from . import EcovacsConfigEntry
 from .const import DOMAIN
-from .controller import EcovacsController
-from .entity import EcovacsEntity
+from .entity import EcovacsEntity, EcovacsLegacyEntity
+from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
 
+SERVICE_RAW_GET_POSITIONS = "raw_get_positions"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcovacsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
-    vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = []
-    controller: EcovacsController = hass.data[DOMAIN][config_entry.entry_id]
-    for device in controller.legacy_devices:
-        await hass.async_add_executor_job(device.connect_and_wait_until_ready)
-        vacuums.append(EcovacsLegacyVacuum(device))
-    for device in controller.devices:
-        vacuums.append(EcovacsVacuum(device))
+
+    controller = config_entry.runtime_data
+    vacuums: list[EcovacsVacuum | EcovacsLegacyVacuum] = [
+        EcovacsVacuum(device)
+        for device in controller.devices
+        if device.capabilities.device_type is DeviceType.VACUUM
+    ]
+    vacuums.extend(
+        [EcovacsLegacyVacuum(device) for device in controller.legacy_devices]
+    )
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_RAW_GET_POSITIONS,
+        None,
+        "async_raw_get_positions",
+        supports_response=SupportsResponse.ONLY,
+    )
 
-class EcovacsLegacyVacuum(StateVacuumEntity):
+
+class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
     """Legacy Ecovacs vacuums."""
 
     _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
-    _attr_should_poll = False
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.RETURN_HOME
@@ -73,21 +87,24 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         | VacuumEntityFeature.FAN_SPEED
     )
 
-    def __init__(self, device: sucks.VacBot) -> None:
-        """Initialize the Ecovacs Vacuum."""
-        self.device = device
-        vacuum = self.device.vacuum
-
-        self.error: str | None = None
-        self._attr_unique_id = vacuum["did"]
-        self._attr_name = vacuum.get("nick", vacuum["did"])
-
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
-        self.device.statusEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.batteryEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.lifespanEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.errorEvents.subscribe(self.on_error)
+        self._event_listeners.append(
+            self.device.statusEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.batteryEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.lifespanEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(self.device.errorEvents.subscribe(self.on_error))
 
     def on_error(self, error: str) -> None:
         """Handle an error event from the robot.
@@ -95,7 +112,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         This will not change the entity's state. If the error caused the state
         to change, that will come through as a separate on_status event
         """
-        if error == "no_error":
+        if error in ["no_error", sucks.ERROR_CODES["100"]]:
             self.error = None
         else:
             self.error = error
@@ -151,6 +168,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         data: dict[str, Any] = {}
         data[ATTR_ERROR] = self.error
 
+        # these attributes are deprecated and can be removed in 2025.2
         for key, val in self.device.components.items():
             attr_name = ATTR_COMPONENT_PREFIX + key
             data[attr_name] = int(val * 100)
@@ -196,6 +214,15 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
 
+    async def async_raw_get_positions(
+        self,
+    ) -> None:
+        """Get bot and chargers positions."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="vacuum_raw_get_positions_not_supported",
+        )
+
 
 _STATE_TO_VACUUM_STATE = {
     State.IDLE: STATE_IDLE,
@@ -221,7 +248,6 @@ class EcovacsVacuum(
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
@@ -235,14 +261,15 @@ class EcovacsVacuum(
 
     def __init__(self, device: Device) -> None:
         """Initialize the vacuum."""
-        capabilities = device.capabilities
-        super().__init__(device, capabilities)
+        super().__init__(device, device.capabilities)
 
         self._rooms: list[Room] = []
 
-        self._attr_fan_speed_list = [
-            level.display_name for level in capabilities.fan_speed.types
-        ]
+        if fan_speed := self._capability.fan_speed:
+            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
+            self._attr_fan_speed_list = [
+                get_name_key(level) for level in fan_speed.types
+            ]
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
@@ -250,10 +277,6 @@ class EcovacsVacuum(
 
         async def on_battery(event: BatteryEvent) -> None:
             self._attr_battery_level = event.value
-            self.async_write_ha_state()
-
-        async def on_fan_speed(event: FanSpeedEvent) -> None:
-            self._attr_fan_speed = event.speed.display_name
             self.async_write_ha_state()
 
         async def on_rooms(event: RoomsEvent) -> None:
@@ -265,8 +288,15 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         self._subscribe(self._capability.battery.event, on_battery)
-        self._subscribe(self._capability.fan_speed.event, on_fan_speed)
         self._subscribe(self._capability.state.event, on_status)
+
+        if self._capability.fan_speed:
+
+            async def on_fan_speed(event: FanSpeedEvent) -> None:
+                self._attr_fan_speed = get_name_key(event.speed)
+                self.async_write_ha_state()
+
+            self._subscribe(self._capability.fan_speed.event, on_fan_speed)
 
         if map_caps := self._capability.map:
             self._subscribe(map_caps.rooms.event, on_rooms)
@@ -297,6 +327,8 @@ class EcovacsVacuum(
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
+        if TYPE_CHECKING:
+            assert self._capability.fan_speed
         await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
@@ -336,7 +368,6 @@ class EcovacsVacuum(
             params = {}
         elif isinstance(params, list):
             raise ServiceValidationError(
-                "Params must be a dict!",
                 translation_domain=DOMAIN,
                 translation_key="vacuum_send_command_params_dict",
             )
@@ -344,10 +375,17 @@ class EcovacsVacuum(
         if command in ["spot_area", "custom_area"]:
             if params is None:
                 raise ServiceValidationError(
-                    f"Params are required for {command}!",
                     translation_domain=DOMAIN,
                     translation_key="vacuum_send_command_params_required",
                     translation_placeholders={"command": command},
+                )
+            if self._capability.clean.action.area is None:
+                info = self._device.device_info
+                name = info.get("nick", info["name"])
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="vacuum_send_command_area_not_supported",
+                    translation_placeholders={"name": name},
                 )
 
             if command in "spot_area":
@@ -370,3 +408,19 @@ class EcovacsVacuum(
             await self._device.execute_command(
                 self._capability.custom.set(command, params)
             )
+
+    async def async_raw_get_positions(
+        self,
+    ) -> dict[str, Any]:
+        """Get bot and chargers positions."""
+        _LOGGER.debug("async_raw_get_positions")
+
+        if not (map_cap := self._capability.map) or not (
+            position_commands := map_cap.position.get
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="vacuum_raw_get_positions_not_supported",
+            )
+
+        return await self._device.execute_command(position_commands[0])

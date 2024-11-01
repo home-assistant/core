@@ -1,4 +1,5 @@
 """Support for Overkiz sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -109,7 +110,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Water consumption",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
@@ -178,6 +179,13 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.POWER,
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         # (not for modbus:YutakiV2DHWElectricalEnergyConsumptionComponent)
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.MODBUSLINK_POWER_HEAT_ELECTRICAL,
+        name="Electric power consumption",
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -398,6 +406,27 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_BOTTOM_TANK_WATER_TEMPERATURE,
+        name="Bottom tank water temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_CONTROL_WATER_TARGET_TEMPERATURE,
+        name="Control water target temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_REMAINING_HOT_WATER,
+        name="Warm water remaining",
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+    ),
     # Cover
     OverkizSensorDescription(
         key=OverkizState.CORE_TARGET_CLOSURE,
@@ -458,15 +487,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizStateSensor(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizStateSensor(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 

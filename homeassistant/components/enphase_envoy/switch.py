@@ -1,9 +1,9 @@
 """Switch platform for Enphase Envoy solar energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyenphase import Envoy, EnvoyDryContactStatus, EnvoyEnpower
@@ -12,64 +12,40 @@ from pyenphase.models.dry_contacts import DryContactStatus
 from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-
-@dataclass(frozen=True)
-class EnvoyEnpowerRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnpowerSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Envoy Enpower switch entity."""
 
     value_fn: Callable[[EnvoyEnpower], bool]
     turn_on_fn: Callable[[Envoy], Coroutine[Any, Any, dict[str, Any]]]
     turn_off_fn: Callable[[Envoy], Coroutine[Any, Any, dict[str, Any]]]
 
 
-@dataclass(frozen=True)
-class EnvoyEnpowerSwitchEntityDescription(
-    SwitchEntityDescription, EnvoyEnpowerRequiredKeysMixin
-):
-    """Describes an Envoy Enpower switch entity."""
-
-
-@dataclass(frozen=True)
-class EnvoyDryContactRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyDryContactSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Envoy Enpower dry contact switch entity."""
 
     value_fn: Callable[[EnvoyDryContactStatus], bool]
     turn_on_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
     turn_off_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
 
 
-@dataclass(frozen=True)
-class EnvoyDryContactSwitchEntityDescription(
-    SwitchEntityDescription, EnvoyDryContactRequiredKeysMixin
-):
-    """Describes an Envoy Enpower dry contact switch entity."""
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyStorageSettingsSwitchEntityDescription(SwitchEntityDescription):
+    """Describes an Envoy storage settings switch entity."""
 
     value_fn: Callable[[EnvoyStorageSettings], bool]
     turn_on_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
     turn_off_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsSwitchEntityDescription(
-    SwitchEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
-):
-    """Describes an Envoy storage settings switch entity."""
 
 
 ENPOWER_GRID_SWITCH = EnvoyEnpowerSwitchEntityDescription(
@@ -98,11 +74,11 @@ CHARGE_FROM_GRID_SWITCH = EnvoyStorageSettingsSwitchEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnphaseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy switch platform."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     entities: list[SwitchEntity] = []
@@ -122,8 +98,7 @@ async def async_setup_entry(
         )
 
     if (
-        envoy_data.enpower
-        and envoy_data.tariff
+        envoy_data.tariff
         and envoy_data.tariff.storage_settings
         and (coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE)
     ):
@@ -237,22 +212,35 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         self,
         coordinator: EnphaseUpdateCoordinator,
         description: EnvoyStorageSettingsSwitchEntityDescription,
-        enpower: EnvoyEnpower,
+        enpower: EnvoyEnpower | None,
     ) -> None:
         """Initialize the Enphase storage settings switch entity."""
         super().__init__(coordinator, description)
         self.envoy = coordinator.envoy
         self.enpower = enpower
-        self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
-            manufacturer="Enphase",
-            model="Enpower",
-            name=f"Enpower {self._serial_number}",
-            sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
-        )
+        if enpower:
+            self._serial_number = enpower.serial_number
+            self._attr_unique_id = f"{self._serial_number}_{description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._serial_number)},
+                manufacturer="Enphase",
+                model="Enpower",
+                name=f"Enpower {self._serial_number}",
+                sw_version=str(enpower.firmware_version),
+                via_device=(DOMAIN, self.envoy_serial_num),
+            )
+        else:
+            # If no enpower device assign switches to Envoy itself
+            self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self.envoy_serial_num)},
+                manufacturer="Enphase",
+                model=coordinator.envoy.envoy_model,
+                name=coordinator.name,
+                sw_version=str(coordinator.envoy.firmware),
+                hw_version=coordinator.envoy.part_number,
+                serial_number=self.envoy_serial_num,
+            )
 
     @property
     def is_on(self) -> bool:

@@ -1,4 +1,5 @@
 """HTTP views to interact with the entity registry."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND
-from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -18,7 +18,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.json import json_dumps
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
     websocket_api.async_register_command(hass, websocket_get_entities)
@@ -41,19 +42,18 @@ def websocket_list_entities(
     registry = er.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'{{"id":{msg["id"]},"type": "{websocket_api.TYPE_RESULT}",'
         '"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
-    msg_json = (
-        msg_json_prefix
-        + b",".join(
+    inner = b",".join(
+        [
             entry.partial_json_repr
             for entry in registry.entities.values()
             if entry.partial_json_repr is not None
-        )
-        + b"]}"
+        ]
     )
+    msg_json = b"".join((msg_json_prefix, inner, b"]}"))
     connection.send_message(msg_json)
 
 
@@ -73,19 +73,18 @@ def websocket_list_entities_for_display(
     registry = er.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type":"{websocket_api.const.TYPE_RESULT}","success":true,'
+        f'{{"id":{msg["id"]},"type":"{websocket_api.TYPE_RESULT}","success":true,'
         f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
-    msg_json = (
-        msg_json_prefix
-        + b",".join(
+    inner = b",".join(
+        [
             entry.display_json_repr
             for entry in registry.entities.values()
             if entry.disabled_by is None and entry.display_json_repr is not None
-        )
-        + b"]}}"
+        ]
     )
+    msg_json = b"".join((msg_json_prefix, inner, b"]}}"))
     connection.send_message(msg_json)
 
 
@@ -153,8 +152,19 @@ def websocket_get_entities(
         # If passed in, we update value. Passing None will remove old value.
         vol.Optional("aliases"): list,
         vol.Optional("area_id"): vol.Any(str, None),
+        # Categories is a mapping of key/value (scope/category_id) pairs.
+        # If passed in, we update/adjust only the provided scope(s).
+        # Other category scopes in the entity, are left as is.
+        #
+        # Categorized items such as entities
+        # can only be in 1 category ID per scope at a time.
+        # Therefore, passing in a category ID will either add or move
+        # the entity to that specific category. Passing in None will
+        # remove the entity from the category.
+        vol.Optional("categories"): cv.schema_with_slug_keys(vol.Any(str, None)),
         vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("labels"): [str],
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
@@ -214,6 +224,10 @@ def websocket_update_entity(
         # Convert aliases to a set
         changes["aliases"] = set(msg["aliases"])
 
+    if "labels" in msg:
+        # Convert labels to a set
+        changes["labels"] = set(msg["labels"])
+
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
         if entity_entry.device_id:
@@ -226,6 +240,18 @@ def websocket_update_entity(
                     )
                 )
                 return
+
+    # Update the categories if provided
+    if "categories" in msg:
+        categories = entity_entry.categories.copy()
+        for scope, category_id in msg["categories"].items():
+            if scope in categories and category_id is None:
+                # Remove the category from the scope as it was unset
+                del categories[scope]
+            elif category_id is not None:
+                # Add or update the category for the given scope
+                categories[scope] = category_id
+        changes["categories"] = categories
 
     try:
         if changes:

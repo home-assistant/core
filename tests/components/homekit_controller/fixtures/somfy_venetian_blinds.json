@@ -1,0 +1,146 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "VELUX Internal Cover",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Netatmo",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "VELUX Internal Cover",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "0.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "iid": 15,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "+nvrOv1cCQU="
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "0000008C-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 9,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Venetian Blinds",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "0000007C-0000-1000-8000-0026BB765291",
+            "iid": 11,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Target Position",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "0000006D-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Current Position",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000072-0000-1000-8000-0026BB765291",
+            "iid": 12,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Position State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "0000006C-0000-1000-8000-0026BB765291",
+            "iid": 13,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 90,
+            "description": "Current Horizontal Tilt Angle",
+            "unit": "arcdegrees",
+            "minValue": -90,
+            "maxValue": 90,
+            "minStep": 1
+          },
+          {
+            "type": "0000007B-0000-1000-8000-0026BB765291",
+            "iid": 14,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 90,
+            "description": "Target Horizontal Tilt Angle",
+            "unit": "arcdegrees",
+            "minValue": -90,
+            "maxValue": 90,
+            "minStep": 1
+          }
+        ]
+      }
+    ]
+  }
+]

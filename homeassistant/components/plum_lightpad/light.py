@@ -1,4 +1,5 @@
 """Support for Plum Lightpad lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -130,8 +131,8 @@ class GlowRing(LightEntity):
 
     _attr_color_mode = ColorMode.HS
     _attr_should_poll = False
+    _attr_translation_key = "glow_ring"
     _attr_supported_color_modes = {ColorMode.HS}
-    _attr_icon = "mdi:crop-portrait"
 
     def __init__(self, lightpad):
         """Initialize the light."""

@@ -1,6 +1,6 @@
 """Test System Monitor utils."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from psutil._common import sdiskpart
 import pytest
@@ -17,12 +17,11 @@ from tests.common import MockConfigEntry
         (OSError("OS error"), "was excluded because of: OS error"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_disk_setup_failure(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error_text: str,
@@ -30,46 +29,40 @@ async def test_disk_setup_failure(
 ) -> None:
     """Test the disk failures."""
 
-    with patch(
-        "homeassistant.components.systemmonitor.util.psutil.disk_usage",
-        side_effect=side_effect,
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_psutil.disk_usage.side_effect = side_effect
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        disk_sensor = hass.states.get("sensor.system_monitor_disk_free_media_share")
-        assert disk_sensor is None
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_free_media_share")
+    assert disk_sensor is None
 
-        assert error_text in caplog.text
+    assert error_text in caplog.text
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_disk_util(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the disk failures."""
 
-    mock_util.disk_partitions.return_value = [
-        sdiskpart("test", "/", "ext4", "", 1, 1),  # Should be ok
-        sdiskpart("test2", "/media/share", "ext4", "", 1, 1),  # Should be ok
-        sdiskpart("test3", "/incorrect", "", "", 1, 1),  # Should be skipped as no type
+    mock_psutil.psutil.disk_partitions.return_value = [
+        sdiskpart("test", "/", "ext4", ""),  # Should be ok
+        sdiskpart("test2", "/media/share", "ext4", ""),  # Should be ok
+        sdiskpart("test3", "/incorrect", "", ""),  # Should be skipped as no type
         sdiskpart(
-            "proc", "/proc/run", "proc", "", 1, 1
+            "proc", "/proc/run", "proc", ""
         ),  # Should be skipped as in skipped disk types
         sdiskpart(
             "test4",
             "/tmpfs/",  # noqa: S108
             "tmpfs",
             "",
-            1,
-            1,
         ),  # Should be skipped as in skipped disk types
-        sdiskpart("test5", "E:", "cd", "cdrom", 1, 1),  # Should be skipped as cdrom
+        sdiskpart("test5", "E:", "cd", "cdrom"),  # Should be skipped as cdrom
     ]
 
     mock_config_entry.add_to_hass(hass)

@@ -1,12 +1,13 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SmappeeConfigEntry
 from .const import DOMAIN
 
 SWITCH_PREFIX = "Switch"
@@ -14,11 +15,11 @@ SWITCH_PREFIX = "Switch"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SmappeeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Smappee Comfort Plugs."""
-    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
+    smappee_base = config_entry.runtime_data
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
@@ -35,18 +36,18 @@ async def async_setup_entry(
                     )
                 )
             elif actuator.type == "INFINITY_OUTPUT_MODULE":
-                for option in actuator.state_options:
-                    entities.append(
-                        SmappeeActuator(
-                            smappee_base,
-                            service_location,
-                            actuator.name,
-                            actuator_id,
-                            actuator.type,
-                            actuator.serialnumber,
-                            actuator_state_option=option,
-                        )
+                entities.extend(
+                    SmappeeActuator(
+                        smappee_base,
+                        service_location,
+                        actuator.name,
+                        actuator_id,
+                        actuator.type,
+                        actuator.serialnumber,
+                        actuator_state_option=option,
                     )
+                    for option in actuator.state_options
+                )
 
     async_add_entities(entities, True)
 

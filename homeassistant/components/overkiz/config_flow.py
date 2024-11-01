@@ -1,4 +1,5 @@
 """Config flow for Overkiz integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -22,9 +23,8 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -32,7 +32,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -43,12 +42,11 @@ class DeveloperModeDisabled(HomeAssistantError):
     """Error to indicate Somfy Developer Mode is disabled."""
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry | None = None
     _api_type: APIType = APIType.CLOUD
     _user: str | None = None
     _server: str = DEFAULT_SERVER
@@ -84,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step via config flow."""
         if user_input:
             self._server = user_input[CONF_HUB]
@@ -109,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_local_or_cloud(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Users can choose between local API or cloud API via config flow."""
         if user_input:
             self._api_type = user_input[CONF_API_TYPE]
@@ -135,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the cloud authentication step via config flow."""
         errors: dict[str, str] = {}
         description_placeholders = {}
@@ -171,30 +169,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self._reauth_entry:
-                    if self._reauth_entry.unique_id != self.unique_id:
-                        return self.async_abort(reason="reauth_wrong_account")
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
 
-                    # Update existing entry during reauth
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry,
-                        data={
-                            **self._reauth_entry.data,
-                            **user_input,
-                        },
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
                     )
-
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
-                        )
-                    )
-
-                    return self.async_abort(reason="reauth_successful")
 
                 # Create new entry
                 self._abort_if_unique_id_configured()
@@ -217,7 +201,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_local(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the local authentication step via config flow."""
         errors = {}
         description_placeholders = {}
@@ -254,30 +238,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self._reauth_entry:
-                    if self._reauth_entry.unique_id != self.unique_id:
-                        return self.async_abort(reason="reauth_wrong_account")
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
 
-                    # Update existing entry during reauth
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry,
-                        data={
-                            **self._reauth_entry.data,
-                            **user_input,
-                        },
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
                     )
-
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
-                        )
-                    )
-
-                    return self.async_abort(reason="reauth_successful")
 
                 # Create new entry
                 self._abort_if_unique_id_configured()
@@ -300,7 +270,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         hostname = discovery_info.hostname
         gateway_id = hostname[8:22]
@@ -311,7 +283,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle ZeroConf discovery."""
         properties = discovery_info.properties
         gateway_id = properties["gateway_pin"]
@@ -333,7 +305,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._process_discovery(gateway_id)
 
-    async def _process_discovery(self, gateway_id: str) -> FlowResult:
+    async def _process_discovery(self, gateway_id: str) -> ConfigFlowResult:
         """Handle discovery of a gateway."""
         await self.async_set_unique_id(gateway_id)
         self._abort_if_unique_id_configured()
@@ -341,23 +313,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth."""
-        self._reauth_entry = cast(
-            ConfigEntry,
-            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
-        )
+        # overkiz entries always have unique IDs
+        self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
 
-        self.context["title_placeholders"] = {
-            "gateway_id": self._reauth_entry.unique_id
-        }
+        self._user = entry_data[CONF_USERNAME]
+        self._server = entry_data[CONF_HUB]
+        self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
 
-        self._user = self._reauth_entry.data[CONF_USERNAME]
-        self._server = self._reauth_entry.data[CONF_HUB]
-        self._api_type = self._reauth_entry.data[CONF_API_TYPE]
-
-        if self._reauth_entry.data[CONF_API_TYPE] == APIType.LOCAL:
-            self._host = self._reauth_entry.data[CONF_HOST]
+        if self._api_type == APIType.LOCAL:
+            self._host = entry_data[CONF_HOST]
 
         return await self.async_step_user(dict(entry_data))
 
@@ -365,11 +333,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, username: str, password: str, server: OverkizServer
     ) -> OverkizClient:
         session = async_create_clientsession(self.hass)
-        client = OverkizClient(
+        return OverkizClient(
             username=username, password=password, server=server, session=session
         )
-
-        return client
 
     async def _create_local_api_token(
         self, cloud_client: OverkizClient, host: str, verify_ssl: bool

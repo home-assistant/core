@@ -1,7 +1,9 @@
 """The Assist pipeline integration."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,6 +17,11 @@ from .const import (
     DATA_LAST_WAKE_UP,
     DOMAIN,
     EVENT_RECORDING,
+    OPTION_PREFERRED,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
+    SAMPLES_PER_CHUNK,
 )
 from .error import PipelineNotFound
 from .pipeline import (
@@ -30,6 +37,8 @@ from .pipeline import (
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
+    async_migrate_engine,
+    async_run_migrations,
     async_setup_pipeline_store,
     async_update_pipeline,
 )
@@ -39,6 +48,7 @@ __all__ = (
     "DOMAIN",
     "async_create_default_pipeline",
     "async_get_pipelines",
+    "async_migrate_engine",
     "async_setup",
     "async_pipeline_from_audio_stream",
     "async_update_pipeline",
@@ -49,6 +59,11 @@ __all__ = (
     "PipelineNotFound",
     "WakeWordSettings",
     "EVENT_RECORDING",
+    "OPTION_PREFERRED",
+    "SAMPLES_PER_CHUNK",
+    "SAMPLE_RATE",
+    "SAMPLE_WIDTH",
+    "SAMPLE_CHANNELS",
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -71,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_LAST_WAKE_UP] = {}
 
     await async_setup_pipeline_store(hass)
+    await async_run_migrations(hass)
     async_register_websocket_api(hass)
 
     return True
@@ -83,9 +99,10 @@ async def async_pipeline_from_audio_stream(
     event_callback: PipelineEventCallback,
     stt_metadata: stt.SpeechMetadata,
     stt_stream: AsyncIterable[bytes],
+    wake_word_phrase: str | None = None,
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
-    tts_audio_output: str | None = None,
+    tts_audio_output: str | dict[str, Any] | None = None,
     wake_word_settings: WakeWordSettings | None = None,
     audio_settings: AudioSettings | None = None,
     device_id: str | None = None,
@@ -101,6 +118,7 @@ async def async_pipeline_from_audio_stream(
         device_id=device_id,
         stt_metadata=stt_metadata,
         stt_stream=stt_stream,
+        wake_word_phrase=wake_word_phrase,
         run=PipelineRun(
             hass,
             context=context,
