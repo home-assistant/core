@@ -9,7 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
+    ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
+    SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_TEMPERATURE,
     STATE_ECO,
     STATE_OFF,
     STATE_ON,
@@ -95,11 +98,11 @@ async def test_set_operation_mode(
     )
 
     await hass.services.async_call(
-        WATER_HEATER_DOMAIN,
-        "set_operation_mode",
-        {
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_OPERATION_MODE,
+        service_data={
             ATTR_ENTITY_ID: ENTITY_ID,
-            "operation_mode": mode,
+            ATTR_OPERATION_MODE: mode,
         },
         blocking=True,
     )
@@ -122,11 +125,11 @@ async def test_set_invalid_operation_mode(
         match=r"Operation mode invalid_mode is not valid for water_heater\.bsb_lan\. Valid operation modes are: eco, off, on",
     ):
         await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            "set_operation_mode",
-            {
+            domain=WATER_HEATER_DOMAIN,
+            service=SERVICE_SET_OPERATION_MODE,
+            service_data={
                 ATTR_ENTITY_ID: ENTITY_ID,
-                "operation_mode": "invalid_mode",
+                ATTR_OPERATION_MODE: "invalid_mode",
             },
             blocking=True,
         )
@@ -143,9 +146,9 @@ async def test_set_temperature(
     )
 
     await hass.services.async_call(
-        WATER_HEATER_DOMAIN,
-        "set_temperature",
-        {
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={
             ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_TEMPERATURE: 50,
         },
@@ -171,9 +174,9 @@ async def test_set_temperature_failure(
         HomeAssistantError, match="Failed to set target temperature for water heater"
     ):
         await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            "set_temperature",
-            {
+            domain=WATER_HEATER_DOMAIN,
+            service=SERVICE_SET_TEMPERATURE,
+            service_data={
                 ATTR_ENTITY_ID: ENTITY_ID,
                 ATTR_TEMPERATURE: 50,
             },
@@ -197,11 +200,11 @@ async def test_operation_mode_error(
         HomeAssistantError, match="Failed to set operation mode for water heater"
     ):
         await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            "set_operation_mode",
-            {
+            domain=WATER_HEATER_DOMAIN,
+            service=SERVICE_SET_OPERATION_MODE,
+            service_data={
                 ATTR_ENTITY_ID: ENTITY_ID,
-                "operation_mode": STATE_ECO,
+                ATTR_OPERATION_MODE: STATE_ECO,
             },
             blocking=True,
         )
