@@ -11,7 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -141,6 +147,53 @@ SENSORS = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_total,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output",
+        key="energy_output",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_output,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="compressor_rpm",
+        key="compressor_rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        value_fn=lambda status: status.compressor_rpm,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="compressor_percentage",
+        key="compressor_percentage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda status: status.compressor_percentage,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="inside_unit_water_pump_state",
+        key="inside_unit_water_pump_state",
+        value_fn=lambda status: status.inside_unit_water_pump_state,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="inside_unit_auxilary_pump_state",
+        key="inside_unit_auxilary_pump_state",
+        value_fn=lambda status: status.inside_unit_auxilary_pump_state,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="inside_unit_dhw_valve_or_pump_state",
+        key="inside_unit_dhw_valve_or_pump_state",
+        value_fn=lambda status: status.inside_unit_dhw_valve_or_pump_state,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="inside_unit_gas_boiler_state",
+        key="inside_unit_gas_boiler_state",
+        value_fn=lambda status: status.inside_unit_gas_boiler_state,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="inside_unit_electric_heater_state",
+        key="inside_unit_electric_heater_state",
+        value_fn=lambda status: status.inside_unit_gas_electric_heater,
     ),
 ]
 

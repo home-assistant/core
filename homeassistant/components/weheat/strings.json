@@ -84,6 +84,30 @@
       },
       "electricity_used": {
         "name": "Electricity used"
+      },
+      "energy_output": {
+        "name": "Energy output"
+      },
+      "compressor_rpm": {
+        "name": "Compressor RPM"
+      },
+      "compressor_percentage": {
+        "name": "Compressor percentage"
+      },
+      "inside_unit_water_pump_state": {
+        "name": "Inside unit water pump state"
+      },
+      "inside_unit_auxilary_pump_state": {
+        "name": "Inside unit auxilary water pump state"
+      },
+      "inside_unit_dhw_valve_or_pump_state": {
+        "name": "Inside unit DHW valve or water pump state"
+      },
+      "inside_unit_gas_boiler_state": {
+        "name": "Inside unit gas boiler heating allowed"
+      },
+      "inside_unit_electric_heater_state": {
+        "name": "Inside unit electric heater state"
       }
     }
   }

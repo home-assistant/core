@@ -2981,7 +2981,7 @@ webexpythonsdk==2.0.1
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2024.09.23
+weheat==2024.11.1
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
