@@ -12,6 +12,7 @@ CONF_READ_ONLY = "read_only"
 CONF_ACCOUNT = "account"
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_GCID = "gcid"
+CONF_CAPTCHA_TOKEN = "hcaptcha_token"
 
 DATA_HASS_CONFIG = "hass_config"
 
@@ -27,3 +28,20 @@ SCAN_INTERVALS = {
     "north_america": 600,
     "rest_of_world": 300,
 }
+
+TEMPLATE_HCAPTCHA = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>hCaptcha</title>
+</head>
+<body>
+    <form id="captcha" action="{return_url}" method="post">
+        <center>
+            <div class="h-captcha" data-sitekey="{sitekey}"></div><br>
+            <button type="submit">Submit</button>
+        </center>
+    </form>
+    <script src="https://hcaptcha.com/1/api.js" async defer></script>
+</body>
+</html>"""

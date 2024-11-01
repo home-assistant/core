@@ -3,9 +3,10 @@
   "name": "BMW Connected Drive",
   "codeowners": ["@gerard33", "@rikroe"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/bmw_connected_drive",
   "iot_class": "cloud_polling",
   "loggers": ["bimmer_connected"],
   "quality_scale": "platinum",
-  "requirements": ["bimmer-connected[china]==0.16.3"]
+  "requirements": ["bimmer-connected[china]==0.16.4.0b2"]
 }
