@@ -37,7 +37,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
@@ -4779,6 +4779,74 @@ async def test_reauth(
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
+)
+async def test_reauth_reconfigure_missing_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the async_reauth_helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        RuntimeError,
+        match=f"Detected code that initialises a {source} flow without a link "
+        "to the config entry. Please report this issue.",
+    ):
+        await manager.flow.async_init("test", context={"source": source})
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
+)
+async def test_reauth_reconfigure_missing_entry_component(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the async_reauth_helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        await manager.flow.async_init("test", context={"source": source})
+        await hass.async_block_till_done()
+
+    # Flow still created, but deprecation logged
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == source
+
+    assert (
+        f"Detected that integration 'hue' initialises a {source} flow"
+        " without a link to the config entry at homeassistant/components" in caplog.text
+    )
+
+
 async def test_reconfigure(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -5012,7 +5080,9 @@ async def test_initializing_flows_canceled_on_shutdown(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
     ):
         task = asyncio.create_task(
-            manager.flow.async_init("test", context={"source": "reauth"})
+            manager.flow.async_init(
+                "test", context={"source": "reauth", "entry_id": "abc"}
+            )
         )
         await hass.async_block_till_done()
         manager.flow.async_shutdown()
