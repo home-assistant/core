@@ -72,8 +72,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_temp': 18.3,
-      'min_temp': 4.4,
+      'max_temp': 65.0,
+      'min_temp': 40.0,
       'operation_list': list([
         'eco',
         'off',
@@ -110,10 +110,10 @@
 # name: test_temperature_unit[static_F.json][water_heater.bsb_lan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 9.2,
+      'current_temperature': 48.5,
       'friendly_name': 'BSB-LAN',
-      'max_temp': 18.3,
-      'min_temp': 4.4,
+      'max_temp': 65.0,
+      'min_temp': 40.0,
       'operation_list': list([
         'eco',
         'off',
@@ -123,7 +123,7 @@
       'supported_features': <WaterHeaterEntityFeature: 3>,
       'target_temp_high': None,
       'target_temp_low': None,
-      'temperature': 10.0,
+      'temperature': 50.0,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.bsb_lan',
