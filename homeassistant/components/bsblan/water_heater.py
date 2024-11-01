@@ -56,7 +56,7 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
     def __init__(self, data: BSBLanData) -> None:
         """Initialize BSBLAN water heater."""
         super().__init__(data.coordinator, data)
-        self._attr_unique_id = f"{format_mac(data.device.MAC)}"
+        self._attr_unique_id = format_mac(data.device.MAC)
         self._attr_operation_list = list(OPERATION_MODES_REVERSE.keys())
 
         # Set temperature limits based on device capabilities
