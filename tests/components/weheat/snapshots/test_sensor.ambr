@@ -539,6 +539,236 @@
     'state': '56789',
   })
 # ---
+# name: test_all_entities[sensor.test_model_indoor_unit_auxiliary_water_pump_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_indoor_unit_auxiliary_water_pump_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indoor unit auxiliary water pump state',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'indoor_unit_auxiliary_pump_state',
+    'unique_id': '0000-1111-2222-3333_indoor_unit_auxiliary_pump_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_auxiliary_water_pump_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Indoor unit auxiliary water pump state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_indoor_unit_auxiliary_water_pump_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'False',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indoor unit DHW valve or water pump state',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'indoor_unit_dhw_valve_or_pump_state',
+    'unique_id': '0000-1111-2222-3333_indoor_unit_dhw_valve_or_pump_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Indoor unit DHW valve or water pump state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'False',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_electric_heater_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_indoor_unit_electric_heater_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indoor unit electric heater state',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'indoor_unit_electric_heater_state',
+    'unique_id': '0000-1111-2222-3333_indoor_unit_electric_heater_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_electric_heater_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Indoor unit electric heater state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_indoor_unit_electric_heater_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'True',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_gas_boiler_heating_allowed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_indoor_unit_gas_boiler_heating_allowed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indoor unit gas boiler heating allowed',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'indoor_unit_gas_boiler_state',
+    'unique_id': '0000-1111-2222-3333_indoor_unit_gas_boiler_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_gas_boiler_heating_allowed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Indoor unit gas boiler heating allowed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_indoor_unit_gas_boiler_heating_allowed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_water_pump_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_indoor_unit_water_pump_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indoor unit water pump state',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'indoor_unit_water_pump_state',
+    'unique_id': '0000-1111-2222-3333_indoor_unit_water_pump_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_indoor_unit_water_pump_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Indoor unit water pump state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_indoor_unit_water_pump_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'False',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_input_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -591,236 +821,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '55',
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_auxiliary_water_pump_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_model_inside_unit_auxiliary_water_pump_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Inside unit auxiliary water pump state',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'inside_unit_auxiliary_pump_state',
-    'unique_id': '0000-1111-2222-3333_inside_unit_auxiliary_pump_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_auxiliary_water_pump_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Inside unit auxiliary water pump state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_model_inside_unit_auxiliary_water_pump_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_dhw_valve_or_water_pump_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_model_inside_unit_dhw_valve_or_water_pump_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Inside unit DHW valve or water pump state',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'inside_unit_dhw_valve_or_pump_state',
-    'unique_id': '0000-1111-2222-3333_inside_unit_dhw_valve_or_pump_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_dhw_valve_or_water_pump_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Inside unit DHW valve or water pump state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_model_inside_unit_dhw_valve_or_water_pump_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_electric_heater_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_model_inside_unit_electric_heater_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Inside unit electric heater state',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'inside_unit_electric_heater_state',
-    'unique_id': '0000-1111-2222-3333_inside_unit_electric_heater_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_electric_heater_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Inside unit electric heater state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_model_inside_unit_electric_heater_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_gas_boiler_heating_allowed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_model_inside_unit_gas_boiler_heating_allowed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Inside unit gas boiler heating allowed',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'inside_unit_gas_boiler_state',
-    'unique_id': '0000-1111-2222-3333_inside_unit_gas_boiler_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_gas_boiler_heating_allowed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Inside unit gas boiler heating allowed',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_model_inside_unit_gas_boiler_heating_allowed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_water_pump_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_model_inside_unit_water_pump_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Inside unit water pump state',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'inside_unit_water_pump_state',
-    'unique_id': '0000-1111-2222-3333_inside_unit_water_pump_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.test_model_inside_unit_water_pump_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Inside unit water pump state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_model_inside_unit_water_pump_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
   })
 # ---
 # name: test_all_entities[sensor.test_model_output_power-entry]

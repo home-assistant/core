@@ -124,11 +124,11 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.energy_output = 56789
     mock_heat_pump_instance.compressor_rpm = 4500
     mock_heat_pump_instance.compressor_percentage = 100
-    mock_heat_pump_instance.inside_unit_water_pump_state = False
-    mock_heat_pump_instance.inside_unit_auxilary_pump_state = False
-    mock_heat_pump_instance.inside_unit_dhw_valve_or_pump_state = False
-    mock_heat_pump_instance.inside_unit_gas_boiler_state = None
-    mock_heat_pump_instance.inside_unit_gas_electric_heater = True
+    mock_heat_pump_instance.indoor_unit_water_pump_state = False
+    mock_heat_pump_instance.indoor_unit_auxiliary_pump_state = False
+    mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = False
+    mock_heat_pump_instance.indoor_unit_gas_boiler_state = None
+    mock_heat_pump_instance.indoor_unit_electric_heater_state = True
 
     return mock_heat_pump_instance
 
