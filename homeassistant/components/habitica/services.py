@@ -275,7 +275,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     translation_domain=DOMAIN,
                     translation_key="not_enough_gold",
                     translation_placeholders={
-                        "gold": f"{int(coordinator.data.user["stats"]["gp"])} GP",
+                        "gold": f"{coordinator.data.user["stats"]["gp"]:.2f} GP",
                         "cost": f"{task_value} GP",
                     },
                 ) from e

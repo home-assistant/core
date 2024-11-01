@@ -508,7 +508,7 @@ async def test_score_task(
             },
             HTTPStatus.UNAUTHORIZED,
             HomeAssistantError,
-            "Unable to buy reward, not enough gold. Your character has 137 GP, but the reward costs 10 GP",
+            "Unable to buy reward, not enough gold. Your character has 137.63 GP, but the reward costs 10 GP",
         ),
     ],
 )
