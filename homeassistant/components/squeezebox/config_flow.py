@@ -100,7 +100,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
