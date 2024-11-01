@@ -175,7 +175,7 @@ class DistanceConverter(BaseUnitConverter):
 
 
 class BloodGlugoseConcentrationConverter(BaseUnitConverter):
-    """Utility to convert blood sugar level values."""
+    """Utility to convert blood glucose concentration values."""
 
     UNIT_CLASS = "blood_glucose_concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
