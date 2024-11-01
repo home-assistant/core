@@ -97,8 +97,8 @@
       "inside_unit_water_pump_state": {
         "name": "Inside unit water pump state"
       },
-      "inside_unit_auxilary_pump_state": {
-        "name": "Inside unit auxilary water pump state"
+      "inside_unit_auxiliary_pump_state": {
+        "name": "Inside unit auxiliary water pump state"
       },
       "inside_unit_dhw_valve_or_pump_state": {
         "name": "Inside unit DHW valve or water pump state"

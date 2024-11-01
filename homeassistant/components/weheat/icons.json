@@ -37,7 +37,7 @@
       "inside_unit_water_pump_state": {
         "default": "mdi:pump"
       },
-      "inside_unit_auxilary_pump_state": {
+      "inside_unit_auxiliary_pump_state": {
         "default": "mdi:pump"
       },
       "inside_unit_dhw_valve_or_pump_state": {

@@ -176,8 +176,8 @@ SENSORS = [
         value_fn=lambda status: status.inside_unit_water_pump_state,
     ),
     WeHeatSensorEntityDescription(
-        translation_key="inside_unit_auxilary_pump_state",
-        key="inside_unit_auxilary_pump_state",
+        translation_key="inside_unit_auxiliary_pump_state",
+        key="inside_unit_auxiliary_pump_state",
         value_fn=lambda status: status.inside_unit_auxilary_pump_state,
     ),
     WeHeatSensorEntityDescription(
