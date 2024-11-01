@@ -10,15 +10,15 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
 _SETUP_TIMEOUT = 30
-_SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr=127.0.0.1:1984"
-
+_SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr="
+_LOCALHOST_IP = "127.0.0.1"
 # Default configuration for HA
 # - Api is listening only on localhost
 # - Disable rtsp listener
 # - Clear default ice servers
-_GO2RTC_CONFIG = """
+_GO2RTC_CONFIG_FORMAT = r"""
 api:
-  listen: "127.0.0.1:1984"
+  listen: "{api_ip}:1984"
 
 rtsp:
   # ffmpeg needs rtsp for opus audio transcoding
@@ -29,29 +29,37 @@ webrtc:
 """
 
 
-def _create_temp_file() -> str:
+def _create_temp_file(api_ip: str) -> str:
     """Create temporary config file."""
     # Set delete=False to prevent the file from being deleted when the file is closed
     # Linux is clearing tmp folder on reboot, so no need to delete it manually
     with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
-        file.write(_GO2RTC_CONFIG.encode())
+        file.write(_GO2RTC_CONFIG_FORMAT.format(api_ip=api_ip).encode())
         return file.name
 
 
 class Server:
     """Go2rtc server."""
 
-    def __init__(self, hass: HomeAssistant, binary: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, binary: str, *, enable_ui: bool = False
+    ) -> None:
         """Initialize the server."""
         self._hass = hass
         self._binary = binary
         self._process: asyncio.subprocess.Process | None = None
         self._startup_complete = asyncio.Event()
+        self._api_ip = _LOCALHOST_IP
+        if enable_ui:
+            # Listen on all interfaces for allowing access from all ips
+            self._api_ip = ""
 
     async def start(self) -> None:
         """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
-        config_file = await self._hass.async_add_executor_job(_create_temp_file)
+        config_file = await self._hass.async_add_executor_job(
+            _create_temp_file, self._api_ip
+        )
 
         self._startup_complete.clear()
 
@@ -84,9 +92,7 @@ class Server:
         async for line in process.stdout:
             msg = line[:-1].decode().strip()
             _LOGGER.debug(msg)
-            if not self._startup_complete.is_set() and msg.endswith(
-                _SUCCESSFUL_BOOT_MESSAGE
-            ):
+            if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
                 self._startup_complete.set()
 
     async def stop(self) -> None:

@@ -31,7 +31,11 @@ from homeassistant.components.camera import (
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.components.go2rtc import WebRTCProvider
-from homeassistant.components.go2rtc.const import DOMAIN
+from homeassistant.components.go2rtc.const import (
+    CONF_DEBUG_UI,
+    DEBUG_UI_URL_MESSAGE,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
@@ -265,7 +269,15 @@ async def _test_setup_and_signaling(
     "mock_is_docker_env",
     "mock_go2rtc_entry",
 )
-@pytest.mark.parametrize("config", [{DOMAIN: {}}, {DEFAULT_CONFIG_DOMAIN: {}}])
+@pytest.mark.parametrize(
+    ("config", "ui_enabled"),
+    [
+        ({DOMAIN: {}}, False),
+        ({DOMAIN: {CONF_DEBUG_UI: True}}, True),
+        ({DEFAULT_CONFIG_DOMAIN: {}}, False),
+        ({DEFAULT_CONFIG_DOMAIN: {}, DOMAIN: {CONF_DEBUG_UI: True}}, True),
+    ],
+)
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
 async def test_setup_go_binary(
     hass: HomeAssistant,
@@ -277,12 +289,13 @@ async def test_setup_go_binary(
     init_test_integration: MockCamera,
     has_go2rtc_entry: bool,
     config: ConfigType,
+    ui_enabled: bool,
 ) -> None:
     """Test the go2rtc config entry with binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
 
     def after_setup() -> None:
-        server.assert_called_once_with(hass, "/usr/bin/go2rtc")
+        server.assert_called_once_with(hass, "/usr/bin/go2rtc", enable_ui=ui_enabled)
         server_start.assert_called_once()
 
     await _test_setup_and_signaling(
@@ -468,7 +481,9 @@ ERR_CONNECT = "Could not connect to go2rtc instance"
 ERR_CONNECT_RETRY = (
     "Could not connect to go2rtc instance on http://localhost:1984/; Retrying"
 )
-ERR_INVALID_URL = "Invalid config for 'go2rtc': invalid url"
+_INVALID_CONFIG = "Invalid config for 'go2rtc': "
+ERR_INVALID_URL = _INVALID_CONFIG + "invalid url"
+ERR_EXCLUSIVE = _INVALID_CONFIG + DEBUG_UI_URL_MESSAGE
 ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
 
 
@@ -501,6 +516,12 @@ async def test_non_user_setup_with_error(
         ({DOMAIN: {}}, None, False, ERR_URL_REQUIRED),
         ({DOMAIN: {}}, None, True, ERR_BINARY_NOT_FOUND),
         ({DOMAIN: {CONF_URL: "invalid"}}, None, True, ERR_INVALID_URL),
+        (
+            {DOMAIN: {CONF_URL: "http://localhost:1984", CONF_DEBUG_UI: True}},
+            None,
+            True,
+            ERR_EXCLUSIVE,
+        ),
     ],
 )
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])

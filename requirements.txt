@@ -4,7 +4,7 @@
 
 # Home Assistant Core
 aiodns==3.2.0
-aiohasupervisor==0.2.0
+aiohasupervisor==0.2.1
 aiohttp==3.10.10
 aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.1.1
