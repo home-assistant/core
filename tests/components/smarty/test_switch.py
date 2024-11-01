@@ -44,13 +44,13 @@ async def test_setting_value(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        target={ATTR_ENTITY_ID: "switch.smarty_post_data_to_smarty"},
+        target={ATTR_ENTITY_ID: "switch.smarty_boost"},
         blocking=True,
     )
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        target={ATTR_ENTITY_ID: "switch.smarty_post_data_to_smarty"},
+        target={ATTR_ENTITY_ID: "switch.smarty_boost"},
         blocking=True,
     )
