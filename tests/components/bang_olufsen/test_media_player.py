@@ -9,6 +9,7 @@ from mozart_api.models import (
     BeolinkLeader,
     BeolinkSelf,
     PlaybackContentMetadata,
+    PlayQueueSettings,
     RenderingState,
     Source,
     WebsocketNotificationTag,
@@ -18,6 +19,7 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.bang_olufsen.const import (
+    BANG_OLUFSEN_REPEAT_FROM_HA,
     BANG_OLUFSEN_STATES,
     DOMAIN,
     BangOlufsenSource,
@@ -36,7 +38,9 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -52,14 +56,17 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
+    SERVICE_REPEAT_SET,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_UNJOIN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -734,10 +741,12 @@ async def test_async_media_next_track(
 @pytest.mark.parametrize(
     ("source", "expected_result", "seek_called_times"),
     [
-        # Deezer source, seek expected
+        # Seekable source, seek expected
         (BangOlufsenSource.DEEZER, does_not_raise(), 1),
-        # Non deezer source, seek shouldn't work
-        (BangOlufsenSource.TIDAL, pytest.raises(HomeAssistantError), 0),
+        # Non seekable source, seek shouldn't work
+        (BangOlufsenSource.LINE_IN, pytest.raises(HomeAssistantError), 0),
+        # Malformed source, seek shouldn't work
+        (Source(), pytest.raises(HomeAssistantError), 0),
     ],
 )
 async def test_async_media_seek(
@@ -1672,3 +1681,96 @@ async def test_async_beolink_allstandby(
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states == snapshot(exclude=props("media_position_updated_at"))
+
+
+@pytest.mark.parametrize(
+    ("repeat"),
+    [
+        # Repeat all
+        (RepeatMode.ALL),
+        # Repeat track
+        (RepeatMode.ONE),
+        # Repeat none
+        (RepeatMode.OFF),
+    ],
+)
+async def test_async_set_repeat(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    repeat: RepeatMode,
+) -> None:
+    """Test async_set_repeat."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert ATTR_MEDIA_REPEAT not in states.attributes
+
+    # Set the return value of the repeat endpoint to match service call
+    mock_mozart_client.get_settings_queue.return_value = PlayQueueSettings(
+        repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            ATTR_MEDIA_REPEAT: repeat,
+        },
+        blocking=True,
+    )
+    mock_mozart_client.set_settings_queue.assert_called_once_with(
+        play_queue_settings=PlayQueueSettings(
+            repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
+        )
+    )
+
+    # Test the BANG_OLUFSEN_REPEAT_TO_HA dict by checking property value
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states.attributes[ATTR_MEDIA_REPEAT] == repeat
+
+
+@pytest.mark.parametrize(
+    ("shuffle"),
+    [
+        # Shuffle on
+        (True),
+        # Shuffle off
+        (False),
+    ],
+)
+async def test_async_set_shuffle(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    shuffle: bool,
+) -> None:
+    """Test async_set_shuffle."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert ATTR_MEDIA_SHUFFLE not in states.attributes
+
+    # Set the return value of the shuffle endpoint to match service call
+    mock_mozart_client.get_settings_queue.return_value = PlayQueueSettings(
+        shuffle=shuffle
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SHUFFLE_SET,
+        {
+            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            ATTR_MEDIA_SHUFFLE: shuffle,
+        },
+        blocking=True,
+    )
+    mock_mozart_client.set_settings_queue.assert_called_once_with(
+        play_queue_settings=PlayQueueSettings(shuffle=shuffle)
+    )
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states.attributes[ATTR_MEDIA_SHUFFLE] == shuffle

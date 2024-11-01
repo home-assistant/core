@@ -698,12 +698,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "bloomsky": {
-      "name": "BloomSky",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "blue_current": {
       "name": "Blue Current",
       "integration_type": "hub",
@@ -2252,13 +2246,6 @@
         }
       }
     },
-    "go2rtc": {
-      "name": "go2rtc",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "single_config_entry": true
-    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -2691,11 +2678,22 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
-    "husqvarna_automower": {
-      "name": "Husqvarna Automower",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
+    "husqvarna": {
+      "name": "Husqvarna",
+      "integrations": {
+        "husqvarna_automower": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Husqvarna Automower"
+        },
+        "husqvarna_automower_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Husqvarna Automower BLE"
+        }
+      }
     },
     "huum": {
       "name": "Huum",
@@ -3287,6 +3285,12 @@
           "iot_class": "local_polling",
           "name": "LG Soundbars"
         },
+        "lg_thinq": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "LG ThinQ"
+        },
         "webostv": {
           "integration_type": "hub",
           "config_flow": true,
@@ -3394,7 +3398,7 @@
     "local_file": {
       "name": "Local File",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "local_ip": {
@@ -3940,6 +3944,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "music_assistant": {
+      "name": "Music Assistant",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mutesync": {
       "name": "mutesync",
       "integration_type": "hub",
@@ -4325,8 +4335,8 @@
     },
     "onkyo": {
       "name": "Onkyo",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "onvif": {
@@ -4529,6 +4539,12 @@
     "p1_monitor": {
       "name": "P1 Monitor",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "palazzetti": {
+      "name": "Palazzetti",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5669,7 +5685,7 @@
     "smarty": {
       "name": "Salda Smarty",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "smhi": {
@@ -7348,13 +7364,11 @@
       "iot_class": "calculated"
     },
     "mold_indicator": {
-      "name": "Mold Indicator",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
     "random": {
-      "name": "Random",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7385,7 +7399,6 @@
       "iot_class": "local_polling"
     },
     "timer": {
-      "name": "Timer",
       "integration_type": "helper",
       "config_flow": false
     },
@@ -7395,7 +7408,6 @@
       "iot_class": "calculated"
     },
     "trend": {
-      "name": "Trend",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -7441,11 +7453,13 @@
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
+    "mold_indicator",
     "moon",
     "nextbus",
     "nmap_tracker",
     "plant",
     "proximity",
+    "random",
     "rpi_power",
     "schedule",
     "season",
@@ -7455,7 +7469,9 @@
     "switch_as_x",
     "threshold",
     "time_date",
+    "timer",
     "tod",
+    "trend",
     "uptime",
     "utility_meter",
     "version",

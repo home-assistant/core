@@ -9,6 +9,7 @@ from spotifyaio.models import (
     Album,
     Artist,
     ArtistResponse,
+    AudioFeatures,
     CategoriesResponse,
     Category,
     CategoryPlaylistResponse,
@@ -132,6 +133,7 @@ def mock_spotify() -> Generator[AsyncMock]:
             ("album.json", "get_album", Album),
             ("artist.json", "get_artist", Artist),
             ("show.json", "get_show", Show),
+            ("audio_features.json", "get_audio_features", AudioFeatures),
         ):
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)

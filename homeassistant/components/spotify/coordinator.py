@@ -3,23 +3,33 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from spotifyaio import (
+    ContextType,
+    ItemType,
     PlaybackState,
     Playlist,
     SpotifyClient,
     SpotifyConnectionError,
     UserProfile,
 )
+from spotifyaio.models import AudioFeatures
 
-from homeassistant.components.media_player import MediaType
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .models import SpotifyData
+
 _LOGGER = logging.getLogger(__name__)
+
+
+type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 @dataclass
@@ -29,6 +39,7 @@ class SpotifyCoordinatorData:
     current_playback: PlaybackState | None
     position_updated_at: datetime | None
     playlist: Playlist | None
+    audio_features: AudioFeatures | None
     dj_playlist: bool = False
 
 
@@ -42,6 +53,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
     """Class to manage fetching Spotify data."""
 
     current_user: UserProfile
+    config_entry: SpotifyConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: SpotifyClient) -> None:
         """Initialize."""
@@ -53,6 +65,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         )
         self.client = client
         self._playlist: Playlist | None = None
+        self._currently_loaded_track: str | None = None
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -65,19 +78,29 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         current = await self.client.get_playback()
         if not current:
             return SpotifyCoordinatorData(
-                current_playback=None, position_updated_at=None, playlist=None
+                current_playback=None,
+                position_updated_at=None,
+                playlist=None,
+                audio_features=None,
             )
         # Record the last updated time, because Spotify's timestamp property is unreliable
         # and doesn't actually return the fetch time as is mentioned in the API description
         position_updated_at = dt_util.utcnow()
 
+        audio_features: AudioFeatures | None = None
+        if (item := current.item) is not None and item.type == ItemType.TRACK:
+            if item.uri != self._currently_loaded_track:
+                self._currently_loaded_track = item.uri
+                audio_features = await self.client.get_audio_features(item.uri)
+            else:
+                audio_features = self.data.audio_features
         dj_playlist = False
         if (context := current.context) is not None:
             if self._playlist is None or self._playlist.uri != context.uri:
                 self._playlist = None
                 if context.uri == SPOTIFY_DJ_PLAYLIST_URI:
                     dj_playlist = True
-                elif context.context_type == MediaType.PLAYLIST:
+                elif context.context_type == ContextType.PLAYLIST:
                     # Make sure any playlist lookups don't break the current
                     # playback state update
                     try:
@@ -93,5 +116,6 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             current_playback=current,
             position_updated_at=position_updated_at,
             playlist=self._playlist,
+            audio_features=audio_features,
             dj_playlist=dj_playlist,
         )

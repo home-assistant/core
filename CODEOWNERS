@@ -617,8 +617,8 @@ build.json @home-assistant/supervisor
 /tests/components/hlk_sw16/ @jameshilliard
 /homeassistant/components/holiday/ @jrieger @gjohansson-ST
 /tests/components/holiday/ @jrieger @gjohansson-ST
-/homeassistant/components/home_connect/ @DavidMStraub
-/tests/components/home_connect/ @DavidMStraub
+/homeassistant/components/home_connect/ @DavidMStraub @Diegorro98
+/tests/components/home_connect/ @DavidMStraub @Diegorro98
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
@@ -659,6 +659,8 @@ build.json @home-assistant/supervisor
 /tests/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
 /homeassistant/components/husqvarna_automower/ @Thomas55555
 /tests/components/husqvarna_automower/ @Thomas55555
+/homeassistant/components/husqvarna_automower_ble/ @alistair23
+/tests/components/husqvarna_automower_ble/ @alistair23
 /homeassistant/components/huum/ @frwickst
 /tests/components/huum/ @frwickst
 /homeassistant/components/hvv_departures/ @vigonotion
@@ -819,6 +821,8 @@ build.json @home-assistant/supervisor
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
+/homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
+/tests/components/lg_thinq/ @LG-ThinQ-Integration
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/lifx/ @Djelibeybi
@@ -950,6 +954,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
+/homeassistant/components/music_assistant/ @music-assistant
+/tests/components/music_assistant/ @music-assistant
 /homeassistant/components/mutesync/ @currentoor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
@@ -1047,6 +1053,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz
+/tests/components/onkyo/ @arturpragacz
 /homeassistant/components/onvif/ @hunterjm
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
@@ -1088,6 +1095,8 @@ build.json @home-assistant/supervisor
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
 /tests/components/p1_monitor/ @klaasnicolaas
+/homeassistant/components/palazzetti/ @dotvav
+/tests/components/palazzetti/ @dotvav
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
 /homeassistant/components/peco/ @IceBotYT
@@ -1237,8 +1246,8 @@ build.json @home-assistant/supervisor
 /tests/components/roku/ @ctalkington
 /homeassistant/components/romy/ @xeniter
 /tests/components/romy/ @xeniter
-/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1 @Orhideous
-/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1 @Orhideous
+/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
+/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
 /homeassistant/components/rpi_power/ @shenxn @swetoast
@@ -1349,6 +1358,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smarttub/ @mdz
 /tests/components/smarttub/ @mdz
 /homeassistant/components/smarty/ @z0mbieprocess
+/tests/components/smarty/ @z0mbieprocess
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl
@@ -1412,8 +1422,8 @@ build.json @home-assistant/supervisor
 /tests/components/stt/ @home-assistant/core
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
-/homeassistant/components/suez_water/ @ooii
-/tests/components/suez_water/ @ooii
+/homeassistant/components/suez_water/ @ooii @jb101010-2
+/tests/components/suez_water/ @ooii @jb101010-2
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
 /homeassistant/components/sunweg/ @rokam
