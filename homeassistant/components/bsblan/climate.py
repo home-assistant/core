@@ -77,7 +77,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
 
         self._attr_min_temp = data.static.min_temp.value
         self._attr_max_temp = data.static.max_temp.value
-        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit()
+        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
 
     @property
     def current_temperature(self) -> float | None:

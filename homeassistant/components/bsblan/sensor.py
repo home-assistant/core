@@ -72,7 +72,7 @@ class BSBLanSensor(BSBLanEntity, SensorEntity):
         super().__init__(data.coordinator, data)
         self.entity_description = description
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
-        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit()
+        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
 
     @property
     def native_value(self) -> StateType:
