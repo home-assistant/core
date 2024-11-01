@@ -3,6 +3,12 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "choose_system": {
+        "data": {
+          "system": "System"
+        },
+        "description": "Please select a system in which you want to set up the webhooks"
       }
     },
     "abort": {
