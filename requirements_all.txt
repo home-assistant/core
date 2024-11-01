@@ -2308,7 +2308,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.6.4
+python-bsblan==1.0.0
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
@@ -2710,7 +2710,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==0.7.1
+spotifyaio==0.8.1
 
 # homeassistant.components.sql
 sqlparse==0.5.0

@@ -57,6 +57,7 @@ PyTurboJPEG==1.7.5
 pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
+securetar==2024.2.1
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
@@ -65,7 +66,7 @@ uv==0.4.28
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-webrtc-models==0.1.0
+webrtc-models==0.2.0
 yarl==1.17.1
 zeroconf==0.136.0
 
