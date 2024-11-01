@@ -1173,8 +1173,10 @@ _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = DeprecatedConstantEn
 )
 """Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
 
+
 # Area units
 AREA_SQUARE_METERS: Final = "m²"
+"""Deprecated: please use UnitOfArea.SQUARE_METERS"""
 
 
 class UnitOfArea(StrEnum):
