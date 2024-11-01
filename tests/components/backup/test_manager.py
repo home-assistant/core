@@ -372,6 +372,25 @@ async def test_async_trigger_restore(
         assert mocked_service_call.called
 
 
+async def test_async_trigger_restore_with_password(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger restore."""
+    manager = BackupManager(hass)
+    manager.loaded_backups = True
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text") as mocked_write_text,
+        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
+    ):
+        await manager.async_restore_backup(slug=TEST_BACKUP.slug, password="abc123")
+        assert mocked_write_text.call_args[0][0] == "abc123.tar;abc123"
+        assert mocked_service_call.called
+
+
 async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass)

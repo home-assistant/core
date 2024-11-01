@@ -16,7 +16,7 @@ from typing import Any, Protocol, cast
 
 from securetar import SecureTarFile, atomic_contents_add
 
-from homeassistant.backup_restore import RESTORE_BACKUP_FILE
+from homeassistant.backup_restore import RESTORE_BACKUP_FILE, password_to_key
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -126,7 +126,12 @@ class BaseBackupManager(abc.ABC):
         self.loaded_platforms = True
 
     @abc.abstractmethod
-    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+    async def async_restore_backup(
+        self,
+        slug: str,
+        password: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Restpre a backup."""
 
     @abc.abstractmethod
@@ -303,7 +308,7 @@ class BackupManager(BaseBackupManager):
             with outer_secure_tarfile.create_inner_tar(
                 "./homeassistant.tar.gz",
                 gzip=True,
-                key=_password_to_key(password=password),
+                key=password_to_key(password=password),
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,
@@ -313,7 +318,12 @@ class BackupManager(BaseBackupManager):
                 )
         return tar_file_path.stat().st_size
 
-    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+    async def async_restore_backup(
+        self,
+        slug: str,
+        password: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Restore a backup.
 
         This will write the restore information to .HA_RESTORE which
@@ -325,7 +335,12 @@ class BackupManager(BaseBackupManager):
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                f"{backup.path.as_posix()};",
+                ";".join(
+                    [
+                        backup.path.as_posix(),
+                        password or "",
+                    ]
+                ),
                 encoding="utf-8",
             )
 
@@ -336,13 +351,3 @@ class BackupManager(BaseBackupManager):
 def _generate_slug(date: str, name: str) -> str:
     """Generate a backup slug."""
     return hashlib.sha1(f"{date} - {name}".lower().encode()).hexdigest()[:8]
-
-
-def _password_to_key(password: str | None) -> bytes | None:
-    """Generate a AES Key from password."""
-    if password is None:
-        return None
-    key: bytes = password.encode()
-    for _ in range(100):
-        key = hashlib.sha256(key).digest()
-    return key[:16]

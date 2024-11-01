@@ -15,16 +15,37 @@ from .common import get_test_config_dir
     ("side_effect", "content", "expected"),
     [
         (FileNotFoundError, "", None),
-        (None, "", backup_restore.RestoreBackupFileContent(backup_file_path=Path(""))),
+        (
+            None,
+            "",
+            backup_restore.RestoreBackupFileContent(
+                backup_file_path=Path(""),
+                password=None,
+            ),
+        ),
         (
             None,
             "test;",
-            backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
+            backup_restore.RestoreBackupFileContent(
+                backup_file_path=Path("test"),
+                password="",
+            ),
+        ),
+        (
+            None,
+            "test;psw",
+            backup_restore.RestoreBackupFileContent(
+                backup_file_path=Path("test"),
+                password="psw",
+            ),
         ),
         (
             None,
             "test;;;;",
-            backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
+            backup_restore.RestoreBackupFileContent(
+                backup_file_path=Path("test"),
+                password="",
+            ),
         ),
     ],
 )
@@ -195,7 +216,7 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         mock.patch(
             "homeassistant.backup_restore.restore_backup_file_content",
             return_value=backup_restore.RestoreBackupFileContent(
-                backup_file_path=backup_file_path
+                backup_file_path=backup_file_path,
             ),
         ),
         mock.patch(
@@ -218,3 +239,16 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         assert {
             member.name for member in extractall_mock.mock_calls[-1].kwargs["members"]
         } == {".HA_VERSION", ".storage", "www"}
+
+
+@pytest.mark.parametrize(
+    ("password", "expected"),
+    [
+        (None, None),
+        ("test", b"\xf0\x9b\xb9\x1f\xdc,\xff\xd5x\xd6\xd6\x8fz\x19.\x0f"),
+        ("lorem ipsum...", b"#\xe0\xfc\xe0\xdb?_\x1f,$\rQ\xf4\xf5\xd8\xfb"),
+    ],
+)
+def test_pw_to_key(password: str | None, expected: bytes | None) -> None:
+    """Test password to key conversion."""
+    assert backup_restore.password_to_key(password) == expected

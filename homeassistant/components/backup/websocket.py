@@ -91,6 +91,7 @@ async def handle_remove(
     {
         vol.Required("type"): "backup/restore",
         vol.Required("slug"): str,
+        vol.Optional("password"): str,
     }
 )
 @websocket_api.async_response
