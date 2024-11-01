@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import datetime as dt
 import logging
@@ -63,6 +64,7 @@ REPEAT_MODE_MAPPING_TO_HA = {
 REPEAT_MODE_MAPPING_TO_SPOTIFY = {
     value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
 }
+AFTER_REQUEST_SLEEP = 1
 
 
 async def async_setup_entry(
@@ -270,32 +272,38 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self.coordinator.client.set_volume(int(volume * 100))
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_media_play(self) -> None:
         """Start or resume playback."""
         await self.coordinator.client.start_playback()
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_media_pause(self) -> None:
         """Pause playback."""
         await self.coordinator.client.pause_playback()
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         await self.coordinator.client.previous_track()
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         await self.coordinator.client.next_track()
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self.coordinator.client.seek_track(int(position * 1000))
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -339,27 +347,31 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
             return
 
         await self.coordinator.client.start_playback(**kwargs)
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_select_source(self, source: str) -> None:
         """Select playback device."""
         for device in self.devices.data:
             if device.name == source:
                 await self.coordinator.client.transfer_playback(device.device_id)
-                await self.coordinator.async_request_refresh()
+                await asyncio.sleep(AFTER_REQUEST_SLEEP)
+                await self.coordinator.async_refresh()
                 return
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         await self.coordinator.client.set_shuffle(state=shuffle)
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
             raise ValueError(f"Unsupported repeat mode: {repeat}")
         await self.coordinator.client.set_repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
-        await self.coordinator.async_request_refresh()
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
     async def async_browse_media(
         self,
