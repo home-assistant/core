@@ -68,4 +68,4 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
                     "key": self.entity_description.key,
                 },
             ) from exc
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_update_listeners()
