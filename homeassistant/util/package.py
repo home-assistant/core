@@ -111,6 +111,8 @@ def install_package(
         "install",
         "--quiet",
         package,
+        # Allow prereleases in sub-packages
+        "--prerelease=allow",
         # We need to use unsafe-first-match for custom components
         # which can use a different version of a package than the one
         # we have built the wheel for.
