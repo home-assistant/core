@@ -821,6 +821,8 @@ build.json @home-assistant/supervisor
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
+/homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
+/tests/components/lg_thinq/ @LG-ThinQ-Integration
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/lifx/ @Djelibeybi
@@ -952,6 +954,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
+/homeassistant/components/music_assistant/ @music-assistant
+/tests/components/music_assistant/ @music-assistant
 /homeassistant/components/mutesync/ @currentoor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
@@ -1091,6 +1095,8 @@ build.json @home-assistant/supervisor
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
 /tests/components/p1_monitor/ @klaasnicolaas
+/homeassistant/components/palazzetti/ @dotvav
+/tests/components/palazzetti/ @dotvav
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
 /homeassistant/components/peco/ @IceBotYT

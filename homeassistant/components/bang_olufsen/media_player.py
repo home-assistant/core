@@ -95,6 +95,7 @@ BANG_OLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -238,6 +239,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
             if queue_settings.repeat is not None:
                 self._attr_repeat = BANG_OLUFSEN_REPEAT_TO_HA[queue_settings.repeat]
+
+            if queue_settings.shuffle is not None:
+                self._attr_shuffle = queue_settings.shuffle
 
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
@@ -661,6 +665,12 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             play_queue_settings=PlayQueueSettings(
                 repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
             )
+        )
+
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Set playback queues to shuffle."""
+        await self._client.set_settings_queue(
+            play_queue_settings=PlayQueueSettings(shuffle=shuffle),
         )
 
     async def async_select_source(self, source: str) -> None:

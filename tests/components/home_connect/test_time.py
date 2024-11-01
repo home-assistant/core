@@ -12,6 +12,7 @@ from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import get_all_appliances
 
@@ -134,13 +135,14 @@ async def test_time_entity_error(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    await hass.services.async_call(
-        TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TIME: time(minute=1),
-        },
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError, match=r"Error.*set.*setting.*"):
+        await hass.services.async_call(
+            TIME_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_TIME: time(minute=1),
+            },
+            blocking=True,
+        )
     assert getattr(problematic_appliance, mock_attr).call_count == 2

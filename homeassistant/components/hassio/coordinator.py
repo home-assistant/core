@@ -563,8 +563,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             # updates if this is not a scheduled refresh and
             # we are not doing the first refresh.
             try:
-                await self.hassio.refresh_updates()
-            except HassioAPIError as err:
+                await self.supervisor_client.refresh_updates()
+            except SupervisorError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
 
         await super()._async_refresh(

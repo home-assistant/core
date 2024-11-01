@@ -589,6 +589,16 @@ async def test_entity_already_in_progress(
             blocking=True,
         )
 
+    # Check update percentage is suppressed when in_progress is False
+    entity = next(
+        entity for entity in mock_update_entities if entity.entity_id == entity_id
+    )
+    entity._attr_in_progress = False
+    entity.async_write_ha_state()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
 
 async def test_entity_without_progress_support(
     hass: HomeAssistant,
