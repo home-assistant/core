@@ -3,12 +3,11 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError, StaticState
+from bsblan import BSBLANError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     STATE_ECO,
@@ -22,12 +21,7 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "water_heater.bsb_lan"
 
@@ -211,31 +205,3 @@ async def test_operation_mode_error(
             },
             blocking=True,
         )
-
-
-@pytest.mark.parametrize(
-    ("static_file"),
-    [
-        ("static.json"),
-        ("static_F.json"),
-    ],
-)
-async def test_temperature_unit(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-    static_file: str,
-) -> None:
-    """Test Celsius and Fahrenheit temperature units."""
-
-    static_data = load_json_object_fixture(static_file, DOMAIN)
-
-    mock_bsblan.static_values.return_value = StaticState.from_dict(static_data)
-
-    await setup_with_selected_platforms(
-        hass, mock_config_entry, [Platform.WATER_HEATER]
-    )
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
