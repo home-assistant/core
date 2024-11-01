@@ -63,7 +63,11 @@ class ZimiLight(LightEntity):
         self._state = False
         self._brightness = None
         if self._light.type == "dimmer":
+            self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, light.identifier)},
             name=self._light.name,
