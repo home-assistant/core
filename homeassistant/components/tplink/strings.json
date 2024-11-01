@@ -190,6 +190,9 @@
       },
       "fan_sleep_mode": {
         "name": "Fan sleep mode"
+      },
+      "child_lock": {
+        "name": "Child lock"
       }
     },
     "number": {
