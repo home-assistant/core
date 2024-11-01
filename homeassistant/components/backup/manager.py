@@ -246,13 +246,14 @@ class BackupManager(BaseBackupManager):
         )
 
         def _sync_queue_consumer() -> None:
-            while True:
-                if (_chunk_future := queue.get()) is None:
-                    break
-                _chunk, _future = _chunk_future
-                if _future is not None:
-                    self.hass.loop.call_soon_threadsafe(_future.set_result, None)
-                target_temp_file.write_bytes(_chunk)
+            with target_temp_file.open("wb") as file_handle:
+                while True:
+                    if (_chunk_future := queue.get()) is None:
+                        break
+                    _chunk, _future = _chunk_future
+                    if _future is not None:
+                        self.hass.loop.call_soon_threadsafe(_future.set_result, None)
+                    file_handle.write(_chunk)
 
         fut: asyncio.Future[None] | None = None
         try:
@@ -284,6 +285,7 @@ class BackupManager(BaseBackupManager):
             temp_dir_handler.cleanup()
 
         await self.hass.async_add_executor_job(_move_and_cleanup)
+        await self.load_backups()
 
     async def async_create_backup(self, **kwargs: Any) -> Backup:
         """Generate a backup."""

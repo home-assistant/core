@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
 
+import aiohttp
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
 from homeassistant.components.backup import BackupManager
@@ -333,3 +335,37 @@ async def test_loading_platforms_when_running_async_post_backup_actions(
     assert len(manager.platforms) == 1
 
     assert "Loaded 1 platforms" in caplog.text
+
+
+async def test_async_receive_backup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test receiving a backup file."""
+    manager = BackupManager(hass)
+
+    size = 2 * 2**16
+    protocol = Mock(_reading_paused=False)
+    stream = aiohttp.StreamReader(protocol, 2**16)
+    stream.feed_data(b"0" * size + b"\r\n--:--")
+    stream.feed_eof()
+
+    openmock = mock_open()
+
+    with patch("pathlib.Path.open", openmock), patch("shutil.move") as movermock:
+        await manager.async_receive_backup(
+            contents=aiohttp.BodyPartReader(
+                b"--:",
+                CIMultiDictProxy(
+                    CIMultiDict(
+                        {
+                            aiohttp.hdrs.CONTENT_DISPOSITION: "attachment; filename=abc123.tar"
+                        }
+                    )
+                ),
+                stream,
+            )
+        )
+        assert openmock.call_count == 1
+        assert movermock.call_count == 1
+        assert movermock.mock_calls[0].args[1].name == "abc123.tar"
