@@ -324,6 +324,7 @@ homeassistant.components.moon.*
 homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
+homeassistant.components.music_assistant.*
 homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*

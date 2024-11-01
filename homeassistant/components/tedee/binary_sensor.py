@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TedeeConfigEntry
+from .coordinator import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
 
 

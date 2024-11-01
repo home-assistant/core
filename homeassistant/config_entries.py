@@ -27,10 +27,16 @@ from typing import TYPE_CHECKING, Any, Generic, Self, cast
 from async_interrupt import interrupt
 from propcache import cached_property
 from typing_extensions import TypeVar
+import voluptuous as vol
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
-from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
+from .const import (
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from .core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -78,10 +84,10 @@ from .util.enum import try_parse_enum
 if TYPE_CHECKING:
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
-    from .components.hassio import HassioServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
+    from .helpers.service_info.hassio import HassioServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
 
@@ -1602,6 +1608,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
         data = self.data
+        self.check_unique_id(entry)
         if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
@@ -1610,34 +1617,49 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         data[entry_id] = entry
         self._index_entry(entry)
 
+    def check_unique_id(self, entry: ConfigEntry) -> None:
+        """Check config entry unique id.
+
+        For a string unique id (this is the correct case): return
+        For a hashable non string unique id: log warning
+        For a non-hashable unique id: raise error
+        """
+        if (unique_id := entry.unique_id) is None:
+            return
+        if isinstance(unique_id, str):
+            # Unique id should be a string
+            return
+        if isinstance(unique_id, Hashable):  # type: ignore[unreachable]
+            # Checks for other non-string was added in HA Core 2024.10
+            # In HA Core 2025.10, we should remove the error and instead fail
+            report_issue = async_suggest_report_issue(
+                self._hass, integration_domain=entry.domain
+            )
+            _LOGGER.error(
+                (
+                    "Config entry '%s' from integration %s has an invalid unique_id"
+                    " '%s' of type %s when a string is expected, please %s"
+                ),
+                entry.title,
+                entry.domain,
+                entry.unique_id,
+                type(entry.unique_id).__name__,
+                report_issue,
+            )
+        else:
+            # Guard against integrations using unhashable unique_id
+            # In HA Core 2024.11, the guard was changed from warning to failing
+            raise HomeAssistantError(
+                f"The entry unique id {unique_id} is not a string."
+            )
+
     def _index_entry(self, entry: ConfigEntry) -> None:
         """Index an entry."""
+        self.check_unique_id(entry)
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
-            unique_id_hash = entry.unique_id
-            if not isinstance(entry.unique_id, str):
-                # Guard against integrations using unhashable unique_id
-                # In HA Core 2024.9, we should remove the guard and instead fail
-                if not isinstance(entry.unique_id, Hashable):  # type: ignore[unreachable]
-                    unique_id_hash = str(entry.unique_id)
-                # Checks for other non-string was added in HA Core 2024.10
-                # In HA Core 2025.10, we should remove the error and instead fail
-                report_issue = async_suggest_report_issue(
-                    self._hass, integration_domain=entry.domain
-                )
-                _LOGGER.error(
-                    (
-                        "Config entry '%s' from integration %s has an invalid unique_id"
-                        " '%s', please %s"
-                    ),
-                    entry.title,
-                    entry.domain,
-                    entry.unique_id,
-                    report_issue,
-                )
-
             self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
-                unique_id_hash, []
+                entry.unique_id, []
             ).append(entry)
 
     def _unindex_entry(self, entry_id: str) -> None:
@@ -1648,9 +1670,6 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if not self._domain_index[domain]:
             del self._domain_index[domain]
         if (unique_id := entry.unique_id) is not None:
-            # Check type first to avoid expensive isinstance call
-            if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
-                unique_id = str(entry.unique_id)  # type: ignore[unreachable]
             self._domain_unique_id_index[domain][unique_id].remove(entry)
             if not self._domain_unique_id_index[domain][unique_id]:
                 del self._domain_unique_id_index[domain][unique_id]
@@ -1669,6 +1688,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """
         entry_id = entry.entry_id
         self._unindex_entry(entry_id)
+        self.check_unique_id(entry)
         object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
         entry.clear_state_cache()
@@ -1682,9 +1702,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:
         """Get entry by domain and unique id."""
-        # Check type first to avoid expensive isinstance call
-        if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
-            unique_id = str(unique_id)  # type: ignore[unreachable]
+        if unique_id is None:
+            return None  # type: ignore[unreachable]
+        if not isinstance(unique_id, Hashable):
+            raise HomeAssistantError(
+                f"The entry unique id {unique_id} is not a string."
+            )
         entries = self._domain_unique_id_index.get(domain, {}).get(unique_id)
         if not entries:
             return None
@@ -2881,6 +2904,38 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
         return self.async_abort(reason=reason)
+
+    @callback
+    def async_show_form(
+        self,
+        *,
+        step_id: str | None = None,
+        data_schema: vol.Schema | None = None,
+        errors: dict[str, str] | None = None,
+        description_placeholders: Mapping[str, str | None] | None = None,
+        last_step: bool | None = None,
+        preview: str | None = None,
+    ) -> ConfigFlowResult:
+        """Return the definition of a form to gather user input.
+
+        The step_id parameter is deprecated and will be removed in a future release.
+        """
+        if self.source == SOURCE_REAUTH and "entry_id" in self.context:
+            # If the integration does not provide a name for the reauth title,
+            # we append it to the description placeholders.
+            # We also need to check entry_id as some integrations bypass the
+            # reauth helpers and create a flow without it.
+            description_placeholders = dict(description_placeholders or {})
+            if description_placeholders.get(CONF_NAME) is None:
+                description_placeholders[CONF_NAME] = self._get_reauth_entry().title
+        return super().async_show_form(
+            step_id=step_id,
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+            last_step=last_step,
+            preview=preview,
+        )
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""

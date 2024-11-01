@@ -10,7 +10,7 @@ from lmcloud.const import FirmwareType
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import LaMarzoccoConfigEntry
+from .coordinator import LaMarzoccoConfigEntry
 
 TO_REDACT = {
     "serial_number",
