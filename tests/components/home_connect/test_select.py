@@ -123,7 +123,7 @@ async def test_select_functionality(
         ),
     ],
 )
-async def test_switch_exception_handling(
+async def test_select_exception_handling(
     entity_id: str,
     status: dict,
     program_to_set: str,
