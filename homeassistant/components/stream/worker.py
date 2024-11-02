@@ -53,7 +53,7 @@ class StreamWorkerError(Exception):
 
 def redact_av_error_string(err: av.FFmpegError) -> str:
     """Return an error string with credentials redacted from the url."""
-    parts = [str(err.type), err.strerror]
+    parts = [str(err.type), err.strerror]  # type: ignore[attr-defined]
     if err.filename is not None:
         parts.append(redact_credentials(err.filename))
     return ", ".join(parts)
@@ -182,7 +182,7 @@ class StreamMuxer:
             # in test_durations
             "avoid_negative_ts": "make_non_negative",
             "fragment_index": str(sequence + 1),
-            "video_track_timescale": str(int(1 / input_vstream.time_base)),
+            "video_track_timescale": str(int(1 / input_vstream.time_base)),  # type: ignore[operator]
             # Only do extra fragmenting if we are using ll_hls
             # Let ffmpeg do the work using frag_duration
             # Fragment durations may exceed the 15% allowed variance but it seems ok
@@ -237,7 +237,7 @@ class StreamMuxer:
                     self._audio_bsf, input_astream
                 )
             output_astream = container.add_stream(template=input_astream)
-        return container, output_vstream, output_astream
+        return container, output_vstream, output_astream  # type: ignore[return-value]
 
     def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
@@ -463,7 +463,7 @@ class TimestampValidator:
         """Validate the packet timestamp based on ordering within the stream."""
         # Discard packets missing DTS. Terminate if too many are missing.
         if packet.dts is None:
-            if self._missing_dts >= MAX_MISSING_DTS:
+            if self._missing_dts >= MAX_MISSING_DTS:  # type: ignore[unreachable]
                 raise StreamWorkerError(
                     f"No dts in {MAX_MISSING_DTS+1} consecutive packets"
                 )
@@ -545,7 +545,7 @@ def stream_worker(
         audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
-        audio_stream = None
+        audio_stream = None  # type: ignore[unreachable]
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
         for field in fields(StreamSettings):
@@ -560,8 +560,8 @@ def stream_worker(
         stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
     dts_validator = TimestampValidator(
-        int(1 / video_stream.time_base),
-        int(1 / audio_stream.time_base) if audio_stream else 1,
+        int(1 / video_stream.time_base),  # type: ignore[operator]
+        int(1 / audio_stream.time_base) if audio_stream else 1,  # type: ignore[operator]
     )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
