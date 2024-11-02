@@ -16,7 +16,6 @@ import av
 import av.audio
 import av.container
 import av.stream
-import av.video
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -130,7 +129,7 @@ class StreamMuxer:
     _segment_start_dts: int
     _memory_file: BytesIO
     _av_output: av.container.OutputContainer
-    _output_video_stream: av.video.VideoStream
+    _output_video_stream: av.VideoStream
     _output_audio_stream: av.audio.AudioStream | None
     _segment: Segment | None
     # the following 2 member variables are used for Part formation
@@ -140,7 +139,7 @@ class StreamMuxer:
     def __init__(
         self,
         hass: HomeAssistant,
-        video_stream: av.video.VideoStream,
+        video_stream: av.VideoStream,
         audio_stream: av.audio.AudioStream | None,
         audio_bsf: str | None,
         stream_state: StreamState,
@@ -161,11 +160,11 @@ class StreamMuxer:
         self,
         memory_file: BytesIO,
         sequence: int,
-        input_vstream: av.video.VideoStream,
+        input_vstream: av.VideoStream,
         input_astream: av.audio.AudioStream | None,
     ) -> tuple[
         av.container.OutputContainer,
-        av.video.VideoStream,
+        av.VideoStream,
         av.audio.AudioStream | None,
     ]:
         """Make a new av OutputContainer and add output streams."""
