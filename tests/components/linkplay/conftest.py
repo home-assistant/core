@@ -1,46 +1,26 @@
 """Test configuration and mocks for LinkPlay component."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
+from typing import Any
+from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientSession
-from linkplay.bridge import LinkPlayBridge, LinkPlayDevice, LinkPlayMultiroom
-from linkplay.endpoint import LinkPlayApiEndpoint
+from linkplay.bridge import LinkPlayBridge, LinkPlayDevice
 import pytest
 
 from homeassistant.components.linkplay.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
+from tests.conftest import AiohttpClientMocker
 
 HOST = "10.0.0.150"
 HOST_REENTRY = "10.0.0.66"
 UUID = "FF31F09E-5001-FBDE-0546-2DBFFF31F09E"
 NAME = "Smart Zone 1_54B9"
-
-
-@pytest.fixture
-def mock_linkplay_factory_bridge_init() -> Generator[AsyncMock]:
-    """Mock for linkplay_factory_httpapi_bridge."""
-
-    with (
-        patch(
-            "homeassistant.components.linkplay.async_get_client_session",
-            return_value=AsyncMock(spec=ClientSession),
-        ),
-        patch(
-            "homeassistant.components.linkplay.linkplay_factory_httpapi_bridge",
-            return_value=AsyncMock(spec=ClientSession),
-        ) as init_factory,
-        patch.object(LinkPlayDevice, "update_status", return_value=None),
-        patch.object(LinkPlayMultiroom, "update_status", return_value=None),
-    ):
-        bridge = LinkPlayBridge(
-            endpoint=LinkPlayApiEndpoint(protocol="http", endpoint=HOST, session=None)
-        )
-        bridge.device = LinkPlayDevice(bridge)
-        init_factory.return_value = bridge
-        yield init_factory
 
 
 @pytest.fixture
@@ -84,3 +64,44 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_HOST: HOST},
         unique_id=UUID,
     )
+
+
+@pytest.fixture
+def mock_player_ex(
+    mock_player_ex: AsyncMock,
+) -> AsyncMock:
+    """Mock a update_status of the LinkPlayPlayer."""
+    mock_player_ex.return_value = load_fixture("getPlayerEx.json", DOMAIN)
+    return mock_player_ex
+
+
+@pytest.fixture
+def mock_status_ex(
+    mock_status_ex: AsyncMock,
+) -> AsyncMock:
+    """Mock a update_status of the LinkPlayDevice."""
+    mock_status_ex.return_value = load_fixture("getStatusEx.json", DOMAIN)
+    return mock_status_ex
+
+
+@contextmanager
+def mock_lp_aiohttp_client() -> Iterator[AiohttpClientMocker]:
+    """Context manager to mock aiohttp client."""
+    mocker = AiohttpClientMocker()
+
+    def create_session(hass: HomeAssistant, *args: Any, **kwargs: Any) -> ClientSession:
+        session = mocker.create_session(hass.loop)
+
+        async def close_session(event):
+            """Close session."""
+            await session.close()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
+
+        return session
+
+    with mock.patch(
+        "homeassistant.components.linkplay.async_get_client_session",
+        side_effect=create_session,
+    ):
+        yield mocker

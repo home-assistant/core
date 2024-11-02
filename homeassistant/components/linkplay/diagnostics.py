@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from . import LinkPlayConfigEntry
 
-TO_REDACT = {"MAC"}
+TO_REDACT = {"MAC", "ETH_MAC"}
 
 
 async def async_get_config_entry_diagnostics(
