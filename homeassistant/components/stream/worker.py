@@ -127,6 +127,15 @@ class StreamState:
 class StreamMuxer:
     """StreamMuxer re-packages video/audio packets for output."""
 
+    _segment_start_dts: int
+    _memory_file: BytesIO
+    _av_output: av.container.OutputContainer
+    _output_video_stream: av.video.VideoStream
+    _output_audio_stream: av.audio.AudioStream | None
+    # the following 2 member variables are used for Part formation
+    _memory_file_pos: int
+    _part_start_dts: int
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -138,19 +147,11 @@ class StreamMuxer:
     ) -> None:
         """Initialize StreamMuxer."""
         self._hass = hass
-        self._segment_start_dts: int = cast(int, None)
-        self._memory_file: BytesIO = cast(BytesIO, None)
-        self._av_output: av.container.OutputContainer = None
-        self._input_video_stream: av.video.VideoStream = video_stream
-        self._input_audio_stream: av.audio.AudioStream | None = audio_stream
+        self._input_video_stream = video_stream
+        self._input_audio_stream = audio_stream
         self._audio_bsf = audio_bsf
-        self._audio_bsf_context: av.BitStreamFilterContext = None
-        self._output_video_stream: av.video.VideoStream = None
-        self._output_audio_stream: av.audio.AudioStream | None = None
+        self._audio_bsf_context: av.BitStreamFilterContext | None = None
         self._segment: Segment | None = None
-        # the following 3 member variables are used for Part formation
-        self._memory_file_pos: int = cast(int, None)
-        self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
