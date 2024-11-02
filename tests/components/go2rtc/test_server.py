@@ -16,9 +16,15 @@ TEST_BINARY = "/bin/go2rtc"
 
 
 @pytest.fixture
-def server(hass: HomeAssistant) -> Server:
+def enable_ui() -> bool:
+    """Fixture to enable the UI."""
+    return False
+
+
+@pytest.fixture
+def server(hass: HomeAssistant, enable_ui: bool) -> Server:
     """Fixture to initialize the Server."""
-    return Server(hass, binary=TEST_BINARY)
+    return Server(hass, binary=TEST_BINARY, enable_ui=enable_ui)
 
 
 @pytest.fixture
@@ -32,12 +38,20 @@ def mock_tempfile() -> Generator[Mock]:
         yield file
 
 
+@pytest.mark.parametrize(
+    ("enable_ui", "api_ip"),
+    [
+        (True, ""),
+        (False, "127.0.0.1"),
+    ],
+)
 async def test_server_run_success(
     mock_create_subprocess: AsyncMock,
     server_stdout: list[str],
     server: Server,
     caplog: pytest.LogCaptureFixture,
     mock_tempfile: Mock,
+    api_ip: str,
 ) -> None:
     """Test that the server runs successfully."""
     await server.start()
@@ -53,9 +67,10 @@ async def test_server_run_success(
     )
 
     # Verify that the config file was written
-    mock_tempfile.write.assert_called_once_with(b"""
+    mock_tempfile.write.assert_called_once_with(
+        f"""
 api:
-  listen: "127.0.0.1:1984"
+  listen: "{api_ip}:1984"
 
 rtsp:
   # ffmpeg needs rtsp for opus audio transcoding
@@ -63,7 +78,8 @@ rtsp:
 
 webrtc:
   ice_servers: []
-""")
+""".encode()
+    )
 
     # Check that server read the log lines
     for entry in server_stdout:
