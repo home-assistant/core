@@ -105,17 +105,16 @@ class RecorderOutput(StreamOutput):
 
             # Create output on first segment
             if not output:
+                container_options: dict[str, str] = {
+                    "video_track_timescale": str(int(1 / source_v.time_base)),
+                    "movflags": "frag_keyframe+empty_moov",
+                    "min_frag_duration": str(self.stream_settings.min_segment_duration),
+                }
                 output = av.open(
                     self.video_path + ".tmp",
                     "w",
                     format=RECORDER_CONTAINER_FORMAT,
-                    container_options={
-                        "video_track_timescale": str(int(1 / source_v.time_base)),
-                        "movflags": "frag_keyframe+empty_moov",
-                        "min_frag_duration": str(
-                            self.stream_settings.min_segment_duration
-                        ),
-                    },
+                    container_options=container_options,
                 )
 
             # Add output streams if necessary
