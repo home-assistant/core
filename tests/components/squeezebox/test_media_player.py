@@ -38,6 +38,8 @@ from homeassistant.components.squeezebox.const import (
 )
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
+    ATTR_RETURN_ITEMS,
+    ATTR_SEARCH_STRING,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
     SERVICE_SEARCH,
