@@ -257,7 +257,7 @@ class StreamMuxer:
             input_astream=self._input_audio_stream,
         )
         if self._output_video_stream.name == "hevc":
-            self._output_video_stream.codec_tag = "hvc1"
+            self._output_video_stream.codec_context.codec_tag = "hvc1"
 
     def mux_packet(self, packet: av.Packet) -> None:
         """Mux a packet to the appropriate output stream."""
