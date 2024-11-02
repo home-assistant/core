@@ -183,3 +183,16 @@ async def test_form_homekit_ignored(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test option flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "api_key"})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # This should be improved at a later stage to increase test coverage
+    hass.config_entries.options.async_abort(result["flow_id"])
