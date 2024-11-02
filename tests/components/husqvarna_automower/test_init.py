@@ -1,6 +1,6 @@
 """Tests for init module."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import http
 import time
 from unittest.mock import AsyncMock
@@ -10,25 +10,27 @@ from aioautomower.exceptions import (
     AuthException,
     HusqvarnaWSServerHandshakeError,
 )
-from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aioautomower.model import MowerAttributes, WorkArea
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+ADDITIONAL_NUMBER_ENTITIES = 1
+ADDITIONAL_SENSOR_ENTITIES = 2
+ADDITIONAL_SWITCH_ENTITIES = 1
 
 
 async def test_load_unload_entry(
@@ -167,37 +169,13 @@ async def test_device_info(
     assert reg_device == snapshot
 
 
-async def test_workarea_deleted(
-    hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test if work area is deleted after removed."""
-
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
-    await setup_integration(hass, mock_config_entry)
-    current_entries = len(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
-    )
-
-    del values[TEST_MOWER_ID].work_areas[123456]
-    mock_automower_client.get_status.return_value = values
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
-    ) == (current_entries - 2)
-
-
 async def test_coordinator_automatic_registry_cleanup(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test automatic registry cleanup."""
     await setup_integration(hass, mock_config_entry)
@@ -211,9 +189,6 @@ async def test_coordinator_automatic_registry_cleanup(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
 
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     values.pop(TEST_MOWER_ID)
     mock_automower_client.get_status.return_value = values
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
@@ -226,4 +201,72 @@ async def test_coordinator_automatic_registry_cleanup(
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices - 1
+    )
+
+
+async def test_add_and_remove_work_area(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test adding a work area in runtime."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    current_entites_start = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    values[TEST_MOWER_ID].work_area_names.append("new work area")
+    values[TEST_MOWER_ID].work_area_dict.update({1: "new work area"})
+    values[TEST_MOWER_ID].work_areas.update(
+        {
+            1: WorkArea(
+                name="new work area",
+                cutting_height=12,
+                enabled=True,
+                progress=12,
+                last_time_completed=datetime(
+                    2024, 10, 1, 11, 11, 0, tzinfo=dt_util.get_default_time_zone()
+                ),
+            )
+        }
+    )
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    current_entites_after_addition = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    assert (
+        current_entites_after_addition
+        == current_entites_start
+        + ADDITIONAL_NUMBER_ENTITIES
+        + ADDITIONAL_SENSOR_ENTITIES
+        + ADDITIONAL_SWITCH_ENTITIES
+    )
+
+    values[TEST_MOWER_ID].work_area_names.remove("new work area")
+    del values[TEST_MOWER_ID].work_area_dict[1]
+    del values[TEST_MOWER_ID].work_areas[1]
+    values[TEST_MOWER_ID].work_area_names.remove("Front lawn")
+    del values[TEST_MOWER_ID].work_area_dict[123456]
+    del values[TEST_MOWER_ID].work_areas[123456]
+    del values[TEST_MOWER_ID].calendar.tasks[:2]
+    values[TEST_MOWER_ID].mower.work_area_id = 654321
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    current_entites_after_deletion = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    assert (
+        current_entites_after_deletion
+        == current_entites_start
+        - ADDITIONAL_SWITCH_ENTITIES
+        - ADDITIONAL_NUMBER_ENTITIES
+        - ADDITIONAL_SENSOR_ENTITIES
     )

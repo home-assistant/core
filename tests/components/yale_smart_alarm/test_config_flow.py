@@ -149,7 +149,6 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
                 "password": "new-test-password",
             },
         )
@@ -203,7 +202,6 @@ async def test_reauth_flow_error(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
                 "password": "wrong-password",
             },
         )
@@ -226,7 +224,6 @@ async def test_reauth_flow_error(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
                 "password": "new-test-password",
             },
         )

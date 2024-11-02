@@ -16,6 +16,7 @@ from hassil.expression import Expression, ListReference, Sequence
 from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
 from hassil.recognize import (
     MISSING_ENTITY,
+    MatchEntity,
     RecognizeResult,
     UnmatchedTextEntity,
     recognize_all,
@@ -561,9 +562,10 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a strict match to user input."""
-        custom_result: RecognizeResult | None = None
-        name_result: RecognizeResult | None = None
+        custom_found = False
+        name_found = False
         best_results: list[RecognizeResult] = []
+        best_name_quality: int | None = None
         best_text_chunks_matched: int | None = None
         for result in recognize_all(
             user_input.text,
@@ -572,51 +574,58 @@ class DefaultAgent(ConversationEntity):
             intent_context=intent_context,
             language=language,
         ):
-            # User intents have highest priority
-            if (result.intent_metadata is not None) and result.intent_metadata.get(
-                METADATA_CUSTOM_SENTENCE
-            ):
-                if (custom_result is None) or (
-                    result.text_chunks_matched > custom_result.text_chunks_matched
-                ):
-                    custom_result = result
+            # Prioritize user intents
+            is_custom = (
+                result.intent_metadata is not None
+                and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
+            )
 
-                # Clear builtin results
-                best_results = []
-                name_result = None
+            if custom_found and not is_custom:
                 continue
 
-            # Prioritize results with a "name" slot, but still prefer ones with
-            # more literal text matched.
-            if (
-                ("name" in result.entities)
-                and (not result.entities["name"].is_wildcard)
-                and (
-                    (name_result is None)
-                    or (result.text_chunks_matched > name_result.text_chunks_matched)
-                )
-            ):
-                name_result = result
+            if not custom_found and is_custom:
+                custom_found = True
+                # Clear builtin results
+                name_found = False
+                best_results = []
+                best_name_quality = None
+                best_text_chunks_matched = None
 
+            # Prioritize results with a "name" slot
+            name = result.entities.get("name")
+            is_name = name and not name.is_wildcard
+
+            if name_found and not is_name:
+                continue
+
+            if not name_found and is_name:
+                name_found = True
+                # Clear non-name results
+                best_results = []
+                best_text_chunks_matched = None
+
+            if is_name:
+                # Prioritize results with a better "name" slot
+                name_quality = len(cast(MatchEntity, name).value.split())
+                if (best_name_quality is None) or (name_quality > best_name_quality):
+                    best_name_quality = name_quality
+                    # Clear worse name results
+                    best_results = []
+                    best_text_chunks_matched = None
+                elif name_quality < best_name_quality:
+                    continue
+
+            # Prioritize results with more literal text
+            # This causes wildcards to match last.
             if (best_text_chunks_matched is None) or (
                 result.text_chunks_matched > best_text_chunks_matched
             ):
-                # Only overwrite if more literal text was matched.
-                # This causes wildcards to match last.
                 best_results = [result]
                 best_text_chunks_matched = result.text_chunks_matched
             elif result.text_chunks_matched == best_text_chunks_matched:
                 # Accumulate results with the same number of literal text matched.
                 # We will resolve the ambiguity below.
                 best_results.append(result)
-
-        if custom_result is not None:
-            # Prioritize user intents
-            return custom_result
-
-        if name_result is not None:
-            # Prioritize matches with entity names above area names
-            return name_result
 
         if best_results:
             # Successful strict match

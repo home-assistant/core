@@ -7,7 +7,12 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    ApiError,
+    CredentialsInvalidError,
+    LoginFirmwareError,
+    ReolinkError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
@@ -170,6 +175,20 @@ async def test_config_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    reolink_connect.get_host_data.side_effect = LoginFirmwareError("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "update_needed"}
 
     reolink_connect.valid_password.return_value = False
     result = await hass.config_entries.flow.async_configure(

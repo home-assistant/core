@@ -316,7 +316,7 @@ class ModbusHub:
                 self._log_error(err, error_state=False)
                 return
             message = f"modbus {self.name} communication open"
-            _LOGGER.warning(message)
+            _LOGGER.info(message)
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
@@ -368,7 +368,7 @@ class ModbusHub:
                 del self._client
                 self._client = None
                 message = f"modbus {self.name} communication closed"
-                _LOGGER.warning(message)
+                _LOGGER.info(message)
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str

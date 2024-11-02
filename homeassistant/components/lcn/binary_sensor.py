@@ -5,14 +5,17 @@ from functools import partial
 
 import pypck
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     DOMAIN as DOMAIN_BINARY_SENSOR,
     BinarySensorEntity,
 )
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -83,9 +86,26 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(
                 self.setpoint_variable
+            )
+
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        if entity_automations + entity_scripts:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_binary_sensor_{self.entity_id}",
+                breaks_in_ha_version="2025.5.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_regulatorlock_sensor",
+                translation_placeholders={
+                    "entity": f"{DOMAIN_BINARY_SENSOR}.{self.name.lower().replace(' ', '_')}",
+                },
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -156,8 +176,25 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(self.source)
+
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        if entity_automations + entity_scripts:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_binary_sensor_{self.entity_id}",
+                breaks_in_ha_version="2025.5.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_keylock_sensor",
+                translation_placeholders={
+                    "entity": f"{DOMAIN_BINARY_SENSOR}.{self.name.lower().replace(' ', '_')}",
+                },
+            )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""

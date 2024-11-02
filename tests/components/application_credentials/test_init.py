@@ -49,18 +49,6 @@ TEST_DOMAIN = "fake_integration"
 
 
 @pytest.fixture
-def ignore_translations() -> list[str]:
-    """Ignore specific translations.
-
-    We can ignore translations for the fake_integration we are testing with.
-    """
-    return [
-        f"component.{TEST_DOMAIN}.config.abort.missing_configuration",
-        f"component.{TEST_DOMAIN}.config.abort.missing_credentials",
-    ]
-
-
-@pytest.fixture
 async def authorization_server() -> AuthorizationServer:
     """Fixture AuthorizationServer for mock application_credentials integration."""
     return AuthorizationServer(AUTHORIZE_URL, TOKEN_URL)
@@ -435,6 +423,10 @@ async def test_import_named_credential(
     ]
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_credentials"],
+)
 async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
@@ -444,6 +436,10 @@ async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     assert result.get("reason") == "missing_credentials"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_credentials"],
+)
 async def test_config_flow_other_domain(
     hass: HomeAssistant,
     ws_client: ClientFixture,
@@ -571,6 +567,10 @@ async def test_config_flow_multiple_entries(
     )
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_credentials"],
+)
 async def test_config_flow_create_delete_credential(
     hass: HomeAssistant,
     ws_client: ClientFixture,
@@ -616,6 +616,10 @@ async def test_config_flow_with_config_credential(
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_configuration"],
+)
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_import_without_setup(hass: HomeAssistant, config_credential) -> None:
     """Test import of credentials without setting up the integration."""
@@ -631,6 +635,10 @@ async def test_import_without_setup(hass: HomeAssistant, config_credential) -> N
     assert result.get("reason") == "missing_configuration"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.config.abort.missing_configuration"],
+)
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_platform(
     hass: HomeAssistant, ws_client: ClientFixture

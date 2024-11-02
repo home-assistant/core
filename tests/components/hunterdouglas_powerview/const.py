@@ -6,6 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 
 MOCK_MAC = "AA::BB::CC::DD::EE::FF"
+MOCK_SERIAL = "A1B2C3D4E5G6H7"
 
 HOMEKIT_DISCOVERY_GEN2 = zeroconf.ZeroconfServiceInfo(
     ip_address="1.2.3.4",

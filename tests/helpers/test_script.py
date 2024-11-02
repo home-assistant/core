@@ -943,18 +943,9 @@ async def test_wait_basic(hass: HomeAssistant, action_type) -> None:
         assert not script_obj.is_running
         assert script_obj.last_action is None
 
-    if action_type == "template":
-        assert_action_trace(
-            {
-                "0": [
-                    {
-                        "result": {"wait": {"completed": True, "remaining": None}},
-                        "variables": {"wait": {"completed": True, "remaining": None}},
-                    }
-                ],
-            }
-        )
-    else:
+    expected_var = {"completed": True, "remaining": None}
+
+    if action_type == "trigger":
         expected_trigger = {
             "alias": None,
             "attribute": None,
@@ -967,23 +958,18 @@ async def test_wait_basic(hass: HomeAssistant, action_type) -> None:
             "platform": "state",
             "to_state": ANY,
         }
-        assert_action_trace(
-            {
-                "0": [
-                    {
-                        "result": {
-                            "wait": {
-                                "trigger": expected_trigger,
-                                "remaining": None,
-                            }
-                        },
-                        "variables": {
-                            "wait": {"remaining": None, "trigger": expected_trigger}
-                        },
-                    }
-                ],
-            }
-        )
+        expected_var["trigger"] = expected_trigger
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {"wait": expected_var},
+                    "variables": {"wait": expected_var},
+                }
+            ],
+        }
+    )
 
 
 async def test_wait_for_trigger_variables(hass: HomeAssistant) -> None:
@@ -1059,28 +1045,21 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
 
     assert timed_out
 
-    if action_type == "template":
-        assert_action_trace(
-            {
-                "0": [
-                    {
-                        "result": {"wait": {"completed": False, "remaining": None}},
-                        "variables": {"wait": {"completed": False, "remaining": None}},
-                    }
-                ],
-            }
-        )
-    else:
-        assert_action_trace(
-            {
-                "0": [
-                    {
-                        "result": {"wait": {"trigger": None, "remaining": None}},
-                        "variables": {"wait": {"remaining": None, "trigger": None}},
-                    }
-                ],
-            }
-        )
+    expected_var = {"completed": False, "remaining": None}
+
+    if action_type == "trigger":
+        expected_var["trigger"] = None
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {"wait": expected_var},
+                    "variables": {"wait": expected_var},
+                }
+            ],
+        }
+    )
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
@@ -1183,30 +1162,22 @@ async def test_cancel_wait(hass: HomeAssistant, action_type) -> None:
         assert not script_obj.is_running
         assert len(events) == 0
 
-    if action_type == "template":
-        assert_action_trace(
-            {
-                "0": [
-                    {
-                        "result": {"wait": {"completed": False, "remaining": None}},
-                        "variables": {"wait": {"completed": False, "remaining": None}},
-                    }
-                ],
-            },
-            expected_script_execution="cancelled",
-        )
-    else:
-        assert_action_trace(
-            {
-                "0": [
-                    {
-                        "result": {"wait": {"trigger": None, "remaining": None}},
-                        "variables": {"wait": {"remaining": None, "trigger": None}},
-                    }
-                ],
-            },
-            expected_script_execution="cancelled",
-        )
+    expected_var = {"completed": False, "remaining": None}
+
+    if action_type == "trigger":
+        expected_var["trigger"] = None
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {"wait": expected_var},
+                    "variables": {"wait": expected_var},
+                }
+            ],
+        },
+        expected_script_execution="cancelled",
+    )
 
 
 async def test_wait_template_not_schedule(hass: HomeAssistant) -> None:
@@ -1294,10 +1265,11 @@ async def test_wait_timeout(
         assert len(events) == 1
         assert "(timeout: 0:00:05)" in caplog.text
 
-    if action_type == "template":
-        variable_wait = {"wait": {"completed": False, "remaining": 0.0}}
-    else:
-        variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
+    variable_wait = {"wait": {"completed": False, "remaining": 0.0}}
+
+    if action_type == "trigger":
+        variable_wait["wait"]["trigger"] = None
+
     expected_trace = {
         "0": [
             {
@@ -1345,7 +1317,7 @@ async def test_wait_trigger_with_zero_timeout(
     assert len(events) == 1
     assert "(timeout: 0:00:00)" in caplog.text
 
-    variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
+    variable_wait = {"wait": {"completed": False, "trigger": None, "remaining": 0.0}}
     expected_trace = {
         "0": [
             {
@@ -1393,7 +1365,7 @@ async def test_wait_trigger_matches_with_zero_timeout(
     assert len(events) == 1
     assert "(timeout: 0:00:00)" in caplog.text
 
-    variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
+    variable_wait = {"wait": {"completed": False, "trigger": None, "remaining": 0.0}}
     expected_trace = {
         "0": [
             {
@@ -1533,12 +1505,11 @@ async def test_wait_continue_on_timeout(
         assert not script_obj.is_running
         assert len(events) == n_events
 
-    if action_type == "template":
-        result_wait = {"wait": {"completed": False, "remaining": 0.0}}
-        variable_wait = dict(result_wait)
-    else:
-        result_wait = {"wait": {"trigger": None, "remaining": 0.0}}
-        variable_wait = dict(result_wait)
+    result_wait = {"wait": {"completed": False, "remaining": 0.0}}
+    if action_type == "trigger":
+        result_wait["wait"]["trigger"] = None
+
+    variable_wait = dict(result_wait)
     expected_trace = {
         "0": [{"result": result_wait, "variables": variable_wait}],
     }
@@ -1766,8 +1737,12 @@ async def test_wait_for_trigger_bad(
         {
             "0": [
                 {
-                    "result": {"wait": {"trigger": None, "remaining": None}},
-                    "variables": {"wait": {"remaining": None, "trigger": None}},
+                    "result": {
+                        "wait": {"completed": False, "trigger": None, "remaining": None}
+                    },
+                    "variables": {
+                        "wait": {"completed": False, "remaining": None, "trigger": None}
+                    },
                 }
             ],
         }
@@ -1807,8 +1782,12 @@ async def test_wait_for_trigger_generated_exception(
         {
             "0": [
                 {
-                    "result": {"wait": {"trigger": None, "remaining": None}},
-                    "variables": {"wait": {"remaining": None, "trigger": None}},
+                    "result": {
+                        "wait": {"completed": False, "trigger": None, "remaining": None}
+                    },
+                    "variables": {
+                        "wait": {"completed": False, "remaining": None, "trigger": None}
+                    },
                 }
             ],
         }
@@ -3717,11 +3696,18 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
             {
                 "result": {
                     "wait": {
+                        "completed": True,
                         "remaining": None,
                         "trigger": expected_trigger,
                     }
                 },
-                "variables": {"wait": {"remaining": None, "trigger": expected_trigger}},
+                "variables": {
+                    "wait": {
+                        "completed": True,
+                        "remaining": None,
+                        "trigger": expected_trigger,
+                    }
+                },
             }
         ],
         "0/parallel/1/sequence/0": [

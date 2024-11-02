@@ -1007,7 +1007,7 @@ async def test_add_item_intent(
         hass,
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": "beer"}, "name": {"value": "list 1"}},
+        {ATTR_ITEM: {"value": " beer "}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -1017,7 +1017,7 @@ async def test_add_item_intent(
 
     assert len(entity1.items) == 1
     assert len(entity2.items) == 0
-    assert entity1.items[0].summary == "beer"
+    assert entity1.items[0].summary == "beer"  # summary is trimmed
     assert entity1.items[0].status == TodoItemStatus.NEEDS_ACTION
     entity1.items.clear()
 
