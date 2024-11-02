@@ -17,7 +17,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "eheimdigital"})
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "eheimdigital"}, unique_id="00:00:00:00:00:01"
+    )
 
 
 @pytest.fixture

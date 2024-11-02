@@ -26,25 +26,6 @@ from .entity import EheimDigitalEntity
 BRIGHTNESS_SCALE = (1, 100)
 
 
-async def async_setup_device_entities(
-    coordinator: EheimDigitalUpdateCoordinator,
-    device_address: str,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the light entities for a device."""
-    device = coordinator.hub.devices[device_address]
-    entities: list[EheimDigitalClassicLEDControlLight] = []
-
-    if isinstance(device, EheimDigitalClassicLEDControl):
-        for channel in range(2):
-            if len(device.tankconfig[channel]) > 0:
-                entities.append(
-                    EheimDigitalClassicLEDControlLight(coordinator, device, channel)
-                )
-                coordinator.known_devices.add(device.mac_address)
-    async_add_entities(entities)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
@@ -53,9 +34,21 @@ async def async_setup_entry(
     """Set up the callbacks for the coordinator so lights can be added as devices are found."""
     coordinator = entry.runtime_data
 
-    coordinator.add_platform_callbacks(
-        Platform.LIGHT, async_setup_device_entities, async_add_entities
-    )
+    async def async_setup_device_entities(device_address: str) -> None:
+        """Set up the light entities for a device."""
+        device = coordinator.hub.devices[device_address]
+        entities: list[EheimDigitalClassicLEDControlLight] = []
+
+        if isinstance(device, EheimDigitalClassicLEDControl):
+            for channel in range(2):
+                if len(device.tankconfig[channel]) > 0:
+                    entities.append(
+                        EheimDigitalClassicLEDControlLight(coordinator, device, channel)
+                    )
+                    coordinator.known_devices.add(device.mac_address)
+        async_add_entities(entities)
+
+    coordinator.add_platform_callback(Platform.LIGHT, async_setup_device_entities)
 
 
 class EheimDigitalClassicLEDControlLight(
