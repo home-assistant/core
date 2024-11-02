@@ -142,7 +142,7 @@ class StreamMuxer:
         hass: HomeAssistant,
         video_stream: av.video.VideoStream,
         audio_stream: av.audio.AudioStream | None,
-        audio_bsf: av.BitStreamFilter | None,
+        audio_bsf: str | None,
         stream_state: StreamState,
         stream_settings: StreamSettings,
     ) -> None:
@@ -233,11 +233,10 @@ class StreamMuxer:
         output_astream = None
         if input_astream:
             if self._audio_bsf:
-                self._audio_bsf_context = self._audio_bsf.create()
-                self._audio_bsf_context.set_input_stream(input_astream)
-            output_astream = container.add_stream(
-                template=self._audio_bsf_context or input_astream
-            )
+                self._audio_bsf_context = av.BitStreamFilterContext(
+                    self._audio_bsf, input_astream
+                )
+            output_astream = container.add_stream(template=input_astream)
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
@@ -280,10 +279,9 @@ class StreamMuxer:
 
         elif packet.stream == self._input_audio_stream:
             if self._audio_bsf_context:
-                self._audio_bsf_context.send(packet)
-                while packet := self._audio_bsf_context.recv():
-                    packet.stream = self._output_audio_stream
-                    self._av_output.mux(packet)
+                for audio_packet in self._audio_bsf_context.filter(packet):
+                    audio_packet.stream = self._output_audio_stream
+                    self._av_output.mux(audio_packet)
                 return
             packet.stream = self._output_audio_stream
             self._av_output.mux(packet)
@@ -492,7 +490,7 @@ def is_keyframe(packet: av.Packet) -> Any:
 
 def get_audio_bitstream_filter(
     packets: Iterator[av.Packet], audio_stream: Any
-) -> av.BitStreamFilterContext | None:
+) -> str | None:
     """Return the aac_adtstoasc bitstream filter if ADTS AAC is detected."""
     if not audio_stream:
         return None
@@ -509,7 +507,7 @@ def get_audio_bitstream_filter(
                         _LOGGER.debug(
                             "ADTS AAC detected. Adding aac_adtstoaac bitstream filter"
                         )
-                        return av.BitStreamFilter("aac_adtstoasc")
+                        return "aac_adtstoasc"
             break
     return None
 
