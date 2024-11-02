@@ -9,6 +9,7 @@ import os
 from typing import TYPE_CHECKING
 
 import av
+import av.container
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -168,7 +169,9 @@ class RecorderOutput(StreamOutput):
             os.remove(video_path + ".tmp")
 
         def finish_writing(
-            segments: deque[Segment], output: av.OutputContainer, video_path: str
+            segments: deque[Segment],
+            output: av.container.OutputContainer | None,
+            video_path: str,
         ) -> None:
             """Finish writing output."""
             # Should only have 0 or 1 segments, but loop through just in case
