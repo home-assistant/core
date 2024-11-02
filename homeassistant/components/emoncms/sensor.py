@@ -149,7 +149,15 @@ async def async_setup_entry(
         return
 
     coordinator = entry.runtime_data
-    LOGGER.debug(entry.unique_id)
+    message = f"uuid for entry {entry.entry_id} is {entry.unique_id}"
+    LOGGER.debug(message)
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data=entry.data,
+            minor_version=1,
+            version=1,
+        )
     elems = coordinator.data
     if not elems:
         return
