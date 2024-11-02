@@ -399,7 +399,7 @@ class StreamMuxer:
         self._memory_file.close()
 
 
-class PeekIterator(Iterator):
+class PeekIterator(Iterator[av.Packet]):
     """An Iterator that may allow multiple passes.
 
     This may be consumed like a normal Iterator, however also supports a
