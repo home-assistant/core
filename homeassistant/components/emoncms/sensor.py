@@ -163,7 +163,6 @@ async def async_setup_entry(
             Platform.SENSOR, DOMAIN, f"{entry.entry_id}-{elem[FEED_ID]}"
         )
         if entity_id is not None and entry.unique_id is not None:
-            # if entity_id is not None and emoncms_unique_id is not None:
             LOGGER.debug(f"{entity_id} exists and needs to be migrated")
             ent_reg.async_update_entity(
                 entity_id, new_unique_id=f"{entry.unique_id}-{elem[FEED_ID]}"
