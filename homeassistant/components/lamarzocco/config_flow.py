@@ -14,6 +14,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     async_discovered_service_info,
 )
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -103,6 +104,15 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors["base"] = "machine_not_found"
                     else:
                         self._config = data
+                        # if DHCP discovery was used, auto fill machine selection
+                        if CONF_HOST in self._discovered:
+                            return await self.async_step_machine_selection(
+                                user_input={
+                                    CONF_HOST: self._discovered[CONF_HOST],
+                                    CONF_MACHINE: self._discovered[CONF_MACHINE],
+                                }
+                            )
+                        # if Bluetooth discovery was used, only select host
                         return self.async_show_form(
                             step_id="machine_selection",
                             data_schema=vol.Schema(
@@ -255,6 +265,25 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
+
+        return await self.async_step_user()
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery via dhcp."""
+
+        await self.async_set_unique_id(discovery_info.hostname)
+        self._abort_if_unique_id_configured()
+
+        _LOGGER.debug(
+            "Discovered La Marzocco machine %s through DHCP at address %s",
+            discovery_info.hostname,
+            discovery_info.ip,
+        )
+
+        self._discovered[CONF_MACHINE] = discovery_info.hostname
+        self._discovered[CONF_HOST] = discovery_info.ip
 
         return await self.async_step_user()
 

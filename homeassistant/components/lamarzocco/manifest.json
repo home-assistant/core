@@ -18,6 +18,17 @@
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
+  "dhcp": [
+    {
+      "hostname": "gs[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789]"
+    },
+    {
+      "hostname": "lm[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789]"
+    },
+    {
+      "hostname": "mr[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789]"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/lamarzocco",
   "integration_type": "device",
   "iot_class": "cloud_polling",
