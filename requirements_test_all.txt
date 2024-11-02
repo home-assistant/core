@@ -1393,6 +1393,9 @@ py-nextbusnext==2.0.5
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.profiler
+py-spy==0.4.0
+
 # homeassistant.components.ecovacs
 py-sucks==0.9.10
 
