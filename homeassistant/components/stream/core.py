@@ -438,7 +438,7 @@ class KeyFrameConverter:
         """Initialize."""
 
         # Keep import here so that we can import stream integration
-        # without installingreqs
+        # without installing reqs
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
