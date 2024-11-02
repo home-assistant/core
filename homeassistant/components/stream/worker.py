@@ -13,6 +13,10 @@ from threading import Event
 from typing import Any, Self, cast
 
 import av
+import av.audio
+import av.container
+import av.stream
+import av.video
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
