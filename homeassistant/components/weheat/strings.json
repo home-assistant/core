@@ -83,10 +83,10 @@
         }
       },
       "electricity_used": {
-        "name": "Electricity used"
+        "name": "Total electricity used"
       },
       "energy_output": {
-        "name": "Energy output"
+        "name": "Total energy output"
       },
       "compressor_rpm": {
         "name": "Compressor RPM"
