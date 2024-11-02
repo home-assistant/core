@@ -132,6 +132,7 @@ class StreamMuxer:
     _av_output: av.container.OutputContainer
     _output_video_stream: av.video.VideoStream
     _output_audio_stream: av.audio.AudioStream | None
+    _segment: Segment | None
     # the following 2 member variables are used for Part formation
     _memory_file_pos: int
     _part_start_dts: int
@@ -151,7 +152,6 @@ class StreamMuxer:
         self._input_audio_stream = audio_stream
         self._audio_bsf = audio_bsf
         self._audio_bsf_context: av.BitStreamFilterContext | None = None
-        self._segment: Segment | None = None
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
