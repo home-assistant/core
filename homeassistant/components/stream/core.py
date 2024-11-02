@@ -509,9 +509,8 @@ class KeyFrameConverter:
                     frames = self._codec_context.decode(None)
                 break
             except EOFError:
-                _LOGGER.debug("Codec context needs flushing, attempting to reopen")
-                self._codec_context.close()
-                self._codec_context.open()
+                _LOGGER.debug("Codec context needs flushing")
+                self._codec_context.flush_buffers()
         else:
             _LOGGER.debug("Unable to decode keyframe")
             return
