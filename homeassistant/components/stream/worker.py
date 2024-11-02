@@ -47,7 +47,7 @@ class StreamWorkerError(Exception):
     """An exception thrown while processing a stream."""
 
 
-def redact_av_error_string(err: av.AVError) -> str:
+def redact_av_error_string(err: av.FFmpegError) -> str:
     """Return an error string with credentials redacted from the url."""
     parts = [str(err.type), err.strerror]
     if err.filename is not None:
@@ -525,7 +525,7 @@ def stream_worker(
         del pyav_options["stimeout"]
     try:
         container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
-    except av.AVError as err:
+    except av.FFmpegError as err:
         raise StreamWorkerError(
             f"Error opening stream ({redact_av_error_string(err)})"
         ) from err
@@ -599,7 +599,7 @@ def stream_worker(
     except StopIteration as ex:
         container.close()
         raise StreamEndedError("Stream ended; no additional packets") from ex
-    except av.AVError as ex:
+    except av.FFmpegError as ex:
         container.close()
         raise StreamWorkerError(
             f"Error demuxing stream while finding first packet ({redact_av_error_string(ex)})"
@@ -626,7 +626,7 @@ def stream_worker(
                 raise
             except StopIteration as ex:
                 raise StreamEndedError("Stream ended; no additional packets") from ex
-            except av.AVError as ex:
+            except av.FFmpegError as ex:
                 raise StreamWorkerError(
                     f"Error demuxing stream ({redact_av_error_string(ex)})"
                 ) from ex
