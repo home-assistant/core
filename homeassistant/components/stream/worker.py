@@ -131,7 +131,7 @@ class StreamMuxer:
         self,
         hass: HomeAssistant,
         video_stream: av.video.VideoStream,
-        audio_stream: av.audio.stream.AudioStream | None,
+        audio_stream: av.audio.AudioStream | None,
         audio_bsf: av.BitStreamFilter | None,
         stream_state: StreamState,
         stream_settings: StreamSettings,
@@ -142,11 +142,11 @@ class StreamMuxer:
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = video_stream
-        self._input_audio_stream: av.audio.stream.AudioStream | None = audio_stream
+        self._input_audio_stream: av.audio.AudioStream | None = audio_stream
         self._audio_bsf = audio_bsf
         self._audio_bsf_context: av.BitStreamFilterContext = None
         self._output_video_stream: av.video.VideoStream = None
-        self._output_audio_stream: av.audio.stream.AudioStream | None = None
+        self._output_audio_stream: av.audio.AudioStream | None = None
         self._segment: Segment | None = None
         # the following 3 member variables are used for Part formation
         self._memory_file_pos: int = cast(int, None)
@@ -161,11 +161,11 @@ class StreamMuxer:
         memory_file: BytesIO,
         sequence: int,
         input_vstream: av.video.VideoStream,
-        input_astream: av.audio.stream.AudioStream | None,
+        input_astream: av.audio.AudioStream | None,
     ) -> tuple[
         av.container.OutputContainer,
         av.video.VideoStream,
-        av.audio.stream.AudioStream | None,
+        av.audio.AudioStream | None,
     ]:
         """Make a new av OutputContainer and add output streams."""
         container = av.open(
