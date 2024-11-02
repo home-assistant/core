@@ -18,8 +18,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "account_mismatch": "Username and region are not allowed to change",
-      "missing_captcha": "Captcha validation missing. Please try again."
+      "account_mismatch": "Username and region are not allowed to change"
     }
   },
   "options": {
@@ -204,7 +203,7 @@
       "message": "Invalid data for point of interest: {poi_exception}"
     },
     "missing_captcha": {
-      "message": "Captcha requried. Please prove you are human"
+      "message": "Login requires captcha validation"
     }
   }
 }

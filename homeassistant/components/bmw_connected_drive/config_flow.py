@@ -124,7 +124,7 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
             if get_region_from_name(
                 self.data.get(CONF_REGION) or ""
             ) == Regions.NORTH_AMERICA and not self.data.get(CONF_CAPTCHA_TOKEN):
-                return await self._async_step_captcha()
+                return await self._async_step_captcha_show()
 
             info = None
             try:
@@ -180,7 +180,7 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
         self._existing_entry_data = self._get_reconfigure_entry().data
         return await self.async_step_user()
 
-    async def _async_step_captcha(self) -> ConfigFlowResult:
+    async def _async_step_captcha_show(self) -> ConfigFlowResult:
         """Show captcha form."""
         self.hass.http.register_view(BmwCaptchaView)
         if (req := http.current_request.get()) is None:
@@ -189,9 +189,9 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
             raise RuntimeError("No header in request")
 
         forward_url = f"{hass_url}{CAPTCHA_URL}?flow_id={self.flow_id}&region={self.data[CONF_REGION]}"
-        return self.async_external_step(step_id="obtain_captcha", url=forward_url)
+        return self.async_external_step(step_id="captcha_retrieve", url=forward_url)
 
-    async def async_step_obtain_captcha(
+    async def async_step_captcha_retrieve(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Obtain token after external auth completed."""
@@ -200,21 +200,14 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_CAPTCHA_TOKEN] = captcha_token
         else:
             self.data["errors"] = {"base": "missing_captcha"}
-        return self.async_external_step_done(next_step_id="obtain_captcha_done")
+        return self.async_external_step_done(next_step_id="captcha_done")
 
-    async def async_step_obtain_captcha_done(
+    async def async_step_captcha_done(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Finalize external step and forward back to step_user."""
 
         return await self.async_step_user(user_input=self.data)
-
-    # async def async_step_obtain_captcha_missing(
-    #     self, user_input: dict[str, Any] | None = None
-    # ) -> ConfigFlowResult:
-    #     """Abort if captcha is missing."""
-
-    #     return self.async_abort(reason="missing_captcha")
 
     @staticmethod
     @callback
@@ -263,18 +256,6 @@ class BMWOptionsFlow(OptionsFlowWithConfigEntry):
         )
 
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class MissingCaptcha(HomeAssistantError):
-    """Error to indicate the captcha token is missing."""
-
-
 class BmwCaptchaView(HomeAssistantView):
     """Generate views for hcaptcha."""
 
@@ -315,3 +296,15 @@ class BmwCaptchaView(HomeAssistantView):
             headers={"content-type": "text/html"},
             text="<script>window.close()</script>Success! This window can be closed",
         )
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""
+
+
+class MissingCaptcha(HomeAssistantError):
+    """Error to indicate the captcha token is missing."""
