@@ -273,7 +273,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
 
-        await self.async_set_unique_id(discovery_info.hostname)
+        serial = discovery_info.hostname.upper()
+
+        await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug(
@@ -282,7 +284,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.ip,
         )
 
-        self._discovered[CONF_MACHINE] = discovery_info.hostname
+        self._discovered[CONF_MACHINE] = serial
         self._discovered[CONF_HOST] = discovery_info.ip
 
         return await self.async_step_user()
