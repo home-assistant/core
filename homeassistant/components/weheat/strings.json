@@ -83,7 +83,7 @@
         }
       },
       "electricity_used": {
-        "name": "Total electricity used"
+        "name": "Electricity used"
       },
       "energy_output": {
         "name": "Total energy output"
