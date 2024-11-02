@@ -202,6 +202,9 @@
   "exceptions": {
     "invalid_poi": {
       "message": "Invalid data for point of interest: {poi_exception}"
+    },
+    "missing_captcha": {
+      "message": "Captcha requried. Please prove you are human"
     }
   }
 }
