@@ -563,7 +563,7 @@ def stream_worker(
 
     dts_validator = TimestampValidator(
         int(1 / video_stream.time_base),
-        1 / audio_stream.time_base if audio_stream else 1,
+        int(1 / audio_stream.time_base) if audio_stream else 1,
     )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
