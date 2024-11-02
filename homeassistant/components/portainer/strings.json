@@ -37,12 +37,6 @@
           "restarting": "Restarting",
           "running": "Running"
         }
-      },
-      "total_cpu": {
-        "name": "Total CPU"
-      },
-      "total_memory": {
-        "name": "Total memory"
       }
     }
   }

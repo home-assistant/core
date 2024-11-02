@@ -3,9 +3,6 @@
     "sensor": {
       "container_state": {
         "default": "mdi:state-machine"
-      },
-      "total_cpu": {
-        "default": "mdi:counter"
       }
     }
   }

@@ -2,10 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import logging
 
-from aiotainer.model import Container, NodeData, Snapshot, State
+from aiotainer.model import Container, NodeData, State
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,20 +13,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import PortainerConfigEntry
 from .coordinator import PortainerDataUpdateCoordinator
 from .entity import ContainerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True, kw_only=True)
-class SnapshotSensorEntityDescription(SensorEntityDescription):
-    """Describes Portainer sensor entity."""
-
-    value_fn: Callable[[Snapshot], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,16 +78,11 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{node_id}-{container_id}-{description.key}"
         self._attr_translation_placeholders = {
-            "container": coordinator.data[self.node_id]
-            .snapshots[-1]
-            .docker_snapshot_raw.containers[self.container_id]
-            .name
+            "container": self.container_attributes.name
         }
 
     @property
     def native_value(self) -> str:
         """Return the state of the sensor."""
-        _LOGGER.debug(
-            "self.container_attributes in sensor: %s", self.container_attributes
-        )
+        _LOGGER.debug("Container attributes: %s", self.container_attributes)
         return self.container_attributes.state.value
