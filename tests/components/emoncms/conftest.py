@@ -155,10 +155,6 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
             "homeassistant.components.emoncms.config_flow.EmoncmsClient",
             new=mock_client,
         ),
-        patch(
-            "homeassistant.components.emoncms.sensor.EmoncmsClient",
-            new=mock_client,
-        ),
     ):
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}

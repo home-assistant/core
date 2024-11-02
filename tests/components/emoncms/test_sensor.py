@@ -160,6 +160,8 @@ async def test_migrate_uuid(
 ) -> None:
     """Test migration from home assistant uuid to emoncms uuid."""
     config_entry.add_to_hass(hass)
+    assert config_entry.version == 1
+    assert config_entry.unique_id is None
     for _, feed in enumerate(FEEDS):
         entity_registry.async_get_or_create(
             Platform.SENSOR,
@@ -170,10 +172,13 @@ async def test_migrate_uuid(
         )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    assert config_entry.version == 2
+    emoncms_uuid = emoncms_client.async_get_uuid.return_value
+    assert config_entry.unique_id == emoncms_uuid
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    emoncms_uuid = emoncms_client.async_get_uuid.return_value
+
     for nb, feed in enumerate(FEEDS):
         assert entity_entries[nb].unique_id == f"{emoncms_uuid}-{feed[FEED_ID]}"
         assert (
