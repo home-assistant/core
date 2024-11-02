@@ -43,6 +43,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])")
+
 SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -316,9 +318,6 @@ def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any
         if len(err.args) > 0 and isinstance(err.args[0], str)
         else {}
     )
-
-
-RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
 def bsh_key_to_translation_key(bsh_key: str) -> str:
