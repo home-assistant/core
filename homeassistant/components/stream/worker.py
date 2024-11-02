@@ -54,7 +54,7 @@ class StreamWorkerError(Exception):
 def redact_av_error_string(err: av.FFmpegError) -> str:
     """Return an error string with credentials redacted from the url."""
     parts = [str(err.type), err.strerror]  # type: ignore[attr-defined]
-    if err.filename is not None:
+    if err.filename:
         parts.append(redact_credentials(err.filename))
     return ", ".join(parts)
 
@@ -135,7 +135,7 @@ class StreamMuxer:
     _segment: Segment | None
     # the following 2 member variables are used for Part formation
     _memory_file_pos: int
-    _part_start_dts: int
+    _part_start_dts: float
 
     def __init__(
         self,
@@ -278,6 +278,7 @@ class StreamMuxer:
             self._part_has_keyframe |= packet.is_keyframe
 
         elif packet.stream == self._input_audio_stream:
+            assert self._output_audio_stream
             if self._audio_bsf_context:
                 for audio_packet in self._audio_bsf_context.filter(packet):
                     audio_packet.stream = self._output_audio_stream

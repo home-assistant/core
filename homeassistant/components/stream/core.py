@@ -27,8 +27,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from av import Packet
-    from av.video.codeccontext import VideoCodecContext
+    from av import Packet, VideoCodecContext
 
     from homeassistant.components.camera import DynamicStreamSettings
 

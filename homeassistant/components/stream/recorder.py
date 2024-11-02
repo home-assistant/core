@@ -142,11 +142,13 @@ class RecorderOutput(StreamOutput):
 
             # Remux video
             for packet in source.demux():
-                if packet.dts is None:
+                if packet.pts is None:
                     continue
                 packet.pts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
                 packet.dts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
-                packet.stream = output_v if packet.stream.type == "video" else output_a
+                stream = output_v if packet.stream.type == "video" else output_a
+                assert stream
+                packet.stream = stream
                 output.mux(packet)
 
             running_duration += source.duration - source.start_time
