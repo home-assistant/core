@@ -151,7 +151,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     message = f"uuid for entry {entry.entry_id} is {entry.unique_id}"
     LOGGER.debug(message)
-    if entry.unique_id is None:
+    unique_id = entry.unique_id
+    if unique_id is None:
+        unique_id = entry.entry_id
         hass.config_entries.async_update_entry(
             entry,
             data=entry.data,
@@ -178,8 +180,7 @@ async def async_setup_entry(
         sensors.append(
             EmonCmsSensor(
                 coordinator,
-                entry.unique_id,
-                entry.entry_id,
+                unique_id,
                 elem["unit"],
                 name,
                 idx,
@@ -194,8 +195,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: EmoncmsCoordinator,
-        unique_id: str | None,
-        entry_id: str,
+        unique_id: str,
         unit_of_measurement: str | None,
         name: str,
         idx: int,
@@ -208,10 +208,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             elem = self.coordinator.data[self.idx]
         self._attr_name = f"{name} {elem[FEED_NAME]}"
         self._attr_native_unit_of_measurement = unit_of_measurement
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}-{elem[FEED_ID]}"
-        else:
-            self._attr_unique_id = f"{entry_id}-{elem[FEED_ID]}"
+        self._attr_unique_id = f"{unique_id}-{elem[FEED_ID]}"
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
