@@ -122,7 +122,7 @@ class RecorderOutput(StreamOutput):
             if not output_v:
                 output_v = output.add_stream(template=source_v)
                 context = output_v.codec_context
-                context.flags |= "GLOBAL_HEADER"
+                context.global_header = True
             if source_a and not output_a:
                 output_a = output.add_stream(template=source_a)
 
