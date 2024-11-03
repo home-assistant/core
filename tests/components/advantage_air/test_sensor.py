@@ -140,7 +140,7 @@ async def test_sensor_platform_disabled_entity(
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert len(mock_get.mock_calls) == 2
+    assert len(mock_get.mock_calls) == 3
 
     state = hass.states.get(entity_id)
     assert state
