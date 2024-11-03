@@ -158,13 +158,13 @@ class MetOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             # Update config entry with data from user input
             self.hass.config_entries.async_update_entry(
-                self._config_entry, data=user_input
+                self.config_entry, data=user_input
             )
             return self.async_create_entry(
-                title=self._config_entry.title, data=user_input
+                title=self.config_entry.title, data=user_input
             )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_get_data_schema(self.hass, config_entry=self._config_entry),
+            data_schema=_get_data_schema(self.hass, config_entry=self.config_entry),
         )
