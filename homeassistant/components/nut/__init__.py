@@ -273,7 +273,7 @@ class PyNUTData:
 
         manufacturer = _manufacturer_from_status(self._status)
         model = _model_from_status(self._status)
-        model_id = _model_id_from_status(self._status)
+        model_id: str | None = self._status.get("device.part")
         firmware = _firmware_from_status(self._status)
         return NUTDeviceInfo(manufacturer, model, model_id, firmware)
 
