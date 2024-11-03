@@ -3151,8 +3151,8 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
         self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
         report(
-            "inherits OptionsFlowWithConfigEntry, which is deprecated "
-            "and will stop working in 2025.12",
+            "inherits from OptionsFlowWithConfigEntry, which is deprecated "
+            "and will stop working in 2025.12,",
             error_if_integration=False,
             error_if_core=True,
         )

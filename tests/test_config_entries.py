@@ -5039,17 +5039,47 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     assert "test" in hass.config.components
 
 
-async def test_options_flow_options_not_mutated() -> None:
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
-        domain="test",
+        domain="hue",
         data={"first": True},
         options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
     )
 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
+    assert (
+        "Detected that integration 'hue' inherits from OptionsFlowWithConfigEntry,"
+        " which is deprecated and will stop working in 2025.12, at homeassistant/"
+        in caplog.text
+    )
 
     options_flow._options["sub_dict"]["2"] = "two"
+    options_flow._options["sub_list"].append("two")
+
+    assert options_flow._options == {
+        "sub_dict": {"1": "one", "2": "two"},
+        "sub_list": ["one", "two"],
+    }
+    assert entry.options == {"sub_dict": {"1": "one"}, "sub_list": ["one"]}
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_options_flow_options_not_mutated(hass: HomeAssistant) -> None:
+    """Test that OptionsFlow doesn't mutate entry options."""
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
+    )
+    entry.add_to_hass(hass)
+
+    options_flow = config_entries.OptionsFlow()
+    options_flow.handler = entry.entry_id
+    options_flow.hass = hass
+
+    options_flow.options["sub_dict"]["2"] = "two"
     options_flow._options["sub_list"].append("two")
 
     assert options_flow._options == {
