@@ -75,11 +75,11 @@ def device_fixture() -> MachineModel:
 
 
 @pytest.fixture
-def mock_device_info() -> LaMarzoccoDeviceInfo:
+def mock_device_info(device_fixture: MachineModel) -> LaMarzoccoDeviceInfo:
     """Return a mocked La Marzocco device info."""
     return LaMarzoccoDeviceInfo(
-        model=MachineModel.GS3_AV,
-        serial_number="GS01234",
+        model=device_fixture,
+        serial_number=SERIAL_DICT[device_fixture],
         name="GS3",
         communication_key="token",
     )
