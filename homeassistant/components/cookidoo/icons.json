@@ -1,7 +1,7 @@
 {
   "entity": {
     "todo": {
-      "item_list": {
+      "ingredient_list": {
         "default": "mdi:cart"
       },
       "additional_item_list": {

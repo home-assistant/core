@@ -28,6 +28,6 @@ class CookidooBaseEntity(CoordinatorEntity[CookidooDataUpdateCoordinator]):
             name="Cookidoo",
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             manufacturer="Vorwerk Deutschland Stiftung & Co. KG",
-            model="Cookidoo Web",
+            model="Cookidoo App",
             configuration_url="https://cookidoo.ch",
         )

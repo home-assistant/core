@@ -2,17 +2,12 @@
 
 from typing import Final
 
-from homeassistant.const import CONF_HOST, CONF_PORT
-
 DOMAIN = "cookidoo"
 
-BROWSER_RUNNER_CHECK_DEFAULT = [
-    {CONF_HOST: "homeassistant.local", CONF_PORT: "9222"},
-    {CONF_HOST: "localhost", CONF_PORT: "9222"},
-    {CONF_HOST: "5afecb1b-chromium-runner", CONF_PORT: "9222"},
-    {CONF_HOST: "5afecb1b-chromium", CONF_PORT: "9222"},
-]
-BROWSER_RUNNER_TIMEOUT: Final = 20000  # s
+CONF_LOCALIZATION: Final = "localization"
 
-TODO_ITEMS: Final = "items"
+LOCALIZATION_SPLIT_CHAR: Final = "_"
+DEFAULT_LOCALIZATION: Final = LOCALIZATION_SPLIT_CHAR.join(["ch", "de-CH"]).lower()
+
+TODO_INGREDIENTS: Final = "ingredients"
 TODO_ADDITIONAL_ITEMS: Final = "additional_items"
