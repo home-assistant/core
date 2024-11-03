@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["bimmer_connected"],
   "quality_scale": "platinum",
-  "requirements": ["bimmer-connected[china]==0.16.4.0b2"]
+  "requirements": ["bimmer-connected[china]==0.16.4"]
 }
