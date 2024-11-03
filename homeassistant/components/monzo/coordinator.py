@@ -3,12 +3,13 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from pprint import pformat
 from typing import Any
 
-from monzopy import AuthorisationExpiredError
+from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .api import AuthenticatedMonzoAPI
@@ -45,5 +46,10 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
             pots = await self.api.user_account.pots()
         except AuthorisationExpiredError as err:
             raise ConfigEntryAuthFailed from err
+        except InvalidMonzoAPIResponseError as err:
+            message = "Invalid Monzo API response."
+            if err.missing_key:
+                message += f"\nMissing key: {err.missing_key} Response:\n{pformat(err.response)}"
+            raise HomeAssistantError(message) from err
 
         return MonzoData(accounts, pots)
