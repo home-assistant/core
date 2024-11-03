@@ -67,5 +67,9 @@
         ]
       }
     }
-  }
+  },
+  "mounts": [
+    // Geocaching API
+    "source=${localEnv:HOME}/Repos/geocachingapi-python,target=${containerWorkspaceFolder}/config/custom_libraries/geocachingapi,type=bind"
+  ]
 }
