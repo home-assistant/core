@@ -776,4 +776,19 @@ DISCOVERY_SCHEMAS = [
         device_type=(device_types.Thermostat,),
         allow_multi=True,  # also used for climate entity
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="OperationalStateCurrentPhase",
+            native_unit_of_measurement=None,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="operational_state",
+        ),
+        entity_class=MatterOperationalStateSensor,
+        required_attributes=(
+            clusters.OperationalState.Attributes.CurrentPhase,
+            clusters.OperationalState.Attributes.PhaseList,
+        ),
+    ),
 ]
