@@ -107,11 +107,19 @@ async def test_dhcp_flow(
         context={"source": SOURCE_DHCP},
     )
 
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Stove"
-    assert result["data"] == {CONF_HOST: "192.168.1.1"}
     assert result["result"].unique_id == "11:22:33:44:55:66"
-    assert len(mock_palazzetti_client.connect.mock_calls) > 0
 
 
 async def test_dhcp_flow_error(

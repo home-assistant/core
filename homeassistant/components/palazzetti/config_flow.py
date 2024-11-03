@@ -17,6 +17,10 @@ from .const import DOMAIN, LOGGER
 class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Palazzetti config flow."""
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_device: PalazzettiClient | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,18 +67,30 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
-        client = PalazzettiClient(hostname=discovery_info.ip)
-
+        self._discovered_device = PalazzettiClient(hostname=discovery_info.ip)
         try:
-            await client.connect()
+            await self._discovered_device.connect()
         except CommunicationError:
             LOGGER.exception("Communication error")
             return self.async_abort(reason="cannot_connect")
 
-        # Abort the flow if a config entry with the same unique ID exists
-        self._abort_if_unique_id_configured()
+        return await self.async_step_discovery_confirm()
 
-        return self.async_create_entry(
-            title=client.name,
-            data={CONF_HOST: discovery_info.ip},
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered_device.name,
+                data={CONF_HOST: self._discovered_device.host},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={
+                "name": self._discovered_device.name,
+                "host": self._discovered_device.host,
+            },
         )
