@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -213,12 +213,12 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> ImapOptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return ImapOptionsFlow()
 
 
-class OptionsFlow(OptionsFlowWithConfigEntry):
+class ImapOptionsFlow(OptionsFlow):
     """Option flow handler."""
 
     async def async_step_init(

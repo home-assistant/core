@@ -11,7 +11,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -143,12 +142,12 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> MetOptionsFlowHandler:
         """Get the options flow for Met."""
-        return MetOptionsFlowHandler(config_entry)
+        return MetOptionsFlowHandler()
 
 
-class MetOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class MetOptionsFlowHandler(OptionsFlow):
     """Options flow for Met component."""
 
     async def async_step_init(

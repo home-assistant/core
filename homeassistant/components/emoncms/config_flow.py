@@ -1,5 +1,7 @@
 """Configflow for the emoncms integration."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from pyemoncms import EmoncmsClient
@@ -9,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -68,9 +70,9 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlowWithConfigEntry:
+    ) -> EmoncmsOptionsFlow:
         """Get the options flow for this handler."""
-        return EmoncmsOptionsFlow(config_entry)
+        return EmoncmsOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -167,7 +169,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         return result
 
 
-class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
+class EmoncmsOptionsFlow(OptionsFlow):
     """Emoncms Options flow handler."""
 
     async def async_step_init(
