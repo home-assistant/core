@@ -117,7 +117,7 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state.attributes.get("source_value_valid") is True
-    assert state.attributes.get("age_coverage_ratio") == 0
+    assert "age_coverage_ratio" not in state.attributes
     # Source sensor turns unavailable, then available with valid value,
     # statistics sensor should follow
     state = hass.states.get("sensor.test")
@@ -209,7 +209,7 @@ async def test_sensor_loaded_from_config_entry(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state.attributes.get("source_value_valid") is True
-    assert state.attributes.get("age_coverage_ratio") == 0
+    assert "age_coverage_ratio" not in state.attributes
 
 
 async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
@@ -246,7 +246,7 @@ async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state.attributes.get("source_value_valid") is True
-    assert state.attributes.get("age_coverage_ratio") == 0
+    assert "age_coverage_ratio" not in state.attributes
 
 
 async def test_sensor_state_reported(hass: HomeAssistant) -> None:
@@ -2068,7 +2068,6 @@ async def test_attributes_remains(recorder_mock: Recorder, hass: HomeAssistant) 
         assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
         assert state.attributes == {
             "age_coverage_ratio": 0.0,
-            "buffer_usage_ratio": None,
             "friendly_name": "test",
             "icon": "mdi:calculator",
             "source_value_valid": True,
@@ -2084,7 +2083,6 @@ async def test_attributes_remains(recorder_mock: Recorder, hass: HomeAssistant) 
         assert state.state == STATE_UNKNOWN
         assert state.attributes == {
             "age_coverage_ratio": 0,
-            "buffer_usage_ratio": None,
             "friendly_name": "test",
             "icon": "mdi:calculator",
             "source_value_valid": True,
