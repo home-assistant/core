@@ -214,7 +214,7 @@ NVR_SWITCH_ENTITIES = (
         cmd_key="GetEmail",
         translation_key="email",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "email"),
+        supported=lambda api: api.supported(None, "email") and not api.is_hub,
         value=lambda api: api.email_enabled(),
         method=lambda api, value: api.set_email(None, value),
     ),
@@ -223,7 +223,7 @@ NVR_SWITCH_ENTITIES = (
         cmd_key="GetFtp",
         translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "ftp"),
+        supported=lambda api: api.supported(None, "ftp") and not api.is_hub,
         value=lambda api: api.ftp_enabled(),
         method=lambda api, value: api.set_ftp(None, value),
     ),
@@ -232,7 +232,7 @@ NVR_SWITCH_ENTITIES = (
         cmd_key="GetPush",
         translation_key="push_notifications",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "push"),
+        supported=lambda api: api.supported(None, "push") and not api.is_hub,
         value=lambda api: api.push_enabled(),
         method=lambda api, value: api.set_push(None, value),
     ),
@@ -241,7 +241,7 @@ NVR_SWITCH_ENTITIES = (
         cmd_key="GetRec",
         translation_key="record",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "recording"),
+        supported=lambda api: api.supported(None, "recording") and not api.is_hub,
         value=lambda api: api.recording_enabled(),
         method=lambda api, value: api.set_recording(None, value),
     ),
@@ -250,7 +250,7 @@ NVR_SWITCH_ENTITIES = (
         cmd_key="GetBuzzerAlarmV20",
         translation_key="hub_ringtone_on_event",
         entity_category=EntityCategory.CONFIG,
-        supported=lambda api: api.supported(None, "buzzer"),
+        supported=lambda api: api.supported(None, "buzzer") and not api.is_hub,
         value=lambda api: api.buzzer_enabled(),
         method=lambda api, value: api.set_buzzer(None, value),
     ),
@@ -278,6 +278,56 @@ DEPRECATED_HDR = ReolinkSwitchEntityDescription(
     value=lambda api, ch: api.HDR_on(ch) is True,
     method=lambda api, ch, value: api.set_HDR(ch, value),
 )
+
+# Can be removed in HA 2025.4.0
+DEPRECATED_NVR_SWITCHES = [
+    ReolinkNVRSwitchEntityDescription(
+        key="email",
+        cmd_key="GetEmail",
+        translation_key="email",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api: api.is_hub,
+        value=lambda api: api.email_enabled(),
+        method=lambda api, value: api.set_email(None, value),
+    ),
+    ReolinkNVRSwitchEntityDescription(
+        key="ftp_upload",
+        cmd_key="GetFtp",
+        translation_key="ftp_upload",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api: api.is_hub,
+        value=lambda api: api.ftp_enabled(),
+        method=lambda api, value: api.set_ftp(None, value),
+    ),
+    ReolinkNVRSwitchEntityDescription(
+        key="push_notifications",
+        cmd_key="GetPush",
+        translation_key="push_notifications",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api: api.is_hub,
+        value=lambda api: api.push_enabled(),
+        method=lambda api, value: api.set_push(None, value),
+    ),
+    ReolinkNVRSwitchEntityDescription(
+        key="record",
+        cmd_key="GetRec",
+        translation_key="record",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api: api.is_hub,
+        value=lambda api: api.recording_enabled(),
+        method=lambda api, value: api.set_recording(None, value),
+    ),
+    ReolinkNVRSwitchEntityDescription(
+        key="buzzer",
+        cmd_key="GetBuzzerAlarmV20",
+        translation_key="hub_ringtone_on_event",
+        icon="mdi:room-service",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api: api.is_hub,
+        value=lambda api: api.buzzer_enabled(),
+        method=lambda api, value: api.set_buzzer(None, value),
+    ),
+]
 
 
 async def async_setup_entry(
@@ -307,10 +357,17 @@ async def async_setup_entry(
         for chime in reolink_data.host.api.chime_list
     )
 
-    # Can be removed in HA 2025.2.0
+    # Can be removed in HA 2025.4.0
+    depricated_dict = {}
+    for desc in DEPRECATED_NVR_SWITCHES:
+        if not desc.supported(reolink_data.host.api):
+            continue
+        depricated_dict[f"{reolink_data.host.unique_id}_{desc.key}"] = desc
+
     entity_reg = er.async_get(hass)
     reg_entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
     for entity in reg_entities:
+        # Can be removed in HA 2025.2.0
         if entity.domain == "switch" and entity.unique_id.endswith("_hdr"):
             if entity.disabled:
                 entity_reg.async_remove(entity.entity_id)
@@ -329,7 +386,24 @@ async def async_setup_entry(
                 for channel in reolink_data.host.api.channels
                 if DEPRECATED_HDR.supported(reolink_data.host.api, channel)
             )
-            break
+
+        # Can be removed in HA 2025.4.0
+        if entity.domain == "switch" and entity.unique_id in depricated_dict:
+            if entity.disabled:
+                entity_reg.async_remove(entity.entity_id)
+                continue
+
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "hub_switch_deprecated",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="hub_switch_deprecated",
+            )
+            entities.append(
+                ReolinkNVRSwitchEntity(reolink_data, depricated_dict[entity.unique_id])
+            )
 
     async_add_entities(entities)
 

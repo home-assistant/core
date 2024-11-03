@@ -59,7 +59,14 @@
           "pt-br": "Portugal",
           "ru-ru": "Russia",
           "sv-se": "Sweden",
-          "tr-tr": "Turkey"
+          "tr-tr": "Türkiye"
+        }
+      },
+      "list_access": {
+        "name": "List access",
+        "state": {
+          "registered": "Private",
+          "shared": "Shared"
         }
       }
     }

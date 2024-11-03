@@ -28,6 +28,13 @@ async def test_button(
     await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
     assert_entities(hass, normal_config_entry.entry_id, entity_registry, snapshot)
 
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: ["button.test_wake"]},
+        blocking=True,
+    )
+
 
 @pytest.mark.parametrize(
     ("name", "func"),

@@ -59,6 +59,11 @@
     }
   },
   "entity": {
+    "assist_satellite": {
+      "assist_satellite": {
+        "name": "[%key:component::assist_satellite::entity_component::_::name%]"
+      }
+    },
     "binary_sensor": {
       "assist_in_progress": {
         "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"

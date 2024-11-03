@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
+from decimal import Decimal
+
 from govee_ble import DeviceClass, SensorUpdate, Units
 from govee_ble.parser import ERROR
 
@@ -28,6 +31,8 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import GoveeBLEConfigEntry, GoveeBLEPassiveBluetoothDataProcessor
 from .device import device_key_to_bluetooth_entity_key
+
+type _SensorValueType = str | int | float | date | datetime | Decimal | None
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -72,7 +77,7 @@ SENSOR_DESCRIPTIONS = {
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[_SensorValueType]:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -117,13 +122,13 @@ async def async_setup_entry(
 
 class GoveeBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[float | int | str | None, SensorUpdate]
+        PassiveBluetoothDataProcessor[_SensorValueType, SensorUpdate]
     ],
     SensorEntity,
 ):
     """Representation of a govee ble sensor."""
 
-    processor: GoveeBLEPassiveBluetoothDataProcessor
+    processor: GoveeBLEPassiveBluetoothDataProcessor[_SensorValueType]
 
     @property
     def available(self) -> bool:
@@ -135,6 +140,6 @@ class GoveeBluetoothSensorEntity(
         )
 
     @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> _SensorValueType:  # pylint: disable=hass-return-type
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

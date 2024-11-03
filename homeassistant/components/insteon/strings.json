@@ -44,7 +44,6 @@
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_insteon_device": "Discovered device not an Insteon device"
     }
   },

@@ -290,40 +290,34 @@ async def test_temperature_features_is_valid(
     await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            "entity_id": "climate.test_temp",
-            "temperature": 20,
-        },
-        blocking=True,
-    )
-    assert (
-        "MockClimateTempEntity set_temperature action was used "
-        "with temperature but the entity does not "
-        "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. "
-        "This will stop working in 2025.4 and raise an error instead. "
-        "Please"
-    ) in caplog.text
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature parameter but the entity does not support it",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test_temp",
+                "temperature": 20,
+            },
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            "entity_id": "climate.test_range",
-            "target_temp_low": 20,
-            "target_temp_high": 25,
-        },
-        blocking=True,
-    )
-    assert (
-        "MockClimateTempRangeEntity set_temperature action was used with "
-        "target_temp_low but the entity does not "
-        "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. "
-        "This will stop working in 2025.4 and raise an error instead. "
-        "Please"
-    ) in caplog.text
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test_range",
+                "target_temp_low": 20,
+                "target_temp_high": 25,
+            },
+            blocking=True,
+        )
 
 
 async def test_mode_validation(

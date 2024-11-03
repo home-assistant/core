@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -53,7 +53,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _discovered_ip: str
+    _discovered_ip: str = ""
     _discovered_model: str
 
     @staticmethod
@@ -119,10 +119,8 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self) -> ConfigFlowResult:
         """Handle any discovery."""
-        self.context[CONF_HOST] = self._discovered_ip
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
-                return self.async_abort(reason="already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
 
         try:
@@ -139,6 +137,10 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
         )
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._discovered_ip == self._discovered_ip  # noqa: SLF001
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None

@@ -127,5 +127,5 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
         self._attr_native_value = self.entity_description.fn(
-            self.device["status"]["state"]
+            self.device.get("status", {}).get("state")
         )

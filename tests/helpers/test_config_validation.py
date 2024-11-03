@@ -6,6 +6,7 @@ import enum
 from functools import partial
 import logging
 import os
+import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import threading
 from typing import Any
@@ -1911,16 +1912,19 @@ async def test_nested_trigger_list_extra() -> None:
 async def test_trigger_backwards_compatibility() -> None:
     """Test triggers with backwards compatibility."""
 
-    assert cv._backward_compat_trigger_schema("str") == "str"
-    assert cv._backward_compat_trigger_schema({"platform": "abc"}) == {
-        "platform": "abc"
-    }
-    assert cv._backward_compat_trigger_schema({"trigger": "abc"}) == {"platform": "abc"}
+    assert cv._trigger_pre_validator("str") == "str"
+    assert cv._trigger_pre_validator({"platform": "abc"}) == {"platform": "abc"}
+    assert cv._trigger_pre_validator({"trigger": "abc"}) == {"platform": "abc"}
     with pytest.raises(
         vol.Invalid,
         match="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
     ):
-        cv._backward_compat_trigger_schema({"trigger": "abc", "platform": "def"})
+        cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
+    with pytest.raises(
+        vol.Invalid,
+        match=re.escape("required key not provided @ data['trigger']"),
+    ):
+        cv._trigger_pre_validator({})
 
 
 async def test_is_entity_service_schema(

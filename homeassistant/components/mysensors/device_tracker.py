@@ -47,19 +47,6 @@ async def async_setup_entry(
 class MySensorsDeviceTracker(MySensorsChildEntity, TrackerEntity):
     """Represent a MySensors device tracker."""
 
-    _latitude: float | None = None
-    _longitude: float | None = None
-
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of the device."""
-        return self._latitude
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of the device."""
-        return self._longitude
-
     @callback
     def _async_update(self) -> None:
         """Update the controller with the latest value from a device."""
@@ -68,5 +55,5 @@ class MySensorsDeviceTracker(MySensorsChildEntity, TrackerEntity):
         child = node.children[self.child_id]
         position: str = child.values[self.value_type]
         latitude, longitude, _ = position.split(",")
-        self._latitude = float(latitude)
-        self._longitude = float(longitude)
+        self._attr_latitude = float(latitude)
+        self._attr_longitude = float(longitude)

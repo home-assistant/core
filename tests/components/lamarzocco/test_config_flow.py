@@ -4,15 +4,11 @@ from unittest.mock import MagicMock, patch
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from lmcloud.models import LaMarzoccoDeviceInfo
+import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_BLUETOOTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigEntryState,
-)
+from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -273,18 +269,10 @@ async def test_reconfigure_flow(
     """Testing reconfgure flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result2 = await __do_successful_user_step(hass, result, mock_cloud_client)
     service_info = get_bluetooth_service_info(
@@ -378,6 +366,10 @@ async def test_bluetooth_discovery(
     }
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.lamarzocco.config.error.machine_not_found"],
+)
 async def test_bluetooth_discovery_errors(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,

@@ -7,7 +7,7 @@ import copy
 import logging
 import random
 import string
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -177,7 +177,9 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     # class variable to store/share discovered host information
-    discovered_hosts: dict[str, dict[str, Any]] = {}
+    DISCOVERED_HOSTS: dict[str, dict[str, Any]] = {}
+
+    unique_id: str
 
     def __init__(self) -> None:
         """Initialize the Konnected flow."""
@@ -231,8 +233,6 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the user wants to import the config entry."""
-        if TYPE_CHECKING:
-            assert self.unique_id is not None
         if user_input is None:
             return self.async_show_form(
                 step_id="import_confirm",
@@ -240,13 +240,13 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         # if we have ssdp discovered applicable host info use it
-        if KonnectedFlowHandler.discovered_hosts.get(self.unique_id):
+        if KonnectedFlowHandler.DISCOVERED_HOSTS.get(self.unique_id):
             return await self.async_step_user(
                 user_input={
-                    CONF_HOST: KonnectedFlowHandler.discovered_hosts[self.unique_id][
+                    CONF_HOST: KonnectedFlowHandler.DISCOVERED_HOSTS[self.unique_id][
                         CONF_HOST
                     ],
-                    CONF_PORT: KonnectedFlowHandler.discovered_hosts[self.unique_id][
+                    CONF_PORT: KonnectedFlowHandler.DISCOVERED_HOSTS[self.unique_id][
                         CONF_PORT
                     ],
                 }
@@ -299,7 +299,7 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
             self.data[CONF_ID] = status.get("chipId", status["mac"].replace(":", ""))
             self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
 
-            KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
+            KonnectedFlowHandler.DISCOVERED_HOSTS[self.data[CONF_ID]] = {
                 CONF_HOST: self.data[CONF_HOST],
                 CONF_PORT: self.data[CONF_PORT],
             }
@@ -332,7 +332,7 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
 
                 # save off our discovered host info
-                KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
+                KonnectedFlowHandler.DISCOVERED_HOSTS[self.data[CONF_ID]] = {
                     CONF_HOST: self.data[CONF_HOST],
                     CONF_PORT: self.data[CONF_PORT],
                 }

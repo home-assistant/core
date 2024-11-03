@@ -103,9 +103,10 @@
       "user": {
         "description": "This helper allows you to create helper entities that define their state using a template.",
         "menu_options": {
+          "alarm_control_panel": "Template an alarm control panel",
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
-          "image": "Template a image",
+          "image": "Template an image",
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",

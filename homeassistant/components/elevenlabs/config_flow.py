@@ -17,6 +17,8 @@ from homeassistant.config_entries import (
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -47,9 +49,12 @@ USER_STEP_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_voices_models(api_key: str) -> tuple[dict[str, str], dict[str, str]]:
+async def get_voices_models(
+    hass: HomeAssistant, api_key: str
+) -> tuple[dict[str, str], dict[str, str]]:
     """Get available voices and models as dicts."""
-    client = AsyncElevenLabs(api_key=api_key)
+    httpx_client = get_async_client(hass)
+    client = AsyncElevenLabs(api_key=api_key, httpx_client=httpx_client)
     voices = (await client.voices.get_all()).voices
     models = await client.models.get_all()
     voices_dict = {
@@ -77,7 +82,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                voices, _ = await get_voices_models(user_input[CONF_API_KEY])
+                voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
             except ApiError:
                 errors["base"] = "invalid_api_key"
             else:
@@ -116,7 +121,7 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if not self.voices or not self.models:
-            self.voices, self.models = await get_voices_models(self.api_key)
+            self.voices, self.models = await get_voices_models(self.hass, self.api_key)
 
         assert self.models and self.voices
 

@@ -20,7 +20,7 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DATA_TTS_MANAGER, DOMAIN, DOMAIN_DATA
+from .const import DATA_COMPONENT, DATA_TTS_MANAGER, DOMAIN
 from .helper import get_engine_instance
 
 URL_QUERY_TTS_OPTIONS = "tts_options"
@@ -146,7 +146,7 @@ class TTSMediaSource(MediaSource):
             for engine in self.hass.data[DATA_TTS_MANAGER].providers
         ] + [
             self._engine_item(entity.entity_id)
-            for entity in self.hass.data[DOMAIN_DATA].entities
+            for entity in self.hass.data[DATA_COMPONENT].entities
         ]
         return BrowseMediaSource(
             domain=DOMAIN,

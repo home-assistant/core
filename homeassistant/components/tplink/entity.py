@@ -18,7 +18,7 @@ from kasa import (
 )
 
 from homeassistant.const import EntityCategory
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -36,6 +36,7 @@ from .const import (
     PRIMARY_STATE_ID,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
+from .deprecate import DeprecatedInfo, async_check_create_deprecated
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +87,8 @@ LEGACY_KEY_MAPPING = {
 @dataclass(frozen=True, kw_only=True)
 class TPLinkFeatureEntityDescription(EntityDescription):
     """Base class for a TPLink feature based entity description."""
+
+    deprecated_info: DeprecatedInfo | None = None
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -251,18 +254,25 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        key = self.entity_description.key
+        return self._get_feature_unique_id(self._device, self.entity_description)
+
+    @staticmethod
+    def _get_feature_unique_id(
+        device: Device, entity_description: TPLinkFeatureEntityDescription
+    ) -> str:
+        """Return unique ID for the entity."""
+        key = entity_description.key
         # The unique id for the state feature in the switch platform is the
         # device_id
         if key == PRIMARY_STATE_ID:
-            return legacy_device_id(self._device)
+            return legacy_device_id(device)
 
         # Historically the legacy device emeter attributes which are now
         # replaced with features used slightly different keys. This ensures
         # that those entities are not orphaned. Returns the mapped key or the
         # provided key if not mapped.
         key = LEGACY_KEY_MAPPING.get(key, key)
-        return f"{legacy_device_id(self._device)}_{key}"
+        return f"{legacy_device_id(device)}_{key}"
 
     @classmethod
     def _category_for_feature(cls, feature: Feature | None) -> EntityCategory | None:
@@ -334,6 +344,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         _D: TPLinkFeatureEntityDescription,
     ](
         cls,
+        hass: HomeAssistant,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         *,
@@ -368,6 +379,11 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                     feat, descriptions, device=device, parent=parent
                 )
             )
+            and async_check_create_deprecated(
+                hass,
+                cls._get_feature_unique_id(device, desc),
+                desc,
+            )
         ]
         return entities
 
@@ -377,6 +393,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         _D: TPLinkFeatureEntityDescription,
     ](
         cls,
+        hass: HomeAssistant,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
         *,
@@ -393,6 +410,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         # Add parent entities before children so via_device id works.
         entities.extend(
             cls._entities_for_device(
+                hass,
                 device,
                 coordinator=coordinator,
                 feature_type=feature_type,
@@ -412,6 +430,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                     child_coordinator = coordinator
                 entities.extend(
                     cls._entities_for_device(
+                        hass,
                         child,
                         coordinator=child_coordinator,
                         feature_type=feature_type,

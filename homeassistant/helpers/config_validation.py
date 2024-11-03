@@ -874,7 +874,7 @@ def url_no_path(value: Any) -> str:
     url_in = url(value)
 
     if urlparse(url_in).path not in ("", "/"):
-        raise vol.Invalid("url it not allowed to have a path component")
+        raise vol.Invalid("url is not allowed to have a path component")
 
     return url_in
 
@@ -1771,7 +1771,7 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
 )
 
 
-def _backward_compat_trigger_schema(value: Any | None) -> Any:
+def _trigger_pre_validator(value: Any | None) -> Any:
     """Rewrite trigger `trigger` to `platform`.
 
     `platform` has been renamed to `trigger` in user documentation and in the automation
@@ -1790,6 +1790,8 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
             )
         value = dict(value)
         value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
+    elif CONF_PLATFORM not in value:
+        raise vol.Invalid("required key not provided", [CONF_TRIGGER])
 
     return value
 
@@ -1831,7 +1833,7 @@ def _base_trigger_validator(value: Any) -> Any:
 TRIGGER_SCHEMA = vol.All(
     ensure_list,
     _base_trigger_list_flatten,
-    [vol.All(_backward_compat_trigger_schema, _base_trigger_validator)],
+    [vol.All(_trigger_pre_validator, _base_trigger_validator)],
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(

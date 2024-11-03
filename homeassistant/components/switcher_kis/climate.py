@@ -29,15 +29,13 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
 
 DEVICE_MODE_TO_HA = {
@@ -81,12 +79,9 @@ async def async_setup_entry(
     )
 
 
-class SwitcherClimateEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], ClimateEntity
-):
+class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     """Representation of a Switcher climate entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -98,9 +93,6 @@ class SwitcherClimateEntity(
         self._remote = remote
 
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
-        )
 
         self._attr_min_temp = remote.min_temperature
         self._attr_max_temp = remote.max_temperature

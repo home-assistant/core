@@ -23,7 +23,7 @@ from homeassistant.components.fritz.const import (
     FRITZ_AUTH_EXCEPTIONS,
 )
 from homeassistant.components.ssdp import ATTR_UPNP_UDN
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -452,18 +452,13 @@ async def test_reconfigure_successful(
         mock_request_post.return_value.status_code = 200
         mock_request_post.return_value.text = MOCK_REQUEST
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_RECONFIGURE,
-                "entry_id": mock_config.entry_id,
-                "show_advanced_options": show_advanced_options,
-            },
-            data=mock_config.data,
+        result = await mock_config.start_reconfigure_flow(
+            hass,
+            show_advanced_options=show_advanced_options,
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -514,14 +509,10 @@ async def test_reconfigure_not_successful(
         mock_request_post.return_value.status_code = 200
         mock_request_post.return_value.text = MOCK_REQUEST
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
+        result = await mock_config.start_reconfigure_flow(hass)
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -532,7 +523,7 @@ async def test_reconfigure_not_successful(
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
         assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
 
         result = await hass.config_entries.flow.async_configure(
