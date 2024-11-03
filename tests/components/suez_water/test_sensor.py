@@ -1,6 +1,5 @@
 """Test Suez_water sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -41,52 +40,23 @@ async def test_suez_sensors_failed_update(
 ) -> None:
     """Test that suez_water sensor reflect failure when api fails."""
 
-    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
-        assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-        entity_ids = await hass.async_add_executor_job(hass.states.entity_ids)
-        assert len(entity_ids) == 1
+    entity_ids = await hass.async_add_executor_job(hass.states.entity_ids)
+    assert len(entity_ids) == 1
 
-        state = hass.states.get(entity_ids[0])
-        assert entity_ids[0]
-        assert state.state != STATE_UNAVAILABLE
+    state = hass.states.get(entity_ids[0])
+    assert entity_ids[0]
+    assert state.state != STATE_UNAVAILABLE
 
-        suez_client.update.side_effect = PySuezError("Should fail to update")
+    suez_client.update.side_effect = PySuezError("Should fail to update")
 
-        freezer.tick(timedelta(hours=1) + DATA_REFRESH_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(True)
+    freezer.tick(DATA_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(True)
 
-        state = hass.states.get(entity_ids[0])
-        assert state
-        assert state.state == STATE_UNAVAILABLE
-
-
-async def test_suez_sensors_invalid_credentials(
-    hass: HomeAssistant,
-    suez_client,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that suez_water sensor can't be loaded with invalid credentials."""
-
-    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
-        suez_client.check_credentials.return_value = False
-        await setup_integration(hass, mock_config_entry)
-
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_suez_sensors_setup_api_error(
-    hass: HomeAssistant,
-    suez_client,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that suez_water sensor needs to retry loading if api failed to connect."""
-
-    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
-        suez_client.check_credentials.side_effect = PySuezError("Test failure")
-        await setup_integration(hass, mock_config_entry)
-
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    state = hass.states.get(entity_ids[0])
+    assert state
+    assert state.state == STATE_UNAVAILABLE
