@@ -80,6 +80,8 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
+        assert self._discovered_device is not None
+
         if user_input is not None:
             return self.async_create_entry(
                 title=self._discovered_device.name,
