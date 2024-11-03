@@ -167,11 +167,6 @@ def _model_from_status(status: dict[str, str]) -> str | None:
     )
 
 
-def _model_id_from_status(status: dict[str, str]) -> str | None:
-    """Return the device part as model ID, if available."""
-    return status.get("device.part")
-
-
 def _firmware_from_status(status: dict[str, str]) -> str | None:
     """Find the best firmware value from the status."""
     return status.get("ups.firmware") or status.get("ups.firmware.aux")
