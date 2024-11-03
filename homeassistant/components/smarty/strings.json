@@ -61,6 +61,11 @@
       "filter_days_left": {
         "name": "Filter days left"
       }
+    },
+    "switch": {
+      "boost": {
+        "name": "Boost"
+      }
     }
   }
 }
