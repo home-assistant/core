@@ -4812,6 +4812,7 @@ async def test_reauth_reconfigure_missing_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
 )
@@ -5039,17 +5040,48 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     assert "test" in hass.config.components
 
 
-async def test_options_flow_options_not_mutated() -> None:
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
-        domain="test",
+        domain="hue",
         data={"first": True},
         options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
     )
 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
+    assert (
+        "Detected that integration 'hue' inherits from OptionsFlowWithConfigEntry,"
+        " which is deprecated and will stop working in 2025.12" in caplog.text
+    )
 
     options_flow._options["sub_dict"]["2"] = "two"
+    options_flow._options["sub_list"].append("two")
+
+    assert options_flow._options == {
+        "sub_dict": {"1": "one", "2": "two"},
+        "sub_list": ["one", "two"],
+    }
+    assert entry.options == {"sub_dict": {"1": "one"}, "sub_list": ["one"]}
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_options_flow_options_not_mutated(hass: HomeAssistant) -> None:
+    """Test that OptionsFlow doesn't mutate entry options."""
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
+    )
+    entry.add_to_hass(hass)
+
+    options_flow = config_entries.OptionsFlow()
+    options_flow.handler = entry.entry_id
+    options_flow.hass = hass
+
+    options_flow.options["sub_dict"]["2"] = "two"
     options_flow._options["sub_list"].append("two")
 
     assert options_flow._options == {
@@ -7405,7 +7437,6 @@ async def test_options_flow_config_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -7433,7 +7464,10 @@ async def test_options_flow_deprecated_config_entry_setter(
 
                 def __init__(self, entry) -> None:
                     """Test initialisation."""
-                    self.config_entry = entry
+                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+                        self.config_entry = entry
+                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+                        self.options = entry.options
 
                 async def async_step_init(self, user_input=None):
                     """Test user step."""
@@ -7460,6 +7494,10 @@ async def test_options_flow_deprecated_config_entry_setter(
 
     assert (
         "Detected that integration 'hue' sets option flow config_entry explicitly, "
+        "which is deprecated and will stop working in 2025.12" in caplog.text
+    )
+    assert (
+        "Detected that integration 'hue' sets option flow options explicitly, "
         "which is deprecated and will stop working in 2025.12" in caplog.text
     )
 
