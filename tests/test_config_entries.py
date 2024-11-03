@@ -5053,8 +5053,7 @@ async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
     assert (
         "Detected that integration 'hue' inherits from OptionsFlowWithConfigEntry,"
-        " which is deprecated and will stop working in 2025.12, at homeassistant/"
-        in caplog.text
+        " which is deprecated and will stop working in 2025.12" in caplog.text
     )
 
     options_flow._options["sub_dict"]["2"] = "two"
