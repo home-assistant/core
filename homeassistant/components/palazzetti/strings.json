@@ -10,6 +10,7 @@
         }
       },
       "discovery_confirm": {
+        "title": "Discovered Palazzetti device",
         "description": "Do you want to add {name} ({host}) to Home Assistant?"
       }
     },
