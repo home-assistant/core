@@ -585,6 +585,9 @@
       },
       "preheat_status": {
         "name": "Pre-heat status"
+      },
+      "test_mode": {
+        "name": "Test mode"
       }
     },
     "button": {
