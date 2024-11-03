@@ -38,6 +38,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
@@ -1236,8 +1237,23 @@ class Recorder(threading.Thread):
         move_away_broken_database(dburl_to_path(self.db_url))
         self.recorder_runs_manager.reset()
         self._setup_recorder()
+        self._create_sqlite_corruption_issue()
+
         if setup_run:
             self._setup_run()
+
+    def _create_sqlite_corruption_issue(self) -> None:
+        """Create an issue to notify users of database corruption."""
+        ir.create_issue(
+            self.hass,
+            DOMAIN,
+            "database_corrupt",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="database_corrupt",
+            learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
+        )
 
     def _close_event_session(self) -> None:
         """Close the event session."""

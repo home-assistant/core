@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
+import dataclasses
 from datetime import datetime, timedelta
 import sqlite3
 import sys
@@ -1687,6 +1688,7 @@ async def test_database_corruption_while_running(
     recorder_mock: Recorder,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
     await hass.async_block_till_done()
@@ -1727,6 +1729,28 @@ async def test_database_corruption_while_running(
     assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
     assert "The system will rename the corrupt database file" in caplog.text
     assert "Connected to recorder database" in caplog.text
+
+    # Retrieve the created database corrupted issue, but clear the 'created' DT for comparison
+    created_issue = dataclasses.replace(
+        issue_registry.async_get_issue(DOMAIN, "database_corrupt"), created=None
+    )
+    # Confirm issue has been created, and matches expected format
+    assert created_issue == ir.IssueEntry(
+        active=True,
+        breaks_in_ha_version=None,
+        created=None,
+        data=None,
+        dismissed_version=None,
+        domain=DOMAIN,
+        is_fixable=True,
+        is_persistent=True,
+        issue_domain=None,
+        issue_id="database_corrupt",
+        learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="database_corrupt",
+        translation_placeholders=None,
+    ), "Created issue does not match expected format"
 
     # This state should go into the new database
     hass.states.async_set("test.two", "on", {})
