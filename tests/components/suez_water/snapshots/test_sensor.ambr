@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday_historical_sensor-entry]
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.suez_mock_device_water_usage_yesterday_historical_sensor',
+    'entity_id': 'sensor.suez_mock_device_water_usage_yesterday',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,7 +23,7 @@
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Water usage yesterday - historical sensor',
+    'original_name': 'Water usage yesterday',
     'platform': 'suez_water',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -32,12 +32,12 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday_historical_sensor-state]
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'suez water mock test',
       'device_class': 'water',
-      'friendly_name': 'Suez mock device Water usage yesterday - historical sensor',
+      'friendly_name': 'Suez mock device Water usage yesterday',
       'highest_monthly_consumption': 2558,
       'history': dict({
         '2024-01-01': 130,
@@ -58,7 +58,7 @@
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.suez_mock_device_water_usage_yesterday_historical_sensor',
+    'entity_id': 'sensor.suez_mock_device_water_usage_yesterday',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
