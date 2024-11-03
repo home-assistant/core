@@ -226,13 +226,13 @@ class ImapOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] | None = None
-        entry_data: dict[str, Any] = dict(self._config_entry.data)
+        entry_data: dict[str, Any] = dict(self.config_entry.data)
         if user_input is not None:
             try:
                 self._async_abort_entries_match(
                     {
-                        CONF_SERVER: self._config_entry.data[CONF_SERVER],
-                        CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
+                        CONF_SERVER: self.config_entry.data[CONF_SERVER],
+                        CONF_USERNAME: self.config_entry.data[CONF_USERNAME],
                         CONF_FOLDER: user_input[CONF_FOLDER],
                         CONF_SEARCH: user_input[CONF_SEARCH],
                     }
