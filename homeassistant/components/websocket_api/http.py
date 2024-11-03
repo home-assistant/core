@@ -344,7 +344,7 @@ class WebSocketHandler:
         try:
             connection = await self._async_handle_auth_phase(auth, send_bytes_text)
             self._async_increase_writer_limit(writer)
-            await self._async_websocket_command_phase(connection, send_bytes_text)
+            await self._async_websocket_command_phase(connection)
         except asyncio.CancelledError:
             logger.debug("%s: Connection cancelled", self.description)
             raise
@@ -454,9 +454,7 @@ class WebSocketHandler:
         writer._limit = 2**20  # noqa: SLF001
 
     async def _async_websocket_command_phase(
-        self,
-        connection: ActiveConnection,
-        send_bytes_text: Callable[[bytes], Coroutine[Any, Any, None]],
+        self, connection: ActiveConnection
     ) -> None:
         """Handle the command phase of the websocket connection."""
         wsock = self._wsock
@@ -467,24 +465,26 @@ class WebSocketHandler:
         # Command phase
         while not wsock.closed:
             msg = await wsock.receive()
+            type_ = msg.type
+            data = msg.data
 
-            if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
+            if type_ in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
                 break
 
-            if msg.type is WSMsgType.BINARY:
-                if len(msg.data) < 1:
+            if type_ is WSMsgType.BINARY:
+                if len(data) < 1:
                     raise Disconnect("Received invalid binary message.")
 
-                handler = msg.data[0]
-                payload = msg.data[1:]
+                handler = data[0]
+                payload = data[1:]
                 async_handle_binary(handler, payload)
                 continue
 
-            if msg.type is not WSMsgType.TEXT:
+            if type_ is not WSMsgType.TEXT:
                 raise Disconnect("Received non-Text message.")
 
             try:
-                command_msg_data = json_loads(msg.data)
+                command_msg_data = json_loads(data)
             except ValueError as ex:
                 raise Disconnect("Received invalid JSON.") from ex
 
