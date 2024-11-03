@@ -17,22 +17,32 @@ class TadoDeviceEntity(Entity):
         """Initialize a Tado device."""
         super().__init__()
         self._device_info = device_info
-        self.device_name = device_info.get("serialNo", device_info.get("serialNumber"))
-        self.device_id = device_info.get(
-            "shortSerialNo", device_info.get("serialNumber")
+        self.device_name = (
+            device_info["serialNumber"]
+            if device_info["is_x"]
+            else device_info["serialNo"]
+        )
+        self.device_id = (
+            device_info["serialNumber"]
+            if device_info["is_x"]
+            else device_info["shortSerialNo"]
         )
         self._attr_device_info = DeviceInfo(
             configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
             identifiers={(DOMAIN, self.device_id)},
             name=self.device_name,
             manufacturer=DEFAULT_NAME,
-            sw_version=device_info.get(
-                "currentFwVersion", device_info.get("firmwareVersion")
-            ),
-            model=device_info.get("deviceType", device_info.get("type")),
+            sw_version=device_info["firmwareVersion"]
+            if device_info["is_x"]
+            else device_info["currentFwVersion"],
+            model=device_info["type"]
+            if device_info["is_x"]
+            else device_info["deviceType"],
             via_device=(
                 DOMAIN,
-                device_info.get("serialNo", device_info.get("serialNumber")),
+                device_info["serialNumber"]
+                if device_info["is_x"]
+                else device_info["serialNo"],
             ),
         )
 

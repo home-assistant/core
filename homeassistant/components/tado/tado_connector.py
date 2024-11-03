@@ -54,7 +54,7 @@ class TadoConnector:
             "geofence": {},
             "zone": {},
         }
-        self.isX = False
+        self.is_x = False
 
     @property
     def fallback(self):
@@ -70,8 +70,9 @@ class TadoConnector:
         tado_home = self.tado.get_me()["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
-        self.isX = self.tado.http.isX
-        if self.isX:
+        self.is_x = self.tado.http.isX
+        [device.update(is_x=self.is_x) for device in self.devices]
+        if self.is_x:
             for z in self.zones:
                 z["type"] = TYPE_HEATING
                 z["name"] = z["roomName"]
@@ -147,13 +148,13 @@ class TadoConnector:
             return
 
         for device in devices:
-            if self.isX:
+            if self.is_x:
                 device_short_serial_no = device["serialNumber"]
             else:
                 device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)
 
-            if self.isX:
+            if self.is_x:
                 device[TEMP_OFFSET] = device["temperatureOffset"]
             else:
                 try:
@@ -189,7 +190,7 @@ class TadoConnector:
     def update_zones(self):
         """Update the zone data from Tado."""
         try:
-            if self.isX:
+            if self.is_x:
                 zone_states = self.tado.get_zone_states()
             else:
                 zone_states = self.tado.get_zone_states()["zoneStates"]
@@ -198,7 +199,7 @@ class TadoConnector:
             return
 
         for zone in zone_states:
-            self.update_zone(int(zone if not self.isX else zone["id"]))
+            self.update_zone(int(zone if not self.is_x else zone["id"]))
 
     def update_zone(self, zone_id):
         """Update the internal data from Tado."""

@@ -223,6 +223,10 @@ HA_TERMINATION_DURATION = "default_overlay_seconds"
 
 TADO_DEFAULT_MIN_TEMP = 5
 TADO_DEFAULT_MAX_TEMP = 40
+
+TADO_X_DEFAULT_MIN_TEMP = 5
+TADO_X_DEFAULT_MAX_TEMP = 30
+
 # Constants for service calls
 SERVICE_ADD_METER_READING = "add_meter_reading"
 CONF_CONFIG_ENTRY = "config_entry"
@@ -237,3 +241,6 @@ TADO_FANSPEED_SETTING = "fanSpeeds"
 TADO_FANLEVEL_SETTING = "fanLevel"
 TADO_VERTICAL_SWING_SETTING = "verticalSwing"
 TADO_HORIZONTAL_SWING_SETTING = "horizontalSwing"
+
+TADO_LINE_X = "is_x"
+TADO_PRE_LINE_X = "is_pre_x"

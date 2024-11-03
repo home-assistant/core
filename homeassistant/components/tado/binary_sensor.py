@@ -20,6 +20,8 @@ from homeassistant.helpers.typing import StateType
 from . import TadoConfigEntry
 from .const import (
     SIGNAL_TADO_UPDATE_RECEIVED,
+    TADO_LINE_X,
+    TADO_PRE_LINE_X,
     TYPE_AIR_CONDITIONING,
     TYPE_BATTERY,
     TYPE_HEATING,
@@ -97,24 +99,39 @@ DEVICE_SENSORS = {
 }
 
 ZONE_SENSORS = {
-    TYPE_HEATING: [
-        POWER_ENTITY_DESCRIPTION,
-        LINK_ENTITY_DESCRIPTION,
-        OVERLAY_ENTITY_DESCRIPTION,
-        OPEN_WINDOW_ENTITY_DESCRIPTION,
-        EARLY_START_ENTITY_DESCRIPTION,
-    ],
-    TYPE_AIR_CONDITIONING: [
-        POWER_ENTITY_DESCRIPTION,
-        LINK_ENTITY_DESCRIPTION,
-        OVERLAY_ENTITY_DESCRIPTION,
-        OPEN_WINDOW_ENTITY_DESCRIPTION,
-    ],
-    TYPE_HOT_WATER: [
-        POWER_ENTITY_DESCRIPTION,
-        LINK_ENTITY_DESCRIPTION,
-        OVERLAY_ENTITY_DESCRIPTION,
-    ],
+    TADO_LINE_X: {
+        TYPE_HEATING: [
+            POWER_ENTITY_DESCRIPTION,
+            LINK_ENTITY_DESCRIPTION,
+            OVERLAY_ENTITY_DESCRIPTION,
+            OPEN_WINDOW_ENTITY_DESCRIPTION,
+        ],
+        TYPE_HOT_WATER: [
+            POWER_ENTITY_DESCRIPTION,
+            LINK_ENTITY_DESCRIPTION,
+            OVERLAY_ENTITY_DESCRIPTION,
+        ],
+    },
+    TADO_PRE_LINE_X: {
+        TYPE_HEATING: [
+            POWER_ENTITY_DESCRIPTION,
+            LINK_ENTITY_DESCRIPTION,
+            OVERLAY_ENTITY_DESCRIPTION,
+            OPEN_WINDOW_ENTITY_DESCRIPTION,
+            EARLY_START_ENTITY_DESCRIPTION,
+        ],
+        TYPE_AIR_CONDITIONING: [
+            POWER_ENTITY_DESCRIPTION,
+            LINK_ENTITY_DESCRIPTION,
+            OVERLAY_ENTITY_DESCRIPTION,
+            OPEN_WINDOW_ENTITY_DESCRIPTION,
+        ],
+        TYPE_HOT_WATER: [
+            POWER_ENTITY_DESCRIPTION,
+            LINK_ENTITY_DESCRIPTION,
+            OVERLAY_ENTITY_DESCRIPTION,
+        ],
+    },
 }
 
 
@@ -127,6 +144,7 @@ async def async_setup_entry(
     devices = tado.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []
+    tado_line = TADO_LINE_X if tado.is_x else TADO_PRE_LINE_X
 
     # Create device sensors
     for device in devices:
@@ -145,30 +163,20 @@ async def async_setup_entry(
     # Create zone sensors
     for zone in zones:
         zone_type = zone["type"]
-        if zone_type not in ZONE_SENSORS:
-            _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
+        if zone_type not in ZONE_SENSORS[tado_line]:
+            _LOGGER.warning(
+                "Unknown or unsupported zone type skipped: %s, tado line: %s",
+                zone_type,
+                tado_line,
+            )
             continue
 
-        if tado.isX:
-            entities.extend(
-                [
-                    TadoZoneBinarySensor(
-                        tado, zone["name"], zone["id"], entity_description
-                    )
-                    for entity_description in ZONE_SENSORS[zone_type]
-                    if entity_description.key
-                    != "early start"  # early start is not available for TadoX
-                ]
-            )
-        else:
-            entities.extend(
-                [
-                    TadoZoneBinarySensor(
-                        tado, zone["name"], zone["id"], entity_description
-                    )
-                    for entity_description in ZONE_SENSORS[zone_type]
-                ]
-            )
+        entities.extend(
+            [
+                TadoZoneBinarySensor(tado, zone["name"], zone["id"], entity_description)
+                for entity_description in ZONE_SENSORS[tado_line][zone_type]
+            ]
+        )
 
     async_add_entities(entities, True)
 

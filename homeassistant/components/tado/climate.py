@@ -74,6 +74,8 @@ from .const import (
     TADO_TO_HA_OFFSET_MAP,
     TADO_TO_HA_SWING_MODE_MAP,
     TADO_VERTICAL_SWING_SETTING,
+    TADO_X_DEFAULT_MAX_TEMP,
+    TADO_X_DEFAULT_MIN_TEMP,
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
@@ -147,7 +149,7 @@ def create_climate_entity(
     tado: TadoConnector, name: str, zone_id: int, device_info: dict
 ) -> TadoClimate | None:
     """Create a Tado climate entity."""
-    if tado.isX:
+    if tado.is_x:
         capabilities = {"type": TYPE_HEATING}
     else:
         capabilities = tado.get_capabilities(zone_id)
@@ -230,7 +232,7 @@ def create_climate_entity(
     if heat_temperatures is None and "temperatures" in capabilities:
         heat_temperatures = capabilities["temperatures"]
 
-    if cool_temperatures is None and heat_temperatures is None and not tado.isX:
+    if cool_temperatures is None and heat_temperatures is None and not tado.is_x:
         _LOGGER.debug("Not adding zone %s since it has no temperatures", name)
         return None
 
@@ -241,9 +243,9 @@ def create_climate_entity(
     cool_max_temp = None
     cool_step = None
 
-    if tado.isX:
-        heat_min_temp = 5.0
-        heat_max_temp = 30.0
+    if tado.is_x:
+        heat_min_temp = TADO_X_DEFAULT_MIN_TEMP
+        heat_max_temp = TADO_X_DEFAULT_MAX_TEMP
         heat_step = PRECISION_HALVES
 
     if heat_temperatures is not None:
@@ -312,8 +314,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._attr_unique_id = f"{zone_type} {zone_id} {tado.home_id}"
 
         self._device_info = device_info
-        self._device_id = self._device_info.get(
-            "shortSerialNo", self._device_info.get("serialNumber")
+        self._device_id = (
+            self._device_info["serialNumber"]
+            if self._tado.is_x
+            else self._device_info["shortSerialNo"]
         )
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
@@ -343,7 +347,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_vertical_swing = TADO_SWING_OFF
         self._current_tado_horizontal_swing = TADO_SWING_OFF
 
-        if tado.isX:
+        if tado.is_x:
             capabilities = {"type": TYPE_HEATING}
         else:
             capabilities = tado.get_capabilities(zone_id)
@@ -437,9 +441,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         ):
             if not self._tado_geofence_data["presenceLocked"]:
                 return PRESET_AUTO
-            if self._tado.isX and self._tado_geofence_data["presence"] == "HOME":
+            if self._tado.is_x and self._tado_geofence_data["presence"] == "HOME":
                 return PRESET_HOME
-            if self._tado.isX and self._tado_geofence_data["presence"] == "AWAY":
+            if self._tado.is_x and self._tado_geofence_data["presence"] == "AWAY":
                 return PRESET_AWAY
         if self._tado_zone_data.is_away:
             return PRESET_AWAY
@@ -625,7 +629,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         """Load tado data into zone."""
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
 
-        if self._tado.isX:
+        if self._tado.is_x:
             self._tado_zone_temp_offset["offsent_celsius"] = self._tado.data["device"][
                 self._device_id
             ][TEMP_OFFSET]
