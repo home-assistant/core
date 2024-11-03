@@ -21,10 +21,10 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import HabiticaConfigEntry
 from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
+from .types import HabiticaConfigEntry, HabiticaTaskType
 from .util import next_due_date
 
 
@@ -35,15 +35,6 @@ class HabiticaTodoList(StrEnum):
     DAILIES = "dailys"
     TODOS = "todos"
     REWARDS = "rewards"
-
-
-class HabiticaTaskType(StrEnum):
-    """Habitica Entities."""
-
-    HABIT = "habit"
-    DAILY = "daily"
-    TODO = "todo"
-    REWARD = "reward"
 
 
 async def async_setup_entry(

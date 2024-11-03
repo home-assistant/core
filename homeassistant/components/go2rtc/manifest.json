@@ -2,10 +2,11 @@
   "domain": "go2rtc",
   "name": "go2rtc",
   "codeowners": ["@home-assistant/core"],
-  "config_flow": true,
+  "config_flow": false,
   "dependencies": ["camera"],
   "documentation": "https://www.home-assistant.io/integrations/go2rtc",
+  "integration_type": "system",
   "iot_class": "local_polling",
-  "requirements": ["go2rtc-client==0.0.1b0"],
+  "requirements": ["go2rtc-client==0.0.1b3"],
   "single_config_entry": true
 }

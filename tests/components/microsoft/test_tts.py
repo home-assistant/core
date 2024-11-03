@@ -10,8 +10,8 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
 from homeassistant.components.microsoft.tts import SUPPORTED_LANGUAGES
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 
