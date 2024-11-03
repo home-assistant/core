@@ -65,23 +65,16 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         client = PalazzettiClient(hostname=discovery_info.ip)
 
-        errors: dict[str, str] = {}
         try:
             await client.connect()
         except CommunicationError:
             LOGGER.exception("Communication error")
-            errors["base"] = "cannot_connect"
-        else:
-            # Abort the flow if a config entry with the same unique ID exists
-            self._abort_if_unique_id_configured()
+            return self.async_abort(reason="cannot_connect")
 
-            return self.async_create_entry(
-                title=client.name,
-                data={CONF_HOST: discovery_info.ip},
-            )
+        # Abort the flow if a config entry with the same unique ID exists
+        self._abort_if_unique_id_configured()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
-            errors=errors,
+        return self.async_create_entry(
+            title=client.name,
+            data={CONF_HOST: discovery_info.ip},
         )
