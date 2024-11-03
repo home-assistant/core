@@ -4812,6 +4812,7 @@ async def test_reauth_reconfigure_missing_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
 )
@@ -5040,6 +5041,7 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
@@ -5066,6 +5068,7 @@ async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) 
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_options_not_mutated(hass: HomeAssistant) -> None:
     """Test that OptionsFlow doesn't mutate entry options."""
     entry = MockConfigEntry(
@@ -7435,7 +7438,6 @@ async def test_options_flow_config_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -7463,7 +7465,10 @@ async def test_options_flow_deprecated_config_entry_setter(
 
                 def __init__(self, entry) -> None:
                     """Test initialisation."""
-                    self.config_entry = entry
+                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+                        self.config_entry = entry
+                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+                        self.options = entry.options
 
                 async def async_step_init(self, user_input=None):
                     """Test user step."""
@@ -7490,6 +7495,10 @@ async def test_options_flow_deprecated_config_entry_setter(
 
     assert (
         "Detected that integration 'hue' sets option flow config_entry explicitly, "
+        "which is deprecated and will stop working in 2025.12" in caplog.text
+    )
+    assert (
+        "Detected that integration 'hue' sets option flow options explicitly, "
         "which is deprecated and will stop working in 2025.12" in caplog.text
     )
 
