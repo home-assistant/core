@@ -13,7 +13,7 @@ AIOSomecomfort==0.0.25
 Adax-local==0.1.5
 
 # homeassistant.components.doorbird
-DoorBirdPy==3.0.7
+DoorBirdPy==3.0.8
 
 # homeassistant.components.homekit
 HAP-python==4.9.1
@@ -476,7 +476,7 @@ auroranoaa==0.0.5
 aurorapy==0.2.7
 
 # homeassistant.components.autarco
-autarco==3.0.0
+autarco==3.1.0
 
 # homeassistant.components.husqvarna_automower_ble
 automower-ble==0.2.0
@@ -2102,7 +2102,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.7.0
+sensorpush-ble==1.7.1
 
 # homeassistant.components.sensoterra
 sensoterra==2.0.1
