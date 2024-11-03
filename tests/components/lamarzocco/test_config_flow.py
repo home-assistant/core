@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from lmcloud.const import MachineModel
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from lmcloud.models import LaMarzoccoDeviceInfo
 import pytest
@@ -441,6 +442,10 @@ async def test_bluetooth_discovery_errors(
     }
 
 
+@pytest.mark.parametrize(
+    "device_fixture",
+    [MachineModel.LINEA_MICRA, MachineModel.LINEA_MINI, MachineModel.GS3_AV],
+)
 async def test_dhcp_discovery(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
