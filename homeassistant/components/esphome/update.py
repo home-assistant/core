@@ -59,6 +59,7 @@ async def async_setup_entry(
     )
 
     entry_data = DomainData.get(hass).get_entry_data(entry)
+    assert entry_data.device_info is not None
     if ((dashboard := async_get_dashboard(hass)) is None) or (
         dashboard.data.get(entry_data.device_info.name) is None
     ):
