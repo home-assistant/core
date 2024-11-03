@@ -186,11 +186,8 @@ class OptionsFlowHandler(OptionsFlow):
         if not sources_list:
             errors["base"] = "cannot_retrieve"
 
-        sources = [
-            s
-            for s in self.config_entry.options.get(CONF_SOURCES, [])
-            if s in sources_list
-        ]
+        option_sources = self.config_entry.options.get(CONF_SOURCES, [])
+        sources = [s for s in option_sources if s in sources_list]
         if not sources:
             sources = sources_list
 
