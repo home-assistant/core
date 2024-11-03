@@ -3,9 +3,11 @@
 from unittest.mock import AsyncMock
 
 from advantage_air import ApiError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.advantage_air import ADVANTAGE_AIR_SYNC_INTERVAL
 from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -33,6 +35,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import add_mock_config
+
+from tests.common import async_fire_time_changed
 
 
 async def test_climate_myzone_main(
@@ -265,3 +269,16 @@ async def test_climate_async_failed_update(
         )
 
     mock_update.assert_called_once()
+
+
+async def test_coordinator_refresh(
+    hass: HomeAssistant,
+    mock_get: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test climate after coordinator refresh."""
+
+    await add_mock_config(hass)
+    freezer.tick(ADVANTAGE_AIR_SYNC_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
