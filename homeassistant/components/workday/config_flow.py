@@ -340,7 +340,7 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
             else:
                 LOGGER.debug("abort_check in options with %s", combined_input)
                 abort_match = {
-                    CONF_COUNTRY: self._config_entry.options.get(CONF_COUNTRY),
+                    CONF_COUNTRY: self.config_entry.options.get(CONF_COUNTRY),
                     CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                     CONF_OFFSET: combined_input[CONF_OFFSET],
                     CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
