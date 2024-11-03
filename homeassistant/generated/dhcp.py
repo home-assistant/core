@@ -277,6 +277,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000DB9*",
     },
     {
+        "domain": "lamarzocco",
+        "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "lm[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "mr[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
         "domain": "lametric",
         "registered_devices": True,
     },
