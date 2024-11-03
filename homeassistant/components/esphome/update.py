@@ -58,9 +58,11 @@ async def async_setup_entry(
         state_type=UpdateState,
     )
 
-    if (dashboard := async_get_dashboard(hass)) is None:
-        return
     entry_data = DomainData.get(hass).get_entry_data(entry)
+    if ((dashboard := async_get_dashboard(hass)) is None) or (
+        dashboard.data.get(entry_data.device_info.name) is None
+    ):
+        return
     unsubs: list[CALLBACK_TYPE] = []
 
     @callback
