@@ -223,8 +223,10 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         """Return the type of stream supported by this camera."""
         return StreamType.WEB_RTC
 
-    def _stream_expires_at(self) -> datetime.datetime:
+    def _stream_expires_at(self) -> datetime.datetime | None:
         """Next time when a stream expires."""
+        if not self._webrtc_sessions:
+            return None
         return min(stream.expires_at for stream in self._webrtc_sessions.values())
 
     async def _async_refresh_stream(self) -> None:
@@ -297,9 +299,5 @@ class NestWebRTCEntity(NestCameraBaseEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Invalidates the RTSP token when unloaded."""
         await super().async_will_remove_from_hass()
-        for stream in self._webrtc_sessions.values():
-            try:
-                await stream.stop_stream()
-            except ApiException as err:
-                _LOGGER.debug("Error stopping stream: %s", err)
-        self._webrtc_sessions.clear()
+        for session_id in list(self._webrtc_sessions.keys()):
+            self.close_webrtc_session(session_id)
