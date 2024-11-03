@@ -17,34 +17,33 @@ class TadoDeviceEntity(Entity):
         """Initialize a Tado device."""
         super().__init__()
         self._device_info = device_info
-        self.device_name = (
-            device_info["serialNumber"]
-            if device_info["is_x"]
-            else device_info["serialNo"]
-        )
-        self.device_id = (
-            device_info["serialNumber"]
-            if device_info["is_x"]
-            else device_info["shortSerialNo"]
-        )
-        self._attr_device_info = DeviceInfo(
-            configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
-            identifiers={(DOMAIN, self.device_id)},
-            name=self.device_name,
-            manufacturer=DEFAULT_NAME,
-            sw_version=device_info["firmwareVersion"]
-            if device_info["is_x"]
-            else device_info["currentFwVersion"],
-            model=device_info["type"]
-            if device_info["is_x"]
-            else device_info["deviceType"],
-            via_device=(
-                DOMAIN,
-                device_info["serialNumber"]
-                if device_info["is_x"]
-                else device_info["serialNo"],
-            ),
-        )
+        if device_info["is_x"]:
+            self.device_name = device_info["serialNumber"]
+            self.device_id = device_info["serialNumber"]
+            self._attr_device_info = DeviceInfo(
+                configuration_url=f"https://app.tado.com/en/main/settings/home/rooms-and-devices/device/{self.device_name}",
+                identifiers={(DOMAIN, self.device_id)},
+                name=self.device_name,
+                manufacturer=DEFAULT_NAME,
+                sw_version=device_info["firmwareVersion"],
+                model=device_info["type"],
+                via_device=(DOMAIN, device_info["serialNumber"]),
+            )
+        else:
+            self.device_name = device_info["serialNo"]
+            self.device_id = device_info["shortSerialNo"]
+            self._attr_device_info = DeviceInfo(
+                configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
+                identifiers={(DOMAIN, self.device_id)},
+                name=self.device_name,
+                manufacturer=DEFAULT_NAME,
+                sw_version=device_info["currentFwVersion"],
+                model=device_info["deviceType"],
+                via_device=(
+                    DOMAIN,
+                    device_info["serialNo"],
+                ),
+            )
 
 
 class TadoHomeEntity(Entity):

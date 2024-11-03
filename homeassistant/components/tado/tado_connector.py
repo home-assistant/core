@@ -240,6 +240,8 @@ class TadoConnector:
 
     def get_capabilities(self, zone_id):
         """Return the capabilities of the devices."""
+        if self.is_x:
+            return {"type": TYPE_HEATING}
         return self.tado.get_capabilities(zone_id)
 
     def get_auto_geofencing_supported(self):

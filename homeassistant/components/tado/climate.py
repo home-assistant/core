@@ -149,10 +149,7 @@ def create_climate_entity(
     tado: TadoConnector, name: str, zone_id: int, device_info: dict
 ) -> TadoClimate | None:
     """Create a Tado climate entity."""
-    if tado.is_x:
-        capabilities = {"type": TYPE_HEATING}
-    else:
-        capabilities = tado.get_capabilities(zone_id)
+    capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
@@ -347,10 +344,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_vertical_swing = TADO_SWING_OFF
         self._current_tado_horizontal_swing = TADO_SWING_OFF
 
-        if tado.is_x:
-            capabilities = {"type": TYPE_HEATING}
-        else:
-            capabilities = tado.get_capabilities(zone_id)
+        capabilities = tado.get_capabilities(zone_id)
         self._current_tado_capabilities = capabilities
 
         self._tado_zone_data: PyTado.TadoZone = {}
