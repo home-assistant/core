@@ -3125,7 +3125,8 @@ class OptionsFlow(ConfigEntryBaseFlow):
         """Return a mutable copy of the config entry options.
 
         Please note that this is not available inside `__init__` method, and
-        can only be referenced after initialisation.
+        can only be referenced after initialisation, unless manually initialised
+        using `self._options = copy.deepcopy(dict(config_entry.options))`
         """
         if not hasattr(self, "_options"):
             self._options = deepcopy(dict(self.config_entry.options))
@@ -3154,7 +3155,7 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
             "inherits from OptionsFlowWithConfigEntry, which is deprecated "
             "and will stop working in 2025.12",
             error_if_integration=False,
-            error_if_core=False,
+            error_if_core=True,
         )
 
 
