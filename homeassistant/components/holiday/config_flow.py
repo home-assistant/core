@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import callback
@@ -77,7 +77,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> HolidayOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return HolidayOptionsFlowHandler(config_entry)
+        return HolidayOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -200,7 +200,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class HolidayOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class HolidayOptionsFlowHandler(OptionsFlow):
     """Handle Holiday options."""
 
     async def async_step_init(
@@ -216,7 +216,7 @@ class HolidayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if not categories:
             return self.async_abort(reason="no_categories")
 
-        options_schema = vol.Schema(
+        schema = vol.Schema(
             {
                 vol.Optional(CONF_CATEGORIES): SelectSelector(
                     SelectSelectorConfig(
@@ -230,9 +230,7 @@ class HolidayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         )
 
         return self.async_show_form(
-            data_schema=self.add_suggested_values_to_schema(
-                options_schema, self.config_entry.options
-            ),
+            data_schema=self.add_suggested_values_to_schema(schema, self.options),
             description_placeholders={
                 CONF_COUNTRY: self.config_entry.data[CONF_COUNTRY]
             },
