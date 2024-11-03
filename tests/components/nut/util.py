@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -79,3 +80,29 @@ async def async_init_integration(
         await hass.async_block_till_done()
 
     return entry
+
+
+async def _test_sensor_and_attributes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    model: str,
+    unique_id: str,
+    device_id: str,
+    state_value: str,
+    expected_attributes: dict,
+) -> None:
+    """Test creation of device sensors with unique ids."""
+
+    await async_init_integration(hass, model)
+    entry = entity_registry.async_get(device_id)
+    assert entry
+    assert entry.unique_id == unique_id
+
+    state = hass.states.get(device_id)
+    assert state.state == state_value
+
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
+    )
