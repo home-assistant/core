@@ -39,13 +39,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import NutConfigEntry, PyNUTData
-from .const import (
-    AMBIENT_THRESHOLD_STATUS_OPTIONS,
-    DOMAIN,
-    KEY_STATUS,
-    KEY_STATUS_DISPLAY,
-    STATE_TYPES,
-)
+from .const import DOMAIN, KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
 
 NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "manufacturer": ATTR_MANUFACTURER,
@@ -53,6 +47,14 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "firmware": ATTR_SW_VERSION,
     "serial": ATTR_SERIAL_NUMBER,
 }
+
+AMBIENT_THRESHOLD_STATUS_OPTIONS = [
+    "good",
+    "warning-low",
+    "critical-low",
+    "warning-high",
+    "critical-high",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
