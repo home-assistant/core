@@ -536,7 +536,7 @@ automower-ble==0.2.0
 axis==63
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.2
+ayla-iot-unofficial==1.4.3
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
