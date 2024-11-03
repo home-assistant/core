@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_suez_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday_historical_sensor-entry]
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday_historical_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_suez_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday_historical_sensor-state]
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday_historical_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'suez water mock test',

@@ -1,6 +1,5 @@
 """Test Suez_water integration initialization."""
 
-
 from homeassistant.components.suez_water.coordinator import PySuezError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -10,7 +9,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-async def test_suez_water_initialization_invalid_credentials(
+async def test_initialization_invalid_credentials(
     hass: HomeAssistant,
     suez_client,
     mock_config_entry: MockConfigEntry,
@@ -23,7 +22,7 @@ async def test_suez_water_initialization_invalid_credentials(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_suez_water_initialization_setup_api_error(
+async def test_initialization_setup_api_error(
     hass: HomeAssistant,
     suez_client,
     mock_config_entry: MockConfigEntry,

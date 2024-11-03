@@ -17,7 +17,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_suez_sensors_valid_state(
+async def test_sensors_valid_state(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     suez_client: MagicMock,
@@ -32,7 +32,7 @@ async def test_suez_sensors_valid_state(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_suez_sensors_failed_update(
+async def test_sensors_failed_update(
     hass: HomeAssistant,
     suez_client,
     mock_config_entry: MockConfigEntry,
