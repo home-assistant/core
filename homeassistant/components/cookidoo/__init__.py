@@ -5,28 +5,19 @@ from __future__ import annotations
 from cookidoo_api import (
     DEFAULT_COOKIDOO_CONFIG,
     Cookidoo,
-    CookidooActionException,
-    CookidooAuthBotDetectionException,
     CookidooAuthException,
-    CookidooConfigException,
-    CookidooNavigationException,
-    CookidooSelectorException,
-    CookidooUnavailableException,
-    CookidooUnexpectedStateException,
+    CookidooRequestException,
+    get_localization_options,
 )
 
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    Platform,
-)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import BROWSER_RUNNER_TIMEOUT, DOMAIN
+from .const import CONF_LOCALIZATION, DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
+from .helpers import cookidoo_localization_for_key
 
 PLATFORMS: list[Platform] = [Platform.TODO]
 
@@ -36,49 +27,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
 
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
-    runner_host = entry.data[CONF_HOST]
-    runner_port = entry.data[CONF_PORT]
-
+    localization = cookidoo_localization_for_key(
+        await get_localization_options(), entry.data[CONF_LOCALIZATION]
+    )
+    session = async_get_clientsession(hass)
     cookidoo = Cookidoo(
+        session,
         {
             **DEFAULT_COOKIDOO_CONFIG,
-            "browser": "chromium",
-            "headless": True,
-            "remote_addr": runner_host,
-            "remote_port": runner_port,
-            "network_timeout": BROWSER_RUNNER_TIMEOUT,
-            "timeout": BROWSER_RUNNER_TIMEOUT,
-            "load_media": False,
+            "localization": localization,
             "email": email,
             "password": password,
-            "tracing": True,
-            "screenshots": True,
-        }
+        },
     )
 
     try:
         await cookidoo.login()
-    except CookidooConfigException as e:
+    except CookidooRequestException as e:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="setup_request_exception",
-        ) from e
-    except (
-        CookidooUnavailableException,
-        CookidooNavigationException,
-        CookidooSelectorException,
-        CookidooActionException,
-        CookidooUnexpectedStateException,
-    ) as e:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="setup_parse_exception",
-        ) from e
-    except CookidooAuthBotDetectionException as e:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="setup_authentication_captcha_exception",
-            translation_placeholders={CONF_EMAIL: email},
         ) from e
     except CookidooAuthException as e:
         raise ConfigEntryAuthFailed(

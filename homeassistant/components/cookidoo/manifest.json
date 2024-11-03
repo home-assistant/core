@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/cookidoo",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["cookidoo-api==0.2.0"],
+  "requirements": ["cookidoo-api==0.4.0-rc.1"],
   "ssdp": [],
   "zeroconf": []
 }

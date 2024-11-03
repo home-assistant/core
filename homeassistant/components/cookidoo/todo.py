@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TODO_ADDITIONAL_ITEMS, TODO_ITEMS
+from .const import DOMAIN, TODO_ADDITIONAL_ITEMS, TODO_INGREDIENTS
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 from .entity import CookidooBaseEntity
 
@@ -29,56 +29,54 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            CookidooItemTodoListEntity(coordinator),
+            CookidooIngredientsTodoListEntity(coordinator),
             CookidooAdditionalItemTodoListEntity(coordinator),
         ]
     )
 
 
-class CookidooItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
-    """A To-do List representation of the items in the Cookidoo Shopping List."""
+class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
+    """A To-do List representation of the ingredients in the Cookidoo Shopping List."""
 
-    _attr_translation_key = "item_list"
-    _attr_name = "Items"
+    _attr_translation_key = "ingredient_list"
+    _attr_name = "Ingredients"
     _attr_supported_features = TodoListEntityFeature.UPDATE_TODO_ITEM
 
     def __init__(self, coordinator: CookidooDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_items"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_ingredients"
 
     @property
     def todo_items(self) -> list[TodoItem]:
-        """Return the todo items."""
+        """Return the todo ingredients."""
         return [
             TodoItem(
                 uid=item["id"],
-                summary=item["label"],
+                summary=item["name"],
                 description=item["description"] or "",
-                status=TodoItemStatus.NEEDS_ACTION
-                if item["state"] == "pending"
-                else TodoItemStatus.COMPLETED,
+                status=TodoItemStatus.COMPLETED
+                if item["isOwned"]
+                else TodoItemStatus.NEEDS_ACTION,
             )
-            for item in self.coordinator.data[TODO_ITEMS]
+            for item in self.coordinator.data[TODO_INGREDIENTS]
         ]
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list.
+        """Update an ingredient to the To-do list.
 
-        Cookidoo items can be changed in state, but not in summary or description. This is currently not possible to distinguish in home assistant and just fails silently.
+        Cookidoo ingredients can be changed in state, but not in summary or description. This is currently not possible to distinguish in home assistant and just fails silently.
         """
         try:
             assert item.uid
-            await self.coordinator.cookidoo.update_items(
+            await self.coordinator.cookidoo.edit_ingredients_ownership(
                 [
                     CookidooItem(
                         {
                             "id": item.uid,
-                            "label": "<nil>",
+                            "name": "<nil>",
                             "description": "<nil>",
-                            "state": "pending"
-                            if item.status == TodoItemStatus.NEEDS_ACTION
-                            else "checked",
+                            "isOwned": item.status == TodoItemStatus.COMPLETED,
                         }
                     )
                 ]
@@ -112,22 +110,24 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
     @property
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
+
         return [
             TodoItem(
                 uid=item["id"],
-                summary=item["label"],
-                status=TodoItemStatus.NEEDS_ACTION
-                if item["state"] == "pending"
-                else TodoItemStatus.COMPLETED,
+                summary=item["name"],
+                status=TodoItemStatus.COMPLETED
+                if item["isOwned"]
+                else TodoItemStatus.NEEDS_ACTION,
             )
             for item in self.coordinator.data[TODO_ADDITIONAL_ITEMS]
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
+
         try:
             assert item.summary
-            await self.coordinator.cookidoo.create_additional_items([item.summary])
+            await self.coordinator.cookidoo.add_additional_items([item.summary])
         except CookidooException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -139,19 +139,32 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
+
         try:
             assert item.uid
             assert item.summary
-            await self.coordinator.cookidoo.update_additional_items(
+            # Update checkbox
+            await self.coordinator.cookidoo.edit_additional_items_ownership(
                 [
                     CookidooItem(
                         {
                             "id": item.uid,
-                            "label": item.summary,
+                            "name": item.summary,
                             "description": None,
-                            "state": "pending"
-                            if item.status == TodoItemStatus.NEEDS_ACTION
-                            else "checked",
+                            "isOwned": item.status == TodoItemStatus.COMPLETED,
+                        }
+                    )
+                ]
+            )
+            # Update summary
+            await self.coordinator.cookidoo.edit_additional_items(
+                [
+                    CookidooItem(
+                        {
+                            "id": item.uid,
+                            "name": item.summary,
+                            "description": None,
+                            "isOwned": item.status == TodoItemStatus.COMPLETED,
                         }
                     )
                 ]
@@ -169,7 +182,7 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
         """Delete an item from the To-do list."""
 
         try:
-            await self.coordinator.cookidoo.delete_additional_items(uids)
+            await self.coordinator.cookidoo.remove_additional_items(uids)
         except CookidooException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
