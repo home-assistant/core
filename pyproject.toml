@@ -63,6 +63,7 @@ dependencies    = [
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
     "requests==2.32.3",
+    "securetar==2024.2.1",
     "SQLAlchemy==2.0.31",
     "typing-extensions>=4.12.2,<5.0",
     "ulid-transform==1.0.2",
@@ -75,7 +76,7 @@ dependencies    = [
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
     "yarl==1.17.1",
-    "webrtc-models==0.1.0",
+    "webrtc-models==0.2.0",
 ]
 
 [project.urls]
