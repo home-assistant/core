@@ -61,7 +61,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> YaleOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return YaleOptionsFlowHandler(config_entry)
+        return YaleOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
