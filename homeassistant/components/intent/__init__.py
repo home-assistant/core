@@ -424,7 +424,7 @@ class GetCurrentTimeIntentHandler(intent.IntentHandler):
 class HelloIntentHandler(intent.IntentHandler):
     """Responds with no action."""
 
-    intent_type = intent.INTENT_HELLO
+    intent_type = intent.INTENT_RESPOND
     description = "Returns the provided response with no action."
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
