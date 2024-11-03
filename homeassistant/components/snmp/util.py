@@ -93,4 +93,5 @@ def _get_snmp_engine() -> SnmpEngine:
     mib_view_controller = MibViewControllerManager.get_mib_view_controller(engine.cache)
     if "PYSNMP-MIB" not in mib_view_controller.mibBuilder.mibSymbols:
         mib_view_controller.mibBuilder.load_modules()
+    engine.cache["mibViewController"] = mib_view_controller
     return engine
