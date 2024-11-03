@@ -15,6 +15,7 @@ class AsyncConfigEntryAuth:
     ) -> None:
         """Initialize igloohome auth."""
         super().__init__()
+        self.websession = websession
         self._oauth_session = oauth_session
 
     async def async_get_access_token(self) -> str:
