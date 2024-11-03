@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from lmcloud.const import MachineModel
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from lmcloud.models import LaMarzoccoDeviceInfo
+import pytest
 
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
