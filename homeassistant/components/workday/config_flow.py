@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
@@ -219,7 +219,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> WorkdayOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return WorkdayOptionsFlowHandler(config_entry)
+        return WorkdayOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -310,7 +310,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class WorkdayOptionsFlowHandler(OptionsFlow):
     """Handle Workday options."""
 
     async def async_step_init(
@@ -340,7 +340,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             else:
                 LOGGER.debug("abort_check in options with %s", combined_input)
                 abort_match = {
-                    CONF_COUNTRY: self._config_entry.options.get(CONF_COUNTRY),
+                    CONF_COUNTRY: self.config_entry.options.get(CONF_COUNTRY),
                     CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                     CONF_OFFSET: combined_input[CONF_OFFSET],
                     CONF_WORKDAYS: combined_input[CONF_WORKDAYS],

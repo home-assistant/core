@@ -86,7 +86,7 @@
     },
     "457ce8414de24596a2d5e7dbc9c7682f": {
       "available": true,
-      "dev_class": "zz_misc",
+      "dev_class": "zz_misc_plug",
       "location": "9e4433a9d69f40b3aefd15e74395eaec",
       "model": "Aqara Smart Plug",
       "model_id": "lumi.plug.maeu01",

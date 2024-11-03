@@ -18,6 +18,14 @@
           "off": "mdi:cloud-cancel"
         }
       }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "mem_usage": {
+        "default": "mdi:memory"
+      }
     }
   }
 }

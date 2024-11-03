@@ -10,7 +10,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -100,12 +100,14 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OnewireOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OnewireOptionsFlowHandler(config_entry)
+        return OnewireOptionsFlowHandler()
 
 
-class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OnewireOptionsFlowHandler(OptionsFlow):
     """Handle OneWire Config options."""
 
     configurable_devices: dict[str, str]

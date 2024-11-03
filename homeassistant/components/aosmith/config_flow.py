@@ -88,12 +88,11 @@ class AOSmithConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             password = user_input[CONF_PASSWORD]
 
-            entry = self._get_reauth_entry()
             error = await self._async_validate_credentials(self._reauth_email, password)
             if error is None:
                 return self.async_update_reload_and_abort(
-                    entry,
-                    data=entry.data | user_input,
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
                 )
             errors["base"] = error
 

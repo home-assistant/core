@@ -458,7 +458,7 @@ async def test_reconfigure_successful(
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -512,7 +512,7 @@ async def test_reconfigure_not_successful(
         result = await mock_config.start_reconfigure_flow(hass)
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -523,7 +523,7 @@ async def test_reconfigure_not_successful(
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
         assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
 
         result = await hass.config_entries.flow.async_configure(

@@ -116,7 +116,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
-                return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 
@@ -199,7 +199,7 @@ class OptionsFlowHandler(OptionsFlow):
                 errors["base"] = "cannot_connect"
             except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
-                return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 

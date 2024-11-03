@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/iaqualink",
   "iot_class": "cloud_polling",
   "loggers": ["iaqualink"],
-  "requirements": ["iaqualink==0.5.0", "h2==4.1.0"]
+  "requirements": ["iaqualink==0.5.0", "h2==4.1.0"],
+  "single_config_entry": true
 }

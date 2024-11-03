@@ -3,16 +3,16 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohasupervisor==0.1.0
+aiohasupervisor==0.2.1
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.10.9
+aiohttp==3.10.10
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
 async-upnp-client==0.41.0
 atomicwrites-homeassistant==1.4.1
-attrs==23.2.0
+attrs==24.2.0
 awesomeversion==24.6.0
 bcrypt==4.2.0
 bleak-retry-connector==3.6.0
@@ -26,25 +26,25 @@ ciso8601==2.3.1
 cryptography==43.0.1
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
+go2rtc-client==0.0.1b3
 ha-av==10.1.1
-ha-ffmpeg==3.2.0
-habluetooth==3.5.0
-hass-nabucasa==0.81.1
+ha-ffmpeg==3.2.1
+habluetooth==3.6.0
+hass-nabucasa==0.83.0
 hassil==1.7.4
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20241002.2
-home-assistant-intents==2024.10.2
+home-assistant-frontend==20241031.0
+home-assistant-intents==2024.10.30
 httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
-mashumaro==3.13.1
 mutagen==1.47.0
-orjson==3.10.7
+orjson==3.10.10
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.4.0
-propcache==0.1.0
+propcache==0.2.0
 psutil-home-assistant==0.0.1
 PyJWT==2.9.0
 pymicro-vad==1.0.1
@@ -57,16 +57,18 @@ PyTurboJPEG==1.7.5
 pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
+securetar==2024.2.1
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
-uv==0.4.17
+uv==0.4.28
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-yarl==1.13.1
-zeroconf==0.135.0
+webrtc-models==0.2.0
+yarl==1.17.1
+zeroconf==0.136.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -101,7 +103,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.0
+anyio==4.6.2.post1
 h11==0.14.0
 httpcore==1.0.5
 
@@ -123,6 +125,9 @@ backoff>=2.0
 # v2 has breaking changes (#99218).
 pydantic==1.10.18
 
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
+
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
 pubnub!=6.4.0
@@ -137,7 +142,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.28.2
+protobuf==5.28.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -185,3 +190,7 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# 5.0.0 breaks Timeout as a context manager
+# TypeError: 'Timeout' object does not support the context manager protocol
+async-timeout==4.0.3

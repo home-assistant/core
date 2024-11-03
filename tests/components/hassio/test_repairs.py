@@ -563,7 +563,7 @@ async def test_mount_failed_repair_flow(
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
-@pytest.mark.usefixtures("all_setup_requests", "addon_installed")
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_docker_config_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -786,7 +786,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
-@pytest.mark.usefixtures("all_setup_requests", "addon_installed")
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_detached_addon_removed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

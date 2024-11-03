@@ -99,7 +99,7 @@ async def async_turn_on(
     flash: str | None = None,
     effect: str | None = None,
     color_name: str | None = None,
-    white: bool | None = None,
+    white: int | None = None,
 ) -> None:
     """Turn all or specified light on."""
     data = {

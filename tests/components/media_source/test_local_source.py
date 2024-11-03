@@ -11,8 +11,8 @@ import pytest
 
 from homeassistant.components import media_source, websocket_api
 from homeassistant.components.media_source import const
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser

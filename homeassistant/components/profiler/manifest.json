@@ -9,5 +9,6 @@
     "pyprof2calltree==1.4.5",
     "guppy3==3.1.4.post1",
     "objgraph==3.5.0"
-  ]
+  ],
+  "single_config_entry": true
 }
