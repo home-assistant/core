@@ -10,7 +10,6 @@ from cookidoo_api import (
     DEFAULT_COOKIDOO_CONFIG,
     Cookidoo,
     CookidooAuthException,
-    CookidooException,
     CookidooLocalizationConfig,
     CookidooRequestException,
     get_localization_options,
@@ -62,9 +61,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             errors := await self.validate_input(user_input)
         ):
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=user_input[CONF_EMAIL], data=user_input
-            )
+            return self.async_create_entry(title="Cookidoo", data=user_input)
         await self.generate_schemata()
         return self.async_show_form(
             step_id="user",
@@ -185,20 +182,14 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
 
-        if not (
-            localization := cookidoo_localization_for_key(
-                self.localizations, user_input[CONF_LOCALIZATION]
-            )
-        ):
-            errors["base"] = "invalid_localization"
-            return errors
-
         session = async_get_clientsession(self.hass)
         cookidoo = Cookidoo(
             session,
             {
                 **DEFAULT_COOKIDOO_CONFIG,
-                "localization": localization,
+                "localization": cookidoo_localization_for_key(
+                    self.localizations, user_input[CONF_LOCALIZATION]
+                ),
                 "email": user_input.get(CONF_EMAIL, ""),
                 "password": user_input.get(CONF_PASSWORD, ""),
             },
@@ -209,7 +200,8 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except CookidooAuthException:
             errors["base"] = "invalid_auth"
-        except CookidooException:
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(f"{DOMAIN}_{user_input[CONF_EMAIL]}")
