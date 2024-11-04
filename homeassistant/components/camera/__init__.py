@@ -484,8 +484,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._create_stream_lock: asyncio.Lock | None = None
         self._webrtc_provider: CameraWebRTCProvider | None = None
         self._legacy_webrtc_provider: CameraWebRTCLegacyProvider | None = None
-        self._webrtc_sync_offer = (
+        self._supports_native_sync_webrtc = (
             type(self).async_handle_web_rtc_offer != Camera.async_handle_web_rtc_offer
+        )
+        self._supports_native_async_webrtc = (
+            type(self).async_handle_async_webrtc_offer
+            != Camera.async_handle_async_webrtc_offer
         )
 
     @cached_property
@@ -623,7 +627,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Integrations can override with a native WebRTC implementation.
         """
-        if self._webrtc_sync_offer:
+        if self._supports_native_sync_webrtc:
             try:
                 answer = await self.async_handle_web_rtc_offer(offer_sdp)
             except ValueError as ex:
@@ -794,7 +798,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Skip all providers if the camera has a native WebRTC implementation
         if not (
-            self._webrtc_sync_offer
+            self._supports_native_sync_webrtc
             or type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
         ):
@@ -844,7 +848,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         config.configuration.ice_servers.extend(ice_servers)
 
         config.get_candidates_upfront = (
-            self._webrtc_sync_offer or self._legacy_webrtc_provider is not None
+            self._supports_native_sync_webrtc
+            or self._legacy_webrtc_provider is not None
         )
 
         return config
@@ -875,12 +880,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the camera capabilities."""
         frontend_stream_types = set()
         if CameraEntityFeature.STREAM in self.supported_features_compat:
-            if (
-                type(self).async_handle_web_rtc_offer
-                != Camera.async_handle_web_rtc_offer
-                or type(self).async_handle_async_webrtc_offer
-                != Camera.async_handle_async_webrtc_offer
-            ):
+            if self._supports_native_sync_webrtc or self._supports_native_async_webrtc:
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)
             else:
