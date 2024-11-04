@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from copy import deepcopy
 import logging
 from typing import Any
 
@@ -227,7 +226,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self._options = deepcopy(dict(config_entry.options))
+        self.initialize_options(config_entry)
         self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
         self._conf_app_id: str | None = None
 

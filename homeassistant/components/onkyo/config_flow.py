@@ -1,6 +1,5 @@
 """Config flow for Onkyo."""
 
-from copy import deepcopy
 import logging
 from typing import Any
 
@@ -328,7 +327,7 @@ class OnkyoOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self._options = deepcopy(dict(config_entry.options))
+        self.initialize_options(config_entry)
         sources_store: dict[str, str] = self.options[OPTION_INPUT_SOURCES]
         sources = {InputSource(k): v for k, v in sources_store.items()}
         self.options[OPTION_INPUT_SOURCES] = sources

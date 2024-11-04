@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 import logging
 import os
 from typing import Any
@@ -192,7 +191,7 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self._options = deepcopy(dict(config_entry.options))
+        self.initialize_options(config_entry)
         self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
         self._state_det_rules: dict[str, Any] = self.options.setdefault(
             CONF_STATE_DETECTION_RULES, {}
