@@ -22,6 +22,13 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, NumberEntityDescription] = {
 }
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, NumberEntityDescription]] = {
+    "F730": {
+        "40940": NumberEntityDescription(
+            key="degree_minutes",
+            translation_key="degree_minutes",
+            native_unit_of_measurement="DM",
+        ),
+    },
     "NIBEF": {
         "40940": NumberEntityDescription(
             key="degree_minutes",

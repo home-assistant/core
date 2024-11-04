@@ -486,7 +486,7 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if self.coordinator.data.get("state") == TeslaFleetState.OFFLINE:
+        if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
             if (sensor_data := await self.async_get_last_sensor_data()) is not None:
                 self._attr_native_value = sensor_data.native_value
 
@@ -524,7 +524,7 @@ class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
             self._attr_native_value = self._get_timestamp(self._value)
 
 
-class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, RestoreSensor):
+class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity):
     """Base class for Tesla Fleet energy site metric sensors."""
 
     entity_description: SensorEntityDescription
@@ -538,20 +538,13 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, RestoreSensor
         self.entity_description = description
         super().__init__(data, description.key)
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if not self.coordinator.updated_once:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
-
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none
         self._attr_native_value = self._value
 
 
-class TeslaFleetWallConnectorSensorEntity(TeslaFleetWallConnectorEntity, RestoreSensor):
+class TeslaFleetWallConnectorSensorEntity(TeslaFleetWallConnectorEntity, SensorEntity):
     """Base class for Tesla Fleet energy site metric sensors."""
 
     entity_description: SensorEntityDescription
@@ -570,20 +563,13 @@ class TeslaFleetWallConnectorSensorEntity(TeslaFleetWallConnectorEntity, Restore
             description.key,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if not self.coordinator.updated_once:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
-
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none
         self._attr_native_value = self._value
 
 
-class TeslaFleetEnergyInfoSensorEntity(TeslaFleetEnergyInfoEntity, RestoreSensor):
+class TeslaFleetEnergyInfoSensorEntity(TeslaFleetEnergyInfoEntity, SensorEntity):
     """Base class for Tesla Fleet energy site metric sensors."""
 
     entity_description: SensorEntityDescription
@@ -596,13 +582,6 @@ class TeslaFleetEnergyInfoSensorEntity(TeslaFleetEnergyInfoEntity, RestoreSensor
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(data, description.key)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if not self.coordinator.updated_once:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""

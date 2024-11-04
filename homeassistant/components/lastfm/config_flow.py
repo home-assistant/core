@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
@@ -80,7 +80,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> LastFmOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return LastFmOptionsFlowHandler(config_entry)
+        return LastFmOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -155,7 +155,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class LastFmOptionsFlowHandler(OptionsFlow):
     """LastFm Options flow handler."""
 
     async def async_step_init(

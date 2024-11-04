@@ -157,7 +157,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.28.2
+protobuf==5.28.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -179,7 +179,7 @@ get-mac==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.2.0
+charset-normalizer==3.4.0
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # Roborock, NAM, Brother, and GIOS.
@@ -205,6 +205,10 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# 5.0.0 breaks Timeout as a context manager
+# TypeError: 'Timeout' object does not support the context manager protocol
+async-timeout==4.0.3
 """
 
 GENERATED_MESSAGE = (

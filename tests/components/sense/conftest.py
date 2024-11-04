@@ -7,14 +7,17 @@ import datetime
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from sense_energy import Scale
 
 from homeassistant.components.sense.binary_sensor import SenseDevice
 from homeassistant.components.sense.const import DOMAIN
 
 from .const import (
+    DEVICE_1_DAY_ENERGY,
     DEVICE_1_ID,
     DEVICE_1_NAME,
     DEVICE_1_POWER,
+    DEVICE_2_DAY_ENERGY,
     DEVICE_2_ID,
     DEVICE_2_NAME,
     DEVICE_2_POWER,
@@ -68,12 +71,14 @@ def mock_sense() -> Generator[MagicMock]:
         device_1.icon = "car"
         device_1.is_on = False
         device_1.power_w = DEVICE_1_POWER
+        device_1.energy_kwh[Scale.DAY] = DEVICE_1_DAY_ENERGY
 
         device_2 = SenseDevice(DEVICE_2_ID)
         device_2.name = DEVICE_2_NAME
         device_2.icon = "stove"
         device_2.is_on = False
         device_2.power_w = DEVICE_2_POWER
+        device_2.energy_kwh[Scale.DAY] = DEVICE_2_DAY_ENERGY
         type(gateway).devices = PropertyMock(return_value=[device_1, device_2])
 
         yield gateway
