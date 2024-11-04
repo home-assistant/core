@@ -273,6 +273,7 @@ class PyNUTData:
         model = _model_from_status(self._status)
         model_id: str | None = self._status.get("device.part")
         firmware = _firmware_from_status(self._status)
+        serial = _serial_from_status(self._status)
         return NUTDeviceInfo(manufacturer, model, model_id, firmware, serial)
 
     async def _async_get_status(self) -> dict[str, str]:
