@@ -131,6 +131,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         manufacturer=data.device_info.manufacturer,
         model=data.device_info.model,
         sw_version=data.device_info.firmware,
+        serial_number=data.device_info.serial,
+        suggested_area=data.device_info.device_location,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -209,6 +211,8 @@ class NUTDeviceInfo:
     manufacturer: str | None = None
     model: str | None = None
     firmware: str | None = None
+    serial: str | None = None
+    device_location: str | None = None
 
 
 class PyNUTData:
@@ -268,7 +272,9 @@ class PyNUTData:
         manufacturer = _manufacturer_from_status(self._status)
         model = _model_from_status(self._status)
         firmware = _firmware_from_status(self._status)
-        return NUTDeviceInfo(manufacturer, model, firmware)
+        serial = _serial_from_status(self._status)
+        device_location: str | None = self._status.get("device.location")
+        return NUTDeviceInfo(manufacturer, model, firmware, serial, device_location)
 
     async def _async_get_status(self) -> dict[str, str]:
         """Get the ups status from NUT."""
