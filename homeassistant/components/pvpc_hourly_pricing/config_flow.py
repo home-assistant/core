@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import callback
@@ -56,7 +56,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> PVPCOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return PVPCOptionsFlowHandler(config_entry)
+        return PVPCOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -178,7 +178,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="reauth_confirm", data_schema=data_schema)
 
 
-class PVPCOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class PVPCOptionsFlowHandler(OptionsFlow):
     """Handle PVPC options."""
 
     _power: float | None = None

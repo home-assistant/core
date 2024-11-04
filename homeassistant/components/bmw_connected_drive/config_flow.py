@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -145,10 +145,10 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> BMWOptionsFlow:
         """Return a MyBMW option flow."""
-        return BMWOptionsFlow(config_entry)
+        return BMWOptionsFlow()
 
 
-class BMWOptionsFlow(OptionsFlowWithConfigEntry):
+class BMWOptionsFlow(OptionsFlow):
     """Handle a option flow for MyBMW."""
 
     async def async_step_init(

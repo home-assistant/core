@@ -3053,6 +3053,7 @@ class OptionsFlowManager(
 class OptionsFlow(ConfigEntryBaseFlow):
     """Base class for config options flows."""
 
+    _options: dict[str, Any]
     handler: str
 
     _config_entry: ConfigEntry
@@ -3119,6 +3120,28 @@ class OptionsFlow(ConfigEntryBaseFlow):
         )
         self._config_entry = value
 
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
+        if not hasattr(self, "_options"):
+            self._options = deepcopy(dict(self.config_entry.options))
+        return self._options
+
+    @options.setter
+    def options(self, value: dict[str, Any]) -> None:
+        """Set the options value."""
+        report(
+            "sets option flow options explicitly, which is deprecated "
+            "and will stop working in 2025.12",
+            error_if_integration=False,
+            error_if_core=True,
+        )
+        self._options = value
+
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
     """Base class for options flows with config entry and options."""
@@ -3127,11 +3150,12 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
         """Initialize options flow."""
         self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
-
-    @property
-    def options(self) -> dict[str, Any]:
-        """Return a mutable copy of the config entry options."""
-        return self._options
+        report(
+            "inherits from OptionsFlowWithConfigEntry, which is deprecated "
+            "and will stop working in 2025.12",
+            error_if_integration=False,
+            error_if_core=False,
+        )
 
 
 class EntityRegistryDisabledHandler:

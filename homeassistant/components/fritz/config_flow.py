@@ -23,7 +23,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -60,9 +59,11 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> FritzBoxToolsOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return FritzBoxToolsOptionsFlowHandler(config_entry)
+        return FritzBoxToolsOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize FRITZ!Box Tools flow."""
@@ -393,7 +394,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
     """Handle an options flow."""
 
     async def async_step_init(
