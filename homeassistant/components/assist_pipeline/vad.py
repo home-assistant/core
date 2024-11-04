@@ -242,6 +242,9 @@ class VoiceActivityTimeout:
     reset_seconds: float = 0.5
     """Seconds of speech before resetting timeout."""
 
+    speech_threshold: float = 0.5
+    """Threshold for speech."""
+
     _silence_seconds_left: float = 0.0
     """Seconds left before considering voice command as stopped."""
 
@@ -257,12 +260,15 @@ class VoiceActivityTimeout:
         self._silence_seconds_left = self.silence_seconds
         self._reset_seconds_left = self.reset_seconds
 
-    def process(self, chunk_seconds: float, is_speech: bool | None) -> bool:
+    def process(self, chunk_seconds: float, speech_probability: float | None) -> bool:
         """Process samples using external VAD.
 
         Returns False when timeout is reached.
         """
-        if is_speech:
+        if speech_probability is None:
+            speech_probability = 0.0
+
+        if speech_probability > self.speech_threshold:
             # Speech
             self._reset_seconds_left -= chunk_seconds
             if self._reset_seconds_left <= 0:
