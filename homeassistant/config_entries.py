@@ -1264,10 +1264,16 @@ class ConfigEntriesFlowManager(
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
+        source = context["source"]
         if (
-            context.get("source")
-            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
-            and self.config_entries.async_has_entries(handler, include_ignore=False)
+            source not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
+            and (
+                self.config_entries.async_has_entries(handler, include_ignore=False)
+                or (
+                    self.config_entries.async_has_entries(handler, include_ignore=True)
+                    and source != SOURCE_USER
+                )
+            )
             and await _support_single_config_entry_only(self.hass, handler)
         ):
             return ConfigFlowResult(
