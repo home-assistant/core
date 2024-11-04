@@ -55,7 +55,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import AemetConfigEntry
 from .const import (
     ATTR_API_CONDITION,
     ATTR_API_FORECAST_CONDITION,
@@ -87,7 +86,7 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITIONS_MAP,
 )
-from .coordinator import WeatherUpdateCoordinator
+from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
 
