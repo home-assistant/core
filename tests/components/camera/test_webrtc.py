@@ -393,6 +393,29 @@ async def test_ws_get_client_config(
     }
 
 
+@pytest.mark.usefixtures("mock_camera_webrtc_native_sync_offer")
+async def test_ws_get_client_config_sync_offer(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get WebRTC client config, when camera is supporting sync offer."""
+    await async_setup_component(hass, "camera", {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "camera/webrtc/get_client_config", "entity_id": "camera.test"}
+    )
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "configuration": {},
+        "getCandidatesUpfront": False,
+    }
+
+
 @pytest.mark.usefixtures("mock_camera_webrtc")
 async def test_ws_get_client_config_custom_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
