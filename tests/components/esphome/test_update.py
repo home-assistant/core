@@ -31,7 +31,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -82,11 +81,6 @@ def stub_reconnect():
                 "installed_version": "1.0.0",
                 "supported_features": 0,
             },
-        ),
-        (
-            [],
-            STATE_UNKNOWN,  # dashboard is available but device is unknown
-            {"supported_features": 0},
         ),
     ],
 )
@@ -408,11 +402,7 @@ async def test_update_becomes_available_at_runtime(
     )
     await hass.async_block_till_done()
     state = hass.states.get("update.test_firmware")
-    assert state is not None
-    features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    # There are no devices on the dashboard so no
-    # way to tell the version so install is disabled
-    assert features is UpdateEntityFeature(0)
+    assert state is None
 
     # A device gets added to the dashboard
     mock_dashboard["configured"] = [
