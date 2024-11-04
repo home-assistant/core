@@ -66,6 +66,19 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         native_unit_of_measurement="caches",
         value_fn=lambda status: len(status.nearby_caches),
     ),
+    GeocachingSensorEntityDescription(
+        key="total_tracked_distance_traveled",
+        translation_key="total_tracked_distance_traveled",
+        native_unit_of_measurement="km",
+        value_fn=lambda status: round(
+            sum(
+                [
+                    trackable.kilometers_traveled or 0
+                    for trackable in status.trackables.values()
+                ]
+            )
+        ),
+    ),
 )
 
 

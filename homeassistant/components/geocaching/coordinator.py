@@ -37,6 +37,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             return str(token)
 
         client_session = async_get_clientsession(hass)
+
         settings: GeocachingSettings = GeocachingSettings()
         settings.set_nearby_caches_setting(
             NearbyCachesSetting(
@@ -49,6 +50,9 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
                 radiusKm=3,
             )
         )
+        # Currently hardcoded
+        settings.set_trackables(["TB89YPV"])
+
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
             settings=settings,

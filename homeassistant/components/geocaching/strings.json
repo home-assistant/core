@@ -32,7 +32,10 @@
       "favorite_points": { "name": "Favorite points" },
       "souvenir_count": { "name": "Total souvenirs" },
       "awarded_favorite_points": { "name": "Awarded favorite points" },
-      "nearby_caches": { "name": "Nearby caches" }
+      "nearby_caches": { "name": "Nearby caches" },
+      "total_tracked_distance_traveled": {
+        "name": "Total tracked distance traveled"
+      }
     }
   }
 }

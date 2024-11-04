@@ -18,6 +18,9 @@
       },
       "nearby_caches": {
         "default": "mdi:near-me"
+      },
+      "total_tracked_distance_traveled": {
+        "default": "mdi:map-marker-distance"
       }
     }
   }
