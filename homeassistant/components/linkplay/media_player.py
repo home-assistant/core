@@ -48,6 +48,7 @@ STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
 }
 
 SOURCE_MAP: dict[PlayingMode, str] = {
+    PlayingMode.NETWORK: "Wifi",
     PlayingMode.LINE_IN: "Line In",
     PlayingMode.BLUETOOTH: "Bluetooth",
     PlayingMode.OPTICAL: "Optical",
