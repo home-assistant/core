@@ -1457,6 +1457,7 @@ class ConfigEntriesFlowManager(
                 or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
             ):
                 self.async_abort(progress_flow_id)
+                continue
 
             # Abort any flows in progress for the same handler
             # when integration allows only one config entry

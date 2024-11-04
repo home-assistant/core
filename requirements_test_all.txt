@@ -481,6 +481,10 @@ autarco==3.1.0
 # homeassistant.components.husqvarna_automower_ble
 automower-ble==0.2.0
 
+# homeassistant.components.generic
+# homeassistant.components.stream
+av==13.1.0
+
 # homeassistant.components.axis
 axis==63
 
@@ -902,10 +906,6 @@ guppy3==3.1.4.post1
 # homeassistant.components.iaqualink
 h2==4.1.0
 
-# homeassistant.components.generic
-# homeassistant.components.stream
-ha-av==10.1.1
-
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.1
 
@@ -1061,7 +1061,7 @@ lacrosse-view==1.0.3
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.0
+lcn-frontend==0.2.1
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
