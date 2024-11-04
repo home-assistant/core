@@ -1834,6 +1834,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
     [
         SensorDeviceClass.APPARENT_POWER,
         SensorDeviceClass.AQI,
+        SensorDeviceClass.AREA,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         SensorDeviceClass.BATTERY,
         SensorDeviceClass.CO,
