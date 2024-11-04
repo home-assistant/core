@@ -14,7 +14,7 @@ from homeassistant.components.cookidoo.const import (
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 EMAIL = "test-email"
 PASSWORD = "test-password"
@@ -44,6 +44,12 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.login.return_value = cast(CookidooAuthResponse, {"name": "Bring"})
+        client.get_ingredients.return_value = load_json_object_fixture(
+            "ingredients.json", DOMAIN
+        )["data"]
+        client.get_additional_items.return_value = load_json_object_fixture(
+            "additional_items.json", DOMAIN
+        )["data"]
         yield client
 
 

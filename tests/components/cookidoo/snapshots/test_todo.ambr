@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_todo[todo.cookidoo_additional_items-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.cookidoo_additional_items',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Additional Items',
+    'platform': 'cookidoo',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 7>,
+    'translation_key': 'additional_item_list',
+    'unique_id': 'cookidoo_test-email_additional_items',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todo[todo.cookidoo_additional_items-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cookidoo Additional Items',
+      'supported_features': <TodoListEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.cookidoo_additional_items',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_todo[todo.cookidoo_ingredients-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.cookidoo_ingredients',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ingredients',
+    'platform': 'cookidoo',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 4>,
+    'translation_key': 'ingredient_list',
+    'unique_id': 'cookidoo_test-email_ingredients',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todo[todo.cookidoo_ingredients-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cookidoo Ingredients',
+      'supported_features': <TodoListEntityFeature: 4>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.cookidoo_ingredients',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
