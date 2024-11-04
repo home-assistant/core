@@ -61,13 +61,11 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         )
         self._device_registry = dr.async_get(hass)
 
-    async def async_config_entry_first_refresh(self) -> None:
-        """Override the first refresh to also fetch iotty devices list."""
+    async def _async_setup(self) -> None:
+        """Get devices."""
         _LOGGER.debug("Fetching devices list from iottyCloud")
         self._devices = await self.iotty.get_devices()
         _LOGGER.debug("There are %d devices", len(self._devices))
-
-        await super().async_config_entry_first_refresh()
 
     async def _async_update_data(self) -> IottyData:
         """Fetch data from iottyCloud device."""

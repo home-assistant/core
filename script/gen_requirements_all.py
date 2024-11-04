@@ -118,7 +118,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.0
+anyio==4.6.2.post1
 h11==0.14.0
 httpcore==1.0.5
 
@@ -157,7 +157,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.28.2
+protobuf==5.28.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -205,6 +205,10 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# 5.0.0 breaks Timeout as a context manager
+# TypeError: 'Timeout' object does not support the context manager protocol
+async-timeout==4.0.3
 """
 
 GENERATED_MESSAGE = (

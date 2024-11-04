@@ -9,6 +9,7 @@ from spotifyaio.models import (
     Album,
     Artist,
     ArtistResponse,
+    AudioFeatures,
     CategoriesResponse,
     Category,
     CategoryPlaylistResponse,
@@ -83,6 +84,13 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+async def patch_sleep() -> Generator[AsyncMock]:
+    """Fixture to setup credentials."""
+    with patch("homeassistant.components.spotify.media_player.AFTER_REQUEST_SLEEP", 0):
+        yield
+
+
 @pytest.fixture
 def mock_spotify() -> Generator[AsyncMock]:
     """Mock the Spotify API."""
@@ -132,6 +140,7 @@ def mock_spotify() -> Generator[AsyncMock]:
             ("album.json", "get_album", Album),
             ("artist.json", "get_artist", Artist),
             ("show.json", "get_show", Show),
+            ("audio_features.json", "get_audio_features", AudioFeatures),
         ):
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)

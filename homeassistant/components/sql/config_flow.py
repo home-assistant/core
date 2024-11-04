@@ -23,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -144,7 +144,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SQLOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SQLOptionsFlowHandler(config_entry)
+        return SQLOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -209,7 +209,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class SQLOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class SQLOptionsFlowHandler(OptionsFlow):
     """Handle SQL options."""
 
     async def async_step_init(

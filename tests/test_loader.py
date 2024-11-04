@@ -818,7 +818,7 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)
 
-    name = "homeassistant.loader._async_get_custom_components"
+    name = "homeassistant.loader._get_custom_components"
     with patch(name) as mock_get:
         mock_get.return_value = {
             "test_1": test_1_integration,

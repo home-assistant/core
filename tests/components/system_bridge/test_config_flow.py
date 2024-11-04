@@ -259,9 +259,12 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     """Test we show user form on authorization error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id=FIXTURE_UUID, data=FIXTURE_USER_INPUT
     )
+    mock_config.add_to_hass(hass)
+
+    result = await mock_config.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
@@ -291,9 +294,12 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
 
 async def test_reauth_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id=FIXTURE_UUID, data=FIXTURE_USER_INPUT
     )
+    mock_config.add_to_hass(hass)
+
+    result = await mock_config.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
@@ -336,9 +342,12 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
 
 async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
     """Test we show user form on connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id=FIXTURE_UUID, data=FIXTURE_USER_INPUT
     )
+    mock_config.add_to_hass(hass)
+
+    result = await mock_config.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
@@ -373,9 +382,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
-    )
+    result = await mock_config.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"

@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .browse_media import async_browse_media
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
-from .coordinator import SpotifyCoordinator
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
 from .models import SpotifyData
 from .util import (
     is_spotify_media_type,
@@ -29,7 +29,7 @@ from .util import (
     spotify_uri_from_media_browser_url,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
 
 __all__ = [
     "async_browse_media",
@@ -38,9 +38,6 @@ __all__ = [
     "is_spotify_media_type",
     "resolve_spotify_media_type",
 ]
-
-
-type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
@@ -80,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
         hass,
         LOGGER,
         name=f"{entry.title} Devices",
+        config_entry=entry,
         update_interval=timedelta(minutes=5),
         update_method=_update_devices,
     )

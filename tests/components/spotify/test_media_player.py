@@ -45,6 +45,7 @@ from homeassistant.const import (
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_SET,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -70,7 +71,10 @@ async def test_entities(
 ) -> None:
     """Test the Spotify entities."""
     freezer.move_to("2023-10-21")
-    with patch("secrets.token_hex", return_value="mock-token"):
+    with (
+        patch("secrets.token_hex", return_value="mock-token"),
+        patch("homeassistant.components.spotify.PLATFORMS", [Platform.MEDIA_PLAYER]),
+    ):
         await setup_integration(hass, mock_config_entry)
 
         await snapshot_platform(
@@ -92,7 +96,10 @@ async def test_podcast(
     mock_spotify.return_value.get_playback.return_value = PlaybackState.from_json(
         load_fixture("playback_episode.json", DOMAIN)
     )
-    with patch("secrets.token_hex", return_value="mock-token"):
+    with (
+        patch("secrets.token_hex", return_value="mock-token"),
+        patch("homeassistant.components.spotify.PLATFORMS", [Platform.MEDIA_PLAYER]),
+    ):
         await setup_integration(hass, mock_config_entry)
 
         await snapshot_platform(

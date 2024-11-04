@@ -283,9 +283,7 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
     }
 
 
-async def _async_get_custom_components(
-    hass: HomeAssistant,
-) -> dict[str, Integration]:
+def _get_custom_components(hass: HomeAssistant) -> dict[str, Integration]:
     """Return list of custom integrations."""
     if hass.config.recovery_mode or hass.config.safe_mode:
         return {}
@@ -295,21 +293,14 @@ async def _async_get_custom_components(
     except ImportError:
         return {}
 
-    def get_sub_directories(paths: list[str]) -> list[pathlib.Path]:
-        """Return all sub directories in a set of paths."""
-        return [
-            entry
-            for path in paths
-            for entry in pathlib.Path(path).iterdir()
-            if entry.is_dir()
-        ]
+    dirs = [
+        entry
+        for path in custom_components.__path__
+        for entry in pathlib.Path(path).iterdir()
+        if entry.is_dir()
+    ]
 
-    dirs = await hass.async_add_executor_job(
-        get_sub_directories, custom_components.__path__
-    )
-
-    integrations = await hass.async_add_executor_job(
-        _resolve_integrations_from_root,
+    integrations = _resolve_integrations_from_root(
         hass,
         custom_components,
         [comp.name for comp in dirs],
@@ -330,7 +321,7 @@ async def async_get_custom_components(
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        comps = await _async_get_custom_components(hass)
+        comps = await hass.async_add_executor_job(_get_custom_components, hass)
 
         hass.data[DATA_CUSTOM_COMPONENTS] = comps
         future.set_result(comps)

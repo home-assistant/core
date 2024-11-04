@@ -72,6 +72,8 @@ async def test_import_no_options(hass: HomeAssistant, language, diaspora) -> Non
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
+    assert CONF_LANGUAGE in entries[0].data
+    assert CONF_DIASPORA in entries[0].data
     for entry_key, entry_val in entries[0].data.items():
         assert entry_val == conf[DOMAIN][entry_key]
 

@@ -124,6 +124,7 @@ homeassistant.components.bryant_evolution.*
 homeassistant.components.bthome.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
+homeassistant.components.cambridge_audio.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cert_expiry.*
@@ -208,6 +209,7 @@ homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.glances.*
+homeassistant.components.go2rtc.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
@@ -322,6 +324,7 @@ homeassistant.components.moon.*
 homeassistant.components.mopeka.*
 homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
+homeassistant.components.music_assistant.*
 homeassistant.components.my.*
 homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
@@ -424,6 +427,7 @@ homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
+homeassistant.components.spotify.*
 homeassistant.components.sql.*
 homeassistant.components.squeezebox.*
 homeassistant.components.ssdp.*

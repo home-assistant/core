@@ -103,7 +103,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SIAOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SIAOptionsFlowHandler(config_entry)
+        return SIAOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -179,10 +179,8 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
 class SIAOptionsFlowHandler(OptionsFlow):
     """Handle SIA options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize SIA options flow."""
-        self.config_entry = config_entry
-        self.options = deepcopy(dict(config_entry.options))
         self.hub: SIAHub | None = None
         self.accounts_todo: list = []
 
