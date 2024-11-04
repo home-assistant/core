@@ -421,7 +421,7 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         options, which is the union of stored options and user input from the options
         flow steps.
         """
-        self._options = copy.deepcopy(dict(config_entry.options))
+        self.initialize_options(config_entry)
         self._common_handler = SchemaCommonFlowHandler(self, options_flow, self.options)
         self._async_options_flow_finished = async_options_flow_finished
 
