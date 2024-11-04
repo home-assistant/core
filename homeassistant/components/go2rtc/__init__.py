@@ -15,6 +15,7 @@ from go2rtc_client.ws import (
     WsError,
 )
 import voluptuous as vol
+from webrtc_models import RTCIceCandidate
 
 from homeassistant.components.camera import (
     Camera,
@@ -219,7 +220,7 @@ class WebRTCProvider(CameraWebRTCProvider):
             value: WebRTCMessage
             match message:
                 case WebRTCCandidate():
-                    value = HAWebRTCCandidate(message.candidate)
+                    value = HAWebRTCCandidate(RTCIceCandidate(message.candidate))
                 case WebRTCAnswer():
                     value = HAWebRTCAnswer(message.sdp)
                 case WsError():
@@ -231,11 +232,13 @@ class WebRTCProvider(CameraWebRTCProvider):
         config = camera.async_get_webrtc_client_configuration()
         await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
 
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidate
+    ) -> None:
         """Handle the WebRTC candidate."""
 
         if ws_client := self._sessions.get(session_id):
-            await ws_client.send(WebRTCCandidate(candidate))
+            await ws_client.send(WebRTCCandidate(candidate.candidate))
         else:
             _LOGGER.debug("Unknown session %s. Ignoring candidate", session_id)
 
