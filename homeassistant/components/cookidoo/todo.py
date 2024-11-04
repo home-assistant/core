@@ -143,32 +143,16 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
         try:
             assert item.uid
             assert item.summary
-            # Update checkbox
-            await self.coordinator.cookidoo.edit_additional_items_ownership(
-                [
-                    CookidooItem(
-                        {
-                            "id": item.uid,
-                            "name": item.summary,
-                            "description": None,
-                            "isOwned": item.status == TodoItemStatus.COMPLETED,
-                        }
-                    )
-                ]
+            new_item = CookidooItem(
+                {
+                    "id": item.uid,
+                    "name": item.summary,
+                    "description": None,
+                    "isOwned": item.status == TodoItemStatus.COMPLETED,
+                }
             )
-            # Update summary
-            await self.coordinator.cookidoo.edit_additional_items(
-                [
-                    CookidooItem(
-                        {
-                            "id": item.uid,
-                            "name": item.summary,
-                            "description": None,
-                            "isOwned": item.status == TodoItemStatus.COMPLETED,
-                        }
-                    )
-                ]
-            )
+            await self.coordinator.cookidoo.edit_additional_items_ownership([new_item])
+            await self.coordinator.cookidoo.edit_additional_items([new_item])
         except CookidooException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
