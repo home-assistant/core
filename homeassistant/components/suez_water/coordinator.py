@@ -34,6 +34,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
     """Suez water coordinator."""
 
     _sync_client: SuezClient
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize suez water coordinator."""
@@ -94,8 +95,6 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
 
     def _get_client(self) -> SuezClient:
         try:
-            if self.config_entry is None:
-                raise ConfigEntryError
             client = SuezClient(
                 username=self.config_entry.data[CONF_USERNAME],
                 password=self.config_entry.data[CONF_PASSWORD],
