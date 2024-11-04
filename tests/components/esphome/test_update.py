@@ -433,6 +433,35 @@ async def test_update_becomes_available_at_runtime(
     assert features is UpdateEntityFeature.INSTALL
 
 
+async def test_update_entity_not_present_with_dashboard_but_unknown_device(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test ESPHome update entity does not get created if the device is unknown to the dashboard."""
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+
+    mock_dashboard["configured"] = []
+
+    state = hass.states.get("update.test_firmware")
+    assert state is None
+
+    await async_get_dashboard(hass).async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.none_firmware")
+    assert state is None
+
+
 async def test_generic_device_update_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
