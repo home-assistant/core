@@ -325,7 +325,7 @@ async def test_reconfigure_username_exist(hass: HomeAssistant) -> None:
             return_value=True,
         ),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "other-username",
@@ -335,8 +335,37 @@ async def test_reconfigure_username_exist(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unique_id_exists"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unique_id_exists"}
+
+    with (
+        patch(
+            "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+            return_value="",
+        ),
+        patch(
+            "homeassistant.components.yale_smart_alarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "other-new-username",
+                "password": "test-password",
+                "area_id": "1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "username": "other-new-username",
+        "name": "Yale Smart Alarm",
+        "password": "test-password",
+        "area_id": "1",
+    }
 
 
 @pytest.mark.parametrize(
