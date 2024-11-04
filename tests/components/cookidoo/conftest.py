@@ -7,17 +7,14 @@ from unittest.mock import AsyncMock, patch
 from cookidoo_api import CookidooAuthResponse
 import pytest
 
-from homeassistant.components.cookidoo.const import (
-    CONF_LOCALIZATION,
-    DEFAULT_LOCALIZATION,
-    DOMAIN,
-)
+from homeassistant.components.cookidoo.const import CONF_LOCALIZATION, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 EMAIL = "test-email"
 PASSWORD = "test-password"
+LOCALIZATION = "ch_de-ch"
 
 
 @pytest.fixture
@@ -61,7 +58,7 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
         data={
             CONF_EMAIL: EMAIL,
             CONF_PASSWORD: PASSWORD,
-            CONF_LOCALIZATION: DEFAULT_LOCALIZATION,
+            CONF_LOCALIZATION: LOCALIZATION,
         },
         entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
     )

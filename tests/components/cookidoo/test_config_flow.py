@@ -9,24 +9,20 @@ from cookidoo_api.exceptions import (
 )
 import pytest
 
-from homeassistant.components.cookidoo.const import (
-    CONF_LOCALIZATION,
-    DEFAULT_LOCALIZATION,
-    DOMAIN,
-)
+from homeassistant.components.cookidoo.const import CONF_LOCALIZATION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import EMAIL, PASSWORD
+from .conftest import EMAIL, LOCALIZATION, PASSWORD
 
 from tests.common import MockConfigEntry
 
 MOCK_DATA_STEP = {
     CONF_EMAIL: EMAIL,
     CONF_PASSWORD: PASSWORD,
-    CONF_LOCALIZATION: DEFAULT_LOCALIZATION,
+    CONF_LOCALIZATION: LOCALIZATION,
 }
 
 
@@ -221,7 +217,7 @@ async def test_flow_reauth(
     assert cookidoo_config_entry.data == {
         CONF_EMAIL: "new-email",
         CONF_PASSWORD: "new-password",
-        CONF_LOCALIZATION: DEFAULT_LOCALIZATION,
+        CONF_LOCALIZATION: LOCALIZATION,
     }
     assert len(hass.config_entries.async_entries()) == 1
 
