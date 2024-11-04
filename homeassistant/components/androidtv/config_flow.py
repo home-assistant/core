@@ -183,19 +183,17 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Android Debug Bridge."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    _apps: dict[str, Any]
+    _state_det_rules: dict[str, Any]
+
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.initialize_options(config_entry)
-        self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
-        self._state_det_rules: dict[str, Any] = self.options.setdefault(
-            CONF_STATE_DETECTION_RULES, {}
-        )
         self._conf_app_id: str | None = None
         self._conf_rule_id: str | None = None
 
@@ -230,6 +228,9 @@ class OptionsFlowHandler(OptionsFlow):
     @callback
     def _async_init_form(self) -> ConfigFlowResult:
         """Return initial configuration form."""
+
+        self._apps = self.options.setdefault(CONF_APPS, {})
+        self._state_det_rules = self.options.setdefault(CONF_STATE_DETECTION_RULES, {})
 
         apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
         apps = [SelectOptionDict(value=APPS_NEW_ID, label="Add new")] + [
