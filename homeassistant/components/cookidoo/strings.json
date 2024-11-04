@@ -38,10 +38,10 @@
   "entity": {
     "todo": {
       "ingredient_list": {
-        "name": "Ingredients"
+        "name": "Shopping list"
       },
       "additional_item_list": {
-        "name": "Additional Items"
+        "name": "Additional Purchases"
       }
     }
   },
