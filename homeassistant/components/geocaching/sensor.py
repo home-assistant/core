@@ -60,6 +60,12 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         entity_registry_visible_default=False,
         value_fn=lambda status: status.user.awarded_favorite_points,
     ),
+    GeocachingSensorEntityDescription(
+        key="nearby_caches",
+        translation_key="nearby_caches",
+        native_unit_of_measurement="caches",
+        value_fn=lambda status: len(status.nearby_caches),
+    ),
 )
 
 

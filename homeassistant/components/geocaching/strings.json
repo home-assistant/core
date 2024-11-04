@@ -31,7 +31,8 @@
       "hide_count": { "name": "Total hides" },
       "favorite_points": { "name": "Favorite points" },
       "souvenir_count": { "name": "Total souvenirs" },
-      "awarded_favorite_points": { "name": "Awarded favorite points" }
+      "awarded_favorite_points": { "name": "Awarded favorite points" },
+      "nearby_caches": { "name": "Nearby caches" }
     }
   }
 }

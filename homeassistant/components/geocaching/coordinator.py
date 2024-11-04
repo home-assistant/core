@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from geocachingapi.exceptions import GeocachingApiError
 from geocachingapi.geocachingapi import GeocachingApi
-from geocachingapi.models import GeocachingStatus
+from geocachingapi.models import (
+    GeocachingCoordinate,
+    GeocachingSettings,
+    GeocachingStatus,
+    NearbyCachesSetting,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -32,8 +37,21 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             return str(token)
 
         client_session = async_get_clientsession(hass)
+        settings: GeocachingSettings = GeocachingSettings()
+        settings.set_nearby_caches_setting(
+            NearbyCachesSetting(
+                location=GeocachingCoordinate(
+                    data={
+                        "latitude": hass.config.latitude,
+                        "longitude": hass.config.longitude,
+                    }
+                ),
+                radiusKm=3,
+            )
+        )
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
+            settings=settings,
             token=session.token["access_token"],
             session=client_session,
             token_refresh_method=async_token_refresh,

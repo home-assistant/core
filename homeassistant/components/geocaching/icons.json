@@ -15,6 +15,9 @@
       },
       "awarded_favorite_points": {
         "default": "mdi:heart"
+      },
+      "nearby_caches": {
+        "default": "mdi:near-me"
       }
     }
   }
