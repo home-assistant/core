@@ -782,6 +782,12 @@ async def test_squeezebox_call_method(
     )
 
 
+async def test_squeezebox_play_album(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
+
 async def test_squeezebox_search_albums(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
