@@ -144,10 +144,8 @@ class ESPHomeDashboardUpdateEntity(
             self._attr_supported_features = NO_FEATURES
         self._attr_installed_version = device_info.esphome_version
         device = coordinator.data.get(device_info.name)
-        if device is None:
-            self._attr_latest_version = None
-        else:
-            self._attr_latest_version = device["current_version"]
+        assert device is not None
+        self._attr_latest_version = device["current_version"]
 
     @callback
     def _handle_coordinator_update(self) -> None:
