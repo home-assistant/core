@@ -92,4 +92,4 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.firmware_update.last_update_success
+        return bool(self.installed_version) and self.firmware_update.last_update_success
