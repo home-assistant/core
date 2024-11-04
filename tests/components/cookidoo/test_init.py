@@ -108,14 +108,19 @@ async def test_config_entry_not_ready(
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [None, CookidooAuthException, CookidooRequestException],
+    ("exception", "status"),
+    [
+        (None, ConfigEntryState.SETUP_RETRY),
+        (CookidooRequestException, ConfigEntryState.SETUP_RETRY),
+        (CookidooAuthException, ConfigEntryState.SETUP_ERROR),
+    ],
 )
 async def test_config_entry_not_ready_auth_error(
     hass: HomeAssistant,
     cookidoo_config_entry: MockConfigEntry,
     mock_cookidoo_client: AsyncMock,
     exception: Exception | None,
+    status: ConfigEntryState,
 ) -> None:
     """Test config entry not ready from authentication error."""
 
@@ -126,4 +131,4 @@ async def test_config_entry_not_ready_auth_error(
     await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert cookidoo_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert cookidoo_config_entry.state is status

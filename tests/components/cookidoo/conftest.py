@@ -63,5 +63,5 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: PASSWORD,
             CONF_LOCALIZATION: DEFAULT_LOCALIZATION,
         },
-        unique_id=f"{DOMAIN}_{EMAIL}",
+        entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
     )

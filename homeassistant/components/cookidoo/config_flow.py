@@ -39,6 +39,21 @@ from .helpers import cookidoo_localization_for_key
 
 _LOGGER = logging.getLogger(__name__)
 
+AUTH_DATA_SCHEMA = {
+    vol.Required(CONF_EMAIL): TextSelector(
+        TextSelectorConfig(
+            type=TextSelectorType.EMAIL,
+            autocomplete="email",
+        ),
+    ),
+    vol.Required(CONF_PASSWORD): TextSelector(
+        TextSelectorConfig(
+            type=TextSelectorType.PASSWORD,
+            autocomplete="current-password",
+        ),
+    ),
+}
+
 
 class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
@@ -60,14 +75,14 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None and not (
             errors := await self.validate_input(user_input)
         ):
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
             return self.async_create_entry(title="Cookidoo", data=user_input)
         await self.generate_schemata()
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(
-                    {**self.AUTH_DATA_SCHEMA, **self.LOCALIZATION_DATA_SCHEMA}
+                    {**AUTH_DATA_SCHEMA, **self.LOCALIZATION_DATA_SCHEMA}
                 ),
                 suggested_values=user_input,
             ),
@@ -133,7 +148,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(self.AUTH_DATA_SCHEMA),
+                data_schema=vol.Schema(AUTH_DATA_SCHEMA),
                 suggested_values={CONF_EMAIL: self.reauth_entry.data[CONF_EMAIL]},
             ),
             description_placeholders={CONF_NAME: self.reauth_entry.title},
@@ -143,21 +158,6 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def generate_schemata(self) -> None:
         """Generate schemata."""
         self.localizations = await get_localization_options()
-
-        self.AUTH_DATA_SCHEMA = {
-            vol.Required(CONF_EMAIL): TextSelector(
-                TextSelectorConfig(
-                    type=TextSelectorType.EMAIL,
-                    autocomplete="email",
-                ),
-            ),
-            vol.Required(CONF_PASSWORD): TextSelector(
-                TextSelectorConfig(
-                    type=TextSelectorType.PASSWORD,
-                    autocomplete="current-password",
-                ),
-            ),
-        }
 
         self.LOCALIZATION_DATA_SCHEMA = {
             vol.Required(
@@ -190,8 +190,8 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 "localization": cookidoo_localization_for_key(
                     self.localizations, user_input[CONF_LOCALIZATION]
                 ),
-                "email": user_input.get(CONF_EMAIL, ""),
-                "password": user_input.get(CONF_PASSWORD, ""),
+                "email": user_input[CONF_EMAIL],
+                "password": user_input[CONF_PASSWORD],
             },
         )
         try:
@@ -203,6 +203,4 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(f"{DOMAIN}_{user_input[CONF_EMAIL]}")
         return errors
