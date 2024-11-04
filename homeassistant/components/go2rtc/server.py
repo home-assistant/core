@@ -47,10 +47,6 @@ class Go2RTCWatchdogError(HomeAssistantError):
     """Raised on watchdog error."""
 
 
-class _Go2RTCWatchdogStop(Exception):
-    """Raised to stop the watchdog."""
-
-
 def _create_temp_file(api_ip: str) -> str:
     """Create temporary config file."""
     # Set delete=False to prevent the file from being deleted when the file is closed
@@ -75,9 +71,8 @@ class Server:
         if enable_ui:
             # Listen on all interfaces for allowing access from all ips
             self._api_ip = ""
-        self._stop_requested = False
-        self._watchdog_stop = asyncio.Event()
         self._watchdog_task: asyncio.Task | None = None
+        self._watchdog_tasks: list[asyncio.Task] = []
 
     async def start(self) -> None:
         """Start the server."""
@@ -132,36 +127,37 @@ class Server:
 
         A new go2rtc server is spawned if the process terminates or the API
         stops responding.
-
-        This method has an outer task group to allow stopping the watchdog.
-        """
-        try:
-            async with asyncio.TaskGroup() as tg:
-                tg.create_task(self._watchdog_impl())
-                tg.create_task(self._stop_watchdog())
-        except* _Go2RTCWatchdogStop:
-            _LOGGER.debug("Watchdog stopping")
-
-    async def _watchdog_impl(self) -> None:
-        """Keep respawning go2rtc servers.
-
-        A new go2rtc server is spawned if the process terminates or the API
-        stops responding.
         """
         while True:
             try:
-                async with asyncio.TaskGroup() as tg:
-                    tg.create_task(self._monitor_process())
-                    tg.create_task(self._monitor_api())
-            except* Go2RTCWatchdogError:
-                await asyncio.sleep(_RESPAWN_COOLDOWN)
+                monitor_process_task = asyncio.create_task(self._monitor_process())
+                self._watchdog_tasks.append(monitor_process_task)
+                monitor_process_task.add_done_callback(self._watchdog_tasks.remove)
+                monitor_api_task = asyncio.create_task(self._monitor_api())
+                self._watchdog_tasks.append(monitor_api_task)
+                monitor_api_task.add_done_callback(self._watchdog_tasks.remove)
                 try:
-                    await self._stop()
-                    _LOGGER.debug("Spawning new go2rtc server")
-                    with suppress(Go2RTCServerStartError):
-                        await self._start()
-                except Exception:
-                    _LOGGER.exception("Unexpected error when restarting go2rtc server")
+                    await asyncio.gather(monitor_process_task, monitor_api_task)
+                except Go2RTCWatchdogError:
+                    _LOGGER.debug("Caught Go2RTCWatchdogError")
+                    for task in self._watchdog_tasks:
+                        if task.done():
+                            if not task.cancelled():
+                                task.exception()
+                            continue
+                        task.cancel()
+                    await asyncio.sleep(_RESPAWN_COOLDOWN)
+                    try:
+                        await self._stop()
+                        _LOGGER.debug("Spawning new go2rtc server")
+                        with suppress(Go2RTCServerStartError):
+                            await self._start()
+                    except Exception:
+                        _LOGGER.exception(
+                            "Unexpected error when restarting go2rtc server"
+                        )
+            except Exception:
+                _LOGGER.exception("Unexpected error in go2rtc server watchdog")
 
     async def _monitor_process(self) -> None:
         """Raise if the go2rtc process terminates."""
@@ -186,15 +182,20 @@ class Server:
 
     async def _stop_watchdog(self) -> None:
         """Handle watchdog stop request."""
-        await self._watchdog_stop.wait()
-        raise _Go2RTCWatchdogStop
+        tasks: list[asyncio.Task] = []
+        if watchdog_task := self._watchdog_task:
+            self._watchdog_task = None
+            tasks.append(watchdog_task)
+            watchdog_task.cancel()
+        for task in self._watchdog_tasks:
+            tasks.append(task)
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
     async def stop(self) -> None:
         """Stop the server and abort the watchdog task."""
-        self._watchdog_stop.set()
-        if self._watchdog_task:
-            await self._watchdog_task
-            self._watchdog_task = None
+        _LOGGER.debug("Server stop requested")
+        await self._stop_watchdog()
         await self._stop()
 
     async def _stop(self) -> None:

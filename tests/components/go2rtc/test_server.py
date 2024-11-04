@@ -201,7 +201,7 @@ async def test_server_restart_process_error(
     server: Server,
 ) -> None:
     """Test that the server is restarted on error."""
-    mock_create_subprocess.return_value.wait.side_effect = [Exception, None, None]
+    mock_create_subprocess.return_value.wait.side_effect = [Exception, None, None, None]
 
     await server.start()
     mock_create_subprocess.assert_awaited_once()
