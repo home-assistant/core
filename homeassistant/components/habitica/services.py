@@ -174,14 +174,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def manage_quests(call: ServiceCall) -> ServiceResponse:
         """Accept, reject, start, leave or cancel quests."""
-        entry: HabiticaConfigEntry | None
-        if not (
-            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
 
         COMMAND_MAP = {
