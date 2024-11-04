@@ -239,6 +239,18 @@ async def _test_setup_and_signaling(
 
     rest_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
 
+    # Stream exists but the source is different
+    rest_client.streams.add.reset_mock()
+    rest_client.streams.list.return_value = {
+        entity_id: Stream([Producer("rtsp://different")])
+    }
+
+    receive_message_callback.reset_mock()
+    ws_client.reset_mock()
+    await test()
+
+    rest_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
+
     # If the stream is already added, the stream should not be added again.
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
