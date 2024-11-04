@@ -665,7 +665,7 @@ class SqueezeBoxMediaPlayerEntity(
         all_params = [command]
         if parameters:
             all_params.extend(parameters)
-        query_result = await self._player.async_query(*all_params)
+        query_result: ServiceResponse = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", query_result)
         if response:
             return query_result
@@ -680,7 +680,7 @@ class SqueezeBoxMediaPlayerEntity(
         search_string: str | None = None,
         tags: str | None = None,
         response: bool | None = None,
-    ) -> None:
+    ) -> ServiceResponse | None:
         """Call Squeezebox JSON/RPC method to search media library."""
         match command:
             case "albums":
