@@ -9,6 +9,7 @@ from typing import Any
 from aiohttp import ClientResponseError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME, CONF_NAME
 from homeassistant.core import (
     HomeAssistant,
@@ -32,7 +33,7 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CAST_SKILL,
 )
-from .util import get_config_entry
+from .types import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +53,21 @@ SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TASK): cv.string,
     }
 )
+
+
+def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
+    """Return config entry or raise if not found or not loaded."""
+    if not (entry := hass.config_entries.async_get_entry(entry_id)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_found",
+        )
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
+        )
+    return entry
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
