@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysuez import SuezClient
-from pysuez.client import PySuezError
+from pysuez.async_client import SuezAsyncClient
+from pysuez.exception import PySuezError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,19 +26,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def validate_input(data: dict[str, Any]) -> None:
+async def validate_input(data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
-        client = SuezClient(
+        client = SuezAsyncClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             data[CONF_COUNTER_ID],
-            provider=None,
         )
-        if not client.check_credentials():
+        if not await client.check_credentials():
             raise InvalidAuth
     except PySuezError as ex:
         raise CannotConnect from ex
@@ -58,7 +57,7 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
             try:
-                await self.hass.async_add_executor_job(validate_input, user_input)
+                await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
