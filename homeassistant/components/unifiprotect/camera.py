@@ -206,7 +206,9 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     def _async_set_stream_source(self) -> None:
         channel = self.channel
         enable_stream = not self._disable_stream and channel.is_rtsp_enabled
-        rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
+        # SRTP disabled because go2rtc does not support it
+        # https://github.com/AlexxIT/go2rtc/#source-rtsp
+        rtsp_url = channel.rtsps_no_srtp_url if self._secure else channel.rtsp_url
         source = rtsp_url if enable_stream else None
         self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
         self._stream_source = source
