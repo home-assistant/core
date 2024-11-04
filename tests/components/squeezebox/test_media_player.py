@@ -112,12 +112,9 @@ async def test_squeezebox_player_rediscovery(
 
     # Make the player appear unavailable
     configured_player.connected = False
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
     # Make the player available again
@@ -126,7 +123,7 @@ async def test_squeezebox_player_rediscovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
