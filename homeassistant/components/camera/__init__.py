@@ -788,17 +788,26 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         providers or inputs to the state attributes change.
         """
         old_provider = self._webrtc_provider
-        new_provider = await self._async_get_supported_webrtc_provider(
-            async_get_supported_provider
-        )
-
         old_legacy_provider = self._legacy_webrtc_provider
+        new_provider = None
         new_legacy_provider = None
-        if new_provider is None:
-            # Only add the legacy provider if the new provider is not available
-            new_legacy_provider = await self._async_get_supported_webrtc_provider(
-                async_get_supported_legacy_provider
+
+        # Skip all providers if the camera has a native WebRTC implementation
+        if not (
+            self._webrtc_sync_offer
+            or type(self).async_handle_async_webrtc_offer
+            != Camera.async_handle_async_webrtc_offer
+        ):
+            # Camera has not a native WebRTC implementation
+            new_provider = await self._async_get_supported_webrtc_provider(
+                async_get_supported_provider
             )
+
+            if new_provider is None:
+                # Only add the legacy provider if the new provider is not available
+                new_legacy_provider = await self._async_get_supported_webrtc_provider(
+                    async_get_supported_legacy_provider
+                )
 
         if old_provider != new_provider or old_legacy_provider != new_legacy_provider:
             self._webrtc_provider = new_provider
