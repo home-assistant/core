@@ -500,8 +500,8 @@ _DEPRECATED_STATE_CLASS_TOTAL_INCREASING: Final = DeprecatedConstantEnum(
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
-    SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.AREA: AreaConverter,
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
@@ -531,8 +531,8 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
 DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     SensorDeviceClass.AQI: {None},
-    SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.AREA: set(UnitOfArea),
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
@@ -608,7 +608,6 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.APPARENT_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: {SensorStateClass.MEASUREMENT},
-    SensorDeviceClass.AREA: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},

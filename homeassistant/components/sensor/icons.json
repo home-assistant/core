@@ -3,14 +3,14 @@
     "_": {
       "default": "mdi:eye"
     },
-    "area": {
-      "default": "mdi:square"
-    },
     "apparent_power": {
       "default": "mdi:flash"
     },
     "aqi": {
       "default": "mdi:air-filter"
+    },
+    "area": {
+      "default": "mdi:square"
     },
     "atmospheric_pressure": {
       "default": "mdi:thermometer-lines"

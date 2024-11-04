@@ -34,8 +34,8 @@ DEVICE_CLASS_NONE = "none"
 
 CONF_APPARENT_POWER = "apparent_power"
 CONF_AQI = "aqi"
-CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_AREA = "area"
+CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
@@ -85,8 +85,8 @@ CONF_WIND_SPEED = "wind_speed"
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_AQI}],
-    SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.AREA: [{CONF_TYPE: CONF_AREA}],
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
@@ -151,8 +151,8 @@ TRIGGER_SCHEMA = vol.All(
                 [
                     CONF_APPARENT_POWER,
                     CONF_AQI,
-                    CONF_ATMOSPHERIC_PRESSURE,
                     CONF_AREA,
+                    CONF_ATMOSPHERIC_PRESSURE,
                     CONF_BATTERY_LEVEL,
                     CONF_CO,
                     CONF_CO2,

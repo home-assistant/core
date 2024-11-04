@@ -139,14 +139,14 @@
     "duration": {
       "name": "Duration"
     },
-    "area": {
-      "name": "Area"
-    },
     "apparent_power": {
       "name": "Apparent power"
     },
     "aqi": {
       "name": "Air quality index"
+    },
+    "area": {
+      "name": "Area"
     },
     "atmospheric_pressure": {
       "name": "Atmospheric pressure"

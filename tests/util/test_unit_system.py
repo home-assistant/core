@@ -46,6 +46,7 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -53,13 +54,13 @@ def test_invalid_units() -> None:
             temperature=INVALID_UNIT,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=INVALID_UNIT,
             mass=UnitOfMass.GRAMS,
@@ -67,13 +68,13 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -81,13 +82,13 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=INVALID_UNIT,
-            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -95,13 +96,13 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=INVALID_UNIT,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=INVALID_UNIT,
@@ -109,13 +110,13 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -123,13 +124,13 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=INVALID_UNIT,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -137,13 +138,13 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-            area=UnitOfArea.SQUARE_METERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=INVALID_UNIT,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -151,7 +152,6 @@ def test_invalid_units() -> None:
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-            area=INVALID_UNIT,
         )
 
 

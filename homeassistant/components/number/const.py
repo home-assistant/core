@@ -434,8 +434,8 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
-    NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.AREA: set(UnitOfArea),
+    NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
     NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},

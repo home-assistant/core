@@ -104,13 +104,13 @@ class UnitSystem:
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
             for unit, unit_type in (
                 (accumulated_precipitation, ACCUMULATED_PRECIPITATION),
+                (area, AREA),
                 (temperature, TEMPERATURE),
                 (length, LENGTH),
                 (wind_speed, WIND_SPEED),
                 (volume, VOLUME),
                 (mass, MASS),
                 (pressure, PRESSURE),
-                (area, AREA),
             )
             if not _is_valid_unit(unit, unit_type)
         )
@@ -120,9 +120,9 @@ class UnitSystem:
 
         self._name = name
         self.accumulated_precipitation_unit = accumulated_precipitation
+        self.area_unit = area
         self.temperature_unit = temperature
         self.length_unit = length
-        self.area_unit = area
         self.mass_unit = mass
         self.pressure_unit = pressure
         self.volume_unit = volume
@@ -203,12 +203,12 @@ class UnitSystem:
         return {
             LENGTH: self.length_unit,
             ACCUMULATED_PRECIPITATION: self.accumulated_precipitation_unit,
+            AREA: self.area_unit,
             MASS: self.mass_unit,
             PRESSURE: self.pressure_unit,
             TEMPERATURE: self.temperature_unit,
             VOLUME: self.volume_unit,
             WIND_SPEED: self.wind_speed_unit,
-            AREA: self.area_unit,
         }
 
     def get_converted_unit(

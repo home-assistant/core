@@ -62,6 +62,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
     hass.config.units = UnitSystem(
         "custom",
         accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+        area=UnitOfArea.SQUARE_METERS,
         conversions={},
         length=UnitOfLength.METERS,
         mass=UnitOfMass.GRAMS,
@@ -69,7 +70,6 @@ def _set_up_units(hass: HomeAssistant) -> None:
         temperature=UnitOfTemperature.CELSIUS,
         volume=UnitOfVolume.LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        area=UnitOfArea.SQUARE_METERS,
     )
 
 
