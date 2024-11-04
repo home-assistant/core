@@ -16,9 +16,15 @@ TEST_BINARY = "/bin/go2rtc"
 
 
 @pytest.fixture
-def server(hass: HomeAssistant) -> Server:
+def enable_ui() -> bool:
+    """Fixture to enable the UI."""
+    return False
+
+
+@pytest.fixture
+def server(hass: HomeAssistant, enable_ui: bool) -> Server:
     """Fixture to initialize the Server."""
-    return Server(hass, binary=TEST_BINARY)
+    return Server(hass, binary=TEST_BINARY, enable_ui=enable_ui)
 
 
 @pytest.fixture
@@ -32,12 +38,20 @@ def mock_tempfile() -> Generator[Mock]:
         yield file
 
 
+@pytest.mark.parametrize(
+    ("enable_ui", "api_ip"),
+    [
+        (True, ""),
+        (False, "127.0.0.1"),
+    ],
+)
 async def test_server_run_success(
     mock_create_subprocess: AsyncMock,
     server_stdout: list[str],
     server: Server,
     caplog: pytest.LogCaptureFixture,
     mock_tempfile: Mock,
+    api_ip: str,
 ) -> None:
     """Test that the server runs successfully."""
     await server.start()
@@ -53,9 +67,10 @@ async def test_server_run_success(
     )
 
     # Verify that the config file was written
-    mock_tempfile.write.assert_called_once_with(b"""
+    mock_tempfile.write.assert_called_once_with(
+        f"""
 api:
-  listen: "127.0.0.1:1984"
+  listen: "{api_ip}:1984"
 
 rtsp:
   # ffmpeg needs rtsp for opus audio transcoding
@@ -63,7 +78,8 @@ rtsp:
 
 webrtc:
   ice_servers: []
-""")
+""".encode()
+    )
 
     # Check that server read the log lines
     for entry in server_stdout:
@@ -145,3 +161,100 @@ async def test_server_failed_to_start(
         stderr=subprocess.STDOUT,
         close_fds=False,
     )
+
+
+@patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
+async def test_server_restart_process_exit(
+    hass: HomeAssistant,
+    mock_create_subprocess: AsyncMock,
+    rest_client: AsyncMock,
+    server: Server,
+) -> None:
+    """Test that the server is restarted when it exits."""
+    evt = asyncio.Event()
+
+    async def wait_event() -> None:
+        await evt.wait()
+
+    mock_create_subprocess.return_value.wait.side_effect = wait_event
+
+    await server.start()
+    mock_create_subprocess.assert_awaited_once()
+    mock_create_subprocess.reset_mock()
+
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    mock_create_subprocess.assert_not_awaited()
+
+    evt.set()
+    await asyncio.sleep(0.1)
+    mock_create_subprocess.assert_awaited_once()
+
+    await server.stop()
+
+
+@patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
+async def test_server_restart_process_error(
+    hass: HomeAssistant,
+    mock_create_subprocess: AsyncMock,
+    rest_client: AsyncMock,
+    server: Server,
+) -> None:
+    """Test that the server is restarted on error."""
+    mock_create_subprocess.return_value.wait.side_effect = [Exception, None, None, None]
+
+    await server.start()
+    mock_create_subprocess.assert_awaited_once()
+    mock_create_subprocess.reset_mock()
+
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    mock_create_subprocess.assert_awaited_once()
+
+    await server.stop()
+
+
+@patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
+async def test_server_restart_api_error(
+    hass: HomeAssistant,
+    mock_create_subprocess: AsyncMock,
+    rest_client: AsyncMock,
+    server: Server,
+) -> None:
+    """Test that the server is restarted on error."""
+    rest_client.streams.list.side_effect = Exception
+
+    await server.start()
+    mock_create_subprocess.assert_awaited_once()
+    mock_create_subprocess.reset_mock()
+
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    mock_create_subprocess.assert_awaited_once()
+
+    await server.stop()
+
+
+@patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
+async def test_server_restart_error(
+    hass: HomeAssistant,
+    mock_create_subprocess: AsyncMock,
+    rest_client: AsyncMock,
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error handling when exception is raised during restart."""
+    rest_client.streams.list.side_effect = Exception
+    mock_create_subprocess.return_value.terminate.side_effect = [Exception, None]
+
+    await server.start()
+    mock_create_subprocess.assert_awaited_once()
+    mock_create_subprocess.reset_mock()
+
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    mock_create_subprocess.assert_awaited_once()
+
+    assert "Unexpected error when restarting go2rtc server" in caplog.text
+
+    await server.stop()

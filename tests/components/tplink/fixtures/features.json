@@ -303,5 +303,10 @@
     "type": "Choice",
     "category": "Config",
     "choices": ["low", "normal", "high"]
+  },
+  "water_alert_timestamp": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": "2024-06-24 10:03:11.046643+01:00"
   }
 }

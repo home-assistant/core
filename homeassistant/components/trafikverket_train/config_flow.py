@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -132,7 +132,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> TVTrainOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return TVTrainOptionsFlowHandler(config_entry)
+        return TVTrainOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -229,7 +229,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class TVTrainOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class TVTrainOptionsFlowHandler(OptionsFlow):
     """Handle Trafikverket Train options."""
 
     async def async_step_init(
