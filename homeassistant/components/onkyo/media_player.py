@@ -137,7 +137,7 @@ def _input_lib_cmds(zone: str) -> dict[InputSource, InputLibValue]:
             cmds = PYEISCP_COMMANDS["zone2"]["SLZ"]
         case "zone3":
             cmds = PYEISCP_COMMANDS["zone3"]["SL3"]
-        case "zone3":
+        case "zone4":
             cmds = PYEISCP_COMMANDS["zone4"]["SL4"]
 
     result: dict[InputSource, InputLibValue] = {}
