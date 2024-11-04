@@ -73,7 +73,7 @@ class NestCameraBaseEntity(Camera, ABC):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_is_streaming = True
-    _attr_supported_features = CameraEntityFeature(0) | CameraEntityFeature.STREAM
+    _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(self, device: Device) -> None:
         """Initialize the camera."""
@@ -116,8 +116,11 @@ class NestCameraBaseEntity(Camera, ABC):
     async def _handle_stream_refresh(self, _: datetime.datetime) -> None:
         """Alarm that fires to check if the stream should be refreshed."""
         _LOGGER.debug("Examining streams to refresh")
-        await self._async_refresh_stream()
-        self._schedule_stream_refresh()
+        self._stream_refresh_unsub = None
+        try:
+          await self._async_refresh_stream()
+        finally:
+          self._schedule_stream_refresh()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
