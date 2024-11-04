@@ -58,14 +58,11 @@ async def async_setup_entry(
         state_type=UpdateState,
     )
 
+    if (dashboard := async_get_dashboard(hass)) is None:
+        return
     entry_data = DomainData.get(hass).get_entry_data(entry)
-    # If the device_info is not available yet, the connection is not fully established
-    if entry_data.device_info is None:
-        return
-    if ((dashboard := async_get_dashboard(hass)) is None) or (
-        dashboard.data.get(entry_data.device_info.name) is None
-    ):
-        return
+    assert entry_data.device_info is not None
+    device_name = entry_data.device_info.name
     unsubs: list[CALLBACK_TYPE] = []
 
     @callback
@@ -77,13 +74,21 @@ async def async_setup_entry(
         if not entry_data.available or not dashboard.last_update_success:
             return
 
+        # Do not add Dashboard Entity if this device is not known to the ESPHome dashboard.
+        if dashboard.data.get(device_name) is None:
+            return
+
         for unsub in unsubs:
             unsub()
         unsubs.clear()
 
         async_add_entities([ESPHomeDashboardUpdateEntity(entry_data, dashboard)])
 
-    if entry_data.available and dashboard.last_update_success:
+    if (
+        entry_data.available
+        and dashboard.last_update_success
+        and dashboard.data.get(device_name)
+    ):
         _async_setup_update_entity()
         return
 
