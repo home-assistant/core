@@ -20,7 +20,8 @@ def rest_client() -> Generator[AsyncMock]:
         ) as mock_client,
     ):
         client = mock_client.return_value
-        client.streams = Mock(spec_set=_StreamClient)
+        client.streams = streams = Mock(spec_set=_StreamClient)
+        streams.list.return_value = {}
         client.webrtc = Mock(spec_set=_WebRTCClient)
         yield client
 

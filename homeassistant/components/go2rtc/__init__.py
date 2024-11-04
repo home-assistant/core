@@ -203,15 +203,17 @@ class WebRTCProvider(CameraWebRTCProvider):
             self._session, self._url, source=camera.entity_id
         )
 
+        if not (stream_source := await camera.stream_source()):
+            send_message(
+                WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
+            )
+            return
+
         streams = await self._rest_client.streams.list()
-        if camera.entity_id not in streams:
-            if not (stream_source := await camera.stream_source()):
-                send_message(
-                    WebRTCError(
-                        "go2rtc_webrtc_offer_failed", "Camera has no stream source"
-                    )
-                )
-                return
+
+        if (stream := streams.get(camera.entity_id)) is None or not any(
+            stream_source == producer.url for producer in stream.producers
+        ):
             await self._rest_client.streams.add(camera.entity_id, stream_source)
 
         @callback
