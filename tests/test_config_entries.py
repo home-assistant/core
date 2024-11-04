@@ -5729,6 +5729,14 @@ async def test_starting_config_flow_on_single_config_entry(
             None,
             {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
         ),
+        (
+            {"source": config_entries.SOURCE_ZEROCONF},
+            None,
+            {
+                "type": data_entry_flow.FlowResultType.ABORT,
+                "reason": "single_instance_allowed",
+            },
+        ),
     ],
 )
 async def test_starting_config_flow_on_single_config_entry_2(
