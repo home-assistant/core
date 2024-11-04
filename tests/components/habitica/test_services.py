@@ -228,3 +228,46 @@ async def test_cast_skill_exceptions(
             return_response=True,
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("mock_habitica")
+async def test_get_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+) -> None:
+    """Test Habitica config entry exceptions."""
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="The selected character is not configured in Home Assistant",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CAST_SKILL,
+            service_data={
+                ATTR_CONFIG_ENTRY: "0000000000000000",
+                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                ATTR_SKILL: "smash",
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="The selected character is currently not loaded or disabled in Home Assistant",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CAST_SKILL,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                ATTR_SKILL: "smash",
+            },
+            return_response=True,
+            blocking=True,
+        )
