@@ -48,7 +48,7 @@ class NetatmoFlowHandler(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return NetatmoOptionsFlowHandler(config_entry)
+        return NetatmoOptionsFlowHandler()
 
     @property
     def logger(self) -> logging.Logger:
@@ -99,13 +99,9 @@ class NetatmoFlowHandler(
 class NetatmoOptionsFlowHandler(OptionsFlow):
     """Handle Netatmo options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Netatmo options flow."""
-        self.initialize_options(config_entry)
-        self.options.setdefault(CONF_WEATHER_AREAS, {})
-
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the Netatmo options."""
+        self.options.setdefault(CONF_WEATHER_AREAS, {})
         return await self.async_step_public_weather_areas()
 
     async def async_step_public_weather_areas(
