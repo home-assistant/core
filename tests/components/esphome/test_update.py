@@ -440,7 +440,13 @@ async def test_update_entity_not_present_with_dashboard_but_unknown_device(
         states=[],
     )
 
-    mock_dashboard["configured"] = []
+    mock_dashboard["configured"] = [
+        {
+            "name": "other-test",
+            "current_version": "2023.2.0-dev",
+            "configuration": "other-test.yaml",
+        }
+    ]
 
     state = hass.states.get("update.test_firmware")
     assert state is None
