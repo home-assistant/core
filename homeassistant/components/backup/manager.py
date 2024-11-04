@@ -20,6 +20,7 @@ from typing import Any, Protocol, cast
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
 
+from homeassistant.backup_restore import RESTORE_BACKUP_FILE
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -126,6 +127,10 @@ class BaseBackupManager(abc.ABC):
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         self.loaded_platforms = True
+
+    @abc.abstractmethod
+    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+        """Restpre a backup."""
 
     @abc.abstractmethod
     async def async_create_backup(self, **kwargs: Any) -> Backup:
@@ -360,6 +365,25 @@ class BackupManager(BaseBackupManager):
                 )
 
         return tar_file_path.stat().st_size
+
+    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+        """Restore a backup.
+
+        This will write the restore information to .HA_RESTORE which
+        will be handled during startup by the restore_backup module.
+        """
+        if (backup := await self.async_get_backup(slug=slug)) is None:
+            raise HomeAssistantError(f"Backup {slug} not found")
+
+        def _write_restore_file() -> None:
+            """Write the restore file."""
+            Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
+                f"{backup.path.as_posix()};",
+                encoding="utf-8",
+            )
+
+        await self.hass.async_add_executor_job(_write_restore_file)
+        await self.hass.services.async_call("homeassistant", "restart", {})
 
 
 def _generate_slug(date: str, name: str) -> str:

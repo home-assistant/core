@@ -369,3 +369,31 @@ async def test_async_receive_backup(
         assert open_mock.call_count == 1
         assert mover_mock.call_count == 1
         assert mover_mock.mock_calls[0].args[1].name == "abc123.tar"
+
+
+async def test_async_trigger_restore(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger restore."""
+    manager = BackupManager(hass)
+    manager.loaded_backups = True
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text") as mocked_write_text,
+        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
+    ):
+        await manager.async_restore_backup(TEST_BACKUP.slug)
+        assert mocked_write_text.call_args[0][0] == "abc123.tar;"
+        assert mocked_service_call.called
+
+
+async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
+    """Test trigger restore."""
+    manager = BackupManager(hass)
+    manager.loaded_backups = True
+
+    with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
+        await manager.async_restore_backup(TEST_BACKUP.slug)

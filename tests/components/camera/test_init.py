@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from webrtc_models import RTCIceCandidate
 
 from homeassistant.components import camera
 from homeassistant.components.camera import (
@@ -929,7 +930,8 @@ async def _test_capabilities(
         # Assert WebSocket response
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == {"frontend_stream_types": list(expected_types)}
+        assert msg["result"] == {"frontend_stream_types": ANY}
+        assert sorted(msg["result"]["frontend_stream_types"]) == sorted(expected_types)
 
     await test(expected_stream_types)
 
@@ -959,7 +961,7 @@ async def _test_capabilities(
             send_message(WebRTCAnswer("answer"))
 
         async def async_on_webrtc_candidate(
-            self, session_id: str, candidate: str
+            self, session_id: str, candidate: RTCIceCandidate
         ) -> None:
             """Handle the WebRTC candidate."""
 
