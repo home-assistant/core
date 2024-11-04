@@ -118,9 +118,9 @@ class NestCameraBaseEntity(Camera, ABC):
         _LOGGER.debug("Examining streams to refresh")
         self._stream_refresh_unsub = None
         try:
-          await self._async_refresh_stream()
+            await self._async_refresh_stream()
         finally:
-          self._schedule_stream_refresh()
+            self._schedule_stream_refresh()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
