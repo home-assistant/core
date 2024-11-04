@@ -218,16 +218,16 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> AndroidTVRemoteOptionsFlowHandler:
         """Create the options flow."""
-        return AndroidTVRemoteOptionsFlowHandler(config_entry)
+        return AndroidTVRemoteOptionsFlowHandler()
 
 
 class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
     """Android TV Remote options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    _apps: dict[str, Any]
+
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.initialize_options(config_entry)
-        self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
         self._conf_app_id: str | None = None
 
     @callback
@@ -248,6 +248,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
                 return await self.async_step_apps(None, sel_app)
             return self._save_config(user_input)
 
+        self._apps = self.options.setdefault(CONF_APPS, {})
         apps_list = {
             k: f"{v[CONF_APP_NAME]} ({k})" if CONF_APP_NAME in v else k
             for k, v in self._apps.items()
