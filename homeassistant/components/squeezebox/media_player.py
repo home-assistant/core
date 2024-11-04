@@ -27,7 +27,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -73,6 +79,8 @@ if TYPE_CHECKING:
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
+SERVICE_SEARCH = "search"
+SERVICE_PLAY = "play"
 
 ATTR_QUERY_RESULT = "query_result"
 
@@ -80,7 +88,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 ATTR_PARAMETERS = "parameters"
+ATTR_RETURN_ITEMS = "return_items"
+ATTR_SEARCH_STRING = "search_string"
+ATTR_PLAYLIST_ACTION = "playlist_action"
+ATTR_SEARCH_TYPE = "search_type"
 ATTR_OTHER_PLAYER = "other_player"
+ATTR_TAGS = "tags"
+
 
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
@@ -134,6 +148,27 @@ async def async_setup_entry(
     )
 
     # Register entity services
+
+    async def async_call_query_helper(
+        entity: SqueezeBoxMediaPlayerEntity, serviceCall: ServiceCall
+    ) -> ServiceResponse | None:
+        return await entity.async_call_query(
+            serviceCall.data[ATTR_COMMAND],
+            serviceCall.data.get(ATTR_PARAMETERS, []),
+            serviceCall.return_response,
+        )
+
+    async def async_search_service_helper(
+        entity: SqueezeBoxMediaPlayerEntity, serviceCall: ServiceCall
+    ) -> ServiceResponse | None:
+        return await entity.async_search_service(
+            serviceCall.data[ATTR_COMMAND],
+            serviceCall.data[ATTR_RETURN_ITEMS],
+            serviceCall.data.get(ATTR_SEARCH_STRING),
+            serviceCall.data.get(ATTR_TAGS),
+            serviceCall.return_response,
+        )
+
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CALL_METHOD,
@@ -150,12 +185,35 @@ async def async_setup_entry(
         {
             vol.Required(ATTR_COMMAND): cv.string,
             vol.Optional(ATTR_PARAMETERS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+                cv.ensure_list,
+                vol.Length(min=1),
+                [cv.string],
             ),
         },
-        "async_call_query",
+        async_call_query_helper,
+        supports_response=SupportsResponse.OPTIONAL,
     )
-
+    platform.async_register_entity_service(
+        SERVICE_SEARCH,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Required(ATTR_RETURN_ITEMS): int,
+            vol.Optional(ATTR_SEARCH_STRING): cv.string,
+            vol.Optional(ATTR_TAGS): cv.string,
+        },
+        async_search_service_helper,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    platform.async_register_entity_service(
+        SERVICE_PLAY,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Required(ATTR_SEARCH_TYPE): cv.string,
+            vol.Required(ATTR_SEARCH_STRING): cv.string,
+            vol.Required(ATTR_PLAYLIST_ACTION): cv.string,
+        },
+        "async_play_service",
+    )
     # Start server discovery task if not already running
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
@@ -594,8 +652,11 @@ class SqueezeBoxMediaPlayerEntity(
         await self._player.async_query(*all_params)
 
     async def async_call_query(
-        self, command: str, parameters: list[str] | None = None
-    ) -> None:
+        self,
+        command: str,
+        parameters: list[str] | None = None,
+        response: bool | None = False,
+    ) -> ServiceResponse | None:
         """Call Squeezebox JSON/RPC method where we care about the result.
 
         Additional parameters are added to the command to form the list of
@@ -604,8 +665,127 @@ class SqueezeBoxMediaPlayerEntity(
         all_params = [command]
         if parameters:
             all_params.extend(parameters)
-        self._query_result = await self._player.async_query(*all_params)
-        _LOGGER.debug("call_query got result %s", self._query_result)
+        query_result = await self._player.async_query(*all_params)
+        _LOGGER.debug("call_query got result %s", query_result)
+        if response:
+            return query_result
+        self._query_result = query_result
+        self.async_write_ha_state()
+        return None
+
+    async def async_search_service(
+        self,
+        command: str,
+        return_items: int,
+        search_string: str | None = None,
+        tags: str | None = None,
+        response: bool | None = None,
+    ) -> None:
+        """Call Squeezebox JSON/RPC method to search media library."""
+        match command:
+            case "albums":
+                _param = [
+                    "0",
+                    str(return_items),
+                    ("tags:" + tags) if tags else "tags:laay",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "favorites":
+                _param = [
+                    "items",
+                    "0",
+                    str(return_items),
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "artists":
+                _param = [
+                    "0",
+                    str(return_items),
+                    ("tags:" + tags) if tags else "",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "genres":
+                _param = [
+                    "0",
+                    str(return_items),
+                    ("tags:" + tags) if tags else "",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "tracks":
+                _param = [
+                    "0",
+                    str(return_items),
+                    ("tags:" + tags) if tags else "tags:aglQrTy",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "playlists":
+                _param = [
+                    "0",
+                    str(return_items),
+                    ("tags:" + tags) if tags else "",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+            case "players":
+                _param = ["0", str(return_items)]
+            case _:
+                _LOGGER.debug("Invalid Search Service Command")
+                return None
+
+        return await self.async_call_query(command, _param, response)
+
+    async def async_play_service(
+        self, command: str, search_type: str, search_string: str, playlist_action: str
+    ) -> None:
+        """Call Squeezebox JSON/RPC method to search media library."""
+        if search_type == "text":
+            match command:
+                case "favorite":
+                    _param = [
+                        "favorites",
+                        "items",
+                        "0",
+                        "1",
+                        "search:" + search_string if search_string is not None else "",
+                    ]
+                    result_loop = "loop_loop"
+                    _type = "Favorites"
+                case _:
+                    _param = [
+                        command + "s",
+                        "items0",
+                        "1",
+                        "search:" + search_string if search_string is not None else "",
+                    ]
+                    result_loop = command + "s_loop"
+                    _type = command
+
+            query_result = await self._player.async_query(*_param)
+
+            if query_result["count"] == 0:
+                raise ServiceValidationError("Search returned zero results")
+
+            if query_result["count"] > 1:
+                raise ServiceValidationError(
+                    f"Search returned {query_result['count']} results.  Each search must return only one result"
+                )
+
+            _id = str(query_result[result_loop][0]["id"])
+
+        else:
+            _id = search_string
+
+            if command == "favorite":
+                _type = "Favorites"
+            else:
+                _type = command
+
+        match playlist_action:
+            case "add":
+                await self.async_play_media(_type, _id, enqueue=MediaPlayerEnqueue.ADD)
+            case "next":
+                await self.async_play_media(_type, _id, enqueue=MediaPlayerEnqueue.NEXT)
+            case _:
+                await self.async_play_media(_type, _id)
         self.async_write_ha_state()
 
     async def async_join_players(self, group_members: list[str]) -> None:

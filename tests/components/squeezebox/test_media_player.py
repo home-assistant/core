@@ -42,8 +42,11 @@ from homeassistant.components.squeezebox.const import (
 )
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
+    ATTR_RETURN_ITEMS,
+    ATTR_SEARCH_STRING,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
+    SERVICE_SEARCH,
 )
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -109,9 +112,12 @@ async def test_squeezebox_player_rediscovery(
 
     # Make the player appear unavailable
     configured_player.connected = False
-    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
     # Make the player available again
@@ -120,7 +126,7 @@ async def test_squeezebox_player_rediscovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
@@ -774,6 +780,150 @@ async def test_squeezebox_call_method(
     configured_player.async_query.assert_called_once_with(
         "test_command", "param1", "param2"
     )
+
+
+async def test_squeezebox_search_albums(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "albums",
+            ATTR_RETURN_ITEMS: 1,
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with(
+        "albums", "0", "1", "tags:laay", "search:searchstring"
+    )
+
+
+async def test_squeezebox_search_favorites(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "favorites",
+            ATTR_RETURN_ITEMS: 1,
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with(
+        "favorites", "items", "0", "1", "search:searchstring"
+    )
+
+
+async def test_squeezebox_search_artists(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "artists",
+            ATTR_RETURN_ITEMS: 1,
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with(
+        "artists", "0", "1", "search:searchstring"
+    )
+
+
+async def test_squeezebox_search_genres(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "genres",
+            ATTR_RETURN_ITEMS: 1,
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with(
+        "genres", "0", "1", "search:searchstring"
+    )
+
+
+async def test_squeezebox_search_tracks(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "tracks",
+            ATTR_RETURN_ITEMS: 1,
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with(
+        "tracks", "0", "1", "tags:aglQrTy", "search:searchstring"
+    )
+
+
+async def test_squeezebox_search_playlists(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "playlists",
+            ATTR_RETURN_ITEMS: 1,
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with(
+        "playlists", "0", "1", "search:searchstring"
+    )
+
+
+async def test_squeezebox_search_players(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "players",
+            ATTR_RETURN_ITEMS: 1,
+            ATTR_SEARCH_STRING: "searchstring",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with("players", "0", "1")
 
 
 async def test_squeezebox_invalid_state(
