@@ -196,7 +196,7 @@ async def validate_rtsps_camera_state(
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
 
-    assert await async_get_stream_source(hass, entity_id) == channel.rtsps_url
+    assert await async_get_stream_source(hass, entity_id) == channel.rtsps_no_srtp_url
     validate_common_camera_state(hass, channel, entity_id, features)
 
 
