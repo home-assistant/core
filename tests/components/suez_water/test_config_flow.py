@@ -10,13 +10,9 @@ from homeassistant.components.suez_water.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .conftest import MOCK_DATA
 
-MOCK_DATA = {
-    "username": "test-username",
-    "password": "test-password",
-    "counter_id": "test-counter",
-}
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
