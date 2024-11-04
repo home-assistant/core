@@ -350,9 +350,9 @@ async def test_async_receive_backup(
     stream.feed_data(b"0" * size + b"\r\n--:--")
     stream.feed_eof()
 
-    openmock = mock_open()
+    open_mock = mock_open()
 
-    with patch("pathlib.Path.open", openmock), patch("shutil.move") as movermock:
+    with patch("pathlib.Path.open", open_mock), patch("shutil.move") as mover_mock:
         await manager.async_receive_backup(
             contents=aiohttp.BodyPartReader(
                 b"--:",
@@ -366,6 +366,6 @@ async def test_async_receive_backup(
                 stream,
             )
         )
-        assert openmock.call_count == 1
-        assert movermock.call_count == 1
-        assert movermock.mock_calls[0].args[1].name == "abc123.tar"
+        assert open_mock.call_count == 1
+        assert mover_mock.call_count == 1
+        assert mover_mock.mock_calls[0].args[1].name == "abc123.tar"
