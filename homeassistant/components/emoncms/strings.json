@@ -19,6 +19,9 @@
     }
   },
   "options": {
+    "error": {
+      "failure": "failure"
+    },
     "step": {
       "init": {
         "data": {

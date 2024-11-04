@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-import pytest
-
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -129,10 +127,6 @@ async def test_options_flow(
     assert config_entry.options == CONFIG_ENTRY
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.emoncms.options.error.failure"],
-)
 async def test_options_flow_failure(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
