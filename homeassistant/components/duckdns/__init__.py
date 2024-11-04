@@ -41,7 +41,6 @@ CONF_IPV4_FETCH_URL = "ipv4_fetch_url"
 CONF_IPV6_FETCH_URL = "ipv6_fetch_url"
 CONF_IP_UPDATE_MODE = "ip_update_mode"
 
-# Define the configuration schema with ip_update_mode only on configuration level
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -63,7 +62,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Service schema for setting TXT record without ip_update_mode
 SERVICE_TXT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TXT): vol.Any(None, cv.string),
@@ -159,7 +157,6 @@ async def _update_duckdns(
     """Update DuckDNS entry with the specified IP versions."""
     params = {"domains": domain, "token": token}
 
-    # Handle TXT record updates
     if txt is not _SENTINEL:
         if txt is None:
             params["txt"] = ""
@@ -181,7 +178,6 @@ async def _update_duckdns(
         if ipv6_address:
             params["ipv6"] = ipv6_address.strip()
 
-    # Send update request to DuckDNS
     resp = await session.get(UPDATE_URL, params=params)
     body = await resp.text()
 
