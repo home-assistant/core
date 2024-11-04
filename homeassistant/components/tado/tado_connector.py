@@ -190,13 +190,13 @@ class TadoConnector:
     def update_zones(self):
         """Update the zone data from Tado."""
         try:
-                zone_states = self.tado.get_zone_states()
+            zone_states = self.tado.get_zone_states()
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating zones")
-            
-        if not self.is_x:
-             zone_states = self.tado.get_zone_states()["zoneStates"]
             return
+
+        if not self.is_x:
+            zone_states = zone_states["zoneStates"]
 
         for zone in zone_states:
             self.update_zone(int(zone if not self.is_x else zone["id"]))
