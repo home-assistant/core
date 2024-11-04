@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from copy import deepcopy
 import logging
 from typing import Any
 import uuid
@@ -101,8 +102,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Netatmo options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
+        self._options = deepcopy(dict(config_entry.options))
         self.options.setdefault(CONF_WEATHER_AREAS, {})
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
