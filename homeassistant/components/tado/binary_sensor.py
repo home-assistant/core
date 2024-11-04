@@ -51,9 +51,13 @@ BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="connection state",
     translation_key="connection_state",
-    state_fn=lambda data: data.get("connectionState", {}).get(
-        "value", data.get("connection", {}).get("state", False)
-    ),
+    state_fn=lambda data: data.get("connectionState", {}).get("value", False),
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+)
+TADO_X_CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
+    key="connection state",
+    translation_key="connection_state",
+    state_fn=lambda data: data.get("connection", {}).get("state", False),
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -89,13 +93,24 @@ EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 )
 
 DEVICE_SENSORS = {
-    TYPE_BATTERY: [
-        BATTERY_STATE_ENTITY_DESCRIPTION,
-        CONNECTION_STATE_ENTITY_DESCRIPTION,
-    ],
-    TYPE_POWER: [
-        CONNECTION_STATE_ENTITY_DESCRIPTION,
-    ],
+    TADO_LINE_X: {
+        TYPE_BATTERY: [
+            BATTERY_STATE_ENTITY_DESCRIPTION,
+            TADO_X_CONNECTION_STATE_ENTITY_DESCRIPTION,
+        ],
+        TYPE_POWER: [
+            TADO_X_CONNECTION_STATE_ENTITY_DESCRIPTION,
+        ],
+    },
+    TADO_PRE_LINE_X: {
+        TYPE_BATTERY: [
+            BATTERY_STATE_ENTITY_DESCRIPTION,
+            CONNECTION_STATE_ENTITY_DESCRIPTION,
+        ],
+        TYPE_POWER: [
+            CONNECTION_STATE_ENTITY_DESCRIPTION,
+        ],
+    },
 }
 
 ZONE_SENSORS = {
@@ -156,7 +171,7 @@ async def async_setup_entry(
         entities.extend(
             [
                 TadoDeviceBinarySensor(tado, device, entity_description)
-                for entity_description in DEVICE_SENSORS[device_type]
+                for entity_description in DEVICE_SENSORS[tado_line][device_type]
             ]
         )
 
