@@ -52,7 +52,7 @@ _FT2_TO_M2 = _FOOT_TO_M**2  # 1 ft² = 0.092903 m²
 _YD2_TO_M2 = _YARD_TO_M**2  # 1 yd² = 0.836127 m²
 _MI2_TO_M2 = _MILE_TO_M**2  # 1 mi² = 2,590,000 m²
 
-_ACRE_TO_M2 = 66 * _FOOT_TO_M * 660 * _FOOT_TO_M  # 1 acre = 4,046.86 m²
+_ACRE_TO_M2 = 66 * 660 * _FT2_TO_M2  # 1 acre = 4,046.86 m²
 _HECTARE_TO_M2 = 100 * 100  # 1 hectare = 10,000 m²
 
 # Duration conversion constants
