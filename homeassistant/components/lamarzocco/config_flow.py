@@ -1,5 +1,7 @@
 """Config flow for La Marzocco integration."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -14,12 +16,14 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     async_discovered_service_info,
 )
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -54,9 +58,6 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-
-        self.reauth_entry: ConfigEntry | None = None
-        self.reconfigure_entry: ConfigEntry | None = None
         self._config: dict[str, Any] = {}
         self._fleet: dict[str, LaMarzoccoDeviceInfo] = {}
         self._discovered: dict[str, str] = {}
@@ -70,8 +71,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             data: dict[str, Any] = {}
-            if self.reauth_entry:
-                data = dict(self.reauth_entry.data)
+            if self.source == SOURCE_REAUTH:
+                data = dict(self._get_reauth_entry().data)
             data = {
                 **data,
                 **user_input,
@@ -95,15 +96,24 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "no_machines"
 
             if not errors:
-                if self.reauth_entry:
+                if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
-                        self.reauth_entry, data=data, reason="reauth_successful"
+                        self._get_reauth_entry(), data=data
                     )
                 if self._discovered:
                     if self._discovered[CONF_MACHINE] not in self._fleet:
                         errors["base"] = "machine_not_found"
                     else:
                         self._config = data
+                        # if DHCP discovery was used, auto fill machine selection
+                        if CONF_HOST in self._discovered:
+                            return await self.async_step_machine_selection(
+                                user_input={
+                                    CONF_HOST: self._discovered[CONF_HOST],
+                                    CONF_MACHINE: self._discovered[CONF_MACHINE],
+                                }
+                            )
+                        # if Bluetooth discovery was used, only select host
                         return self.async_show_form(
                             step_id="machine_selection",
                             data_schema=vol.Schema(
@@ -134,7 +144,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             if not self._discovered:
                 serial_number = user_input[CONF_MACHINE]
-                if self.reconfigure_entry is None:
+                if self.source != SOURCE_RECONFIGURE:
                     await self.async_set_unique_id(serial_number)
                     self._abort_if_unique_id_configured()
             else:
@@ -154,7 +164,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._config[CONF_HOST] = user_input[CONF_HOST]
 
             if not errors:
-                if self.reconfigure_entry:
+                if self.source == SOURCE_RECONFIGURE:
                     for service_info in async_discovered_service_info(self.hass):
                         self._discovered[service_info.name] = service_info.address
 
@@ -204,16 +214,13 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Bluetooth device selection."""
 
-        assert self.reconfigure_entry
-
         if user_input is not None:
             return self.async_update_reload_and_abort(
-                self.reconfigure_entry,
+                self._get_reconfigure_entry(),
                 data={
                     **self._config,
                     CONF_MAC: user_input[CONF_MAC],
                 },
-                reason="reconfigure_successful",
             )
 
         bt_options = [
@@ -262,13 +269,31 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery via dhcp."""
+
+        serial = discovery_info.hostname.upper()
+
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured()
+
+        _LOGGER.debug(
+            "Discovered La Marzocco machine %s through DHCP at address %s",
+            discovery_info.hostname,
+            discovery_info.ip,
+        )
+
+        self._discovered[CONF_MACHINE] = serial
+        self._discovered[CONF_HOST] = discovery_info.ip
+
+        return await self.async_step_user()
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -288,32 +313,22 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reconfiguration of the config entry."""
-        self.reconfigure_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm reconfiguration of the device."""
-        assert self.reconfigure_entry
-
+        """Perform reconfiguration of the config entry."""
         if not user_input:
+            reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
-                step_id="reconfigure_confirm",
+                step_id="reconfigure",
                 data_schema=vol.Schema(
                     {
                         vol.Required(
                             CONF_USERNAME,
-                            default=self.reconfigure_entry.data[CONF_USERNAME],
+                            default=reconfigure_entry.data[CONF_USERNAME],
                         ): str,
                         vol.Required(
                             CONF_PASSWORD,
-                            default=self.reconfigure_entry.data[CONF_PASSWORD],
+                            default=reconfigure_entry.data[CONF_PASSWORD],
                         ): str,
                     }
                 ),
@@ -325,12 +340,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> LmOptionsFlowHandler:
         """Create the options flow."""
-        return LmOptionsFlowHandler(config_entry)
+        return LmOptionsFlowHandler()
 
 
-class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class LmOptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
 
     async def async_step_init(

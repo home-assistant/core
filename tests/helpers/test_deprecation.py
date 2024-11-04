@@ -13,6 +13,7 @@ from homeassistant.helpers.deprecation import (
     DeprecatedAlias,
     DeprecatedConstant,
     DeprecatedConstantEnum,
+    EnumWithDeprecatedMembers,
     check_if_deprecated_constant,
     deprecated_class,
     deprecated_function,
@@ -520,3 +521,119 @@ def test_dir_with_deprecated_constants(
 ) -> None:
     """Test dir() with deprecated constants."""
     assert dir_with_deprecated_constants([*module_globals.keys()]) == expected
+
+
+@pytest.mark.parametrize(
+    ("module_name", "extra_extra_msg"),
+    [
+        ("homeassistant.components.hue.light", ""),  # builtin integration
+        (
+            "config.custom_components.hue.light",
+            ", please report it to the author of the 'hue' custom integration",
+        ),  # custom component integration
+    ],
+)
+def test_enum_with_deprecated_members(
+    caplog: pytest.LogCaptureFixture,
+    module_name: str,
+    extra_extra_msg: str,
+) -> None:
+    """Test EnumWithDeprecatedMembers."""
+    filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
+
+    class TestEnum(
+        StrEnum,
+        metaclass=EnumWithDeprecatedMembers,
+        deprecated={
+            "CATS": ("TestEnum.CATS_PER_CM", "2025.11.0"),
+            "DOGS": ("TestEnum.DOGS_PER_CM", None),
+        },
+    ):
+        """Zoo units."""
+
+        CATS_PER_CM = "cats/cm"
+        DOGS_PER_CM = "dogs/cm"
+        CATS = "cats/cm"
+        DOGS = "dogs/cm"
+
+    # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
+    with (
+        patch.dict(sys.modules, {module_name: Mock(__file__=filename)}),
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="await session.close()",
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=extract_stack_to_frame(
+                [
+                    Mock(
+                        filename="/home/paulus/homeassistant/core.py",
+                        lineno="23",
+                        line="do_something()",
+                    ),
+                    Mock(
+                        filename=filename,
+                        lineno="23",
+                        line="await session.close()",
+                    ),
+                    Mock(
+                        filename="/home/paulus/aiohue/lights.py",
+                        lineno="2",
+                        line="something()",
+                    ),
+                ]
+            ),
+        ),
+    ):
+        TestEnum.CATS  # noqa: B018
+        TestEnum.DOGS  # noqa: B018
+
+    assert len(caplog.record_tuples) == 2
+    assert (
+        "tests.helpers.test_deprecation",
+        logging.WARNING,
+        (
+            "TestEnum.CATS was used from hue, this is a deprecated enum member which "
+            "will be removed in HA Core 2025.11.0. Use TestEnum.CATS_PER_CM instead"
+            f"{extra_extra_msg}"
+        ),
+    ) in caplog.record_tuples
+    assert (
+        "tests.helpers.test_deprecation",
+        logging.WARNING,
+        (
+            "TestEnum.DOGS was used from hue, this is a deprecated enum member. Use "
+            f"TestEnum.DOGS_PER_CM instead{extra_extra_msg}"
+        ),
+    ) in caplog.record_tuples
+
+
+def test_enum_with_deprecated_members_integration_not_found(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test check_if_deprecated_constant."""
+
+    class TestEnum(
+        StrEnum,
+        metaclass=EnumWithDeprecatedMembers,
+        deprecated={
+            "CATS": ("TestEnum.CATS_PER_CM", "2025.11.0"),
+            "DOGS": ("TestEnum.DOGS_PER_CM", None),
+        },
+    ):
+        """Zoo units."""
+
+        CATS_PER_CM = "cats/cm"
+        DOGS_PER_CM = "dogs/cm"
+        CATS = "cats/cm"
+        DOGS = "dogs/cm"
+
+    with patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        side_effect=MissingIntegrationFrame,
+    ):
+        TestEnum.CATS  # noqa: B018
+        TestEnum.DOGS  # noqa: B018
+
+    assert len(caplog.record_tuples) == 0

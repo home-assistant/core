@@ -1,10 +1,12 @@
 """Setup the Reolink tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
 from reolink_aio.api import Chime
+from reolink_aio.baichuan import Baichuan
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
@@ -80,6 +82,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.protocol = "rtsp"
         host_mock.channels = [0]
         host_mock.stream_channels = [0]
+        host_mock.new_devices = False
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
@@ -117,6 +120,12 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
         host_mock.auto_track_method.return_value = 3
         host_mock.daynight_state.return_value = "Black&White"
+
+        # Baichuan
+        host_mock.baichuan = create_autospec(Baichuan)
+        # Disable tcp push by default for tests
+        host_mock.baichuan.events_active = False
+        host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
         yield host_mock_class
 
 

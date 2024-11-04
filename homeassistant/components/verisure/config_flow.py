@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
 from verisure import (
     Error as VerisureError,
@@ -38,15 +38,16 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 2
 
     email: str
-    entry: ConfigEntry
     password: str
     verisure: Verisure
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> VerisureOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> VerisureOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return VerisureOptionsFlowHandler(config_entry)
+        return VerisureOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -179,10 +180,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Verisure."""
-        self.entry = cast(
-            ConfigEntry,
-            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -230,25 +227,21 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
             else:
-                data = self.entry.data.copy()
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **data,
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_EMAIL, default=self.entry.data[CONF_EMAIL]): str,
+                    vol.Required(
+                        CONF_EMAIL, default=self._get_reauth_entry().data[CONF_EMAIL]
+                    ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -274,18 +267,13 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
                         CONF_EMAIL: self.email,
                         CONF_PASSWORD: self.password,
                     },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_mfa",
@@ -304,10 +292,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 class VerisureOptionsFlowHandler(OptionsFlow):
     """Handle Verisure options."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Verisure options flow."""
-        self.entry = entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -324,7 +308,7 @@ class VerisureOptionsFlowHandler(OptionsFlow):
                     vol.Optional(
                         CONF_LOCK_CODE_DIGITS,
                         description={
-                            "suggested_value": self.entry.options.get(
+                            "suggested_value": self.config_entry.options.get(
                                 CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
                             )
                         },

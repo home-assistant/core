@@ -49,7 +49,7 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
 
         price_data = [
             {
-                "start_time": dt.datetime.fromisoformat(starts_at),
+                "start_time": starts_at,
                 "price": price,
                 "level": tibber_home.price_level.get(starts_at),
             }
@@ -57,7 +57,9 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
         ]
 
         selected_data = [
-            price for price in price_data if start <= price["start_time"] < end
+            price
+            for price in price_data
+            if start <= dt.datetime.fromisoformat(price["start_time"]) < end
         ]
         tibber_prices[home_nickname] = selected_data
 

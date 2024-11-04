@@ -13,7 +13,7 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -193,6 +193,14 @@ async def test_reauth(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
+        suggested_values = {
+            key: key.description.get("suggested_value")
+            for key in result["data_schema"].schema
+        }
+        assert suggested_values[CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
+        assert suggested_values[CONF_PASSWORD] == wrong_password
+        assert suggested_values[CONF_REGION] == FIXTURE_USER_INPUT[CONF_REGION]
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
         )
@@ -203,3 +211,103 @@ async def test_reauth(hass: HomeAssistant) -> None:
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
         assert len(mock_setup_entry.mock_calls) == 2
+
+
+async def test_reauth_unique_id_abort(hass: HomeAssistant) -> None:
+    """Test aborting the reauth form if unique_id changes."""
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=login_sideeffect,
+        autospec=True,
+    ):
+        wrong_password = "wrong"
+
+        config_entry_with_wrong_password = deepcopy(FIXTURE_CONFIG_ENTRY)
+        config_entry_with_wrong_password["data"][CONF_PASSWORD] = wrong_password
+
+        config_entry = MockConfigEntry(**config_entry_with_wrong_password)
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.data == config_entry_with_wrong_password["data"]
+
+        result = await config_entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**FIXTURE_USER_INPUT, CONF_REGION: "north_america"}
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "account_mismatch"
+        assert config_entry.data == config_entry_with_wrong_password["data"]
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test the reconfiguration form."""
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=login_sideeffect,
+        autospec=True,
+    ):
+        config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await config_entry.start_reconfigure_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        suggested_values = {
+            key: key.description.get("suggested_value")
+            for key in result["data_schema"].schema
+        }
+        assert suggested_values[CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
+        assert suggested_values[CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+        assert suggested_values[CONF_REGION] == FIXTURE_USER_INPUT[CONF_REGION]
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "reconfigure_successful"
+        assert config_entry.data == FIXTURE_COMPLETE_ENTRY
+
+
+async def test_reconfigure_unique_id_abort(hass: HomeAssistant) -> None:
+    """Test aborting the reconfiguration form if unique_id changes."""
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=login_sideeffect,
+        autospec=True,
+    ):
+        config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await config_entry.start_reconfigure_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**FIXTURE_USER_INPUT, CONF_USERNAME: "somebody@email.com"},
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "account_mismatch"
+        assert config_entry.data == FIXTURE_COMPLETE_ENTRY

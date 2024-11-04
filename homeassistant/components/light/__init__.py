@@ -7,11 +7,11 @@ import csv
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag, StrEnum
-from functools import cached_property
 import logging
 import os
 from typing import Any, Self, cast, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -408,7 +408,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     def preprocess_data(data: dict[str, Any]) -> VolDictType:
         """Preprocess the service data."""
         base: VolDictType = {
-            entity_field: data.pop(entity_field)
+            entity_field: data.pop(entity_field)  # type: ignore[arg-type]
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
         }

@@ -6,10 +6,11 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from functools import cached_property, partial
+from functools import partial
 import logging
 from typing import Any, Protocol, cast
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api

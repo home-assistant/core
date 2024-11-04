@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
@@ -57,7 +57,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             address=data[CONF_HOST],
             blid=data[CONF_BLID],
             password=data[CONF_PASSWORD],
-            continuous=False,
+            continuous=True,
             delay=data[CONF_DELAY],
         )
     )
@@ -92,7 +92,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> RoombaOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return RoombaOptionsFlowHandler(config_entry)
+        return RoombaOptionsFlowHandler()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -130,7 +130,9 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         # going for a longer hostname we abort so the user
         # does not see two flows if discovery fails.
         for progress in self._async_in_progress():
-            flow_unique_id: str = progress["context"]["unique_id"]
+            flow_unique_id = progress["context"].get("unique_id")
+            if not flow_unique_id:
+                continue
             if flow_unique_id.startswith(self.blid):
                 return self.async_abort(reason="short_blid")
             if self.blid.startswith(flow_unique_id):
@@ -298,7 +300,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class RoombaOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class RoombaOptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
     async def async_step_init(

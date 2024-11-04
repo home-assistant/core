@@ -100,8 +100,6 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self._device_name = device_name
         self._tado = tado
         self._active = False
-        self._latitude = None
-        self._longitude = None
 
     @callback
     def update_state(self) -> None:
@@ -159,13 +157,3 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     def location_name(self) -> str:
         """Return the state of the device."""
         return STATE_HOME if self._active else STATE_NOT_HOME
-
-    @property
-    def latitude(self) -> None:
-        """Return latitude value of the device."""
-        return None
-
-    @property
-    def longitude(self) -> None:
-        """Return longitude value of the device."""
-        return None
