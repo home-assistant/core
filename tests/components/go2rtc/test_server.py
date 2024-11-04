@@ -47,6 +47,7 @@ def mock_tempfile() -> Generator[Mock]:
 )
 async def test_server_run_success(
     mock_create_subprocess: AsyncMock,
+    rest_client: AsyncMock,
     server_stdout: list[str],
     server: Server,
     caplog: pytest.LogCaptureFixture,
@@ -95,7 +96,7 @@ webrtc:
 
 @pytest.mark.usefixtures("mock_tempfile")
 async def test_server_timeout_on_stop(
-    mock_create_subprocess: MagicMock, server: Server
+    mock_create_subprocess: MagicMock, rest_client: AsyncMock, server: Server
 ) -> None:
     """Test server run where the process takes too long to terminate."""
     # Start server thread
