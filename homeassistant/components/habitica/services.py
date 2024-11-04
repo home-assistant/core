@@ -79,13 +79,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             "deprecated_api_call",
-            breaks_in_ha_version="2025.5.0",
+            breaks_in_ha_version="2025.6.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_api_call",
         )
         _LOGGER.warning(
-            "Deprecated action called: 'habitica.api_call' is deprecated and will be removed in Home Assistant version 2025.5.0"
+            "Deprecated action called: 'habitica.api_call' is deprecated and will be removed in Home Assistant version 2025.6.0"
         )
 
         name = call.data[ATTR_NAME]
