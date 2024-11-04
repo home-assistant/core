@@ -32,7 +32,6 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CAST_SKILL,
 )
-from .types import HabiticaConfigEntry
 from .util import get_config_entry
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,9 +86,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def cast_skill(call: ServiceCall) -> ServiceResponse:
         """Skill action."""
-        entry: HabiticaConfigEntry = get_config_entry(
-            hass, call.data[ATTR_CONFIG_ENTRY]
-        )
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
         skill = {
             "pickpocket": {"spellId": "pickPocket", "cost": "10 MP"},
