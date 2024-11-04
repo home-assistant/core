@@ -101,16 +101,32 @@ async def _async_update_cloudflare(
     _LOGGER.debug("Records: %s", records)
 
     session = async_get_clientsession(hass, family=socket.AF_INET)
+    session_ipv6 = async_get_clientsession(hass, family=socket.AF_INET6)
+
     location_info = await async_detect_location_info(session)
+    location_info_v6 = await async_detect_location_info(session_ipv6)
 
-    if not location_info or not is_ipv4_address(location_info.ip):
-        raise HomeAssistantError("Could not get external IPv4 address")
+    filtered_records = []
 
-    filtered_records = [
-        record
-        for record in records
-        if record["name"] in target_records and record["content"] != location_info.ip
-    ]
+    if not location_info and is_ipv4_address(location_info.ip):
+        for record in records:
+            if (
+                record["name"] in target_records
+                and record["content"] != location_info.ip
+                and record["type"] == "A"
+            ):
+                record["content"] = location_info.ip
+                filtered_records.append(record)
+
+    if not location_info_v6 and is_ipv4_address(location_info_v6.ip):
+        for record in records:
+            if (
+                record["name"] in target_records
+                and record["content"] != location_info_v6.ip
+                and record["type"] == "AAAA"
+            ):
+                record["content"] = location_info_v6.ip
+                filtered_records.append(record)
 
     if len(filtered_records) == 0:
         _LOGGER.debug("All target records are up to date")
@@ -121,7 +137,7 @@ async def _async_update_cloudflare(
             client.update_dns_record(
                 zone_id=dns_zone["id"],
                 record_id=record["id"],
-                record_content=location_info.ip,
+                record_content=record["content"],
                 record_name=record["name"],
                 record_type=record["type"],
                 record_proxied=record["proxied"],
