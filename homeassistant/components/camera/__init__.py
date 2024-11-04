@@ -798,7 +798,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             or type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
         ):
-            # Camera has not a native WebRTC implementation
+            # Camera doesn't have a native WebRTC implementation
             new_provider = await self._async_get_supported_webrtc_provider(
                 async_get_supported_provider
             )
