@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+import secrets
 from typing import Any
 import uuid
 
@@ -29,6 +30,7 @@ from .const import (
     PREF_ALEXA_ENTITY_CONFIGS,
     PREF_ALEXA_REPORT_STATE,
     PREF_ALEXA_SETTINGS_VERSION,
+    PREF_BACKUP_ENCRYPTION_KEY,
     PREF_CLOUD_USER,
     PREF_CLOUDHOOKS,
     PREF_ENABLE_ALEXA,
@@ -208,6 +210,17 @@ class CloudPreferences:
 
         await self._save_prefs(prefs)
 
+    async def async_set_backup_encryption_key(self) -> str:
+        """Set the backup encryption key."""
+        backup_encryption_key = secrets.token_hex(64)
+        await self._save_prefs(
+            {
+                **self._prefs,
+                PREF_BACKUP_ENCRYPTION_KEY: backup_encryption_key,
+            }
+        )
+        return backup_encryption_key
+
     async def async_set_username(self, username: str | None) -> bool:
         """Set the username that is logged in."""
         # Logging out.
@@ -352,6 +365,11 @@ class CloudPreferences:
     def cloudhooks(self) -> dict[str, Any]:
         """Return the published cloud webhooks."""
         return self._prefs.get(PREF_CLOUDHOOKS, {})  # type: ignore[no-any-return]
+
+    @property
+    def backup_encryption_key(self) -> str | None:
+        """Return the backup encryption key."""
+        return self._prefs.get(PREF_BACKUP_ENCRYPTION_KEY)
 
     @property
     def instance_id(self) -> str | None:

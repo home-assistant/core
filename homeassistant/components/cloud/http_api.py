@@ -92,6 +92,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, thingtalk_convert)
     websocket_api.async_register_command(hass, tts_info)
 
+    websocket_api.async_register_command(hass, backup_generate_encryption_key)
+
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
@@ -858,5 +860,27 @@ def tts_info(
                 for language, voices in TTS_VOICES.items()
                 for voice in voices
             ]
+        },
+    )
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {vol.Required("type"): "cloud/backup/generate_encryption_key"}
+)
+@websocket_api.async_response
+async def backup_generate_encryption_key(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to generate encryption key."""
+    connection.send_result(
+        msg["id"],
+        {
+            "backup_encryption_key": await hass.data[
+                DATA_CLOUD
+            ].client.prefs.async_set_backup_encryption_key()
         },
     )

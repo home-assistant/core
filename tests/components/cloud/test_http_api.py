@@ -1668,6 +1668,27 @@ async def test_tts_info(
     }
 
 
+async def test_set_backup_encryption_key(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setting the backup encryption key."""
+    mock_token_hex = "abc123321cba"
+    client = await hass_ws_client(hass)
+
+    with patch("secrets.token_hex", return_value=mock_token_hex):
+        await client.send_json_auto_id({"type": "cloud/backup/generate_encryption_key"})
+        response = await client.receive_json()
+
+    assert response["result"]["backup_encryption_key"] == mock_token_hex
+    assert cloud.client.prefs.backup_encryption_key == mock_token_hex
+
+    assert hass_storage[DOMAIN]["data"]["backup_encryption_key"] == mock_token_hex
+
+
 @pytest.mark.parametrize(
     ("endpoint", "data"),
     [
