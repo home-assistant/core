@@ -39,13 +39,12 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
     """A To-do List representation of the ingredients in the Cookidoo Shopping List."""
 
     _attr_translation_key = "ingredient_list"
-    _attr_name = "Ingredients"
     _attr_supported_features = TodoListEntityFeature.UPDATE_TODO_ITEM
 
     def __init__(self, coordinator: CookidooDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_ingredients"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_ingredients"
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -55,9 +54,11 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
                 uid=item["id"],
                 summary=item["name"],
                 description=item["description"] or "",
-                status=TodoItemStatus.COMPLETED
-                if item["isOwned"]
-                else TodoItemStatus.NEEDS_ACTION,
+                status=(
+                    TodoItemStatus.COMPLETED
+                    if item["isOwned"]
+                    else TodoItemStatus.NEEDS_ACTION
+                ),
             )
             for item in self.coordinator.data[TODO_INGREDIENTS]
         ]
@@ -95,7 +96,6 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
     """A To-do List representation of the additional items in the Cookidoo Shopping List."""
 
     _attr_translation_key = "additional_item_list"
-    _attr_name = "Additional Items"
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
@@ -105,7 +105,7 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
     def __init__(self, coordinator: CookidooDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_additional_items"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_additional_items"
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -115,9 +115,11 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
             TodoItem(
                 uid=item["id"],
                 summary=item["name"],
-                status=TodoItemStatus.COMPLETED
-                if item["isOwned"]
-                else TodoItemStatus.NEEDS_ACTION,
+                status=(
+                    TodoItemStatus.COMPLETED
+                    if item["isOwned"]
+                    else TodoItemStatus.NEEDS_ACTION
+                ),
             )
             for item in self.coordinator.data[TODO_ADDITIONAL_ITEMS]
         ]

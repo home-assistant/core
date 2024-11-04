@@ -11,7 +11,7 @@
       },
       "reauth_confirm": {
         "title": "Login again to Cookidoo",
-        "description": "Pleas login again to cookidoo to continue use this integration.",
+        "description": "Please log in to Cookidoo again to continue using this integration.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -395,7 +395,7 @@
         "th_zh-hans": "Thailand - Chinese (Simplified)",
         "th_es": "Thailand - Spanish",
         "th_vi": "Thailand - Vietnamese",
-        "tr_tr-tr": "Turkey - Turkish (Turkey)",
+        "tr_tr-tr": "Türkiye - Turkish (Türkiye)",
         "ua_en": "Ukraine - English",
         "ua_fr": "Ukraine - French",
         "ua_el": "Ukraine - Greek",

@@ -47,15 +47,15 @@ class CookidooDataUpdateCoordinator(
             ingredients = await self.cookidoo.get_ingredients()
             additional_items = await self.cookidoo.get_additional_items()
         except CookidooAuthException as e:
-            # try to recover by refreshing access token, otherwise
-            # initiate reauth flow
             try:
                 await self.cookidoo.refresh_token()
             except CookidooAuthException as exc:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="setup_authentication_exception",
-                    translation_placeholders={CONF_EMAIL: self.cookidoo._cfg["email"]},  # noqa: SLF001
+                    translation_placeholders={
+                        CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
+                    },
                 ) from exc
             raise UpdateFailed(
                 "Authentication failed but re-authentication was successful, trying again later"
