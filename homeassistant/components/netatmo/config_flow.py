@@ -102,7 +102,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Netatmo options flow."""
-        self._options = deepcopy(dict(config_entry.options))
+        self.initialize_options(config_entry)
         self.options.setdefault(CONF_WEATHER_AREAS, {})
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
