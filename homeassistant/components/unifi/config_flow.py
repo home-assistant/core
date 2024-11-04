@@ -38,7 +38,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from . import UnifiConfigEntry
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -82,7 +81,7 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
         config_entry: ConfigEntry,
     ) -> UnifiOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return UnifiOptionsFlowHandler(config_entry)
+        return UnifiOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
@@ -247,11 +246,6 @@ class UnifiOptionsFlowHandler(OptionsFlow):
     """Handle Unifi Network options."""
 
     hub: UnifiHub
-
-    def __init__(self, config_entry: UnifiConfigEntry) -> None:
-        """Initialize UniFi Network options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
