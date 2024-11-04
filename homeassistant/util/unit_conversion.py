@@ -175,18 +175,7 @@ class AreaConverter(BaseUnitConverter):
         UnitOfArea.ACRES: 1 / _ACRE_TO_M2,
         UnitOfArea.HECTARES: 1 / _HECTARE_TO_M2,
     }
-    VALID_UNITS = {
-        UnitOfArea.SQUARE_METERS,
-        UnitOfArea.SQUARE_CENTIMETERS,
-        UnitOfArea.SQUARE_MILLIMETERS,
-        UnitOfArea.SQUARE_KILOMETERS,
-        UnitOfArea.SQUARE_INCHES,
-        UnitOfArea.SQUARE_FEET,
-        UnitOfArea.SQUARE_YARDS,
-        UnitOfArea.SQUARE_MILES,
-        UnitOfArea.ACRES,
-        UnitOfArea.HECTARES,
-    }
+    VALID_UNITS = set(UnitOfArea)
 
 
 class DistanceConverter(BaseUnitConverter):
