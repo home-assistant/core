@@ -18,6 +18,7 @@ def rest_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.go2rtc.Go2RtcRestClient",
         ) as mock_client,
+        patch("homeassistant.components.go2rtc.server.Go2RtcRestClient", mock_client),
     ):
         client = mock_client.return_value
         client.streams = Mock(spec_set=_StreamClient)

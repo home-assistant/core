@@ -38,7 +38,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
 
-from .const import CONF_DEBUG_UI, DEBUG_UI_URL_MESSAGE, DOMAIN
+from .const import CONF_DEBUG_UI, DEBUG_UI_URL_MESSAGE, DEFAULT_URL, DOMAIN
 from .server import Server
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-        url = "http://localhost:1984/"
+        url = DEFAULT_URL
 
     hass.data[_DATA_GO2RTC] = url
     discovery_flow.async_create_flow(
