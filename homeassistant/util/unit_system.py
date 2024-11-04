@@ -254,18 +254,18 @@ METRIC_SYSTEM = UnitSystem(
             for unit in UnitOfPressure
             if unit != UnitOfPressure.HPA
         },
-        # Convert non-metric distances
-        ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
-        ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
-        ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
-        ("distance", UnitOfLength.NAUTICAL_MILES): UnitOfLength.KILOMETERS,
-        ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric area
         ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_MILLIMETERS,
         ("area", UnitOfArea.SQUARE_FEET): UnitOfArea.SQUARE_METERS,
         ("area", UnitOfArea.SQUARE_MILES): UnitOfArea.SQUARE_KILOMETERS,
         ("area", UnitOfArea.SQUARE_YARDS): UnitOfArea.SQUARE_METERS,
         ("area", UnitOfArea.ACRES): UnitOfArea.HECTARES,
+        # Convert non-metric distances
+        ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
+        ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
+        ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
+        ("distance", UnitOfLength.NAUTICAL_MILES): UnitOfLength.KILOMETERS,
+        ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
@@ -311,13 +311,13 @@ METRIC_SYSTEM = UnitSystem(
             if unit not in (UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.KNOTS)
         },
     },
+    area=UnitOfArea.SQUARE_METERS,
     length=UnitOfLength.KILOMETERS,
     mass=UnitOfMass.GRAMS,
     pressure=UnitOfPressure.PA,
     temperature=UnitOfTemperature.CELSIUS,
     volume=UnitOfVolume.LITERS,
     wind_speed=UnitOfSpeed.METERS_PER_SECOND,
-    area=UnitOfArea.SQUARE_METERS,
 )
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
@@ -330,17 +330,17 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
             for unit in UnitOfPressure
             if unit != UnitOfPressure.INHG
         },
-        # Convert non-USCS distances
-        ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
-        ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
-        ("distance", UnitOfLength.METERS): UnitOfLength.FEET,
-        ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS areas
         ("area", UnitOfArea.SQUARE_METERS): UnitOfArea.SQUARE_FEET,
         ("area", UnitOfArea.SQUARE_CENTIMETERS): UnitOfArea.SQUARE_INCHES,
         ("area", UnitOfArea.SQUARE_MILLIMETERS): UnitOfArea.SQUARE_INCHES,
         ("area", UnitOfArea.SQUARE_KILOMETERS): UnitOfArea.SQUARE_MILES,
         ("area", UnitOfArea.HECTARES): UnitOfArea.ACRES,
+        # Convert non-USCS distances
+        ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
+        ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
+        ("distance", UnitOfLength.METERS): UnitOfLength.FEET,
+        ("distance", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS precipitation
@@ -389,13 +389,13 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
             if unit not in (UnitOfSpeed.KNOTS, UnitOfSpeed.MILES_PER_HOUR)
         },
     },
+    area=UnitOfArea.SQUARE_FEET,
     length=UnitOfLength.MILES,
     mass=UnitOfMass.POUNDS,
     pressure=UnitOfPressure.PSI,
     temperature=UnitOfTemperature.FAHRENHEIT,
     volume=UnitOfVolume.GALLONS,
     wind_speed=UnitOfSpeed.MILES_PER_HOUR,
-    area=UnitOfArea.SQUARE_FEET,
 )
 
 IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM

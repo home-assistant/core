@@ -660,13 +660,6 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         ),
         (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.INHG, None),
         (SensorDeviceClass.ATMOSPHERIC_PRESSURE, "very_much", None),
-        # Test distance conversion
-        (SensorDeviceClass.DISTANCE, UnitOfLength.CENTIMETERS, UnitOfLength.INCHES),
-        (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, UnitOfLength.MILES),
-        (SensorDeviceClass.DISTANCE, UnitOfLength.METERS, UnitOfLength.FEET),
-        (SensorDeviceClass.DISTANCE, UnitOfLength.MILLIMETERS, UnitOfLength.INCHES),
-        (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, None),
-        (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test area conversion
         (
             SensorDeviceClass.AREA,
@@ -682,6 +675,13 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_MILES),
         (SensorDeviceClass.AREA, UnitOfArea.HECTARES, UnitOfArea.ACRES),
         (SensorDeviceClass.AREA, "very_area", None),
+        # Test distance conversion
+        (SensorDeviceClass.DISTANCE, UnitOfLength.CENTIMETERS, UnitOfLength.INCHES),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, UnitOfLength.MILES),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.METERS, UnitOfLength.FEET),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.MILLIMETERS, UnitOfLength.INCHES),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, None),
+        (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test gas meter conversion
         (SensorDeviceClass.GAS, UnitOfVolume.CENTUM_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
