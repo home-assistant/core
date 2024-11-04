@@ -28,12 +28,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import (
-    CONF_LOCALIZATION,
-    DEFAULT_LOCALIZATION,
-    DOMAIN,
-    LOCALIZATION_SPLIT_CHAR,
-)
+from .const import CONF_LOCALIZATION, DOMAIN, LOCALIZATION_SPLIT_CHAR
 from .coordinator import CookidooConfigEntry
 from .helpers import cookidoo_localization_for_key
 
@@ -160,9 +155,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         self.localizations = await get_localization_options()
 
         self.LOCALIZATION_DATA_SCHEMA = {
-            vol.Required(
-                CONF_LOCALIZATION, default=DEFAULT_LOCALIZATION
-            ): SelectSelector(
+            vol.Required(CONF_LOCALIZATION): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key="localization",
