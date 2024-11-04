@@ -36,6 +36,8 @@ from .error import Disconnect
 from .messages import message_to_json_bytes
 from .util import describe_request
 
+CLOSE_MSG_TYPES = {WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING}
+
 if TYPE_CHECKING:
     from .connection import ActiveConnection
 
@@ -468,7 +470,7 @@ class WebSocketHandler:
             msg_type = msg.type
             msg_data = msg.data
 
-            if msg_type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
+            if msg_type in CLOSE_MSG_TYPES:
                 break
 
             if msg_type is WSMsgType.BINARY:
