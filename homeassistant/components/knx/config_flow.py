@@ -770,7 +770,6 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
-        self.config_entry = config_entry
         super().__init__(initial_data=config_entry.data)  # type: ignore[arg-type]
 
     @callback
