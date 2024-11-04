@@ -179,7 +179,7 @@ get-mac==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.2.0
+charset-normalizer==3.4.0
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # Roborock, NAM, Brother, and GIOS.

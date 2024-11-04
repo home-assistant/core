@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
-from webrtc_models import RTCConfiguration, RTCIceServer
+from webrtc_models import RTCConfiguration, RTCIceCandidate, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -78,7 +78,14 @@ class WebRTCAnswer(WebRTCMessage):
 class WebRTCCandidate(WebRTCMessage):
     """WebRTC candidate."""
 
-    candidate: str
+    candidate: RTCIceCandidate
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the message."""
+        return {
+            "type": self._get_type(),
+            "candidate": self.candidate.candidate,
+        }
 
 
 @dataclass(frozen=True)
@@ -138,7 +145,9 @@ class CameraWebRTCProvider(ABC):
         """Handle the WebRTC offer and return the answer via the provided callback."""
 
     @abstractmethod
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidate
+    ) -> None:
         """Handle the WebRTC candidate."""
 
     @callback
@@ -319,7 +328,9 @@ async def ws_candidate(
         )
         return
 
-    await camera.async_on_webrtc_candidate(msg["session_id"], msg["candidate"])
+    await camera.async_on_webrtc_candidate(
+        msg["session_id"], RTCIceCandidate(msg["candidate"])
+    )
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 

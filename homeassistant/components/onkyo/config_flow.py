@@ -11,7 +11,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -323,13 +322,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         return OnkyoOptionsFlowHandler(config_entry)
 
 
-class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OnkyoOptionsFlowHandler(OptionsFlow):
     """Handle an options flow for Onkyo."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
-
+        self.initialize_options(config_entry)
         sources_store: dict[str, str] = self.options[OPTION_INPUT_SOURCES]
         sources = {InputSource(k): v for k, v in sources_store.items()}
         self.options[OPTION_INPUT_SOURCES] = sources
