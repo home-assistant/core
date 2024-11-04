@@ -235,14 +235,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def score_task(call: ServiceCall) -> ServiceResponse:
         """Score a task action."""
-        entry: HabiticaConfigEntry | None
-        if not (
-            entry := hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY])
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_found",
-            )
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
         try:
             task_id, task_value = next(
