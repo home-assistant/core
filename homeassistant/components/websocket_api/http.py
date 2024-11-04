@@ -465,8 +465,8 @@ class WebSocketHandler:
         # Command phase
         while not wsock.closed:
             msg = await wsock.receive()
-            type_ = msg.type
-            data = msg.data
+            msg_type = msg.type
+            msg_data = msg.data
 
             if type_ in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
                 break
