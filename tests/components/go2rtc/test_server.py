@@ -71,13 +71,14 @@ async def test_server_run_success(
     mock_tempfile.write.assert_called_once_with(
         f"""
 api:
-  listen: "{api_ip}:1984"
+  listen: "{api_ip}:11984"
 
 rtsp:
   # ffmpeg needs rtsp for opus audio transcoding
-  listen: "127.0.0.1:8554"
+  listen: "127.0.0.1:18554"
 
 webrtc:
+  listen: ":18555/tcp"
   ice_servers: []
 """.encode()
     )
