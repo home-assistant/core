@@ -27,30 +27,30 @@ class ZimiController:
         """Initialize."""
         self.controller: ControlPoint = None
         self.hass = hass
-        self.config = config
+        self.config_entry = config
 
-        if self.config.data.get(VERBOSITY, 0) > 1:
+        if self.config_entry.data.get(VERBOSITY, 0) > 1:
             _LOGGER.setLevel(logging.DEBUG)
 
-        _LOGGER.debug("Initialising:\n%s", pprint.pformat(self.config.data))
+        _LOGGER.debug("Initialising:\n%s", pprint.pformat(self.config_entry.data))
 
         # store (this) bridge object in hass data
-        hass.data.setdefault(DOMAIN, {})[self.config.entry_id] = self
+        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
 
     @property
     def host(self) -> str:
         """Return the host of this hub."""
-        return self.config.data[CONF_HOST]
+        return self.config_entry.data[CONF_HOST]
 
     @property
     def port(self) -> int:
         """Return the host of this hub."""
-        return self.config.data[CONF_PORT]
+        return self.config_entry.data[CONF_PORT]
 
     @property
     def timeout(self) -> int:
         """Return the timeout of this hub."""
-        return self.config.data[TIMEOUT]
+        return self.config_entry.data[TIMEOUT]
 
     async def connect(self) -> bool:
         """Initialize Connection with the Zimi Controller."""
@@ -85,10 +85,10 @@ class ZimiController:
             raise ConfigEntryNotReady(error) from error
 
         if self.controller:
-            # self.hass.config_entries.async_setup_platforms(self.config, PLATFORMS)
+            # self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
             self.hass.data[CONTROLLER] = self
             await self.hass.config_entries.async_forward_entry_setups(
-                self.config, PLATFORMS
+                self.config_entry, PLATFORMS
             )
 
         return True
@@ -100,14 +100,14 @@ class ZimiController:
     @property
     def verbosity(self) -> int:
         """Return the verbosity of this hub."""
-        return self.config.data[VERBOSITY]
+        return self.config_entry.data[VERBOSITY]
 
     @property
     def watchdog(self) -> int:
         """Return the watchdog timer of this hub."""
-        return self.config.data[WATCHDOG]
+        return self.config_entry.data[WATCHDOG]
 
     @property
     def zcc_verbosity(self) -> int:
         """Return the verbosity of the zcc-helper."""
-        return self.config.data[VERBOSITY] - 1  # Reduced verbosity for zcc-helper
+        return self.config_entry.data[VERBOSITY] - 1  # Reduced verbosity for zcc-helper

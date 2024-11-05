@@ -7,3 +7,4 @@ PLATFORMS = ["light"]
 TIMEOUT = "timeout"
 VERBOSITY = "verbosity"
 WATCHDOG = "watchdog"
+MAC = "mac"

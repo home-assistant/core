@@ -2,10 +2,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "Zimi",
+        "description": "You can find the MAC on the back of your Zimi Cloud Connect.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "mac": "MAC"
+        },
+        "data_description": {
+          "mac": "You can find the MAC on the back of your Zimi Cloud Connect."
         }
       }
     },

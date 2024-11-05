@@ -12,8 +12,9 @@ from zcc import ControlPointDiscoveryService, ControlPointError
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN, TIMEOUT, VERBOSITY, WATCHDOG
+from .const import DOMAIN, MAC, TIMEOUT, VERBOSITY, WATCHDOG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +22,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_HOST, default=""): str,
         vol.Optional(CONF_PORT, default=5003): int,
-        vol.Optional(TIMEOUT, default=3): int,
-        vol.Optional(WATCHDOG, default=1800): int,
-        vol.Optional(VERBOSITY, default=1): int,
+        vol.Required(MAC): str,
     }
 )
 
@@ -63,6 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during configuration steps")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(data["mac"])
             return self.async_create_entry(title=data["title"], data=data)
 
         return self.async_show_form(
@@ -72,14 +72,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the user input."""
 
-        if data[TIMEOUT] is None:
-            data[TIMEOUT] = 3
+        data[TIMEOUT] = 3
+        data[VERBOSITY] = 1
+        data[WATCHDOG] = 1800
 
-        if data[VERBOSITY] is None:
-            data[VERBOSITY] = 1
+        unformatted_mac = data[MAC]
+        data[MAC] = format_mac(data[MAC])
+        assert data[MAC] is not unformatted_mac
 
-        if data[WATCHDOG] is None:
-            data[WATCHDOG] = 1800
+        if data[CONF_PORT] is None:
+            data[CONF_PORT] = 5003
 
         if data[CONF_HOST] == "":
             try:
@@ -96,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(10)
-                s.connect((data[CONF_HOST], int(data[CONF_PORT])))
+                s.connect((data[CONF_HOST], data[CONF_PORT]))
             except ConnectionRefusedError as e:
                 raise ConnectionRefused from e
             except TimeoutError as e:
@@ -112,6 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "timeout": data[TIMEOUT],
             "verbosity": data[VERBOSITY],
             "watchdog": data[WATCHDOG],
+            "mac": data[MAC],
         }
 
 
