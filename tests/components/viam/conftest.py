@@ -7,6 +7,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from viam.app.viam_client import ViamClient
+from viam.rpc.dial import DialOptions
+
+
+@dataclass
+class MockOrg:
+    """Fake organization for testing."""
+
+    id: str = "34"
+    name: str = "My org"
 
 
 @dataclass
@@ -18,8 +27,8 @@ class MockLocation:
 
 
 @dataclass
-class MockRobot:
-    """Fake robot for testing."""
+class MockMachine:
+    """Fake machine for testing."""
 
     id: str = "1234"
     name: str = "test"
@@ -43,18 +52,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="mock_viam_client")
-def mock_viam_client_fixture() -> Generator[tuple[MagicMock, MockRobot]]:
+def mock_viam_client_fixture() -> (
+    Generator[tuple[MagicMock, MockOrg, MockLocation, MockMachine]]
+):
     """Override ViamClient from Viam SDK."""
     with (
         patch("viam.app.viam_client.ViamClient") as MockClient,
+        patch.object(DialOptions, "with_api_key"),
         patch.object(ViamClient, "create_from_dial_options") as mock_create_client,
     ):
         instance: MagicMock = MockClient.return_value
         mock_create_client.return_value = instance
 
+        mock_org = MockOrg()
         mock_location = MockLocation()
-        mock_robot = MockRobot()
+        mock_machine = MockMachine()
+        instance.app_client.list_organizations.return_value = async_return([mock_org])
         instance.app_client.list_locations.return_value = async_return([mock_location])
         instance.app_client.get_location.return_value = async_return(mock_location)
-        instance.app_client.list_robots.return_value = async_return([mock_robot])
-        yield instance, mock_robot
+        instance.app_client.list_robots.return_value = async_return([mock_machine])
+        yield instance, mock_org, mock_location, mock_machine

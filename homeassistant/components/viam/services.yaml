@@ -1,5 +1,10 @@
 capture_data:
   fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
     values:
       required: true
       selector:
@@ -14,6 +19,11 @@ capture_data:
         text:
 capture_image:
   fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
     filepath:
       required: false
       selector:
@@ -34,6 +44,11 @@ capture_image:
         text:
 get_classifications:
   fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
     classifier_name:
       required: true
       selector:
@@ -48,14 +63,6 @@ get_classifications:
       required: false
       selector:
         number:
-    robot_address:
-      required: false
-      selector:
-        text:
-    robot_secret:
-      required: false
-      selector:
-        text:
     filepath:
       required: false
       selector:
@@ -68,6 +75,11 @@ get_classifications:
             domain: camera
 get_detections:
   fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
     detector_name:
       required: true
       selector:
@@ -78,14 +90,6 @@ get_detections:
       selector:
         text:
           type: number
-    robot_address:
-      required: false
-      selector:
-        text:
-    robot_secret:
-      required: false
-      selector:
-        text:
     filepath:
       required: false
       selector:
