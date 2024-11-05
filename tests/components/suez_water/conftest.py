@@ -7,15 +7,24 @@ from pysuez import AggregatedData, PriceResult
 from pysuez.const import ATTRIBUTION
 import pytest
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.suez_water.const import DOMAIN
 
 from tests.common import MockConfigEntry
+from tests.conftest import RecorderInstanceGenerator
 
 MOCK_DATA = {
     "username": "test-username",
     "password": "test-password",
-    "counter_id": "test-counter",
+    "counter_id": "123456",
 }
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
 
 
 @pytest.fixture
@@ -30,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+def mock_setup_entry(recorder_mock: Recorder) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.suez_water.async_setup_entry", return_value=True
@@ -39,7 +48,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="suez_client")
-def mock_suez_client() -> Generator[AsyncMock]:
+def mock_suez_client(recorder_mock: Recorder) -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
     with (
         patch(
