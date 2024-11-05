@@ -137,9 +137,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     info_coordinator=TeslemetryEnergySiteInfoCoordinator(
                         hass, api, product
                     ),
-                    history_coordinator=TeslemetryEnergyHistoryCoordinator(hass, api)
-                    if powerwall
-                    else None,
+                    history_coordinator=(
+                        TeslemetryEnergyHistoryCoordinator(hass, api)
+                        if powerwall
+                        else None
+                    ),
                     id=site_id,
                     device=device,
                 )
