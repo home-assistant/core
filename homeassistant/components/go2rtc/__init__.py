@@ -156,8 +156,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
     except Go2RtcVersionError as err:
-        _LOGGER.warning("The go2rtc server version is not supported, %s", err)
-        return False
+        raise ConfigEntryNotReady(
+            f"The go2rtc server version is not supported, {err}"
+        ) from err
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False

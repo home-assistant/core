@@ -664,7 +664,7 @@ async def test_setup_with_retryable_setup_entry_error_default_server(
     [
         (
             Go2RtcVersionError("1.9.4", "1.9.5", "2.0.0"),
-            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
             ERR_UNSUPPORTED_VERSION,
         ),
     ],
