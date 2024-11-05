@@ -9,7 +9,7 @@ from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.chemistry import DOSE_STATE
 from screenlogicpy.device_const.pump import PUMP_TYPE
-from screenlogicpy.device_const.system import EQUIPMENT_FLAG
+from screenlogicpy.device_const.system import CONTROLLER_STATE, EQUIPMENT_FLAG
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -58,6 +58,15 @@ SUPPORTED_CORE_SENSORS = [
         key=VALUE.AIR_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ScreenLogicPushSensorDescription(
+        subscription_code=CODE.STATUS_CHANGED,
+        data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
+        key=VALUE.STATE,
+        device_class=SensorDeviceClass.ENUM,
+        options=["Unknown", "Ready", "Sync", "Service"],
+        value_mod=lambda val: CONTROLLER_STATE(val).title,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
