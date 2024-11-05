@@ -135,6 +135,14 @@
           "on": "mdi:sleep"
         }
       }
+    },
+    "binary_sensor": {
+      "pending_quest": {
+        "default": "mdi:script-outline",
+        "state": {
+          "on": "mdi:script-text-outline"
+        }
+      }
     }
   },
   "services": {
