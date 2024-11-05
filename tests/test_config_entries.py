@@ -7441,6 +7441,7 @@ async def test_options_flow_config_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -7468,10 +7469,7 @@ async def test_options_flow_deprecated_config_entry_setter(
 
                 def __init__(self, entry) -> None:
                     """Test initialisation."""
-                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-                        self.config_entry = entry
-                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-                        self.options = entry.options
+                    self.config_entry = entry
 
                 async def async_step_init(self, user_input=None):
                     """Test user step."""
