@@ -405,19 +405,18 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        options = self.config_entry.options
         data_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_CONSIDER_HOME,
-                    default=self.options.get(
+                    default=options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
                 vol.Optional(
                     CONF_OLD_DISCOVERY,
-                    default=self.options.get(
-                        CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
-                    ),
+                    default=options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY),
                 ): bool,
             }
         )
