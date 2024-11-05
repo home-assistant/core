@@ -65,7 +65,7 @@ class CookidooDataUpdateCoordinator(
                 "Unable to connect and retrieve data from cookidoo"
             ) from e
 
-        list_dict: dict[str, list[CookidooItem]] = {}
-        list_dict[TODO_INGREDIENTS] = ingredients
-        list_dict[TODO_ADDITIONAL_ITEMS] = additional_items
-        return list_dict
+        return {
+            TODO_INGREDIENTS: ingredients,
+            TODO_ADDITIONAL_ITEMS: additional_items,
+        }

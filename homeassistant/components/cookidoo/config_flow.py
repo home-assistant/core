@@ -53,7 +53,6 @@ AUTH_DATA_SCHEMA = {
 class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
 
-    VERSION = 1
     reauth_entry: CookidooConfigEntry
     reconfigure_entry: CookidooConfigEntry
     AUTH_DATA_SCHEMA: dict

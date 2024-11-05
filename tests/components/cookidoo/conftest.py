@@ -40,7 +40,7 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
-        client.login.return_value = cast(CookidooAuthResponse, {"name": "Bring"})
+        client.login.return_value = cast(CookidooAuthResponse, {"name": "Cookidoo"})
         client.get_ingredients.return_value = load_json_object_fixture(
             "ingredients.json", DOMAIN
         )["data"]
