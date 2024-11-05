@@ -1180,7 +1180,7 @@ AREA_SQUARE_METERS: Final = "m²"
 _DEPRECATED_AREA_SQUARE_METERS: Final = DeprecatedConstant(
     "AREA_SQUARE_METERS",
     "UnitOfArea.SQUARE_METERS",
-    "2025.5",
+    "2025.12",
 )
 """Deprecated: please use UnitOfArea.SQUARE_METERS"""
 
