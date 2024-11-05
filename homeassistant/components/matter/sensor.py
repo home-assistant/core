@@ -176,6 +176,7 @@ class MatterOperationalStateSensor(MatterSensor):
                 clusters.OperationalState.Attributes.OperationalState
             )
         )
+        self.current_phase = current_phase_str
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
