@@ -40,7 +40,7 @@ def get_feed(
 FEEDS = [get_feed(i + 1, unit=unit) for i, unit in enumerate(UNITS)]
 
 
-EMONCMS_FAILURE = {"success": False, "message": "failure"}
+EMONCMS_FAILURE = {"success": False, "message": "api_error"}
 
 FLOW_RESULT = {
     CONF_API_KEY: "my_api_key",

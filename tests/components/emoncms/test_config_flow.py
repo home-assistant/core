@@ -138,6 +138,6 @@ async def test_options_flow_failure(
     await setup_integration(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert result["errors"]["base"] == "failure"
+    assert result["errors"]["base"] == EMONCMS_FAILURE["message"]
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
