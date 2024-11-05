@@ -36,6 +36,7 @@ from .const import (
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
+    ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
@@ -94,6 +95,7 @@ UNHEALTHY_REASONS = {
 
 # Keys (type + context) of issues that when found should be made into a repair
 ISSUE_KEYS_FOR_REPAIRS = {
+    ISSUE_KEY_ADDON_BOOT_FAIL,
     "issue_mount_mount_failed",
     "issue_system_multiple_data_disks",
     "issue_system_reboot_required",
