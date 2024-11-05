@@ -12,7 +12,7 @@ ENV \
 ARG QEMU_CPU
 
 # Install uv
-RUN pip3 install uv==0.4.17
+RUN pip3 install uv==0.4.28
 
 WORKDIR /usr/src
 
@@ -54,7 +54,7 @@ RUN \
         "armv7") go2rtc_suffix='arm' ;; \
         *) go2rtc_suffix=${BUILD_ARCH} ;; \
     esac \
-    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.4/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
+    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.6/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
     && chmod +x /bin/go2rtc \
     # Verify go2rtc can be executed
     && go2rtc --version

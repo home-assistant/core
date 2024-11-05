@@ -250,7 +250,7 @@ async def test_reconfiguration(
     result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -285,7 +285,7 @@ async def test_reconfigure_errors(
     result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     mock_pyloadapi.login.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(

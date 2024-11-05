@@ -42,7 +42,7 @@ async def test_flow_import_failure(
         data=YAML,
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == EMONCMS_FAILURE["message"]
+    assert result["reason"] == "api_error"
 
 
 async def test_flow_import_already_configured(
@@ -138,6 +138,7 @@ async def test_options_flow_failure(
     await setup_integration(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert result["errors"]["base"] == "failure"
+    assert result["errors"]["base"] == "api_error"
+    assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"

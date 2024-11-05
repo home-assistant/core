@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/omnilogic",
   "iot_class": "cloud_polling",
   "loggers": ["config", "omnilogic"],
-  "requirements": ["omnilogic==0.4.5"]
+  "requirements": ["omnilogic==0.4.5"],
+  "single_config_entry": true
 }

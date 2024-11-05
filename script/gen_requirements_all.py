@@ -118,7 +118,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.0
+anyio==4.6.2.post1
 h11==0.14.0
 httpcore==1.0.5
 
@@ -140,6 +140,9 @@ backoff>=2.0
 # v2 has breaking changes (#99218).
 pydantic==1.10.18
 
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
+
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
 pubnub!=6.4.0
@@ -154,7 +157,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.28.2
+protobuf==5.28.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -176,7 +179,7 @@ get-mac==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.2.0
+charset-normalizer==3.4.0
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # Roborock, NAM, Brother, and GIOS.
@@ -202,6 +205,10 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# 5.0.0 breaks Timeout as a context manager
+# TypeError: 'Timeout' object does not support the context manager protocol
+async-timeout==4.0.3
 """
 
 GENERATED_MESSAGE = (

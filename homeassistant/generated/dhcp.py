@@ -38,10 +38,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E076D0*",
     },
     {
-        "domain": "awair",
-        "macaddress": "70886B1*",
-    },
-    {
         "domain": "axis",
         "registered_devices": True,
     },
@@ -279,6 +275,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "lm[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "mr[0-9][0-9][0-9][0-9][0-9][0-9]",
     },
     {
         "domain": "lametric",

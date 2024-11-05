@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from . import get_addons_info, get_issues_info
 from .const import (
+    ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
@@ -181,8 +182,8 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
         return placeholders
 
 
-class DetachedAddonIssueRepairFlow(SupervisorIssueRepairFlow):
-    """Handler for detached addon issue fixing flows."""
+class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
+    """Handler for addon issue fixing flows."""
 
     @property
     def description_placeholders(self) -> dict[str, str] | None:
@@ -210,7 +211,10 @@ async def async_create_fix_flow(
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:
         return DockerConfigIssueRepairFlow(issue_id)
-    if issue and issue.key == ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED:
-        return DetachedAddonIssueRepairFlow(issue_id)
+    if issue and issue.key in {
+        ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+        ISSUE_KEY_ADDON_BOOT_FAIL,
+    }:
+        return AddonIssueRepairFlow(issue_id)
 
     return SupervisorIssueRepairFlow(issue_id)

@@ -44,13 +44,14 @@ RECONNECT_DELAY = 5
 class NiceGODevice:
     """Nice G.O. device dataclass."""
 
+    type: str
     id: str
     name: str
     barrier_status: str
     light_status: bool | None
     fw_version: str
     connected: bool
-    vacation_mode: bool
+    vacation_mode: bool | None
 
 
 class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
@@ -85,7 +86,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         """Stop reconnecting if hass is stopping."""
         self._hass_stopping = True
 
-    async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
+    async def _parse_barrier(
+        self, device_type: str, barrier_state: BarrierState
+    ) -> NiceGODevice | None:
         """Parse barrier data."""
 
         device_id = barrier_state.deviceId
@@ -121,11 +124,15 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         fw_version = barrier_state.reported["deviceFwVersion"]
         if barrier_state.connectionState:
             connected = barrier_state.connectionState.connected
+        elif device_type == "Mms100":
+            connected = barrier_state.reported.get("radioConnected", 0) == 1
         else:
-            connected = False
-        vacation_mode = barrier_state.reported["vcnMode"]
+            # Assume connected
+            connected = True
+        vacation_mode = barrier_state.reported.get("vcnMode", None)
 
         return NiceGODevice(
+            type=device_type,
             id=device_id,
             name=name,
             barrier_status=barrier_status,
@@ -156,7 +163,8 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
                 barriers = await self.api.get_all_barriers()
                 parsed_barriers = [
-                    await self._parse_barrier(barrier.state) for barrier in barriers
+                    await self._parse_barrier(barrier.type, barrier.state)
+                    for barrier in barriers
                 ]
 
                 # Parse the barriers and save them in a dictionary
@@ -226,6 +234,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         _LOGGER.debug(data)
         raw_data = data["data"]["devicesStatesUpdateFeed"]["item"]
         parsed_data = await self._parse_barrier(
+            self.data[
+                raw_data["deviceId"]
+            ].type,  # Device type is not sent in device state update, and it can't change, so we just reuse the existing one
             BarrierState(
                 deviceId=raw_data["deviceId"],
                 desired=json.loads(raw_data["desired"]),
@@ -238,7 +249,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 else None,
                 version=raw_data["version"],
                 timestamp=raw_data["timestamp"],
-            )
+            ),
         )
         if parsed_data is None:
             return

@@ -137,6 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, TimerStatusIntentHandler())
     intent.async_register(hass, GetCurrentDateIntentHandler())
     intent.async_register(hass, GetCurrentTimeIntentHandler())
+    intent.async_register(hass, HelloIntentHandler())
 
     return True
 
@@ -239,6 +240,8 @@ class GetStateIntentHandler(intent.IntentHandler):
         vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("state"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("preferred_area_id"): cv.string,
+        vol.Optional("preferred_floor_id"): cv.string,
     }
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -280,7 +283,13 @@ class GetStateIntentHandler(intent.IntentHandler):
             device_classes=device_classes,
             assistant=intent_obj.assistant,
         )
-        match_result = intent.async_match_targets(hass, match_constraints)
+        match_preferences = intent.MatchTargetsPreferences(
+            area_id=slots.get("preferred_area_id", {}).get("value"),
+            floor_id=slots.get("preferred_floor_id", {}).get("value"),
+        )
+        match_result = intent.async_match_targets(
+            hass, match_constraints, match_preferences
+        )
         if (
             (not match_result.is_match)
             and (match_result.no_match_reason is not None)
@@ -356,7 +365,7 @@ class NevermindIntentHandler(intent.IntentHandler):
     description = "Cancels the current request and does nothing"
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
-        """Doe not do anything, and produces an empty response."""
+        """Do nothing and produces an empty response."""
         return intent_obj.create_response()
 
 
@@ -410,6 +419,17 @@ class GetCurrentTimeIntentHandler(intent.IntentHandler):
         response = intent_obj.create_response()
         response.async_set_speech_slots({"time": datetime.now().time()})
         return response
+
+
+class HelloIntentHandler(intent.IntentHandler):
+    """Responds with no action."""
+
+    intent_type = intent.INTENT_RESPOND
+    description = "Returns the provided response with no action."
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Return the provided response, but take no action."""
+        return intent_obj.create_response()
 
 
 async def _async_process_intent(
