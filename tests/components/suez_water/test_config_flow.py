@@ -6,6 +6,7 @@ from pysuez.exception import PySuezError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -69,7 +70,9 @@ async def test_form_invalid_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_already_configured(hass: HomeAssistant) -> None:
+async def test_form_already_configured(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
     """Test we abort when entry is already configured."""
 
     entry = MockConfigEntry(
