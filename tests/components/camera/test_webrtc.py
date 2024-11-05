@@ -529,8 +529,8 @@ async def test_websocket_webrtc_offer(
     ("message", "expected_frontend_message"),
     [
         (
-            WebRTCCandidate(RTCIceCandidate("candidate")),
-            {"type": "candidate", "candidate": "candidate"},
+            WebRTCCandidate(RTCIceCandidate("candidate", 0)),
+            {"type": "candidate", "candidate": "candidate", "sdp_m_line_index": 0},
         ),
         (
             WebRTCError("webrtc_offer_failed", "error"),
@@ -1012,13 +1012,14 @@ async def test_ws_webrtc_candidate(
                 "entity_id": "camera.demo_camera",
                 "session_id": session_id,
                 "candidate": candidate,
+                "sdp_m_line_index": 1,
             }
         )
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidate(candidate)
+            session_id, RTCIceCandidate(candidate, 1)
         )
 
 
@@ -1034,6 +1035,7 @@ async def test_ws_webrtc_candidate_not_supported(
             "entity_id": "camera.demo_camera",
             "session_id": "session_id",
             "candidate": "candidate",
+            "sdp_m_line_index": 1,
         }
     )
     response = await client.receive_json()
@@ -1064,13 +1066,14 @@ async def test_ws_webrtc_candidate_webrtc_provider(
                 "entity_id": "camera.demo_camera",
                 "session_id": session_id,
                 "candidate": candidate,
+                "sdp_m_line_index": 1,
             }
         )
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidate(candidate)
+            session_id, RTCIceCandidate(candidate, 1)
         )
 
 
@@ -1086,6 +1089,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
             "entity_id": "camera.does_not_exist",
             "session_id": "session_id",
             "candidate": "candidate",
+            "sdp_m_line_index": 1,
         }
     )
     response = await client.receive_json()
@@ -1130,6 +1134,7 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
             "entity_id": "camera.demo_camera",
             "session_id": "session_id",
             "candidate": "candidate",
+            "sdp_m_line_index": 0,
         }
     )
     response = await client.receive_json()
@@ -1182,7 +1187,9 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     await provider.async_handle_async_webrtc_offer(
         Mock(), "offer_sdp", "session_id", Mock()
     )
-    await provider.async_on_webrtc_candidate("session_id", RTCIceCandidate("candidate"))
+    await provider.async_on_webrtc_candidate(
+        "session_id", RTCIceCandidate("candidate", 0)
+    )
     provider.async_close_session("session_id")
 
 
