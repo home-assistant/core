@@ -62,11 +62,6 @@ async def async_setup_entry(
 
     assert data is not None
 
-    entities: list[NumberEntity] = []
-    _LOGGER.debug("Adding min time ventilators numbers (if present)")
-    for index, thermostat in enumerate(data.ecobee.thermostats):
-        for numbers in VENTILATOR_NUMBERS:
-            if thermostat["settings"]["ventilatorType"] != "none":
     entities: list[NumberEntity] = [
         EcobeeVentilatorMinTime(data, index, numbers)
         for index, thermostat in enumerate(data.ecobee.thermostats)
