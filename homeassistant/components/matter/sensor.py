@@ -150,6 +150,9 @@ class MatterOperationalStateSensor(MatterSensor):
         operational_state_list = self.get_matter_attribute_value(
             clusters.OperationalState.Attributes.OperationalStateList
         )
+        phase_list = self.get_matter_attribute_value(
+            clusters.OperationalState.Attributes.PhaseList
+        )
         if TYPE_CHECKING:
             operational_state_list = cast(
                 list[clusters.OperationalState.Structs.OperationalStateStruct],
