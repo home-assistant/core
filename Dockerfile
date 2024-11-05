@@ -7,7 +7,8 @@ FROM ${BUILD_FROM}
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
-    UV_SYSTEM_PYTHON=true
+    UV_SYSTEM_PYTHON=true \
+    UV_NO_CACHE=true
 
 ARG QEMU_CPU
 
@@ -22,24 +23,21 @@ COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
 RUN \
     uv pip install \
         --no-build \
-        --no-cache-dir \
         -r homeassistant/requirements.txt
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
 RUN \
     if ls homeassistant/home_assistant_*.whl 1> /dev/null 2>&1; then \
-        uv pip install --no-cache-dir homeassistant/home_assistant_*.whl; \
+        uv pip install homeassistant/home_assistant_*.whl; \
     fi \
     && uv pip install \
         --no-build \
-        --no-cache-dir \
         -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
 RUN \
     uv pip install \
-        --no-cache-dir \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
