@@ -798,9 +798,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Skip all providers if the camera has a native WebRTC implementation
         if not (
-            self._supports_native_sync_webrtc
-            or type(self).async_handle_async_webrtc_offer
-            != Camera.async_handle_async_webrtc_offer
+            self._supports_native_sync_webrtc or self._supports_native_async_webrtc
         ):
             # Camera doesn't have a native WebRTC implementation
             new_provider = await self._async_get_supported_webrtc_provider(
