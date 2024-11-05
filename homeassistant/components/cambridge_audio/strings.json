@@ -32,6 +32,9 @@
           "dim": "Dim",
           "off": "[%key:common::state::off%]"
         }
+      },
+      "audio_output": {
+        "name": "Audio output"
       }
     },
     "switch": {
@@ -52,6 +55,12 @@
     },
     "preset_non_integer": {
       "message": "Preset must be an integer, got: {preset_id}"
+    },
+    "entry_cannot_connect": {
+      "message": "Error while connecting to {host}"
+    },
+    "command_error": {
+      "message": "Error executing {function_name} on entity {entity_id}"
     }
   }
 }

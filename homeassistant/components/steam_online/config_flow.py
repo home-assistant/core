@@ -40,9 +40,9 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: SteamConfigEntry,
-    ) -> OptionsFlow:
+    ) -> SteamOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SteamOptionsFlowHandler(config_entry)
+        return SteamOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -121,17 +121,12 @@ def _batch_ids(ids: list[str]) -> Iterator[list[str]]:
 class SteamOptionsFlowHandler(OptionsFlow):
     """Handle Steam client options."""
 
-    def __init__(self, entry: SteamConfigEntry) -> None:
-        """Initialize options flow."""
-        self.entry = entry
-        self.options = dict(entry.options)
-
     async def async_step_init(
         self, user_input: dict[str, dict[str, str]] | None = None
     ) -> ConfigFlowResult:
         """Manage Steam options."""
         if user_input is not None:
-            await self.hass.config_entries.async_unload(self.entry.entry_id)
+            await self.hass.config_entries.async_unload(self.config_entry.entry_id)
             for _id in self.options[CONF_ACCOUNTS]:
                 if _id not in user_input[CONF_ACCOUNTS] and (
                     entity_id := er.async_get(self.hass).async_get_entity_id(
@@ -146,7 +141,7 @@ class SteamOptionsFlowHandler(OptionsFlow):
                     if _id in user_input[CONF_ACCOUNTS]
                 }
             }
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data=channel_data)
         error = None
         try:
@@ -176,7 +171,9 @@ class SteamOptionsFlowHandler(OptionsFlow):
         """Get accounts."""
         interface = steam.api.interface("ISteamUser")
         try:
-            friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
+            friends = interface.GetFriendList(
+                steamid=self.config_entry.data[CONF_ACCOUNT]
+            )
             _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
         except steam.api.HTTPError:
             return []

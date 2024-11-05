@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -1226,9 +1226,9 @@ class UnitOfConductivity(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
     },
 ):
     """Conductivity units."""
