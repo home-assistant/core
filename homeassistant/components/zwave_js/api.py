@@ -82,7 +82,9 @@ from .const import (
     ATTR_PARAMETERS,
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
+    CONF_INSTALLER_MODE,
     DATA_CLIENT,
+    DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     USER_AGENT,
 )
@@ -363,7 +365,7 @@ def async_handle_failed_command[**_P](
     return async_handle_failed_command_func
 
 
-def node_status(node: Node) -> dict[str, Any]:
+def node_status(node: Node, hass: HomeAssistant) -> dict[str, Any]:
     """Get node status."""
     return {
         "node_id": node.node_id,
@@ -378,6 +380,7 @@ def node_status(node: Node) -> dict[str, Any]:
             cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
             for cc in node.command_classes
         ),
+        "installer_mode": hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
     }
 
 
@@ -513,7 +516,9 @@ async def websocket_network_status(
             "inclusion_state": controller.inclusion_state,
             "rf_region": controller.rf_region,
             "status": controller.status,
-            "nodes": [node_status(node) for node in driver.controller.nodes.values()],
+            "nodes": [
+                node_status(node, hass) for node in driver.controller.nodes.values()
+            ],
         },
     }
     connection.send_result(
@@ -578,7 +583,7 @@ async def websocket_node_status(
     node: Node,
 ) -> None:
     """Get the status of a Z-Wave JS node."""
-    connection.send_result(msg[ID], node_status(node))
+    connection.send_result(msg[ID], node_status(node, hass))
 
 
 @websocket_api.websocket_command(
