@@ -140,7 +140,14 @@ class CloudBackupSyncAgent(BackupSyncAgent):
             self.cloud,
             storage_type="backup",
             name=f"{self.cloud.client.prefs.instance_id}.tar",
-            metadata={"homeassistant_version": metadata["homeassistant"]},
+            metadata={
+                "slug": metadata["slug"],
+                "homeassistant_version": metadata["homeassistant"],
+                "name": metadata["name"],
+                "date": metadata["date"],
+                "protected": metadata["protected"],
+                "content": {},
+            },
             size=size,
             base64md5hash=base64md5hash,
         )
@@ -158,10 +165,10 @@ class CloudBackupSyncAgent(BackupSyncAgent):
         backups = await async_files_list(self.cloud)
         return [
             SyncedBackup(
-                id=backup.key,
-                date=backup.last_modified,
-                slug="N/A",
-                name="N/A",
+                id=backup.Key,
+                date=backup.LastModified,
+                slug=backup.Metadata["slug"],
+                name=backup.Metadata.get("name"),
             )
             for backup in backups
         ]
