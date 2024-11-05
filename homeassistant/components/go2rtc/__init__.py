@@ -5,7 +5,7 @@ import shutil
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from go2rtc_client import Go2RtcRestClient
-from go2rtc_client.exceptions import Go2RtcClientError
+from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 from go2rtc_client.ws import (
     Go2RtcWsClient,
     ReceiveMessages,
@@ -114,7 +114,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         server = Server(
             hass, binary, enable_ui=config.get(DOMAIN, {}).get(CONF_DEBUG_UI, False)
         )
-        await server.start()
+        try:
+            await server.start()
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning("Could not start go2rtc server", exc_info=True)
+            return False
 
         async def on_stop(event: Event) -> None:
             await server.stop()
@@ -143,7 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Validate the server URL
     try:
         client = Go2RtcRestClient(async_get_clientsession(hass), url)
-        await client.streams.list()
+        await client.validate_server_version()
     except Go2RtcClientError as err:
         if isinstance(err.__cause__, _RETRYABLE_ERRORS):
             raise ConfigEntryNotReady(
@@ -151,6 +155,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from err
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
+    except Go2RtcVersionError as err:
+        raise ConfigEntryNotReady(
+            f"The go2rtc server version is not supported, {err}"
+        ) from err
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
         return False
