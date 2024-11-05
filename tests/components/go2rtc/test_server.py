@@ -295,6 +295,7 @@ async def test_server_restart_api_error(
 async def test_server_restart_error(
     hass: HomeAssistant,
     mock_create_subprocess: AsyncMock,
+    server_stdout: list[str],
     rest_client: AsyncMock,
     server: Server,
     caplog: pytest.LogCaptureFixture,
@@ -307,9 +308,15 @@ async def test_server_restart_error(
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
 
+    # Verify go2rtc binary stdout was not yet logged with warning level
+    assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
+
     await asyncio.sleep(0.1)
     await hass.async_block_till_done()
     mock_create_subprocess.assert_awaited_once()
+
+    # Verify go2rtc binary stdout was logged with warning level
+    assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     assert "Unexpected error when restarting go2rtc server" in caplog.text
 

@@ -117,9 +117,7 @@ class Server:
         except TimeoutError as err:
             msg = "Go2rtc server didn't start correctly"
             _LOGGER.exception(msg)
-            for line in self._log_buffer:
-                _LOGGER.warning(line)
-            self._log_buffer.clear()
+            self._log_server_output(logging.WARNING)
             await self._stop()
             raise Go2RTCServerStartError from err
 
@@ -137,6 +135,12 @@ class Server:
             _LOGGER.debug(msg)
             if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
                 self._startup_complete.set()
+
+    def _log_server_output(self, loglevel: int) -> None:
+        """Log captured process output, then clear the log buffer."""
+        for line in list(self._log_buffer):  # Copy the deque to avoid mutation error
+            _LOGGER.log(loglevel, line)
+        self._log_buffer.clear()
 
     async def _watchdog(self) -> None:
         """Keep respawning go2rtc servers.
@@ -166,9 +170,7 @@ class Server:
                     try:
                         await self._stop()
                         _LOGGER.warning("Go2rtc unexpectedly stopped, server log:")
-                        for line in self._log_buffer:
-                            _LOGGER.warning(line)
-                        self._log_buffer.clear()
+                        self._log_server_output(logging.WARNING)
                         _LOGGER.debug("Spawning new go2rtc server")
                         with suppress(Go2RTCServerStartError):
                             await self._start()
