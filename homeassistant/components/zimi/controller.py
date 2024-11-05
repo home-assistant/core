@@ -93,6 +93,10 @@ class ZimiController:
 
         return True
 
+    async def disconnect(self) -> bool:
+        """Disconnect connection with the Zimi controller."""
+        return self.controller.disconnect()
+
     @property
     def verbosity(self) -> int:
         """Return the verbosity of this hub."""
