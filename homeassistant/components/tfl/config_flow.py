@@ -28,16 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_STOP_POINTS_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_STOP_POINTS): TextSelector(TextSelectorConfig(multiple=True))}
 )
-RECONFIGURE_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_API_APP_KEY): cv.string,
-    }
-)
-OPTIONS_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_STOP_POINTS): TextSelector(TextSelectorConfig(multiple=True)),
-    }
-)
 
 
 @dataclass
