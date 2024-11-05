@@ -4987,3 +4987,21 @@ async def test_invoke_cc_api(
     msg = await ws_client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "NotFoundError", "message": ""}
+
+
+async def test_get_global_settings(
+    hass: HomeAssistant, integration, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the get_global_settings WS API call works."""
+    ws_client = await hass_ws_client(hass)
+
+    # Test we can get global settings
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/get_global_settings",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == hass.data[DOMAIN]

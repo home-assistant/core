@@ -82,7 +82,6 @@ from .const import (
     ATTR_PARAMETERS,
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
@@ -365,7 +364,7 @@ def async_handle_failed_command[**_P](
     return async_handle_failed_command_func
 
 
-def node_status(node: Node, hass: HomeAssistant) -> dict[str, Any]:
+def node_status(node: Node) -> dict[str, Any]:
     """Get node status."""
     return {
         "node_id": node.node_id,
@@ -380,7 +379,6 @@ def node_status(node: Node, hass: HomeAssistant) -> dict[str, Any]:
             cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
             for cc in node.command_classes
         ),
-        "installer_mode": hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
     }
 
 
@@ -448,6 +446,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_hard_reset_controller)
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
+    websocket_api.async_register_command(hass, websocket_get_global_settings)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -516,9 +515,7 @@ async def websocket_network_status(
             "inclusion_state": controller.inclusion_state,
             "rf_region": controller.rf_region,
             "status": controller.status,
-            "nodes": [
-                node_status(node, hass) for node in driver.controller.nodes.values()
-            ],
+            "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
     connection.send_result(
@@ -583,7 +580,7 @@ async def websocket_node_status(
     node: Node,
 ) -> None:
     """Get the status of a Z-Wave JS node."""
-    connection.send_result(msg[ID], node_status(node, hass))
+    connection.send_result(msg[ID], node_status(node))
 
 
 @websocket_api.websocket_command(
@@ -2616,3 +2613,19 @@ async def websocket_invoke_cc_api(
             msg[ID],
             result,
         )
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_global_settings",
+    }
+)
+def websocket_get_global_settings(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get global zwavejs configuration."""
+    connection.send_result(msg[ID], hass.data[DOMAIN])
