@@ -3127,10 +3127,6 @@ class OptionsFlow(ConfigEntryBaseFlow):
         )
         self._config_entry = value
 
-    def initialize_options(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options to a mutable copy of the config entry options."""
-        self._options = deepcopy(dict(config_entry.options))
-
     @property
     def options(self) -> dict[str, Any]:
         """Return a mutable copy of the config entry options.
@@ -3139,7 +3135,7 @@ class OptionsFlow(ConfigEntryBaseFlow):
         can only be referenced after initialisation.
         """
         if not hasattr(self, "_options"):
-            self.initialize_options(self.config_entry)
+            self._options = deepcopy(dict(self.config_entry.options))
         return self._options
 
     @options.setter
