@@ -2627,5 +2627,5 @@ def websocket_get_global_settings(
     connection: ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Get global zwavejs configuration."""
+    """Get Z-Wave JS integration wide configuration."""
     connection.send_result(msg[ID], hass.data[DOMAIN])
