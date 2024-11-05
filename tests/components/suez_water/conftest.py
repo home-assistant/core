@@ -41,9 +41,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_suez_client() -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
     with (
-        patch("pysuez.async_client.SuezAsyncClient", autospec=True) as main,
         patch(
-            "homeassistant.components.suez_water.coordinator.SuezAsyncClient", new=main
+            "homeassistant.components.suez_water.coordinator.SuezAsyncClient", autospec=True
         ) as mock_client,
         patch(
             "homeassistant.components.suez_water.config_flow.SuezAsyncClient",
@@ -59,9 +58,8 @@ def mock_suez_client() -> Generator[AsyncMock]:
 def mock_suez_data(suez_client) -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
     with (
-        patch("pysuez.suez_data.SuezData", autospec=True) as main,
         patch(
-            "homeassistant.components.suez_water.coordinator.SuezData", new=main
+            "homeassistant.components.suez_water.coordinator.SuezData", autospec=True
         ) as mock_data,
     ):
         data_api = mock_data.return_value

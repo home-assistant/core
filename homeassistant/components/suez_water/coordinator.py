@@ -39,23 +39,16 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
 
     async def _async_update_data(self) -> AggregatedSensorData:
         """Fetch data from API endpoint."""
-        async with asyncio.timeout(30):
-            try:
-                data = await self._fetch_data()
-                _LOGGER.debug("Successfully fetched suez data")
-            finally:
-                await self._async_client.close_session()
-            return data
-
-    async def _fetch_data(self) -> AggregatedSensorData:
-        """Fetch latest data from Suez."""
         try:
-            return await self._data_api.fetch_all_deprecated_data()
+            data = await self._data_api.fetch_all_deprecated_data()
         except PySuezError as err:
             _LOGGER.exception(err)
             raise UpdateFailed(
                 f"Suez coordinator error communicating with API: {err}"
             ) from err
+        _LOGGER.debug("Successfully fetched suez data")
+        return data
+
 
     async def _get_client(self) -> SuezAsyncClient:
         try:
