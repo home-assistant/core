@@ -8,10 +8,12 @@ from typing import Any
 from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
+
+from .errors import CannotConnect, InvalidHost, InvalidPort
 
 from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
@@ -129,14 +131,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._import_info = import_info
         return await self.async_step_user(None)
 
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid host."""
-
-
-class InvalidPort(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid port."""

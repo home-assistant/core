@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from nikohomecontrol import NikoHomeControlConnection
+from .errors import CannotConnect
 
 from .const import DOMAIN
 
@@ -15,6 +17,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data["config"]
     options = entry.data["options"]
     enabled_entities = entry.data["entities"]
+
+    controller = NikoHomeControlConnection(config["host"], config["port"])
+
+    if not controller:
+        raise CannotConnect
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "config": config,
