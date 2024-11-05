@@ -39,6 +39,16 @@ webrtc:
   ice_servers: []
 """
 
+_LOG_LEVEL_MAP = {
+    "TRC": logging.DEBUG,
+    "DBG": logging.DEBUG,
+    "INF": logging.DEBUG,
+    "WRN": logging.WARNING,
+    "ERR": logging.WARNING,
+    "FTL": logging.ERROR,
+    "PNC": logging.ERROR,
+}
+
 
 class Go2RTCServerStartError(HomeAssistantError):
     """Raised when server does not start."""
@@ -132,7 +142,10 @@ class Server:
         async for line in process.stdout:
             msg = line[:-1].decode().strip()
             self._log_buffer.append(msg)
-            _LOGGER.debug(msg)
+            loglevel = logging.WARNING
+            if len(split_msg := msg.split(" ", 2)) == 3:
+                loglevel = _LOG_LEVEL_MAP.get(split_msg[1], loglevel)
+            _LOGGER.log(loglevel, msg)
             if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
                 self._startup_complete.set()
 
