@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from webrtc_models import RTCIceCandidate, RTCIceServer
 
 from homeassistant.components.camera import (
     DATA_ICE_SERVERS,
@@ -13,7 +14,6 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
     CameraWebRTCProvider,
-    RTCIceServer,
     StreamType,
     WebRTCAnswer,
     WebRTCCandidate,
@@ -81,7 +81,9 @@ class SomeTestProvider(CameraWebRTCProvider):
         """
         send_message(WebRTCAnswer(answer="answer"))
 
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidate
+    ) -> None:
         """Handle the WebRTC candidate."""
 
     @callback
@@ -391,6 +393,29 @@ async def test_ws_get_client_config(
     }
 
 
+@pytest.mark.usefixtures("mock_camera_webrtc_native_sync_offer")
+async def test_ws_get_client_config_sync_offer(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get WebRTC client config, when camera is supporting sync offer."""
+    await async_setup_component(hass, "camera", {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "camera/webrtc/get_client_config", "entity_id": "camera.test"}
+    )
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "configuration": {},
+        "getCandidatesUpfront": False,
+    }
+
+
 @pytest.mark.usefixtures("mock_camera_webrtc")
 async def test_ws_get_client_config_custom_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -503,7 +528,10 @@ async def test_websocket_webrtc_offer(
 @pytest.mark.parametrize(
     ("message", "expected_frontend_message"),
     [
-        (WebRTCCandidate("candidate"), {"type": "candidate", "candidate": "candidate"}),
+        (
+            WebRTCCandidate(RTCIceCandidate("candidate")),
+            {"type": "candidate", "candidate": "candidate"},
+        ),
         (
             WebRTCError("webrtc_offer_failed", "error"),
             {"type": "error", "code": "webrtc_offer_failed", "message": "error"},
@@ -989,7 +1017,9 @@ async def test_ws_webrtc_candidate(
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
-        mock_on_webrtc_candidate.assert_called_once_with(session_id, candidate)
+        mock_on_webrtc_candidate.assert_called_once_with(
+            session_id, RTCIceCandidate(candidate)
+        )
 
 
 @pytest.mark.usefixtures("mock_camera_webrtc")
@@ -1039,7 +1069,9 @@ async def test_ws_webrtc_candidate_webrtc_provider(
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
-        mock_on_webrtc_candidate.assert_called_once_with(session_id, candidate)
+        mock_on_webrtc_candidate.assert_called_once_with(
+            session_id, RTCIceCandidate(candidate)
+        )
 
 
 @pytest.mark.usefixtures("mock_camera_webrtc")
@@ -1140,7 +1172,7 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
             send_message(WebRTCAnswer(answer="answer"))
 
         async def async_on_webrtc_candidate(
-            self, session_id: str, candidate: str
+            self, session_id: str, candidate: RTCIceCandidate
         ) -> None:
             """Handle the WebRTC candidate."""
 
@@ -1150,7 +1182,7 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
     await provider.async_handle_async_webrtc_offer(
         Mock(), "offer_sdp", "session_id", Mock()
     )
-    await provider.async_on_webrtc_candidate("session_id", "candidate")
+    await provider.async_on_webrtc_candidate("session_id", RTCIceCandidate("candidate"))
     provider.async_close_session("session_id")
 
 

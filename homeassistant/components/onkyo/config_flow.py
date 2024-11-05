@@ -11,7 +11,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -323,16 +322,13 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         return OnkyoOptionsFlowHandler(config_entry)
 
 
-class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OnkyoOptionsFlowHandler(OptionsFlow):
     """Handle an options flow for Onkyo."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
-
-        sources_store: dict[str, str] = self.options[OPTION_INPUT_SOURCES]
-        sources = {InputSource(k): v for k, v in sources_store.items()}
-        self.options[OPTION_INPUT_SOURCES] = sources
+        sources_store: dict[str, str] = config_entry.options[OPTION_INPUT_SOURCES]
+        self._input_sources = {InputSource(k): v for k, v in sources_store.items()}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -362,15 +358,12 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
             )
         )
 
-        sources: dict[InputSource, str] = self.options[OPTION_INPUT_SOURCES]
-        for source in sources:
-            schema_dict[vol.Required(source.value_meaning, default=sources[source])] = (
+        for source, source_name in self._input_sources.items():
+            schema_dict[vol.Required(source.value_meaning, default=source_name)] = (
                 TextSelector()
             )
 
-        schema = vol.Schema(schema_dict)
-
         return self.async_show_form(
             step_id="init",
-            data_schema=schema,
+            data_schema=vol.Schema(schema_dict),
         )

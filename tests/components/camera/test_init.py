@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from webrtc_models import RTCIceCandidate
 
 from homeassistant.components import camera
 from homeassistant.components.camera import (
@@ -24,7 +25,6 @@ from homeassistant.components.camera.const import (
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STARTED,
@@ -37,18 +37,12 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, WEBRTC_ANSWER, mock_turbo_jpeg
+from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
 from tests.common import (
-    MockConfigEntry,
-    MockModule,
     async_fire_time_changed,
     help_test_all,
     import_and_test_deprecated_constant_enum,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -960,7 +954,7 @@ async def _test_capabilities(
             send_message(WebRTCAnswer("answer"))
 
         async def async_on_webrtc_candidate(
-            self, session_id: str, candidate: str
+            self, session_id: str, candidate: RTCIceCandidate
         ) -> None:
             """Handle the WebRTC candidate."""
 
@@ -985,61 +979,12 @@ async def test_camera_capabilities_hls(
     )
 
 
+@pytest.mark.usefixtures("mock_camera_webrtc_native_sync_offer")
 async def test_camera_capabilities_webrtc(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test WebRTC camera capabilities."""
-
-    # Cannot use the fixture mock_camera_web_rtc as it's mocking Camera.async_handle_web_rtc_offer
-    # Camera capabilities are determined by by checking if the function was overwritten(implemented) or not
-    class MockCamera(camera.Camera):
-        """Mock Camera Entity."""
-
-        _attr_name = "Test"
-        _attr_supported_features: camera.CameraEntityFeature = (
-            camera.CameraEntityFeature.STREAM
-        )
-
-        async def stream_source(self) -> str | None:
-            return STREAM_SOURCE
-
-        async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
-            return WEBRTC_ANSWER
-
-    domain = "test"
-
-    entry = MockConfigEntry(domain=domain)
-    entry.add_to_hass(hass)
-
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_unload_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, DOMAIN)
-        return True
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain,
-            async_setup_entry=async_setup_entry_init,
-            async_unload_entry=async_unload_entry_init,
-        ),
-    )
-    setup_test_component_platform(hass, DOMAIN, [MockCamera()], from_config_entry=True)
-    mock_platform(hass, f"{domain}.config_flow", Mock())
-
-    with mock_config_flow(domain, ConfigFlow):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     await _test_capabilities(
         hass, hass_ws_client, "camera.test", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}

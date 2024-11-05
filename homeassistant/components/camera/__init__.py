@@ -20,7 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache import cached_property, under_cached_property
 import voluptuous as vol
-from webrtc_models import RTCIceServer
+from webrtc_models import RTCIceCandidate, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -827,20 +827,23 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
         config = self._async_get_webrtc_client_configuration()
 
-        ice_servers = [
-            server
-            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
-            for server in servers()
-        ]
-        config.configuration.ice_servers.extend(ice_servers)
+        if not self._webrtc_sync_offer:
+            # Until 2024.11, the frontend was not resolving any ice servers
+            # The async approach was added 2024.11 and new integrations need to use it
+            ice_servers = [
+                server
+                for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
+                for server in servers()
+            ]
+            config.configuration.ice_servers.extend(ice_servers)
 
-        config.get_candidates_upfront = (
-            self._webrtc_sync_offer or self._legacy_webrtc_provider is not None
-        )
+        config.get_candidates_upfront = self._legacy_webrtc_provider is not None
 
         return config
 
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidate
+    ) -> None:
         """Handle a WebRTC candidate."""
         if self._webrtc_provider:
             await self._webrtc_provider.async_on_webrtc_candidate(session_id, candidate)
