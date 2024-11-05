@@ -67,14 +67,9 @@ async def validate_stop_point(
     description_placeholders: dict[str, str] = {}
 
     _LOGGER.debug("Validating stop_point=%s", stop_point)
-
+    stop_point_api = stopPoint(app_key)
     try:
-        stop_point_api = stopPoint(app_key)
-        _LOGGER.debug("Validating stop_point=%s", stop_point)
-        arrivals = await call_tfl_api(
-            hass, stop_point_api.getStationArrivals, stop_point
-        )
-        _LOGGER.debug("Got for stop_point=%s, arrivals=%s", stop_point, arrivals)
+        await call_tfl_api(hass, stop_point_api.getStationArrivals, stop_point)
     except HTTPError as exception:
         if exception.code == 404:
             errors["base"] = "invalid_stop_point"
