@@ -7209,7 +7209,7 @@ async def test_async_update_entry_unique_id_collision(
 
     manager.async_update_entry(entry4, unique_id="very unique")
     assert len(issue_registry.issues) == 1
-    assert len(caplog.record_tuples) == 1
+    assert len(caplog.record_tuples) == 2
 
     assert (
         "Unique id of config entry 'Mock Title' from integration test changed to "
