@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from cookidoo_api import CookidooException, CookidooItem
 
 from homeassistant.components.todo import (
@@ -69,7 +71,8 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
         Cookidoo ingredients can be changed in state, but not in summary or description. This is currently not possible to distinguish in home assistant and just fails silently.
         """
         try:
-            assert item.uid
+            if TYPE_CHECKING:
+                assert item.uid
             await self.coordinator.cookidoo.edit_ingredients_ownership(
                 [
                     CookidooItem(
@@ -128,7 +131,8 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
         """Add an item to the To-do list."""
 
         try:
-            assert item.summary
+            if TYPE_CHECKING:
+                assert item.summary
             await self.coordinator.cookidoo.add_additional_items([item.summary])
         except CookidooException as e:
             raise HomeAssistantError(
@@ -143,8 +147,9 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
         """Update an item to the To-do list."""
 
         try:
-            assert item.uid
-            assert item.summary
+            if TYPE_CHECKING:
+                assert item.uid
+                assert item.summary
             new_item = CookidooItem(
                 {
                     "id": item.uid,

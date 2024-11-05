@@ -22,6 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
 
 
@@ -44,9 +46,7 @@ async def test_todo(
 ) -> None:
     """Snapshot test states of todo platform."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -62,9 +62,7 @@ async def test_update_ingredient(
 ) -> None:
     """Test update ingredient item."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -75,7 +73,7 @@ async def test_update_ingredient(
             ATTR_ITEM: "unique_id_mehl",
             ATTR_STATUS: TodoItemStatus.COMPLETED,
         },
-        target={ATTR_ENTITY_ID: "todo.cookidoo_ingredients"},
+        target={ATTR_ENTITY_ID: "todo.cookidoo_shopping_list"},
         blocking=True,
     )
 
@@ -98,9 +96,7 @@ async def test_update_ingredient_exception(
 ) -> None:
     """Test update ingredient with exception."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -117,7 +113,7 @@ async def test_update_ingredient_exception(
                 ATTR_ITEM: "unique_id_mehl",
                 ATTR_STATUS: TodoItemStatus.COMPLETED,
             },
-            target={ATTR_ENTITY_ID: "todo.cookidoo_ingredients"},
+            target={ATTR_ENTITY_ID: "todo.cookidoo_shopping_list"},
             blocking=True,
         )
 
@@ -129,9 +125,7 @@ async def test_add_additional_item(
 ) -> None:
     """Test add additional item to list."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -139,7 +133,7 @@ async def test_add_additional_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         service_data={ATTR_ITEM: "Äpfel"},
-        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_items"},
+        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
         blocking=True,
     )
 
@@ -155,9 +149,7 @@ async def test_add_additional_item_exception(
 ) -> None:
     """Test add additional item to list with exception."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -169,7 +161,7 @@ async def test_add_additional_item_exception(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             service_data={ATTR_ITEM: "Äpfel"},
-            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_items"},
+            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
 
@@ -181,9 +173,7 @@ async def test_update_additional_item(
 ) -> None:
     """Test update additional item."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -195,7 +185,7 @@ async def test_update_additional_item(
             ATTR_RENAME: "Peperoni",
             ATTR_STATUS: TodoItemStatus.COMPLETED,
         },
-        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_items"},
+        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
         blocking=True,
     )
 
@@ -228,9 +218,7 @@ async def test_update_additional_item_exception(
 ) -> None:
     """Test update additional item with exception."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -249,7 +237,7 @@ async def test_update_additional_item_exception(
                 ATTR_RENAME: "Peperoni",
                 ATTR_STATUS: TodoItemStatus.COMPLETED,
             },
-            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_items"},
+            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
 
@@ -261,9 +249,7 @@ async def test_delete_additional_items(
 ) -> None:
     """Test delete additional item."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
 
@@ -271,7 +257,7 @@ async def test_delete_additional_items(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         service_data={ATTR_ITEM: "unique_id_tomaten"},
-        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_items"},
+        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
         blocking=True,
     )
 
@@ -287,9 +273,7 @@ async def test_delete_additional_items_exception(
 ) -> None:
     """Test delete additional item."""
 
-    cookidoo_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, cookidoo_config_entry)
 
     assert cookidoo_config_entry.state is ConfigEntryState.LOADED
     mock_cookidoo_client.remove_additional_items.side_effect = CookidooRequestException
@@ -301,6 +285,6 @@ async def test_delete_additional_items_exception(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             service_data={ATTR_ITEM: "unique_id_tomaten"},
-            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_items"},
+            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
