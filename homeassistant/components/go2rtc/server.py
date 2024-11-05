@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_URL
+from .const import HA_MANAGED_API_PORT, HA_MANAGED_URL
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
@@ -26,13 +26,14 @@ _RESPAWN_COOLDOWN = 1
 # - Clear default ice servers
 _GO2RTC_CONFIG_FORMAT = r"""
 api:
-  listen: "{api_ip}:1984"
+  listen: "{api_ip}:{api_port}"
 
 rtsp:
   # ffmpeg needs rtsp for opus audio transcoding
-  listen: "127.0.0.1:8554"
+  listen: "127.0.0.1:18554"
 
 webrtc:
+  listen: ":18555/tcp"
   ice_servers: []
 """
 
@@ -52,7 +53,11 @@ def _create_temp_file(api_ip: str) -> str:
     # Set delete=False to prevent the file from being deleted when the file is closed
     # Linux is clearing tmp folder on reboot, so no need to delete it manually
     with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
-        file.write(_GO2RTC_CONFIG_FORMAT.format(api_ip=api_ip).encode())
+        file.write(
+            _GO2RTC_CONFIG_FORMAT.format(
+                api_ip=api_ip, api_port=HA_MANAGED_API_PORT
+            ).encode()
+        )
         return file.name
 
 
@@ -113,7 +118,7 @@ class Server:
             raise Go2RTCServerStartError from err
 
         # Check the server version
-        client = Go2RtcRestClient(async_get_clientsession(self._hass), DEFAULT_URL)
+        client = Go2RtcRestClient(async_get_clientsession(self._hass), HA_MANAGED_URL)
         await client.validate_server_version()
 
     async def _log_output(self, process: asyncio.subprocess.Process) -> None:
@@ -173,7 +178,7 @@ class Server:
 
     async def _monitor_api(self) -> None:
         """Raise if the go2rtc process terminates."""
-        client = Go2RtcRestClient(async_get_clientsession(self._hass), DEFAULT_URL)
+        client = Go2RtcRestClient(async_get_clientsession(self._hass), HA_MANAGED_URL)
 
         _LOGGER.debug("Monitoring go2rtc API")
         try:
