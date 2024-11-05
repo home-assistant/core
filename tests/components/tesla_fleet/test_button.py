@@ -1,13 +1,16 @@
 """Test the Tesla Fleet button platform."""
 
-from unittest.mock import patch
+from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy import SnapshotAssertion
+from tesla_fleet_api.exceptions import NotOnWhitelistFault
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
@@ -63,3 +66,30 @@ async def test_press(
             blocking=True,
         )
         command.assert_called_once()
+
+
+async def test_press_signing_error(
+    hass: HomeAssistant, normal_config_entry: MockConfigEntry, mock_products: AsyncMock
+) -> None:
+    """Test pressing a button with a signing error."""
+    # Enable Signing
+    new_product = deepcopy(mock_products.return_value)
+    new_product["response"][0]["command_signing"] = "required"
+    mock_products.return_value = new_product
+
+    await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
+
+    with (
+        patch(
+            "homeassistant.components.tesla_fleet.VehicleSigned.flash_lights",
+            side_effect=NotOnWhitelistFault,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: ["button.test_flash_lights"]},
+            blocking=True,
+        )
+    assert error.from_exception(NotOnWhitelistFault)
