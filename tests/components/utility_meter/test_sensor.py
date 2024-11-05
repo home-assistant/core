@@ -1810,7 +1810,7 @@ async def test_self_reset_hourly_dst2(hass: HomeAssistant) -> None:
     hass.config.time_zone = "Europe/Berlin"
     dt_util.set_default_time_zone(dt_util.get_time_zone(hass.config.time_zone))
     await _test_self_reset(
-        hass, gen_config("weekly"), "2024-10-27T23:59:00.000000+02:00"
+        hass, gen_config("daily"), "2024-10-26T23:59:00.000000+02:00"
     )
 
 

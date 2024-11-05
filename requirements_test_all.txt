@@ -598,7 +598,7 @@ colorthief==0.2.1
 construct==2.10.68
 
 # homeassistant.components.utility_meter
-croniter==2.0.2
+croniter==5.0.1
 
 # homeassistant.components.crownstone
 crownstone-cloud==1.4.11
