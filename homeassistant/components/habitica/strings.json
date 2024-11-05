@@ -432,7 +432,7 @@
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
-          "description": "Select the Habitica character for tracking your habit."
+          "description": "Select the Habitica character tracking your habit."
         },
         "task": {
           "name": "Habit name",
@@ -440,7 +440,7 @@
         },
         "direction": {
           "name": "Reward or loss",
-          "description": "Is it a positive or a negative progress you want to track for your habit."
+          "description": "Is it positive or negative progress you want to track for your habit."
         }
       }
     },
