@@ -79,6 +79,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Initiate a flow via the UI."""
         errors: dict[str, str] = {}
+        description_placeholders = {}
 
         if user_input is not None:
             self._async_abort_entries_match(
@@ -91,7 +92,8 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass, user_input[CONF_URL], user_input[CONF_API_KEY]
             )
             if not result[CONF_SUCCESS]:
-                errors["base"] = result[CONF_MESSAGE]
+                errors["base"] = "api_error"
+                description_placeholders = {"details": result[CONF_MESSAGE]}
             else:
                 self.include_only_feeds = user_input.get(CONF_ONLY_INCLUDE_FEEDID)
                 self.url = user_input[CONF_URL]
@@ -115,6 +117,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input,
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_choose_feeds(
@@ -177,6 +180,7 @@ class EmoncmsOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
+        description_placeholders = {}
         data = self.options if self.options else self.config_entry.data
         url = data[CONF_URL]
         api_key = data[CONF_API_KEY]
@@ -184,7 +188,8 @@ class EmoncmsOptionsFlow(OptionsFlow):
         options: list = include_only_feeds
         result = await get_feed_list(self.hass, url, api_key)
         if not result[CONF_SUCCESS]:
-            errors["base"] = result[CONF_MESSAGE]
+            errors["base"] = "api_error"
+            description_placeholders = {"details": result[CONF_MESSAGE]}
         else:
             options = get_options(result[CONF_MESSAGE])
         dropdown = {"options": options, "mode": "dropdown", "multiple": True}
@@ -209,4 +214,5 @@ class EmoncmsOptionsFlow(OptionsFlow):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
