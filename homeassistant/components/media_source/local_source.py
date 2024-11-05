@@ -225,7 +225,7 @@ class LocalMediaView(http.HomeAssistantView):
         media_path = self.source.async_full_path(source_dir_id, location)
 
         # Check that the file exists
-        if not media_path.is_file():
+        if not self.hass.async_add_executor_job(media_path.is_file):
             raise web.HTTPNotFound
 
         # Check that it's a media file

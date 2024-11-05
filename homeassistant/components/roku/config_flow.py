@@ -10,12 +10,17 @@ from rokuecp import Roku, RokuError
 import voluptuous as vol
 
 from homeassistant.components import ssdp, zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID, DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -154,4 +159,37 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self.discovery_info[CONF_NAME],
             data=self.discovery_info,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> RokuOptionsFlowHandler:
+        """Create the options flow."""
+        return RokuOptionsFlowHandler()
+
+
+class RokuOptionsFlowHandler(OptionsFlow):
+    """Handle Roku options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Roku options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PLAY_MEDIA_APP_ID,
+                        default=self.config_entry.options.get(
+                            CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID
+                        ),
+                    ): str,
+                }
+            ),
         )

@@ -13,8 +13,10 @@ from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
     ExclusionStrategy,
+    InclusionState,
     InclusionStrategy,
     LogLevel,
+    NodeStatus,
     Protocols,
     ProvisioningEntryStatus,
     QRCodeVersion,
@@ -41,6 +43,7 @@ from zwave_js_server.model.controller.firmware import (
     ControllerFirmwareUpdateResult,
 )
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node, NodeStatistics
@@ -73,6 +76,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .config_validation import BITMASK_SCHEMA
 from .const import (
+    ATTR_COMMAND_CLASS,
+    ATTR_ENDPOINT,
+    ATTR_METHOD_NAME,
+    ATTR_PARAMETERS,
+    ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
@@ -435,6 +443,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
     websocket_api.async_register_command(hass, websocket_hard_reset_controller)
+    websocket_api.async_register_command(hass, websocket_node_capabilities)
+    websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -694,6 +704,30 @@ async def websocket_add_node(
         )
 
     @callback
+    def forward_node_added(
+        node: Node, low_security: bool, low_security_reason: str | None
+    ) -> None:
+        interview_unsubs = [
+            node.on("interview started", forward_event),
+            node.on("interview completed", forward_event),
+            node.on("interview stage completed", forward_stage),
+            node.on("interview failed", forward_event),
+        ]
+        unsubs.extend(interview_unsubs)
+        node_details = {
+            "node_id": node.node_id,
+            "status": node.status,
+            "ready": node.ready,
+            "low_security": low_security,
+            "low_security_reason": low_security_reason,
+        }
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": "node added", "node": node_details}
+            )
+        )
+
+    @callback
     def forward_requested_grant(event: dict) -> None:
         connection.send_message(
             websocket_api.event_message(
@@ -727,24 +761,10 @@ async def websocket_add_node(
 
     @callback
     def node_added(event: dict) -> None:
-        node = event["node"]
-        interview_unsubs = [
-            node.on("interview started", forward_event),
-            node.on("interview completed", forward_event),
-            node.on("interview stage completed", forward_stage),
-            node.on("interview failed", forward_event),
-        ]
-        unsubs.extend(interview_unsubs)
-        node_details = {
-            "node_id": node.node_id,
-            "status": node.status,
-            "ready": node.ready,
-            "low_security": event["result"].get("lowSecurity", False),
-        }
-        connection.send_message(
-            websocket_api.event_message(
-                msg[ID], {"event": "node added", "node": node_details}
-            )
+        forward_node_added(
+            event["node"],
+            event["result"].get("lowSecurity", False),
+            event["result"].get("lowSecurityReason"),
         )
 
     @callback
@@ -776,25 +796,39 @@ async def websocket_add_node(
     ]
     msg[DATA_UNSUBSCRIBE] = unsubs
 
-    try:
-        result = await controller.async_begin_inclusion(
-            INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
-            force_security=force_security,
-            provisioning=provisioning,
-            dsk=dsk,
-        )
-    except ValueError as err:
-        connection.send_error(
+    if controller.inclusion_state == InclusionState.INCLUDING:
+        connection.send_result(
             msg[ID],
-            ERR_INVALID_FORMAT,
-            err.args[0],
+            True,  # Inclusion is already in progress
         )
-        return
+        # Check for nodes that have been added but not fully included
+        for node in controller.nodes.values():
+            if node.status != NodeStatus.DEAD and not node.ready:
+                forward_node_added(
+                    node,
+                    not node.is_secure,
+                    None,
+                )
+    else:
+        try:
+            result = await controller.async_begin_inclusion(
+                INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
+                force_security=force_security,
+                provisioning=provisioning,
+                dsk=dsk,
+            )
+        except ValueError as err:
+            connection.send_error(
+                msg[ID],
+                ERR_INVALID_FORMAT,
+                err.args[0],
+            )
+            return
 
-    connection.send_result(
-        msg[ID],
-        result,
-    )
+        connection.send_result(
+            msg[ID],
+            result,
+        )
 
 
 @websocket_api.require_admin
@@ -2499,3 +2533,81 @@ async def websocket_hard_reset_controller(
         )
     ]
     await driver.async_hard_reset()
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/node_capabilities",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_node_capabilities(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Get node endpoints with their support command classes."""
+    # consumers expect snake_case at the moment
+    # remove that addition when consumers are updated
+    connection.send_result(
+        msg[ID],
+        {
+            idx: [
+                command_class.to_dict() | {"is_secure": command_class.is_secure}
+                for command_class in endpoint.command_classes
+            ]
+            for idx, endpoint in node.endpoints.items()
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/invoke_cc_api",
+        vol.Required(DEVICE_ID): str,
+        vol.Required(ATTR_COMMAND_CLASS): vol.All(
+            vol.Coerce(int), vol.Coerce(CommandClass)
+        ),
+        vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
+        vol.Required(ATTR_METHOD_NAME): cv.string,
+        vol.Required(ATTR_PARAMETERS): list,
+        vol.Optional(ATTR_WAIT_FOR_RESULT): cv.boolean,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_invoke_cc_api(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Call invokeCCAPI on the node or provided endpoint."""
+    command_class: CommandClass = msg[ATTR_COMMAND_CLASS]
+    method_name: str = msg[ATTR_METHOD_NAME]
+    parameters: list[Any] = msg[ATTR_PARAMETERS]
+
+    node_or_endpoint: Node | Endpoint = node
+    if (endpoint := msg.get(ATTR_ENDPOINT)) is not None:
+        node_or_endpoint = node.endpoints[endpoint]
+
+    try:
+        result = await node_or_endpoint.async_invoke_cc_api(
+            command_class,
+            method_name,
+            *parameters,
+            wait_for_result=msg.get(ATTR_WAIT_FOR_RESULT, False),
+        )
+    except BaseZwaveJSServerError as err:
+        connection.send_error(msg[ID], err.__class__.__name__, str(err))
+    else:
+        connection.send_result(
+            msg[ID],
+            result,
+        )

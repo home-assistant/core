@@ -17,16 +17,13 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import Camera, RtspToWebRtcProviderType
+    from . import Camera
     from .prefs import CameraPreferences
 
 DOMAIN: Final = "camera"
 DATA_COMPONENT: HassKey[EntityComponent[Camera]] = HassKey(DOMAIN)
 
 DATA_CAMERA_PREFS: HassKey[CameraPreferences] = HassKey("camera_prefs")
-DATA_RTSP_TO_WEB_RTC: HassKey[dict[str, RtspToWebRtcProviderType]] = HassKey(
-    "rtsp_to_web_rtc"
-)
 
 PREF_PRELOAD_STREAM: Final = "preload_stream"
 PREF_ORIENTATION: Final = "orientation"

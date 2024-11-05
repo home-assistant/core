@@ -32,7 +32,8 @@
       "reconfigure": {
         "title": "Configure SolarLog",
         "data": {
-          "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]"
+          "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

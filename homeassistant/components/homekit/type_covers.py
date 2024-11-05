@@ -19,6 +19,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,11 +29,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
     STATE_ON,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import (
     Event,
@@ -72,10 +69,10 @@ from .const import (
 )
 
 DOOR_CURRENT_HASS_TO_HK = {
-    STATE_OPEN: HK_DOOR_OPEN,
-    STATE_CLOSED: HK_DOOR_CLOSED,
-    STATE_OPENING: HK_DOOR_OPENING,
-    STATE_CLOSING: HK_DOOR_CLOSING,
+    CoverState.OPEN: HK_DOOR_OPEN,
+    CoverState.CLOSED: HK_DOOR_CLOSED,
+    CoverState.OPENING: HK_DOOR_OPENING,
+    CoverState.CLOSING: HK_DOOR_CLOSING,
 }
 
 # HomeKit only has two states for
@@ -85,13 +82,13 @@ DOOR_CURRENT_HASS_TO_HK = {
 # Opening is mapped to 0 since the target is Open
 # Closing is mapped to 1 since the target is Closed
 DOOR_TARGET_HASS_TO_HK = {
-    STATE_OPEN: HK_DOOR_OPEN,
-    STATE_CLOSED: HK_DOOR_CLOSED,
-    STATE_OPENING: HK_DOOR_OPEN,
-    STATE_CLOSING: HK_DOOR_CLOSED,
+    CoverState.OPEN: HK_DOOR_OPEN,
+    CoverState.CLOSED: HK_DOOR_CLOSED,
+    CoverState.OPENING: HK_DOOR_OPEN,
+    CoverState.CLOSING: HK_DOOR_CLOSED,
 }
 
-MOVING_STATES = {STATE_OPENING, STATE_CLOSING}
+MOVING_STATES = {CoverState.OPENING, CoverState.CLOSING}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,7 +187,7 @@ class GarageDoorOpener(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update cover state after state changed."""
-        hass_state = new_state.state
+        hass_state: CoverState = new_state.state  # type: ignore[assignment]
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
         current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
 
@@ -434,10 +431,11 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update cover position after state changed."""
-        position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
-        hk_position = position_mapping.get(new_state.state)
+        position_mapping = {CoverState.OPEN: 100, CoverState.CLOSED: 0}
+        _state: CoverState = new_state.state  # type: ignore[assignment]
+        hk_position = position_mapping.get(_state)
         if hk_position is not None:
-            is_moving = new_state.state in MOVING_STATES
+            is_moving = _state in MOVING_STATES
 
             if self.char_current_position.value != hk_position:
                 self.char_current_position.set_value(hk_position)
@@ -452,8 +450,8 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
 
 def _hass_state_to_position_start(state: str) -> int:
     """Convert hass state to homekit position state."""
-    if state == STATE_OPENING:
+    if state == CoverState.OPENING:
         return HK_POSITION_GOING_TO_MAX
-    if state == STATE_CLOSING:
+    if state == CoverState.CLOSING:
         return HK_POSITION_GOING_TO_MIN
     return HK_POSITION_STOPPED

@@ -81,8 +81,8 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
     ConductivityConverter: (
-        UnitOfConductivity.MICROSIEMENS,
-        UnitOfConductivity.MILLISIEMENS,
+        UnitOfConductivity.MICROSIEMENS_PER_CM,
+        UnitOfConductivity.MILLISIEMENS_PER_CM,
         1000,
     ),
     DataRateConverter: (
@@ -131,12 +131,84 @@ _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
     ConductivityConverter: [
+        # Deprecated to deprecated
         (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
         (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS),
         (5, UnitOfConductivity.MILLISIEMENS, 5e3, UnitOfConductivity.MICROSIEMENS),
         (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS),
         (5e6, UnitOfConductivity.MICROSIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
         (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS),
+        # Deprecated to new
+        (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS_PER_CM),
+        (5, UnitOfConductivity.SIEMENS, 5e6, UnitOfConductivity.MICROSIEMENS_PER_CM),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS,
+            5e3,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (5, UnitOfConductivity.MILLISIEMENS, 5e-3, UnitOfConductivity.SIEMENS_PER_CM),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (5e6, UnitOfConductivity.MICROSIEMENS, 5, UnitOfConductivity.SIEMENS_PER_CM),
+        # New to deprecated
+        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e3, UnitOfConductivity.MILLISIEMENS),
+        (5, UnitOfConductivity.SIEMENS_PER_CM, 5e6, UnitOfConductivity.MICROSIEMENS),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MICROSIEMENS,
+        ),
+        (5, UnitOfConductivity.MILLISIEMENS_PER_CM, 5e-3, UnitOfConductivity.SIEMENS),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS,
+        ),
+        (5e6, UnitOfConductivity.MICROSIEMENS_PER_CM, 5, UnitOfConductivity.SIEMENS),
+        # New to new
+        (
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+        ),
+        (
+            5,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+            5e-3,
+            UnitOfConductivity.SIEMENS_PER_CM,
+        ),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5e3,
+            UnitOfConductivity.MILLISIEMENS_PER_CM,
+        ),
+        (
+            5e6,
+            UnitOfConductivity.MICROSIEMENS_PER_CM,
+            5,
+            UnitOfConductivity.SIEMENS_PER_CM,
+        ),
     ],
     DataRateConverter: [
         (8e3, UnitOfDataRate.BITS_PER_SECOND, 8, UnitOfDataRate.KILOBITS_PER_SECOND),

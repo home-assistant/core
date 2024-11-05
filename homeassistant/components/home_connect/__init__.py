@@ -4,18 +4,20 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from requests import HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -28,6 +30,7 @@ from .const import (
     BSH_PAUSE,
     BSH_RESUME,
     DOMAIN,
+    OLD_NEW_UNIQUE_ID_SUFFIX_MAP,
     SERVICE_OPTION_ACTIVE,
     SERVICE_OPTION_SELECTED,
     SERVICE_PAUSE_PROGRAM,
@@ -76,7 +79,14 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
 
 SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
 def _get_appliance_by_device_id(
@@ -84,8 +94,7 @@ def _get_appliance_by_device_id(
 ) -> api.HomeConnectDevice:
     """Return a Home Connect appliance instance given an device_id."""
     for hc_api in hass.data[DOMAIN].values():
-        for dev_dict in hc_api.devices:
-            device = dev_dict[CONF_DEVICE]
+        for device in hc_api.devices:
             if device.device_id == device_id:
                 return device.appliance
     raise ValueError(f"Appliance for device id {device_id} not found")
@@ -252,9 +261,7 @@ async def update_all_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     device_registry = dr.async_get(hass)
     try:
         await hass.async_add_executor_job(hc_api.get_devices)
-        for device_dict in hc_api.devices:
-            device = device_dict["device"]
-
+        for device in hc_api.devices:
             device_entry = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, device.appliance.haId)},
@@ -268,3 +275,42 @@ async def update_all_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
             await hass.async_add_executor_job(device.initialize)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+
+        @callback
+        def update_unique_id(
+            entity_entry: RegistryEntry,
+        ) -> dict[str, Any] | None:
+            """Update unique ID of entity entry."""
+            for old_id_suffix, new_id_suffix in OLD_NEW_UNIQUE_ID_SUFFIX_MAP.items():
+                if entity_entry.unique_id.endswith(f"-{old_id_suffix}"):
+                    return {
+                        "new_unique_id": entity_entry.unique_id.replace(
+                            old_id_suffix, new_id_suffix
+                        )
+                    }
+            return None
+
+        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    return True
+
+
+def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any]:
+    """Return a dict from a Home Connect error."""
+    return (
+        err.args[0]
+        if len(err.args) > 0 and isinstance(err.args[0], dict)
+        else {"description": err.args[0]}
+        if len(err.args) > 0 and isinstance(err.args[0], str)
+        else {}
+    )

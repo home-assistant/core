@@ -68,6 +68,9 @@
         "state": {
           "on": "mdi:sleep"
         }
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
       }
     },
     "sensor": {
@@ -88,6 +91,9 @@
       },
       "alarm_source": {
         "default": "mdi:bell"
+      },
+      "water_alert_timestamp": {
+        "default": "mdi:clock-alert-outline"
       }
     },
     "number": {

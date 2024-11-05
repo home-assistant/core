@@ -54,12 +54,12 @@ async def test_disabled_by_default_switch(
 ) -> None:
     """Test vpn enabled switch is disabled by default ."""
     await setup_integration(hass, mock_config_entry)
+    for entity in ("vpn_enabled", "auto_zigbee_update"):
+        assert not hass.states.get(f"switch.mock_title_{entity}")
 
-    assert not hass.states.get("switch.mock_title_vpn_enabled")
-
-    assert (entry := entity_registry.async_get("switch.mock_title_vpn_enabled"))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert (entry := entity_registry.async_get(f"switch.mock_title_{entity}"))
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
