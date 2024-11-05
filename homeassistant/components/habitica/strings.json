@@ -38,6 +38,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "pending_quest": {
+        "name": "Pending quest invitation"
+      }
+    },
     "button": {
       "run_cron": {
         "name": "Start my day"
