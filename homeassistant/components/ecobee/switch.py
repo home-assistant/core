@@ -42,9 +42,13 @@ async def async_setup_entry(
         if thermostat["settings"]["ventilatorType"] != "none"
     ]
 
-    for index, thermostat in enumerate(data.ecobee.thermostats):
-        if thermostat["settings"]["hasHeatPump"]:
-            entities.append(EcobeeSwitchAuxHeatOnly(data, index))
+    entities.extend(
+        (
+            EcobeeSwitchAuxHeatOnly(data, index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if thermostat["settings"]["hasHeatPump"]
+        )
+    )
 
     async_add_entities(entities, update_before_add=True)
 
