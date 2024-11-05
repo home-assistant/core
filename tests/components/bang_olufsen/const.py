@@ -130,12 +130,12 @@ TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [
     "Audio Streamer",
-    "B&O Radio",
     "Bluetooth",
-    "Deezer",
+    "Spotify Connect",
     "Line-In",
     "Optical",
-    "Spotify Connect",
+    "B&O Radio",
+    "Deezer",
     "Tidal Connect",
 ]
 TEST_PLAYBACK_METADATA = PlaybackContentMetadata(

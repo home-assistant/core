@@ -20,57 +20,57 @@ class BangOlufsenSource:
     URI_STREAMER: Final[Source] = Source(
         name="Audio Streamer",
         id="uriStreamer",
-        is_enabled=True,
         is_seekable=False,
+        is_enabled=True,
         is_playable=True,
     )
     BLUETOOTH: Final[Source] = Source(
         name="Bluetooth",
         id="bluetooth",
-        is_enabled=True,
         is_seekable=False,
+        is_enabled=True,
         is_playable=True,
     )
     CHROMECAST: Final[Source] = Source(
         name="Chromecast built-in",
         id="chromeCast",
-        is_enabled=True,
         is_seekable=False,
+        is_enabled=True,
         is_playable=True,
     )
     LINE_IN: Final[Source] = Source(
         name="Line-In",
         id="lineIn",
-        is_enabled=True,
         is_seekable=False,
+        is_enabled=True,
         is_playable=True,
     )
     SPDIF: Final[Source] = Source(
         name="Optical",
         id="spdif",
-        is_enabled=True,
         is_seekable=False,
+        is_enabled=True,
         is_playable=True,
     )
     NET_RADIO: Final[Source] = Source(
         name="B&O Radio",
         id="netRadio",
-        is_enabled=True,
         is_seekable=False,
+        is_enabled=True,
         is_playable=True,
     )
     DEEZER: Final[Source] = Source(
         name="Deezer",
         id="deezer",
-        is_enabled=True,
         is_seekable=True,
+        is_enabled=True,
         is_playable=True,
     )
     TIDAL: Final[Source] = Source(
         name="Tidal",
         id="tidal",
-        is_enabled=True,
         is_seekable=True,
+        is_enabled=True,
         is_playable=True,
     )
 
@@ -190,18 +190,60 @@ VALID_MEDIA_TYPES: Final[tuple] = (
 # Fallback sources to use in case of API failure.
 FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
     items=[
-        BangOlufsenSource.URI_STREAMER,
-        BangOlufsenSource.NET_RADIO,
-        BangOlufsenSource.BLUETOOTH,
-        BangOlufsenSource.DEEZER,
-        BangOlufsenSource.LINE_IN,
-        BangOlufsenSource.SPDIF,
+        Source(
+            id="uriStreamer",
+            is_enabled=True,
+            is_playable=True,
+            name="Audio Streamer",
+            type=SourceTypeEnum(value="uriStreamer"),
+            is_seekable=False,
+        ),
+        Source(
+            id="bluetooth",
+            is_enabled=True,
+            is_playable=True,
+            name="Bluetooth",
+            type=SourceTypeEnum(value="bluetooth"),
+            is_seekable=False,
+        ),
         Source(
             id="spotify",
             is_enabled=True,
             is_playable=True,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
+            is_seekable=True,
+        ),
+        Source(
+            id="lineIn",
+            is_enabled=True,
+            is_playable=True,
+            name="Line-In",
+            type=SourceTypeEnum(value="lineIn"),
+            is_seekable=False,
+        ),
+        Source(
+            id="spdif",
+            is_enabled=True,
+            is_playable=True,
+            name="Optical",
+            type=SourceTypeEnum(value="spdif"),
+            is_seekable=False,
+        ),
+        Source(
+            id="netRadio",
+            is_enabled=True,
+            is_playable=True,
+            name="B&O Radio",
+            type=SourceTypeEnum(value="netRadio"),
+            is_seekable=False,
+        ),
+        Source(
+            id="deezer",
+            is_enabled=True,
+            is_playable=True,
+            name="Deezer",
+            type=SourceTypeEnum(value="deezer"),
             is_seekable=True,
         ),
         Source(
