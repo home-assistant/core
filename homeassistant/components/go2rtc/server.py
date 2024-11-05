@@ -112,6 +112,10 @@ class Server:
             await self._stop()
             raise Go2RTCServerStartError from err
 
+        # Check the server version
+        client = Go2RtcRestClient(async_get_clientsession(self._hass), DEFAULT_URL)
+        await client.validate_server_version()
+
     async def _log_output(self, process: asyncio.subprocess.Process) -> None:
         """Log the output of the process."""
         assert process.stdout is not None
@@ -174,7 +178,7 @@ class Server:
         _LOGGER.debug("Monitoring go2rtc API")
         try:
             while True:
-                await client.streams.list()
+                await client.validate_server_version()
                 await asyncio.sleep(10)
         except Exception as err:
             _LOGGER.debug("go2rtc API did not reply", exc_info=True)
