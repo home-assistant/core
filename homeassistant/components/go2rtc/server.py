@@ -1,6 +1,7 @@
 """Go2rtc server."""
 
 import asyncio
+from collections import deque
 from contextlib import suppress
 import logging
 from tempfile import NamedTemporaryFile
@@ -18,6 +19,7 @@ _TERMINATE_TIMEOUT = 5
 _SETUP_TIMEOUT = 30
 _SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr="
 _LOCALHOST_IP = "127.0.0.1"
+_LOG_BUFFER_SIZE = 512
 _RESPAWN_COOLDOWN = 1
 
 # Default configuration for HA
@@ -70,6 +72,7 @@ class Server:
         """Initialize the server."""
         self._hass = hass
         self._binary = binary
+        self._log_buffer: deque[str] = deque(maxlen=_LOG_BUFFER_SIZE)
         self._process: asyncio.subprocess.Process | None = None
         self._startup_complete = asyncio.Event()
         self._api_ip = _LOCALHOST_IP
@@ -114,6 +117,9 @@ class Server:
         except TimeoutError as err:
             msg = "Go2rtc server didn't start correctly"
             _LOGGER.exception(msg)
+            for line in self._log_buffer:
+                _LOGGER.warning(line)
+            self._log_buffer.clear()
             await self._stop()
             raise Go2RTCServerStartError from err
 
@@ -127,6 +133,7 @@ class Server:
 
         async for line in process.stdout:
             msg = line[:-1].decode().strip()
+            self._log_buffer.append(msg)
             _LOGGER.debug(msg)
             if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
                 self._startup_complete.set()
@@ -158,6 +165,10 @@ class Server:
                     await asyncio.sleep(_RESPAWN_COOLDOWN)
                     try:
                         await self._stop()
+                        _LOGGER.warning("Go2rtc unexpectedly stopped, server log:")
+                        for line in self._log_buffer:
+                            _LOGGER.warning(line)
+                        self._log_buffer.clear()
                         _LOGGER.debug("Spawning new go2rtc server")
                         with suppress(Go2RTCServerStartError):
                             await self._start()
