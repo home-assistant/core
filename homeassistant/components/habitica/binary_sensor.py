@@ -60,10 +60,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        [
-            HabiticaBinarySensorEntity(coordinator, description)
-            for description in BINARY_SENSOR_DESCRIPTIONS
-        ]
+        HabiticaBinarySensorEntity(coordinator, description)
+        for description in BINARY_SENSOR_DESCRIPTIONS
     )
 
 
