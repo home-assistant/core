@@ -822,7 +822,7 @@ async def test_squeezebox_search_favorites(
         blocking=True,
     )
     configured_player.async_query.assert_called_once_with(
-        "favorites", "items", "0", "1", "search:searchstring"
+        "favorites", "items", "0", "1", "", "search:searchstring"
     )
 
 
@@ -843,7 +843,7 @@ async def test_squeezebox_search_artists(
         blocking=True,
     )
     configured_player.async_query.assert_called_once_with(
-        "artists", "0", "1", "search:searchstring"
+        "artists", "0", "1", "", "search:searchstring"
     )
 
 
@@ -864,7 +864,7 @@ async def test_squeezebox_search_genres(
         blocking=True,
     )
     configured_player.async_query.assert_called_once_with(
-        "genres", "0", "1", "search:searchstring"
+        "genres", "0", "1", "", "search:searchstring"
     )
 
 
@@ -906,7 +906,7 @@ async def test_squeezebox_search_playlists(
         blocking=True,
     )
     configured_player.async_query.assert_called_once_with(
-        "playlists", "0", "1", "search:searchstring"
+        "playlists", "0", "1", "", "search:searchstring"
     )
 
 
