@@ -21,14 +21,14 @@ def generate_mock_home_data():
         MagicMock(
             name="first_home",
             price_total={
-                STARTTIME.isoformat(): 0.46914,
-                (STARTTIME + dt.timedelta(hours=1)).isoformat(): 0.46914,
+                START_TIME.isoformat(): 0.36914,
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): 0.36914,
                 tomorrow.isoformat(): 0.46914,
                 (tomorrow + dt.timedelta(hours=1)).isoformat(): 0.46914,
             },
             price_level={
-                STARTTIME.isoformat(): "VERY_EXPENSIVE",
-                (STARTTIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
+                START_TIME.isoformat(): "VERY_EXPENSIVE",
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
                 tomorrow.isoformat(): "VERY_EXPENSIVE",
                 (tomorrow + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
             },
@@ -36,14 +36,14 @@ def generate_mock_home_data():
         MagicMock(
             name="second_home",
             price_total={
-                STARTTIME.isoformat(): 0.46914,
-                (STARTTIME + dt.timedelta(hours=1)).isoformat(): 0.46914,
+                START_TIME.isoformat(): 0.36914,
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): 0.36914,
                 tomorrow.isoformat(): 0.46914,
                 (tomorrow + dt.timedelta(hours=1)).isoformat(): 0.46914,
             },
             price_level={
-                STARTTIME.isoformat(): "VERY_EXPENSIVE",
-                (STARTTIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
+                START_TIME.isoformat(): "VERY_EXPENSIVE",
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
                 tomorrow.isoformat(): "VERY_EXPENSIVE",
                 (tomorrow + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
             },
