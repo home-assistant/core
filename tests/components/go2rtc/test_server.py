@@ -38,6 +38,42 @@ def mock_tempfile() -> Generator[Mock]:
         yield file
 
 
+def _assert_server_output_logged(
+    server_stdout: list[str],
+    caplog: pytest.LogCaptureFixture,
+    loglevel: int,
+    expect_logged: bool,
+) -> None:
+    """Check server stdout was logged."""
+    for entry in server_stdout:
+        assert (
+            (
+                "homeassistant.components.go2rtc.server",
+                loglevel,
+                entry,
+            )
+            in caplog.record_tuples
+        ) is expect_logged
+
+
+def assert_server_output_logged(
+    server_stdout: list[str],
+    caplog: pytest.LogCaptureFixture,
+    loglevel: int,
+) -> None:
+    """Check server stdout was logged."""
+    _assert_server_output_logged(server_stdout, caplog, loglevel, True)
+
+
+def assert_server_output_not_logged(
+    server_stdout: list[str],
+    caplog: pytest.LogCaptureFixture,
+    loglevel: int,
+) -> None:
+    """Check server stdout was logged."""
+    _assert_server_output_logged(server_stdout, caplog, loglevel, False)
+
+
 @pytest.mark.parametrize(
     ("enable_ui", "api_ip"),
     [
@@ -83,16 +119,14 @@ webrtc:
 """.encode()
     )
 
-    # Check that server read the log lines
-    for entry in server_stdout:
-        assert (
-            "homeassistant.components.go2rtc.server",
-            logging.DEBUG,
-            entry,
-        ) in caplog.record_tuples
+    # Verify go2rtc binary stdout was logged with debug level
+    assert_server_output_logged(server_stdout, caplog, logging.DEBUG)
 
     await server.stop()
     mock_create_subprocess.return_value.terminate.assert_called_once()
+
+    # Verify go2rtc binary stdout was not logged with warning level
+    assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
 
 @pytest.mark.usefixtures("mock_tempfile")
@@ -140,13 +174,9 @@ async def test_server_failed_to_start(
     ):
         await server.start()
 
-    # Verify go2rtc binary stdout was logged
-    for entry in server_stdout:
-        assert (
-            "homeassistant.components.go2rtc.server",
-            logging.DEBUG,
-            entry,
-        ) in caplog.record_tuples
+    # Verify go2rtc binary stdout was logged with debug and warning level
+    assert_server_output_logged(server_stdout, caplog, logging.DEBUG)
+    assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     assert (
         "homeassistant.components.go2rtc.server",
@@ -169,8 +199,10 @@ async def test_server_failed_to_start(
 async def test_server_restart_process_exit(
     hass: HomeAssistant,
     mock_create_subprocess: AsyncMock,
+    server_stdout: list[str],
     rest_client: AsyncMock,
     server: Server,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the server is restarted when it exits."""
     evt = asyncio.Event()
@@ -188,9 +220,15 @@ async def test_server_restart_process_exit(
     await hass.async_block_till_done()
     mock_create_subprocess.assert_not_awaited()
 
+    # Verify go2rtc binary stdout was not yet logged with warning level
+    assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
+
     evt.set()
     await asyncio.sleep(0.1)
     mock_create_subprocess.assert_awaited_once()
+
+    # Verify go2rtc binary stdout was logged with warning level
+    assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     await server.stop()
 
@@ -199,8 +237,10 @@ async def test_server_restart_process_exit(
 async def test_server_restart_process_error(
     hass: HomeAssistant,
     mock_create_subprocess: AsyncMock,
+    server_stdout: list[str],
     rest_client: AsyncMock,
     server: Server,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the server is restarted on error."""
     mock_create_subprocess.return_value.wait.side_effect = [Exception, None, None, None]
@@ -209,9 +249,15 @@ async def test_server_restart_process_error(
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
 
+    # Verify go2rtc binary stdout was not yet logged with warning level
+    assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
+
     await asyncio.sleep(0.1)
     await hass.async_block_till_done()
     mock_create_subprocess.assert_awaited_once()
+
+    # Verify go2rtc binary stdout was logged with warning level
+    assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     await server.stop()
 
@@ -220,8 +266,10 @@ async def test_server_restart_process_error(
 async def test_server_restart_api_error(
     hass: HomeAssistant,
     mock_create_subprocess: AsyncMock,
+    server_stdout: list[str],
     rest_client: AsyncMock,
     server: Server,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that the server is restarted on error."""
     rest_client.streams.list.side_effect = Exception
@@ -230,9 +278,15 @@ async def test_server_restart_api_error(
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
 
+    # Verify go2rtc binary stdout was not yet logged with warning level
+    assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
+
     await asyncio.sleep(0.1)
     await hass.async_block_till_done()
     mock_create_subprocess.assert_awaited_once()
+
+    # Verify go2rtc binary stdout was logged with warning level
+    assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     await server.stop()
 
@@ -241,6 +295,7 @@ async def test_server_restart_api_error(
 async def test_server_restart_error(
     hass: HomeAssistant,
     mock_create_subprocess: AsyncMock,
+    server_stdout: list[str],
     rest_client: AsyncMock,
     server: Server,
     caplog: pytest.LogCaptureFixture,
@@ -253,9 +308,15 @@ async def test_server_restart_error(
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
 
+    # Verify go2rtc binary stdout was not yet logged with warning level
+    assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
+
     await asyncio.sleep(0.1)
     await hass.async_block_till_done()
     mock_create_subprocess.assert_awaited_once()
+
+    # Verify go2rtc binary stdout was logged with warning level
+    assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     assert "Unexpected error when restarting go2rtc server" in caplog.text
 
