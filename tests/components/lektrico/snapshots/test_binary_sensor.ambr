@@ -35,18 +35,8 @@
 # name: test_all_entities[binary_sensor.1p7k_500006_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'contactor_failure': False,
-      'cp_diode_failure': False,
-      'critical_temp': False,
       'device_class': 'problem',
       'friendly_name': '1p7k_500006 Errors',
-      'meter_fault': False,
-      'overcurrent': False,
-      'overtemp': False,
-      'overvoltage_error': False,
-      'rcd_error': False,
-      'state_e_activated': False,
-      'undervoltage_error': True,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_errors',
