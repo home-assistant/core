@@ -163,7 +163,9 @@ class FeedReaderOptionsFlowHandler(OptionsFlow):
             {
                 vol.Optional(
                     CONF_MAX_ENTRIES,
-                    default=self.options.get(CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES),
+                    default=self.config_entry.options.get(
+                        CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES
+                    ),
                 ): cv.positive_int,
             }
         )
