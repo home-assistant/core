@@ -896,40 +896,46 @@ async def test_supervisor_issue_detached_addon_removed(
 @pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_addon_boot_fail(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test fix flow for supervisor issue."""
     mock_resolution_info(
-        aioclient_mock,
+        supervisor_client,
         issues=[
-            {
-                "uuid": "1234",
-                "type": "boot_fail",
-                "context": "addon",
-                "reference": "test",
-                "suggestions": [
-                    {
-                        "uuid": "1235",
-                        "type": "execute_start",
-                        "context": "addon",
-                        "reference": "test",
-                    },
-                    {
-                        "uuid": "1236",
-                        "type": "disable_boot",
-                        "context": "addon",
-                        "reference": "test",
-                    },
-                ],
-            },
+            Issue(
+                type="boot_fail",
+                context=ContextType.ADDON,
+                reference="test",
+                uuid=(issue_uuid := uuid4()),
+            ),
         ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type="execute_start",
+                    context=ContextType.ADDON,
+                    reference="test",
+                    uuid=(sugg_uuid := uuid4()),
+                    auto=False,
+                ),
+                Suggestion(
+                    type="disable_boot",
+                    context=ContextType.ADDON,
+                    reference="test",
+                    uuid=uuid4(),
+                    auto=False,
+                ),
+            ]
+        },
     )
 
     assert await async_setup_component(hass, "hassio", {})
 
-    repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
     assert repair_issue
 
     client = await hass_client()
@@ -982,10 +988,5 @@ async def test_supervisor_issue_addon_boot_fail(
         "description_placeholders": None,
     }
 
-    assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
-
-    assert aioclient_mock.mock_calls[-1][0] == "post"
-    assert (
-        str(aioclient_mock.mock_calls[-1][1])
-        == "http://127.0.0.1/resolution/suggestion/1235"
-    )
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id=issue_uuid.hex)
+    supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)

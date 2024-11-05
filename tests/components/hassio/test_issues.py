@@ -639,7 +639,7 @@ async def test_supervisor_issues_add_remove(
             "data": {
                 "event": "issue_changed",
                 "data": {
-                    "uuid": "1234",
+                    "uuid": (issue_uuid := uuid4().hex),
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
@@ -657,7 +657,7 @@ async def test_supervisor_issues_add_remove(
     assert len(msg["result"]["issues"]) == 1
     assert_issue_repair_in_list(
         msg["result"]["issues"],
-        uuid="1234",
+        uuid=issue_uuid,
         context="system",
         type_="reboot_required",
         fixable=False,
@@ -671,13 +671,13 @@ async def test_supervisor_issues_add_remove(
             "data": {
                 "event": "issue_changed",
                 "data": {
-                    "uuid": "1234",
+                    "uuid": issue_uuid,
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
                     "suggestions": [
                         {
-                            "uuid": "1235",
+                            "uuid": uuid4().hex,
                             "type": "execute_reboot",
                             "context": "system",
                             "reference": None,
@@ -697,7 +697,7 @@ async def test_supervisor_issues_add_remove(
     assert len(msg["result"]["issues"]) == 1
     assert_issue_repair_in_list(
         msg["result"]["issues"],
-        uuid="1234",
+        uuid=issue_uuid,
         context="system",
         type_="reboot_required",
         fixable=True,
@@ -711,7 +711,7 @@ async def test_supervisor_issues_add_remove(
             "data": {
                 "event": "issue_removed",
                 "data": {
-                    "uuid": "1234",
+                    "uuid": issue_uuid,
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
@@ -834,7 +834,7 @@ async def test_supervisor_issues_detached_addon_missing(
             "data": {
                 "event": "issue_changed",
                 "data": {
-                    "uuid": "1234",
+                    "uuid": (issue_uuid := uuid4().hex),
                     "type": "detached_addon_missing",
                     "context": "addon",
                     "reference": "test",
@@ -852,7 +852,7 @@ async def test_supervisor_issues_detached_addon_missing(
     assert len(msg["result"]["issues"]) == 1
     assert_issue_repair_in_list(
         msg["result"]["issues"],
-        uuid="1234",
+        uuid=issue_uuid,
         context="addon",
         type_="detached_addon_missing",
         fixable=False,

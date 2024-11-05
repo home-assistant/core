@@ -7,9 +7,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import logging
 from typing import Any, NotRequired, TypedDict
+from uuid import UUID
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import Issue as SupervisorIssue
+from aiohasupervisor.models import ContextType, Issue as SupervisorIssue
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -44,7 +45,6 @@ from .const import (
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
     UPDATE_KEY_SUPERVISOR,
-    SupervisorIssueContext,
 )
 from .coordinator import get_addons_info
 from .handler import HassIO, get_supervisor_client
@@ -119,9 +119,9 @@ class SuggestionDataType(TypedDict):
 class Suggestion:
     """Suggestion from Supervisor which resolves an issue."""
 
-    uuid: str
+    uuid: UUID
     type: str
-    context: SupervisorIssueContext
+    context: ContextType
     reference: str | None = None
 
     @property
@@ -133,9 +133,9 @@ class Suggestion:
     def from_dict(cls, data: SuggestionDataType) -> Suggestion:
         """Convert from dictionary representation."""
         return cls(
-            uuid=data["uuid"],
+            uuid=UUID(data["uuid"]),
             type=data["type"],
-            context=SupervisorIssueContext(data["context"]),
+            context=ContextType(data["context"]),
             reference=data["reference"],
         )
 
@@ -154,9 +154,9 @@ class IssueDataType(TypedDict):
 class Issue:
     """Issue from Supervisor."""
 
-    uuid: str
+    uuid: UUID
     type: str
-    context: SupervisorIssueContext
+    context: ContextType
     reference: str | None = None
     suggestions: list[Suggestion] = field(default_factory=list, compare=False)
 
@@ -170,9 +170,9 @@ class Issue:
         """Convert from dictionary representation."""
         suggestions: list[SuggestionDataType] = data.get("suggestions", [])
         return cls(
-            uuid=data["uuid"],
+            uuid=UUID(data["uuid"]),
             type=data["type"],
-            context=SupervisorIssueContext(data["context"]),
+            context=ContextType(data["context"]),
             reference=data["reference"],
             suggestions=[
                 Suggestion.from_dict(suggestion) for suggestion in suggestions
@@ -189,7 +189,7 @@ class SupervisorIssues:
         self._client = client
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
-        self._issues: dict[str, Issue] = {}
+        self._issues: dict[UUID, Issue] = {}
         self._supervisor_client = get_supervisor_client(hass)
 
     @property
@@ -283,7 +283,7 @@ class SupervisorIssues:
             async_create_issue(
                 self._hass,
                 DOMAIN,
-                issue.uuid,
+                issue.uuid.hex,
                 is_fixable=bool(issue.suggestions),
                 severity=IssueSeverity.WARNING,
                 translation_key=issue.key,
@@ -303,20 +303,20 @@ class SupervisorIssues:
         except SupervisorError:
             _LOGGER.error(
                 "Could not get suggestions for supervisor issue %s, skipping it",
-                data.uuid,
+                data.uuid.hex,
             )
             return
         self.add_issue(
             Issue(
-                uuid=data.uuid.hex,
+                uuid=data.uuid,
                 type=str(data.type),
-                context=data.context.value,
+                context=data.context,
                 reference=data.reference,
                 suggestions=[
                     Suggestion(
                         uuid=suggestion.uuid,
                         type=str(suggestion.type),
-                        context=suggestion.context.value,
+                        context=suggestion.context,
                         reference=suggestion.reference,
                     )
                     for suggestion in suggestions
@@ -330,13 +330,13 @@ class SupervisorIssues:
             return
 
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
-            async_delete_issue(self._hass, DOMAIN, issue.uuid)
+            async_delete_issue(self._hass, DOMAIN, issue.uuid.hex)
 
         del self._issues[issue.uuid]
 
     def get_issue(self, issue_id: str) -> Issue | None:
         """Get issue from key."""
-        return self._issues.get(issue_id)
+        return self._issues.get(UUID(issue_id))
 
     async def setup(self) -> None:
         """Create supervisor events listener."""

@@ -8,6 +8,7 @@ from types import MethodType
 from typing import Any
 
 from aiohasupervisor import SupervisorClient, SupervisorError
+from aiohasupervisor.models import ContextType
 import voluptuous as vol
 
 from homeassistant.components.repairs import RepairsFlow
@@ -22,7 +23,6 @@ from .const import (
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_COMPONENTS,
     PLACEHOLDER_KEY_REFERENCE,
-    SupervisorIssueContext,
 )
 from .handler import get_supervisor_client
 from .issues import Issue, Suggestion
@@ -171,9 +171,9 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
                 if issue.key == self.issue.key or issue.type != self.issue.type:
                     continue
 
-                if issue.context == SupervisorIssueContext.CORE:
+                if issue.context == ContextType.CORE:
                     components.insert(0, "Home Assistant")
-                elif issue.context == SupervisorIssueContext.ADDON:
+                elif issue.context == ContextType.ADDON:
                     components.append(
                         next(
                             (
