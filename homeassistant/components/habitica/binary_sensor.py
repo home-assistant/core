@@ -33,17 +33,19 @@ class HabiticaBinarySensor(StrEnum):
     PENDING_QUEST = "pending_quest"
 
 
+def get_scroll_image_for_pending_quest_invitation(user: dict[str, Any]) -> str | None:
+    """Entity picture for pending quest invitation."""
+    if user["party"]["quest"].get("key") and user["party"]["quest"]["RSVPNeeded"]:
+        return f"inventory_quest_scroll_{user["party"]["quest"]["key"]}.png"
+    return None
+
+
 BINARY_SENSOR_DESCRIPTIONS: tuple[HabiticaBinarySensorEntityDescription, ...] = (
     HabiticaBinarySensorEntityDescription(
         key=HabiticaBinarySensor.PENDING_QUEST,
         translation_key=HabiticaBinarySensor.PENDING_QUEST,
         value_fn=lambda user: user["party"]["quest"]["RSVPNeeded"],
-        entity_picture=(
-            lambda user: f"inventory_quest_scroll_{key}.png"
-            if (key := user["party"]["quest"].get("key"))
-            and user["party"]["quest"]["RSVPNeeded"]
-            else None
-        ),
+        entity_picture=get_scroll_image_for_pending_quest_invitation,
     ),
 )
 
