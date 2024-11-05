@@ -26,7 +26,6 @@ from homeassistant.components.utility_meter.const import (
 )
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
-    ATTR_LAST_VALID_STATE,
     ATTR_STATUS,
     COLLECTING,
     PAUSED,
@@ -760,64 +759,6 @@ async def test_restore_state(
                     "status": "paused",
                 },
             ),
-            # sensor.energy_bill_tariff2 has missing keys and falls back to
-            # saved state
-            (
-                State(
-                    "sensor.energy_bill_tariff2",
-                    "2.1",
-                    attributes={
-                        ATTR_STATUS: PAUSED,
-                        ATTR_LAST_RESET: last_reset_1,
-                        ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
-                    },
-                ),
-                {
-                    "native_value": {
-                        "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "2.2",
-                    },
-                    "native_unit_of_measurement": "kWh",
-                    "last_valid_state": "None",
-                },
-            ),
-            # sensor.energy_bill_tariff3 has invalid data and falls back to
-            # saved state
-            (
-                State(
-                    "sensor.energy_bill_tariff3",
-                    "3.1",
-                    attributes={
-                        ATTR_STATUS: COLLECTING,
-                        ATTR_LAST_RESET: last_reset_1,
-                        ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
-                    },
-                ),
-                {
-                    "native_value": {
-                        "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "3f",  # Invalid
-                    },
-                    "native_unit_of_measurement": "kWh",
-                    "last_valid_state": "None",
-                },
-            ),
-            # No extra saved data, fall back to saved state
-            (
-                State(
-                    "sensor.energy_bill_tariff4",
-                    "error",
-                    attributes={
-                        ATTR_STATUS: COLLECTING,
-                        ATTR_LAST_RESET: last_reset_1,
-                        ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
-                    },
-                ),
-                {},
-            ),
         ],
     )
 
@@ -852,25 +793,6 @@ async def test_restore_state(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
-    state = hass.states.get("sensor.energy_bill_tariff2")
-    assert state.state == "2.1"
-    assert state.attributes.get("status") == PAUSED
-    assert state.attributes.get("last_reset") == last_reset_1
-    assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-
-    state = hass.states.get("sensor.energy_bill_tariff3")
-    assert state.state == "3.1"
-    assert state.attributes.get("status") == COLLECTING
-    assert state.attributes.get("last_reset") == last_reset_1
-    assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.MEGA_WATT_HOUR
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-
-    state = hass.states.get("sensor.energy_bill_tariff4")
-    assert state.state == STATE_UNKNOWN
-
     # utility_meter is loaded, now set sensors according to utility_meter:
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -882,12 +804,7 @@ async def test_restore_state(
     state = hass.states.get("sensor.energy_bill_tariff0")
     assert state.attributes.get("status") == COLLECTING
 
-    for entity_id in (
-        "sensor.energy_bill_tariff1",
-        "sensor.energy_bill_tariff2",
-        "sensor.energy_bill_tariff3",
-        "sensor.energy_bill_tariff4",
-    ):
+    for entity_id in ("sensor.energy_bill_tariff1",):
         state = hass.states.get(entity_id)
         assert state.attributes.get("status") == PAUSED
 
@@ -939,7 +856,18 @@ async def test_service_reset_no_tariffs(
                         ATTR_LAST_RESET: last_reset,
                     },
                 ),
-                {},
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "last_valid_state": None,
+                    "status": "collecting",
+                    "input_device_class": "energy",
+                },
             ),
         ],
     )
@@ -1045,21 +973,33 @@ async def test_service_reset_no_tariffs_correct_with_multi(
                 State(
                     "sensor.energy_bill",
                     "3",
-                    attributes={
-                        ATTR_LAST_RESET: last_reset,
-                    },
                 ),
-                {},
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "status": "collecting",
+                },
             ),
             (
                 State(
                     "sensor.water_bill",
                     "6",
-                    attributes={
-                        ATTR_LAST_RESET: last_reset,
-                    },
                 ),
-                {},
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "6",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "status": "collecting",
+                },
             ),
         ],
     )

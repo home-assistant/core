@@ -598,7 +598,6 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            # new introduced in 2022.04
             self._state = last_sensor_data.native_value
             self._input_device_class = last_sensor_data.input_device_class
             self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
@@ -608,39 +607,6 @@ class UtilityMeterSensor(RestoreSensor):
             if last_sensor_data.status == COLLECTING:
                 # Null lambda to allow cancelling the collection on tariff change
                 self._collecting = lambda: None
-
-        elif state := await self.async_get_last_state():
-            # legacy to be removed on 2022.10 (we are keeping this to avoid utility_meter counter losses)
-            try:
-                self._state = Decimal(state.state)
-            except InvalidOperation:
-                _LOGGER.error(
-                    "Could not restore state <%s>. Resetting utility_meter.%s",
-                    state.state,
-                    self.name,
-                )
-            else:
-                self._unit_of_measurement = state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-                self._last_period = (
-                    Decimal(state.attributes[ATTR_LAST_PERIOD])
-                    if state.attributes.get(ATTR_LAST_PERIOD)
-                    and is_number(state.attributes[ATTR_LAST_PERIOD])
-                    else Decimal(0)
-                )
-                self._last_valid_state = (
-                    Decimal(state.attributes[ATTR_LAST_VALID_STATE])
-                    if state.attributes.get(ATTR_LAST_VALID_STATE)
-                    and is_number(state.attributes[ATTR_LAST_VALID_STATE])
-                    else None
-                )
-                self._last_reset = dt_util.as_utc(
-                    dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
-                )
-                if state.attributes.get(ATTR_STATUS) == COLLECTING:
-                    # Null lambda to allow cancelling the collection on tariff change
-                    self._collecting = lambda: None
 
         @callback
         def async_source_tracking(event):
