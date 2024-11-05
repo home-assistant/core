@@ -207,9 +207,8 @@ class OllamaOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.url: str = self.config_entry.data[CONF_URL]
-        self.model: str = self.config_entry.data[CONF_MODEL]
+        self.url: str = config_entry.data[CONF_URL]
+        self.model: str = config_entry.data[CONF_MODEL]
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

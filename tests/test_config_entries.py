@@ -5729,6 +5729,14 @@ async def test_starting_config_flow_on_single_config_entry(
             None,
             {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
         ),
+        (
+            {"source": config_entries.SOURCE_ZEROCONF},
+            None,
+            {
+                "type": data_entry_flow.FlowResultType.ABORT,
+                "reason": "single_instance_allowed",
+            },
+        ),
     ],
 )
 async def test_starting_config_flow_on_single_config_entry_2(
@@ -5843,8 +5851,20 @@ async def test_avoid_adding_second_config_entry_on_single_config_entry(
         assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
+@pytest.mark.parametrize(
+    ("flow_1_unique_id", "flow_2_unique_id"),
+    [
+        (None, None),
+        ("very_unique", "very_unique"),
+        (None, config_entries.DEFAULT_DISCOVERY_UNIQUE_ID),
+        ("very_unique", config_entries.DEFAULT_DISCOVERY_UNIQUE_ID),
+    ],
+)
 async def test_in_progress_get_canceled_when_entry_is_created(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    flow_1_unique_id: str | None,
+    flow_2_unique_id: str | None,
 ) -> None:
     """Test that we abort all in progress flows when a new entry is created on a single instance only integration."""
     integration = loader.Integration(
@@ -5872,6 +5892,15 @@ async def test_in_progress_get_canceled_when_entry_is_created(
             if user_input is not None:
                 return self.async_create_entry(title="Test Title", data=user_input)
 
+            await self.async_set_unique_id(flow_1_unique_id, raise_on_progress=False)
+            return self.async_show_form(step_id="user")
+
+        async def async_step_zeroconfg(self, user_input=None):
+            """Test user step."""
+            if user_input is not None:
+                return self.async_create_entry(title="Test Title", data=user_input)
+
+            await self.async_set_unique_id(flow_2_unique_id, raise_on_progress=False)
             return self.async_show_form(step_id="user")
 
     with (

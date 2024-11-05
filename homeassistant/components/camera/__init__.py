@@ -840,17 +840,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
         config = self._async_get_webrtc_client_configuration()
 
-        ice_servers = [
-            server
-            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
-            for server in servers()
-        ]
-        config.configuration.ice_servers.extend(ice_servers)
+        if not self._supports_native_sync_webrtc:
+            # Until 2024.11, the frontend was not resolving any ice servers
+            # The async approach was added 2024.11 and new integrations need to use it
+            ice_servers = [
+                server
+                for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
+                for server in servers()
+            ]
+            config.configuration.ice_servers.extend(ice_servers)
 
-        config.get_candidates_upfront = (
-            self._supports_native_sync_webrtc
-            or self._legacy_webrtc_provider is not None
-        )
+        config.get_candidates_upfront = self._legacy_webrtc_provider is not None
 
         return config
 

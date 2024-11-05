@@ -128,13 +128,27 @@ ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
 
 type InputLibValue = str | tuple[str, ...]
 
-_cmds: dict[str, InputLibValue] = {
-    k: v["name"]
-    for k, v in {
-        **PYEISCP_COMMANDS["main"]["SLI"]["values"],
-        **PYEISCP_COMMANDS["zone2"]["SLZ"]["values"],
-    }.items()
-}
+
+def _input_lib_cmds(zone: str) -> dict[InputSource, InputLibValue]:
+    match zone:
+        case "main":
+            cmds = PYEISCP_COMMANDS["main"]["SLI"]
+        case "zone2":
+            cmds = PYEISCP_COMMANDS["zone2"]["SLZ"]
+        case "zone3":
+            cmds = PYEISCP_COMMANDS["zone3"]["SL3"]
+        case "zone4":
+            cmds = PYEISCP_COMMANDS["zone4"]["SL4"]
+
+    result: dict[InputSource, InputLibValue] = {}
+    for k, v in cmds["values"].items():
+        try:
+            source = InputSource(k)
+        except ValueError:
+            continue
+        result[source] = v["name"]
+
+    return result
 
 
 async def async_setup_platform(
@@ -147,16 +161,13 @@ async def async_setup_platform(
     host = config.get(CONF_HOST)
 
     source_mapping: dict[str, InputSource] = {}
-    for value, source_lib in _cmds.items():
-        try:
-            source = InputSource(value)
-        except ValueError:
-            continue
-        if isinstance(source_lib, str):
-            source_mapping.setdefault(source_lib, source)
-        else:
-            for source_lib_single in source_lib:
-                source_mapping.setdefault(source_lib_single, source)
+    for zone in ZONES:
+        for source, source_lib in _input_lib_cmds(zone).items():
+            if isinstance(source_lib, str):
+                source_mapping.setdefault(source_lib, source)
+            else:
+                for source_lib_single in source_lib:
+                    source_mapping.setdefault(source_lib_single, source)
 
     sources: dict[InputSource, str] = {}
     for source_lib_single, source_name in config[CONF_SOURCES].items():
@@ -340,9 +351,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
 
-        self._source_mapping = sources
-        self._reverse_mapping = {value: key for key, value in sources.items()}
-        self._lib_mapping = {_cmds[source.value]: source for source in InputSource}
+        self._name_mapping = sources
+        self._reverse_name_mapping = {value: key for key, value in sources.items()}
+        self._lib_mapping = _input_lib_cmds(zone)
+        self._reverse_lib_mapping = {
+            value: key for key, value in self._lib_mapping.items()
+        }
 
         self._attr_source_list = list(sources.values())
         self._attr_extra_state_attributes = {}
@@ -414,7 +428,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.source_list and source in self.source_list:
-            source_lib = _cmds[self._reverse_mapping[source].value]
+            source_lib = self._lib_mapping[self._reverse_name_mapping[source]]
             if isinstance(source_lib, str):
                 source_lib_single = source_lib
             else:
@@ -432,7 +446,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     ) -> None:
         """Play radio station by preset number."""
         if self.source is not None:
-            source = self._reverse_mapping[self.source]
+            source = self._reverse_name_mapping[self.source]
             if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
                 self._update_receiver("preset", media_id)
 
@@ -505,9 +519,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     @callback
     def _parse_source(self, source_lib: InputLibValue) -> None:
-        source = self._lib_mapping[source_lib]
-        if source in self._source_mapping:
-            self._attr_source = self._source_mapping[source]
+        source = self._reverse_lib_mapping[source_lib]
+        if source in self._name_mapping:
+            self._attr_source = self._name_mapping[source]
             return
 
         source_meaning = source.value_meaning
