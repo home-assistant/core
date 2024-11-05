@@ -979,7 +979,7 @@ async def test_camera_capabilities_hls(
     )
 
 
-@pytest.mark.usefixtures("mock_camera_webrtc_native_sync_offer")
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
 async def test_camera_capabilities_webrtc(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -987,5 +987,21 @@ async def test_camera_capabilities_webrtc(
     """Test WebRTC camera capabilities."""
 
     await _test_capabilities(
-        hass, hass_ws_client, "camera.test", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
+        hass, hass_ws_client, "camera.sync", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
     )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "expect_native_async_webrtc"),
+    [("camera.sync", False), ("camera.async", True)],
+)
+@pytest.mark.usefixtures("mock_test_webrtc_cameras", "register_test_provider")
+async def test_webrtc_provider_not_added_for_native_webrtc(
+    hass: HomeAssistant, entity_id: str, expect_native_async_webrtc: bool
+) -> None:
+    """Test that a WebRTC provider is not added to a camera when the camera has native WebRTC support."""
+    camera_obj = get_camera_from_entity_id(hass, entity_id)
+    assert camera_obj
+    assert camera_obj._webrtc_provider is None
+    assert camera_obj._supports_native_sync_webrtc is not expect_native_async_webrtc
+    assert camera_obj._supports_native_async_webrtc is expect_native_async_webrtc
