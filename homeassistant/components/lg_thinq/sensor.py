@@ -255,73 +255,9 @@ WATER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         translation_key=ThinQProperty.WATER_TYPE,
     ),
 }
-TIMER_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
-    TimerProperty.RELATIVE_TO_START: SensorEntityDescription(
-        key=TimerProperty.RELATIVE_TO_START,
-        translation_key=TimerProperty.RELATIVE_TO_START,
-    ),
-    TimerProperty.RELATIVE_TO_START_WM: SensorEntityDescription(
-        key=TimerProperty.RELATIVE_TO_START,
-        translation_key=TimerProperty.RELATIVE_TO_START_WM,
-    ),
-    TimerProperty.RELATIVE_TO_STOP: SensorEntityDescription(
-        key=TimerProperty.RELATIVE_TO_STOP,
-        translation_key=TimerProperty.RELATIVE_TO_STOP,
-    ),
-    TimerProperty.RELATIVE_TO_STOP_WM: SensorEntityDescription(
-        key=TimerProperty.RELATIVE_TO_STOP,
-        translation_key=TimerProperty.RELATIVE_TO_STOP_WM,
-    ),
-    TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP: SensorEntityDescription(
-        key=TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP,
-        translation_key=TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP,
-    ),
-    TimerProperty.ABSOLUTE_TO_START: SensorEntityDescription(
-        key=TimerProperty.ABSOLUTE_TO_START,
-        translation_key=TimerProperty.ABSOLUTE_TO_START,
-    ),
-    TimerProperty.ABSOLUTE_TO_STOP: SensorEntityDescription(
-        key=TimerProperty.ABSOLUTE_TO_STOP,
-        translation_key=TimerProperty.ABSOLUTE_TO_STOP,
-    ),
-    TimerProperty.REMAIN: SensorEntityDescription(
-        key=TimerProperty.REMAIN,
-        translation_key=TimerProperty.REMAIN,
-    ),
-    TimerProperty.TARGET: SensorEntityDescription(
-        key=TimerProperty.TARGET,
-        translation_key=TimerProperty.TARGET,
-    ),
-    TimerProperty.RUNNING: SensorEntityDescription(
-        key=TimerProperty.RUNNING,
-        translation_key=TimerProperty.RUNNING,
-    ),
-    TimerProperty.TOTAL: SensorEntityDescription(
-        key=TimerProperty.TOTAL,
-        translation_key=TimerProperty.TOTAL,
-    ),
-    TimerProperty.LIGHT_START: SensorEntityDescription(
-        key=TimerProperty.LIGHT_START,
-        translation_key=TimerProperty.LIGHT_START,
-    ),
-    ThinQProperty.ELAPSED_DAY_STATE: SensorEntityDescription(
-        key=ThinQProperty.ELAPSED_DAY_STATE,
-        native_unit_of_measurement=UnitOfTime.DAYS,
-        translation_key=ThinQProperty.ELAPSED_DAY_STATE,
-    ),
-    ThinQProperty.ELAPSED_DAY_TOTAL: SensorEntityDescription(
-        key=ThinQProperty.ELAPSED_DAY_TOTAL,
-        native_unit_of_measurement=UnitOfTime.DAYS,
-        translation_key=ThinQProperty.ELAPSED_DAY_TOTAL,
-    ),
-}
 
 WASHER_SENSORS: tuple[SensorEntityDescription, ...] = (
     RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
-    TIMER_SENSOR_DESC[TimerProperty.RELATIVE_TO_START_WM],
-    TIMER_SENSOR_DESC[TimerProperty.RELATIVE_TO_STOP_WM],
-    TIMER_SENSOR_DESC[TimerProperty.REMAIN],
-    TIMER_SENSOR_DESC[TimerProperty.TOTAL],
 )
 DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = {
     DeviceType.AIR_CONDITIONER: (
@@ -332,9 +268,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.ODOR_LEVEL],
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.TOTAL_POLLUTION_LEVEL],
         FILTER_INFO_SENSOR_DESC[ThinQProperty.FILTER_LIFETIME],
-        TIMER_SENSOR_DESC[TimerProperty.RELATIVE_TO_START],
-        TIMER_SENSOR_DESC[TimerProperty.RELATIVE_TO_STOP],
-        TIMER_SENSOR_DESC[TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP],
     ),
     DeviceType.AIR_PURIFIER_FAN: (
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM1],
@@ -345,7 +278,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.MONITORING_ENABLED],
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.ODOR_LEVEL],
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.TOTAL_POLLUTION_LEVEL],
-        TIMER_SENSOR_DESC[TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP],
     ),
     DeviceType.AIR_PURIFIER: (
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM1],
@@ -361,7 +293,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     DeviceType.COOKTOP: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         POWER_SENSOR_DESC[ThinQProperty.POWER_LEVEL],
-        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
     ),
     DeviceType.DEHUMIDIFIER: (
         JOB_MODE_SENSOR_DESC[ThinQProperty.CURRENT_JOB_MODE],
@@ -372,9 +303,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         PREFERENCE_SENSOR_DESC[ThinQProperty.RINSE_LEVEL],
         PREFERENCE_SENSOR_DESC[ThinQProperty.SOFTENING_LEVEL],
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
-        TIMER_SENSOR_DESC[TimerProperty.RELATIVE_TO_START_WM],
-        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
-        TIMER_SENSOR_DESC[TimerProperty.TOTAL],
     ),
     DeviceType.DRYER: WASHER_SENSORS,
     DeviceType.HOME_BREW: (
@@ -385,10 +313,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_INFO],
         RECIPE_SENSOR_DESC[ThinQProperty.BEER_REMAIN],
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
-        TIMER_SENSOR_DESC[ThinQProperty.ELAPSED_DAY_STATE],
-        TIMER_SENSOR_DESC[ThinQProperty.ELAPSED_DAY_TOTAL],
     ),
-    DeviceType.HOOD: (TIMER_SENSOR_DESC[TimerProperty.REMAIN],),
     DeviceType.HUMIDIFIER: (
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM1],
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.PM2],
@@ -397,9 +322,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.TEMPERATURE],
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.MONITORING_ENABLED],
         AIR_QUALITY_SENSOR_DESC[ThinQProperty.TOTAL_POLLUTION_LEVEL],
-        TIMER_SENSOR_DESC[TimerProperty.ABSOLUTE_TO_START],
-        TIMER_SENSOR_DESC[TimerProperty.ABSOLUTE_TO_STOP],
-        TIMER_SENSOR_DESC[TimerProperty.SLEEP_TIMER_RELATIVE_TO_STOP],
     ),
     DeviceType.KIMCHI_REFRIGERATOR: (
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],
@@ -408,15 +330,10 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
             translation_key=ThinQProperty.TARGET_TEMPERATURE,
         ),
     ),
-    DeviceType.MICROWAVE_OVEN: (
-        RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
-        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
-    ),
+    DeviceType.MICROWAVE_OVEN: (RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],),
     DeviceType.OVEN: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         TEMPERATURE_SENSOR_DESC[ThinQProperty.TARGET_TEMPERATURE],
-        TIMER_SENSOR_DESC[TimerProperty.REMAIN],
-        TIMER_SENSOR_DESC[TimerProperty.TARGET],
     ),
     DeviceType.PLANT_CULTIVATOR: (
         LIGHT_SENSOR_DESC[ThinQProperty.BRIGHTNESS],
@@ -427,7 +344,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         TEMPERATURE_SENSOR_DESC[ThinQProperty.DAY_TARGET_TEMPERATURE],
         TEMPERATURE_SENSOR_DESC[ThinQProperty.NIGHT_TARGET_TEMPERATURE],
         TEMPERATURE_SENSOR_DESC[ThinQProperty.TEMPERATURE_STATE],
-        TIMER_SENSOR_DESC[TimerProperty.LIGHT_START],
     ),
     DeviceType.REFRIGERATOR: (
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],
@@ -436,7 +352,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     DeviceType.ROBOT_CLEANER: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         JOB_MODE_SENSOR_DESC[ThinQProperty.CURRENT_JOB_MODE],
-        TIMER_SENSOR_DESC[TimerProperty.RUNNING],
     ),
     DeviceType.STICK_CLEANER: (
         BATTERY_SENSOR_DESC[ThinQProperty.BATTERY_PERCENT],
