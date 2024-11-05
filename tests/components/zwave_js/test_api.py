@@ -87,6 +87,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_PARAMETERS,
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
+    CONF_INSTALLER_MODE,
     DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
@@ -4989,19 +4990,31 @@ async def test_invoke_cc_api(
     assert msg["error"] == {"code": "NotFoundError", "message": ""}
 
 
-async def test_get_global_settings(
+async def test_get_integration_settings(
     hass: HomeAssistant, integration, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that the get_global_settings WS API call works."""
+    """Test that the get_integration_settings WS API call works."""
     ws_client = await hass_ws_client(hass)
 
-    # Test we can get global settings
+    # Test default settings
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "zwave_js/get_global_settings",
+            TYPE: "zwave_js/get_integration_settings",
         }
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert msg["result"] == {CONF_INSTALLER_MODE: False}
+
+    # Test with installer_mode: true
+    hass.data[DOMAIN] = {CONF_INSTALLER_MODE: True}
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/get_integration_settings",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {CONF_INSTALLER_MODE: True}
