@@ -5004,4 +5004,4 @@ async def test_get_global_settings(
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == hass.data[DOMAIN]
+    assert msg["result"] == {CONF_INSTALLER_MODE: False}
