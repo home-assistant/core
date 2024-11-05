@@ -70,11 +70,15 @@ async def async_setup_entry(
     ]
 
     _LOGGER.debug("Adding aux cutover threshold number (if present)")
-    for index, thermostat in enumerate(data.ecobee.thermostats):
-        if thermostat["settings"]["hasHeatPump"]:
-            entities.append(EcobeeAuxCutoverThreshold(data, index))
+    entities.extend(
+        (
+            EcobeeAuxCutoverThreshold(data, index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if thermostat["settings"]["hasHeatPump"]
+        )
+    )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, True)
 
 
 class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
