@@ -18,6 +18,7 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityDescription,
     CameraEntityFeature,
+    RTCIceCandidate,
     StreamType,
     WebRTCAnswer,
     WebRTCCandidate,
@@ -116,7 +117,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         if description.live_stream:
             self._attr_supported_features |= CameraEntityFeature.STREAM
             self._attr_frontend_stream_type = StreamType.WEB_RTC
-        self._webrtc_sync_offer = True
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -197,15 +197,25 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             elif ring_message.answer:
                 send_message(WebRTCAnswer(ring_message.answer))
             elif ring_message.candidate:
-                send_message(WebRTCCandidate(ring_message.candidate))
+                send_message(
+                    WebRTCCandidate(
+                        RTCIceCandidate(
+                            ring_message.candidate, ring_message.sdp_m_line_index or 0
+                        )
+                    )
+                )
 
         return await self._device.generate_async_webrtc_stream(
             offer_sdp, session_id, message_wrapper
         )
 
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidate
+    ) -> None:
         """Handle a WebRTC candidate."""
-        await self._device.on_webrtc_candidate(session_id, candidate)
+        await self._device.on_webrtc_candidate(
+            session_id, candidate.candidate, candidate.sdp_m_line_index
+        )
 
     @callback
     def close_webrtc_session(self, session_id: str) -> None:

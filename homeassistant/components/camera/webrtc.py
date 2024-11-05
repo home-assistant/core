@@ -85,6 +85,7 @@ class WebRTCCandidate(WebRTCMessage):
         return {
             "type": self._get_type(),
             "candidate": self.candidate.candidate,
+            "sdp_m_line_index": self.candidate.sdp_m_line_index,
         }
 
 
@@ -308,6 +309,7 @@ async def ws_get_client_config(
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("session_id"): str,
         vol.Required("candidate"): str,
+        vol.Required("sdp_m_line_index"): int,
     }
 )
 @websocket_api.async_response
@@ -329,7 +331,7 @@ async def ws_candidate(
         return
 
     await camera.async_on_webrtc_candidate(
-        msg["session_id"], RTCIceCandidate(msg["candidate"])
+        msg["session_id"], RTCIceCandidate(msg["candidate"], msg["sdp_m_line_index"])
     )
     connection.send_message(websocket_api.result_message(msg["id"]))
 
