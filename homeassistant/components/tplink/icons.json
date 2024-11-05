@@ -68,6 +68,9 @@
         "state": {
           "on": "mdi:sleep"
         }
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
       }
     },
     "sensor": {

@@ -47,6 +47,7 @@ def mock_tempfile() -> Generator[Mock]:
 )
 async def test_server_run_success(
     mock_create_subprocess: AsyncMock,
+    rest_client: AsyncMock,
     server_stdout: list[str],
     server: Server,
     caplog: pytest.LogCaptureFixture,
@@ -70,13 +71,14 @@ async def test_server_run_success(
     mock_tempfile.write.assert_called_once_with(
         f"""
 api:
-  listen: "{api_ip}:1984"
+  listen: "{api_ip}:11984"
 
 rtsp:
   # ffmpeg needs rtsp for opus audio transcoding
-  listen: "127.0.0.1:8554"
+  listen: "127.0.0.1:18554"
 
 webrtc:
+  listen: ":18555/tcp"
   ice_servers: []
 """.encode()
     )
@@ -95,7 +97,7 @@ webrtc:
 
 @pytest.mark.usefixtures("mock_tempfile")
 async def test_server_timeout_on_stop(
-    mock_create_subprocess: MagicMock, server: Server
+    mock_create_subprocess: MagicMock, rest_client: AsyncMock, server: Server
 ) -> None:
     """Test server run where the process takes too long to terminate."""
     # Start server thread

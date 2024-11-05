@@ -3161,7 +3161,7 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
             "inherits from OptionsFlowWithConfigEntry, which is deprecated "
             "and will stop working in 2025.12",
             error_if_integration=False,
-            error_if_core=False,
+            error_if_core=True,
         )
 
 
