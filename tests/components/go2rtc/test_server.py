@@ -39,39 +39,42 @@ def mock_tempfile() -> Generator[Mock]:
 
 
 def _assert_server_output_logged(
-    server_stdout: list[str],
+    server_output: list[str],
     caplog: pytest.LogCaptureFixture,
     loglevel: int,
     expect_logged: bool,
+    prefix: str,
 ) -> None:
     """Check server stdout was logged."""
-    for entry in server_stdout:
+    for entry in server_output:
         assert (
             (
                 "homeassistant.components.go2rtc.server",
                 loglevel,
-                entry,
+                prefix + entry,
             )
             in caplog.record_tuples
         ) is expect_logged
 
 
 def assert_server_output_logged(
-    server_stdout: list[str],
+    server_output: list[str],
     caplog: pytest.LogCaptureFixture,
     loglevel: int,
+    prefix="",
 ) -> None:
     """Check server stdout was logged."""
-    _assert_server_output_logged(server_stdout, caplog, loglevel, True)
+    _assert_server_output_logged(server_output, caplog, loglevel, True, prefix)
 
 
 def assert_server_output_not_logged(
-    server_stdout: list[str],
+    server_output: list[str],
     caplog: pytest.LogCaptureFixture,
     loglevel: int,
+    prefix="",
 ) -> None:
     """Check server stdout was logged."""
-    _assert_server_output_logged(server_stdout, caplog, loglevel, False)
+    _assert_server_output_logged(server_output, caplog, loglevel, False, prefix)
 
 
 @pytest.mark.parametrize(
@@ -99,7 +102,7 @@ async def test_server_run_success(
         "-c",
         "test.yaml",
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.PIPE,
         close_fds=False,
     )
 
@@ -190,16 +193,18 @@ async def test_server_failed_to_start(
         "-c",
         "test.yaml",
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.PIPE,
         close_fds=False,
     )
 
 
 @patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
+@pytest.mark.parametrize("server_stderr", [["exit with signal: terminated"]])
 async def test_server_restart_process_exit(
     hass: HomeAssistant,
     mock_create_subprocess: AsyncMock,
     server_stdout: list[str],
+    server_stderr: list[str],
     rest_client: AsyncMock,
     server: Server,
     caplog: pytest.LogCaptureFixture,
@@ -220,15 +225,17 @@ async def test_server_restart_process_exit(
     await hass.async_block_till_done()
     mock_create_subprocess.assert_not_awaited()
 
-    # Verify go2rtc binary stdout was not yet logged with warning level
+    # Verify go2rtc binary output was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
+    assert_server_output_not_logged(server_stderr, caplog, logging.WARNING, "STDERR ")
 
     evt.set()
     await asyncio.sleep(0.1)
     mock_create_subprocess.assert_awaited_once()
 
-    # Verify go2rtc binary stdout was logged with warning level
+    # Verify go2rtc binary output was logged with warning level
     assert_server_output_logged(server_stdout, caplog, logging.WARNING)
+    assert_server_output_logged(server_stderr, caplog, logging.WARNING, "STDERR ")
 
     await server.stop()
 

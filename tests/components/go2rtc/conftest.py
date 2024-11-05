@@ -50,7 +50,15 @@ def server_stdout() -> list[str]:
 
 
 @pytest.fixture
-def mock_create_subprocess(server_stdout: list[str]) -> Generator[AsyncMock]:
+def server_stderr() -> list[str]:
+    """Server stderr lines."""
+    return []
+
+
+@pytest.fixture
+def mock_create_subprocess(
+    server_stdout: list[str], server_stderr: list[str]
+) -> Generator[AsyncMock]:
     """Mock create_subprocess_exec."""
     with patch(f"{GO2RTC_PATH}.server.asyncio.create_subprocess_exec") as mock_subproc:
         subproc = AsyncMock()
@@ -60,6 +68,9 @@ def mock_create_subprocess(server_stdout: list[str]) -> Generator[AsyncMock]:
         # Simulate process output
         subproc.stdout.__aiter__.return_value = iter(
             [f"{entry}\n".encode() for entry in server_stdout]
+        )
+        subproc.stderr.__aiter__.return_value = iter(
+            [f"{entry}\n".encode() for entry in server_stderr]
         )
         mock_subproc.return_value = subproc
         yield mock_subproc

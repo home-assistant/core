@@ -103,12 +103,15 @@ class Server:
             "-c",
             config_file,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
+            stderr=asyncio.subprocess.PIPE,
             close_fds=False,  # required for posix_spawn on CPython < 3.13
         )
 
         self._hass.async_create_background_task(
-            self._log_output(self._process), "Go2rtc log output"
+            self._log_output_stdout(self._process), "Go2rtc log stdout output"
+        )
+        self._hass.async_create_background_task(
+            self._log_output_stderr(self._process), "Go2rtc log stderr output"
         )
 
         try:
@@ -125,7 +128,7 @@ class Server:
         client = Go2RtcRestClient(async_get_clientsession(self._hass), HA_MANAGED_URL)
         await client.validate_server_version()
 
-    async def _log_output(self, process: asyncio.subprocess.Process) -> None:
+    async def _log_output_stdout(self, process: asyncio.subprocess.Process) -> None:
         """Log the output of the process."""
         assert process.stdout is not None
 
@@ -135,6 +138,15 @@ class Server:
             _LOGGER.debug(msg)
             if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
                 self._startup_complete.set()
+
+    async def _log_output_stderr(self, process: asyncio.subprocess.Process) -> None:
+        """Log the output of the process."""
+        assert process.stderr is not None
+
+        async for line in process.stderr:
+            msg = "STDERR " + line[:-1].decode().strip()
+            self._log_buffer.append(msg)
+            _LOGGER.debug(msg)
 
     def _log_server_output(self, loglevel: int) -> None:
         """Log captured process output, then clear the log buffer."""
