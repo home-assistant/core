@@ -358,8 +358,8 @@ class OnkyoOptionsFlowHandler(OptionsFlow):
             )
         )
 
-        for source, value in self._input_sources.items():
-            schema_dict[vol.Required(source.value_meaning, default=value)] = (
+        for source, source_name in self._input_sources.items():
+            schema_dict[vol.Required(source.value_meaning, default=source_name)] = (
                 TextSelector()
             )
 
