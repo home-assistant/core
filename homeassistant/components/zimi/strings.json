@@ -16,7 +16,11 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "timeout": "Connection timed out]",
+      "invalid_host": "Invalid host name",
+      "connection_refused": "Connection refused",
+      "discovery_failure": "ZCC discovery via UDP failed."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

@@ -93,8 +93,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             try:
                 socket.gethostbyname(data[CONF_HOST])
-            except socket.herror as e:
-                raise InvalidHost(f"{data[CONF_HOST]} is not a valid host") from e
+            except Exception as e:
+                raise InvalidHost from e
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(10)
