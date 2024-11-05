@@ -703,7 +703,7 @@ async def test_reconfigure(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry
@@ -739,7 +739,7 @@ async def test_reconfigure_nochange(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry
@@ -775,7 +775,7 @@ async def test_reconfigure_otherenvoy(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # let mock return different serial from first time, sim it's other one on changed ip
@@ -790,33 +790,13 @@ async def test_reconfigure_otherenvoy(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unexpected_envoy"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
 
     # entry should still be original entry
     assert config_entry.data[CONF_HOST] == "1.1.1.1"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "test-password"
-
-    # set serial back to original to finsich flow
-    mock_envoy.serial_number = "1234"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "new-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    # updated original entry
-    assert config_entry.data[CONF_HOST] == "1.1.1.1"
-    assert config_entry.data[CONF_USERNAME] == "test-username"
-    assert config_entry.data[CONF_PASSWORD] == "new-password"
 
 
 @pytest.mark.parametrize(
@@ -909,7 +889,7 @@ async def test_reconfigure_change_ip_to_existing(
 
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry

@@ -4688,6 +4688,65 @@ async def test_validate_statistics_state_class_removed(
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
 )
+async def test_validate_statistics_state_class_removed_issue_cleaned_up(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+) -> None:
+    """Test validate_statistics."""
+    now = get_start_time(dt_util.utcnow())
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(hass, client, {}, {})
+
+    # No statistics, valid state - empty response
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
+    await hass.async_block_till_done()
+    await assert_validation_result(hass, client, {}, {})
+
+    # Statistics has run, empty response
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # State update with invalid state class, expect error
+    _attributes = dict(attributes)
+    _attributes.pop("state_class")
+    hass.states.async_set(
+        "sensor.test", 12, attributes=_attributes, timestamp=now.timestamp()
+    )
+    await hass.async_block_till_done()
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "state_class_removed",
+            }
+        ],
+    }
+    await assert_validation_result(hass, client, expected, {"state_class_removed"})
+
+    # Remove the statistics - empty response
+    get_instance(hass).async_clear_statistics(["sensor.test"])
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+
+@pytest.mark.parametrize(
+    ("units", "attributes", "unit"),
+    [
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
 async def test_validate_statistics_sensor_no_longer_recorded(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -5371,3 +5430,51 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert len(states) == 1
     assert ATTR_OPTIONS not in states[0].attributes
     assert ATTR_FRIENDLY_NAME in states[0].attributes
+
+
+async def test_clean_up_repairs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test cleaning up repairs."""
+    await async_setup_component(hass, "sensor", {})
+    issue_registry = ir.async_get(hass)
+    client = await hass_ws_client()
+
+    # Create some issues
+    def create_issue(domain: str, issue_id: str, data: dict | None) -> None:
+        ir.async_create_issue(
+            hass,
+            domain,
+            issue_id,
+            data=data,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="",
+        )
+
+    create_issue("test", "test_issue", None)
+    create_issue(DOMAIN, "test_issue_1", None)
+    create_issue(DOMAIN, "test_issue_2", {"issue_type": "another_issue"})
+    create_issue(DOMAIN, "test_issue_3", {"issue_type": "state_class_removed"})
+    create_issue(DOMAIN, "test_issue_4", {"issue_type": "units_changed"})
+
+    # Check the issues
+    assert set(issue_registry.issues) == {
+        ("test", "test_issue"),
+        ("sensor", "test_issue_1"),
+        ("sensor", "test_issue_2"),
+        ("sensor", "test_issue_3"),
+        ("sensor", "test_issue_4"),
+    }
+
+    # Request update of issues
+    await client.send_json_auto_id({"type": "recorder/update_statistics_issues"})
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Check the issues
+    assert set(issue_registry.issues) == {
+        ("test", "test_issue"),
+        ("sensor", "test_issue_1"),
+        ("sensor", "test_issue_2"),
+    }

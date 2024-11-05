@@ -1,5 +1,7 @@
 """The tests for the Ring component."""
 
+from unittest.mock import AsyncMock, patch
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import AuthenticationError, Ring, RingError, RingTimeout
@@ -12,11 +14,12 @@ from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS, SCAN_INTERVAL
 from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_DEVICE_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import MOCK_HARDWARE_ID
 from .device_mocks import FRONT_DOOR_DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -450,3 +453,32 @@ async def test_no_listen_start(
     assert "Ring event listener failed to start after 10 seconds" in [
         record.message for record in caplog.records if record.levelname == "WARNING"
     ]
+
+
+async def test_migrate_create_device_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration creates new device id created."""
+    entry = MockConfigEntry(
+        title="Ring",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "foo@bar.com",
+            "token": {"access_token": "mock-token"},
+        },
+        unique_id="foo@bar.com",
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    with patch("uuid.uuid4", return_value=MOCK_HARDWARE_ID):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert CONF_DEVICE_ID in entry.data
+    assert entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
+
+    assert "Migration to version 1.2 complete" in caplog.text

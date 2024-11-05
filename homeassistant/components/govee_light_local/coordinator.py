@@ -6,6 +6,7 @@ import logging
 
 from govee_local_api import GoveeController, GoveeDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -18,6 +19,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):

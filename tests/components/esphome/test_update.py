@@ -531,7 +531,8 @@ async def test_generic_device_update_entity_has_update(
     state = hass.states.get("update.test_myupdate")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes["in_progress"] == 50
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 50
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
