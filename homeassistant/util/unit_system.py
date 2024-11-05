@@ -44,9 +44,9 @@ _CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
 _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 _CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
 
-LENGTH_UNITS = DistanceConverter.VALID_UNITS
-
 AREA_UNITS = AreaConverter.VALID_UNITS
+
+LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
 MASS_UNITS: set[str] = {
     UnitOfMass.POUNDS,
