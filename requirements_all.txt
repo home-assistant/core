@@ -2550,7 +2550,7 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.10.2
+reolink-aio==0.10.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2888,7 +2888,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.3.2
+uiprotect==6.4.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
