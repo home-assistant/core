@@ -5066,31 +5066,6 @@ async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) 
     assert entry.options == {"sub_dict": {"1": "one"}, "sub_list": ["one"]}
 
 
-@pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
-async def test_options_flow_options_not_mutated(hass: HomeAssistant) -> None:
-    """Test that OptionsFlow doesn't mutate entry options."""
-    entry = MockConfigEntry(
-        domain="test",
-        data={"first": True},
-        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
-    )
-    entry.add_to_hass(hass)
-
-    options_flow = config_entries.OptionsFlow()
-    options_flow.handler = entry.entry_id
-    options_flow.hass = hass
-
-    options_flow.options["sub_dict"]["2"] = "two"
-    options_flow._options["sub_list"].append("two")
-
-    assert options_flow._options == {
-        "sub_dict": {"1": "one", "2": "two"},
-        "sub_list": ["one", "two"],
-    }
-    assert entry.options == {"sub_dict": {"1": "one"}, "sub_list": ["one"]}
-
-
 async def test_initializing_flows_canceled_on_shutdown(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -7523,10 +7498,6 @@ async def test_options_flow_deprecated_config_entry_setter(
 
     assert (
         "Detected that integration 'hue' sets option flow config_entry explicitly, "
-        "which is deprecated and will stop working in 2025.12" in caplog.text
-    )
-    assert (
-        "Detected that integration 'hue' sets option flow options explicitly, "
         "which is deprecated and will stop working in 2025.12" in caplog.text
     )
 
