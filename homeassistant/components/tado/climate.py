@@ -233,12 +233,12 @@ def create_climate_entity(
         _LOGGER.debug("Not adding zone %s since it has no temperatures", name)
         return None
 
-    heat_min_temp = None
-    heat_max_temp = None
-    heat_step = None
-    cool_min_temp = None
-    cool_max_temp = None
-    cool_step = None
+    heat_min_temp: float | None = None
+    heat_max_temp: float | None = None
+    heat_step: float | None = None
+    cool_min_temp: float | None = None
+    cool_max_temp: float | None = None
+    cool_step: float | None = None
 
     if tado.is_x:
         heat_min_temp = TADO_X_DEFAULT_MIN_TEMP
