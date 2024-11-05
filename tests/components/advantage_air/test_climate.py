@@ -1,6 +1,6 @@
 """Test the Advantage Air Climate Platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from advantage_air import ApiError
 from freezegun.api import FrozenDateTimeFactory
@@ -280,5 +280,10 @@ async def test_coordinator_refresh(
 
     await add_mock_config(hass)
     freezer.tick(ADVANTAGE_AIR_SYNC_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.advantage_air.climate.AdvantageAirAC._async_configure_preset"
+    ) as set_preset:
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        set_preset.assert_called()
