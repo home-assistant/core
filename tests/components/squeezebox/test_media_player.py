@@ -42,10 +42,13 @@ from homeassistant.components.squeezebox.const import (
 )
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
+    ATTR_PLAYLIST_ACTION,
     ATTR_RETURN_ITEMS,
     ATTR_SEARCH_STRING,
+    ATTR_SEARCH_TYPE,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
+    SERVICE_PLAY,
     SERVICE_SEARCH,
 )
 from homeassistant.const import (
@@ -779,10 +782,98 @@ async def test_squeezebox_call_method(
     )
 
 
-async def test_squeezebox_play_album(
+async def test_squeezebox_play_other_item(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test query service call."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "album",
+            ATTR_SEARCH_TYPE: "item",
+            ATTR_SEARCH_STRING: FAKE_VALID_ITEM_ID,
+            ATTR_PLAYLIST_ACTION: "play",
+        },
+        blocking=True,
+    )
+    assert configured_player.async_load_playlist.call_count == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "album",
+            ATTR_SEARCH_TYPE: "item",
+            ATTR_SEARCH_STRING: FAKE_VALID_ITEM_ID,
+            ATTR_PLAYLIST_ACTION: "add",
+        },
+        blocking=True,
+    )
+    assert configured_player.async_load_playlist.call_count == 2
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "album",
+            ATTR_SEARCH_TYPE: "item",
+            ATTR_SEARCH_STRING: FAKE_VALID_ITEM_ID,
+            ATTR_PLAYLIST_ACTION: "next",
+        },
+        blocking=True,
+    )
+    assert configured_player.async_load_playlist.call_count == 3
+
+
+async def test_squeezebox_play_favorite_item(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test query service call."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "favorite",
+            ATTR_SEARCH_TYPE: "item",
+            ATTR_SEARCH_STRING: FAKE_VALID_ITEM_ID,
+            ATTR_PLAYLIST_ACTION: "play",
+        },
+        blocking=True,
+    )
+    assert configured_player.async_load_playlist.call_count == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "favorite",
+            ATTR_SEARCH_TYPE: "item",
+            ATTR_SEARCH_STRING: FAKE_VALID_ITEM_ID,
+            ATTR_PLAYLIST_ACTION: "add",
+        },
+        blocking=True,
+    )
+    assert configured_player.async_load_playlist.call_count == 2
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_COMMAND: "favorite",
+            ATTR_SEARCH_TYPE: "item",
+            ATTR_SEARCH_STRING: FAKE_VALID_ITEM_ID,
+            ATTR_PLAYLIST_ACTION: "next",
+        },
+        blocking=True,
+    )
+    assert configured_player.async_load_playlist.call_count == 3
 
 
 async def test_squeezebox_search_albums(

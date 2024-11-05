@@ -762,10 +762,10 @@ class SqueezeBoxMediaPlayerEntity(
 
             query_result = await self._player.async_query(*_param)
 
-            if query_result["count"] == 0:
+            if int(query_result["count"]) == 0:
                 raise ServiceValidationError("Search returned zero results")
 
-            if query_result["count"] > 1:
+            if int(query_result["count"]) > 1:
                 raise ServiceValidationError(
                     f"Search returned {query_result['count']} results.  Each search must return only one result"
                 )
