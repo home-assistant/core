@@ -73,7 +73,7 @@ class MicroVadSpeexEnhancer(AudioEnhancer):
 
         if self.is_vad_enabled:
             self.vad = MicroVad()
-            _LOGGER.debug("Initialized microVAD ")
+            _LOGGER.debug("Initialized microVAD")
 
     def enhance_chunk(self, audio: bytes, timestamp_ms: int) -> EnhancedAudioChunk:
         """Enhance 10ms chunk of PCM audio @ 16Khz with 16-bit mono samples."""
