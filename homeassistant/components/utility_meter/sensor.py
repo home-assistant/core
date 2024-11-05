@@ -555,9 +555,8 @@ class UtilityMeterSensor(RestoreSensor):
         """Program the reset of the utility meter."""
         if self.scheduler:
             self._next_reset = self.scheduler.get_next(datetime)
-            _LOGGER.debug(
-                "Next reset of %s is %s", self.entity_id, self._next_reset.isoformat()
-            )
+
+            _LOGGER.debug("Next reset of %s is %s", self.entity_id, self._next_reset)
             self.async_on_remove(
                 async_track_point_in_time(
                     self.hass,
