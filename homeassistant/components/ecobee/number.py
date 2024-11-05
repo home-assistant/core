@@ -67,7 +67,12 @@ async def async_setup_entry(
     for index, thermostat in enumerate(data.ecobee.thermostats):
         for numbers in VENTILATOR_NUMBERS:
             if thermostat["settings"]["ventilatorType"] != "none":
-                entities.append(EcobeeVentilatorMinTime(data, index, numbers))  # noqa: PERF401: the advantages of a list comprehension seem offset by the additional work required when adding EcobeeAuxCutoverThreshold.
+    entities: list[NumberEntity] = [
+        EcobeeVentilatorMinTime(data, index, numbers)
+        for index, thermostat in enumerate(data.ecobee.thermostats)
+        if thermostat["settings"]["ventilatorType"] != "none"
+        for numbers in VENTILATOR_NUMBERS
+    ]
 
     _LOGGER.debug("Adding aux cutover threshold number (if present)")
     for index, thermostat in enumerate(data.ecobee.thermostats):
