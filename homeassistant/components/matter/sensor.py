@@ -183,9 +183,8 @@ class MatterOperationalStatePhaseSensor(MatterSensor):
         current_phase = self.get_matter_attribute_value(
             clusters.OperationalState.Attributes.CurrentPhase
         )
-        if (current_phase != NoneType):
-            current_phase_str = phase_list[current_phase]
-            self.current_phase = current_phase_str
+        current_phase_str = phase_list[current_phase]
+        self.current_phase = current_phase_str
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
