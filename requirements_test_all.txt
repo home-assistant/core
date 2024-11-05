@@ -1650,7 +1650,7 @@ pylitterbot==2023.5.0
 pylutron-caseta==0.21.1
 
 # homeassistant.components.lutron
-pylutron==0.2.15
+pylutron==0.2.16
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
