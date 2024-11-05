@@ -113,7 +113,7 @@ class OpenSkyOptionsFlowHandler(OptionsFlow):
                     errors["base"] = "invalid_auth"
             if not errors:
                 return self.async_create_entry(
-                    title=self.options.get(CONF_NAME, "OpenSky"),
+                    title=self.config_entry.options.get(CONF_NAME, "OpenSky"),
                     data=user_input,
                 )
 
@@ -130,6 +130,6 @@ class OpenSkyOptionsFlowHandler(OptionsFlow):
                         vol.Optional(CONF_CONTRIBUTING_USER, default=False): bool,
                     }
                 ),
-                user_input or self.options,
+                user_input or self.config_entry.options,
             ),
         )
