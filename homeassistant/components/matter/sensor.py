@@ -786,7 +786,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=None,
             device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
-            translation_key="operational_state",
+            translation_key="current_phase",
         ),
         entity_class=MatterOperationalStateSensor,
         required_attributes=(
