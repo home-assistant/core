@@ -44,11 +44,10 @@ async def validate_app_key(hass: HomeAssistant, app_key: str) -> ValidationResul
     errors: dict[str, str] = {}
 
     _LOGGER.debug("Validating app_key")
+    stop_point_api = stopPoint(app_key)
     try:
-        stop_point_api = stopPoint(app_key)
         # Make a random, cheap, call to the API to validate the app_key
-        categories = await call_tfl_api(hass, stop_point_api.getCategories)
-        _LOGGER.debug("Validating app_key, got categories=%s", categories)
+        await call_tfl_api(hass, stop_point_api.getCategories)
     except CannotConnect:
         errors["base"] = "cannot_connect"
     except InvalidAuth:
