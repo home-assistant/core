@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-import pytest
-
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -44,7 +42,7 @@ async def test_flow_import_failure(
         data=YAML,
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == EMONCMS_FAILURE["message"]
+    assert result["reason"] == "api_error"
 
 
 async def test_flow_import_already_configured(
@@ -129,10 +127,6 @@ async def test_options_flow(
     assert config_entry.options == CONFIG_ENTRY
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.emoncms.options.error.failure"],
-)
 async def test_options_flow_failure(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -144,7 +138,8 @@ async def test_options_flow_failure(
     await setup_integration(hass, config_entry)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert result["errors"]["base"] == "failure"
+    assert result["errors"]["base"] == "api_error"
+    assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 

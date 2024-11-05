@@ -16,7 +16,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import UnknownHandler
@@ -403,7 +402,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
         )
 
 
-class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class SchemaOptionsFlowHandler(OptionsFlow):
     """Handle a schema based options flow."""
 
     def __init__(
@@ -422,10 +421,10 @@ class SchemaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         options, which is the union of stored options and user input from the options
         flow steps.
         """
-        super().__init__(config_entry)
-        self._common_handler = SchemaCommonFlowHandler(
-            self, options_flow, self._options
-        )
+        # Although `self.options` is most likely unused, it is safer to keep both
+        # `self.options` and `self._common_handler.options` referring to the same object
+        self._options = copy.deepcopy(dict(config_entry.options))
+        self._common_handler = SchemaCommonFlowHandler(self, options_flow, self.options)
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:

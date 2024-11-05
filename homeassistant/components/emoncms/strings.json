@@ -1,5 +1,8 @@
 {
   "config": {
+    "error": {
+      "api_error": "An error occured in the pyemoncms API : {details}"
+    },
     "step": {
       "user": {
         "data": {
@@ -22,6 +25,9 @@
     }
   },
   "options": {
+    "error": {
+      "api_error": "[%key:component::emoncms::config::error::api_error%]"
+    },
     "step": {
       "init": {
         "data": {

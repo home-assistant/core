@@ -254,7 +254,9 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda inverter: inverter.current_power,
+        value_fn=(
+            lambda inverter: None if inverter is None else inverter.current_power
+        ),
     ),
     SolarLogInverterSensorEntityDescription(
         key="consumption_year",
@@ -265,9 +267,7 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         value_fn=(
-            lambda inverter: None
-            if inverter.consumption_year is None
-            else inverter.consumption_year
+            lambda inverter: None if inverter is None else inverter.consumption_year
         ),
     ),
 )
@@ -296,6 +296,14 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities)
+
+    def _async_add_new_device(device_id: int) -> None:
+        async_add_entities(
+            SolarLogInverterSensor(coordinator, sensor, device_id)
+            for sensor in INVERTER_SENSOR_TYPES
+        )
+
+    coordinator.new_device_callbacks.append(_async_add_new_device)
 
 
 class SolarLogCoordinatorSensor(SolarLogCoordinatorEntity, SensorEntity):

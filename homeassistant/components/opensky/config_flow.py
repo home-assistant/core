@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -45,7 +45,7 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OpenSkyOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OpenSkyOptionsFlowHandler(config_entry)
+        return OpenSkyOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -83,7 +83,7 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OpenSkyOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OpenSkyOptionsFlowHandler(OptionsFlow):
     """OpenSky Options flow handler."""
 
     async def async_step_init(

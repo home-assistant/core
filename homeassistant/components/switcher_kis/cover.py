@@ -40,21 +40,27 @@ async def async_setup_entry(
     @callback
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
+        entities: list[CoverEntity] = []
         if coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
         ):
-            async_add_entities([SwitcherCoverEntity(coordinator, 0)])
+            entities.append(SwitcherSingleCoverEntity(coordinator, 0))
+        if (
+            coordinator.data.device_type.category
+            == DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT
+        ):
+            entities.extend(SwitcherDualCoverEntity(coordinator, i) for i in range(2))
+        async_add_entities(entities)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
     )
 
 
-class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
+class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
     """Representation of a Switcher cover entity."""
 
-    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -62,19 +68,7 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
     )
-
-    def __init__(
-        self,
-        coordinator: SwitcherDataUpdateCoordinator,
-        cover_id: int,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator)
-        self._cover_id = cover_id
-
-        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
-
-        self._update_data()
+    _cover_id: int
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -137,3 +131,44 @@ class SwitcherCoverEntity(SwitcherEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_call_api(API_STOP, self._cover_id)
+
+
+class SwitcherSingleCoverEntity(SwitcherBaseCoverEntity):
+    """Representation of a Switcher single cover entity."""
+
+    _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        cover_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._cover_id = cover_id
+
+        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+
+        self._update_data()
+
+
+class SwitcherDualCoverEntity(SwitcherBaseCoverEntity):
+    """Representation of a Switcher dual cover entity."""
+
+    _attr_translation_key = "cover"
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        cover_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._cover_id = cover_id
+
+        self._attr_translation_placeholders = {"cover_id": str(cover_id + 1)}
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{cover_id}"
+        )
+
+        self._update_data()

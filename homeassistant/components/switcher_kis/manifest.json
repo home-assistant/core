@@ -7,6 +7,6 @@
   "iot_class": "local_push",
   "loggers": ["aioswitcher"],
   "quality_scale": "platinum",
-  "requirements": ["aioswitcher==4.2.0"],
+  "requirements": ["aioswitcher==4.4.0"],
   "single_config_entry": true
 }

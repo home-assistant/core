@@ -545,8 +545,8 @@ def test_enum_with_deprecated_members(
         StrEnum,
         metaclass=EnumWithDeprecatedMembers,
         deprecated={
-            "CATS": ("CATS_PER_CM", "2025.11.0"),
-            "DOGS": ("DOGS_PER_CM", None),
+            "CATS": ("TestEnum.CATS_PER_CM", "2025.11.0"),
+            "DOGS": ("TestEnum.DOGS_PER_CM", None),
         },
     ):
         """Zoo units."""
@@ -618,8 +618,8 @@ def test_enum_with_deprecated_members_integration_not_found(
         StrEnum,
         metaclass=EnumWithDeprecatedMembers,
         deprecated={
-            "CATS": ("CATS_PER_CM", "2025.11.0"),
-            "DOGS": ("DOGS_PER_CM", None),
+            "CATS": ("TestEnum.CATS_PER_CM", "2025.11.0"),
+            "DOGS": ("TestEnum.DOGS_PER_CM", None),
         },
     ):
         """Zoo units."""

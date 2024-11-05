@@ -1,5 +1,7 @@
 """Configflow for the emoncms integration."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from pyemoncms import EmoncmsClient
@@ -9,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -71,15 +73,16 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlowWithConfigEntry:
+    ) -> EmoncmsOptionsFlow:
         """Get the options flow for this handler."""
-        return EmoncmsOptionsFlow(config_entry)
+        return EmoncmsOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Initiate a flow via the UI."""
         errors: dict[str, str] = {}
+        description_placeholders = {}
 
         if user_input is not None:
             self._async_abort_entries_match(
@@ -92,7 +95,8 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass, user_input[CONF_URL], user_input[CONF_API_KEY]
             )
             if not result[CONF_SUCCESS]:
-                errors["base"] = result[CONF_MESSAGE]
+                errors["base"] = "api_error"
+                description_placeholders = {"details": result[CONF_MESSAGE]}
             else:
                 self.include_only_feeds = user_input.get(CONF_ONLY_INCLUDE_FEEDID)
                 self.url = user_input[CONF_URL]
@@ -121,6 +125,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input,
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_choose_feeds(
@@ -175,7 +180,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         return result
 
 
-class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
+class EmoncmsOptionsFlow(OptionsFlow):
     """Emoncms Options flow handler."""
 
     async def async_step_init(
@@ -183,14 +188,16 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        data = self.options if self.options else self._config_entry.data
+        description_placeholders = {}
+        data = self.options if self.options else self.config_entry.data
         url = data[CONF_URL]
         api_key = data[CONF_API_KEY]
         include_only_feeds = data.get(CONF_ONLY_INCLUDE_FEEDID, [])
         options: list = include_only_feeds
         result = await get_feed_list(self.hass, url, api_key)
         if not result[CONF_SUCCESS]:
-            errors["base"] = result[CONF_MESSAGE]
+            errors["base"] = "api_error"
+            description_placeholders = {"details": result[CONF_MESSAGE]}
         else:
             options = get_options(result[CONF_MESSAGE])
         dropdown = {"options": options, "mode": "dropdown", "multiple": True}
@@ -215,4 +222,5 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )

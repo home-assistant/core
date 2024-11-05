@@ -74,6 +74,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfEnergy,
     UnitOfTemperature,
 )
@@ -1666,13 +1667,15 @@ async def test_disabling_entity(
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_entity_becomes_unavailable_with_export(
+@pytest.mark.parametrize("unavailable_state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
+async def test_entity_becomes_unavailable(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     client: ClientSessionGenerator,
     sensor_entities: dict[str, er.RegistryEntry],
+    unavailable_state: str,
 ) -> None:
-    """Test an entity that becomes unavailable is still exported."""
+    """Test an entity that becomes unavailable/unknown is no longer exported."""
     data = {**sensor_entities}
 
     await hass.async_block_till_done()
@@ -1700,6 +1703,20 @@ async def test_entity_becomes_unavailable_with_export(
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
+        metric_name="last_updated_time_seconds",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(12.0).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="sensor_humidity_percent",
         domain="sensor",
         friendly_name="Outside Humidity",
@@ -1720,21 +1737,28 @@ async def test_entity_becomes_unavailable_with_export(
         entity="sensor.outside_humidity",
     ).withValue(1).assert_in_metrics(body)
 
-    # Make sensor_1 unavailable.
+    # Make sensor_1 unavailable/unknown.
     set_state_with_entry(
-        hass, data["sensor_1"], STATE_UNAVAILABLE, data["sensor_1_attributes"]
+        hass, data["sensor_1"], unavailable_state, data["sensor_1_attributes"]
     )
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    # Check that only the availability changed on sensor_1.
+    # Check that the availability changed on sensor_1 and the metric with the value is gone.
     EntityMetric(
         metric_name="sensor_temperature_celsius",
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
-    ).withValue(15.6).assert_in_metrics(body)
+    ).assert_not_in_metrics(body)
+
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_not_in_metrics(body)
 
     EntityMetric(
         metric_name="state_change_total",
@@ -1749,6 +1773,13 @@ async def test_entity_becomes_unavailable_with_export(
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
     ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="last_updated_time_seconds",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_in_metrics(body)
 
     # The other sensor should be unchanged.
     EntityMetric(
@@ -1772,8 +1803,8 @@ async def test_entity_becomes_unavailable_with_export(
         entity="sensor.outside_humidity",
     ).withValue(1).assert_in_metrics(body)
 
-    # Bring sensor_1 back and check that it is correct.
-    set_state_with_entry(hass, data["sensor_1"], 200.0, data["sensor_1_attributes"])
+    # Bring sensor_1 back and check that it returned.
+    set_state_with_entry(hass, data["sensor_1"], 201.0, data["sensor_1_attributes"])
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -1783,7 +1814,14 @@ async def test_entity_becomes_unavailable_with_export(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
-    ).withValue(200.0).assert_in_metrics(body)
+    ).withValue(201.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(12.0).assert_in_metrics(body)
 
     EntityMetric(
         metric_name="state_change_total",

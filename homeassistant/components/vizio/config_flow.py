@@ -108,10 +108,6 @@ def _host_is_same(host1: str, host2: str) -> bool:
 class VizioOptionsConfigFlow(OptionsFlow):
     """Handle Vizio options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize vizio options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -184,7 +180,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> VizioOptionsConfigFlow:
         """Get the options flow for this handler."""
-        return VizioOptionsConfigFlow(config_entry)
+        return VizioOptionsConfigFlow()
 
     def __init__(self) -> None:
         """Initialize config flow."""
