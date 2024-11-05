@@ -1124,7 +1124,7 @@ hole==0.8.0
 holidays==0.59
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241031.0
+home-assistant-frontend==20241104.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.10.30
@@ -2550,7 +2550,7 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.10.2
+reolink-aio==0.10.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2888,7 +2888,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.3.2
+uiprotect==6.4.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
