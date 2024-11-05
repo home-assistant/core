@@ -34,6 +34,11 @@
     "type": "Switch",
     "category": "Config"
   },
+  "child_lock": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
   "current_consumption": {
     "value": 5.23,
     "type": "Sensor",
