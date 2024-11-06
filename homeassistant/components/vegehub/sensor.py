@@ -80,7 +80,7 @@ async def async_setup_entry(
 
 
 class VegeHubSensor(SensorEntity):
-    """Class for VegeHub Amalog Sensors."""
+    """Class for VegeHub Analog Sensors."""
 
     def __init__(
         self,
