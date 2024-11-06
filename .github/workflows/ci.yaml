@@ -622,13 +622,13 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.python-version }}
           check-latest: true
-      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@v4.1.2
         with:
@@ -823,7 +823,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: Split tests for full run Python ${{ matrix.python-version }}
+    name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
         run: |
