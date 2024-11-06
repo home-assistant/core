@@ -1,4 +1,4 @@
-"""Binary sensor platform for Acaia scales."""
+"""Binary sensor platform for acaia scales."""
 
 from collections.abc import Callable
 from dataclasses import dataclass

@@ -1,4 +1,4 @@
-"""Config flow for Acaia integration."""
+"""Config flow for acaia integration."""
 
 from typing import Any
 
@@ -38,7 +38,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_MAC])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title="Acaia",
+                title="acaia",
                 data={**self._discovered, **user_input},
             )
 

@@ -1,4 +1,4 @@
-"""Initialize the Acaia component."""
+"""Initialize the acaia component."""
 
 from homeassistant.const import CONF_MAC, Platform
 from homeassistant.core import HomeAssistant

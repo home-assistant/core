@@ -1,4 +1,4 @@
-"""Sensor platform for Acaia."""
+"""Sensor platform for acaia."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -26,7 +26,7 @@ from .entity import AcaiaEntity, AcaiaEntityDescription
 
 @dataclass(kw_only=True, frozen=True)
 class AcaiaSensorEntityDescription(AcaiaEntityDescription, SensorEntityDescription):
-    """Description for Acaia Sensor entities."""
+    """Description for acaia Sensor entities."""
 
     unit_fn: Callable[[AcaiaDeviceState], str] | None = None
     value_fn: Callable[[AcaiaScale], StateType]
@@ -49,7 +49,7 @@ SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
 )
 RESTORE_SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
     AcaiaSensorEntityDescription(
-        key="battery_level",
+        key="battery",
         translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement="%",
@@ -124,7 +124,7 @@ class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if value := self.entity_description.value_fn(self._scale) is not None:
+        if (value := self.entity_description.value_fn(self._scale)) is not None:
             return value
 
         if self._restored_data is None:

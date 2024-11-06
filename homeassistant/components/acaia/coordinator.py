@@ -1,4 +1,4 @@
-"""Coordinator for Acaia integration."""
+"""Coordinator for acaia integration."""
 
 from __future__ import annotations
 
@@ -60,13 +60,14 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             await self._scale.connect(setup_tasks=False)
         except (AcaiaDeviceNotFound, AcaiaError, TimeoutError) as ex:
             _LOGGER.debug(
-                "Could not connect to scale: %s, Error: %s", self._scale.mac, ex
+                "Could not connect to scale: %s, Error: %s",
+                self.config_entry.data[CONF_MAC],
+                ex,
             )
             self._scale.connected = False
             self._scale.timer_running = False
             self._scale.async_empty_queue_and_cancel_tasks()
-            self.async_update_listeners()
-            raise UpdateFailed from ex
+            return
 
         # connected, set up background tasks
         if not self.scale.heartbeat_task or self.scale.heartbeat_task.done():

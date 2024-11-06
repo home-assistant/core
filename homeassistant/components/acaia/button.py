@@ -1,4 +1,4 @@
-"""Button entities for Acaia scales."""
+"""Button entities for acaia scales."""
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
