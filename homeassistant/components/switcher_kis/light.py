@@ -35,29 +35,18 @@ async def async_setup_entry(
     def async_add_light(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add light from Switcher device."""
         entities: list[LightEntity] = []
-        device_type_to_light_count = {
-            DeviceType.RUNNER_S11: 2,
-            DeviceType.RUNNER_S12: 1,
-            DeviceType.LIGHT_SL01: 1,
-            DeviceType.LIGHT_SL01_MINI: 1,
-            DeviceType.LIGHT_SL02: 2,
-            DeviceType.LIGHT_SL02_MINI: 2,
-            DeviceType.LIGHT_SL03: 3,
-        }
 
         if coordinator.data.device_type.category in (
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
             DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT,
             DeviceCategory.LIGHT,
         ):
-            if device_type_to_light_count[coordinator.data.device_type] == 1:
+            if len(coordinator.data.light) == 1:
                 entities.append(SwitcherSingleLightEntity(coordinator, 0))
             else:
                 entities.extend(
                     SwitcherMultiLightEntity(coordinator, i)
-                    for i in range(
-                        device_type_to_light_count[coordinator.data.device_type]
-                    )
+                    for i in range(len(coordinator.data.light))
                 )
         async_add_entities(entities)
 
