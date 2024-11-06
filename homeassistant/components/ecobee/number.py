@@ -69,10 +69,10 @@ async def async_setup_entry(
         for numbers in VENTILATOR_NUMBERS
     ]
 
-    _LOGGER.debug("Adding aux cutover threshold number (if present)")
+    _LOGGER.debug("Adding compressor min temp number (if present)")
     entities.extend(
         (
-            EcobeeAuxCutoverThreshold(data, index)
+            EcobeeCompressorMinTemp(data, index)
             for index, thermostat in enumerate(data.ecobee.thermostats)
             if thermostat["settings"]["hasHeatPump"]
         )
@@ -121,21 +121,22 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
         self.update_without_throttle = True
 
 
-class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
+class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
     """A number class, representing the minimum outdoor temperature at which the compressor can operate.
 
     This applies more to air source heat pumps than geothermal. This serves as a safety feature (compressors have a minimum operating temperature) as well as providing the ability to choose fuel in a dual-fuel system (i.e. choose between electrical heat pump and fossil auxiliary heat depending on Time of Use, Solar, etc.).
-    Note that python-ecobee-api refers to this as Cutover Threshold, but Ecobee uses Compressor Protection Min Temp.
+    Note that python-ecobee-api refers to this as Aux Cutover Threshold, but Ecobee uses Compressor Protection Min Temp.
     """
 
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_has_entity_name = True
+    _attr_icon = "mdi:thermometer-off"
     _attr_mode = NumberMode.BOX
     _attr_native_min_value = -25
     _attr_native_max_value = 66
     _attr_native_step = 5
     _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
-    _attr_translation_key = "aux_heat_cutover"
+    _attr_translation_key = "compressor_protection_min_temp"
 
     def __init__(
         self,
@@ -144,7 +145,7 @@ class EcobeeAuxCutoverThreshold(EcobeeBaseEntity, NumberEntity):
     ) -> None:
         """Initialize ecobee compressor min temperature."""
         super().__init__(data, thermostat_index)
-        self._attr_unique_id = f"{self.base_unique_id}_aux_cutover_threshold"
+        self._attr_unique_id = f"{self.base_unique_id}_compressor_protection_min_temp"
         self.update_without_throttle = False
 
     async def async_update(self) -> None:
