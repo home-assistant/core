@@ -11,7 +11,7 @@
         }
       }
     },
-    "error": {
+    "abort": {
       "cannot_connect": "Failed to connect to the device. Please try again."
     }
   },

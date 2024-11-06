@@ -6,11 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.vegehub.const import DOMAIN
-from homeassistant.components.vegehub.switch import (
-    CommunicationFailed,
-    SwitchDeviceClass,
-    VegeHubSwitch,
-)
+from homeassistant.components.vegehub.switch import SwitchDeviceClass, VegeHubSwitch
 from homeassistant.const import UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -130,7 +126,7 @@ async def test_set_actuator_failure(vegehub_switch, mock_session) -> None:
         text="",
     )
 
-    with pytest.raises(CommunicationFailed):
+    with pytest.raises(ConnectionError):
         await vegehub_switch._set_actuator(1)
 
 

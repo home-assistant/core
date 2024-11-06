@@ -45,7 +45,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 _LOGGER.info("User input of %s", self._hub.ip_address)
 
-                self._hub.retrieve_mac_address()
+                await self._hub.retrieve_mac_address()
 
                 if len(self._hub.mac_address) <= 0:
                     _LOGGER.error(
@@ -86,7 +86,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     info_data["mac_address"] = self._hub.mac_address
                     info_data["ip_addr"] = self._hub.ip_address
                     info_data["hostname"] = self._hostname
-                    info_data["sw_ver"] = self._properties["version"]
+                    info_data["sw_ver"] = self._properties.get("version")
                     info_data["config_url"] = self._config_url
 
                     # Create a task to ask the hub for an update when it can, so that we have initial data

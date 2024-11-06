@@ -17,7 +17,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 # Mock data for testing
 TEST_IP = "192.168.0.100"
 TEST_MAC = "A1:B2:C3:D4:E5:F6"
-TEST_SIMPLE_MAC = "a1b2c3d4e5f6"
+TEST_SIMPLE_MAC = "A1B2C3D4E5F6"
 TEST_HOSTNAME = "VegeHub"
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
@@ -142,6 +142,7 @@ async def test_user_flow_success(
     hass: HomeAssistant, setup_mock_config_flow, mock_aiohttp_session
 ) -> None:
     """Test the user flow with successful configuration."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -165,10 +166,20 @@ async def test_user_flow_cannot_connect(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
 ) -> None:
     """Test the user flow when the device cannot be connected."""
+
+    mocker = AiohttpClientMocker()
+
     with patch(
-        "homeassistant.components.vegehub.config_flow.VegeHubConfigFlow._get_device_mac",
-        return_value="",
+        "aiohttp.ClientSession",
+        side_effect=lambda *args, **kwargs: mocker.create_session(
+            asyncio.get_event_loop()
+        ),
     ):
+        mocker.post(
+            "http://192.168.0.100/api/info/get",
+            status=200,
+            json={},
+        )
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
