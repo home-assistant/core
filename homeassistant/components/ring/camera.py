@@ -200,7 +200,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                 send_message(
                     WebRTCCandidate(
                         RTCIceCandidate(
-                            ring_message.candidate, ring_message.sdp_m_line_index or 0
+                            ring_message.candidate,
+                            sdp_m_line_index=ring_message.sdp_m_line_index or 0,
                         )
                     )
                 )
@@ -213,6 +214,10 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self, session_id: str, candidate: RTCIceCandidate
     ) -> None:
         """Handle a WebRTC candidate."""
+        if candidate.sdp_m_line_index is None:
+            msg = "The sdp_m_line_index is required for ring webrtc streaming"
+            _LOGGER.error(msg)
+            return
         await self._device.on_webrtc_candidate(
             session_id, candidate.candidate, candidate.sdp_m_line_index
         )
