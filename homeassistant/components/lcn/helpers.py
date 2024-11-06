@@ -238,7 +238,7 @@ def register_lcn_address_devices(
         identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
 
         if device_config[CONF_ADDRESS][2]:  # is group
-            device_model = f"LCN group (g{address[0]:03d}{address[1]:03d})"
+            device_model = "LCN group"
             sw_version = None
         else:  # is module
             hardware_type = device_config[CONF_HARDWARE_TYPE]
@@ -246,7 +246,7 @@ def register_lcn_address_devices(
                 hardware_name = pypck.lcn_defs.HARDWARE_DESCRIPTIONS[hardware_type]
             else:
                 hardware_name = pypck.lcn_defs.HARDWARE_DESCRIPTIONS[-1]
-            device_model = f"{hardware_name} (m{address[0]:03d}{address[1]:03d})"
+            device_model = f"{hardware_name}"
             sw_version = f"{device_config[CONF_SOFTWARE_SERIAL]:06X}"
 
         device_entry = device_registry.async_get_or_create(

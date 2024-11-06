@@ -4,8 +4,73 @@ output_abs:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: &device_selector
+        device:
+          filter:
+            - integration: lcn
+              model: LCN group
+            - integration: lcn
+              model: UnknownModuleType
+            - integration: lcn
+              model: LCN-SW1.0
+            - integration: lcn
+              model: LCN-SW1.1
+            - integration: lcn
+              model: LCN-UP1.0
+            - integration: lcn
+              model: LCN-UP2
+            - integration: lcn
+              model: LCN-SW2
+            - integration: lcn
+              model: LCN-UP-Profi1-Plus
+            - integration: lcn
+              model: LCN-DI12
+            - integration: lcn
+              model: LCN-HU
+            - integration: lcn
+              model: LCN-SH
+            - integration: lcn
+              model: LCN-UP2
+            - integration: lcn
+              model: LCN-UPP
+            - integration: lcn
+              model: LCN-SK
+            - integration: lcn
+              model: LCN-LD
+            - integration: lcn
+              model: LCN-SH-Plus
+            - integration: lcn
+              model: LCN-UPS
+            - integration: lcn
+              model: LCN_UPS24V
+            - integration: lcn
+              model: LCN-GTM
+            - integration: lcn
+              model: LCN-SHS
+            - integration: lcn
+              model: LCN-ESD
+            - integration: lcn
+              model: LCN-EB2
+            - integration: lcn
+              model: LCN-MRS
+            - integration: lcn
+              model: LCN-EB11
+            - integration: lcn
+              model: LCN-UMR
+            - integration: lcn
+              model: LCN-UPU
+            - integration: lcn
+              model: LCN-UMR24V
+            - integration: lcn
+              model: LCN-SHD
+            - integration: lcn
+              model: LCN-SHU
+            - integration: lcn
+              model: LCN-SR6
+            - integration: lcn
+              model: LCN-UMF
+            - integration: lcn
+              model: LCN-WBH
     address:
       example: "myhome.s0.m7"
       selector:
@@ -39,8 +104,7 @@ output_rel:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -66,8 +130,7 @@ output_toggle:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -94,8 +157,7 @@ relays:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -110,8 +172,7 @@ led:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -147,8 +208,7 @@ var_abs:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -217,8 +277,7 @@ var_reset:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -253,8 +312,7 @@ var_rel:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -347,8 +405,7 @@ lock_regulator:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -384,8 +441,7 @@ send_keys:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -434,8 +490,7 @@ lock_keys:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -480,8 +535,7 @@ dyn_text:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
@@ -502,8 +556,7 @@ pck:
   fields:
     device_id:
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector:
-        text:
+      selector: *device_selector
     address:
       example: "myhome.s0.m7"
       selector:
