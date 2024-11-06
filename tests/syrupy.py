@@ -272,16 +272,13 @@ def override_syrupy_report_ran_items_match_location(
 
     # Advanced check, to remove false-positives
     # We check that at least one assertion would have hit the snapshot location
-    for assertion in self.assertions:
-        if (
-            assertion.extension.get_location(
-                test_location=assertion.test_location, index=assertion.index
-            )
-            == snapshot_location
-        ):
-            return True
-
-    return False
+    return any(
+        assertion.extension.get_location(
+            test_location=assertion.test_location, index=assertion.index
+        )
+        == snapshot_location
+        for assertion in self.assertions
+    )
 
 
 # Classes and Methods to override default finish behavior in syrupy
