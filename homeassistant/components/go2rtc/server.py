@@ -1,6 +1,7 @@
 """Go2rtc server."""
 
 import asyncio
+from collections import deque
 from contextlib import suppress
 import logging
 from tempfile import NamedTemporaryFile
@@ -18,6 +19,7 @@ _TERMINATE_TIMEOUT = 5
 _SETUP_TIMEOUT = 30
 _SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr="
 _LOCALHOST_IP = "127.0.0.1"
+_LOG_BUFFER_SIZE = 512
 _RESPAWN_COOLDOWN = 1
 
 # Default configuration for HA
@@ -36,6 +38,16 @@ webrtc:
   listen: ":18555/tcp"
   ice_servers: []
 """
+
+_LOG_LEVEL_MAP = {
+    "TRC": logging.DEBUG,
+    "DBG": logging.DEBUG,
+    "INF": logging.DEBUG,
+    "WRN": logging.WARNING,
+    "ERR": logging.WARNING,
+    "FTL": logging.ERROR,
+    "PNC": logging.ERROR,
+}
 
 
 class Go2RTCServerStartError(HomeAssistantError):
@@ -70,6 +82,7 @@ class Server:
         """Initialize the server."""
         self._hass = hass
         self._binary = binary
+        self._log_buffer: deque[str] = deque(maxlen=_LOG_BUFFER_SIZE)
         self._process: asyncio.subprocess.Process | None = None
         self._startup_complete = asyncio.Event()
         self._api_ip = _LOCALHOST_IP
@@ -114,6 +127,7 @@ class Server:
         except TimeoutError as err:
             msg = "Go2rtc server didn't start correctly"
             _LOGGER.exception(msg)
+            self._log_server_output(logging.WARNING)
             await self._stop()
             raise Go2RTCServerStartError from err
 
@@ -127,9 +141,19 @@ class Server:
 
         async for line in process.stdout:
             msg = line[:-1].decode().strip()
-            _LOGGER.debug(msg)
+            self._log_buffer.append(msg)
+            loglevel = logging.WARNING
+            if len(split_msg := msg.split(" ", 2)) == 3:
+                loglevel = _LOG_LEVEL_MAP.get(split_msg[1], loglevel)
+            _LOGGER.log(loglevel, msg)
             if not self._startup_complete.is_set() and _SUCCESSFUL_BOOT_MESSAGE in msg:
                 self._startup_complete.set()
+
+    def _log_server_output(self, loglevel: int) -> None:
+        """Log captured process output, then clear the log buffer."""
+        for line in list(self._log_buffer):  # Copy the deque to avoid mutation error
+            _LOGGER.log(loglevel, line)
+        self._log_buffer.clear()
 
     async def _watchdog(self) -> None:
         """Keep respawning go2rtc servers.
@@ -158,6 +182,8 @@ class Server:
                     await asyncio.sleep(_RESPAWN_COOLDOWN)
                     try:
                         await self._stop()
+                        _LOGGER.warning("Go2rtc unexpectedly stopped, server log:")
+                        self._log_server_output(logging.WARNING)
                         _LOGGER.debug("Spawning new go2rtc server")
                         with suppress(Go2RTCServerStartError):
                             await self._start()

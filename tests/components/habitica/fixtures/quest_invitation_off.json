@@ -54,8 +54,8 @@
     },
     "party": {
       "quest": {
-        "RSVPNeeded": true,
-        "key": "dustbunnies"
+        "RSVPNeeded": false,
+        "key": null
       }
     },
     "needsCron": true,
