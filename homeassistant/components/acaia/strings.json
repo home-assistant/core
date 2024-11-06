@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup your Acaia scale",
+        "description": "Set a name of your choosing and enter the mac address of your scale.",
+        "data": {
+          "name": "Display name",
+          "mac_address": "MAC address",
+          "is_new_style_scale": "Is this a newer (than 2021) scale? If the integration fails to work, try toggling this setting."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "timer_running": {
+        "name": "Timer running"
+      },
+      "connected": {
+        "name": "Connected"
+      }
+    },
+    "button": {
+      "tare": {
+        "name": "Tare"
+      },
+      "reset_timer": {
+        "name": "Reset timer"
+      },
+      "start_stop": {
+        "name": "Start/stop timer"
+      }
+    },
+    "sensor": {
+      "weight": {
+        "name": "Weight"
+      },
+      "battery": {
+        "name": "Battery"
+      }
+    }
+  }
+}

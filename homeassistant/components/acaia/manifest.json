@@ -1,0 +1,21 @@
+{
+  "domain": "acaia",
+  "name": "Acaia",
+  "bluetooth": [
+    {
+      "manufacturer_id": 16962
+    },
+    {
+      "local_name": "PROCHBT001"
+    }
+  ],
+  "codeowners": ["@zweckj"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://github.com/zweckj/acaia",
+  "iot_class": "assumed_state",
+  "issue_tracker": "https://github.com/zweckj/acaia/issues",
+  "requirements": ["pyacaia_async==0.0.12b4"],
+  "loggers": ["pyacaia_async"],
+  "version": "0.1.2"
+}
