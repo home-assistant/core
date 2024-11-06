@@ -106,6 +106,27 @@ class ProtectProxyView(HomeAssistantView):
         ):
             return data
         return _404("Invalid NVR ID")
+    
+    @callback
+    def _async_get_camera(self, data: ProtectData, camera_id: str) -> Camera | None:
+        if (camera := data.api.bootstrap.cameras.get(camera_id)) is not None:
+            return camera
+
+        entity_registry = er.async_get(self.hass)
+        device_registry = dr.async_get(self.hass)
+
+        if (entity := entity_registry.async_get(camera_id)) is None or (
+            device := device_registry.async_get(entity.device_id or "")
+        ) is None:
+            return None
+
+        macs = [c[1] for c in device.connections if c[0] == dr.CONNECTION_NETWORK_MAC]
+        for mac in macs:
+            if (ufp_device := data.api.bootstrap.get_device_from_mac(mac)) is not None:
+                if isinstance(ufp_device, Camera):
+                    camera = ufp_device
+                    break
+        return camera
 
 
 class ThumbnailProxyView(ProtectProxyView):
@@ -156,27 +177,6 @@ class VideoProxyView(ProtectProxyView):
     url = "/api/unifiprotect/video/{nvr_id}/{camera_id}/{start}/{end}"
     name = "api:unifiprotect_thumbnail"
 
-    @callback
-    def _async_get_camera(self, data: ProtectData, camera_id: str) -> Camera | None:
-        if (camera := data.api.bootstrap.cameras.get(camera_id)) is not None:
-            return camera
-
-        entity_registry = er.async_get(self.hass)
-        device_registry = dr.async_get(self.hass)
-
-        if (entity := entity_registry.async_get(camera_id)) is None or (
-            device := device_registry.async_get(entity.device_id or "")
-        ) is None:
-            return None
-
-        macs = [c[1] for c in device.connections if c[0] == dr.CONNECTION_NETWORK_MAC]
-        for mac in macs:
-            if (ufp_device := data.api.bootstrap.get_device_from_mac(mac)) is not None:
-                if isinstance(ufp_device, Camera):
-                    camera = ufp_device
-                    break
-        return camera
-
     async def get(
         self, request: web.Request, nvr_id: str, camera_id: str, start: str, end: str
     ) -> web.StreamResponse:
@@ -226,3 +226,58 @@ class VideoProxyView(ProtectProxyView):
         if response.prepared:
             await response.write_eof()
         return response
+
+class VideoEventProxyView(ProtectProxyView):
+    """View to proxy video clips for events from UniFi Protect."""
+
+    url = "/api/unifiprotect/video/{nvr_id}/{camera_id}/{event_id}"
+    name = "api:unifiprotect_thumbnail"
+
+    async def get(
+        self, request: web.Request, nvr_id: str, camera_id: str, event_id: str
+    ) -> web.StreamResponse:
+        """Get Camera Video clip for an event."""
+
+        data = self._get_data_or_404(nvr_id)
+        if isinstance(data, web.Response):
+            return data
+
+        camera = self._async_get_camera(data, camera_id)
+        if camera is None:
+            return _404(f"Invalid camera ID: {camera_id}")
+        if not camera.can_read_media(data.api.bootstrap.auth_user):
+            return _403(f"User cannot read media from camera: {camera.id}")
+        
+        try:
+            event = await data.api.get_event(event_id)
+        except NvrError as err:
+            _bad_identifier(f"{data.api.bootstrap.nvr.id}:{subtype}:{event_id}", err)
+
+        if event.start is None or event.end is None:
+            raise BrowseError("Event is still ongoing")
+
+        response = web.StreamResponse(
+            status=200,
+            reason="OK",
+            headers={
+                "Content-Type": "video/mp4",
+            },
+        )
+
+        async def iterator(total: int, chunk: bytes | None) -> None:
+            if not response.prepared:
+                response.content_length = total
+                await response.prepare(request)
+
+            if chunk is not None:
+                await response.write(chunk)
+
+        try:
+            await camera.get_video(event.start, event.end, iterator_callback=iterator)
+        except ClientError as err:
+            return _404(err)
+
+        if response.prepared:
+            await response.write_eof()
+        return response
+        
