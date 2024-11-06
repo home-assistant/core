@@ -3,14 +3,14 @@
 from collections.abc import Generator
 
 import pytest
+from watergate_local_api import WatergateApiException
 
 from homeassistant.components.watergate.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import DEFAULT_DEVICE_STATE
-from .const import MOCK_WEBHOOK_ID
+from .const import DEFAULT_DEVICE_STATE, MOCK_WEBHOOK_ID
 
 from tests.common import AsyncMock, HomeAssistant
 
@@ -18,7 +18,7 @@ from tests.common import AsyncMock, HomeAssistant
 async def test_step_user_form(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],
-    mock_webhook_id_generatio: Generator[None],
+    mock_webhook_id_generation: Generator[None],
     mock_setup_entry: Generator[AsyncMock],
     user_input: dict[str, str],
 ) -> None:
@@ -30,7 +30,6 @@ async def test_step_user_form(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert CONF_NAME in result["data_schema"].schema
     assert CONF_IP_ADDRESS in result["data_schema"].schema
 
     result = await hass.config_entries.flow.async_configure(
@@ -38,20 +37,20 @@ async def test_step_user_form(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device"
+    assert result["title"] == "Sonic"
     assert result["data"] == {**user_input, CONF_WEBHOOK_ID: MOCK_WEBHOOK_ID}
 
 
 @pytest.mark.parametrize(
     "client_result",
-    [AsyncMock(return_value=None), AsyncMock(side_effect=Exception)],
+    [AsyncMock(return_value=None), AsyncMock(side_effect=WatergateApiException)],
 )
 async def test_step_user_form_with_exception(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],
     user_input: dict[str, str],
     client_result: AsyncMock,
-    mock_webhook_id_generatio: Generator[None],
+    mock_webhook_id_generation: Generator[None],
     mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test checking if errors will be displayed when Exception is thrown while checking device state."""
@@ -80,5 +79,5 @@ async def test_step_user_form_with_exception(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device"
+    assert result["title"] == "Sonic"
     assert result["data"] == {**user_input, CONF_WEBHOOK_ID: MOCK_WEBHOOK_ID}

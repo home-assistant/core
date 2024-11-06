@@ -10,14 +10,18 @@ from watergate_local_api import WatergateLocalApiClient
 from watergate_local_api.models import WebhookEvent
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.webhook import Request, Response, async_generate_url
+from homeassistant.components.webhook import (
+    Request,
+    Response,
+    async_generate_url,
+    async_register,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_WEBHOOK_ID, Platform
+from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import WatergateDataCoordinator
-from .entity import WatergateConfigEntry, WatergateData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,26 +30,28 @@ PLATFORMS: list[Platform] = [
     Platform.VALVE,
 ]
 
+type WatergateConfigEntry = ConfigEntry[WatergateDataCoordinator]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
     """Set up Watergate from a config entry."""
-    sonic_name = entry.data[CONF_NAME]
     sonic_address = entry.data[CONF_IP_ADDRESS]
     webhook_id = entry.data[CONF_WEBHOOK_ID]
 
     _LOGGER.debug(
-        "Setting up watergate local api integration for device: %s (IP: %s)",
-        sonic_name,
+        "Setting up watergate local api integration for device: IP: %s)",
         sonic_address,
     )
 
-    watergate_client = WatergateLocalApiClient(sonic_address)
+    watergate_client = WatergateLocalApiClient(
+        sonic_address if sonic_address.startswith("http") else f"http://{sonic_address}"
+    )
 
     coordinator = WatergateDataCoordinator(hass, watergate_client)
+    entry.runtime_data = coordinator
 
-    hass.components.webhook.async_unregister(webhook_id)
-    hass.components.webhook.async_register(
-        DOMAIN, "Watergate", webhook_id, get_webhook_handler(coordinator)
+    async_register(
+        hass, DOMAIN, "Watergate", webhook_id, get_webhook_handler(coordinator)
     )
 
     _LOGGER.debug("Registered webhook: %s", webhook_id)
@@ -53,18 +59,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
 
     await watergate_client.async_set_webhook_url(
-        async_generate_url(hass, webhook_id, allow_ip=True)
+        async_generate_url(hass, webhook_id, allow_ip=True, prefer_external=False)
     )
-
-    entry.runtime_data = WatergateData(watergate_client, coordinator, sonic_name)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
     """Unload a config entry."""
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    hass.components.webhook.async_unregister(webhook_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -91,8 +97,8 @@ def get_webhook_handler(
         body_type = body.get("type")
 
         coordinator_data = coordinator.data
-        if body_type == Platform.VALVE and coordinator_data.state:
-            coordinator_data.state.valve_state = data.state
+        if body_type == Platform.VALVE and coordinator_data:
+            coordinator_data.valve_state = data.state
 
         coordinator.async_set_updated_data(coordinator_data)
 

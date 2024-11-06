@@ -24,7 +24,7 @@ async def test_async_setup_entry(
     hass.config.internal_url = "http://hassio.local"
 
     with (
-        patch("homeassistant.components.webhook.async_register") as mock_webhook,
+        patch("homeassistant.components.watergate.async_register") as mock_webhook,
     ):
         await init_integration(hass, mock_entry)
 
