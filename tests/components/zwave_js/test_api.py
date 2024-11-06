@@ -4991,30 +4991,20 @@ async def test_invoke_cc_api(
     assert msg["error"] == {"code": "NotFoundError", "message": ""}
 
 
+@pytest.mark.parametrize("config", [{}, {CONF_INSTALLER_MODE: True}])
 async def test_get_integration_settings(
+    config,
     hass: HomeAssistant,
-    integration: MockConfigEntry,
+    client,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the get_integration_settings WS API call works."""
     ws_client = await hass_ws_client(hass)
 
-    # Test default settings
-    await ws_client.send_json_auto_id(
-        {
-            TYPE: "zwave_js/get_integration_settings",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {CONF_INSTALLER_MODE: False}
-
-    # Test with installer_mode: true
-    # Unload the component
-    hass.config.components.remove(DOMAIN)
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_INSTALLER_MODE: True}}
-    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json_auto_id(
@@ -5024,4 +5014,6 @@ async def test_get_integration_settings(
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {CONF_INSTALLER_MODE: True}
+    assert msg["result"] == {
+        CONF_INSTALLER_MODE: config.get(CONF_INSTALLER_MODE, False)
+    }
