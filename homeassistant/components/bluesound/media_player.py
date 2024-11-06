@@ -369,8 +369,6 @@ class BluesoundPlayer(MediaPlayerEntity):
                 return MediaPlayerState.PAUSED
             case "stream" | "play":
                 return MediaPlayerState.PLAYING
-            case "stop":
-                return MediaPlayerState.IDLE
             case _:
                 return MediaPlayerState.IDLE
 
