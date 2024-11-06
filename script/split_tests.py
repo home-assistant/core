@@ -75,6 +75,10 @@ class BucketHolder:
                             f"{other_test.total_tests:>{digits}} tests in {other_test.path}"
                         )
                         smallest_bucket.add(other_test)
+                elif tests.path.endswith(".py"):
+                    print(
+                        f"{other_test.total_tests:>{digits}} tests in {other_test.path}"
+                    )
 
         # verify that all tests are added to a bucket
         if not test_folder.added_to_bucket:
@@ -235,6 +239,8 @@ def main() -> None:
     print(f"Estimated tests per bucket: {tests_per_bucket}")
 
     bucket_holder.create_ouput_file()
+
+    raise ("Stop now")
 
 
 if __name__ == "__main__":
