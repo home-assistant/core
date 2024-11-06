@@ -75,7 +75,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> EmoncmsOptionsFlow:
         """Get the options flow for this handler."""
-        return EmoncmsOptionsFlow()
+        return EmoncmsOptionsFlow(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -183,18 +183,23 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
 class EmoncmsOptionsFlow(OptionsFlow):
     """Emoncms Options flow handler."""
 
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize emoncms options flow."""
+        self._url = config_entry.data[CONF_URL]
+        self._api_key = config_entry.data[CONF_API_KEY]
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
         description_placeholders = {}
-        data = self.options if self.options else self.config_entry.data
-        url = data[CONF_URL]
-        api_key = data[CONF_API_KEY]
-        include_only_feeds = data.get(CONF_ONLY_INCLUDE_FEEDID, [])
+        include_only_feeds = self.config_entry.options.get(
+            CONF_ONLY_INCLUDE_FEEDID,
+            self.config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID, []),
+        )
         options: list = include_only_feeds
-        result = await get_feed_list(self.hass, url, api_key)
+        result = await get_feed_list(self.hass, self._url, self._api_key)
         if not result[CONF_SUCCESS]:
             errors["base"] = "api_error"
             description_placeholders = {"details": result[CONF_MESSAGE]}
@@ -204,10 +209,7 @@ class EmoncmsOptionsFlow(OptionsFlow):
         if user_input:
             include_only_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
             return self.async_create_entry(
-                title=sensor_name(url),
                 data={
-                    CONF_URL: url,
-                    CONF_API_KEY: api_key,
                     CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
                 },
             )

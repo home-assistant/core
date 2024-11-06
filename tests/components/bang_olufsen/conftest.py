@@ -124,7 +124,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.get_available_sources = AsyncMock()
         client.get_available_sources.return_value = SourceArray(
             items=[
-                # Is in the HIDDEN_SOURCE_IDS constant, so should not be user selectable
+                # Is not playable, so should not be user selectable
                 Source(
                     name="AirPlay",
                     id="airPlay",
@@ -137,14 +137,16 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     id="tidal",
                     is_enabled=True,
                     is_multiroom_available=True,
+                    is_playable=True,
                 ),
                 Source(
                     name="Line-In",
                     id="lineIn",
                     is_enabled=True,
                     is_multiroom_available=False,
+                    is_playable=True,
                 ),
-                # Is disabled, so should not be user selectable
+                # Is disabled and not playable, so should not be user selectable
                 Source(
                     name="Powerlink",
                     id="pl",

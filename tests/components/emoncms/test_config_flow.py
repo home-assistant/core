@@ -97,10 +97,6 @@ async def test_user_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-USER_OPTIONS = {
-    CONF_ONLY_INCLUDE_FEEDID: ["1"],
-}
-
 CONFIG_ENTRY = {
     CONF_API_KEY: "my_api_key",
     CONF_ONLY_INCLUDE_FEEDID: ["1"],
@@ -116,15 +112,19 @@ async def test_options_flow(
 ) -> None:
     """Options flow - success test."""
     await setup_integration(hass, config_entry)
+    assert config_entry.options == {}
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=USER_OPTIONS,
+        user_input={
+            CONF_ONLY_INCLUDE_FEEDID: ["1"],
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == CONFIG_ENTRY
-    assert config_entry.options == CONFIG_ENTRY
+    assert config_entry.options == {
+        CONF_ONLY_INCLUDE_FEEDID: ["1"],
+    }
 
 
 async def test_options_flow_failure(
