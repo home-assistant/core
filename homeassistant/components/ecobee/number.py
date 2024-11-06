@@ -160,8 +160,9 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
             self.update_without_throttle = False
         else:
             await self.data.update()
+
         self._attr_native_value = (
-            self.thermostat["settings"]["compressorProtectionMinTemp"] / 10
+            (self.thermostat["settings"]["compressorProtectionMinTemp"]) / 10
         )
 
     def set_native_value(self, value: float) -> None:
