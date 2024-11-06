@@ -432,20 +432,7 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
             for i in range(int(worker_count)):
                 with open(f".pytest_syrupy_gw{i}_result", encoding="utf-8") as f:
                     _merge_serialized_report(self.report, json.load(f))
-                # os.remove(f".pytest_syrupy_gw{i}_result")
-        else:
-            with open(
-                ".pytest_syrupy_no_xdist_result",
-                "w",
-                encoding="utf-8",
-            ) as f:
-                json.dump(
-                    _serialize_report(
-                        self.report, self._collected_items, self._selected_items
-                    ),
-                    f,
-                    indent=2,
-                )
+                os.remove(f".pytest_syrupy_gw{i}_result")
 
     if self.report.num_unused:
         if self.update_snapshots:
