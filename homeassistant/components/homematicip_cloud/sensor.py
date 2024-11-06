@@ -420,6 +420,7 @@ class HomematicipWindspeedSensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.WIND_SPEED
     _attr_native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the windspeed sensor."""
@@ -451,6 +452,7 @@ class HomematicipTodayRainSensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.PRECIPITATION
     _attr_native_unit_of_measurement = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""

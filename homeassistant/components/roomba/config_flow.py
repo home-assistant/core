@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
@@ -92,7 +92,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> RoombaOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return RoombaOptionsFlowHandler(config_entry)
+        return RoombaOptionsFlowHandler()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -300,7 +300,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class RoombaOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class RoombaOptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
     async def async_step_init(
@@ -310,17 +310,18 @@ class RoombaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        options = self.config_entry.options
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_CONTINUOUS,
-                        default=self.options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
+                        default=options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
                     ): bool,
                     vol.Optional(
                         CONF_DELAY,
-                        default=self.options.get(CONF_DELAY, DEFAULT_DELAY),
+                        default=options.get(CONF_DELAY, DEFAULT_DELAY),
                     ): int,
                 }
             ),

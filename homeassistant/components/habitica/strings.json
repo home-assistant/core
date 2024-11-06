@@ -38,6 +38,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "pending_quest": {
+        "name": "Pending quest invitation"
+      }
+    },
     "button": {
       "run_cron": {
         "name": "Start my day"
@@ -204,10 +209,10 @@
       "message": "Unable to create new to-do `{name}` for Habitica, please try again"
     },
     "setup_rate_limit_exception": {
-      "message": "Currently rate limited, try again later"
+      "message": "Rate limit exceeded, try again later"
     },
     "service_call_unallowed": {
-      "message": "Unable to carry out this action, because the required conditions are not met"
+      "message": "Unable to complete action, the required conditions are not met"
     },
     "service_call_exception": {
       "message": "Unable to connect to Habitica, try again later"
@@ -219,7 +224,10 @@
       "message": "Unable to cast skill, your character does not have the skill or spell {skill}."
     },
     "entry_not_found": {
-      "message": "The selected character is currently not configured or loaded in Home Assistant."
+      "message": "The selected character is not configured in Home Assistant."
+    },
+    "entry_not_loaded": {
+      "message": "The selected character is currently not loaded or disabled in Home Assistant."
     },
     "task_not_found": {
       "message": "Unable to cast skill, could not find the task {task}"
