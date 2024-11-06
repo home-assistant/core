@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 
-VENTILATOR_MIN_HOME_ID = "number.ecobee_ventilator_min_time_home"
-VENTILATOR_MIN_AWAY_ID = "number.ecobee_ventilator_min_time_away"
+VENTILATOR_MIN_HOME_ID = "number.ecobee_ventilator_minimum_time_home"
+VENTILATOR_MIN_AWAY_ID = "number.ecobee_ventilator_minimum_time_away"
 THERMOSTAT_ID = 0
 
 
@@ -26,7 +26,9 @@ async def test_ventilator_min_on_home_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get("min") == 0
     assert state.attributes.get("max") == 60
     assert state.attributes.get("step") == 5
-    assert state.attributes.get("friendly_name") == "ecobee Ventilator min time home"
+    assert (
+        state.attributes.get("friendly_name") == "ecobee Ventilator minimum time home"
+    )
     assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
 
 
@@ -39,7 +41,9 @@ async def test_ventilator_min_on_away_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get("min") == 0
     assert state.attributes.get("max") == 60
     assert state.attributes.get("step") == 5
-    assert state.attributes.get("friendly_name") == "ecobee Ventilator min time away"
+    assert (
+        state.attributes.get("friendly_name") == "ecobee Ventilator minimum time away"
+    )
     assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
 
 
