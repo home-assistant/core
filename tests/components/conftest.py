@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
+import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -511,17 +512,38 @@ def supervisor_client() -> Generator[AsyncMock]:
         yield supervisor_client
 
 
+async def _validate_translation_placeholders(
+    full_key: str,
+    translation: str,
+    description_placeholders: dict[str, str] | None,
+) -> str | None:
+    """Raise if translation exist with missing placeholders."""
+    tuples = list(string.Formatter().parse(translation))
+    for _, placeholder, _, _ in tuples:
+        if placeholder is None:
+            continue
+        if (
+            description_placeholders is None
+            or placeholder not in description_placeholders
+        ):
+            pytest.fail(f"Placeholder not found for `{placeholder}` in {full_key}")
+
+
 async def _ensure_translation_exists(
     hass: HomeAssistant,
     ignore_translations: dict[str, StoreInfo],
     category: str,
     component: str,
     key: str,
+    description_placeholders: dict[str, str] | None,
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
     translations = await async_get_translations(hass, "en", category, [component])
-    if full_key in translations:
+    if (translation := translations.get(full_key)) is not None:
+        _validate_translation_placeholders(
+            full_key, translation, description_placeholders
+        )
         return
 
     if full_key in ignore_translations:
@@ -579,6 +601,7 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
                         category,
                         component,
                         f"error.{error}",
+                        result["description_placeholders"],
                     )
             return result
 
@@ -593,6 +616,7 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
                 category,
                 component,
                 f"abort.{result["reason"]}",
+                result["description_placeholders"],
             )
 
         return result
