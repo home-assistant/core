@@ -19,7 +19,7 @@
           "from": "Start station",
           "to": "End station",
           "via": "List of up to 5 via stations",
-          "is_arrival": "Use arrival instead of departure",
+          "is_arrival": "Show arrival time instead of the standard departure time for you connection – Usually the departure time of the connection leaving the start station is displayed, by switching to arrival, the destination time the connection arrives at the end station is tracked.",
           "time_mode": "Select a time mode"
         },
         "data_description": {
@@ -28,11 +28,16 @@
         "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
         "title": "Swiss Public Transport"
       },
-      "optional": {
+      "advanced": {
         "data": {
           "time": "Select the time of day",
           "time_offset": "Select an offset duration"
         },
+        "data_description": {
+          "time": "For connections of mode 'fixed time of day', please select the relevant time (e.g. 7:12:00 AM every morning).",
+          "time_offset": "For connections of mode 'at an offset from now', please select the relevant duration (e.g. +00:05:00 taking into account the time to walk to the station)."
+        },
+        "description": "Configuration of the selected time mode for your connection",
         "title": "Swiss Public Transport"
       }
     }
