@@ -90,6 +90,7 @@ class UnitSystem:
         name: str,
         *,
         accumulated_precipitation: UnitOfPrecipitationDepth,
+        area: UnitOfArea,
         conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str],
         length: UnitOfLength,
         mass: UnitOfMass,
@@ -97,7 +98,6 @@ class UnitSystem:
         temperature: UnitOfTemperature,
         volume: UnitOfVolume,
         wind_speed: UnitOfSpeed,
-        area: UnitOfArea,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
