@@ -195,7 +195,7 @@
         "name": "Child lock"
       },
       "pir_enabled": {
-        "name": "PIR enabled"
+        "name": "Motion sensor"
       }
     },
     "number": {
