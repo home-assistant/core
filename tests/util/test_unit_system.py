@@ -418,7 +418,7 @@ def test_get_unit_system_invalid(key: str) -> None:
         (
             SensorDeviceClass.AREA,
             UnitOfArea.SQUARE_INCHES,
-            UnitOfArea.SQUARE_MILLIMETERS,
+            UnitOfArea.SQUARE_CENTIMETERS,
         ),
         (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, UnitOfArea.SQUARE_KILOMETERS),
         (SensorDeviceClass.AREA, UnitOfArea.SQUARE_YARDS, UnitOfArea.SQUARE_METERS),

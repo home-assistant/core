@@ -1174,14 +1174,6 @@ _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = DeprecatedConstantEn
 """Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
 
 
-_DEPRECATED_AREA_SQUARE_METERS: Final = DeprecatedConstant(
-    "AREA_SQUARE_METERS",
-    "UnitOfArea.SQUARE_METERS",
-    "2025.12",
-)
-"""Deprecated: please use UnitOfArea.SQUARE_METERS"""
-
-
 class UnitOfArea(StrEnum):
     """Area units."""
 
@@ -1195,6 +1187,13 @@ class UnitOfArea(StrEnum):
     SQUARE_MILES = "mi²"
     ACRES = "ac"
     HECTARES = "ha"
+
+
+_DEPRECATED_AREA_SQUARE_METERS: Final = DeprecatedConstantEnum(
+    UnitOfArea.SQUARE_METERS,
+    "2025.12",
+)
+"""Deprecated: please use UnitOfArea.SQUARE_METERS"""
 
 
 # Mass units

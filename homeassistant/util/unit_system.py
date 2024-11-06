@@ -255,7 +255,7 @@ METRIC_SYSTEM = UnitSystem(
             if unit != UnitOfPressure.HPA
         },
         # Convert non-metric area
-        ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_MILLIMETERS,
+        ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_CENTIMETERS,
         ("area", UnitOfArea.SQUARE_FEET): UnitOfArea.SQUARE_METERS,
         ("area", UnitOfArea.SQUARE_MILES): UnitOfArea.SQUARE_KILOMETERS,
         ("area", UnitOfArea.SQUARE_YARDS): UnitOfArea.SQUARE_METERS,
