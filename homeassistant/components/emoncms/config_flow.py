@@ -181,7 +181,9 @@ class EmoncmsOptionsFlow(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
         description_placeholders = {}
-        data = self.options if self.options else self.config_entry.data
+        data = self.config_entry.data
+        if current_options := self.config_entry.options:
+            data = current_options
         url = data[CONF_URL]
         api_key = data[CONF_API_KEY]
         include_only_feeds = data.get(CONF_ONLY_INCLUDE_FEEDID, [])
