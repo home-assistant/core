@@ -528,21 +528,6 @@ async def _ensure_translation_exists(
         ignore_translations[full_key] = "used"
         return
 
-    key_parts = key.split(".")
-    # Ignore step data translations if title or description exists
-    if (
-        len(key_parts) >= 3
-        and key_parts[0] == "step"
-        and key_parts[2] == "data"
-        and (
-            f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.description"
-            in translations
-            or f"component.{component}.{category}.{key_parts[0]}.{key_parts[1]}.title"
-            in translations
-        )
-    ):
-        return
-
     pytest.fail(
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
