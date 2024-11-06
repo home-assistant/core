@@ -25,8 +25,6 @@ from .entity import (
     RingDeviceT,
     RingEntity,
     RingEntityDescription,
-    async_check_create_deprecated,
-    async_check_exists,
     refresh_after,
 )
 
@@ -61,9 +59,8 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
     RingSwitchEntityDescription[RingDoorBell](
         key="in_home_chime",
         translation_key="in_home_chime",
-        exists_fn=lambda device: device.family == "doorbots",
-        dynamic_exists_fn=lambda device: device.existing_doorbell_type
-        in IN_HOME_CHIME_IS_PRESENT,
+        exists_fn=lambda device: device.family == "doorbots"
+        and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT,
         dynamic_setting_description="In-home chime Not Present",
         is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
         turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
@@ -91,17 +88,13 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    async_add_entities(
-        RingSwitch(device, devices_coordinator, description)
-        for description in SWITCHES
-        for device in ring_data.devices.all_devices
-        if async_check_exists(hass, SWITCH_DOMAIN, description, device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.SWITCH,
-            description.unique_id_fn(description, device),
-            description,
-        )
+    RingSwitch.process_entities(
+        hass,
+        devices_coordinator,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        domain=SWITCH_DOMAIN,
+        descriptions=SWITCHES,
     )
 
 
@@ -117,15 +110,15 @@ class RingSwitch(RingEntity[RingDeviceT], SwitchEntity):
         description: RingSwitchEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize the switch."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
+        super().__init__(device, coordinator, description)
         self._no_updates_until = dt_util.utcnow()
-        self._attr_unique_id = description.unique_id_fn(description, device)
         self._attr_is_on = description.is_on_fn(device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
+        if self._removed:
+            return
         self._device = cast(
             RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),

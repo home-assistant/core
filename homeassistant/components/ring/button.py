@@ -2,18 +2,37 @@
 
 from __future__ import annotations
 
-from ring_doorbell import RingOther
+from collections.abc import Sequence
+from dataclasses import dataclass
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from ring_doorbell import RingCapability, RingOther
+
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity, exception_wrap
+from .entity import RingDeviceT, RingEntity, RingEntityDescription, exception_wrap
 
-BUTTON_DESCRIPTION = ButtonEntityDescription(
-    key="open_door", translation_key="open_door"
+
+@dataclass(frozen=True, kw_only=True)
+class RingButtonEntityDescription(
+    ButtonEntityDescription, RingEntityDescription[RingDeviceT]
+):
+    """Describes a Ring button entity."""
+
+
+BUTTONS: Sequence[RingButtonEntityDescription] = (
+    RingButtonEntityDescription(
+        key="open_door",
+        translation_key="open_door",
+        exists_fn=lambda device: device.has_capability(RingCapability.OPEN),
+    ),
 )
 
 
@@ -26,10 +45,13 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    async_add_entities(
-        RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
-        for device in ring_data.devices.other
-        if device.has_capability("open")
+    RingDoorButton.process_entities(
+        hass,
+        devices_coordinator,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        domain=BUTTON_DOMAIN,
+        descriptions=BUTTONS,
     )
 
 
@@ -40,15 +62,14 @@ class RingDoorButton(RingEntity[RingOther], ButtonEntity):
         self,
         device: RingOther,
         coordinator: RingDataCoordinator,
-        description: ButtonEntityDescription,
+        description: RingEntityDescription[RingOther],
     ) -> None:
         """Initialize the button."""
         super().__init__(
             device,
             coordinator,
+            description,
         )
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
 
     @exception_wrap
     async def async_press(self) -> None:

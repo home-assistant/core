@@ -11,7 +11,6 @@ from ring_doorbell import RingCapability, RingEvent
 from ring_doorbell.const import KIND_DING, KIND_MOTION
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -29,7 +28,6 @@ from .entity import (
     RingDeviceT,
     RingEntityDescription,
     async_check_create_deprecated,
-    async_check_exists,
 )
 
 
@@ -75,7 +73,7 @@ async def async_setup_entry(
         RingBinarySensor(device, listen_coordinator, description)
         for description in BINARY_SENSOR_TYPES
         for device in ring_data.devices.all_devices
-        if async_check_exists(hass, BINARY_SENSOR_DOMAIN, description, device)
+        if description.exists_fn(device)
         and async_check_create_deprecated(
             hass,
             Platform.BINARY_SENSOR,
@@ -136,6 +134,8 @@ class RingBinarySensor(
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        if self._removed:
+            return
         if alert := self._get_coordinator_alert():
             self._async_handle_event(alert)
         super()._handle_coordinator_update()

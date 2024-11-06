@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Generic, cast
+from typing import Any, cast
 
 from ring_doorbell import RingChime, RingDoorBell, RingGeneric, RingOther
 import ring_doorbell.const
@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingDeviceT, RingEntity, refresh_after
+from .entity import RingDeviceT, RingEntity, RingEntityDescription, refresh_after
 
 
 async def async_setup_entry(
@@ -39,7 +39,9 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):
+class RingNumberEntityDescription(
+    NumberEntityDescription, RingEntityDescription[RingDeviceT]
+):
     """Describes Ring number entity."""
 
     value_fn: Callable[[RingDeviceT], StateType]
@@ -118,9 +120,8 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
         description: RingNumberEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize a number for Ring device."""
-        super().__init__(device, coordinator)
+        super().__init__(device, coordinator, description)
         self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
         self._update_native_value()
 
     def _update_native_value(self) -> None:
@@ -131,7 +132,8 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-
+        if self._removed:
+            return
         self._device = cast(
             RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),

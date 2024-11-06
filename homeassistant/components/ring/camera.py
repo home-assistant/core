@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -11,7 +13,11 @@ from haffmpeg.camera import CameraMjpeg
 from ring_doorbell import RingDoorBell
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    Camera,
+    CameraEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,12 +25,29 @@ from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity, exception_wrap
+from .entity import RingEntity, RingEntityDescription, exception_wrap
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 MOTION_DETECTION_CAPABILITY = "motion_detection"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class RingCameraEntityDescription(
+    CameraEntityDescription, RingEntityDescription[RingDoorBell]
+):
+    """Base class for camera entity description."""
+
+
+CAMERAS: Iterable[RingCameraEntityDescription] = (
+    RingCameraEntityDescription(
+        key="last_recording",
+        exists_fn=lambda camera: isinstance(camera, RingDoorBell)
+        and camera.has_subscription,
+        unique_id_fn=lambda _, device: f"{device.device_api_id}",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -37,13 +60,15 @@ async def async_setup_entry(
     devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
-    cams = [
-        RingCam(camera, devices_coordinator, ffmpeg_manager)
-        for camera in ring_data.devices.video_devices
-        if camera.has_subscription
-    ]
-
-    async_add_entities(cams)
+    RingCam.process_entities(
+        hass,
+        devices_coordinator,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        domain=CAMERA_DOMAIN,
+        descriptions=CAMERAS,
+        ffmpeg_manager=ffmpeg_manager,
+    )
 
 
 class RingCam(RingEntity[RingDoorBell], Camera):
@@ -55,10 +80,12 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self,
         device: RingDoorBell,
         coordinator: RingDataCoordinator,
+        description: RingCameraEntityDescription,
+        *,
         ffmpeg_manager: ffmpeg.FFmpegManager,
     ) -> None:
         """Initialize a Ring Door Bell camera."""
-        super().__init__(device, coordinator)
+        super().__init__(device, coordinator, description)
         Camera.__init__(self)
         self._ffmpeg_manager = ffmpeg_manager
         self._last_event: dict[str, Any] | None = None
@@ -66,13 +93,14 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._video_url: str | None = None
         self._image: bytes | None = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
-        self._attr_unique_id = str(device.id)
         if device.has_capability(MOTION_DETECTION_CAPABILITY):
             self._attr_motion_detection_enabled = device.motion_detection
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
+        if self._removed:
+            return
         self._device = self._get_coordinator_data().get_video_device(
             self._device.device_api_id
         )

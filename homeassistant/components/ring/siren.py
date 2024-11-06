@@ -15,20 +15,12 @@ from homeassistant.components.siren import (
     SirenEntityFeature,
     SirenTurnOnServiceParameters,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import (
-    RingDeviceT,
-    RingEntity,
-    RingEntityDescription,
-    async_check_create_deprecated,
-    async_check_exists,
-    refresh_after,
-)
+from .entity import RingDeviceT, RingEntity, RingEntityDescription, refresh_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,17 +74,13 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    async_add_entities(
-        RingSiren(device, devices_coordinator, description)
-        for device in ring_data.devices.all_devices
-        for description in SIRENS
-        if async_check_exists(hass, SIREN_DOMAIN, description, device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.SIREN,
-            description.unique_id_fn(description, device),
-            description,
-        )
+    RingSiren.process_entities(
+        hass,
+        devices_coordinator,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        domain=SIREN_DOMAIN,
+        descriptions=SIRENS,
     )
 
 
@@ -108,9 +96,7 @@ class RingSiren(RingEntity[RingDeviceT], SirenEntity):
         description: RingSirenEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize a Ring Chime siren."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
-        self._attr_unique_id = description.unique_id_fn(description, device)
+        super().__init__(device, coordinator, description)
         if description.is_on_fn:
             self._attr_is_on = description.is_on_fn(self._device)
         features = SirenEntityFeature(0)
@@ -146,6 +132,8 @@ class RingSiren(RingEntity[RingDeviceT], SirenEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
+        if self._removed:
+            return
         if not self.entity_description.is_on_fn:
             return
         self._device = cast(

@@ -66,6 +66,12 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         )
         self.ring_api: Ring = ring_api
         self.first_call: bool = True
+        self._device_api_ids: list[int] = []
+
+    @property
+    def device_api_ids(self) -> list[int]:
+        """Return list of device ids."""
+        return self._device_api_ids
 
     async def _async_update_data(self) -> RingDevices:
         """Fetch data from API endpoint."""
@@ -76,10 +82,12 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         self.first_call = False
         devices: RingDevices = self.ring_api.devices()
         subscribed_device_ids = set(self.async_contexts())
+        self._device_api_ids = []
         for device in devices.all_devices:
+            self._device_api_ids.append(device.device_api_id)
             # Don't update all devices in the ring api, only those that set
             # their device id as context when they subscribed.
-            if device.id in subscribed_device_ids:
+            if device.device_api_id in subscribed_device_ids:
                 try:
                     async with TaskGroup() as tg:
                         if device.has_capability("history"):

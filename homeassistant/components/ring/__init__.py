@@ -117,8 +117,7 @@ async def _migrate_old_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
                 entity_entry.domain, entity_entry.platform, new_unique_id
             ):
                 _LOGGER.error(
-                    "Cannot migrate to unique_id '%s', already exists for '%s', "
-                    "You may have to delete unavailable ring entities",
+                    "Cannot migrate to unique_id '%s', already exists for '%s'",
                     new_unique_id,
                     existing_entity_id,
                 )

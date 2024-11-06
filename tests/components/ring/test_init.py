@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_HARDWARE_ID
-from .device_mocks import FRONT_DOOR_DEVICE_ID
+from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -241,11 +241,11 @@ async def test_error_on_device_update(
     [
         (
             LIGHT_DOMAIN,
-            123456,
+            FRONT_DEVICE_ID,
         ),
         (
             CAMERA_DOMAIN,
-            654321,
+            FRONT_DOOR_DEVICE_ID,
         ),
     ],
 )
@@ -292,7 +292,7 @@ async def test_update_unique_id_existing(
     mock_ring_client,
 ) -> None:
     """Test unique_id update of integration."""
-    old_unique_id = 123456
+    old_unique_id = FRONT_DOOR_DEVICE_ID
     entry = MockConfigEntry(
         title="Ring",
         domain=DOMAIN,
@@ -323,13 +323,13 @@ async def test_update_unique_id_existing(
 
     entity_not_migrated = entity_registry.async_get(entity.entity_id)
     entity_existing = entity_registry.async_get(entity_existing.entity_id)
-    assert entity_not_migrated
+    # entity will be removed as it's no longer provided
+    assert entity_not_migrated is None
     assert entity_existing
-    assert entity_not_migrated.unique_id == old_unique_id
+
     assert (
         f"Cannot migrate to unique_id '{old_unique_id}', "
-        f"already exists for '{entity_existing.entity_id}', "
-        "You may have to delete unavailable ring entities"
+        f"already exists for '{entity_existing.entity_id}'."
     ) in caplog.text
 
 
@@ -340,7 +340,7 @@ async def test_update_unique_id_no_update(
     mock_ring_client,
 ) -> None:
     """Test unique_id update of integration."""
-    correct_unique_id = "123456"
+    correct_unique_id = str(FRONT_DOOR_DEVICE_ID)
     entry = MockConfigEntry(
         title="Ring",
         domain=DOMAIN,
@@ -355,7 +355,7 @@ async def test_update_unique_id_no_update(
     entity = entity_registry.async_get_or_create(
         domain=CAMERA_DOMAIN,
         platform=DOMAIN,
-        unique_id="123456",
+        unique_id=str(FRONT_DOOR_DEVICE_ID),
         config_entry=entry,
     )
     assert entity.unique_id == correct_unique_id

@@ -1,20 +1,27 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
 
+from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum, auto
 import logging
 from typing import Any
 
-from ring_doorbell import RingStickUpCam
+from ring_doorbell import RingCapability, RingStickUpCam
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightEntity,
+    LightEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity, exception_wrap
+from .entity import RingDeviceT, RingEntity, RingEntityDescription, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +32,23 @@ _LOGGER = logging.getLogger(__name__)
 # updates to take place.
 
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
+
+
+@dataclass(frozen=True, kw_only=True)
+class RingLightEntityDescription(
+    LightEntityDescription, RingEntityDescription[RingDeviceT]
+):
+    """Describes a Ring light entity."""
+
+
+LIGHTS: Iterable[RingLightEntityDescription] = (
+    RingLightEntityDescription(
+        key="light",
+        translation_key="light",
+        exists_fn=lambda device: device.has_capability(RingCapability.LIGHT),
+        unique_id_fn=lambda _, device: f"{device.device_api_id}",
+    ),
+)
 
 
 class OnOffState(StrEnum):
@@ -43,10 +67,13 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    async_add_entities(
-        RingLight(device, devices_coordinator)
-        for device in ring_data.devices.stickup_cams
-        if device.has_capability("light")
+    RingLight.process_entities(
+        hass,
+        devices_coordinator,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        domain=LIGHT_DOMAIN,
+        descriptions=LIGHTS,
     )
 
 
@@ -55,20 +82,23 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_translation_key = "light"
 
     def __init__(
-        self, device: RingStickUpCam, coordinator: RingDataCoordinator
+        self,
+        device: RingStickUpCam,
+        coordinator: RingDataCoordinator,
+        description: RingLightEntityDescription[RingStickUpCam],
     ) -> None:
         """Initialize the light."""
-        super().__init__(device, coordinator)
-        self._attr_unique_id = str(device.id)
+        super().__init__(device, coordinator, description)
         self._attr_is_on = device.lights == OnOffState.ON
         self._no_updates_until = dt_util.utcnow()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
+        if self._removed:
+            return
         if self._no_updates_until > dt_util.utcnow():
             return
         device = self._get_coordinator_data().get_stickup_cam(

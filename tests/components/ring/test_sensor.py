@@ -217,7 +217,8 @@ async def test_only_chime_devices(
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
 
-    mock_ring_devices.all_devices = mock_ring_devices.chimes
+    mock_ring_devices._single_family = "chimes"
+    assert len(mock_ring_devices.all_devices) == 1
 
     await setup_platform(hass, Platform.SENSOR)
     await hass.async_block_till_done()
