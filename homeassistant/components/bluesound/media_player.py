@@ -364,12 +364,13 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self.is_grouped and not self.is_master:
             return MediaPlayerState.IDLE
 
-        status = self._status.state
-        if status in ("pause", "stop"):
-            return MediaPlayerState.PAUSED
-        if status in ("stream", "play"):
-            return MediaPlayerState.PLAYING
-        return MediaPlayerState.IDLE
+        match self._status.state:
+            case "pause":
+                return MediaPlayerState.PAUSED
+            case "stream" | "play":
+                return MediaPlayerState.PLAYING
+            case _:
+                return MediaPlayerState.IDLE
 
     @property
     def media_title(self) -> str | None:
