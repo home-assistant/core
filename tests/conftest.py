@@ -159,7 +159,7 @@ def pytest_configure(config: pytest.Config) -> None:
     # Temporary workaround until it is finalised inside syrupy
     # See https://github.com/syrupy-project/syrupy/pull/901
     SnapshotSession.finish = override_syrupy_finish
-    # Override default report match location when location are provided, for example:
+    # Override default report match location for unused snapshots
     # Temporary workaround until it is finalised inside syrupy
     # See https://github.com/syrupy-project/syrupy/issues/918
     SnapshotReport._ran_items_match_location = (
