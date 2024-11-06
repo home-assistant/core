@@ -151,6 +151,9 @@ class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
     _attr_should_poll = False
+    _unrecorded_attributes = frozenset(
+        {ATTR_ENTITY_ID, ATTR_HYSTERESIS, ATTR_LOWER, ATTR_TYPE, ATTR_UPPER}
+    )
 
     def __init__(
         self,

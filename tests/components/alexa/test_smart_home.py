@@ -3999,6 +3999,108 @@ async def test_alarm_control_panel_code_arm_required(hass: HomeAssistant) -> Non
     await discovery_test(device, hass, expected_endpoints=0)
 
 
+async def test_alarm_control_panel_disarm_required(hass: HomeAssistant) -> None:
+    """Test alarm_control_panel disarm required."""
+    device = (
+        "alarm_control_panel.test_4",
+        "armed_away",
+        {
+            "friendly_name": "Test Alarm Control Panel 4",
+            "code_arm_required": False,
+            "code_format": "FORMAT_NUMBER",
+            "code": "1234",
+            "supported_features": 3,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "alarm_control_panel#test_4"
+    assert appliance["displayCategories"][0] == "SECURITY_PANEL"
+    assert appliance["friendlyName"] == "Test Alarm Control Panel 4"
+    assert_endpoint_capabilities(
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    properties = await reported_properties(hass, "alarm_control_panel#test_4")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+    msg = await assert_request_fails(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_4",
+        "alarm_control_panel.alarm_arm_home",
+        hass,
+        payload={"armState": "ARMED_STAY"},
+    )
+    assert msg["event"]["payload"]["type"] == "AUTHORIZATION_REQUIRED"
+    assert (
+        msg["event"]["payload"]["message"]
+        == "You must disarm the system before you can set the requested arm state."
+    )
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_4",
+        "alarm_control_panel.alarm_arm_away",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_AWAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+
+async def test_alarm_control_panel_change_arm_type(hass: HomeAssistant) -> None:
+    """Test alarm_control_panel change arm type."""
+    device = (
+        "alarm_control_panel.test_5",
+        "armed_home",
+        {
+            "friendly_name": "Test Alarm Control Panel 5",
+            "code_arm_required": False,
+            "code_format": "FORMAT_NUMBER",
+            "code": "1234",
+            "supported_features": 3,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "alarm_control_panel#test_5"
+    assert appliance["displayCategories"][0] == "SECURITY_PANEL"
+    assert appliance["friendlyName"] == "Test Alarm Control Panel 5"
+    assert_endpoint_capabilities(
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    properties = await reported_properties(hass, "alarm_control_panel#test_5")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_5",
+        "alarm_control_panel.alarm_arm_home",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_STAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_5",
+        "alarm_control_panel.alarm_arm_away",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_AWAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+
 async def test_range_unsupported_domain(hass: HomeAssistant) -> None:
     """Test rangeController with unsupported domain."""
     device = ("switch.test", "on", {"friendly_name": "Test switch"})
