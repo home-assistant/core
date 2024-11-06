@@ -6,7 +6,7 @@ import logging
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.device import DeviceCategory, DeviceState, DeviceType, SwitcherLight
+from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
