@@ -379,7 +379,6 @@ class UtilityMeterSensor(RestoreSensor):
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
-        self._attr_native_value = None
         self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
         self._last_valid_state = None
@@ -485,13 +484,13 @@ class UtilityMeterSensor(RestoreSensor):
             )
             return
 
-        if self._attr_native_value is None:
+        if self.native_value is None:
             # First state update initializes the utility_meter sensors
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
             ]:
                 sensor.start(new_state_attributes)
-                if self._attr_native_unit_of_measurement is None:
+                if self.native_unit_of_measurement is None:
                     _LOGGER.warning(
                         "Source sensor %s has no unit of measurement. Please %s",
                         self._sensor_source_id,
@@ -536,7 +535,7 @@ class UtilityMeterSensor(RestoreSensor):
 
         _LOGGER.debug(
             "%s - %s - source <%s>",
-            self._attr_name,
+            self.name,
             COLLECTING if self._collecting is not None else PAUSED,
             self._sensor_source_id,
         )
@@ -578,14 +577,14 @@ class UtilityMeterSensor(RestoreSensor):
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()
         self._last_period = (
-            Decimal(self._attr_native_value) if self._attr_native_value else Decimal(0)
+            Decimal(self.native_value) if self.native_value else Decimal(0)
         )
         self._attr_native_value = 0
         self.async_write_ha_state()
 
     async def async_calibrate(self, value):
         """Calibrate the Utility Meter with a given value."""
-        _LOGGER.debug("Calibrate %s = %s type(%s)", self._attr_name, value, type(value))
+        _LOGGER.debug("Calibrate %s = %s type(%s)", self.name, value, type(value))
         self._attr_native_value = Decimal(str(value))
         self.async_write_ha_state()
 
@@ -638,7 +637,7 @@ class UtilityMeterSensor(RestoreSensor):
             _LOGGER.debug(
                 "<%s> collecting %s from %s",
                 self.name,
-                self._attr_native_unit_of_measurement,
+                self.native_unit_of_measurement,
                 self._sensor_source_id,
             )
             self._collecting = async_track_state_change_event(
@@ -659,7 +658,7 @@ class UtilityMeterSensor(RestoreSensor):
         if self._input_device_class is not None:
             return self._input_device_class
         if (
-            self._attr_native_unit_of_measurement
+            self.native_unit_of_measurement
             in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]
         ):
             return SensorDeviceClass.ENERGY
