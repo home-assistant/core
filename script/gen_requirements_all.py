@@ -58,7 +58,11 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 # will be included in requirements_all_{action}.txt
 
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
-    "pytest": {"exclude": set(), "include": {"python-gammu"}, "markers": {}},
+    "pytest": {
+        "exclude": set(),
+        "include": {"python-gammu"},
+        "markers": {},
+    },
     "wheels_aarch64": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
