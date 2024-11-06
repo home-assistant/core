@@ -57,7 +57,9 @@ class BucketHolder:
             if (
                 smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
             ) or (is_file := isinstance(tests, TestFile)):
-                print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
+                print(
+                    f"{tests.total_tests:>{digits}} tests in {tests.path} (is file: {is_file})"
+                )
                 smallest_bucket.add(tests)
                 if is_file:
                     # Ensure all files from the same folder are in the same bucket
