@@ -358,7 +358,7 @@ async def test_ws_get_client_config_sync_offer(
     assert msg["success"]
     assert msg["result"] == {
         "configuration": {},
-        "getCandidatesUpfront": False,
+        "getCandidatesUpfront": True,
     }
 
 
