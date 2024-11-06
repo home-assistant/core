@@ -40,7 +40,6 @@ class JewishCalendarEntity(Entity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry.entry_id)},
-            name=config_entry.title,
         )
         data = config_entry.runtime_data
         self._location = data.location

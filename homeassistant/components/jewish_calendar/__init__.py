@@ -7,7 +7,7 @@ from functools import partial
 from hdate import Location
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
@@ -165,7 +165,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    async def update_listener(
+        hass: HomeAssistant, entry: JewishCalendarConfigEntry
+    ) -> None:
         # Trigger update of states for all platforms
         await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -173,7 +175,9 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
