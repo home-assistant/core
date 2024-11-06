@@ -55,24 +55,25 @@ class BucketHolder:
 
             print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
             smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
-            if smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket:
-                smallest_bucket.add(tests)
-                continue
-            if isinstance(tests, TestFile):
+            is_file = isinstance(tests, TestFile)
+            if (
+                smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
+            ) or is_file:
                 smallest_bucket.add(tests)
                 # Ensure all files from the same folder are in the same bucket
                 # to ensure that syrupy correctly identifies unused snapshots
-                for other_test in sorted_tests:
-                    if (
-                        isinstance(other_test, TestFolder)
-                        or other_test.added_to_bucket
-                        or other_test.path.parent != tests.path.parent
-                    ):
-                        continue
-                    print(
-                        f"{other_test.total_tests:>{digits}} tests in {other_test.path} (same bucket)"
-                    )
-                    smallest_bucket.add(other_test)
+                if is_file:
+                    for other_test in sorted_tests:
+                        if (
+                            isinstance(other_test, TestFolder)
+                            or other_test.added_to_bucket
+                            or other_test.path.parent != tests.path.parent
+                        ):
+                            continue
+                        print(
+                            f"{other_test.total_tests:>{digits}} tests in {other_test.path} (same bucket)"
+                        )
+                        smallest_bucket.add(other_test)
 
         # verify that all tests are added to a bucket
         if not test_folder.added_to_bucket:
