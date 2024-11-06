@@ -52,7 +52,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     _data: dict[str, Any] | None = None
     _issue: Issue | None = None
 
-    def __init__(self, hass: Homeassistant, issue_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, issue_id: str) -> None:
         """Initialize repair flow."""
         self._issue_id = issue_id
         self._supervisor_client = get_supervisor_client(hass)
