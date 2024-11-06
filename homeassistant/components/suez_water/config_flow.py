@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysuez.async_client import SuezAsyncClient
-from pysuez.exception import PySuezError
+from pysuez import PySuezError, SuezClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -32,7 +31,7 @@ async def validate_input(data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
-        client = SuezAsyncClient(
+        client = SuezClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             data[CONF_COUNTER_ID],

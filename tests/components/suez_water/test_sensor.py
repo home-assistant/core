@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 async def test_sensors_valid_state(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    suez_data: AsyncMock,
+    suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -34,7 +34,7 @@ async def test_sensors_valid_state(
 
 async def test_sensors_failed_update(
     hass: HomeAssistant,
-    suez_data,
+    suez_client,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -51,9 +51,7 @@ async def test_sensors_failed_update(
     assert entity_ids[0]
     assert state.state != STATE_UNAVAILABLE
 
-    suez_data.fetch_all_deprecated_data.side_effect = PySuezError(
-        "Should fail to update"
-    )
+    suez_client.fetch_aggregated_data.side_effect = PySuezError("Should fail to update")
 
     freezer.tick(DATA_REFRESH_INTERVAL)
     async_fire_time_changed(hass)

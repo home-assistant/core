@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.suez_water.const import DOMAIN
-from homeassistant.components.suez_water.coordinator import AggregatedSensorData
+from homeassistant.components.suez_water.coordinator import AggregatedData
 
 from tests.common import MockConfigEntry
 
@@ -38,33 +38,21 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="suez_client")
-def mock_suez_client() -> Generator[AsyncMock]:
+def mock_suez_data() -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
     with (
         patch(
-            "homeassistant.components.suez_water.coordinator.SuezAsyncClient", autospec=True
+            "homeassistant.components.suez_water.coordinator.SuezClient", autospec=True
         ) as mock_client,
         patch(
-            "homeassistant.components.suez_water.config_flow.SuezAsyncClient",
+            "homeassistant.components.suez_water.config_flow.SuezClient",
             new=mock_client,
         ),
     ):
-        client = mock_client.return_value
-        client.check_credentials.return_value = True
-        yield client
+        suez_client = mock_client.return_value
+        suez_client.check_credentials.return_value = True
 
-
-@pytest.fixture(name="suez_data")
-def mock_suez_data(suez_client) -> Generator[AsyncMock]:
-    """Create mock for suez_water external api."""
-    with (
-        patch(
-            "homeassistant.components.suez_water.coordinator.SuezData", autospec=True
-        ) as mock_data,
-    ):
-        data_api = mock_data.return_value
-
-        result = AggregatedSensorData(
+        result = AggregatedData(
             value=160,
             current_month={
                 "2024-01-01": 130,
@@ -86,5 +74,5 @@ def mock_suez_data(suez_client) -> Generator[AsyncMock]:
             },
         )
 
-        data_api.fetch_all_deprecated_data.return_value = result
-        yield data_api
+        suez_client.fetch_aggregated_data.return_value = result
+        yield suez_client

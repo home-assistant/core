@@ -1,10 +1,6 @@
 """Suez water update coordinator."""
 
-import asyncio
-
-from pysuez.async_client import SuezAsyncClient
-from pysuez.exception import PySuezError
-from pysuez.suez_data import AggregatedSensorData, SuezData
+from pysuez import AggregatedData, PySuezError, SuezClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -15,11 +11,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
 
-class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
+class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedData]):
     """Suez water coordinator."""
 
-    _async_client: SuezAsyncClient
-    _data_api: SuezData
+    _suez_client: SuezClient
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -34,13 +29,12 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
         )
 
     async def _async_setup(self) -> None:
-        self._async_client = await self._get_client()
-        self._data_api = SuezData(self._async_client)
+        self._suez_client = await self._get_client()
 
-    async def _async_update_data(self) -> AggregatedSensorData:
+    async def _async_update_data(self) -> AggregatedData:
         """Fetch data from API endpoint."""
         try:
-            data = await self._data_api.fetch_all_deprecated_data()
+            data = await self._suez_client.fetch_aggregated_data()
         except PySuezError as err:
             _LOGGER.exception(err)
             raise UpdateFailed(
@@ -49,10 +43,9 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
         _LOGGER.debug("Successfully fetched suez data")
         return data
 
-
-    async def _get_client(self) -> SuezAsyncClient:
+    async def _get_client(self) -> SuezClient:
         try:
-            client = SuezAsyncClient(
+            client = SuezClient(
                 username=self.config_entry.data[CONF_USERNAME],
                 password=self.config_entry.data[CONF_PASSWORD],
                 counter_id=self.config_entry.data[CONF_COUNTER_ID],
