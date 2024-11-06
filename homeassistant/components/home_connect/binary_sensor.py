@@ -13,7 +13,11 @@ from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .api import HomeConnectDevice
 from .const import (
@@ -198,11 +202,17 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
             DOMAIN,
             f"deprecated_binary_common_door_sensor_{self.entity_id}",
             breaks_in_ha_version="2025.5.0",
-            is_fixable=True,
+            is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_binary_common_door_sensor",
             translation_placeholders={
                 "entity": self.entity_id,
                 "items": "\n".join([f"- {item}" for item in items]),
             },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_binary_common_door_sensor_{self.entity_id}"
         )

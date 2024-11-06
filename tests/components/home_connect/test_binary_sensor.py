@@ -18,7 +18,6 @@ from homeassistant.components.home_connect.const import (
     REFRIGERATION_STATUS_DOOR_OPEN,
     REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
 )
-from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -28,8 +27,6 @@ import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -145,7 +142,6 @@ async def test_bianry_sensors_fridge_door_states(
 @pytest.mark.usefixtures("bypass_throttle")
 async def test_create_issue(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
     appliance: Mock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -156,7 +152,6 @@ async def test_create_issue(
     """Test we create an issue when an automation or script is using a deprecated entity."""
     entity_id = "binary_sensor.washer_door"
     get_appliances.return_value = [appliance]
-    http_client = await hass_client()
     issue_id = f"deprecated_binary_common_door_sensor_{entity_id}"
 
     assert await async_setup_component(
@@ -204,17 +199,7 @@ async def test_create_issue(
     assert len(issue_registry.issues) == 1
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
-    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
-
-    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
-    assert data
-    flow_id = data["flow_id"]
-    assert data["step_id"] == "confirm"
-
-    data = await process_repair_fix_flow(http_client, flow_id)
-    assert data
-    assert data["type"] == "create_entry"
-    # Test confirm step in repair flow
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Assert the issue is no longer present
