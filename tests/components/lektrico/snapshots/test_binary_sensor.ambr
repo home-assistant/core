@@ -281,7 +281,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_overvoltage_error-entry]
+# name: test_all_entities[binary_sensor.1p7k_500006_overvoltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -293,7 +293,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_overvoltage_error',
+    'entity_id': 'binary_sensor.1p7k_500006_overvoltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -305,23 +305,23 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Overvoltage error',
+    'original_name': 'Overvoltage',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'overvoltage_error',
-    'unique_id': '500006_overvoltage_error',
+    'translation_key': 'overvoltage',
+    'unique_id': '500006_overvoltage',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_overvoltage_error-state]
+# name: test_all_entities[binary_sensor.1p7k_500006_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Overvoltage error',
+      'friendly_name': '1p7k_500006 Overvoltage',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_overvoltage_error',
+    'entity_id': 'binary_sensor.1p7k_500006_overvoltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -422,7 +422,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_undervoltage_error-entry]
+# name: test_all_entities[binary_sensor.1p7k_500006_undervoltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -434,7 +434,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_undervoltage_error',
+    'entity_id': 'binary_sensor.1p7k_500006_undervoltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -446,23 +446,23 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Undervoltage error',
+    'original_name': 'Undervoltage',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'undervoltage_error',
-    'unique_id': '500006_undervoltage_error',
+    'translation_key': 'undervoltage',
+    'unique_id': '500006_undervoltage',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_undervoltage_error-state]
+# name: test_all_entities[binary_sensor.1p7k_500006_undervoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Undervoltage error',
+      'friendly_name': '1p7k_500006 Undervoltage',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_undervoltage_error',
+    'entity_id': 'binary_sensor.1p7k_500006_undervoltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

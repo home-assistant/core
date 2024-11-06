@@ -38,11 +38,11 @@
       "meter_fault": {
         "name": "Meter fault"
       },
-      "undervoltage_error": {
-        "name": "Undervoltage error"
+      "undervoltage": {
+        "name": "Undervoltage"
       },
-      "overvoltage_error": {
-        "name": "Overvoltage error"
+      "overvoltage": {
+        "name": "Overvoltage"
       },
       "rcd_error": {
         "name": "Rcd error"
