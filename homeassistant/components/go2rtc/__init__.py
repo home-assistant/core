@@ -222,7 +222,9 @@ class WebRTCProvider(CameraWebRTCProvider):
             value: WebRTCMessage
             match message:
                 case WebRTCCandidate():
-                    value = HAWebRTCCandidate(RTCIceCandidate(message.candidate))
+                    value = HAWebRTCCandidate(
+                        RTCIceCandidate(message.candidate, sdp_mid="0")
+                    )
                 case WebRTCAnswer():
                     value = HAWebRTCAnswer(message.sdp)
                 case WsError():

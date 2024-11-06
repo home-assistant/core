@@ -392,7 +392,7 @@ async def message_callbacks(
     [
         (
             WebRTCCandidate("candidate"),
-            HAWebRTCCandidate(RTCIceCandidate("candidate")),
+            HAWebRTCCandidate(RTCIceCandidate("candidate", sdp_mid="0")),
         ),
         (
             WebRTCAnswer(ANSWER_SDP),
@@ -428,7 +428,9 @@ async def test_on_candidate(
     session_id = "session_id"
 
     # Session doesn't exist
-    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidate("candidate"))
+    await camera.async_on_webrtc_candidate(
+        session_id, RTCIceCandidate("candidate", sdp_mid="0")
+    )
     assert (
         "homeassistant.components.go2rtc",
         logging.DEBUG,
@@ -448,7 +450,9 @@ async def test_on_candidate(
     )
     ws_client.reset_mock()
 
-    await camera.async_on_webrtc_candidate(session_id, RTCIceCandidate("candidate"))
+    await camera.async_on_webrtc_candidate(
+        session_id, RTCIceCandidate("candidate", sdp_mid="0")
+    )
     ws_client.send.assert_called_once_with(WebRTCCandidate("candidate"))
     assert caplog.record_tuples == []
 
