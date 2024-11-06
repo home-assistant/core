@@ -39,7 +39,6 @@ class NordpooolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
         )
         self.client = NordpoolClient(session=async_get_clientsession(hass))
         self.unsub: Callable[[], None] | None = None
-        self.config_entry.async_on_unload(self.unsub)  # type: ignore[arg-type]
 
     def get_next_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
@@ -53,6 +52,13 @@ class NordpooolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
         )
         LOGGER.debug("Next update at %s", next_run)
         return next_run
+
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and ignore new runs."""
+        await super().async_shutdown()
+        if self.unsub:
+            self.unsub()
+            self.unsub = None
 
     async def fetch_data(self, now: datetime) -> None:
         """Fetch data from Nord Pool."""

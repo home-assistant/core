@@ -39,7 +39,7 @@ async def test_form(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
-    assert result["data"] == {"areas": ["SE3"], "currency": "SEK"}
+    assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
 
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")

@@ -45,7 +45,7 @@ async def test_coordinator(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         mock_data.assert_called_once()
-        state = hass.states.get("sensor.nordpool_se3_current_price")
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == "1.01177"
         mock_data.reset_mock()
 
@@ -54,7 +54,7 @@ async def test_coordinator(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         mock_data.assert_called_once()
-        state = hass.states.get("sensor.nordpool_se3_current_price")
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
         mock_data.reset_mock()
 
@@ -73,7 +73,7 @@ async def test_coordinator(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_data.assert_called_once()
-        state = hass.states.get("sensor.nordpool_se3_current_price")
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
         mock_data.reset_mock()
 
@@ -83,5 +83,5 @@ async def test_coordinator(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_data.assert_called_once()
-        state = hass.states.get("sensor.nordpool_se3_current_price")
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == "0.5223"

@@ -31,7 +31,7 @@ async def test_unload_entry(hass: HomeAssistant, get_data: DeliveryPeriodData) -
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry.entry_id)
