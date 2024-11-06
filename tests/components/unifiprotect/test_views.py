@@ -11,6 +11,7 @@ from uiprotect.exceptions import ClientError
 
 from homeassistant.components.unifiprotect.views import (
     async_generate_event_video_url,
+    async_generate_proxy_event_video_url,
     async_generate_thumbnail_url,
 )
 from homeassistant.core import HomeAssistant
@@ -520,3 +521,39 @@ async def test_video_entity_id(
 
     assert response.status == 200
     ufp.api.request.assert_called_once()
+
+
+async def test_video_event_bad_nvr_id(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp: MockUFPFixture,
+) -> None:
+    """Test video proxy URL with bad NVR id."""
+
+    ufp.api.request = AsyncMock()
+    await init_entry(hass, ufp, [])
+
+    url = async_generate_proxy_event_video_url("test_id", ufp.api.bootstrap.nvr.id)
+    url = url.replace(ufp.api.bootstrap.nvr.id, "bad_id")
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 404
+    ufp.api.request.assert_not_called()
+
+
+async def test_video_event_bad_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp: MockUFPFixture,
+) -> None:
+    """Test generating event with bad event ID."""
+
+    await init_entry(hass, ufp, [])
+    url = async_generate_proxy_event_video_url("test_id", ufp.api.bootstrap.nvr.id)
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 404
+    ufp.api.request.assert_not_called()

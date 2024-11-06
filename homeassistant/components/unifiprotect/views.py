@@ -9,6 +9,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from aiohttp import web
+from uiprotect import NvrError
 from uiprotect.data import Camera, Event
 from uiprotect.exceptions import ClientError
 
@@ -60,6 +61,14 @@ def async_generate_event_video_url(event: Event) -> str:
 
 
 @callback
+def async_generate_proxy_event_video_url(event_id: str, nvr_id: str) -> str:
+    """Generate proxy URL for event video."""
+
+    url_format = VideoEventProxyView.url or "{nvr_id}/{event_id}"
+    return url_format.format(nvr_id=nvr_id, event_id=event_id)
+
+
+@callback
 def _client_error(message: Any, code: HTTPStatus) -> web.Response:
     _LOGGER.warning("Client error (%s): %s", code.value, message)
     if code == HTTPStatus.BAD_REQUEST:
@@ -106,7 +115,7 @@ class ProtectProxyView(HomeAssistantView):
         ):
             return data
         return _404("Invalid NVR ID")
-    
+
     @callback
     def _async_get_camera(self, data: ProtectData, camera_id: str) -> Camera | None:
         if (camera := data.api.bootstrap.cameras.get(camera_id)) is not None:
@@ -227,10 +236,11 @@ class VideoProxyView(ProtectProxyView):
             await response.write_eof()
         return response
 
+
 class VideoEventProxyView(ProtectProxyView):
     """View to proxy video clips for events from UniFi Protect."""
 
-    url = "/api/unifiprotect/video/{nvr_id}/{camera_id}/{event_id}"
+    url = "/api/unifiprotect/video/{nvr_id}/{event_id}"
     name = "api:unifiprotect_thumbnail"
 
     async def get(
@@ -242,19 +252,17 @@ class VideoEventProxyView(ProtectProxyView):
         if isinstance(data, web.Response):
             return data
 
-        camera = self._async_get_camera(data, camera_id)
+        try:
+            event = await data.api.get_event(event_id)
+        except NvrError:
+            return _404(f"Invalid event ID: {event_id}")
+        if event.start is None or event.end is None:
+            return _400("Event is still ongoing")
+        camera = self._async_get_camera(data, str(event.camera_id))
         if camera is None:
             return _404(f"Invalid camera ID: {camera_id}")
         if not camera.can_read_media(data.api.bootstrap.auth_user):
             return _403(f"User cannot read media from camera: {camera.id}")
-        
-        try:
-            event = await data.api.get_event(event_id)
-        except NvrError as err:
-            _bad_identifier(f"{data.api.bootstrap.nvr.id}:{subtype}:{event_id}", err)
-
-        if event.start is None or event.end is None:
-            raise BrowseError("Event is still ongoing")
 
         response = web.StreamResponse(
             status=200,
@@ -280,4 +288,3 @@ class VideoEventProxyView(ProtectProxyView):
         if response.prepared:
             await response.write_eof()
         return response
-        
