@@ -437,6 +437,11 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         if async_setup_preview:
             setattr(self, "async_setup_preview", async_setup_preview)
 
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options."""
+        return self._options
+
     @staticmethod
     def _async_step(
         step_id: str,
