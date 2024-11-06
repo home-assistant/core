@@ -256,6 +256,34 @@ class HomeAssistantSnapshotExtension(AmberSnapshotExtension):
         return str(test_dir.joinpath("snapshots"))
 
 
+# Override the default SnapshotReport._ran_items_match_location method in syrupy
+# See https://github.com/syrupy-project/syrupy/issues/918
+# Can be tested with the following test:
+# pytest --snapshot-details tests/components/config/test_config_entries.py tests/test_config.py
+def override_syrupy_report_ran_items_match_location(
+    self: SnapshotReport, snapshot_location: str
+) -> bool:
+    # Base implementation
+    if not any(
+        PyTestLocation(item).matches_snapshot_location(snapshot_location)
+        for item in self.ran_items
+    ):
+        return False
+
+    # Advanced check, to remove false-positives
+    # We check that at least one assertion would have hit the snapshot location
+    for assertion in self.assertions:
+        if (
+            assertion.extension.get_location(
+                test_location=assertion.test_location, index=assertion.index
+            )
+            == snapshot_location
+        ):
+            return True
+
+    return False
+
+
 # Classes and Methods to override default finish behavior in syrupy
 # This is needed to handle the xdist plugin in pytest
 # The default implementation does not handle the xdist plugin
@@ -404,7 +432,20 @@ def override_syrupy_finish(self: SnapshotSession) -> int:
             for i in range(int(worker_count)):
                 with open(f".pytest_syrupy_gw{i}_result", encoding="utf-8") as f:
                     _merge_serialized_report(self.report, json.load(f))
-                os.remove(f".pytest_syrupy_gw{i}_result")
+                # os.remove(f".pytest_syrupy_gw{i}_result")
+        else:
+            with open(
+                ".pytest_syrupy_no_xdist_result",
+                "w",
+                encoding="utf-8",
+            ) as f:
+                json.dump(
+                    _serialize_report(
+                        self.report, self._collected_items, self._selected_items
+                    ),
+                    f,
+                    indent=2,
+                )
 
     if self.report.num_unused:
         if self.update_snapshots:
