@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from contextlib import suppress
 from types import MethodType
 from typing import Any
 
-from aiohasupervisor import SupervisorClient, SupervisorError
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType
 import voluptuous as vol
 
@@ -53,15 +52,11 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     _data: dict[str, Any] | None = None
     _issue: Issue | None = None
 
-    def __init__(self, issue_id: str) -> None:
+    def __init__(self, issue_id: str, hass: HomeAssistant) -> None:
         """Initialize repair flow."""
         self._issue_id = issue_id
+        self._supervisor_client = get_supervisor_client(hass)
         super().__init__()
-
-    @property
-    def _supervisor_client(self) -> SupervisorClient:
-        """Supervisor client for API calls."""
-        return get_supervisor_client(self.hass)
 
     @property
     def issue(self) -> Issue | None:
@@ -131,10 +126,12 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 
-        with suppress(SupervisorError):
+        try:
             await self._supervisor_client.resolution.apply_suggestion(suggestion.uuid)
-            return self.async_create_entry(data={})
-        return self.async_abort(reason="apply_suggestion_fail")
+        except SupervisorError:
+            return self.async_abort(reason="apply_suggestion_fail")
+
+        return self.async_create_entry(data={})
 
     @staticmethod
     def _async_step(
@@ -218,11 +215,11 @@ async def async_create_fix_flow(
     supervisor_issues = get_issues_info(hass)
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:
-        return DockerConfigIssueRepairFlow(issue_id)
+        return DockerConfigIssueRepairFlow(issue_id, hass)
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
     }:
-        return AddonIssueRepairFlow(issue_id)
+        return AddonIssueRepairFlow(issue_id, hass)
 
-    return SupervisorIssueRepairFlow(issue_id)
+    return SupervisorIssueRepairFlow(issue_id, hass)

@@ -362,9 +362,7 @@ class SupervisorIssues:
         self.unsupported_reasons = set(data.unsupported)
 
         # Remove any cached issues that weren't returned
-        for issue_id in set(self._issues.keys()) - {
-            issue.uuid for issue in data.issues
-        }:
+        for issue_id in set(self._issues) - {issue.uuid for issue in data.issues}:
             self.remove_issue(self._issues[issue_id])
 
         # Add/update any issues that came back
