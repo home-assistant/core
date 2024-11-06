@@ -93,6 +93,7 @@ from homeassistant.components.zwave_js.const import (
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -4991,15 +4992,16 @@ async def test_invoke_cc_api(
 
 
 async def test_get_integration_settings(
-    hass: HomeAssistant, integration, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the get_integration_settings WS API call works."""
     ws_client = await hass_ws_client(hass)
 
     # Test default settings
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 1,
             TYPE: "zwave_js/get_integration_settings",
         }
     )
@@ -5008,10 +5010,15 @@ async def test_get_integration_settings(
     assert msg["result"] == {CONF_INSTALLER_MODE: False}
 
     # Test with installer_mode: true
-    hass.data[DOMAIN] = {CONF_INSTALLER_MODE: True}
-    await ws_client.send_json(
+    # Unload the component
+    hass.config.components.remove(DOMAIN)
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_INSTALLER_MODE: True}}
+    )
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
         {
-            ID: 2,
             TYPE: "zwave_js/get_integration_settings",
         }
     )
