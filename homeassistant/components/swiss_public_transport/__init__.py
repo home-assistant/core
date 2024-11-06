@@ -23,9 +23,10 @@ from .const import (
     CONF_DESTINATION,
     CONF_IS_ARRIVAL,
     CONF_START,
-    CONF_TIME,
+    CONF_TIME_FIXED,
     CONF_TIME_OFFSET,
     CONF_VIA,
+    DEFAULT_IS_ARRIVAL,
     DOMAIN,
     PLACEHOLDERS,
 )
@@ -67,8 +68,8 @@ async def async_setup_entry(
         destination,
         session,
         via=config.get(CONF_VIA),
-        time=config.get(CONF_TIME),
-        isArrivalTime=config.get(CONF_IS_ARRIVAL, False),
+        time=config.get(CONF_TIME_FIXED),
+        isArrivalTime=config.get(CONF_IS_ARRIVAL, DEFAULT_IS_ARRIVAL) == "arrival",
     )
     if time_offset:
         offset_opendata(opendata, time_offset)

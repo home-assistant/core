@@ -28,12 +28,14 @@ from .const import (
     CONF_DESTINATION,
     CONF_IS_ARRIVAL,
     CONF_START,
-    CONF_TIME,
+    CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
     CONF_VIA,
+    DEFAULT_IS_ARRIVAL,
     DEFAULT_TIME_MODE,
     DOMAIN,
+    IS_ARRIVAL_OPTIONS,
     MAX_VIA,
     PLACEHOLDERS,
     TIME_MODE_OPTIONS,
@@ -50,8 +52,14 @@ USER_DATA_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_DESTINATION): cv.string,
-        vol.Optional(CONF_IS_ARRIVAL): bool,
-        vol.Optional(CONF_TIME_MODE): SelectSelector(
+        vol.Optional(CONF_IS_ARRIVAL, default=DEFAULT_IS_ARRIVAL): SelectSelector(
+            SelectSelectorConfig(
+                options=IS_ARRIVAL_OPTIONS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="is_arrival",
+            ),
+        ),
+        vol.Optional(CONF_TIME_MODE, default=DEFAULT_TIME_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TIME_MODE_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -60,7 +68,7 @@ USER_DATA_SCHEMA = vol.Schema(
         ),
     }
 )
-ADVANCED_TIME_DATA_SCHEMA = {vol.Optional(CONF_TIME): TimeSelector()}
+ADVANCED_TIME_DATA_SCHEMA = {vol.Optional(CONF_TIME_FIXED): TimeSelector()}
 ADVANCED_TIME_OFFSET_DATA_SCHEMA = {vol.Optional(CONF_TIME_OFFSET): DurationSelector()}
 
 
@@ -90,51 +98,75 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_DESTINATION],
                     session,
                     via=user_input.get(CONF_VIA),
-                    time=user_input.get(CONF_TIME),
+                    time=user_input.get(CONF_TIME_FIXED),
                 )
                 err = await self.fetch_connections(opendata)
                 if err:
                     errors["base"] = err
                 else:
-                    if user_input[CONF_TIME_MODE] == "now":
-                        unique_id = unique_id_from_config(user_input)
-                        await self.async_set_unique_id(unique_id)
-                        self._abort_if_unique_id_configured()
-                        return self.async_create_entry(
-                            title=unique_id,
-                            data=user_input,
-                        )
                     self.user_input = user_input
-                    return await self.async_step_advanced()
+                    if user_input[CONF_TIME_MODE] == "fixed":
+                        return await self.async_step_time_fixed()
+                    if user_input[CONF_TIME_MODE] == "offset":
+                        return await self.async_step_time_offset()
+
+                    unique_id = unique_id_from_config(user_input)
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=unique_id,
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=USER_DATA_SCHEMA,
-                suggested_values=user_input or {CONF_TIME_MODE: DEFAULT_TIME_MODE},
+                suggested_values=user_input,
             ),
             errors=errors,
             description_placeholders=PLACEHOLDERS,
         )
 
-    async def async_step_advanced(
-        self, advanced_input: dict[str, Any] | None = None
+    async def async_step_time_fixed(
+        self, time_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Async advanced step to set up the connection."""
+        """Async time step to set up the connection."""
+        return await self._async_step_time_mode(
+            CONF_TIME_FIXED, vol.Schema(ADVANCED_TIME_DATA_SCHEMA), time_input
+        )
+
+    async def async_step_time_offset(
+        self, time_offset_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Async time offset step to set up the connection."""
+        return await self._async_step_time_mode(
+            CONF_TIME_OFFSET,
+            vol.Schema(ADVANCED_TIME_OFFSET_DATA_SCHEMA),
+            time_offset_input,
+        )
+
+    async def _async_step_time_mode(
+        self,
+        step_id: str,
+        time_mode_schema: vol.Schema,
+        time_mode_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Async time mode step to set up the connection."""
         errors: dict[str, str] = {}
-        if advanced_input is not None:
-            unique_id = unique_id_from_config({**self.user_input, **advanced_input})
+        if time_mode_input is not None:
+            unique_id = unique_id_from_config({**self.user_input, **time_mode_input})
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
             session = async_get_clientsession(self.hass)
-            time_offset: dict[str, int] | None = advanced_input.get(CONF_TIME_OFFSET)
+            time_offset: dict[str, int] | None = time_mode_input.get(CONF_TIME_OFFSET)
             opendata = OpendataTransport(
                 self.user_input[CONF_START],
                 self.user_input[CONF_DESTINATION],
                 session,
                 via=self.user_input.get(CONF_VIA),
-                time=advanced_input.get(CONF_TIME),
+                time=time_mode_input.get(CONF_TIME_FIXED),
             )
             if time_offset:
                 offset_opendata(opendata, time_offset)
@@ -144,14 +176,12 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=unique_id,
-                    data={**self.user_input, **advanced_input},
+                    data={**self.user_input, **time_mode_input},
                 )
 
         return self.async_show_form(
-            step_id="advanced",
-            data_schema=vol.Schema(ADVANCED_TIME_DATA_SCHEMA)
-            if self.user_input[CONF_TIME_MODE] == "fixed"
-            else vol.Schema(ADVANCED_TIME_OFFSET_DATA_SCHEMA),
+            step_id=step_id,
+            data_schema=time_mode_schema,
             errors=errors,
             description_placeholders=PLACEHOLDERS,
         )

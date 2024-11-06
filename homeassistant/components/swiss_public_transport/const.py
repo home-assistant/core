@@ -9,17 +9,18 @@ CONF_START: Final = "from"
 CONF_VIA: Final = "via"
 CONF_IS_ARRIVAL: Final = "is_arrival"
 CONF_TIME_MODE: Final = "time_mode"
-CONF_TIME: Final = "time"
+CONF_TIME_FIXED: Final = "time_fixed"
 CONF_TIME_OFFSET: Final = "time_offset"
 
 DEFAULT_NAME = "Next Destination"
 DEFAULT_UPDATE_TIME = 90
-DEFAULT_IS_ARRIVAL = False
+DEFAULT_IS_ARRIVAL = "departure"
 DEFAULT_TIME_MODE = "now"
 
 MAX_VIA = 5
 CONNECTIONS_COUNT = 3
 CONNECTIONS_MAX = 15
+IS_ARRIVAL_OPTIONS = ["departure", "arrival"]
 TIME_MODE_OPTIONS = ["now", "fixed", "offset"]
 
 

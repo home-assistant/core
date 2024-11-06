@@ -8,7 +8,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_IS_ARRIVAL,
     CONF_START,
-    CONF_TIME,
+    CONF_TIME_FIXED,
     CONF_TIME_OFFSET,
     CONF_VIA,
     DOMAIN,
@@ -31,15 +31,15 @@ MOCK_DATA_STEP_VIA = {
     CONF_VIA: ["via_station"],
 }
 
-MOCK_DATA_STEP_TIME = {
+MOCK_DATA_STEP_TIME_FIXED = {
     **MOCK_DATA_STEP_VIA,
-    CONF_TIME: "18:03:00",
+    CONF_TIME_FIXED: "18:03:00",
 }
 
 MOCK_DATA_STEP_TIME_OFFSET = {
     **MOCK_DATA_STEP_VIA,
     CONF_TIME_OFFSET: {"hours": 0, "minutes": 10, "seconds": 0},
-    CONF_IS_ARRIVAL: True,
+    CONF_IS_ARRIVAL: "arrival",
 }
 
 CONNECTIONS = [
@@ -84,7 +84,7 @@ CONNECTIONS = [
         (1, 1, MOCK_DATA_STEP_BASE, "None_departure"),
         (1, 2, MOCK_DATA_STEP_BASE, None),
         (2, 1, MOCK_DATA_STEP_VIA, None),
-        (3, 1, MOCK_DATA_STEP_TIME, None),
+        (3, 1, MOCK_DATA_STEP_TIME_FIXED, None),
         (3, 1, MOCK_DATA_STEP_TIME_OFFSET, None),
     ],
 )

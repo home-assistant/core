@@ -19,25 +19,28 @@
           "from": "Start station",
           "to": "End station",
           "via": "List of up to 5 via stations",
-          "is_arrival": "Show arrival time instead of the standard departure time for you connection – Usually the departure time of the connection leaving the start station is displayed, by switching to arrival, the destination time the connection arrives at the end station is tracked.",
+          "is_arrival": "Select the relevant station",
           "time_mode": "Select a time mode"
         },
         "data_description": {
+          "is_arrival": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
           "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station)."
         },
         "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
         "title": "Swiss Public Transport"
       },
-      "advanced": {
+      "time_fixed": {
         "data": {
-          "time": "Select the time of day",
-          "time_offset": "Select an offset duration"
+          "time_fixed": "Time of day"
         },
-        "data_description": {
-          "time": "For connections of mode 'fixed time of day', please select the relevant time (e.g. 7:12:00 AM every morning).",
-          "time_offset": "For connections of mode 'at an offset from now', please select the relevant duration (e.g. +00:05:00 taking into account the time to walk to the station)."
+        "description": "Please select the relevant time for the connection (e.g. 7:12:00 AM every morning).",
+        "title": "Swiss Public Transport"
+      },
+      "time_offset": {
+        "data": {
+          "time_offset": "Time offset"
         },
-        "description": "Configuration of the selected time mode for your connection",
+        "description": "Please select the relevant offset to add to the earliest possible connection (e.g. add +00:05:00 offset, taking into account the time to walk to the station)",
         "title": "Swiss Public Transport"
       }
     }
@@ -104,6 +107,12 @@
     }
   },
   "selector": {
+    "is_arrival": {
+      "options": {
+        "departure": "Show departure time from start station",
+        "arrival": "Show arrival time at end station"
+      }
+    },
     "time_mode": {
       "options": {
         "now": "Now",

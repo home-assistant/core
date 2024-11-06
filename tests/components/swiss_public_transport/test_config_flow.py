@@ -13,7 +13,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_IS_ARRIVAL,
     CONF_START,
-    CONF_TIME,
+    CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
     CONF_VIA,
@@ -30,6 +30,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 MOCK_USER_DATA_STEP = {
     CONF_START: "test_start",
     CONF_DESTINATION: "test_destination",
+    CONF_IS_ARRIVAL: "departure",
     CONF_TIME_MODE: "now",
 }
 
@@ -50,15 +51,15 @@ MOCK_USER_DATA_STEP_TOO_MANY_STATIONS = {
 
 MOCK_USER_DATA_STEP_ARRIVAL = {
     **MOCK_USER_DATA_STEP,
-    CONF_IS_ARRIVAL: True,
+    CONF_IS_ARRIVAL: "arrival",
 }
 
-MOCK_USER_DATA_STEP_TIME = {
+MOCK_USER_DATA_STEP_TIME_FIXED = {
     **MOCK_USER_DATA_STEP,
     CONF_TIME_MODE: "fixed",
 }
 
-MOCK_USER_DATA_STEP_TIME_OFFSET = {
+MOCK_USER_DATA_STEP_TIME_FIXED_OFFSET = {
     **MOCK_USER_DATA_STEP,
     CONF_TIME_MODE: "offset",
 }
@@ -69,7 +70,7 @@ MOCK_USER_DATA_STEP_BAD = {
 }
 
 MOCK_ADVANCED_DATA_STEP_TIME = {
-    CONF_TIME: "18:03:00",
+    CONF_TIME_FIXED: "18:03:00",
 }
 
 MOCK_ADVANCED_DATA_STEP_TIME_OFFSET = {
@@ -78,7 +79,7 @@ MOCK_ADVANCED_DATA_STEP_TIME_OFFSET = {
 
 
 @pytest.mark.parametrize(
-    ("user_input", "advanced_input", "config_title"),
+    ("user_input", "time_mode_input", "config_title"),
     [
         (MOCK_USER_DATA_STEP, None, "test_start test_destination"),
         (
@@ -93,19 +94,19 @@ MOCK_ADVANCED_DATA_STEP_TIME_OFFSET = {
         ),
         (MOCK_USER_DATA_STEP_ARRIVAL, None, "test_start test_destination arrival"),
         (
-            MOCK_USER_DATA_STEP_TIME,
+            MOCK_USER_DATA_STEP_TIME_FIXED,
             MOCK_ADVANCED_DATA_STEP_TIME,
             "test_start test_destination at 18:03:00",
         ),
         (
-            MOCK_USER_DATA_STEP_TIME_OFFSET,
+            MOCK_USER_DATA_STEP_TIME_FIXED_OFFSET,
             MOCK_ADVANCED_DATA_STEP_TIME_OFFSET,
             "test_start test_destination in 00:10:00",
         ),
     ],
 )
 async def test_flow_user_init_data_success(
-    hass: HomeAssistant, user_input, advanced_input, config_title
+    hass: HomeAssistant, user_input, time_mode_input, config_title
 ) -> None:
     """Test success response."""
     result = await hass.config_entries.flow.async_init(
@@ -127,18 +128,21 @@ async def test_flow_user_init_data_success(
             user_input=user_input,
         )
 
-        if advanced_input:
+        if time_mode_input:
             assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "advanced"
+            if CONF_TIME_FIXED in time_mode_input:
+                assert result["step_id"] == "time_fixed"
+            if CONF_TIME_OFFSET in time_mode_input:
+                assert result["step_id"] == "time_offset"
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                user_input=advanced_input,
+                user_input=time_mode_input,
             )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["result"].title == config_title
 
-        assert result["data"] == {**user_input, **(advanced_input or {})}
+        assert result["data"] == {**user_input, **(time_mode_input or {})}
 
 
 @pytest.mark.parametrize(
@@ -216,10 +220,10 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=MOCK_USER_DATA_STEP_TIME,
+            user_input=MOCK_USER_DATA_STEP_TIME_FIXED,
         )
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "advanced"
+        assert result["step_id"] == "time_fixed"
 
     with patch(
         "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
