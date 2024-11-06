@@ -63,12 +63,8 @@ class BucketHolder:
                 # Ensure all files from the same folder are in the same bucket
                 # to ensure that syrupy correctly identifies unused snapshots
                 if is_file:
-                    for other_test in sorted_tests:
-                        if (
-                            isinstance(other_test, TestFolder)
-                            or other_test.added_to_bucket
-                            or other_test.path.parent != tests.path.parent
-                        ):
+                    for other_test in tests.parent.children.values():
+                        if other_test is tests or isinstance(other_test, TestFolder):
                             continue
                         print(
                             f"{other_test.total_tests:>{digits}} tests in {other_test.path} (same bucket)"
@@ -94,6 +90,7 @@ class TestFile:
     total_tests: int
     path: Path
     added_to_bucket: bool = field(default=False, init=False)
+    parent: TestFolder | None = field(default=None, init=False)
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
@@ -140,6 +137,7 @@ class TestFolder:
     def add_test_file(self, file: TestFile) -> None:
         """Add test file to folder."""
         path = file.path
+        file.parent = self
         relative_path = path.relative_to(self.path)
         if not relative_path.parts:
             raise ValueError("Path is not a child of this folder")
