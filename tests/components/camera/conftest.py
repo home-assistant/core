@@ -157,7 +157,7 @@ def mock_stream_source_fixture() -> Generator[AsyncMock]:
 
 @pytest.fixture
 async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
-    """Initialize a test WebRTC cameras."""
+    """Initialize test WebRTC cameras with native RTC support."""
 
     # Cannot use the fixture mock_camera_web_rtc as it's mocking Camera.async_handle_web_rtc_offer
     # and native support is checked by verify the function "async_handle_web_rtc_offer" was
