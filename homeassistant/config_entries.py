@@ -3141,6 +3141,11 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
             error_if_core=True,
         )
 
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options."""
+        return self._options
+
 
 class EntityRegistryDisabledHandler:
     """Handler when entities related to config entries updated disabled_by."""
