@@ -198,7 +198,7 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
             DOMAIN,
             f"deprecated_binary_common_door_sensor_{self.entity_id}",
             breaks_in_ha_version="2025.5.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_binary_common_door_sensor",
             translation_placeholders={
