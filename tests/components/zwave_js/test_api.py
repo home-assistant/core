@@ -5,7 +5,7 @@ from http import HTTPStatus
 from io import BytesIO
 import json
 from typing import Any
-from unittest.mock import PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from zwave_js_server.const import (
@@ -5018,3 +5018,4 @@ async def test_get_integration_settings(
     assert msg["success"]
     assert msg["result"] == {
         CONF_INSTALLER_MODE: installer_mode,
+    }
