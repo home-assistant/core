@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from .entity import JCalConfigEntry, JewishCalendarEntity
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,7 +167,7 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: JCalConfigEntry,
+    config_entry: JewishCalendarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish calendar sensors ."""
@@ -189,7 +189,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: JCalConfigEntry,
+        config_entry: JewishCalendarConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""

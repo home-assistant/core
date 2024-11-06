@@ -10,11 +10,11 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN
 
-type JCalConfigEntry = ConfigEntry[JCalData]
+type JewishCalendarConfigEntry = ConfigEntry[JewishCalendarData]
 
 
 @dataclass
-class JCalData:
+class JewishCalendarData:
     """Jewish Calendar runtime dataclass."""
 
     language: str
@@ -31,7 +31,7 @@ class JewishCalendarEntity(Entity):
 
     def __init__(
         self,
-        config_entry: JCalConfigEntry,
+        config_entry: JewishCalendarConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize a Jewish Calendar entity."""

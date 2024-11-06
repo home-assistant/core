@@ -20,7 +20,7 @@ from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .entity import JCalConfigEntry, JewishCalendarEntity
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 
 @dataclass(frozen=True)
@@ -61,7 +61,7 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: JCalConfigEntry,
+    config_entry: JewishCalendarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish Calendar binary sensors."""

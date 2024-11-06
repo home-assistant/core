@@ -35,7 +35,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from .entity import JCalConfigEntry, JCalData
+from .entity import JewishCalendarConfigEntry, JewishCalendarData
 from .sensor import INFO_SENSORS, TIME_SENSORS
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -120,7 +120,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: JCalConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
     """Set up a configuration entry for Jewish calendar."""
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
@@ -143,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: JCalConfigEntry) 
         )
     )
 
-    config_entry.runtime_data = JCalData(
+    config_entry.runtime_data = JewishCalendarData(
         language,
         diaspora,
         location,
