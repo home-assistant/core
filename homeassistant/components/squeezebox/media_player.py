@@ -665,6 +665,7 @@ class SqueezeBoxMediaPlayerEntity(
         all_params = [command]
         if parameters:
             all_params.extend(parameters)
+
         query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", query_result)
         if response:
