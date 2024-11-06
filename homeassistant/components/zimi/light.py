@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 # Import the device class from the component that you want to support
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONTROLLER, DOMAIN
+from .const import DOMAIN
 from .controller import ZimiController
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     debug = config_entry.data.get("debug", False)
 
-    controller: ZimiController = hass.data[CONTROLLER]
+    controller: ZimiController = config_entry.runtime_data
 
     # entities = []
 

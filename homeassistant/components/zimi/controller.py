@@ -3,7 +3,7 @@
 import logging
 import pprint
 
-from zcc import (  # type: ignore[import-untyped]
+from zcc import (
     ControlPoint,
     ControlPointDescription,
     ControlPointDiscoveryService,
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONTROLLER, DOMAIN, PLATFORMS, TIMEOUT, VERBOSITY, WATCHDOG
+from .const import DOMAIN, PLATFORMS, TIMEOUT, VERBOSITY, WATCHDOG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class ZimiController:
 
         if self.controller:
             # self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
-            self.hass.data[CONTROLLER] = self
+            self.config_entry.runtime_data = self
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS
             )

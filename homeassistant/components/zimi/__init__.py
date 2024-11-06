@@ -6,6 +6,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONTROLLER, DOMAIN
@@ -23,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not connected:
         raise ConfigEntryNotReady
 
-    hass.data[CONTROLLER] = controller
+    entry.runtime_data = controller
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -43,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    controller = hass.data[CONTROLLER]
+    controller = entry.runtime_data
     await controller.disconnect()
 
     device_registry = dr.async_get(hass)
