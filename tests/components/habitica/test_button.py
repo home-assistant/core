@@ -207,7 +207,7 @@ async def test_button_press(
     [
         (
             HTTPStatus.TOO_MANY_REQUESTS,
-            "Currently rate limited",
+            "Rate limit exceeded, try again later",
             ServiceValidationError,
         ),
         (
@@ -217,7 +217,7 @@ async def test_button_press(
         ),
         (
             HTTPStatus.UNAUTHORIZED,
-            "Unable to carry out this action",
+            "Unable to complete action, the required conditions are not met",
             ServiceValidationError,
         ),
     ],
