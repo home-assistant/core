@@ -848,7 +848,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ]
             config.configuration.ice_servers.extend(ice_servers)
 
-        config.get_candidates_upfront = self._legacy_webrtc_provider is not None
+        config.get_candidates_upfront = (
+            self._supports_native_sync_webrtc
+            or self._legacy_webrtc_provider is not None
+        )
 
         return config
 
