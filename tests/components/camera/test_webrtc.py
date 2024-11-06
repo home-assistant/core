@@ -529,8 +529,18 @@ async def test_websocket_webrtc_offer(
     ("message", "expected_frontend_message"),
     [
         (
-            WebRTCCandidate(RTCIceCandidate("candidate", 0)),
-            {"type": "candidate", "candidate": "candidate", "sdp_m_line_index": 0},
+            WebRTCCandidate(RTCIceCandidate("candidate", sdp_m_line_index=0)),
+            {
+                "type": "candidate",
+                "candidate": {"candidate": "candidate", "sdpMLineIndex": 0},
+            },
+        ),
+        (
+            WebRTCCandidate(RTCIceCandidate("candidate", sdp_mid="0")),
+            {
+                "type": "candidate",
+                "candidate": {"candidate": "candidate", "sdpMid": "0"},
+            },
         ),
         (
             WebRTCError("webrtc_offer_failed", "error"),
@@ -538,7 +548,7 @@ async def test_websocket_webrtc_offer(
         ),
         (WebRTCAnswer("answer"), {"type": "answer", "answer": "answer"}),
     ],
-    ids=["candidate", "error", "answer"],
+    ids=["candidate-mlineindex", "candidate-mid", "error", "answer"],
 )
 @pytest.mark.usefixtures("mock_stream_source", "mock_camera")
 async def test_websocket_webrtc_offer_webrtc_provider(
@@ -1011,15 +1021,14 @@ async def test_ws_webrtc_candidate(
                 "type": "camera/webrtc/candidate",
                 "entity_id": "camera.demo_camera",
                 "session_id": session_id,
-                "candidate": candidate,
-                "sdp_m_line_index": 1,
+                "candidate": {"candidate": candidate, "sdpMLineIndex": 1},
             }
         )
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidate(candidate, 1)
+            session_id, RTCIceCandidate(candidate, sdp_m_line_index=1)
         )
 
 
@@ -1034,8 +1043,7 @@ async def test_ws_webrtc_candidate_not_supported(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.demo_camera",
             "session_id": "session_id",
-            "candidate": "candidate",
-            "sdp_m_line_index": 1,
+            "candidate": {"candidate": "candidate", "sdpMLineIndex": 1},
         }
     )
     response = await client.receive_json()
@@ -1065,15 +1073,14 @@ async def test_ws_webrtc_candidate_webrtc_provider(
                 "type": "camera/webrtc/candidate",
                 "entity_id": "camera.demo_camera",
                 "session_id": session_id,
-                "candidate": candidate,
-                "sdp_m_line_index": 1,
+                "candidate": {"candidate": candidate, "sdpMLineIndex": 1},
             }
         )
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidate(candidate, 1)
+            session_id, RTCIceCandidate(candidate, sdp_m_line_index=1)
         )
 
 
@@ -1088,8 +1095,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.does_not_exist",
             "session_id": "session_id",
-            "candidate": "candidate",
-            "sdp_m_line_index": 1,
+            "candidate": {"candidate": "candidate", "sdpMLineIndex": 1},
         }
     )
     response = await client.receive_json()
@@ -1133,8 +1139,7 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
             "type": "camera/webrtc/candidate",
             "entity_id": "camera.demo_camera",
             "session_id": "session_id",
-            "candidate": "candidate",
-            "sdp_m_line_index": 0,
+            "candidate": {"candidate": "candidate", "sdp_m_line_index": 0},
         }
     )
     response = await client.receive_json()
@@ -1188,7 +1193,7 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
         Mock(), "offer_sdp", "session_id", Mock()
     )
     await provider.async_on_webrtc_candidate(
-        "session_id", RTCIceCandidate("candidate", 0)
+        "session_id", RTCIceCandidate("candidate", sdp_m_line_index=0)
     )
     provider.async_close_session("session_id")
 
