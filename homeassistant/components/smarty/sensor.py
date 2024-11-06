@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import REVOLUTIONS_PER_MINUTE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -64,11 +64,13 @@ ENTITIES: tuple[SmartySensorDescription, ...] = (
     SmartySensorDescription(
         key="supply_fan_speed",
         translation_key="supply_fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         value_fn=lambda smarty: smarty.supply_fan_speed,
     ),
     SmartySensorDescription(
         key="extract_fan_speed",
         translation_key="extract_fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         value_fn=lambda smarty: smarty.extract_fan_speed,
     ),
     SmartySensorDescription(

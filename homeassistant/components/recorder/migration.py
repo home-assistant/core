@@ -200,12 +200,13 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
         return None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
     migration_needed: bool
+    non_live_data_migration_needed: bool
     schema_errors: set[str]
     start_version: int
 
@@ -235,12 +236,17 @@ def validate_db_schema(
         # columns may otherwise not exist etc.
         schema_errors = _find_schema_errors(hass, instance, session_maker)
 
-    migration_needed = not is_current or non_live_data_migration_needed(
+    schema_migration_needed = not is_current
+    _non_live_data_migration_needed = non_live_data_migration_needed(
         instance, session_maker, current_version
     )
 
     return SchemaValidationStatus(
-        current_version, migration_needed, schema_errors, current_version
+        current_version=current_version,
+        non_live_data_migration_needed=_non_live_data_migration_needed,
+        migration_needed=schema_migration_needed or _non_live_data_migration_needed,
+        schema_errors=schema_errors,
+        start_version=current_version,
     )
 
 
@@ -257,7 +263,10 @@ def _find_schema_errors(
 
 def live_migration(schema_status: SchemaValidationStatus) -> bool:
     """Check if live migration is possible."""
-    return schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+    return (
+        schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+        and not schema_status.non_live_data_migration_needed
+    )
 
 
 def pre_migrate_schema(engine: Engine) -> None:

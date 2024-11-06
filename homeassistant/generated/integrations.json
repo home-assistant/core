@@ -3398,7 +3398,7 @@
     "local_file": {
       "name": "Local File",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "local_ip": {
@@ -3943,6 +3943,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
+    },
+    "music_assistant": {
+      "name": "Music Assistant",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "mutesync": {
       "name": "mutesync",

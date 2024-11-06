@@ -83,6 +83,7 @@ from .exceptions import (
     Unauthorized,
 )
 from .helpers.deprecation import (
+    DeferredDeprecatedAlias,
     DeprecatedConstantEnum,
     EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
@@ -182,6 +183,19 @@ _DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
 )
 _DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
 _DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
+
+
+def _deprecated_core_config() -> Any:
+    # pylint: disable-next=import-outside-toplevel
+    from . import core_config
+
+    return core_config.Config
+
+
+# The Config class was moved to core_config in Home Assistant 2024.11
+_DEPRECATED_Config = DeferredDeprecatedAlias(
+    _deprecated_core_config, "homeassistant.core_config.Config", "2025.11"
+)
 
 
 # How long to wait until things that run on startup have to finish.

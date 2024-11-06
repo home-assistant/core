@@ -69,6 +69,9 @@
           "on": "mdi:sleep"
         }
       },
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
       "pir_enabled": {
         "default": "mdi:motion-sensor-off",
         "state": {
@@ -94,6 +97,9 @@
       },
       "alarm_source": {
         "default": "mdi:bell"
+      },
+      "water_alert_timestamp": {
+        "default": "mdi:clock-alert-outline"
       }
     },
     "number": {

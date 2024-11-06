@@ -49,6 +49,9 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
         key="fan_sleep_mode",
     ),
     TPLinkSwitchEntityDescription(
+        key="child_lock",
+    ),
+    TPLinkSwitchEntityDescription(
         key="pir_enabled",
     ),
 )

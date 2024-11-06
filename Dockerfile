@@ -7,7 +7,8 @@ FROM ${BUILD_FROM}
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
-    UV_SYSTEM_PYTHON=true
+    UV_SYSTEM_PYTHON=true \
+    UV_NO_CACHE=true
 
 ARG QEMU_CPU
 
@@ -54,7 +55,7 @@ RUN \
         "armv7") go2rtc_suffix='arm' ;; \
         *) go2rtc_suffix=${BUILD_ARCH} ;; \
     esac \
-    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.5/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
+    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.6/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
     && chmod +x /bin/go2rtc \
     # Verify go2rtc can be executed
     && go2rtc --version

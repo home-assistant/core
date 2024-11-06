@@ -1,5 +1,6 @@
 """Tests for the La Marzocco number entities."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from lmcloud.const import (
@@ -28,20 +29,41 @@ from . import async_init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_coffee_boiler(
+@pytest.mark.parametrize(
+    ("entity_name", "value", "func_name", "kwargs"),
+    [
+        (
+            "coffee_target_temperature",
+            94,
+            "set_temp",
+            {"boiler": BoilerType.COFFEE, "temperature": 94},
+        ),
+        (
+            "smart_standby_time",
+            23,
+            "set_smart_standby",
+            {"enabled": True, "mode": "LastBrewing", "minutes": 23},
+        ),
+    ],
+)
+async def test_general_numbers(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    entity_name: str,
+    value: float,
+    func_name: str,
+    kwargs: dict[str, Any],
 ) -> None:
-    """Test the La Marzocco coffee temperature Number."""
+    """Test the numbers available to all machines."""
 
     await async_init_integration(hass, mock_config_entry)
     serial_number = mock_lamarzocco.serial_number
 
-    state = hass.states.get(f"number.{serial_number}_coffee_target_temperature")
+    state = hass.states.get(f"number.{serial_number}_{entity_name}")
 
     assert state
     assert state == snapshot
@@ -59,16 +81,14 @@ async def test_coffee_boiler(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
-            ATTR_VALUE: 94,
+            ATTR_ENTITY_ID: f"number.{serial_number}_{entity_name}",
+            ATTR_VALUE: value,
         },
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_temp.mock_calls) == 1
-    mock_lamarzocco.set_temp.assert_called_once_with(
-        boiler=BoilerType.COFFEE, temperature=94
-    )
+    mock_func = getattr(mock_lamarzocco, func_name)
+    mock_func.assert_called_once_with(**kwargs)
 
 
 @pytest.mark.parametrize("device_fixture", [MachineModel.GS3_AV, MachineModel.GS3_MP])

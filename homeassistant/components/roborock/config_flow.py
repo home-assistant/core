@@ -24,7 +24,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
@@ -171,12 +170,12 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> RoborockOptionsFlowHandler:
         """Create the options flow."""
-        return RoborockOptionsFlowHandler(config_entry)
+        return RoborockOptionsFlowHandler()
 
 
-class RoborockOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class RoborockOptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Roborock."""
 
     async def async_step_init(
