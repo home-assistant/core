@@ -122,10 +122,15 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
 
 
 class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
-    """A number class, representing the minimum outdoor temperature at which the compressor can operate.
+    """Minimum outdoor temperature at which the compressor will operate.
 
-    This applies more to air source heat pumps than geothermal. This serves as a safety feature (compressors have a minimum operating temperature) as well as providing the ability to choose fuel in a dual-fuel system (i.e. choose between electrical heat pump and fossil auxiliary heat depending on Time of Use, Solar, etc.).
-    Note that python-ecobee-api refers to this as Aux Cutover Threshold, but Ecobee uses Compressor Protection Min Temp.
+    This applies more to air source heat pumps than geothermal. This serves as a safety
+         feature (compressors have a minimum operating temperature) as well as
+        providing the ability to choose fuel in a dual-fuel system (i.e. choose between
+        electrical heat pump and fossil auxiliary heat depending on Time of Use, Solar,
+        etc.).
+        Note that python-ecobee-api refers to this as Aux Cutover Threshold, but Ecobee
+        uses Compressor Protection Min Temp.
     """
 
     _attr_device_class = NumberDeviceClass.TEMPERATURE
