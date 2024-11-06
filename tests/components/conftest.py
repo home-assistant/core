@@ -526,7 +526,7 @@ def _validate_translation_placeholders(
             description_placeholders is None
             or placeholder not in description_placeholders
         ):
-            pytest.fail(f"Placeholder not found for `{placeholder}` in {full_key}")
+            pytest.fail(f"Description not found for placeholder `{placeholder}` in {full_key}")
 
 
 async def _ensure_translation_exists(
