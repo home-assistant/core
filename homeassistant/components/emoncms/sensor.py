@@ -138,10 +138,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the emoncms sensors."""
-    config = entry.options if entry.options else entry.data
-    name = sensor_name(config[CONF_URL])
-    exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
-    include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
+    name = sensor_name(entry.data[CONF_URL])
+    exclude_feeds = entry.data.get(CONF_EXCLUDE_FEEDID)
+    include_only_feeds = entry.options.get(
+        CONF_ONLY_INCLUDE_FEEDID, entry.data.get(CONF_ONLY_INCLUDE_FEEDID)
+    )
 
     if exclude_feeds is None and include_only_feeds is None:
         return

@@ -649,6 +649,9 @@
       "ptz_pan_position": {
         "name": "PTZ pan position"
       },
+      "ptz_tilt_position": {
+        "name": "PTZ tilt position"
+      },
       "battery_temperature": {
         "name": "Battery temperature"
       },

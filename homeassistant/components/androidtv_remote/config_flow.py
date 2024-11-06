@@ -226,8 +226,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.initialize_options(config_entry)
-        self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
+        self._apps: dict[str, Any] = dict(config_entry.options.get(CONF_APPS, {}))
         self._conf_app_id: str | None = None
 
     @callback
