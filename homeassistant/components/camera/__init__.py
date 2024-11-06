@@ -811,9 +811,18 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     async_get_supported_legacy_provider
                 )
 
-        if old_provider != new_provider or old_legacy_provider != new_legacy_provider:
+        changed = False
+        if old_provider != new_provider:
+            changed = True
             self._webrtc_provider = new_provider
+            if new_provider:
+                new_provider.async_provider_added(self)
+
+        if old_legacy_provider != new_legacy_provider:
+            changed = True
             self._legacy_webrtc_provider = new_legacy_provider
+
+        if changed:
             self._invalidate_camera_capabilities_cache()
             if write_state:
                 self.async_write_ha_state()

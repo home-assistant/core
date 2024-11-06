@@ -1,5 +1,6 @@
 """The go2rtc component."""
 
+import asyncio
 import logging
 import shutil
 
@@ -31,7 +32,7 @@ from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOM
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -188,6 +189,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._session = async_get_clientsession(hass)
         self._rest_client = Go2RtcRestClient(self._session, url)
         self._sessions: dict[str, Go2RtcWsClient] = {}
+        self._current_tasks: dict[str, asyncio.Task[None]] = {}
 
     @property
     def domain(self) -> str:
@@ -198,6 +200,60 @@ class WebRTCProvider(CameraWebRTCProvider):
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
+
+    async def _add_stream_if_not_exists_task(self, camera: Camera) -> None:
+        """Add stream if it does not exist."""
+        if not (stream_source := await camera.stream_source()):
+            raise HomeAssistantError("Camera does not have a stream source")
+
+        streams = await self._rest_client.streams.list()
+
+        if (stream := streams.get(camera.entity_id)) is None or not any(
+            stream_source == producer.url for producer in stream.producers
+        ):
+            await self._rest_client.streams.add(
+                camera.entity_id,
+                stream_source,
+            )
+
+            stream = await self._rest_client.streams.probe(
+                camera.entity_id, audio="all"
+            )
+            if any(
+                "audio, recvonly" in media
+                for producer in stream.producers
+                for media in producer.media
+            ):
+                # Add ffmpeg audio transcoding only if the camera has audio
+                await self._rest_client.streams.add(
+                    camera.entity_id,
+                    [stream_source, f"ffmpeg:{camera.entity_id}#audio=opus"],
+                )
+
+    @callback
+    def _async_add_stream_if_not_exists(self, camera: Camera) -> asyncio.Task[None]:
+        if task := self._current_tasks.get(camera.entity_id):
+            return task
+
+        self._current_tasks[camera.entity_id] = task = self._hass.async_create_task(
+            self._add_stream_if_not_exists_task(camera)
+        )
+
+        @callback
+        def done(task: asyncio.Task) -> None:
+            self._current_tasks.pop(camera.entity_id)
+
+            if not task.cancelled():
+                try:
+                    task.result()
+                except (Go2RtcClientError, HomeAssistantError):
+                    _LOGGER.exception(
+                        "Adding stream failed for %s",
+                        camera.entity_id,
+                    )
+
+        task.add_done_callback(done)
+        return task
 
     async def async_handle_async_webrtc_offer(
         self,
@@ -211,21 +267,13 @@ class WebRTCProvider(CameraWebRTCProvider):
             self._session, self._url, source=camera.entity_id
         )
 
-        if not (stream_source := await camera.stream_source()):
+        try:
+            await self._async_add_stream_if_not_exists(camera)
+        except (Go2RtcClientError, HomeAssistantError) as err:
             send_message(
-                WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
+                WebRTCError("go2rtc_webrtc_offer_failed", f"Error adding stream: {err}")
             )
             return
-
-        streams = await self._rest_client.streams.list()
-
-        if (stream := streams.get(camera.entity_id)) is None or not any(
-            stream_source == producer.url for producer in stream.producers
-        ):
-            await self._rest_client.streams.add(
-                camera.entity_id,
-                [stream_source, f"ffmpeg:{camera.entity_id}#audio=opus"],
-            )
 
         @callback
         def on_messages(message: ReceiveMessages) -> None:
@@ -260,3 +308,8 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Close the session."""
         ws_client = self._sessions.pop(session_id)
         self._hass.async_create_task(ws_client.close())
+
+    @callback
+    def async_provider_added(self, camera: Camera) -> None:
+        """Notify the provider that the provider was added to the given camera."""
+        self._async_add_stream_if_not_exists(camera)

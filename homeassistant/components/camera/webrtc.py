@@ -155,6 +155,11 @@ class CameraWebRTCProvider(ABC):
         """Close the session."""
         return  ## This is an optional method so we need a default here.
 
+    @callback
+    def async_provider_added(self, camera: Camera) -> None:
+        """Notify the provider that the provider was added to the given camera."""
+        return  ## This is an optional method so we need a default here.
+
 
 class CameraWebRTCLegacyProvider(Protocol):
     """WebRTC provider."""
