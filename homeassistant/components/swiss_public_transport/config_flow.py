@@ -52,18 +52,18 @@ USER_DATA_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_DESTINATION): cv.string,
-        vol.Optional(CONF_IS_ARRIVAL, default=DEFAULT_IS_ARRIVAL): SelectSelector(
-            SelectSelectorConfig(
-                options=IS_ARRIVAL_OPTIONS,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="is_arrival",
-            ),
-        ),
         vol.Optional(CONF_TIME_MODE, default=DEFAULT_TIME_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TIME_MODE_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key="time_mode",
+            ),
+        ),
+        vol.Optional(CONF_IS_ARRIVAL, default=DEFAULT_IS_ARRIVAL): SelectSelector(
+            SelectSelectorConfig(
+                options=IS_ARRIVAL_OPTIONS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="is_arrival",
             ),
         ),
     }
