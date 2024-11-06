@@ -19,12 +19,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
-    Platform,
     UnitOfPower,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, template
+from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -150,34 +149,18 @@ async def async_setup_entry(
         return
 
     coordinator = entry.runtime_data
-    message = f"uuid for entry {entry.entry_id} is {entry.unique_id}"
-    LOGGER.debug(message)
-    unique_id = entry.unique_id
-    if unique_id is None:
-        unique_id = entry.entry_id
-        hass.config_entries.async_update_entry(
-            entry,
-            data=entry.data,
-            minor_version=1,
-            version=1,
-        )
+    unique_id = entry.unique_id if entry.unique_id else entry.entry_id
+    LOGGER.debug(
+        f"uuid which will be used for entities in sensor.async_setup_entry is {unique_id}"
+    )
     elems = coordinator.data
     if not elems:
         return
-    ent_reg = er.async_get(hass)
     sensors: list[EmonCmsSensor] = []
 
     for idx, elem in enumerate(elems):
         if include_only_feeds is not None and elem[FEED_ID] not in include_only_feeds:
             continue
-        entity_id = ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{entry.entry_id}-{elem[FEED_ID]}"
-        )
-        if entity_id is not None and entry.unique_id is not None:
-            LOGGER.debug(f"{entity_id} exists and needs to be migrated")
-            ent_reg.async_update_entity(
-                entity_id, new_unique_id=f"{entry.unique_id}-{elem[FEED_ID]}"
-            )
         sensors.append(
             EmonCmsSensor(
                 coordinator,

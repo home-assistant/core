@@ -66,9 +66,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     include_only_feeds: list | None = None
     dropdown: dict = {}
 
-    VERSION = 2
-    MINOR_VERSION = 1
-
     @staticmethod
     @callback
     def async_get_options_flow(

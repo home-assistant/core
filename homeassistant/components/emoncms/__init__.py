@@ -5,6 +5,7 @@ from pyemoncms import EmoncmsClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -23,6 +24,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> b
         entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass),
     )
+    emoncms_unique_id = await emoncms_client.async_get_uuid()
+    message = f"uuid for entry {entry.entry_id} is {entry.unique_id}"
+    LOGGER.debug(message)
+    ent_reg = er.async_get(hass)
+    entry_entities = ent_reg.entities.get_entries_for_config_entry_id(entry.entry_id)
+    if emoncms_unique_id:
+        if entry.unique_id != emoncms_unique_id:
+            for entity in entry_entities:
+                if entity.unique_id.split("-")[0] == entry.entry_id:
+                    feed_id = entity.unique_id.split("-")[-1]
+                    LOGGER.debug(f"moving feed {feed_id} to hardware uuid")
+                    ent_reg.async_update_entity(
+                        entity.entity_id, new_unique_id=f"{emoncms_unique_id}-{feed_id}"
+                    )
+            hass.config_entries.async_update_entry(
+                entry,
+                data=entry.data,
+                unique_id=emoncms_unique_id,
+            )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "migrate database",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="migrate_database",
+            translation_placeholders={
+                "url": entry.data[CONF_URL],
+                "doc_url": EMONCMS_UUID_DOC_URL,
+            },
+        )
     coordinator = EmoncmsCoordinator(hass, emoncms_client)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
@@ -40,54 +74,3 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    url = config_entry.data[CONF_URL]
-    LOGGER.debug(
-        "Migrating configuration of emoncms server %s from version %s.%s",
-        url,
-        config_entry.version,
-        config_entry.minor_version,
-    )
-    emoncms_client = EmoncmsClient(
-        url,
-        config_entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
-    )
-    emoncms_unique_id = await emoncms_client.async_get_uuid()
-
-    if config_entry.version == 1:
-        if emoncms_unique_id is None:
-            # we raise issue and stay on version 1
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "migrate database",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="migrate_database",
-                translation_placeholders={"url": url, "doc_url": EMONCMS_UUID_DOC_URL},
-            )
-            status = "not achieved as emoncms has to be updated to a newer version"
-        else:
-            # we can migrate to version 2
-            hass.config_entries.async_update_entry(
-                config_entry,
-                data=config_entry.data,
-                unique_id=emoncms_unique_id,
-                minor_version=1,
-                version=2,
-            )
-            status = "successful"
-        LOGGER.debug(
-            "Migration of emoncms server %s to configuration version %s.%s %s",
-            url,
-            config_entry.version,
-            config_entry.minor_version,
-            status,
-        )
-
-    return True
