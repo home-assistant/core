@@ -339,6 +339,7 @@ homeassistant.components.nfandroidtv.*
 homeassistant.components.nightscout.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
+homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
