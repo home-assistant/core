@@ -60,7 +60,7 @@ async def test_list_access_states(
     fixture: str,
     entity_state: str,
 ) -> None:
-    """Snapshot test states of sensor platform."""
+    """Snapshot test states of list access sensor."""
 
     mock_bring_client.get_list.return_value = load_json_object_fixture(
         f"{fixture}.json", DOMAIN
