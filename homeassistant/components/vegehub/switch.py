@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-import aiohttp
+from vegehub import VegeHub
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -17,7 +17,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER, MODEL
-from .errors import CommunicationFailed, MissingInformation
 
 SWITCH_TYPE = SwitchEntityDescription(
     key="switch",
@@ -73,7 +72,7 @@ async def async_setup_entry(
 class VegeHubSwitch(SwitchEntity):
     """Class for VegeHub Binary Sensors."""
 
-    def __init__(self, name, sens_slot, act_slot, config_entry) -> None:
+    def __init__(self, name, sens_slot, act_slot, config_entry, state=None) -> None:
         """Initialize the sensor."""
         self._config_entry = config_entry
 
@@ -82,7 +81,7 @@ class VegeHubSwitch(SwitchEntity):
         )  # Generate a unique_id using mac and slot
 
         self._attr_name: str = name
-        self._state = None  # assuming 'v' is the latest sensor value
+        self._state: float | None = state
         self._sens_slot = sens_slot
         self._act_slot = act_slot
         self._attr_unique_id: str = new_id
@@ -137,28 +136,21 @@ class VegeHubSwitch(SwitchEntity):
         )
 
     @property
-    def user_duration(self):
+    def user_duration(self) -> int:
         """Retrieve the user duration from the options."""
-
         return int(self._config_entry.options.get("user_act_duration", 0) or 600)
 
-    async def async_update_sensor(self, value):
+    async def async_update_sensor(self, value: float) -> None:
         """Update the sensor state with the latest value."""
         self._state = value
         self.async_write_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        # self.data.smartplug.state = "ON"
-        _LOGGER.info("Switch ON")
-        # self.hass.async_create_task(self._set_actuator(1))
         self.hass.add_job(self._set_actuator, 1)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        # self.data.smartplug.state = "OFF"
-        _LOGGER.info("Switch OFF")
-        # self.hass.async_create_task(self._set_actuator(0))
         self.hass.add_job(self._set_actuator, 0)
 
     def update(self) -> None:
@@ -170,56 +162,12 @@ class VegeHubSwitch(SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        # return self.data.available
 
-        # snick - Maybe we just have this ping the hub and see if it's there. If not, return false and the actuator isn't available?
+        # Maybe in the future have this ping the hub and see if it's there.
+        # If not, return false and the actuator isn't available?
         return True
 
-    async def _set_actuator(self, state):
-        url = f"http://{self.ip_addr}/api/actuators/set"
-        _LOGGER.info("Setting actuator %s on %s", self._act_slot, self.ip_addr)
-
-        # Prepare the JSON payload for the POST request
-        payload = {
-            "target": self._act_slot,
-            "duration": self.user_duration,
-            "state": state,
-        }
-
-        # Use aiohttp to send the POST request with the JSON body
-        async with (
-            aiohttp.ClientSession() as session,
-            session.post(url, json=payload) as response,
-        ):
-            if response.status != 200:
-                _LOGGER.error(
-                    "Failed to set actuator state on %s: HTTP %s",
-                    url,
-                    response.status,
-                )
-                raise CommunicationFailed
-
-    async def _get_actuator_info(self, ip_address):
-        """Fetch the current status of the actuators. Incomplete function, but not sure if we need it."""
-        url = f"http://{ip_address}/api/actuators/status"
-        _LOGGER.info("Retrieving MAC address from %s", ip_address)
-
-        # Use aiohttp to send the POST request with the JSON body
-        async with aiohttp.ClientSession() as session, session.get(url) as response:
-            if response.status != 200:
-                _LOGGER.error(
-                    "Failed to get config from %s: HTTP %s", url, response.status
-                )
-                raise CommunicationFailed
-
-            # Parse the JSON response
-            config_data = await response.json()
-            mac_address = config_data.get("wifi", {}).get("mac_addr")
-            if not mac_address:
-                _LOGGER.error(
-                    "MAC address not found in the config response from %s", ip_address
-                )
-                raise MissingInformation
-            simplified_mac_address = mac_address.replace(":", "")
-            _LOGGER.info("%s MAC address: %s", ip_address, mac_address)
-            return simplified_mac_address
+    async def _set_actuator(self, state: int) -> bool:
+        """Set the actuator on the Hub to the desired state (1 or 0)."""
+        hub = VegeHub(self.ip_addr)
+        return await hub.set_actuator(state, self._act_slot, self.user_duration)
