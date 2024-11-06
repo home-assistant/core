@@ -52,7 +52,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     _data: dict[str, Any] | None = None
     _issue: Issue | None = None
 
-    def __init__(self, issue_id: str, hass: HomeAssistant) -> None:
+    def __init__(self, hass: Homeassistant, issue_id: str) -> None:
         """Initialize repair flow."""
         self._issue_id = issue_id
         self._supervisor_client = get_supervisor_client(hass)
@@ -215,11 +215,11 @@ async def async_create_fix_flow(
     supervisor_issues = get_issues_info(hass)
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:
-        return DockerConfigIssueRepairFlow(issue_id, hass)
+        return DockerConfigIssueRepairFlow(hass, issue_id)
     if issue and issue.key in {
         ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
         ISSUE_KEY_ADDON_BOOT_FAIL,
     }:
-        return AddonIssueRepairFlow(issue_id, hass)
+        return AddonIssueRepairFlow(hass, issue_id)
 
-    return SupervisorIssueRepairFlow(issue_id, hass)
+    return SupervisorIssueRepairFlow(hass, issue_id)
