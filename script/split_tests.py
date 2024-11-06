@@ -49,7 +49,6 @@ class BucketHolder:
             test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
         )
         for tests in sorted_tests:
-            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
             if tests.added_to_bucket:
                 # Already added to bucket
                 continue
@@ -58,6 +57,7 @@ class BucketHolder:
             if (
                 smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
             ) or (is_file := isinstance(tests, TestFile)):
+                print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
                 smallest_bucket.add(tests)
                 if is_file:
                     # Ensure all files from the same folder are in the same bucket
@@ -69,6 +69,9 @@ class BucketHolder:
                             or other_test.path.parent != tests.path.parent
                         ):
                             continue
+                        print(
+                            f"{other_test.total_tests:>{digits}} tests in {other_test.path}"
+                        )
                         smallest_bucket.add(other_test)
 
         # verify that all tests are added to a bucket
