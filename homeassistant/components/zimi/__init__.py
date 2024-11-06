@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller = ZimiController(hass, entry)
     connected = await controller.connect()
     if not connected:
-        return False
+        raise ConfigEntryNotReady
 
     hass.data[CONTROLLER] = controller
 
