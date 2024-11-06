@@ -422,9 +422,7 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         flow steps.
         """
         self._options = copy.deepcopy(dict(config_entry.options))
-        self._common_handler = SchemaCommonFlowHandler(
-            self, options_flow, self._options
-        )
+        self._common_handler = SchemaCommonFlowHandler(self, options_flow, self.options)
         self._async_options_flow_finished = async_options_flow_finished
 
         for step in options_flow:
