@@ -81,3 +81,42 @@ async def test_set_min_time_away(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         mock_set_min_away_time.assert_called_once_with(THERMOSTAT_ID, target_value)
+
+
+COMPRESSOR_MIN_TEMP_ID = "number.ecobee2_compressor_minimum_temperature"
+
+
+async def test_compressor_protection_min_temp_attributes(hass: HomeAssistant) -> None:
+    """Test the compressor min temp value is correct.
+
+    Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary.
+    """
+    await setup_platform(hass, NUMBER_DOMAIN)
+
+    state = hass.states.get(COMPRESSOR_MIN_TEMP_ID)
+    assert state.state == "-12.2"
+    assert (
+        state.attributes.get("friendly_name")
+        == "ecobee2 Compressor minimum temperature"
+    )
+
+
+async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
+    """Test the number can set minimum compressor operating temp.
+
+    Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary
+    """
+    target_value = 0
+    with patch(
+        "homeassistant.components.ecobee.Ecobee.set_aux_cutover_threshold"
+    ) as mock_set_compressor_min_temp:
+        await setup_platform(hass, NUMBER_DOMAIN)
+
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: COMPRESSOR_MIN_TEMP_ID, ATTR_VALUE: target_value},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_compressor_min_temp.assert_called_once_with(1, 32)
