@@ -9,6 +9,7 @@ from aiopvpc import DEFAULT_POWER_KW, PVPCData
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -48,7 +49,6 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
     _use_api_token: bool = False
     _api_token: str | None = None
     _api: PVPCData | None = None
-    _reauth_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -141,12 +141,10 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
             ATTR_POWER_P3: self._power_p3,
             CONF_API_TOKEN: self._api_token if self._use_api_token else None,
         }
-        if self._reauth_entry:
-            self.hass.config_entries.async_update_entry(self._reauth_entry, data=data)
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
             )
-            return self.async_abort(reason="reauth_successful")
 
         assert self._name is not None
         return self.async_create_entry(title=self._name, data=data)
@@ -155,9 +153,6 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with ESIOS Token."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         self._api_token = entry_data.get(CONF_API_TOKEN)
         self._use_api_token = self._api_token is not None
         self._name = entry_data[CONF_NAME]

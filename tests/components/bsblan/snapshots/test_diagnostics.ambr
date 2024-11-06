@@ -47,6 +47,13 @@
           'unit': '',
           'value': '2',
         }),
+        'room1_temp_setpoint_boost': dict({
+          'data_type': 1,
+          'desc': 'Boost',
+          'name': 'Room 1 Temp Setpoint Boost',
+          'unit': '°C',
+          'value': '22.5',
+        }),
         'room1_thermostat_mode': dict({
           'data_type': 1,
           'desc': 'Kein Bedarf',

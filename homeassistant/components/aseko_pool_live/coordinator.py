@@ -7,12 +7,15 @@ import logging
 
 from aioaseko import Aseko, Unit
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type AsekoConfigEntry = ConfigEntry[AsekoDataUpdateCoordinator]
 
 
 class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Unit]]):

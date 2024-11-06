@@ -29,9 +29,6 @@
     "m3u_invalid_format": {
       "message": "Media sources with the .m3u extension are not supported."
     },
-    "non_deezer_seeking": {
-      "message": "Seeking is currently only supported when using Deezer"
-    },
     "invalid_source": {
       "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
     },

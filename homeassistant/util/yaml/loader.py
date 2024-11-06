@@ -22,7 +22,7 @@ except ImportError:
         SafeLoader as FastestAvailableSafeLoader,
     )
 
-from functools import cached_property
+from propcache import cached_property
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report

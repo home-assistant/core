@@ -13,16 +13,10 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_AUTO_OFF,
@@ -32,6 +26,7 @@ from .const import (
     SIGNAL_DEVICE_ADD,
 )
 from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,12 +77,9 @@ async def async_setup_entry(
     )
 
 
-class SwitcherBaseSwitchEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], SwitchEntity
-):
+class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
     """Representation of a Switcher switch entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
@@ -97,9 +89,6 @@ class SwitcherBaseSwitchEntity(
 
         # Entity class attributes
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
-        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

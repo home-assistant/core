@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import Context, CoreState, callback
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.trace import trace_get
@@ -22,7 +22,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     REMOVE_TRIGGER = object()
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Instantiate trigger data."""
         super().__init__(hass, _LOGGER, name="Trigger Update Coordinator")
         self.config = config
@@ -37,7 +37,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         return self.config.get("unique_id")
 
     @callback
-    def async_remove(self):
+    def async_remove(self) -> None:
         """Signal that the entities need to remove themselves."""
         if self._unsub_start:
             self._unsub_start()
@@ -66,7 +66,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                     eager_start=True,
                 )
 
-    async def _attach_triggers(self, start_event=None) -> None:
+    async def _attach_triggers(self, start_event: Event | None = None) -> None:
         """Attach the triggers."""
         if CONF_ACTION in self.config:
             self._script = Script(

@@ -28,7 +28,7 @@ class AutomowerBinarySensorEntityDescription(BinarySensorEntityDescription):
     value_fn: Callable[[MowerAttributes], bool]
 
 
-BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
+MOWER_BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
     AutomowerBinarySensorEntityDescription(
         key="battery_charging",
         value_fn=lambda data: data.mower.activity == MowerActivities.CHARGING,
@@ -57,7 +57,7 @@ async def async_setup_entry(
     async_add_entities(
         AutomowerBinarySensorEntity(mower_id, coordinator, description)
         for mower_id in coordinator.data
-        for description in BINARY_SENSOR_TYPES
+        for description in MOWER_BINARY_SENSOR_TYPES
     )
 
 

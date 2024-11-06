@@ -54,7 +54,8 @@ _DIRECTION_INPUT_SELECT = "input_select.direction"
         },
     ],
 )
-async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_missing_optional_config(hass: HomeAssistant) -> None:
     """Test: missing optional template is ok."""
     _verify(hass, STATE_ON, None, None, None, None)
 
@@ -107,7 +108,8 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_wrong_template_config(hass: HomeAssistant) -> None:
     """Test: missing 'value_template' will fail."""
     assert hass.states.async_all("fan") == []
 
@@ -149,7 +151,8 @@ async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_templates_with_entities(hass: HomeAssistant) -> None:
     """Test tempalates with values from other entities."""
     _verify(hass, STATE_OFF, 0, None, None, None)
 
@@ -229,9 +232,8 @@ async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
-async def test_templates_with_entities2(
-    hass: HomeAssistant, entity, tests, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_templates_with_entities2(hass: HomeAssistant, entity, tests) -> None:
     """Test templates with values from other entities."""
     for set_percentage, test_percentage, test_type in tests:
         hass.states.async_set(entity, set_percentage)
@@ -262,9 +264,8 @@ async def test_templates_with_entities2(
         },
     ],
 )
-async def test_availability_template_with_entities(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability tempalates with values from other entities."""
     for state, test_assert in ((STATE_ON, True), (STATE_OFF, False)):
         hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, state)
@@ -347,9 +348,8 @@ async def test_availability_template_with_entities(
         ),
     ],
 )
-async def test_template_with_unavailable_entities(
-    hass: HomeAssistant, states, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_with_unavailable_entities(hass: HomeAssistant, states) -> None:
     """Test unavailability with value_template."""
     _verify(hass, states[0], states[1], states[2], states[3], None)
 
@@ -378,8 +378,9 @@ async def test_template_with_unavailable_entities(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("fan.test_fan").state != STATE_UNAVAILABLE
@@ -940,7 +941,8 @@ async def _register_components(
         },
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one fan per id."""
     assert len(hass.states.async_all()) == 1
 
@@ -1082,7 +1084,8 @@ async def test_implemented_percentage(
         },
     ],
 )
-async def test_implemented_preset_mode(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_implemented_preset_mode(hass: HomeAssistant) -> None:
     """Test a fan that implements preset_mode."""
     assert len(hass.states.async_all()) == 1
 

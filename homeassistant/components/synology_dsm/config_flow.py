@@ -326,7 +326,11 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_conf = entry_data
-        self.context["title_placeholders"][CONF_HOST] = entry_data[CONF_HOST]
+        placeholders = {
+            **self.context["title_placeholders"],
+            CONF_HOST: entry_data[CONF_HOST],
+        }
+        self.context["title_placeholders"] = placeholders
 
         return await self.async_step_reauth_confirm()
 

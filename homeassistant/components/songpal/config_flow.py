@@ -106,7 +106,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered: %s", discovery_info)
 
         friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
-        parsed_url = urlparse(discovery_info.ssdp_location)
+        hostname = urlparse(discovery_info.ssdp_location).hostname
         scalarweb_info = discovery_info.upnp["X_ScalarWebAPI_DeviceInfo"]
         endpoint = scalarweb_info["X_ScalarWebAPI_BaseURL"]
         service_types = scalarweb_info["X_ScalarWebAPI_ServiceList"][
@@ -117,14 +117,17 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         if "videoScreen" in service_types:
             return self.async_abort(reason="not_songpal_device")
 
+        if TYPE_CHECKING:
+            # the hostname must be str because the ssdp_location is not bytes and
+            # not a relative url
+            assert isinstance(hostname, str)
+
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_name,
-            CONF_HOST: parsed_url.hostname,
+            CONF_HOST: hostname,
         }
 
-        if TYPE_CHECKING:
-            assert isinstance(parsed_url.hostname, str)
-        self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint)
+        self.conf = SongpalConfig(friendly_name, hostname, endpoint)
 
         return await self.async_step_init()
 

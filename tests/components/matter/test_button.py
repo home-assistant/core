@@ -5,38 +5,30 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_integration_with_node_fixture
-
-
-@pytest.fixture(name="powerplug_node")
-async def powerplug_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a Powerplug node."""
-    return await setup_integration_with_node_fixture(
-        hass, "eve_energy_plug", matter_client
-    )
+from .common import snapshot_matter_entities
 
 
-@pytest.fixture(name="dishwasher_node")
-async def dishwasher_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for an dishwasher node."""
-    return await setup_integration_with_node_fixture(
-        hass, "silabs_dishwasher", matter_client
-    )
+@pytest.mark.usefixtures("matter_devices")
+async def test_buttons(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test buttons."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BUTTON)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["eve_energy_plug"])
 async def test_identify_button(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    powerplug_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test button entity is created for a Matter Identify Cluster."""
     state = hass.states.get("button.eve_energy_plug_identify")
@@ -53,23 +45,24 @@ async def test_identify_button(
     )
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=powerplug_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.Identify.Commands.Identify(identifyTime=15),
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
 async def test_operational_state_buttons(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    dishwasher_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test if button entities are created for operational state commands."""
     assert hass.states.get("button.dishwasher_pause")
     assert hass.states.get("button.dishwasher_start")
     assert hass.states.get("button.dishwasher_stop")
 
-    # resume may not be disocvered as its missing in the supported command list
+    # resume may not be discovered as it's missing in the supported command list
     assert hass.states.get("button.dishwasher_resume") is None
 
     # test press action
@@ -83,7 +76,7 @@ async def test_operational_state_buttons(
     )
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=dishwasher_node.node_id,
+        node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.OperationalState.Commands.Pause(),
     )

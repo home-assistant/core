@@ -156,8 +156,7 @@ class OAuthFitbitApi(FitbitApi):
 
     async def async_get_access_token(self) -> dict[str, Any]:
         """Return a valid access token for the Fitbit API."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
         return self._oauth_session.token
 
 

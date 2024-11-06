@@ -11,7 +11,12 @@ from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -52,7 +57,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _existing_entry: ConfigEntry | None = None
+    _existing_entry: ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -70,9 +75,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._existing_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._existing_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -103,7 +106,7 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
-                if self._existing_entry:
+                if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         entry=self._existing_entry,
                         data={
@@ -124,7 +127,9 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 CONFIG_SCHEMA,
-                self._existing_entry.data if self._existing_entry else user_input,
+                self._existing_entry.data
+                if self.source == SOURCE_REAUTH
+                else user_input,
             ),
             errors=errors,
         )

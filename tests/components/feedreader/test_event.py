@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.components.feedreader.event import (
     ATTR_CONTENT,
+    ATTR_DESCRIPTION,
     ATTR_LINK,
     ATTR_TITLE,
 )
@@ -35,6 +36,7 @@ async def test_event_entity(
         assert state.attributes[ATTR_TITLE] == "Title 1"
         assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
         assert state.attributes[ATTR_CONTENT] == "Content 1"
+        assert state.attributes[ATTR_DESCRIPTION] == "Description 1"
 
         future = dt_util.utcnow() + timedelta(hours=1, seconds=1)
         async_fire_time_changed(hass, future)
@@ -45,6 +47,7 @@ async def test_event_entity(
         assert state.attributes[ATTR_TITLE] == "Title 2"
         assert state.attributes[ATTR_LINK] == "http://www.example.com/link/2"
         assert state.attributes[ATTR_CONTENT] == "Content 2"
+        assert state.attributes[ATTR_DESCRIPTION] == "Description 2"
 
         future = dt_util.utcnow() + timedelta(hours=2, seconds=2)
         async_fire_time_changed(hass, future)
@@ -55,3 +58,4 @@ async def test_event_entity(
         assert state.attributes[ATTR_TITLE] == "Title 1"
         assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
         assert state.attributes[ATTR_CONTENT] == "This is a summary"
+        assert state.attributes[ATTR_DESCRIPTION] == "Description 1"

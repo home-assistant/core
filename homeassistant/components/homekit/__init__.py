@@ -167,7 +167,6 @@ BATTERY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
 MOTION_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.MOTION)
 MOTION_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
 DOORBELL_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.DOORBELL)
-DOORBELL_BINARY_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
 HUMIDITY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY)
 
 
@@ -1137,10 +1136,6 @@ class HomeKit:
             if doorbell_event_entity_id := lookup.get(DOORBELL_EVENT_SENSOR):
                 config[entity_id].setdefault(
                     CONF_LINKED_DOORBELL_SENSOR, doorbell_event_entity_id
-                )
-            elif doorbell_binary_sensor_entity_id := lookup.get(DOORBELL_BINARY_SENSOR):
-                config[entity_id].setdefault(
-                    CONF_LINKED_DOORBELL_SENSOR, doorbell_binary_sensor_entity_id
                 )
 
         if domain == HUMIDIFIER_DOMAIN and (
