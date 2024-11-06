@@ -166,7 +166,7 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def update_listener(
-        hass: HomeAssistant, entry: JewishCalendarConfigEntry
+        hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
     ) -> None:
         # Trigger update of states for all platforms
         await hass.config_entries.async_reload(config_entry.entry_id)
