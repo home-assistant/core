@@ -100,6 +100,7 @@ class VegeHubSensor(SensorEntity):
         self._attr_name: str = name
         self._data_type: str = data_type
         self._unit_of_measurement: str = ""
+        self._attr_native_value = None
 
         if chan_type == CHAN_TYPE_BATTERY:
             self._unit_of_measurement = UnitOfElectricPotential.VOLT
@@ -127,7 +128,7 @@ class VegeHubSensor(SensorEntity):
         return self._attr_name
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if (
             self._data_type == OPTION_DATA_TYPE_CHOICES[1] and self._attr_native_value
@@ -138,11 +139,11 @@ class VegeHubSensor(SensorEntity):
         ):  # Temperature C
             if isinstance(self._attr_native_value, (int, str, float)):
                 return (41.6700 * float(self._attr_native_value)) - 40.0000
-            return 0.0
+            return None
 
         if isinstance(self._attr_native_value, (int, str, float)):
             return float(self._attr_native_value)
-        return 0.0
+        return None
 
     @property
     def suggested_unit_of_measurement(self) -> str:
