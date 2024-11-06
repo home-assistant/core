@@ -56,9 +56,9 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
     # Currently only a single Jellyfin server is supported
     entry: JellyfinConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    jellyfin_data = entry.runtime_data
+    coordinator = entry.runtime_data
 
-    return JellyfinSource(hass, jellyfin_data.jellyfin_client, entry)
+    return JellyfinSource(hass, coordinator.api_client, entry)
 
 
 class JellyfinSource(MediaSource):

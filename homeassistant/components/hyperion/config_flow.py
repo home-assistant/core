@@ -111,6 +111,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    unique_id: str
+
     def __init__(self) -> None:
         """Instantiate config flow."""
         self._data: dict[str, Any] = {}

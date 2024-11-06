@@ -12,6 +12,13 @@
       },
       "list_language": {
         "default": "mdi:earth"
+      },
+      "list_access": {
+        "default": "mdi:account-lock",
+        "state": {
+          "shared": "mdi:account-group",
+          "invitation": "mdi:account-multiple-plus"
+        }
       }
     },
     "todo": {

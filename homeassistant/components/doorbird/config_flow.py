@@ -97,17 +97,17 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    reauth_entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize the DoorBird config flow."""
         self.discovery_schema: vol.Schema | None = None
-        self.reauth_entry: ConfigEntry | None = None
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        entry_id = self.context["entry_id"]
-        self.reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
+        self.reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -115,9 +115,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth input."""
         errors: dict[str, str] = {}
-        existing_entry = self.reauth_entry
-        assert existing_entry
-        existing_data = existing_entry.data
+        existing_data = self.reauth_entry.data
         placeholders: dict[str, str] = {
             CONF_NAME: existing_data[CONF_NAME],
             CONF_HOST: existing_data[CONF_HOST],
@@ -132,7 +130,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
             _, errors = await self._async_validate_or_error(new_config)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    existing_entry, data=new_config
+                    self.reauth_entry, data=new_config
                 )
 
         return self.async_show_form(

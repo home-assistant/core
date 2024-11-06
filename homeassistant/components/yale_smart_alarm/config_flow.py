@@ -40,7 +40,6 @@ DATA_SCHEMA = vol.Schema(
 
 DATA_SCHEMA_AUTH = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }
 )
@@ -50,8 +49,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 2
-
-    entry: ConfigEntry | None
 
     @staticmethod
     @callback
@@ -63,7 +60,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Yale."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -73,7 +69,8 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            username = user_input[CONF_USERNAME]
+            reauth_entry = self._get_reauth_entry()
+            username = reauth_entry.data[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
             try:
@@ -88,18 +85,10 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
 
             if not errors:
-                existing_entry = await self.async_set_unique_id(username)
-                if existing_entry and self.entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry,
-                        data={
-                            **self.entry.data,
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        },
-                    )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: password},
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",

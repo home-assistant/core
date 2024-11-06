@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime
-from functools import cached_property, partial
+from functools import partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -20,6 +20,7 @@ from typing import Any, Final, TypedDict, final
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api

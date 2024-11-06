@@ -8,20 +8,24 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from homeassistant import config_entries, core
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import UnitOfTime
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONNECTIONS_COUNT, DOMAIN
-from .coordinator import DataConnection, SwissPublicTransportDataUpdateCoordinator
+from .coordinator import (
+    DataConnection,
+    SwissPublicTransportConfigEntry,
+    SwissPublicTransportDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,24 +75,27 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda data_connection: data_connection["delay"],
     ),
+    SwissPublicTransportSensorEntityDescription(
+        key="line",
+        translation_key="line",
+        value_fn=lambda data_connection: data_connection["line"],
+    ),
 )
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    hass: HomeAssistant,
+    config_entry: SwissPublicTransportConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
     unique_id = config_entry.unique_id
 
     if TYPE_CHECKING:
         assert unique_id
 
     async_add_entities(
-        SwissPublicTransportSensor(coordinator, description, unique_id)
+        SwissPublicTransportSensor(config_entry.runtime_data, description, unique_id)
         for description in SENSORS
     )
 

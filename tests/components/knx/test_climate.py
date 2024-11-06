@@ -819,3 +819,34 @@ async def test_fan_speed_zero_mode_auto(hass: HomeAssistant, knx: KNXTestKit) ->
     )
     await knx.assert_write("1/2/6", (0x0,))
     knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="auto")
+
+
+async def test_climate_humidity(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate humidity."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_HUMIDITY_STATE_ADDRESS: "1/2/16",
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/16")
+    await knx.receive_response("1/2/16", (0x14, 0x74))
+    knx.assert_state(
+        "climate.test",
+        HVACMode.HEAT,
+        current_humidity=45.6,
+    )

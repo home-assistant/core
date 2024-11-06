@@ -386,7 +386,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'no_sensor',
+    'state': 'doing_great',
   })
 # ---
 # name: test_all_entities[sensor.gummibaum_salinity-entry]
@@ -421,7 +421,7 @@
     'supported_features': 0,
     'translation_key': 'salinity',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-salinity',
-    'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS: 'mS/cm'>,
+    'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
   })
 # ---
 # name: test_all_entities[sensor.gummibaum_salinity-state]
@@ -430,7 +430,7 @@
       'device_class': 'conductivity',
       'friendly_name': 'Gummibaum Salinity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS: 'mS/cm'>,
+      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_salinity',
@@ -1052,7 +1052,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'no_sensor',
+    'state': 'doing_great',
   })
 # ---
 # name: test_all_entities[sensor.kakaobaum_salinity-entry]
@@ -1087,7 +1087,7 @@
     'supported_features': 0,
     'translation_key': 'salinity',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-salinity',
-    'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS: 'mS/cm'>,
+    'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
   })
 # ---
 # name: test_all_entities[sensor.kakaobaum_salinity-state]
@@ -1096,7 +1096,7 @@
       'device_class': 'conductivity',
       'friendly_name': 'Kakaobaum Salinity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS: 'mS/cm'>,
+      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_salinity',

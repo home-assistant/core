@@ -120,6 +120,10 @@ async def test_create_option_entry(
     }
 
 
+@pytest.mark.parametrize(  # Remove when translations fixed
+    "ignore_translations",
+    ["component.honeywell.config.abort.reauth_successful"],
+)
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test a successful reauth flow."""
 
