@@ -990,7 +990,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.0.1b5
+go2rtc-client==0.1.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -2559,7 +2559,7 @@ rfk101py==0.0.1
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.8
+ring-doorbell==0.9.9
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
