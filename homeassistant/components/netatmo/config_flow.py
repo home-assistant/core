@@ -106,7 +106,6 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the Netatmo options."""
-        self.options.setdefault(CONF_WEATHER_AREAS, {})
         return await self.async_step_public_weather_areas()
 
     async def async_step_public_weather_areas(
