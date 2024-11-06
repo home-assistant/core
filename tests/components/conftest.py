@@ -512,7 +512,7 @@ def supervisor_client() -> Generator[AsyncMock]:
         yield supervisor_client
 
 
-async def _validate_translation_placeholders(
+def _validate_translation_placeholders(
     full_key: str,
     translation: str,
     description_placeholders: dict[str, str] | None,
