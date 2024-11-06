@@ -6,5 +6,6 @@
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/watergate",
   "iot_class": "local_push",
-  "requirements": ["watergate-local-api==2024.1.11"]
+  "quality_scale": "bronze",
+  "requirements": ["watergate-local-api==2024.4.1"]
 }

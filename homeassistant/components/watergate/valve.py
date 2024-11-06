@@ -10,10 +10,12 @@ from homeassistant.components.valve import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import WatergateConfigEntry
 from .coordinator import WatergateDataCoordinator
-from .entity import WatergateConfigEntry, WatergateEntity
+from .entity import WatergateEntity
 
 ENTITY_NAME = "valve"
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -21,11 +23,9 @@ async def async_setup_entry(
     config_entry: WatergateConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up all entries for Wolf Platform."""
+    """Set up all entries for Watergate Platform."""
 
-    async_add_entities(
-        [SonicValve(config_entry.runtime_data.coordinator, config_entry)]
-    )
+    async_add_entities([SonicValve(config_entry.runtime_data)])
 
 
 class SonicValve(WatergateEntity, ValveEntity):
@@ -40,13 +40,10 @@ class SonicValve(WatergateEntity, ValveEntity):
     def __init__(
         self,
         coordinator: WatergateDataCoordinator,
-        entry: WatergateConfigEntry,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, entry, ENTITY_NAME)
-        self._valve_state = (
-            coordinator.data.state.valve_state if coordinator.data.state else None
-        )
+        super().__init__(coordinator, ENTITY_NAME)
+        self._valve_state = coordinator.data.valve_state if coordinator.data else None
 
     @property
     def is_closed(self) -> bool:
@@ -66,11 +63,9 @@ class SonicValve(WatergateEntity, ValveEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
-        self._attr_available = self.coordinator.data.state is not None
+        self._attr_available = self.coordinator.data is not None
         self._valve_state = (
-            self.coordinator.data.state.valve_state
-            if self.coordinator.data.state
-            else None
+            self.coordinator.data.valve_state if self.coordinator.data else None
         )
         self.async_write_ha_state()
 
@@ -81,7 +76,7 @@ class SonicValve(WatergateEntity, ValveEntity):
         self.async_write_ha_state()
 
     async def async_close_valve(self, **kwargs: Any) -> None:
-        """Open the valve."""
-        await self._api_client.async_set_valve_state("close")
+        """Close the valve."""
+        await self._api_client.async_set_valve_state(ValveState.CLOSED)
         self._valve_state = ValveState.CLOSING
         self.async_write_ha_state()

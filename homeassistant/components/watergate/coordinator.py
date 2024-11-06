@@ -14,15 +14,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class WatergateAgregatedRequests:
-    """Class to hold aggregated requests."""
-
-    def __init__(self, state: DeviceState | None = None) -> None:
-        """Initialize aggregated requests."""
-        self.state = state
-
-
-class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]):
+class WatergateDataCoordinator(DataUpdateCoordinator[DeviceState]):
     """Class to manage fetching watergate data."""
 
     def __init__(self, hass: HomeAssistant, api: WatergateLocalApiClient) -> None:
@@ -35,9 +27,9 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         )
         self.api = api
 
-    async def _async_update_data(self) -> WatergateAgregatedRequests:
+    async def _async_update_data(self) -> DeviceState:
         try:
             state = await self.api.async_get_device_state()
         except WatergateApiException as exc:
             raise UpdateFailed from exc
-        return WatergateAgregatedRequests(state=state)
+        return state
