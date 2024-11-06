@@ -23,8 +23,35 @@
   },
   "entity": {
     "binary_sensor": {
-      "errors": {
-        "name": "Errors"
+      "state_e_activated": {
+        "name": "State e activated"
+      },
+      "overtemp": {
+        "name": "Overtemp"
+      },
+      "critical_temp": {
+        "name": "Critical temp"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "meter_fault": {
+        "name": "Meter fault"
+      },
+      "undervoltage_error": {
+        "name": "Undervoltage error"
+      },
+      "overvoltage_error": {
+        "name": "Overvoltage error"
+      },
+      "rcd_error": {
+        "name": "Rcd error"
+      },
+      "cp_diode_failure": {
+        "name": "Cp diode failure"
+      },
+      "contactor_failure": {
+        "name": "Contactor failure"
       }
     },
     "button": {

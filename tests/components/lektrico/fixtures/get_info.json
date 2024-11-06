@@ -15,7 +15,6 @@
   "user_current": 32,
   "lb_mode": 0,
   "require_auth": true,
-  "has_active_errors": true,
   "state_e_activated": false,
   "undervoltage_error": true,
   "rcd_error": false,
