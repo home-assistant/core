@@ -9,6 +9,12 @@
           "system": "System"
         },
         "description": "Please select a system in which you want to set up the webhooks"
+      },
+      "webhooks": {
+        "description": "Please name your Webhooks. Leaving them empty will delete them."
+      },
+      "delete_webhooks": {
+        "description": "Webhook configuration inconsistent. Webhooks with Home Assistant were already configured. If you continue they will be marked for removal."
       }
     },
     "abort": {
@@ -21,7 +27,9 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "no_availible_webhooks": "There are no availible webhooks in the ekey Bionyx plattform. Please delete some and try again.",
+      "webhook_deletion_requested": "Please go to the ekey Bionyx App and confirm the deletion of the webhooks. Afterwards set the integration up again."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
