@@ -54,7 +54,7 @@ async def async_setup_entry(
 
 
 class AcaiaButton(AcaiaEntity, ButtonEntity):
-    """Representation of a acaia Button."""
+    """Representation of an Acaia button."""
 
     entity_description: AcaiaButtonEntityDescription
 
