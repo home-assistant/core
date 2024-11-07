@@ -157,6 +157,97 @@ async def test_get_integration_logger_no_integration(
     assert logger.name == __name__
 
 
+@pytest.mark.parametrize(
+    ("integration_frame_path", "keywords", "expected_error", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core",
+            {},
+            True,
+            0,
+            id="core default",
+        ),
+        pytest.param(
+            "homeassistant/components/test_core_integration",
+            {},
+            False,
+            1,
+            id="core integration default",
+        ),
+        pytest.param(
+            "custom_components/test_custom_integration",
+            {},
+            False,
+            1,
+            id="custom integration default",
+        ),
+        pytest.param(
+            "custom_components/test_custom_integration",
+            {"custom_integration_behavior": frame.ReportBehavior.IGNORE},
+            False,
+            0,
+            id="custom integration ignore",
+        ),
+        pytest.param(
+            "custom_components/test_custom_integration",
+            {"custom_integration_behavior": frame.ReportBehavior.ERROR},
+            True,
+            1,
+            id="custom integration error",
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            {"core_integration_behavior": frame.ReportBehavior.IGNORE},
+            False,
+            0,
+            id="core_integration_behavior ignore",
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            {"core_integration_behavior": frame.ReportBehavior.ERROR},
+            True,
+            1,
+            id="core_integration_behavior error",
+        ),
+        pytest.param(
+            "homeassistant/test_integration_frame",
+            {"core_behavior": frame.ReportBehavior.IGNORE},
+            False,
+            0,
+            id="core_behavior ignore",
+        ),
+        pytest.param(
+            "homeassistant/test_integration_frame",
+            {"core_behavior": frame.ReportBehavior.LOG},
+            False,
+            1,
+            id="core_behavior log",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_report_usage(
+    caplog: pytest.LogCaptureFixture,
+    keywords: dict[str, Any],
+    expected_error: bool,
+    expected_log: int,
+) -> None:
+    """Test report."""
+
+    what = "test_report_string"
+
+    errored = False
+    try:
+        with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+            frame.report_usage(what, **keywords)
+    except RuntimeError:
+        errored = True
+
+    assert errored == expected_error
+
+    assert caplog.text.count(what) == expected_log
+
+
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_prevent_flooding(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
