@@ -1140,18 +1140,15 @@ async def async_handle_snapshot_service(
     hass = camera.hass
     filename: Template | None = service_call.data.get(ATTR_FILENAME)
 
-    # If no filename provided, generate default one located in the media folder
-    if filename is None:
+    if filename is not None:
+        snapshot_file = filename.async_render(
+            variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_SNAPSHOT)}
+        )
+    else:
+        # If no filename provided, generate default one located in the media folder
         filename_date = dt_util.now().strftime("%Y%m%d-%H%M%S")
         media_path = hass.config.path("media")
-        filename = Template(
-            f"{media_path}/snapshots/{camera.entity_id}/{filename_date}.jpg",
-            camera.hass,
-        )
-
-    snapshot_file = filename.async_render(
-        variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_SNAPSHOT)}
-    )
+        snapshot_file = f"{media_path}/snapshots/{camera.entity_id}/{filename_date}.jpg"
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
