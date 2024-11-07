@@ -7,12 +7,11 @@ from functools import partial
 from hdate import Location
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
     CONF_LATITUDE,
-    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_TIME_ZONE,
@@ -36,6 +35,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .entity import JewishCalendarConfigEntry, JewishCalendarData
 from .sensor import INFO_SENSORS, TIME_SENSORS
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -120,7 +120,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
     """Set up a configuration entry for Jewish calendar."""
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
@@ -143,13 +145,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     )
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
-        CONF_LANGUAGE: language,
-        CONF_DIASPORA: diaspora,
-        CONF_LOCATION: location,
-        CONF_CANDLE_LIGHT_MINUTES: candle_lighting_offset,
-        CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
-    }
+    config_entry.runtime_data = JewishCalendarData(
+        language,
+        diaspora,
+        location,
+        candle_lighting_offset,
+        havdalah_offset,
+    )
 
     # Update unique ID to be unrelated to user defined options
     old_prefix = get_unique_prefix(
@@ -163,7 +165,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    async def update_listener(
+        hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+    ) -> None:
         # Trigger update of states for all platforms
         await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -171,16 +175,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 @callback

@@ -10,7 +10,12 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+)
 
 from .const import DOMAIN
 
@@ -52,7 +57,11 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): TextSelector(),
-                    vol.Required(CONF_PORT, default=80): int,
+                    vol.Required(CONF_PORT, default=80): NumberSelector(
+                        NumberSelectorConfig(
+                            mode=NumberSelectorMode.BOX,
+                        )
+                    ),
                 }
             ),
             errors=errors,

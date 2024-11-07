@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import TextSelector
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -20,6 +21,25 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): TextSelector(),
     }
 )
+
+
+async def validate_api(
+    hass: HomeAssistant, api_key: str
+) -> tuple[str | None, dict[str, str]]:
+    """Validate the API key."""
+    errors: dict[str, str] = {}
+    username: str | None = None
+    try:
+        username = await async_validate_api(hass, api_key)
+    except AuthenticationError:
+        errors["base"] = "invalid_auth"
+    except ConnectionError:
+        errors["base"] = "cannot_connect"
+    except NoDevicesError:
+        errors["base"] = "no_devices"
+    except NoUsernameError:
+        errors["base"] = "no_username"
+    return (username, errors)
 
 
 class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,17 +61,8 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
-            try:
-                username = await async_validate_api(self.hass, api_key)
-            except AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            except NoDevicesError:
-                errors["base"] = "no_devices"
-            except NoUsernameError:
-                errors["base"] = "no_username"
-            else:
+            username, errors = await validate_api(self.hass, api_key)
+            if username:
                 reauth_entry = self._get_reauth_entry()
                 if username == reauth_entry.unique_id:
                     return self.async_update_reload_and_abort(
@@ -68,6 +79,32 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure Sensibo."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            api_key = user_input[CONF_API_KEY]
+            username, errors = await validate_api(self.hass, api_key)
+            if username:
+                reconfigure_entry = self._get_reconfigure_entry()
+                if username == reconfigure_entry.unique_id:
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={
+                            CONF_API_KEY: api_key,
+                        },
+                    )
+                errors["base"] = "incorrect_api_key"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -77,17 +114,8 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
-            try:
-                username = await async_validate_api(self.hass, api_key)
-            except AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            except NoDevicesError:
-                errors["base"] = "no_devices"
-            except NoUsernameError:
-                errors["base"] = "no_username"
-            else:
+            username, errors = await validate_api(self.hass, api_key)
+            if username:
                 await self.async_set_unique_id(username)
                 self._abort_if_unique_id_configured()
 

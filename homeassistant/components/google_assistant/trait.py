@@ -33,7 +33,10 @@ from homeassistant.components import (
     valve,
     water_heater,
 )
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
@@ -63,13 +66,6 @@ from homeassistant.const import (
     SERVICE_ALARM_TRIGGER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -1557,19 +1553,19 @@ class ArmDisArmTrait(_Trait):
     commands = [COMMAND_ARM_DISARM]
 
     state_to_service = {
-        STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
-        STATE_ALARM_ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
-        STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
-        STATE_ALARM_ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        STATE_ALARM_TRIGGERED: SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: SERVICE_ALARM_ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: SERVICE_ALARM_TRIGGER,
     }
 
     state_to_support = {
-        STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-        STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
-        STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-        STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-        STATE_ALARM_TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
     """The list of states to support in increasing security state."""
 
@@ -1595,8 +1591,8 @@ class ArmDisArmTrait(_Trait):
     def _default_arm_state(self):
         states = self._supported_states()
 
-        if STATE_ALARM_TRIGGERED in states:
-            states.remove(STATE_ALARM_TRIGGERED)
+        if AlarmControlPanelState.TRIGGERED in states:
+            states.remove(AlarmControlPanelState.TRIGGERED)
 
         if not states:
             raise SmartHomeError(ERR_NOT_SUPPORTED, "ArmLevel missing")
@@ -1611,7 +1607,7 @@ class ArmDisArmTrait(_Trait):
             # level synonyms are generated from state names
             # 'armed_away' becomes 'armed away' or 'away'
             level_synonym = [state.replace("_", " ")]
-            if state != STATE_ALARM_TRIGGERED:
+            if state != AlarmControlPanelState.TRIGGERED:
                 level_synonym.append(state.split("_")[1])
 
             level = {
@@ -1652,11 +1648,11 @@ class ArmDisArmTrait(_Trait):
         elif (
             params["arm"]
             and params.get("cancel")
-            and self.state.state == STATE_ALARM_PENDING
+            and self.state.state == AlarmControlPanelState.PENDING
         ):
             service = SERVICE_ALARM_DISARM
         else:
-            if self.state.state == STATE_ALARM_DISARMED:
+            if self.state.state == AlarmControlPanelState.DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
             _verify_pin_challenge(data, self.state, challenge)
             service = SERVICE_ALARM_DISARM

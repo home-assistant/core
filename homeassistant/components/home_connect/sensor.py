@@ -24,6 +24,7 @@ import homeassistant.util.dt as dt_util
 from .api import ConfigEntryAuth
 from .const import (
     ATTR_VALUE,
+    BSH_DOOR_STATE,
     BSH_OPERATION_STATE,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
@@ -31,6 +32,8 @@ from .const import (
     COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
     COFFEE_EVENT_DRIP_TRAY_FULL,
     COFFEE_EVENT_WATER_TANK_EMPTY,
+    DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+    DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
     DOMAIN,
     REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
     REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
@@ -90,6 +93,16 @@ SENSORS = (
             "aborting",
         ],
         translation_key="operation_state",
+    ),
+    HomeConnectSensorEntityDescription(
+        key=BSH_DOOR_STATE,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "closed",
+            "locked",
+            "open",
+        ],
+        translation_key="door",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffee",
@@ -218,6 +231,22 @@ EVENT_SENSORS = (
         default_value="off",
         translation_key="drip_tray_full",
         appliance_types=("CoffeeMaker",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="salt_nearly_empty",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="rinse_aid_nearly_empty",
+        appliance_types=("Dishwasher",),
     ),
 )
 

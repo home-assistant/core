@@ -139,7 +139,7 @@ CONNECTIONS_SENSORS: tuple[NYTGamesConnectionsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.DAYS,
         device_class=SensorDeviceClass.DURATION,
-        value_fn=lambda connections: connections.current_streak,
+        value_fn=lambda connections: connections.max_streak,
     ),
 )
 
