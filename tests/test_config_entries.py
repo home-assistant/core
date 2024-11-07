@@ -5071,10 +5071,15 @@ async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
     assert caplog.text == ""  # No deprecation warning for custom components
 
-    options_flow._options["sub_dict"]["2"] = "two"
-    options_flow._options["sub_list"].append("two")
+    # Ensure available at startup
+    assert options_flow.config_entry is entry
+    assert options_flow.options == entry.options
 
-    assert options_flow._options == {
+    options_flow.options["sub_dict"]["2"] = "two"
+    options_flow.options["sub_list"].append("two")
+
+    # Ensure it does not mutate the entry options
+    assert options_flow.options == {
         "sub_dict": {"1": "one", "2": "two"},
         "sub_list": ["one", "two"],
     }
