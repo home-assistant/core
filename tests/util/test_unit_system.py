@@ -388,6 +388,18 @@ def test_get_unit_system_invalid(key: str) -> None:
 @pytest.mark.parametrize(
     ("device_class", "original_unit", "state_unit"),
     [
+        # Test area conversion
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_FEET, UnitOfArea.SQUARE_METERS),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_INCHES,
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, UnitOfArea.SQUARE_KILOMETERS),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_YARDS, UnitOfArea.SQUARE_METERS),
+        (SensorDeviceClass.AREA, UnitOfArea.ACRES, UnitOfArea.HECTARES),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, None),
+        (SensorDeviceClass.AREA, "very_long", None),
         # Test atmospheric pressure
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -413,18 +425,6 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.DISTANCE, UnitOfLength.YARDS, UnitOfLength.METERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
-        # Test area conversion
-        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_FEET, UnitOfArea.SQUARE_METERS),
-        (
-            SensorDeviceClass.AREA,
-            UnitOfArea.SQUARE_INCHES,
-            UnitOfArea.SQUARE_CENTIMETERS,
-        ),
-        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, UnitOfArea.SQUARE_KILOMETERS),
-        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_YARDS, UnitOfArea.SQUARE_METERS),
-        (SensorDeviceClass.AREA, UnitOfArea.ACRES, UnitOfArea.HECTARES),
-        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, None),
-        (SensorDeviceClass.AREA, "very_long", None),
         # Test gas meter conversion
         (
             SensorDeviceClass.GAS,
@@ -557,19 +557,19 @@ def test_get_metric_converted_unit_(
 
 
 UNCONVERTED_UNITS_METRIC_SYSTEM = {
-    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
-    SensorDeviceClass.DISTANCE: (
-        UnitOfLength.CENTIMETERS,
-        UnitOfLength.KILOMETERS,
-        UnitOfLength.METERS,
-        UnitOfLength.MILLIMETERS,
-    ),
     SensorDeviceClass.AREA: (
         UnitOfArea.SQUARE_MILLIMETERS,
         UnitOfArea.SQUARE_CENTIMETERS,
         UnitOfArea.SQUARE_METERS,
         UnitOfArea.SQUARE_KILOMETERS,
         UnitOfArea.HECTARES,
+    ),
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
+    SensorDeviceClass.DISTANCE: (
+        UnitOfLength.CENTIMETERS,
+        UnitOfLength.KILOMETERS,
+        UnitOfLength.METERS,
+        UnitOfLength.MILLIMETERS,
     ),
     SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
     SensorDeviceClass.PRECIPITATION: (
@@ -613,6 +613,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
 @pytest.mark.parametrize(
     "device_class",
     [
+        SensorDeviceClass.AREA,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         SensorDeviceClass.DISTANCE,
         SensorDeviceClass.GAS,
@@ -622,7 +623,6 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         SensorDeviceClass.SPEED,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
-        SensorDeviceClass.AREA,
     ],
 )
 def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
@@ -642,6 +642,21 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
 @pytest.mark.parametrize(
     ("device_class", "original_unit", "state_unit"),
     [
+        # Test area conversion
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_METERS, UnitOfArea.SQUARE_FEET),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_MILES),
+        (SensorDeviceClass.AREA, UnitOfArea.HECTARES, UnitOfArea.ACRES),
+        (SensorDeviceClass.AREA, "very_area", None),
         # Test atmospheric pressure
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -660,21 +675,6 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         ),
         (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.INHG, None),
         (SensorDeviceClass.ATMOSPHERIC_PRESSURE, "very_much", None),
-        # Test area conversion
-        (
-            SensorDeviceClass.AREA,
-            UnitOfArea.SQUARE_MILLIMETERS,
-            UnitOfArea.SQUARE_INCHES,
-        ),
-        (
-            SensorDeviceClass.AREA,
-            UnitOfArea.SQUARE_CENTIMETERS,
-            UnitOfArea.SQUARE_INCHES,
-        ),
-        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_METERS, UnitOfArea.SQUARE_FEET),
-        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_MILES),
-        (SensorDeviceClass.AREA, UnitOfArea.HECTARES, UnitOfArea.ACRES),
-        (SensorDeviceClass.AREA, "very_area", None),
         # Test distance conversion
         (SensorDeviceClass.DISTANCE, UnitOfLength.CENTIMETERS, UnitOfLength.INCHES),
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, UnitOfLength.MILES),
@@ -806,6 +806,13 @@ def test_get_us_converted_unit(
 
 
 UNCONVERTED_UNITS_US_SYSTEM = {
+    SensorDeviceClass.AREA: (
+        UnitOfArea.SQUARE_FEET,
+        UnitOfArea.SQUARE_INCHES,
+        UnitOfArea.SQUARE_MILES,
+        UnitOfArea.SQUARE_YARDS,
+        UnitOfArea.ACRES,
+    ),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.INHG,),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.FEET,
@@ -813,13 +820,6 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.MILES,
         UnitOfLength.YARDS,
-    ),
-    SensorDeviceClass.AREA: (
-        UnitOfArea.SQUARE_FEET,
-        UnitOfArea.SQUARE_INCHES,
-        UnitOfArea.SQUARE_MILES,
-        UnitOfArea.SQUARE_YARDS,
-        UnitOfArea.ACRES,
     ),
     SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
     SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
