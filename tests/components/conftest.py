@@ -632,6 +632,9 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
 
         if result["type"] is FlowResultType.FORM:
             if step_id := result.get("step_id"):
+                # neither title nor description are required
+                # - title defaults to integration name
+                # - description is optional
                 for header in ("title", "description"):
                     await _ensure_translation_exists(
                         flow.hass,
@@ -640,8 +643,6 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
                         component,
                         f"step.{step_id}.{header}",
                         result["description_placeholders"],
-                        # title is not compulsory
-                        # description is optional
                         translation_required=False,
                     )
             if errors := result.get("errors"):
