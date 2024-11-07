@@ -299,6 +299,27 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("pm10"),
     ),
     AirQEntityDescription(
+        key="pm1_SPS30",
+        device_class=SensorDeviceClass.PM1,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("pm1_SPS30"),
+    ),
+    AirQEntityDescription(
+        key="pm2_5_SPS30",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("pm2_5_SPS30"),
+    ),
+    AirQEntityDescription(
+        key="pm10_SPS30",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("pm10_SPS30"),
+    ),
+    AirQEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
