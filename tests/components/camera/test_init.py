@@ -297,7 +297,10 @@ async def test_snapshot_service_with_default_filename(
             blocking=True,
         )
 
-        path = f"{hass.config.path('media')}/snapshots/camera.demo_camera/20241106-152434.jpg"
+        path = (
+            f"{hass.config.path('media')}"
+            "/snapshots/camera.demo_camera/20241106-152434.jpg"
+        )
         mopen.assert_called_once_with(path, "wb")
 
         mock_write = mopen().write
