@@ -102,7 +102,10 @@ def make_device_data(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
 
-        if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
+        if isinstance(device, Device) and device.device_type in [
+            "Smart Lock",
+            "Smart Lock Pro",
+        ]:
             devices_data.locks.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
