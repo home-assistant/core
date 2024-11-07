@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from unittest.mock import patch
 
+from pynordpool.exceptions import NordpoolError
 from pynordpool.model import DeliveryPeriodData
 import pytest
 
@@ -53,3 +55,79 @@ async def test_single_config_entry(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+async def test_cannot_connect(
+    hass: HomeAssistant, get_data: DeliveryPeriodData
+) -> None:
+    """Test cannot connect error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch(
+        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+        side_effect=NordpoolError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+        return_value=get_data,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nord Pool SE3,SE4"
+    assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
+
+
+@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+async def test_empty_data(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
+    """Test empty data error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    invalid_data = replace(get_data, raw={})
+
+    with patch(
+        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+        return_value=invalid_data,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+    assert result["errors"] == {"base": "no_data"}
+
+    with patch(
+        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+        return_value=get_data,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nord Pool SE3,SE4"
+    assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}

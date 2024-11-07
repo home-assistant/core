@@ -1,5 +1,9 @@
 {
   "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_data": "Api connected but response was empty"
+    },
     "step": {
       "user": {
         "data": {
