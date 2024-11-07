@@ -30,7 +30,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for zcc."""
 
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -40,8 +39,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        data = {}
-        errors = {}
+        data: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         try:
             data = await self.validate_input(user_input)
