@@ -11,11 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import AcaiaConfigEntry
-from .entity import AcaiaEntity, AcaiaEntityDescription
+from .entity import AcaiaEntity
 
 
 @dataclass(kw_only=True, frozen=True)
-class AcaiaButtonEntityDescription(AcaiaEntityDescription, ButtonEntityDescription):
+class AcaiaButtonEntityDescription(ButtonEntityDescription):
     """Description for acaia button entities."""
 
     press_fn: Callable[[AcaiaScale], Coroutine[Any, Any, None]]
