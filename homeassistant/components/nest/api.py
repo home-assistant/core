@@ -114,9 +114,14 @@ async def new_subscriber(
         implementation, config_entry_oauth2_flow.LocalOAuth2Implementation
     ):
         raise TypeError(f"Unexpected auth implementation {implementation}")
-    subscription_name = entry.data.get(
-        CONF_SUBSCRIPTION_NAME, entry.data[CONF_SUBSCRIBER_ID]
-    )
+    if not (
+        subscription_name := entry.data.get(
+            CONF_SUBSCRIPTION_NAME, entry.data.get(CONF_SUBSCRIBER_ID)
+        )
+    ):
+        raise ValueError(
+            "Configuration option 'subscription_name' or 'subscriber_id' missing"
+        )
     auth = AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
         config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation),

@@ -31,6 +31,7 @@ from .common import (
     SUBSCRIBER_ID,
     TEST_CONFIG_ENTRY_LEGACY,
     TEST_CONFIG_LEGACY,
+    TEST_CONFIG_NEW_SUBSCRIPTION,
     TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
     PlatformSetup,
@@ -86,6 +87,19 @@ def failing_subscriber(
 
 
 async def test_setup_success(
+    hass: HomeAssistant, error_caplog: pytest.LogCaptureFixture, setup_platform
+) -> None:
+    """Test successful setup."""
+    await setup_platform()
+    assert not error_caplog.records
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("nest_test_config", [(TEST_CONFIG_NEW_SUBSCRIPTION)])
+async def test_setup_success_new_subscription_format(
     hass: HomeAssistant, error_caplog: pytest.LogCaptureFixture, setup_platform
 ) -> None:
     """Test successful setup."""
