@@ -5040,6 +5040,24 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     assert "test" in hass.config.components
 
 
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    ["homeassistant/components/my_integration", "homeassistant.core"],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_options_flow_with_config_entry_core() -> None:
+    """Test that OptionsFlowWithConfigEntry cannot be used in core."""
+    entry = MockConfigEntry(
+        domain="hue",
+        data={"first": True},
+        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
+    )
+
+    with pytest.raises(RuntimeError, match="OptionsFlowWithConfigEntry cannot be used"):
+        _ = config_entries.OptionsFlowWithConfigEntry(entry)
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
@@ -5051,10 +5069,7 @@ async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) 
     )
 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
-    assert (
-        "Detected that integration 'hue' inherits from OptionsFlowWithConfigEntry,"
-        " which is deprecated and will stop working in 2025.12" in caplog.text
-    )
+    assert caplog.text == ""  # No deprecation warning for custom components
 
     options_flow._options["sub_dict"]["2"] = "two"
     options_flow._options["sub_list"].append("two")
