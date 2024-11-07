@@ -2160,7 +2160,8 @@ class ConfigEntries:
             if (
                 # flipr creates duplicates during migration, and asks users to
                 # remove the duplicate. We don't need warn about it here too.
-                # We should remove the special case for "flipr" in HA Core 2025.4
+                # We should remove the special case for "flipr" in HA Core 2025.4,
+                # when the flipr migration period ends
                 entry.domain != "flipr"
                 and unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
@@ -2442,7 +2443,8 @@ class ConfigEntries:
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
             # flipr creates duplicates during migration, and asks users to
             # remove the duplicate. We don't need warn about it here too.
-            # We should remove the special case for "flipr" in HA Core 2025.4
+            # We should remove the special case for "flipr" in HA Core 2025.4,
+            # when the flipr migration period ends
             if domain == "flipr":
                 continue
             for unique_id, entries in unique_ids.items():
