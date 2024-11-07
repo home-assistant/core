@@ -486,6 +486,25 @@ async def test_websocket_update_orientation_prefs(
     assert msg["result"]["orientation"] == camera.Orientation.ROTATE_180
 
 
+@pytest.mark.usefixtures("mock_camera")
+async def test_websocket_get_snapshot(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get camera snapshot websocket command."""
+    await async_setup_component(hass, "camera", {})
+
+    # Request snapshot through websocket
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 7, "type": "camera/snapshot", "entity_id": "camera.demo_camera"}
+    )
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["success"]
+    assert msg["result"] == "VGVzdA=="
+
+
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
 async def test_play_stream_service_no_source(hass: HomeAssistant) -> None:
     """Test camera play_stream service."""

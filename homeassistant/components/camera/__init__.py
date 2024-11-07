@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
@@ -360,6 +361,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
     websocket_api.async_register_command(hass, ws_camera_capabilities)
+    websocket_api.async_register_command(hass, websocket_get_snapshot)
     async_register_ws(hass)
 
     await component.async_setup(config)
@@ -1090,6 +1092,37 @@ async def websocket_update_prefs(
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
         connection.send_result(msg["id"], entity_prefs)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/snapshot",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def websocket_get_snapshot(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get camera snapshot websocket command."""
+    try:
+        entity_id = msg["entity_id"]
+        camera = get_camera_from_entity_id(hass, entity_id)
+
+        image: bytes | None = (
+            await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+            if camera.use_stream_for_stills
+            else await camera.async_camera_image()
+        )
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error requesting snapshot: %s", ex)
+        connection.send_error(msg["id"], "snapshot_failed", str(ex))
+    else:
+        if image is None:
+            connection.send_error(msg["id"], "snapshot_failed", "Unable to get image")
+            return
+
+        connection.send_result(msg["id"], base64.b64encode(image).decode("ascii"))
 
 
 class _TemplateCameraEntity:
