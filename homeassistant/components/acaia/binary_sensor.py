@@ -21,7 +21,7 @@ from .entity import AcaiaEntity, AcaiaEntityDescription
 class AcaiaBinarySensorEntityDescription(
     AcaiaEntityDescription, BinarySensorEntityDescription
 ):
-    """Description for Acaia Binary Sensor entities."""
+    """Description for acaia binary sensor entities."""
 
     is_on_fn: Callable[[AcaiaScale], bool]
 
@@ -57,7 +57,7 @@ async def async_setup_entry(
 
 
 class AcaiaSensor(AcaiaEntity, BinarySensorEntity):
-    """Representation of a Acaia Binary Sensor."""
+    """Representation of a acaia Binary Sensor."""
 
     entity_description: AcaiaBinarySensorEntityDescription
 

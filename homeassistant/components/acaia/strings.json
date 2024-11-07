@@ -1,13 +1,28 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "step": {
       "user": {
-        "title": "Setup your Acaia scale",
-        "description": "Set a name of your choosing and enter the mac address of your scale.",
+        "title": "Set up your acaia scale",
         "data": {
-          "name": "Display name",
           "mac_address": "MAC address",
-          "is_new_style_scale": "Is this a newer (than 2021) scale? If the integration fails to work, try toggling this setting."
+          "is_new_style_scale": "Modern scale"
+        },
+        "data_description": {
+          "mac_address": "The MAC address of your scale",
+          "is_new_style_scale": "Is this a modern (newer than 2021) scale?"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "mac_address": "[%key:component::acaia::config::step::user::data_description::mac_address%]",
+          "is_new_style_scale": "[%key:component::acaia::config::step::user::data_description::is_new_style_scale%]"
+        },
+        "data_description": {
+          "mac_address": "[%key:component::acaia::config::step::user::data_description::mac_address%]",
+          "is_new_style_scale": "[%key:component::acaia::config::step::user::data_description::is_new_style_scale%]"
         }
       }
     }

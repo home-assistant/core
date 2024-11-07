@@ -80,7 +80,7 @@ async def async_setup_entry(
 
 
 class AcaiaSensor(AcaiaEntity, SensorEntity):
-    """Representation of a Acaia Sensor."""
+    """Representation of a acaia sensor."""
 
     entity_description: AcaiaSensorEntityDescription
 
@@ -103,7 +103,7 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
 
 
 class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
-    """Representation of a Acaia Sensor with restore capabilities."""
+    """Representation of a acaia sensor with restore capabilities."""
 
     entity_description: AcaiaSensorEntityDescription
 

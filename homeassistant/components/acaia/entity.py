@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from pyacaia_async.acaiascale import AcaiaScale
 
-from homeassistant.const import CONF_NAME, CONF_MAC
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -36,13 +36,12 @@ class AcaiaEntity(CoordinatorEntity[AcaiaCoordinator]):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        mac = coordinator.config_entry.data[CONF_MAC]
         self.entity_description = entity_description
         self._scale = coordinator.scale
-        self._attr_unique_id = f"{mac}_{entity_description.key}"
+        self._attr_unique_id = f"{self._scale.mac}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mac)},
+            identifiers={(DOMAIN, self._scale.mac)},
             name=coordinator.config_entry.data.get(CONF_NAME),
             manufacturer="acaia",
         )

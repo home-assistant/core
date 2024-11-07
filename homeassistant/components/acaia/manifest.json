@@ -1,6 +1,6 @@
 {
   "domain": "acaia",
-  "name": "Acaia",
+  "name": "acaia",
   "bluetooth": [
     {
       "manufacturer_id": 16962
@@ -15,7 +15,6 @@
   "documentation": "https://github.com/zweckj/acaia",
   "iot_class": "assumed_state",
   "issue_tracker": "https://github.com/zweckj/acaia/issues",
-  "requirements": ["pyacaia_async==0.0.12b4"],
   "loggers": ["pyacaia_async"],
-  "version": "0.1.2"
+  "requirements": ["pyacaia_async==0.0.12b4"]
 }

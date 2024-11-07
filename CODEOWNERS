@@ -40,6 +40,7 @@ build.json @home-assistant/supervisor
 # Integrations
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
+/homeassistant/components/acaia/ @zweckj
 /homeassistant/components/accuweather/ @bieniu
 /tests/components/accuweather/ @bieniu
 /homeassistant/components/acmeda/ @atmurray

@@ -11,7 +11,7 @@ from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_IS_NEW_STYLE_SCALE
 
@@ -37,13 +37,13 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
-            name="Acaia coordinator",
+            name="acaia coordinator",
             update_interval=SCAN_INTERVAL,
             config_entry=entry,
         )
 
         self._scale = AcaiaScale(
-            mac=entry.data[CONF_MAC],
+            address_or_ble_device=entry.data[CONF_MAC],
             is_new_style_scale=entry.data[CONF_IS_NEW_STYLE_SCALE],
             notify_callback=self.async_update_listeners,
         )
@@ -64,9 +64,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
                 self.config_entry.data[CONF_MAC],
                 ex,
             )
-            self._scale.connected = False
-            self._scale.timer_running = False
-            self._scale.async_empty_queue_and_cancel_tasks()
+            self._scale.device_disconnected_handler(notify=False)
             return
 
         # connected, set up background tasks

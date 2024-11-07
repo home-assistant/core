@@ -16,7 +16,7 @@ from .entity import AcaiaEntity, AcaiaEntityDescription
 
 @dataclass(kw_only=True, frozen=True)
 class AcaiaButtonEntityDescription(AcaiaEntityDescription, ButtonEntityDescription):
-    """Description for Acaia Button entities."""
+    """Description for acaia button entities."""
 
     async_press_fn: Callable[[AcaiaScale], Coroutine[Any, Any, None]]
 
@@ -54,7 +54,7 @@ async def async_setup_entry(
 
 
 class AcaiaButton(AcaiaEntity, ButtonEntity):
-    """Representation of a Acaia Button."""
+    """Representation of a acaia Button."""
 
     entity_description: AcaiaButtonEntityDescription
 

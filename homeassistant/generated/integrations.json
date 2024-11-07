@@ -11,6 +11,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "acaia": {
+      "name": "acaia",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "accuweather": {
       "name": "AccuWeather",
       "integration_type": "service",
