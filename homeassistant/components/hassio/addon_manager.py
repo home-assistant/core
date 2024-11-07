@@ -15,13 +15,14 @@ from aiohasupervisor.models import (
     AddonsOptions,
     AddonState as SupervisorAddonState,
     InstalledAddonComplete,
+    PartialBackupOptions,
     StoreAddonUpdate,
 )
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .handler import HassioAPIError, async_create_backup, get_supervisor_client
+from .handler import get_supervisor_client
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
 type _ReturnFuncType[_T, **_P, _R] = Callable[
@@ -31,18 +32,15 @@ type _ReturnFuncType[_T, **_P, _R] = Callable[
 
 def api_error[_AddonManagerT: AddonManager, **_P, _R](
     error_message: str,
-    *,
-    expected_error_type: type[HassioAPIError | SupervisorError] | None = None,
 ) -> Callable[
     [_FuncType[_AddonManagerT, _P, _R]], _ReturnFuncType[_AddonManagerT, _P, _R]
 ]:
-    """Handle HassioAPIError and raise a specific AddonError."""
-    error_type = expected_error_type or (HassioAPIError, SupervisorError)
+    """Handle SupervisorError and raise a specific AddonError."""
 
-    def handle_hassio_api_error(
+    def handle_supervisor_api_error(
         func: _FuncType[_AddonManagerT, _P, _R],
     ) -> _ReturnFuncType[_AddonManagerT, _P, _R]:
-        """Handle a HassioAPIError."""
+        """Handle a SupervisorError."""
 
         @wraps(func)
         async def wrapper(
@@ -51,7 +49,7 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
             """Wrap an add-on manager method."""
             try:
                 return_value = await func(self, *args, **kwargs)
-            except error_type as err:
+            except SupervisorError as err:
                 raise AddonError(
                     f"{error_message.format(addon_name=self.addon_name)}: {err}"
                 ) from err
@@ -60,7 +58,7 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
 
         return wrapper
 
-    return handle_hassio_api_error
+    return handle_supervisor_api_error
 
 
 @dataclass
@@ -123,10 +121,7 @@ class AddonManager:
             )
         )
 
-    @api_error(
-        "Failed to get the {addon_name} add-on discovery info",
-        expected_error_type=SupervisorError,
-    )
+    @api_error("Failed to get the {addon_name} add-on discovery info")
     async def async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
         discovery_info = next(
@@ -143,10 +138,7 @@ class AddonManager:
 
         return discovery_info.config
 
-    @api_error(
-        "Failed to get the {addon_name} add-on info",
-        expected_error_type=SupervisorError,
-    )
+    @api_error("Failed to get the {addon_name} add-on info")
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache manager add-on info."""
         addon_store_info = await self._supervisor_client.store.addon_info(
@@ -188,10 +180,7 @@ class AddonManager:
 
         return addon_state
 
-    @api_error(
-        "Failed to set the {addon_name} add-on options",
-        expected_error_type=SupervisorError,
-    )
+    @api_error("Failed to set the {addon_name} add-on options")
     async def async_set_addon_options(self, config: dict) -> None:
         """Set manager add-on options."""
         await self._supervisor_client.addons.set_addon_options(
@@ -203,9 +192,7 @@ class AddonManager:
         if not addon_info.available:
             raise AddonError(f"{self.addon_name} add-on is not available")
 
-    @api_error(
-        "Failed to install the {addon_name} add-on", expected_error_type=SupervisorError
-    )
+    @api_error("Failed to install the {addon_name} add-on")
     async def async_install_addon(self) -> None:
         """Install the managed add-on."""
         addon_info = await self.async_get_addon_info()
@@ -214,10 +201,7 @@ class AddonManager:
 
         await self._supervisor_client.store.install_addon(self.addon_slug)
 
-    @api_error(
-        "Failed to uninstall the {addon_name} add-on",
-        expected_error_type=SupervisorError,
-    )
+    @api_error("Failed to uninstall the {addon_name} add-on")
     async def async_uninstall_addon(self) -> None:
         """Uninstall the managed add-on."""
         await self._supervisor_client.addons.uninstall_addon(self.addon_slug)
@@ -240,23 +224,17 @@ class AddonManager:
             self.addon_slug, StoreAddonUpdate(backup=False)
         )
 
-    @api_error(
-        "Failed to start the {addon_name} add-on", expected_error_type=SupervisorError
-    )
+    @api_error("Failed to start the {addon_name} add-on")
     async def async_start_addon(self) -> None:
         """Start the managed add-on."""
         await self._supervisor_client.addons.start_addon(self.addon_slug)
 
-    @api_error(
-        "Failed to restart the {addon_name} add-on", expected_error_type=SupervisorError
-    )
+    @api_error("Failed to restart the {addon_name} add-on")
     async def async_restart_addon(self) -> None:
         """Restart the managed add-on."""
         await self._supervisor_client.addons.restart_addon(self.addon_slug)
 
-    @api_error(
-        "Failed to stop the {addon_name} add-on", expected_error_type=SupervisorError
-    )
+    @api_error("Failed to stop the {addon_name} add-on")
     async def async_stop_addon(self) -> None:
         """Stop the managed add-on."""
         await self._supervisor_client.addons.stop_addon(self.addon_slug)
@@ -268,10 +246,8 @@ class AddonManager:
         name = f"addon_{self.addon_slug}_{addon_info.version}"
 
         self._logger.debug("Creating backup: %s", name)
-        await async_create_backup(
-            self._hass,
-            {"name": name, "addons": [self.addon_slug]},
-            partial=True,
+        await self._supervisor_client.backups.partial_backup(
+            PartialBackupOptions(name=name, addons={self.addon_slug})
         )
 
     async def async_configure_addon(

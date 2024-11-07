@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
     Discovery,
+    NewBackup,
     Repository,
     ResolutionInfo,
     StoreAddon,
@@ -417,13 +418,22 @@ def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.addons.uninstall_addon
 
 
-@pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock]:
-    """Mock create backup."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_create_backup
+@pytest.fixture(name="create_partial_backup")
+def create_partial_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock create partial backup."""
+    supervisor_client.backups.partial_backup.return_value = NewBackup(
+        "job123", "backup123"
+    )
+    return supervisor_client.backups.partial_backup
 
-    yield from mock_create_backup()
+
+@pytest.fixture(name="create_full_backup")
+def create_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock create full backup."""
+    supervisor_client.backups.full_backup.return_value = NewBackup(
+        "job123", "backup123"
+    )
+    return supervisor_client.backups.full_backup
 
 
 @pytest.fixture(name="update_addon")
@@ -505,6 +515,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
     supervisor_client = AsyncMock()
     supervisor_client.addons = AsyncMock()
+    supervisor_client.backups = AsyncMock()
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.os = AsyncMock()
