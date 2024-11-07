@@ -223,7 +223,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
         UnitOfEnergy.GIGA_WATT_HOUR: 1 / 1e6,
-        UnitOfEnergy.TERRA_WATT_HOUR: 1 / 1e9,
+        UnitOfEnergy.TERA_WATT_HOUR: 1 / 1e9,
         UnitOfEnergy.CALORIE: _WH_TO_CAL * 1e3,
         UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
         UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
@@ -296,14 +296,14 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.KILO_WATT: 1 / 1000,
         UnitOfPower.MEGA_WATT: 1 / 1e6,
         UnitOfPower.GIGA_WATT: 1 / 1e9,
-        UnitOfPower.TERRA_WATT: 1 / 1e12,
+        UnitOfPower.TERA_WATT: 1 / 1e12,
     }
     VALID_UNITS = {
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,
         UnitOfPower.GIGA_WATT,
-        UnitOfPower.TERRA_WATT,
+        UnitOfPower.TERA_WATT,
     }
 
 
