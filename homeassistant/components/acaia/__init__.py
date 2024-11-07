@@ -5,7 +5,9 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import AcaiaConfigEntry, AcaiaCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AcaiaConfigEntry) -> bool:

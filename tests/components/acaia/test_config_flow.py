@@ -9,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from tests.common import MockConfigEntry
-
 
 async def test_form(
     hass: HomeAssistant,
@@ -74,34 +72,4 @@ async def test_bluetooth_discovery(
         CONF_MAC: service_info.address,
         CONF_NAME: service_info.name,
         CONF_IS_NEW_STYLE_SCALE: False,
-    }
-
-
-async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Testing reconfgure flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    user_input = {
-        CONF_MAC: "aa:bb:cc:dd:ee:gg",
-        CONF_IS_NEW_STYLE_SCALE: False,
-    }
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=user_input,
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {
-        **mock_config_entry.data,
-        **user_input,
     }
