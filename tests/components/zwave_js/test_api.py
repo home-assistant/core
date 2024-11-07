@@ -3155,9 +3155,8 @@ async def test_set_raw_config_parameter(
     client.async_send_command_no_wait.return_value = None
 
     # Test setting a raw config parameter value
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 1,
             TYPE: "zwave_js/set_raw_config_parameter",
             DEVICE_ID: device.id,
             PROPERTY: 102,
@@ -3184,9 +3183,8 @@ async def test_set_raw_config_parameter(
     client.async_send_command_no_wait.reset_mock()
 
     # Test getting non-existent node fails
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 2,
             TYPE: "zwave_js/set_raw_config_parameter",
             DEVICE_ID: "fake_device",
             PROPERTY: 102,
@@ -3203,9 +3201,8 @@ async def test_set_raw_config_parameter(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 3,
             TYPE: "zwave_js/set_raw_config_parameter",
             DEVICE_ID: device.id,
             PROPERTY: 102,
@@ -3235,9 +3232,8 @@ async def test_get_raw_config_parameter(
     client.async_send_command.return_value = {"value": 1}
 
     # Test getting a raw config parameter value
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 1,
             TYPE: "zwave_js/get_raw_config_parameter",
             DEVICE_ID: device.id,
             PROPERTY: 102,
@@ -3261,9 +3257,8 @@ async def test_get_raw_config_parameter(
         "zwave_js_server.model.node.Node.async_get_raw_config_parameter_value",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                ID: 2,
                 TYPE: "zwave_js/get_raw_config_parameter",
                 DEVICE_ID: device.id,
                 PROPERTY: 102,
@@ -3276,9 +3271,8 @@ async def test_get_raw_config_parameter(
         assert msg["error"]["message"] == "zwave_error: Z-Wave error 1 - error message"
 
     # Test getting non-existent node fails
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 3,
             TYPE: "zwave_js/get_raw_config_parameter",
             DEVICE_ID: "fake_device",
             PROPERTY: 102,
@@ -3288,13 +3282,26 @@ async def test_get_raw_config_parameter(
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
+    # Test FailedCommand exception
+    client.async_send_command.side_effect = FailedCommand("test", "test")
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/get_raw_config_parameter",
+            DEVICE_ID: device.id,
+            PROPERTY: 102,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "test"
+    assert msg["error"]["message"] == "Command failed: test"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 4,
             TYPE: "zwave_js/get_raw_config_parameter",
             DEVICE_ID: device.id,
             PROPERTY: 102,
