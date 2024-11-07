@@ -1,4 +1,4 @@
-"""Base class for acaia entities."""
+"""Base class for Acaia entities."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -17,7 +17,7 @@ from .coordinator import AcaiaCoordinator
 
 @dataclass(kw_only=True, frozen=True)
 class AcaiaEntityDescription(EntityDescription):
-    """Description for acaia entities."""
+    """Description for Acaia entities."""
 
     available_fn: Callable[[AcaiaScale], bool] = lambda scale: scale.connected
 

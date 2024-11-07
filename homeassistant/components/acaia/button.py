@@ -1,4 +1,4 @@
-"""Button entities for acaia scales."""
+"""Button entities for Acaia scales."""
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -18,24 +18,24 @@ from .entity import AcaiaEntity, AcaiaEntityDescription
 class AcaiaButtonEntityDescription(AcaiaEntityDescription, ButtonEntityDescription):
     """Description for acaia button entities."""
 
-    async_press_fn: Callable[[AcaiaScale], Coroutine[Any, Any, None]]
+    press_fn: Callable[[AcaiaScale], Coroutine[Any, Any, None]]
 
 
 BUTTONS: tuple[AcaiaButtonEntityDescription, ...] = (
     AcaiaButtonEntityDescription(
         key="tare",
         translation_key="tare",
-        async_press_fn=lambda scale: scale.tare(),
+        press_fn=lambda scale: scale.tare(),
     ),
     AcaiaButtonEntityDescription(
         key="reset_timer",
         translation_key="reset_timer",
-        async_press_fn=lambda scale: scale.reset_timer(),
+        press_fn=lambda scale: scale.reset_timer(),
     ),
     AcaiaButtonEntityDescription(
         key="start_stop",
         translation_key="start_stop",
-        async_press_fn=lambda scale: scale.start_stop_timer(),
+        press_fn=lambda scale: scale.start_stop_timer(),
     ),
 )
 
@@ -48,9 +48,7 @@ async def async_setup_entry(
     """Set up button entities and services."""
 
     coordinator = entry.runtime_data
-    async_add_entities(
-        AcaiaButton(coordinator, description) for description in BUTTONS
-    )
+    async_add_entities(AcaiaButton(coordinator, description) for description in BUTTONS)
 
 
 class AcaiaButton(AcaiaEntity, ButtonEntity):
@@ -60,4 +58,4 @@ class AcaiaButton(AcaiaEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.async_press_fn(self._scale)
+        await self.entity_description.press_fn(self._scale)

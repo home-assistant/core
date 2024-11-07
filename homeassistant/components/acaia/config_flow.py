@@ -1,4 +1,4 @@
-"""Config flow for acaia integration."""
+"""Config flow for Acaia integration."""
 
 from typing import Any
 

@@ -76,17 +76,20 @@ async def test_bluetooth_discovery(
         CONF_IS_NEW_STYLE_SCALE: False,
     }
 
+
 async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure we can't add the same device twice."""
 
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -98,4 +101,3 @@ async def test_already_configured(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-

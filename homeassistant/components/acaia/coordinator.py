@@ -1,4 +1,4 @@
-"""Coordinator for acaia integration."""
+"""Coordinator for Acaia integration."""
 
 from __future__ import annotations
 
