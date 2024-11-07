@@ -632,15 +632,18 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
 
         if result["type"] is FlowResultType.FORM:
             if step_id := result.get("step_id"):
-                await _ensure_translation_exists(
-                    flow.hass,
-                    _ignore_translations,
-                    category,
-                    component,
-                    f"step.{step_id}.title",
-                    result["description_placeholders"],
-                    translation_required=False,
-                )
+                for header in ("title", "description"):
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"step.{step_id}.{header}",
+                        result["description_placeholders"],
+                        # title is not compulsory
+                        # description is optional
+                        translation_required=False,
+                    )
             if errors := result.get("errors"):
                 for error in errors.values():
                     await _ensure_translation_exists(
