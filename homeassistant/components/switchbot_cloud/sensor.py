@@ -9,7 +9,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,6 +25,7 @@ from .entity import SwitchBotCloudEntity
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_BATTERY = "battery"
+SENSOR_TYPE_CO2 = "CO2"
 
 METER_PLUS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -40,6 +45,12 @@ METER_PLUS_SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CO2,
     ),
 )
 
