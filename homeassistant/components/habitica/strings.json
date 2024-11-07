@@ -38,6 +38,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "pending_quest": {
+        "name": "Pending quest invitation"
+      }
+    },
     "button": {
       "run_cron": {
         "name": "Start my day"
@@ -204,10 +209,10 @@
       "message": "Unable to create new to-do `{name}` for Habitica, please try again"
     },
     "setup_rate_limit_exception": {
-      "message": "Currently rate limited, try again later"
+      "message": "Rate limit exceeded, try again later"
     },
     "service_call_unallowed": {
-      "message": "Unable to carry out this action, because the required conditions are not met"
+      "message": "Unable to complete action, the required conditions are not met"
     },
     "service_call_exception": {
       "message": "Unable to connect to Habitica, try again later"

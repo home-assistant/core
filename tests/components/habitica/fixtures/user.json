@@ -52,6 +52,12 @@
       ],
       "habits": ["1d147de6-5c02-4740-8e2f-71d3015a37f4"]
     },
+    "party": {
+      "quest": {
+        "RSVPNeeded": true,
+        "key": "dustbunnies"
+      }
+    },
     "needsCron": true,
     "lastCron": "2024-09-21T22:01:55.586Z"
   }

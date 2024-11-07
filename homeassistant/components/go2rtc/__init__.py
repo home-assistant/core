@@ -38,7 +38,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
 
-from .const import CONF_DEBUG_UI, DEBUG_UI_URL_MESSAGE, DEFAULT_URL, DOMAIN
+from .const import CONF_DEBUG_UI, DEBUG_UI_URL_MESSAGE, DOMAIN, HA_MANAGED_URL
 from .server import Server
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-        url = DEFAULT_URL
+        url = HA_MANAGED_URL
 
     hass.data[_DATA_GO2RTC] = url
     discovery_flow.async_create_flow(
@@ -222,7 +222,10 @@ class WebRTCProvider(CameraWebRTCProvider):
         if (stream := streams.get(camera.entity_id)) is None or not any(
             stream_source == producer.url for producer in stream.producers
         ):
-            await self._rest_client.streams.add(camera.entity_id, stream_source)
+            await self._rest_client.streams.add(
+                camera.entity_id,
+                [stream_source, f"ffmpeg:{camera.entity_id}#audio=opus"],
+            )
 
         @callback
         def on_messages(message: ReceiveMessages) -> None:

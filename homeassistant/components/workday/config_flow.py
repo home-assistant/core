@@ -320,7 +320,7 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            combined_input: dict[str, Any] = {**self.options, **user_input}
+            combined_input: dict[str, Any] = {**self.config_entry.options, **user_input}
             if CONF_PROVINCE not in user_input:
                 # Province not present, delete old value (if present) too
                 combined_input.pop(CONF_PROVINCE, None)
@@ -357,23 +357,22 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
                 else:
                     return self.async_create_entry(data=combined_input)
 
+        options = self.config_entry.options
         schema: vol.Schema = await self.hass.async_add_executor_job(
             add_province_and_language_to_schema,
             DATA_SCHEMA_OPT,
-            self.options.get(CONF_COUNTRY),
+            options.get(CONF_COUNTRY),
         )
 
-        new_schema = self.add_suggested_values_to_schema(
-            schema, user_input or self.options
-        )
+        new_schema = self.add_suggested_values_to_schema(schema, user_input or options)
         LOGGER.debug("Errors have occurred in options %s", errors)
         return self.async_show_form(
             step_id="init",
             data_schema=new_schema,
             errors=errors,
             description_placeholders={
-                "name": self.options[CONF_NAME],
-                "country": self.options.get(CONF_COUNTRY),
+                "name": options[CONF_NAME],
+                "country": options.get(CONF_COUNTRY),
             },
         )
 
