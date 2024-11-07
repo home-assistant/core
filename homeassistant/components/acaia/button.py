@@ -49,7 +49,7 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     async_add_entities(
-        [AcaiaButton(coordinator, description) for description in BUTTONS]
+        AcaiaButton(coordinator, description) for description in BUTTONS
     )
 
 
