@@ -1109,11 +1109,12 @@ async def websocket_get_snapshot(
         entity_id = msg["entity_id"]
         camera = get_camera_from_entity_id(hass, entity_id)
 
-        image: bytes | None = (
-            await _async_get_stream_image(camera, wait_for_next_keyframe=True)
-            if camera.use_stream_for_stills
-            else await camera.async_camera_image()
-        )
+        async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
+            image: bytes | None = (
+                await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+                if camera.use_stream_for_stills
+                else await camera.async_camera_image()
+            )
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting snapshot: %s", ex)
         connection.send_error(msg["id"], "snapshot_failed", str(ex))
