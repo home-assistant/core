@@ -47,17 +47,13 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
     for tibber_home in tibber_connection.get_homes(only_active=True):
         home_nickname = tibber_home.name
 
-        price_info = tibber_home.info["viewer"]["home"]["currentSubscription"][
-            "priceInfo"
-        ]
         price_data = [
             {
-                "start_time": price["startsAt"],
-                "price": price["total"],
-                "level": price["level"],
+                "start_time": starts_at,
+                "price": price,
+                "level": tibber_home.price_level.get(starts_at),
             }
-            for key in ("today", "tomorrow")
-            for price in price_info[key]
+            for starts_at, price in tibber_home.price_total.items()
         ]
 
         selected_data = [

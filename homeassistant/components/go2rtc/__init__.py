@@ -222,7 +222,10 @@ class WebRTCProvider(CameraWebRTCProvider):
         if (stream := streams.get(camera.entity_id)) is None or not any(
             stream_source == producer.url for producer in stream.producers
         ):
-            await self._rest_client.streams.add(camera.entity_id, stream_source)
+            await self._rest_client.streams.add(
+                camera.entity_id,
+                [stream_source, f"ffmpeg:{camera.entity_id}#audio=opus"],
+            )
 
         @callback
         def on_messages(message: ReceiveMessages) -> None:
