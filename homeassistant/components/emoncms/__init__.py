@@ -25,12 +25,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> b
         session=async_get_clientsession(hass),
     )
     emoncms_unique_id = await emoncms_client.async_get_uuid()
-    message = f"uuid for entry {entry.entry_id} is {entry.unique_id}"
-    LOGGER.debug(message)
-    ent_reg = er.async_get(hass)
-    entry_entities = ent_reg.entities.get_entries_for_config_entry_id(entry.entry_id)
     if emoncms_unique_id:
         if entry.unique_id != emoncms_unique_id:
+            ent_reg = er.async_get(hass)
+            entry_entities = ent_reg.entities.get_entries_for_config_entry_id(
+                entry.entry_id
+            )
             for entity in entry_entities:
                 if entity.unique_id.split("-")[0] == entry.entry_id:
                     feed_id = entity.unique_id.split("-")[-1]

@@ -38,7 +38,6 @@ from .const import (
     FEED_ID,
     FEED_NAME,
     FEED_TAG,
-    LOGGER,
 )
 from .coordinator import EmoncmsCoordinator
 
@@ -149,10 +148,8 @@ async def async_setup_entry(
         return
 
     coordinator = entry.runtime_data
+    # uuid was added in emoncms database 11.5.7
     unique_id = entry.unique_id if entry.unique_id else entry.entry_id
-    LOGGER.debug(
-        f"uuid which will be used for entities in sensor.async_setup_entry is {unique_id}"
-    )
     elems = coordinator.data
     if not elems:
         return

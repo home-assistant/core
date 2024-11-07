@@ -48,13 +48,19 @@ def sensor_name(url: str) -> str:
     return f"emoncms@{sensorip}"
 
 
-async def get_feed_list(hass: HomeAssistant, url: str, api_key: str) -> dict[str, Any]:
+async def get_feed_list(
+    hass: HomeAssistant,
+    url: str,
+    api_key: str,
+    emoncms_client: EmoncmsClient | None = None,
+) -> dict[str, Any]:
     """Check connection to emoncms and return feed list if successful."""
-    emoncms_client = EmoncmsClient(
-        url,
-        api_key,
-        session=async_get_clientsession(hass),
-    )
+    if not emoncms_client:
+        emoncms_client = EmoncmsClient(
+            url,
+            api_key,
+            session=async_get_clientsession(hass),
+        )
     return await emoncms_client.async_request("/feed/list.json")
 
 
@@ -82,25 +88,25 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
 
         if user_input is not None:
+            self.url = user_input[CONF_URL]
+            self.api_key = user_input[CONF_API_KEY]
             self._async_abort_entries_match(
                 {
-                    CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_URL: user_input[CONF_URL],
+                    CONF_API_KEY: self.api_key,
+                    CONF_URL: self.url,
                 }
             )
+            emoncms_client = EmoncmsClient(
+                self.url, self.api_key, session=async_get_clientsession(self.hass)
+            )
             result = await get_feed_list(
-                self.hass, user_input[CONF_URL], user_input[CONF_API_KEY]
+                self.hass, self.url, self.api_key, emoncms_client=emoncms_client
             )
             if not result[CONF_SUCCESS]:
                 errors["base"] = "api_error"
                 description_placeholders = {"details": result[CONF_MESSAGE]}
             else:
                 self.include_only_feeds = user_input.get(CONF_ONLY_INCLUDE_FEEDID)
-                self.url = user_input[CONF_URL]
-                self.api_key = user_input[CONF_API_KEY]
-                emoncms_client = EmoncmsClient(
-                    self.url, self.api_key, session=async_get_clientsession(self.hass)
-                )
                 await self.async_set_unique_id(await emoncms_client.async_get_uuid())
                 self._abort_if_unique_id_configured()
                 options = get_options(result[CONF_MESSAGE])
