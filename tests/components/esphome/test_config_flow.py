@@ -1405,7 +1405,7 @@ async def test_discovery_mqtt_empty_payload(
     hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery aborted if MQTT payload is empty."""
-    await mqtt_discovery_test_abort(hass, "", "unknown")
+    await mqtt_discovery_test_abort(hass, "", "mqtt_missing_payload")
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
