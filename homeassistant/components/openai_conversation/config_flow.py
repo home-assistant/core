@@ -115,7 +115,6 @@ class OpenAIOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )

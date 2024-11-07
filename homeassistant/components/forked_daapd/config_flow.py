@@ -52,10 +52,6 @@ TEST_CONNECTION_ERROR_DICT = {
 class ForkedDaapdOptionsFlowHandler(OptionsFlow):
     """Handle a forked-daapd options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -122,7 +118,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> ForkedDaapdOptionsFlowHandler:
         """Return options flow handler."""
-        return ForkedDaapdOptionsFlowHandler(config_entry)
+        return ForkedDaapdOptionsFlowHandler()
 
     async def validate_input(self, user_input):
         """Validate the user input."""

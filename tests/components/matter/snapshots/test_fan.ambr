@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fans[air_purifier][fan.air_purifier_fan-entry]
+# name: test_fans[air_purifier][fan.air_purifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.air_purifier_fan',
+    'entity_id': 'fan.air_purifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -32,20 +32,20 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': <FanEntityFeature: 63>,
-    'translation_key': 'fan',
+    'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[air_purifier][fan.air_purifier_fan-state]
+# name: test_fans[air_purifier][fan.air_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'direction': 'forward',
-      'friendly_name': 'Air Purifier Fan',
+      'friendly_name': 'Air Purifier',
       'oscillating': False,
       'percentage': None,
       'percentage_step': 10.0,
@@ -61,14 +61,14 @@
       'supported_features': <FanEntityFeature: 63>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.air_purifier_fan',
+    'entity_id': 'fan.air_purifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_fans[fan][fan.mocked_fan_switch_fan-entry]
+# name: test_fans[fan][fan.mocked_fan_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -89,7 +89,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.mocked_fan_switch_fan',
+    'entity_id': 'fan.mocked_fan_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -101,19 +101,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': <FanEntityFeature: 57>,
-    'translation_key': 'fan',
+    'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[fan][fan.mocked_fan_switch_fan-state]
+# name: test_fans[fan][fan.mocked_fan_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mocked Fan Switch Fan',
+      'friendly_name': 'Mocked Fan Switch',
       'percentage': 0,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
@@ -128,14 +128,14 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.mocked_fan_switch_fan',
+    'entity_id': 'fan.mocked_fan_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_fans[room_airconditioner][fan.room_airconditioner_fan-entry]
+# name: test_fans[room_airconditioner][fan.room_airconditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -155,7 +155,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.room_airconditioner_fan',
+    'entity_id': 'fan.room_airconditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -167,19 +167,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': <FanEntityFeature: 57>,
-    'translation_key': 'fan',
+    'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[room_airconditioner][fan.room_airconditioner_fan-state]
+# name: test_fans[room_airconditioner][fan.room_airconditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Room AirConditioner Fan',
+      'friendly_name': 'Room AirConditioner',
       'percentage': 0,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
@@ -193,14 +193,14 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.room_airconditioner_fan',
+    'entity_id': 'fan.room_airconditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_fans[thermostat][fan.longan_link_hvac_fan-entry]
+# name: test_fans[thermostat][fan.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -219,7 +219,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.longan_link_hvac_fan',
+    'entity_id': 'fan.longan_link_hvac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -231,19 +231,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': <FanEntityFeature: 56>,
-    'translation_key': 'fan',
+    'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterFan-514-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[thermostat][fan.longan_link_hvac_fan-state]
+# name: test_fans[thermostat][fan.longan_link_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC Fan',
+      'friendly_name': 'Longan link HVAC',
       'preset_mode': None,
       'preset_modes': list([
         'low',
@@ -254,7 +254,7 @@
       'supported_features': <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.longan_link_hvac_fan',
+    'entity_id': 'fan.longan_link_hvac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

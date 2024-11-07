@@ -444,7 +444,12 @@
         "completedBy": {},
         "assignedUsers": []
       },
-      "reminders": [],
+      "reminders": [
+        {
+          "id": "91c09432-10ac-4a49-bd20-823081ec29ed",
+          "time": "2024-09-22T02:00:00.0000Z"
+        }
+      ],
       "byHabitica": false,
       "createdAt": "2024-09-21T22:17:19.513Z",
       "updatedAt": "2024-09-21T22:19:35.576Z",
@@ -477,7 +482,7 @@
     },
     {
       "_id": "86ea2475-d1b5-4020-bdcc-c188c7996afa",
-      "date": "2024-09-26T22:15:00.000Z",
+      "date": "2024-09-21T22:00:00.000Z",
       "completed": false,
       "collapseChecklist": false,
       "checklist": [],
