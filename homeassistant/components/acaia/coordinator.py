@@ -23,7 +23,7 @@ type AcaiaConfigEntry = ConfigEntry[AcaiaCoordinator]
 
 
 class AcaiaCoordinator(DataUpdateCoordinator[None]):
-    """Class to handle fetching data from the La Marzocco API centrally."""
+    """Class to handle fetching data from the scale."""
 
     config_entry: AcaiaConfigEntry
 

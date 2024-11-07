@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The MAC address does not match the one in the configuration"
     },
     "step": {
       "user": {

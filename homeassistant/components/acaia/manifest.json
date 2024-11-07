@@ -12,9 +12,8 @@
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
-  "documentation": "https://github.com/zweckj/acaia",
+  "documentation": "https://www.home-assistant.io/integrations/acaia",
   "iot_class": "assumed_state",
-  "issue_tracker": "https://github.com/zweckj/acaia/issues",
   "loggers": ["pyacaia_async"],
-  "requirements": ["pyacaia_async==0.0.12b4"]
+  "requirements": ["pyacaia_async==0.1.0"]
 }
