@@ -5053,7 +5053,7 @@ async def test_options_flow_with_config_entry_core() -> None:
         options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
     )
 
-    with pytest.raises(RuntimeError, match="OptionsFlowWithConfigEntry cannot be used"):
+    with pytest.raises(RuntimeError, match="inherits from OptionsFlowWithConfigEntry"):
         _ = config_entries.OptionsFlowWithConfigEntry(entry)
 
 
