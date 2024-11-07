@@ -152,9 +152,9 @@ def report(
     custom_integration_behavior = core_integration_behavior
 
     if log_custom_component_only:
-        if core_behavior == ReportBehavior.LOG:
+        if core_behavior is ReportBehavior.LOG:
             core_behavior = ReportBehavior.IGNORE
-        if core_integration_behavior == ReportBehavior.LOG:
+        if core_integration_behavior is ReportBehavior.LOG:
             core_integration_behavior = ReportBehavior.IGNORE
 
     report_usage(
@@ -197,9 +197,9 @@ def report_usage(
         )
     except MissingIntegrationFrame as err:
         msg = f"Detected code that {what}. Please report this issue."
-        if core_behavior == ReportBehavior.ERROR:
+        if core_behavior is ReportBehavior.ERROR:
             raise RuntimeError(msg) from err
-        if core_behavior == ReportBehavior.LOG:
+        if core_behavior is ReportBehavior.LOG:
             _LOGGER.warning(msg, stack_info=True)
         return
 
@@ -207,7 +207,7 @@ def report_usage(
     if integration_frame.custom_integration:
         integration_behavior = custom_integration_behavior
 
-    if integration_behavior != ReportBehavior.IGNORE:
+    if integration_behavior is not ReportBehavior.IGNORE:
         _report_integration(
             what, integration_frame, level, integration_behavior == ReportBehavior.ERROR
         )
