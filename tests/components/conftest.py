@@ -517,7 +517,7 @@ def _validate_translation_placeholders(
     translation: str,
     description_placeholders: dict[str, str] | None,
 ) -> str | None:
-    """Raise if translation exist with missing placeholders."""
+    """Raise if translation exists with missing placeholders."""
     tuples = list(string.Formatter().parse(translation))
     for _, placeholder, _, _ in tuples:
         if placeholder is None:
