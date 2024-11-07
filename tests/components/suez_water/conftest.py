@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.suez_water.const import DOMAIN
-from homeassistant.components.suez_water.coordinator import AggregatedData
+from homeassistant.components.suez_water.coordinator import AggregatedData, PriceResult
 
 from tests.common import MockConfigEntry
 
@@ -38,7 +38,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="suez_client")
-def mock_suez_data() -> Generator[AsyncMock]:
+def mock_suez_client() -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
     with (
         patch(
@@ -75,4 +75,5 @@ def mock_suez_data() -> Generator[AsyncMock]:
         )
 
         suez_client.fetch_aggregated_data.return_value = result
+        suez_client.get_price.return_value = PriceResult("4.74")
         yield suez_client

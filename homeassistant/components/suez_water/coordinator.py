@@ -1,6 +1,8 @@
 """Suez water update coordinator."""
 
-from pysuez import AggregatedData, PySuezError, SuezClient
+from dataclasses import dataclass
+
+from pysuez import AggregatedData, PriceResult, PySuezError, SuezClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -11,7 +13,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
 
-class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedData]):
+@dataclass
+class SuezWaterData:
+    """Class used to hold all fetch data from suez api."""
+
+    aggregated: AggregatedData
+    price: PriceResult
+
+
+class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
     """Suez water coordinator."""
 
     _suez_client: SuezClient
@@ -37,10 +47,13 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedData]):
         if not await self._suez_client.check_credentials():
             raise ConfigEntryError("Invalid credentials for suez water")
 
-    async def _async_update_data(self) -> AggregatedData:
+    async def _async_update_data(self) -> SuezWaterData:
         """Fetch data from API endpoint."""
         try:
-            data = await self._suez_client.fetch_aggregated_data()
+            data = SuezWaterData(
+                aggregated=await self._suez_client.fetch_aggregated_data(),
+                price=await self._suez_client.get_price(),
+            )
         except PySuezError as err:
             _LOGGER.exception(err)
             raise UpdateFailed(
