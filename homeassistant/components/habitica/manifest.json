@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/habitica",
   "iot_class": "cloud_polling",
   "loggers": ["habitipy", "plumbum"],
-  "requirements": ["habitipy==0.3.1"]
+  "requirements": ["habitipy==0.3.3"]
 }

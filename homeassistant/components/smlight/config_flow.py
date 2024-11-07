@@ -15,7 +15,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from . import SmConfigEntry
 from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -39,7 +38,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.client: Api2
         self.host: str | None = None
-        self._reauth_entry: SmConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -140,9 +138,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth when API Authentication failed."""
 
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         host = entry_data[CONF_HOST]
         self.client = Api2(host, session=async_get_clientsession(self.hass))
         self.host = host
@@ -164,11 +159,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             except SmlightConnectionError:
                 return self.async_abort(reason="cannot_connect")
             else:
-                assert self._reauth_entry is not None
-
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
-                    data={**self._reauth_entry.data, **user_input},
+                    self._get_reauth_entry(), data_updates=user_input
                 )
 
         return self.async_show_form(

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -479,16 +479,6 @@ STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
 STATE_STANDBY: Final = "standby"
-STATE_ALARM_DISARMED: Final = "disarmed"
-STATE_ALARM_ARMED_HOME: Final = "armed_home"
-STATE_ALARM_ARMED_AWAY: Final = "armed_away"
-STATE_ALARM_ARMED_NIGHT: Final = "armed_night"
-STATE_ALARM_ARMED_VACATION: Final = "armed_vacation"
-STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = "armed_custom_bypass"
-STATE_ALARM_PENDING: Final = "pending"
-STATE_ALARM_ARMING: Final = "arming"
-STATE_ALARM_DISARMING: Final = "disarming"
-STATE_ALARM_TRIGGERED: Final = "triggered"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
@@ -520,6 +510,60 @@ _DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
     "jammed",
     "LockState.JAMMED",
     "2025.10",
+)
+
+# #### ALARM CONTROL PANEL STATES ####
+# STATE_ALARM_* below are deprecated as of 2024.11
+# use the AlarmControlPanelState enum instead.
+_DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
+    "disarmed",
+    "AlarmControlPanelState.DISARMED",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_HOME: Final = DeprecatedConstant(
+    "armed_home",
+    "AlarmControlPanelState.ARMED_HOME",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_AWAY: Final = DeprecatedConstant(
+    "armed_away",
+    "AlarmControlPanelState.ARMED_AWAY",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_NIGHT: Final = DeprecatedConstant(
+    "armed_night",
+    "AlarmControlPanelState.ARMED_NIGHT",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_VACATION: Final = DeprecatedConstant(
+    "armed_vacation",
+    "AlarmControlPanelState.ARMED_VACATION",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = DeprecatedConstant(
+    "armed_custom_bypass",
+    "AlarmControlPanelState.ARMED_CUSTOM_BYPASS",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_PENDING: Final = DeprecatedConstant(
+    "pending",
+    "AlarmControlPanelState.PENDING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_ARMING: Final = DeprecatedConstant(
+    "arming",
+    "AlarmControlPanelState.ARMING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_DISARMING: Final = DeprecatedConstant(
+    "disarming",
+    "AlarmControlPanelState.DISARMING",
+    "2025.11",
+)
+_DEPRECATED_STATE_ALARM_TRIGGERED: Final = DeprecatedConstant(
+    "triggered",
+    "AlarmControlPanelState.TRIGGERED",
+    "2025.11",
 )
 
 # #### STATE AND EVENT ATTRIBUTES ####
@@ -1182,9 +1226,9 @@ class UnitOfConductivity(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "SIEMENS": ("SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("MILLISIEMENS_PER_CM", "2025.11.0"),
+        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
+        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
+        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
     },
 ):
     """Conductivity units."""

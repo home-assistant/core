@@ -526,6 +526,10 @@ async def test_config_flow_thread_flasher_uninstall_fails(hass: HomeAssistant) -
         assert result["step_id"] == "confirm_otbr"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test_firmware_domain.options.abort.zha_still_using_stick"],
+)
 async def test_options_flow_zigbee_to_thread_zha_configured(
     hass: HomeAssistant,
 ) -> None:
@@ -563,6 +567,10 @@ async def test_options_flow_zigbee_to_thread_zha_configured(
     assert result["reason"] == "zha_still_using_stick"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test_firmware_domain.options.abort.otbr_still_using_stick"],
+)
 async def test_options_flow_thread_to_zigbee_otbr_configured(
     hass: HomeAssistant,
 ) -> None:

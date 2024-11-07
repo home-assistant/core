@@ -121,6 +121,13 @@ def backup(make_backup):
     return make_backup()
 
 
+@pytest.fixture(autouse=True)
+def mock_supervisor_client(
+    supervisor_client: AsyncMock, addon_store_info: AsyncMock
+) -> None:
+    """Mock supervisor client."""
+
+
 def mock_detect_radio_type(
     radio_type: RadioType = RadioType.ezsp,
     ret: ProbeResult = ProbeResult.RADIO_TYPE_DETECTED,
@@ -772,6 +779,7 @@ async def test_user_flow_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "choose_serial_port"
 
 
+@pytest.mark.usefixtures("addon_not_installed")
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[]))
 async def test_user_flow_show_manual(hass: HomeAssistant) -> None:
     """Test user flow manual entry when no comport detected."""

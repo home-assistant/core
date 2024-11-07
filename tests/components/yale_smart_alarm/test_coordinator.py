@@ -13,9 +13,10 @@ from yalesmartalarmclient import (
     YaleSmartAlarmData,
 )
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -74,7 +75,7 @@ async def test_coordinator_setup_and_update_errors(
     client = load_config_entry[1]
 
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
     client.reset_mock()
 
     client.get_information.side_effect = ConnectionError("Could not connect")
@@ -116,7 +117,7 @@ async def test_coordinator_setup_and_update_errors(
     await hass.async_block_till_done(wait_background_tasks=True)
     client.get_information.assert_called_once()
     state = hass.states.get("alarm_control_panel.yale_smart_alarm")
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
     client.reset_mock()
 
     client.get_information.side_effect = AuthenticationError("Can not authenticate")

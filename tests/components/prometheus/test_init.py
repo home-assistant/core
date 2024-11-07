@@ -31,6 +31,7 @@ from homeassistant.components import (
     switch,
     update,
 )
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -64,8 +65,6 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
     PERCENTAGE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
@@ -75,6 +74,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfEnergy,
     UnitOfTemperature,
 )
@@ -643,7 +643,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Text Unit",
         entity="sensor.text_unit",
-    ).withValue(0.0).assert_in_metrics(body)
+    ).assert_not_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -716,6 +716,13 @@ async def test_input_number(
         friendly_name="Target temperature",
         entity="input_number.target_temperature",
     ).withValue(22.7).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="input_number_state_celsius",
+        domain="input_number",
+        friendly_name="Converted temperature",
+        entity="input_number.converted_temperature",
+    ).withValue(100).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -1660,13 +1667,15 @@ async def test_disabling_entity(
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_entity_becomes_unavailable_with_export(
+@pytest.mark.parametrize("unavailable_state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
+async def test_entity_becomes_unavailable(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     client: ClientSessionGenerator,
     sensor_entities: dict[str, er.RegistryEntry],
+    unavailable_state: str,
 ) -> None:
-    """Test an entity that becomes unavailable is still exported."""
+    """Test an entity that becomes unavailable/unknown is no longer exported."""
     data = {**sensor_entities}
 
     await hass.async_block_till_done()
@@ -1694,6 +1703,20 @@ async def test_entity_becomes_unavailable_with_export(
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
+        metric_name="last_updated_time_seconds",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(12.0).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="sensor_humidity_percent",
         domain="sensor",
         friendly_name="Outside Humidity",
@@ -1714,21 +1737,28 @@ async def test_entity_becomes_unavailable_with_export(
         entity="sensor.outside_humidity",
     ).withValue(1).assert_in_metrics(body)
 
-    # Make sensor_1 unavailable.
+    # Make sensor_1 unavailable/unknown.
     set_state_with_entry(
-        hass, data["sensor_1"], STATE_UNAVAILABLE, data["sensor_1_attributes"]
+        hass, data["sensor_1"], unavailable_state, data["sensor_1_attributes"]
     )
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    # Check that only the availability changed on sensor_1.
+    # Check that the availability changed on sensor_1 and the metric with the value is gone.
     EntityMetric(
         metric_name="sensor_temperature_celsius",
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
-    ).withValue(15.6).assert_in_metrics(body)
+    ).assert_not_in_metrics(body)
+
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_not_in_metrics(body)
 
     EntityMetric(
         metric_name="state_change_total",
@@ -1743,6 +1773,13 @@ async def test_entity_becomes_unavailable_with_export(
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
     ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="last_updated_time_seconds",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_in_metrics(body)
 
     # The other sensor should be unchanged.
     EntityMetric(
@@ -1766,8 +1803,8 @@ async def test_entity_becomes_unavailable_with_export(
         entity="sensor.outside_humidity",
     ).withValue(1).assert_in_metrics(body)
 
-    # Bring sensor_1 back and check that it is correct.
-    set_state_with_entry(hass, data["sensor_1"], 200.0, data["sensor_1_attributes"])
+    # Bring sensor_1 back and check that it returned.
+    set_state_with_entry(hass, data["sensor_1"], 201.0, data["sensor_1_attributes"])
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -1777,7 +1814,14 @@ async def test_entity_becomes_unavailable_with_export(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
-    ).withValue(200.0).assert_in_metrics(body)
+    ).withValue(201.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(12.0).assert_in_metrics(body)
 
     EntityMetric(
         metric_name="state_change_total",
@@ -2208,6 +2252,17 @@ async def input_number_fixture(
     set_state_with_entry(hass, input_number_3, 22.7)
     data["input_number_3"] = input_number_3
 
+    input_number_4 = entity_registry.async_get_or_create(
+        domain=input_number.DOMAIN,
+        platform="test",
+        unique_id="input_number_4",
+        suggested_object_id="converted_temperature",
+        original_name="Converted temperature",
+        unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+    )
+    set_state_with_entry(hass, input_number_4, 212)
+    data["input_number_4"] = input_number_4
+
     await hass.async_block_till_done()
     return data
 
@@ -2466,7 +2521,7 @@ async def alarm_control_panel_fixture(
         suggested_object_id="alarm_control_panel_1",
         original_name="Alarm Control Panel 1",
     )
-    set_state_with_entry(hass, alarm_control_panel_1, STATE_ALARM_ARMED_AWAY)
+    set_state_with_entry(hass, alarm_control_panel_1, AlarmControlPanelState.ARMED_AWAY)
     data["alarm_control_panel_1"] = alarm_control_panel_1
 
     alarm_control_panel_2 = entity_registry.async_get_or_create(
@@ -2476,7 +2531,7 @@ async def alarm_control_panel_fixture(
         suggested_object_id="alarm_control_panel_2",
         original_name="Alarm Control Panel 2",
     )
-    set_state_with_entry(hass, alarm_control_panel_2, STATE_ALARM_ARMED_HOME)
+    set_state_with_entry(hass, alarm_control_panel_2, AlarmControlPanelState.ARMED_HOME)
     data["alarm_control_panel_2"] = alarm_control_panel_2
 
     await hass.async_block_till_done()
