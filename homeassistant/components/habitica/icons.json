@@ -58,6 +58,14 @@
         "default": "mdi:hand-heart-outline"
       }
     },
+    "calendar": {
+      "todos": {
+        "default": "mdi:calendar-check"
+      },
+      "dailys": {
+        "default": "mdi:calendar-multiple"
+      }
+    },
     "sensor": {
       "display_name": {
         "default": "mdi:account-circle"
@@ -125,6 +133,14 @@
         "default": "mdi:sleep-off",
         "state": {
           "on": "mdi:sleep"
+        }
+      }
+    },
+    "binary_sensor": {
+      "pending_quest": {
+        "default": "mdi:script-outline",
+        "state": {
+          "on": "mdi:script-text-outline"
         }
       }
     }

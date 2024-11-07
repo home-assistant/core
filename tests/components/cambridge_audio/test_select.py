@@ -51,3 +51,14 @@ async def test_setting_value(
         blocking=True,
     )
     mock_stream_magic_client.set_display_brightness.assert_called_once_with("dim")
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.cambridge_audio_cxnv2_audio_output",
+            ATTR_OPTION: "Speaker A",
+        },
+        blocking=True,
+    )
+    mock_stream_magic_client.set_audio_output.assert_called_once_with("speaker_a")

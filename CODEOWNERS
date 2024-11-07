@@ -496,8 +496,8 @@ build.json @home-assistant/supervisor
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
 /tests/components/freedompro/ @stefano055415
-/homeassistant/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
-/tests/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
+/homeassistant/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
+/tests/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
 /homeassistant/components/fritzbox/ @mib1185 @flabbamann
 /tests/components/fritzbox/ @mib1185 @flabbamann
 /homeassistant/components/fritzbox_callmonitor/ @cdce8p
@@ -954,6 +954,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
+/homeassistant/components/music_assistant/ @music-assistant
+/tests/components/music_assistant/ @music-assistant
 /homeassistant/components/mutesync/ @currentoor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core

@@ -93,6 +93,24 @@
       }
     },
     {
+      "address": [0, 7, false],
+      "name": "Switch_Regulator1",
+      "resource": "r1varsetpoint",
+      "domain": "switch",
+      "domain_data": {
+        "output": "R1VARSETPOINT"
+      }
+    },
+    {
+      "address": [0, 7, false],
+      "name": "Switch_KeyLock1",
+      "resource": "a1",
+      "domain": "switch",
+      "domain_data": {
+        "output": "A1"
+      }
+    },
+    {
       "address": [0, 5, true],
       "name": "Switch_Group5",
       "resource": "relay1",

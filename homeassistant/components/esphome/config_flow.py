@@ -21,7 +21,6 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -32,6 +31,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.util.json import json_loads_object
 
@@ -482,15 +482,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for esphome."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
