@@ -1772,10 +1772,30 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock]:
-    """Mock as if we're calling code from inside an integration."""
+def integration_frame_path() -> str:
+    """Return the path to the integration frame.
+
+    Can be parametrized with
+    `@pytest.mark.parametrize("integration_frame_path", ["path_to_frame"])`
+
+    - "custom_components/XYZ" for a custom integration
+    - "homeassistant/components/XYZ" for a core integration
+    - "homeassistant/XYZ" for core (no integration)
+
+    Defaults to core component `hue`
+    """
+    return "homeassistant/components/hue"
+
+
+@pytest.fixture
+def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
+    """Mock where we are calling code from.
+
+    Defaults to calling from `hue` core integration, and can be parametrized
+    with `integration_frame_path`.
+    """
     correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
+        filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )
