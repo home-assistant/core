@@ -1357,7 +1357,7 @@ class UnitOfBloodGlucoseConcentration(StrEnum):
     """Blood glucose concentration units."""
 
     MILLIGRAMS_PER_DECILITER = "mg/dL"
-    MILLIMOLS_PER_LITER = "mmol/L"
+    MILLIMOLE_PER_LITER = "mmol/L"
 
 
 # Speed units

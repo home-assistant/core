@@ -85,7 +85,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
     BloodGlugoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
-        UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         18,
     ),
     ConductivityConverter: (
@@ -143,11 +143,11 @@ _CONVERTED_VALUE: dict[
             90,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
             5,
-            UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         ),
         (
             1,
-            UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
             18,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         ),

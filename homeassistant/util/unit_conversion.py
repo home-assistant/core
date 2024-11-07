@@ -180,7 +180,7 @@ class BloodGlugoseConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "blood_glucose_concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
-        UnitOfBloodGlucoseConcentration.MILLIMOLS_PER_LITER: 1,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER: 1,
     }
     VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
 
