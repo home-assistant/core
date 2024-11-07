@@ -151,8 +151,11 @@ def report(
     )
     custom_integration_behavior = core_integration_behavior
 
-    if log_custom_component_only and not error_if_integration:
-        core_integration_behavior = ReportBehavior.IGNORE
+    if log_custom_component_only:
+        if core_behavior == ReportBehavior.LOG:
+            core_behavior = ReportBehavior.IGNORE
+        if core_integration_behavior == ReportBehavior.LOG:
+            core_integration_behavior = ReportBehavior.IGNORE
 
     report_usage(
         what,
@@ -196,7 +199,7 @@ def report_usage(
         msg = f"Detected code that {what}. Please report this issue."
         if core_behavior == ReportBehavior.ERROR:
             raise RuntimeError(msg) from err
-        if core_integration_behavior != ReportBehavior.IGNORE:
+        if core_behavior == ReportBehavior.LOG:
             _LOGGER.warning(msg, stack_info=True)
         return
 
