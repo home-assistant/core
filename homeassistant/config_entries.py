@@ -2437,6 +2437,17 @@ class ConfigEntries:
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
             for unique_id, entries in unique_ids.items():
+                # We might mutate the list of entries, so we need a copy to not mess up
+                # the index
+                entries = list(entries)
+
+                # There's no need to raise an issue for ignored entries, we can
+                # safely remove them once we no longer allow unique id collisions.
+                # Iterate over a copy of the copy to allow mutating while iterating
+                for entry in list(entries):
+                    if entry.source == SOURCE_IGNORE:
+                        entries.remove(entry)
+
                 if len(entries) < 2:
                     continue
                 issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
