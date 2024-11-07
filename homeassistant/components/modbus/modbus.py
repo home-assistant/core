@@ -55,6 +55,7 @@ from .const import (
     CONF_BYTESIZE,
     CONF_MSG_WAIT,
     CONF_PARITY,
+    CONF_RESTART_DELAY,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -256,6 +257,7 @@ class ModbusHub:
         self.name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
+        self._config_restart_delay = client_config[CONF_RESTART_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
         self._pb_class = {
             SERIAL: AsyncModbusSerialClient,
@@ -311,6 +313,10 @@ class ModbusHub:
         async with self._lock:
             try:
                 await self._client.connect()  # type: ignore[union-attr]
+                if not self._client or not self._client.connected:
+                    err = f"{self.name} connect failed for unknown reasons. See pymodbus debug logs for further details."
+                    self._log_error(err, error_state=False)
+                    return
             except ModbusException as exception_error:
                 err = f"{self.name} connect failed, retry in pymodbus  ({exception_error!s})"
                 self._log_error(err, error_state=False)
@@ -369,6 +375,7 @@ class ModbusHub:
                 self._client = None
                 message = f"modbus {self.name} communication closed"
                 _LOGGER.info(message)
+                await asyncio.sleep(self._config_restart_delay)
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
@@ -410,7 +417,7 @@ class ModbusHub:
         if self._config_delay:
             return None
         async with self._lock:
-            if not self._client:
+            if not self._client or not self._client.connected:
                 return None
             result = await self.low_level_pb_call(unit, address, value, use_call)
             if self._msg_wait:

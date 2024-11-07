@@ -49,6 +49,7 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_NAN_VALUE,
     CONF_PRECISION,
+    CONF_RESTART_DELAY,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
