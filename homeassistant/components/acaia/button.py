@@ -61,4 +61,3 @@ class AcaiaButton(AcaiaEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.async_press_fn(self._scale)
-        self.async_write_ha_state()
