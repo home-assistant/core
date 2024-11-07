@@ -178,3 +178,13 @@ def mock_energy_history():
         return_value=ENERGY_HISTORY,
     ) as mock_live_status:
         yield mock_live_status
+
+@pytest.fixture(autouse=True)
+def mock_signed_command() -> Generator[AsyncMock]:
+    """Mock Tesla Fleet Api signed_command method."""
+    with patch(
+        "homeassistant.components.tesla_fleet.VehicleSigned.signed_command",
+        return_value=COMMAND_OK,
+    ) as mock_signed_command:
+        yield mock_signed_command
+

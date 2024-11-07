@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -116,7 +116,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -454,7 +454,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -531,7 +531,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@1c608d11d69870c2092266b3f9a6f3abbf17002c # v1.4.3
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}
