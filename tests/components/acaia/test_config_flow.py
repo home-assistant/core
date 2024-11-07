@@ -9,6 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(
     hass: HomeAssistant,
@@ -73,3 +75,27 @@ async def test_bluetooth_discovery(
         CONF_NAME: service_info.name,
         CONF_IS_NEW_STYLE_SCALE: False,
     }
+
+async def test_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ensure we can't add the same device twice."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_IS_NEW_STYLE_SCALE: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
