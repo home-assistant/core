@@ -64,6 +64,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
+from homeassistant.util import dt as dt_util
 
 from .const import (  # noqa: F401
     _DEPRECATED_STREAM_TYPE_HLS,
@@ -151,7 +152,7 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: VolDictType = {vol.Optional(ATTR_FILENAME): cv.template}
 
 CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
@@ -1137,7 +1138,17 @@ async def async_handle_snapshot_service(
 ) -> None:
     """Handle snapshot services calls."""
     hass = camera.hass
-    filename: Template = service_call.data[ATTR_FILENAME]
+    filename: Template | None = service_call.data.get(ATTR_FILENAME)
+
+    # If no filename provided, generate default one located in the media folder
+    if filename is None:
+        filename_date = dt_util.now().strftime("%Y%m%d-%H%M%S")
+        media_path = hass.config.path("media")
+        local_media_template = Template(
+            f"{media_path}/snapshots/{camera.entity_id}/{filename_date}.jpg",
+            camera.hass,
+        )
+        filename = local_media_template
 
     snapshot_file = filename.async_render(
         variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_SNAPSHOT)}

@@ -5,6 +5,7 @@ import io
 from types import ModuleType
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidate
@@ -270,6 +271,42 @@ async def test_snapshot_service(
         issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
         assert issue is not None
         assert issue == snapshot
+
+
+@pytest.mark.usefixtures("mock_camera")
+@freeze_time("2024-11-06 23:24:34 UTC")
+async def test_snapshot_service_with_default_filename(
+    hass: HomeAssistant,
+) -> None:
+    """Test snapshot service with default filename."""
+    mopen = mock_open()
+
+    with (
+        patch("homeassistant.components.camera.open", mopen, create=True),
+        patch(
+            "homeassistant.components.camera.os.makedirs",
+        ),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+    ):
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+            },
+            blocking=True,
+        )
+
+        path = (
+            hass.config.path("media")
+            + "/snapshots/camera.demo_camera/20241106-152434.jpg"
+        )
+        mopen.assert_called_once_with(path, "wb")
+
+        mock_write = mopen().write
+
+        assert len(mock_write.mock_calls) == 1
+        assert mock_write.mock_calls[0][1][0] == b"Test"
 
 
 @pytest.mark.usefixtures("mock_camera")
