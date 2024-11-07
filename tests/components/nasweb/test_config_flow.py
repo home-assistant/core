@@ -7,12 +7,18 @@ from webio_api.api_client import AuthError
 
 from homeassistant import config_entries
 from homeassistant.components.nasweb.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.network import NoURLAvailableError
 
-from .conftest import BASE_CONFIG_FLOW, BASE_COORDINATOR, BASE_NASWEB_DATA
+from .conftest import (
+    BASE_CONFIG_FLOW,
+    BASE_COORDINATOR,
+    BASE_NASWEB_DATA,
+    TEST_SERIAL_NUMBER,
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -24,12 +30,7 @@ TEST_USER_INPUT = {
 }
 
 
-async def test_form(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    validate_input_all_ok: dict[str, AsyncMock | MagicMock],
-) -> None:
-    """Test the form."""
+async def _add_test_config_entry(hass: HomeAssistant) -> ConfigFlowResult:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -40,10 +41,24 @@ async def test_form(
         result["flow_id"], TEST_USER_INPUT
     )
     await hass.async_block_till_done()
+    return result2
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "1.1.1.1"
-    assert result2.get("data") == TEST_USER_INPUT
+
+async def test_form(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    validate_input_all_ok: dict[str, AsyncMock | MagicMock],
+) -> None:
+    """Test the form."""
+    result = await _add_test_config_entry(hass)
+
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.1.1.1"
+    assert result.get("data") == TEST_USER_INPUT
+
+    config_entry = result.get("result")
+    assert config_entry is not None
+    assert config_entry.unique_id == TEST_SERIAL_NUMBER
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -169,3 +184,25 @@ async def test_form_exception(
         )
         assert result2.get("type") == FlowResultType.FORM
         assert result2.get("errors") == {"base": "unknown"}
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    validate_input_all_ok: dict[str, AsyncMock | MagicMock],
+) -> None:
+    """Test already configured device."""
+    result = await _add_test_config_entry(hass)
+    config_entry = result.get("result")
+    assert config_entry is not None
+    assert config_entry.unique_id == TEST_SERIAL_NUMBER
+
+    result2_1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2_2 = await hass.config_entries.flow.async_configure(
+        result2_1["flow_id"], TEST_USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result2_2.get("type") == FlowResultType.ABORT
+    assert result2_2.get("reason") == "already_configured"

@@ -18,6 +18,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 BASE_CONFIG_FLOW = "homeassistant.components.nasweb.config_flow."
 BASE_NASWEB_DATA = "homeassistant.components.nasweb.nasweb_data."
 BASE_COORDINATOR = "homeassistant.components.nasweb.coordinator."
+TEST_SERIAL_NUMBER = "0011223344556677"
 
 
 @pytest.fixture
@@ -38,7 +39,7 @@ def validate_input_all_ok() -> Generator[dict[str, AsyncMock | MagicMock]]:
         ) as get_webhook_url,
         patch(
             BASE_CONFIG_FLOW + "WebioAPI.get_serial_number",
-            return_value="0011223344556677",
+            return_value=TEST_SERIAL_NUMBER,
         ) as get_serial,
         patch(
             BASE_CONFIG_FLOW + "WebioAPI.status_subscription",
