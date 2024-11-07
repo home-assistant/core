@@ -2158,7 +2158,11 @@ class ConfigEntries:
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
-                unique_id is not None
+                # flipr creates duplicates during migration, and asks users to
+                # remove the duplicate. We don't need warn about it here too.
+                # We should remove the special case for "flipr" in HA Core 2025.4
+                entry.domain != "flipr"
+                and unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
@@ -2436,6 +2440,11 @@ class ConfigEntries:
             issues.add(issue.issue_id)
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+            # flipr creates duplicates during migration, and asks users to
+            # remove the duplicate. We don't need warn about it here too.
+            # We should remove the special case for "flipr" in HA Core 2025.4
+            if domain == "flipr":
+                continue
             for unique_id, entries in unique_ids.items():
                 if len(entries) < 2:
                     continue
