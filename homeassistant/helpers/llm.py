@@ -14,16 +14,16 @@ import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation.trace import (
+from homeassistant.components.climate import INTENT_GET_TEMPERATURE
+from homeassistant.components.conversation import (
     ConversationTraceEventType,
     async_conversation_trace_append,
 )
-from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
-from homeassistant.components.homeassistant.exposed_entities import async_should_expose
+from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
+from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import ATTR_VARIABLES, DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.weather.intent import INTENT_GET_WEATHER
+from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -167,7 +167,7 @@ class APIInstance:
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
         async_conversation_trace_append(
-            ConversationTraceEventType.LLM_TOOL_CALL,
+            ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
         )
 
@@ -279,6 +279,7 @@ class AssistAPI(API):
         intent.INTENT_TOGGLE,
         intent.INTENT_GET_CURRENT_DATE,
         intent.INTENT_GET_CURRENT_TIME,
+        intent.INTENT_RESPOND,
     }
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -324,8 +325,7 @@ class AssistAPI(API):
             (
                 "When controlling Home Assistant always call the intent tools. "
                 "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-                "When controlling a device, prefer passing just its name and its domain "
-                "(what comes before the dot in its entity id). "
+                "When controlling a device, prefer passing just name and domain. "
                 "When controlling an area, prefer passing just area name and domain."
             )
         ]
@@ -363,7 +363,7 @@ class AssistAPI(API):
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml.dump(exposed_entities))
+            prompt.append(yaml.dump(list(exposed_entities.values())))
 
         return "\n".join(prompt)
 
@@ -416,7 +416,9 @@ class AssistAPI(API):
                 ):
                     continue
 
-                tools.append(ScriptTool(self.hass, state.entity_id))
+                script_tool = ScriptTool(self.hass, state.entity_id)
+                if script_tool.parameters.schema:
+                    tools.append(script_tool)
 
         return tools
 
@@ -447,11 +449,16 @@ def _get_exposed_entities(
     entities = {}
 
     for state in hass.states.async_all():
-        if state.domain == SCRIPT_DOMAIN:
-            continue
-
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
+
+        description: str | None = None
+        if state.domain == SCRIPT_DOMAIN:
+            description, parameters = _get_cached_script_parameters(
+                hass, state.entity_id
+            )
+            if parameters.schema:  # Only list scripts without input fields here
+                continue
 
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
@@ -477,8 +484,12 @@ def _get_exposed_entities(
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
+            "domain": state.domain,
             "state": state.state,
         }
+
+        if description:
+            info["description"] = description
 
         if area_names:
             info["areas"] = ", ".join(area_names)
@@ -521,7 +532,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return convert(cv.CONDITIONS_SCHEMA)
 
     if isinstance(schema, selector.ConstantSelector):
-        return {"enum": [schema.config["value"]]}
+        return convert(vol.Schema(schema.config["value"]))
 
     result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
@@ -573,7 +584,7 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object"}
+        return {"type": "object", "additionalProperties": True}
 
     if isinstance(schema, selector.SelectSelector):
         options = [
@@ -597,12 +608,89 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "time"}
 
     if isinstance(schema, selector.TriggerSelector):
-        return convert(cv.TRIGGER_SCHEMA)
+        return {"type": "array", "items": {"type": "string"}}
 
     if schema.config.get("multiple"):
         return {"type": "array", "items": {"type": "string"}}
 
     return {"type": "string"}
+
+
+def _get_cached_script_parameters(
+    hass: HomeAssistant, entity_id: str
+) -> tuple[str | None, vol.Schema]:
+    """Get script description and schema."""
+    entity_registry = er.async_get(hass)
+
+    description = None
+    parameters = vol.Schema({})
+    entity_entry = entity_registry.async_get(entity_id)
+    if entity_entry and entity_entry.unique_id:
+        parameters_cache = hass.data.get(SCRIPT_PARAMETERS_CACHE)
+
+        if parameters_cache is None:
+            parameters_cache = hass.data[SCRIPT_PARAMETERS_CACHE] = {}
+
+            @callback
+            def clear_cache(event: Event) -> None:
+                """Clear script parameter cache on script reload or delete."""
+                if (
+                    event.data[ATTR_DOMAIN] == SCRIPT_DOMAIN
+                    and event.data[ATTR_SERVICE] in parameters_cache
+                ):
+                    parameters_cache.pop(event.data[ATTR_SERVICE])
+
+            cancel = hass.bus.async_listen(EVENT_SERVICE_REMOVED, clear_cache)
+
+            @callback
+            def on_homeassistant_close(event: Event) -> None:
+                """Cleanup."""
+                cancel()
+
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_CLOSE, on_homeassistant_close
+            )
+
+        if entity_entry.unique_id in parameters_cache:
+            return parameters_cache[entity_entry.unique_id]
+
+        if service_desc := service.async_get_cached_service_description(
+            hass, SCRIPT_DOMAIN, entity_entry.unique_id
+        ):
+            description = service_desc.get("description")
+            schema: dict[vol.Marker, Any] = {}
+            fields = service_desc.get("fields", {})
+
+            for field, config in fields.items():
+                field_description = config.get("description")
+                if not field_description:
+                    field_description = config.get("name")
+                key: vol.Marker
+                if config.get("required"):
+                    key = vol.Required(field, description=field_description)
+                else:
+                    key = vol.Optional(field, description=field_description)
+                if "selector" in config:
+                    schema[key] = selector.selector(config["selector"])
+                else:
+                    schema[key] = cv.string
+
+            parameters = vol.Schema(schema)
+
+            aliases: list[str] = []
+            if entity_entry.name:
+                aliases.append(entity_entry.name)
+            if entity_entry.aliases:
+                aliases.extend(entity_entry.aliases)
+            if aliases:
+                if description:
+                    description = description + ". Aliases: " + str(list(aliases))
+                else:
+                    description = "Aliases: " + str(list(aliases))
+
+            parameters_cache[entity_entry.unique_id] = (description, parameters)
+
+    return description, parameters
 
 
 class ScriptTool(Tool):
@@ -614,73 +702,14 @@ class ScriptTool(Tool):
         script_entity_id: str,
     ) -> None:
         """Init the class."""
-        entity_registry = er.async_get(hass)
-
         self.name = split_entity_id(script_entity_id)[1]
         if self.name[0].isdigit():
             self.name = "_" + self.name
         self._entity_id = script_entity_id
-        self.parameters = vol.Schema({})
-        entity_entry = entity_registry.async_get(script_entity_id)
-        if entity_entry and entity_entry.unique_id:
-            parameters_cache = hass.data.get(SCRIPT_PARAMETERS_CACHE)
 
-            if parameters_cache is None:
-                parameters_cache = hass.data[SCRIPT_PARAMETERS_CACHE] = {}
-
-                @callback
-                def clear_cache(event: Event) -> None:
-                    """Clear script parameter cache on script reload or delete."""
-                    if (
-                        event.data[ATTR_DOMAIN] == SCRIPT_DOMAIN
-                        and event.data[ATTR_SERVICE] in parameters_cache
-                    ):
-                        parameters_cache.pop(event.data[ATTR_SERVICE])
-
-                cancel = hass.bus.async_listen(EVENT_SERVICE_REMOVED, clear_cache)
-
-                @callback
-                def on_homeassistant_close(event: Event) -> None:
-                    """Cleanup."""
-                    cancel()
-
-                hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_CLOSE, on_homeassistant_close
-                )
-
-            if entity_entry.unique_id in parameters_cache:
-                self.description, self.parameters = parameters_cache[
-                    entity_entry.unique_id
-                ]
-                return
-
-            if service_desc := service.async_get_cached_service_description(
-                hass, SCRIPT_DOMAIN, entity_entry.unique_id
-            ):
-                self.description = service_desc.get("description")
-                schema: dict[vol.Marker, Any] = {}
-                fields = service_desc.get("fields", {})
-
-                for field, config in fields.items():
-                    description = config.get("description")
-                    if not description:
-                        description = config.get("name")
-                    key: vol.Marker
-                    if config.get("required"):
-                        key = vol.Required(field, description=description)
-                    else:
-                        key = vol.Optional(field, description=description)
-                    if "selector" in config:
-                        schema[key] = selector.selector(config["selector"])
-                    else:
-                        schema[key] = cv.string
-
-                self.parameters = vol.Schema(schema)
-
-                parameters_cache[entity_entry.unique_id] = (
-                    self.description,
-                    self.parameters,
-                )
+        self.description, self.parameters = _get_cached_script_parameters(
+            hass, script_entity_id
+        )
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext

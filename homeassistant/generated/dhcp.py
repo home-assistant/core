@@ -14,11 +14,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "august",
-        "hostname": "yale-connect-plus",
-        "macaddress": "00177A*",
-    },
-    {
-        "domain": "august",
         "hostname": "connect",
         "macaddress": "D86162*",
     },
@@ -34,12 +29,13 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "august",
-        "hostname": "august*",
-        "macaddress": "E076D0*",
+        "hostname": "connect",
+        "macaddress": "789C85*",
     },
     {
-        "domain": "awair",
-        "macaddress": "70886B1*",
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*",
     },
     {
         "domain": "axis",
@@ -281,6 +277,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000DB9*",
     },
     {
+        "domain": "lamarzocco",
+        "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "lm[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
+        "domain": "lamarzocco",
+        "hostname": "mr[0-9][0-9][0-9][0-9][0-9][0-9]",
+    },
+    {
         "domain": "lametric",
         "registered_devices": True,
     },
@@ -431,6 +439,26 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "2CAB33*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "94E36D*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "9C7613*",
+    },
+    {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "341513*",
     },
     {
         "domain": "roomba",
@@ -1093,6 +1121,19 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "wiz",
         "hostname": "wiz_*",
+    },
+    {
+        "domain": "wmspro",
+        "macaddress": "0023D5*",
+    },
+    {
+        "domain": "wmspro",
+        "registered_devices": True,
+    },
+    {
+        "domain": "yale",
+        "hostname": "yale-connect-plus",
+        "macaddress": "00177A*",
     },
     {
         "domain": "yeelight",

@@ -1,0 +1,85 @@
+{
+  "message": "Popular Playlists",
+  "playlists": {
+    "href": "https://api.spotify.com/v1/browse/featured-playlists?country=NL&timestamp=2023-12-18T18%3A35%3A35&offset=0&limit=20",
+    "items": [
+      {
+        "collaborative": false,
+        "description": "De ideale playlist voor het fijne kerstgevoel bij de boom!",
+        "external_urls": {
+          "spotify": "https://open.spotify.com/playlist/37i9dQZF1DX4dopZ9vOp1t"
+        },
+        "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DX4dopZ9vOp1t",
+        "id": "37i9dQZF1DX4dopZ9vOp1t",
+        "images": [
+          {
+            "height": null,
+            "url": "https://i.scdn.co/image/ab67706f000000037d14c267b8ee5fea2246a8fe",
+            "width": null
+          }
+        ],
+        "name": "Kerst Hits 2023",
+        "owner": {
+          "display_name": "Spotify",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/spotify"
+          },
+          "href": "https://api.spotify.com/v1/users/spotify",
+          "id": "spotify",
+          "type": "user",
+          "uri": "spotify:user:spotify"
+        },
+        "primary_color": null,
+        "public": null,
+        "snapshot_id": "MTcwMjU2ODI4MSwwMDAwMDAwMDE1ZGRiNzI3OGY4OGU2MzA1MWNkZGMyNTdmNDUwMTc1",
+        "tracks": {
+          "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DX4dopZ9vOp1t/tracks",
+          "total": 298
+        },
+        "type": "playlist",
+        "uri": "spotify:playlist:37i9dQZF1DX4dopZ9vOp1t"
+      },
+      {
+        "collaborative": false,
+        "description": "De 50 populairste hits van Nederland. Cover: Jack Harlow",
+        "external_urls": {
+          "spotify": "https://open.spotify.com/playlist/37i9dQZF1DWSBi5svWQ9Nk"
+        },
+        "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DWSBi5svWQ9Nk",
+        "id": "37i9dQZF1DWSBi5svWQ9Nk",
+        "images": [
+          {
+            "height": null,
+            "url": "https://i.scdn.co/image/ab67706f00000003f7b99051789611a49101c1cf",
+            "width": null
+          }
+        ],
+        "name": "Top Hits NL",
+        "owner": {
+          "display_name": "Spotify",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/user/spotify"
+          },
+          "href": "https://api.spotify.com/v1/users/spotify",
+          "id": "spotify",
+          "type": "user",
+          "uri": "spotify:user:spotify"
+        },
+        "primary_color": null,
+        "public": null,
+        "snapshot_id": "MTcwMjU5NDgwMCwwMDAwMDAwMDU4NWY2MTE4NmU4NmIwMDdlMGE4ZGRkOTZkN2U2MzAx",
+        "tracks": {
+          "href": "https://api.spotify.com/v1/playlists/37i9dQZF1DWSBi5svWQ9Nk/tracks",
+          "total": 50
+        },
+        "type": "playlist",
+        "uri": "spotify:playlist:37i9dQZF1DWSBi5svWQ9Nk"
+      }
+    ],
+    "limit": 20,
+    "next": "https://api.spotify.com/v1/browse/featured-playlists?country=NL&timestamp=2023-12-18T18%3A35%3A35&offset=20&limit=20",
+    "offset": 0,
+    "previous": null,
+    "total": 24
+  }
+}

@@ -1,10 +1,10 @@
 """Test the Teslemetry update platform."""
 
 import copy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
@@ -35,7 +35,7 @@ async def test_update_alt(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the update entities are correct."""
 
@@ -46,7 +46,7 @@ async def test_update_alt(
 
 async def test_update_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the update entities are correct when offline."""
 
@@ -58,7 +58,7 @@ async def test_update_offline(
 
 async def test_update_services(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:

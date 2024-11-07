@@ -1,8 +1,11 @@
 """Tests for the telegram_bot component."""
 
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from telegram import Update
+from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
 
 from homeassistant.components.telegram_bot import (
     ATTR_MESSAGE,
@@ -11,6 +14,7 @@ from homeassistant.components.telegram_bot import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -186,6 +190,103 @@ async def test_polling_platform_message_text_update(
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
     assert isinstance(events[0].context, Context)
+
+
+@pytest.mark.parametrize(
+    ("error", "log_message"),
+    [
+        (
+            TelegramError("Telegram error"),
+            'caused error: "Telegram error"',
+        ),
+        (NetworkError("Network error"), ""),
+        (RetryAfter(42), ""),
+        (TimedOut("TimedOut error"), ""),
+    ],
+)
+async def test_polling_platform_add_error_handler(
+    hass: HomeAssistant,
+    config_polling: dict[str, Any],
+    update_message_text: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    log_message: str,
+) -> None:
+    """Test polling add error handler."""
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class:
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            config_polling,
+        )
+        await hass.async_block_till_done()
+
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.updater.stop = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+        process_error = application.add_error_handler.call_args[0][0]
+        application.bot.defaults.tzinfo = None
+        update = Update.de_json(update_message_text, application.bot)
+
+        await process_error(update, MagicMock(error=error))
+
+        assert log_message in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("error", "log_message"),
+    [
+        (
+            TelegramError("Telegram error"),
+            "TelegramError: Telegram error",
+        ),
+        (NetworkError("Network error"), ""),
+        (RetryAfter(42), ""),
+        (TimedOut("TimedOut error"), ""),
+    ],
+)
+async def test_polling_platform_start_polling_error_callback(
+    hass: HomeAssistant,
+    config_polling: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    log_message: str,
+) -> None:
+    """Test polling add error handler."""
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class:
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            config_polling,
+        )
+        await hass.async_block_till_done()
+
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.initialize = AsyncMock()
+        application.updater.start_polling = AsyncMock()
+        application.start = AsyncMock()
+        application.updater.stop = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        error_callback = application.updater.start_polling.call_args.kwargs[
+            "error_callback"
+        ]
+
+        error_callback(error)
+
+        assert log_message in caplog.text
 
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(

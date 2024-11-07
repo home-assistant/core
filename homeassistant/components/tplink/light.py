@@ -382,17 +382,25 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if (
-            (effect := kwargs.get(ATTR_EFFECT))
-            # Effect is unlikely to be LIGHT_EFFECTS_OFF but check for it anyway
-            and effect not in {LightEffect.LIGHT_EFFECTS_OFF, EFFECT_OFF}
-            and effect in self._effect_module.effect_list
-        ):
-            await self._effect_module.set_effect(
-                kwargs[ATTR_EFFECT], brightness=brightness, transition=transition
-            )
-        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if self.effect and self.effect != EFFECT_OFF:
+        effect_off_called = False
+        if effect := kwargs.get(ATTR_EFFECT):
+            if effect in {LightEffect.LIGHT_EFFECTS_OFF, EFFECT_OFF}:
+                if self._effect_module.effect is not LightEffect.LIGHT_EFFECTS_OFF:
+                    await self._effect_module.set_effect(LightEffect.LIGHT_EFFECTS_OFF)
+                    effect_off_called = True
+                if len(kwargs) == 1:
+                    return
+            elif effect in self._effect_module.effect_list:
+                await self._effect_module.set_effect(
+                    kwargs[ATTR_EFFECT], brightness=brightness, transition=transition
+                )
+                return
+            else:
+                _LOGGER.error("Invalid effect %s for %s", effect, self._device.host)
+                return
+
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            if self.effect and self.effect != EFFECT_OFF and not effect_off_called:
                 # If there is an effect in progress
                 # we have to clear the effect
                 # before we can set a color temp

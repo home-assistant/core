@@ -93,3 +93,16 @@ async def test_sensor_setup_and_states(
 
     # test get_temperature ValueError
     assert get_temperature(None, "temp_key") is None
+
+    # test startup placeholder values
+    update_callback({"outgoing_bit_depth": "0bit"})
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.madvr_envy_outgoing_bit_depth").state == STATE_UNKNOWN
+    )
+
+    update_callback({"outgoing_color_space": "?"})
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("sensor.madvr_envy_outgoing_color_space").state == STATE_UNKNOWN
+    )

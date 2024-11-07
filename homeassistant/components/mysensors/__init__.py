@@ -10,7 +10,6 @@ from mysensors import BaseAsyncGateway
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import (
@@ -24,15 +23,12 @@ from .const import (
     DiscoveryInfo,
     SensorType,
 )
-from .device import MySensorsChildEntity, get_mysensors_devices
+from .entity import MySensorsChildEntity, get_mysensors_devices
 from .gateway import finish_setup, gw_stop, setup_gateway
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_HASS_CONFIG = "hass_config"
-
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -152,7 +148,7 @@ def setup_mysensors_platform(
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:
-        _LOGGER.info("Adding new devices: %s", new_devices)
+        _LOGGER.debug("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
             async_add_entities(new_devices)
     return new_devices

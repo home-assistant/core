@@ -7,11 +7,18 @@ from typing import Final
 
 from kasa import Feature
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
+from .deprecate import DeprecatedInfo, async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -25,9 +32,23 @@ class TPLinkButtonEntityDescription(
 BUTTON_DESCRIPTIONS: Final = [
     TPLinkButtonEntityDescription(
         key="test_alarm",
+        deprecated_info=DeprecatedInfo(
+            platform=BUTTON_DOMAIN,
+            new_platform=SIREN_DOMAIN,
+            breaks_in_ha_version="2025.4.0",
+        ),
     ),
     TPLinkButtonEntityDescription(
         key="stop_alarm",
+        deprecated_info=DeprecatedInfo(
+            platform=BUTTON_DOMAIN,
+            new_platform=SIREN_DOMAIN,
+            breaks_in_ha_version="2025.4.0",
+        ),
+    ),
+    TPLinkButtonEntityDescription(
+        key="reboot",
+        device_class=ButtonDeviceClass.RESTART,
     ),
 ]
 
@@ -46,6 +67,7 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+        hass=hass,
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Action,
@@ -53,6 +75,7 @@ async def async_setup_entry(
         descriptions=BUTTON_DESCRIPTIONS_MAP,
         child_coordinators=children_coordinators,
     )
+    async_cleanup_deprecated(hass, BUTTON_DOMAIN, config_entry.entry_id, entities)
     async_add_entities(entities)
 
 

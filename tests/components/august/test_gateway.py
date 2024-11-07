@@ -22,14 +22,14 @@ async def test_refresh_access_token(hass: HomeAssistant) -> None:
 @patch("yalexs.manager.gateway.AuthenticatorAsync.should_refresh")
 @patch("yalexs.manager.gateway.AuthenticatorAsync.async_refresh_access_token")
 async def _patched_refresh_access_token(
-    hass,
-    new_token,
-    new_token_expire_time,
+    hass: HomeAssistant,
+    new_token: str,
+    new_token_expire_time: int,
     refresh_access_token_mock,
     should_refresh_mock,
     authenticate_mock,
     async_get_operable_locks_mock,
-):
+) -> None:
     authenticate_mock.side_effect = MagicMock(
         return_value=_mock_august_authentication(
             "original_token", 1234, AuthenticationState.AUTHENTICATED
@@ -50,5 +50,5 @@ async def _patched_refresh_access_token(
     )
     await august_gateway.async_refresh_access_token_if_needed()
     refresh_access_token_mock.assert_called()
-    assert august_gateway.access_token == new_token
+    assert await august_gateway.async_get_access_token() == new_token
     assert august_gateway.authentication.access_token_expires == new_token_expire_time

@@ -1,16 +1,12 @@
 """Test loading of the Tibber config entry."""
 
-from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -40,21 +36,15 @@ async def test_repair_flow(
     )
     assert len(issue_registry.issues) == 1
 
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(
-        url, json={"handler": "notify", "issue_id": f"migrate_notify_tibber_{service}"}
+    data = await start_repair_fix_flow(
+        http_client, "notify", f"migrate_notify_tibber_{service}"
     )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
     # Simulate the users confirmed the repair flow
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await http_client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 

@@ -9,7 +9,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import TriggerUpdateCoordinator
 
 
-class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]):
+class TriggerEntity(  # pylint: disable=hass-enforce-class-module
+    TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]
+):
     """Template entity based on trigger data."""
 
     def __init__(

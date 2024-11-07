@@ -64,11 +64,5 @@
     "invalid_config_entry": {
       "message": "Invalid config entry provided. Got {config_entry}"
     }
-  },
-  "issues": {
-    "image_size_deprecated_format": {
-      "title": "Deprecated size format for image generation action",
-      "description": "OpenAI is now using Dall-E 3 to generate images using `openai_conversation.generate_image`, which supports different sizes. Valid values are now \"1024x1024\", \"1024x1792\", \"1792x1024\". The old values of \"256\", \"512\", \"1024\" are currently interpreted as \"1024x1024\".\nPlease update your scripts or automations with the new parameters."
-    }
   }
 }

@@ -1,5 +1,6 @@
 """Tests for the lifx integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,7 +22,7 @@ def mock_effect_conductor():
     """Mock the effect conductor."""
 
     class MockConductor:
-        def __init__(self, *args, **kwargs) -> None:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Mock the conductor."""
             self.start = AsyncMock()
             self.stop = AsyncMock()

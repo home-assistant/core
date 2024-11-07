@@ -12,7 +12,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
 )
@@ -25,7 +24,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy"),
+    ["envoy_metered_batt_relay", "envoy_eu_batt"],
+    indirect=["mock_envoy"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch(
@@ -110,7 +111,26 @@ async def test_switch_grid_operation(
     mock_envoy.go_off_grid.assert_awaited_once_with()
     mock_envoy.go_off_grid.reset_mock()
 
-    test_entity = f"{Platform.SWITCH}.enpower_{sn}_charge_from_grid"
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "use_serial"),
+    [
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_switch_charge_from_grid_operation(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    use_serial: str,
+) -> None:
+    """Test switch platform operation for charge from grid switches."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    test_entity = f"{Platform.SWITCH}.{use_serial}_charge_from_grid"
 
     # validate envoy value is reflected in entity
     assert (entity_state := hass.states.get(test_entity))
@@ -146,12 +166,24 @@ async def test_switch_grid_operation(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy", "entity_states"),
+    [
+        (
+            "envoy_metered_batt_relay",
+            {
+                "NC1": (STATE_OFF, 0, 1),
+                "NC2": (STATE_ON, 1, 0),
+                "NC3": (STATE_OFF, 0, 1),
+            },
+        )
+    ],
+    indirect=["mock_envoy"],
 )
 async def test_switch_relay_operation(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_states: dict[str, tuple[str, int, int]],
 ) -> None:
     """Test enphase_envoy switch relay entities operation."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
@@ -162,13 +194,10 @@ async def test_switch_relay_operation(
     for contact_id, dry_contact in mock_envoy.data.dry_contact_settings.items():
         name = dry_contact.load_name.lower().replace(" ", "_")
         test_entity = f"{entity_base}{name}"
-        target_value = mock_envoy.data.dry_contact_status[contact_id].status
         assert (entity_state := hass.states.get(test_entity))
-        assert (
-            entity_state.state == STATE_ON
-            if target_value == STATE_CLOSED
-            else STATE_OFF
-        )
+        assert entity_state.state == entity_states[contact_id][0]
+        open_count = entity_states[contact_id][1]
+        close_count = entity_states[contact_id][2]
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -199,15 +228,7 @@ async def test_switch_relay_operation(
             blocking=True,
         )
 
-        assert (
-            mock_envoy.open_dry_contact.await_count
-            if target_value == STATE_CLOSED
-            else mock_envoy.close_dry_contact.await_count
-        ) == 1
-        assert (
-            mock_envoy.close_dry_contact.await_count
-            if target_value == STATE_CLOSED
-            else mock_envoy.open_dry_contact.await_count
-        ) == 0
+        assert mock_envoy.open_dry_contact.await_count == open_count
+        assert mock_envoy.close_dry_contact.await_count == close_count
         mock_envoy.open_dry_contact.reset_mock()
         mock_envoy.close_dry_contact.reset_mock()

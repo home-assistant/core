@@ -26,7 +26,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def track_connected(hass):
+def track_connected(hass: HomeAssistant) -> dict[str, list[int]]:
     """Track connected and disconnected events."""
     connected_evt = []
 
@@ -293,6 +293,6 @@ async def test_auth_sending_unknown_type_disconnects(
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_REQUIRED
 
-        await ws._writer._send_frame(b"1" * 130, 0x30)
+        await ws._writer.send_frame(b"1" * 130, 0x30)
         auth_msg = await ws.receive()
         assert auth_msg.type == WSMsgType.close

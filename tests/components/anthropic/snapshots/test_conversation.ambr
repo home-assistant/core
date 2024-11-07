@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_unknown_hass_api
+  dict({
+    'conversation_id': None,
+    'response': IntentResponse(
+      card=dict({
+      }),
+      error_code=<IntentResponseErrorCode.UNKNOWN: 'unknown'>,
+      failed_results=list([
+      ]),
+      intent=None,
+      intent_targets=list([
+      ]),
+      language='en',
+      matched_states=list([
+      ]),
+      reprompt=dict({
+      }),
+      response_type=<IntentResponseType.ERROR: 'error'>,
+      speech=dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Error preparing LLM API: API non-existing not found',
+        }),
+      }),
+      speech_slots=dict({
+      }),
+      success_results=list([
+      ]),
+      unmatched_states=list([
+      ]),
+    ),
+  })
+# ---

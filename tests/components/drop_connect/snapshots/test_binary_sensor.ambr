@@ -1,4 +1,98 @@
 # serializer version: 1
+# name: test_sensors[alert][binary_sensor.alert_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.alert_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'DROP-1_C0FFEE_81_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[alert][binary_sensor.alert_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Alert Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.alert_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[alert][binary_sensor.alert_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.alert_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Sensor',
+    'platform': 'drop_connect',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alert_sensor',
+    'unique_id': 'DROP-1_C0FFEE_81_alert_sensor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[alert][binary_sensor.alert_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Alert Sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.alert_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_leak_detected-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

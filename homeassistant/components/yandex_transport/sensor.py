@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aioymaps import CaptchaError, YandexMapsRequester
+from aioymaps import CaptchaError, NoSessionError, YandexMapsRequester
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -88,7 +88,7 @@ class DiscoverYandexTransport(SensorEntity):
         closer_time = None
         try:
             yandex_reply = await self.requester.get_stop_info(self._stop_id)
-        except CaptchaError as ex:
+        except (CaptchaError, NoSessionError) as ex:
             _LOGGER.error(
                 "%s. You may need to disable the integration for some time",
                 ex,

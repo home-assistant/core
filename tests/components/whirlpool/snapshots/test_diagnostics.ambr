@@ -29,6 +29,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'whirlpool',
       'minor_version': 1,
       'options': dict({

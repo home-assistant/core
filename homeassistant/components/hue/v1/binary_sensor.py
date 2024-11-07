@@ -25,6 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HuePresence(GenericZLLSensor, BinarySensorEntity):
     """The presence sensor entity for a Hue motion sensor device."""
 

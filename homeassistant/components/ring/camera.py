@@ -12,14 +12,12 @@ from ring_doorbell import RingDoorBell
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import RingData
-from .const import DOMAIN
+from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
@@ -31,11 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
-    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
@@ -81,6 +79,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         history_data = self._device.last_history
         if history_data:
             self._last_event = history_data[0]
+            # will call async_update to update the attributes and get the
+            # video url from the api
             self.async_schedule_update_ha_state(True)
         else:
             self._last_event = None
@@ -159,36 +159,36 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         if self._last_video_id != self._last_event["id"]:
             self._image = None
 
-        self._video_url = await self.hass.async_add_executor_job(self._get_video)
+        self._video_url = await self._async_get_video()
 
         self._last_video_id = self._last_event["id"]
         self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
     @exception_wrap
-    def _get_video(self) -> str | None:
+    async def _async_get_video(self) -> str | None:
         if TYPE_CHECKING:
             # _last_event is set before calling update so will never be None
             assert self._last_event
         event_id = self._last_event.get("id")
         assert event_id and isinstance(event_id, int)
-        return self._device.recording_url(event_id)
+        return await self._device.async_recording_url(event_id)
 
     @exception_wrap
-    def _set_motion_detection_enabled(self, new_state: bool) -> None:
+    async def _async_set_motion_detection_enabled(self, new_state: bool) -> None:
         if not self._device.has_capability(MOTION_DETECTION_CAPABILITY):
             _LOGGER.error(
                 "Entity %s does not have motion detection capability", self.entity_id
             )
             return
 
-        self._device.motion_detection = new_state
+        await self._device.async_set_motion_detection(new_state)
         self._attr_motion_detection_enabled = new_state
-        self.schedule_update_ha_state(False)
+        self.async_write_ha_state()
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        self._set_motion_detection_enabled(True)
+        await self._async_set_motion_detection_enabled(True)
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._set_motion_detection_enabled(False)
+        await self._async_set_motion_detection_enabled(False)

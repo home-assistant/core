@@ -79,7 +79,8 @@ CONFIG_SCHEMA: Final = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# system mode schemas are built dynamically when the services are regiatered
+# system mode schemas are built dynamically when the services are registered
+# because supported modes can vary for edge-case systems
 
 RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
@@ -141,9 +142,9 @@ class EvoSession:
             client_v2._user_account = None  # noqa: SLF001
 
         await client_v2.login()
-        await self.save_auth_tokens()
+        self.client_v2 = client_v2  # only set attr if authentication succeeded
 
-        self.client_v2 = client_v2
+        await self.save_auth_tokens()
 
         self.client_v1 = ev1.EvohomeClient(
             username,
@@ -175,7 +176,7 @@ class EvoSession:
         ):
             app_storage[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
 
-        user_data: dict[str, str] = app_storage.pop(USER_DATA, {})
+        user_data: dict[str, str] = app_storage.pop(USER_DATA, {}) or {}
 
         self.session_id = user_data.get(SZ_SESSION_ID)
         self._tokens = app_storage
@@ -222,7 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_PASSWORD],
         )
 
-    except evo.AuthenticationFailed as err:
+    except (evo.AuthenticationFailed, evo.RequestFailed) as err:
         handle_evo_exception(err)
         return False
 
@@ -239,10 +240,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         update_method=broker.async_update,
     )
+    await coordinator.async_register_shutdown()
 
     hass.data[DOMAIN] = {"broker": broker, "coordinator": coordinator}
 

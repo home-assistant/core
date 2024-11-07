@@ -117,6 +117,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     ),
     UnifiButtonEntityDescription[Wlans, Wlan](
         key="WLAN regenerate password",
+        translation_key="wlan_regenerate_password",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -149,7 +150,7 @@ class UnifiButtonEntity(UnifiEntity[HandlerT, ApiItemT], ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.control_fn(self.hub.api, self._obj_id)
+        await self.entity_description.control_fn(self.api, self._obj_id)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

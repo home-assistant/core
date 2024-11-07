@@ -15,9 +15,7 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(
-        self, import_data: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Set up by import from async_setup."""
         await self._async_handle_discovery_without_unique_id()
         return self.async_create_entry(title="Thread", data={})

@@ -100,7 +100,7 @@ TEST_DEVICE_NAME = "test_vehicle_2"
 TEST_ENTITY_ID = f"sensor.{TEST_DEVICE_NAME}_odometer"
 
 
-def advance_time_to_next_fetch(hass):
+def advance_time_to_next_fetch(hass: HomeAssistant) -> None:
     """Fast forward time to next fetch."""
     future = dt_util.utcnow() + timedelta(seconds=FETCH_INTERVAL + 30)
     async_fire_time_changed(hass, future)
@@ -181,7 +181,7 @@ async def setup_subaru_config_entry(
 
 
 @pytest.fixture
-async def subaru_config_entry(hass):
+async def subaru_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a Subaru config entry prior to setup."""
     await async_setup_component(hass, HA_DOMAIN, {})
     config_entry = MockConfigEntry(**TEST_CONFIG_ENTRY)
@@ -190,7 +190,9 @@ async def subaru_config_entry(hass):
 
 
 @pytest.fixture
-async def ev_entry(hass, subaru_config_entry):
+async def ev_entry(
+    hass: HomeAssistant, subaru_config_entry: MockConfigEntry
+) -> MockConfigEntry:
     """Create a Subaru entry representing an EV vehicle with full STARLINK subscription."""
     await setup_subaru_config_entry(hass, subaru_config_entry)
     assert DOMAIN in hass.config_entries.async_domains()

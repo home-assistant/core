@@ -22,8 +22,8 @@ class ConversationTraceEventType(enum.StrEnum):
     AGENT_DETAIL = "agent_detail"
     """Event detail added by a conversation agent."""
 
-    LLM_TOOL_CALL = "llm_tool_call"
-    """An LLM Tool call"""
+    TOOL_CALL = "tool_call"
+    """A conversation agent Tool call or default agent intent call."""
 
 
 @dataclass(frozen=True)

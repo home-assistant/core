@@ -15,6 +15,7 @@ from habitipy.aio import HabitipyAsync
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -41,7 +42,13 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=60),
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=5,
+                immediate=False,
+            ),
         )
         self.api = habitipy
 
@@ -51,7 +58,10 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             tasks_response = await self.api.tasks.user.get()
             tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
         except ClientResponseError as error:
-            raise UpdateFailed(f"Error communicating with API: {error}") from error
+            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
+                _LOGGER.debug("Rate limit exceeded, will try again later")
+                return self.data
+            raise UpdateFailed(f"Unable to connect to Habitica: {error}") from error
 
         return HabiticaData(user=user_response, tasks=tasks_response)
 
@@ -73,4 +83,4 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 translation_key="service_call_exception",
             ) from e
         else:
-            await self.async_refresh()
+            await self.async_request_refresh()

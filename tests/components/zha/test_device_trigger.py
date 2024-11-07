@@ -306,6 +306,7 @@ async def test_device_offline_fires(
     assert zha_device.available is True
     zha_device.available = False
     zha_device.emit_zha_event({"device_event_type": "device_offline"})
+    await hass.async_block_till_done()
 
     assert len(service_calls) == 1
     assert service_calls[0].data["message"] == "service called"

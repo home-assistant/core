@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, call
 
 from aioesphomeapi import (
     APIClient,
@@ -17,7 +17,6 @@ from aioesphomeapi import (
     UserService,
     UserServiceArg,
     UserServiceArgType,
-    VoiceAssistantFeature,
 )
 import pytest
 
@@ -28,10 +27,6 @@ from homeassistant.components.esphome.const import (
     CONF_DEVICE_NAME,
     DOMAIN,
     STABLE_BLE_VERSION_STR,
-)
-from homeassistant.components.esphome.voice_assistant import (
-    VoiceAssistantAPIPipeline,
-    VoiceAssistantUDPPipeline,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -44,7 +39,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import _ONE_SECOND, MockESPHomeDevice
+from .conftest import MockESPHomeDevice
 
 from tests.common import MockConfigEntry, async_capture_events, async_mock_service
 
@@ -721,6 +716,34 @@ async def test_state_subscription(
     assert mock_client.send_home_assistant_state.mock_calls == []
 
 
+async def test_state_request(
+    mock_client: APIClient,
+    hass: HomeAssistant,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test ESPHome requests state change."""
+    device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("binary_sensor.test", "on", {"bool": True, "float": 3.0})
+    device.mock_home_assistant_state_request("binary_sensor.test", None)
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", None, "on")
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+    hass.states.async_set("binary_sensor.test", "off", {"bool": False, "float": 5.0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == []
+
+
 async def test_debug_logging(
     mock_client: APIClient,
     hass: HomeAssistant,
@@ -1024,7 +1047,7 @@ async def test_esphome_device_with_project(
     )
     assert dev.manufacturer == "mfr"
     assert dev.model == "model"
-    assert dev.hw_version == "2.2.2"
+    assert dev.sw_version == "2.2.2 (ESPHome 1.0.0)"
 
 
 async def test_esphome_device_with_manufacturer(
@@ -1186,102 +1209,3 @@ async def test_entry_missing_unique_id(
     await mock_esphome_device(mock_client=mock_client, mock_storage=True)
     await hass.async_block_till_done()
     assert entry.unique_id == "11:22:33:44:55:aa"
-
-
-async def test_manager_voice_assistant_handlers_api(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
-    caplog: pytest.LogCaptureFixture,
-    mock_voice_assistant_api_pipeline: VoiceAssistantAPIPipeline,
-) -> None:
-    """Test the handlers are correctly executed in manager.py."""
-
-    device: MockESPHomeDevice = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-            | VoiceAssistantFeature.API_AUDIO
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "homeassistant.components.esphome.manager.VoiceAssistantAPIPipeline",
-            new=mock_voice_assistant_api_pipeline,
-        ),
-    ):
-        port: int | None = await device.mock_voice_assistant_handle_start(
-            "", 0, None, None
-        )
-
-        assert port == 0
-
-        port: int | None = await device.mock_voice_assistant_handle_start(
-            "", 0, None, None
-        )
-
-        assert "Voice assistant UDP server was not stopped" in caplog.text
-
-    await device.mock_voice_assistant_handle_audio(bytes(_ONE_SECOND))
-
-    mock_voice_assistant_api_pipeline.receive_audio_bytes.assert_called_with(
-        bytes(_ONE_SECOND)
-    )
-
-    mock_voice_assistant_api_pipeline.receive_audio_bytes.reset_mock()
-
-    await device.mock_voice_assistant_handle_stop()
-    mock_voice_assistant_api_pipeline.handle_finished()
-
-    await device.mock_voice_assistant_handle_audio(bytes(_ONE_SECOND))
-
-    mock_voice_assistant_api_pipeline.receive_audio_bytes.assert_not_called()
-
-
-async def test_manager_voice_assistant_handlers_udp(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
-    mock_voice_assistant_udp_pipeline: VoiceAssistantUDPPipeline,
-) -> None:
-    """Test the handlers are correctly executed in manager.py."""
-
-    device: MockESPHomeDevice = await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-        device_info={
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "homeassistant.components.esphome.manager.VoiceAssistantUDPPipeline",
-            new=mock_voice_assistant_udp_pipeline,
-        ),
-    ):
-        await device.mock_voice_assistant_handle_start("", 0, None, None)
-
-    mock_voice_assistant_udp_pipeline.run_pipeline.assert_called()
-
-    await device.mock_voice_assistant_handle_stop()
-    mock_voice_assistant_udp_pipeline.handle_finished()
-
-    mock_voice_assistant_udp_pipeline.stop.assert_called()
-    mock_voice_assistant_udp_pipeline.close.assert_called()

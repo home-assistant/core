@@ -7010,324 +7010,6 @@
     }),
   ])
 # ---
-# name: test_snapshots[haa_fan]
-  list([
-    dict({
-      'device': dict({
-        'area_id': None,
-        'config_entries': list([
-          'TestData',
-        ]),
-        'configuration_url': None,
-        'connections': list([
-        ]),
-        'disabled_by': None,
-        'entry_type': None,
-        'hw_version': '',
-        'identifiers': list([
-          list([
-            'homekit_controller:accessory-id',
-            '00:00:00:00:00:00:aid:1',
-          ]),
-        ]),
-        'is_new': False,
-        'labels': list([
-        ]),
-        'manufacturer': 'José A. Jiménez Campos',
-        'model': 'RavenSystem HAA',
-        'name': 'HAA-C718B3',
-        'name_by_user': None,
-        'serial_number': 'C718B3-1',
-        'suggested_area': None,
-        'sw_version': '5.0.18',
-      }),
-      'entities': list([
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-            'entity_id': 'button.haa_c718b3_identify',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Identify',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_1_7',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'device_class': 'identify',
-              'friendly_name': 'HAA-C718B3 Identify',
-            }),
-            'entity_id': 'button.haa_c718b3_identify',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.haa_c718b3_setup',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Setup',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': 'setup',
-            'unique_id': '00:00:00:00:00:00_1_1010_1012',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'HAA-C718B3 Setup',
-            }),
-            'entity_id': 'button.haa_c718b3_setup',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.haa_c718b3_update',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Update',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_1010_1011',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'device_class': 'update',
-              'friendly_name': 'HAA-C718B3 Update',
-            }),
-            'entity_id': 'button.haa_c718b3_update',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': dict({
-              'preset_modes': None,
-            }),
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'fan',
-            'entity_category': None,
-            'entity_id': 'fan.haa_c718b3',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 1>,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_8',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'HAA-C718B3',
-              'percentage': 66,
-              'percentage_step': 33.333333333333336,
-              'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 1>,
-            }),
-            'entity_id': 'fan.haa_c718b3',
-            'state': 'on',
-          }),
-        }),
-      ]),
-    }),
-    dict({
-      'device': dict({
-        'area_id': None,
-        'config_entries': list([
-          'TestData',
-        ]),
-        'configuration_url': None,
-        'connections': list([
-        ]),
-        'disabled_by': None,
-        'entry_type': None,
-        'hw_version': '',
-        'identifiers': list([
-          list([
-            'homekit_controller:accessory-id',
-            '00:00:00:00:00:00:aid:2',
-          ]),
-        ]),
-        'is_new': False,
-        'labels': list([
-        ]),
-        'manufacturer': 'José A. Jiménez Campos',
-        'model': 'RavenSystem HAA',
-        'name': 'HAA-C718B3',
-        'name_by_user': None,
-        'serial_number': 'C718B3-2',
-        'suggested_area': None,
-        'sw_version': '5.0.18',
-      }),
-      'entities': list([
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-            'entity_id': 'button.haa_c718b3_identify_2',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Identify',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_2_1_7',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'device_class': 'identify',
-              'friendly_name': 'HAA-C718B3 Identify',
-            }),
-            'entity_id': 'button.haa_c718b3_identify_2',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'switch',
-            'entity_category': None,
-            'entity_id': 'switch.haa_c718b3',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_2_8',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'HAA-C718B3',
-            }),
-            'entity_id': 'switch.haa_c718b3',
-            'state': 'off',
-          }),
-        }),
-      ]),
-    }),
-  ])
-# ---
 # name: test_snapshots[home_assistant_bridge_basic_cover]
   list([
     dict({
@@ -17954,6 +17636,733 @@
     }),
   ])
 # ---
+# name: test_snapshots[somfy_venetian_blinds]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX Internal Cover',
+        'model_id': None,
+        'name': 'VELUX Internal Cover',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '0.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_internal_cover_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX Internal Cover Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX Internal Cover Identify',
+            }),
+            'entity_id': 'button.velux_internal_cover_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'cover',
+            'entity_category': None,
+            'entity_id': 'cover.velux_internal_cover_venetian_blinds',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'VELUX Internal Cover Venetian Blinds',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <CoverEntityFeature: 183>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_position': 0,
+              'current_tilt_position': 100,
+              'friendly_name': 'VELUX Internal Cover Venetian Blinds',
+              'supported_features': <CoverEntityFeature: 183>,
+            }),
+            'entity_id': 'cover.velux_internal_cover_venetian_blinds',
+            'state': 'closed',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[u_by_moen_ts3304]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Moen Incorporated',
+        'model': 'TS3304',
+        'model_id': None,
+        'name': 'U by Moen-015F44',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '3.3.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.u_by_moen_015f44_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'U by Moen-015F44 Identify',
+            }),
+            'entity_id': 'button.u_by_moen_015f44_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'hvac_modes': list([
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.OFF: 'off'>,
+              ]),
+              'max_temp': 35,
+              'min_temp': 7,
+              'target_temp_step': 1.0,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'climate',
+            'entity_category': None,
+            'entity_id': 'climate.u_by_moen_015f44',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <ClimateEntityFeature: 385>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_11',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_temperature': 21.7,
+              'friendly_name': 'U by Moen-015F44',
+              'hvac_action': <HVACAction.OFF: 'off'>,
+              'hvac_modes': list([
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.OFF: 'off'>,
+              ]),
+              'max_temp': 35,
+              'min_temp': 7,
+              'supported_features': <ClimateEntityFeature: 385>,
+              'target_temp_step': 1.0,
+              'temperature': None,
+            }),
+            'entity_id': 'climate.u_by_moen_015f44',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.u_by_moen_015f44_current_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Current Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_11_13',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'U by Moen-015F44 Current Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.u_by_moen_015f44_current_temperature',
+            'state': '21.66666',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44',
+            }),
+            'entity_id': 'switch.u_by_moen_015f44',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_1',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 1',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_17',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 1',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_1',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_2',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 2',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_22',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 2',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_2',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_3',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 3',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_27',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 3',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_3',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_4',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 4',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_32',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 4',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_4',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[velux_active_netatmo_co2]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX Sensor',
+        'model_id': None,
+        'name': 'VELUX Sensor',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '16.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_sensor_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX Sensor Identify',
+            }),
+            'entity_id': 'button.velux_sensor_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Carbon Dioxide sensor',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_14',
+            'unit_of_measurement': 'ppm',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'carbon_dioxide',
+              'friendly_name': 'VELUX Sensor Carbon Dioxide sensor',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': 'ppm',
+            }),
+            'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
+            'state': '1124.0',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.velux_sensor_humidity_sensor',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Humidity sensor',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_11',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'humidity',
+              'friendly_name': 'VELUX Sensor Humidity sensor',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.velux_sensor_humidity_sensor',
+            'state': '69.0',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.velux_sensor_temperature_sensor',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Temperature sensor',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'VELUX Sensor Temperature sensor',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.velux_sensor_temperature_sensor',
+            'state': '23.9',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[velux_gateway]
   list([
     dict({
@@ -18354,6 +18763,249 @@
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.velux_window_roof_window',
+            'state': 'closed',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[velux_window]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX Window',
+        'model_id': None,
+        'name': 'VELUX Window',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '0.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_window_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX Window Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX Window Identify',
+            }),
+            'entity_id': 'button.velux_window_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'cover',
+            'entity_category': None,
+            'entity_id': 'cover.velux_window_roof_window',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+            'original_icon': None,
+            'original_name': 'VELUX Window Roof Window',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <CoverEntityFeature: 7>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_position': 0,
+              'device_class': 'window',
+              'friendly_name': 'VELUX Window Roof Window',
+              'supported_features': <CoverEntityFeature: 7>,
+            }),
+            'entity_id': 'cover.velux_window_roof_window',
+            'state': 'closed',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[velux_window_cover]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX External Cover',
+        'model_id': None,
+        'name': 'VELUX External Cover',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '15.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_external_cover_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX External Cover Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX External Cover Identify',
+            }),
+            'entity_id': 'button.velux_external_cover_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'cover',
+            'entity_category': None,
+            'entity_id': 'cover.velux_external_cover_awning_blinds',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'VELUX External Cover Awning Blinds',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <CoverEntityFeature: 7>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_position': 0,
+              'friendly_name': 'VELUX External Cover Awning Blinds',
+              'supported_features': <CoverEntityFeature: 7>,
+            }),
+            'entity_id': 'cover.velux_external_cover_awning_blinds',
             'state': 'closed',
           }),
         }),

@@ -26,7 +26,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -41,8 +41,6 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
     """Set up La Marzocco as config entry."""
@@ -53,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
+        client=get_async_client(hass),
     )
 
     # initialize local API
@@ -102,12 +101,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     coordinator = LaMarzoccoUpdateCoordinator(
         hass=hass,
+        entry=entry,
         local_client=local_client,
         cloud_client=cloud_client,
         bluetooth_client=bluetooth_client,
     )
 
-    await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

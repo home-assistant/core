@@ -5,17 +5,18 @@ from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag
-from functools import cached_property
 import logging
 import threading
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from propcache import cached_property
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -34,6 +35,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import (
@@ -981,10 +983,13 @@ async def _test_friendly_name(
 ) -> None:
     """Test friendly name."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -1306,10 +1311,13 @@ async def test_entity_name_translation_placeholder_errors(
         """Return all backend translations."""
         return translations[language]
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
-        return True
 
     ent = MockEntity(
         unique_id="qwer",
@@ -1531,7 +1539,11 @@ async def test_friendly_name_updated(
 ) -> None:
     """Test friendly name is updated when device or entity registry updates."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [
@@ -1547,7 +1559,6 @@ async def test_friendly_name_updated(
                 ),
             ]
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -2303,7 +2314,12 @@ async def test_update_capabilities_too_often_cooldown(
 
 
 @pytest.mark.parametrize(
-    ("property", "default_value", "values"), [("attribution", None, ["abcd", "efgh"])]
+    ("property", "default_value", "values"),
+    [
+        ("attribution", None, ["abcd", "efgh"]),
+        ("attribution", None, [True, 1]),
+        ("attribution", None, [1.0, 1]),
+    ],
 )
 async def test_cached_entity_properties(
     hass: HomeAssistant, property: str, default_value: Any, values: Any
@@ -2312,22 +2328,30 @@ async def test_cached_entity_properties(
     ent1 = entity.Entity()
     ent2 = entity.Entity()
     assert getattr(ent1, property) == default_value
+    assert type(getattr(ent1, property)) is type(default_value)
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
     # Test set
     setattr(ent1, f"_attr_{property}", values[0])
     assert getattr(ent1, property) == values[0]
+    assert type(getattr(ent1, property)) is type(values[0])
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
     # Test update
     setattr(ent1, f"_attr_{property}", values[1])
     assert getattr(ent1, property) == values[1]
+    assert type(getattr(ent1, property)) is type(values[1])
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
     # Test delete
     delattr(ent1, f"_attr_{property}")
     assert getattr(ent1, property) == default_value
+    assert type(getattr(ent1, property)) is type(default_value)
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
 
 async def test_cached_entity_property_delete_attr(hass: HomeAssistant) -> None:

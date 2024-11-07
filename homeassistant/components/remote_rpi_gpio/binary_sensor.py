@@ -15,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .. import remote_rpi_gpio
 from . import (
     CONF_BOUNCETIME,
     CONF_INVERT_LOGIC,
@@ -23,6 +22,8 @@ from . import (
     DEFAULT_BOUNCETIME,
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
+    read_input,
+    setup_input,
 )
 
 CONF_PORTS = "ports"
@@ -56,9 +57,7 @@ def setup_platform(
     devices = []
     for port_num, port_name in ports.items():
         try:
-            remote_sensor = remote_rpi_gpio.setup_input(
-                address, port_num, pull_mode, bouncetime
-            )
+            remote_sensor = setup_input(address, port_num, pull_mode, bouncetime)
         except (ValueError, IndexError, KeyError, OSError):
             return
         new_sensor = RemoteRPiGPIOBinarySensor(port_name, remote_sensor, invert_logic)
@@ -84,7 +83,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
 
         def read_gpio():
             """Read state from GPIO."""
-            self._state = remote_rpi_gpio.read_input(self._sensor)
+            self._state = read_input(self._sensor)
             self.schedule_update_ha_state()
 
         self._sensor.when_deactivated = read_gpio
@@ -108,6 +107,6 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     def update(self) -> None:
         """Update the GPIO state."""
         try:
-            self._state = remote_rpi_gpio.read_input(self._sensor)
+            self._state = read_input(self._sensor)
         except requests.exceptions.ConnectionError:
             return

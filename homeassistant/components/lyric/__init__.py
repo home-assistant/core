@@ -10,9 +10,6 @@ import logging
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
-from aiolyric.objects.device import LyricDevice
-from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricAccessories, LyricRoom
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -22,14 +19,8 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     config_validation as cv,
-    device_registry as dr,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
     ConfigEntryLyricClient,
@@ -80,11 +71,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await lyric.get_locations()
                 await asyncio.gather(
                     *(
-                        lyric.get_thermostat_rooms(location.locationID, device.deviceID)
+                        lyric.get_thermostat_rooms(
+                            location.location_id, device.device_id
+                        )
                         for location in lyric.locations
                         for device in location.devices
-                        if device.deviceClass == "Thermostat"
-                        and device.deviceID.startswith("LCC")
+                        if device.device_class == "Thermostat"
+                        and device.device_id.startswith("LCC")
                     )
                 )
 
@@ -102,6 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator[Lyric](
         hass,
         _LOGGER,
+        config_entry=entry,
         # Name of the data. For logging purposes.
         name="lyric_coordinator",
         update_method=async_update_data,
@@ -125,88 +119,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
-    """Defines a base Honeywell Lyric entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[Lyric],
-        location: LyricLocation,
-        device: LyricDevice,
-        key: str,
-    ) -> None:
-        """Initialize the Honeywell Lyric entity."""
-        super().__init__(coordinator)
-        self._key = key
-        self._location = location
-        self._mac_id = device.macID
-        self._update_thermostat = coordinator.data.update_thermostat
-        self._update_fan = coordinator.data.update_fan
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._key
-
-    @property
-    def location(self) -> LyricLocation:
-        """Get the Lyric Location."""
-        return self.coordinator.data.locations_dict[self._location.locationID]
-
-    @property
-    def device(self) -> LyricDevice:
-        """Get the Lyric Device."""
-        return self.location.devices_dict[self._mac_id]
-
-
-class LyricDeviceEntity(LyricEntity):
-    """Defines a Honeywell Lyric device entity."""
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Honeywell Lyric instance."""
-        return DeviceInfo(
-            identifiers={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
-            manufacturer="Honeywell",
-            model=self.device.deviceModel,
-            name=f"{self.device.name} Thermostat",
-        )
-
-
-class LyricAccessoryEntity(LyricDeviceEntity):
-    """Defines a Honeywell Lyric accessory entity, a sub-device of a thermostat."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[Lyric],
-        location: LyricLocation,
-        device: LyricDevice,
-        room: LyricRoom,
-        accessory: LyricAccessories,
-        key: str,
-    ) -> None:
-        """Initialize the Honeywell Lyric accessory entity."""
-        super().__init__(coordinator, location, device, key)
-        self._room = room
-        self._accessory = accessory
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Honeywell Lyric instance."""
-        return DeviceInfo(
-            identifiers={
-                (
-                    f"{dr.CONNECTION_NETWORK_MAC}_room_accessory",
-                    f"{self._mac_id}_room{self._room.id}_accessory{self._accessory.id}",
-                )
-            },
-            manufacturer="Honeywell",
-            model="RCHTSENSOR",
-            name=f"{self._room.roomName} Sensor",
-            via_device=(dr.CONNECTION_NETWORK_MAC, self._mac_id),
-        )

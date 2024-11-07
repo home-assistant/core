@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -602,6 +602,41 @@ TEST_DATA = [
             "next_state": "80",
         },
     ),
+    (  # Air purifier filter time sensor
+        {
+            "config": {
+                "filterlifetime": 259200,
+                "ledindication": True,
+                "locked": False,
+                "mode": "speed_1",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "de26d19d9e91b2db3ded6ee7ab6b6a4b",
+            "lastannounced": None,
+            "lastseen": "2024-08-07T18:27Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier",
+            "name": "IKEA Starkvind",
+            "productid": "E2007",
+            "state": {
+                "deviceruntime": 73405,
+                "filterruntime": 73405,
+                "lastupdated": "2024-08-07T18:27:52.543",
+                "replacefilter": False,
+                "speed": 20,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAAirPurifier",
+            "uniqueid": "0c:43:14:ff:fe:6c:20:12-01-fc7d",
+        },
+        {
+            "entity_id": "sensor.ikea_starkvind_filter_time",
+            "websocket_event": {"state": {"filterruntime": 100000}},
+            "next_state": "1.15740740740741",
+        },
+    ),
 ]
 
 
@@ -638,17 +673,6 @@ async def test_sensors(
 
     await sensor_ws_data(expected["websocket_event"])
     assert hass.states.get(expected["entity_id"]).state == expected["next_state"]
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(

@@ -115,7 +115,7 @@ class HomeAssistantSnapcast:
             client.set_availability(True)
         for group in self.groups:
             group.set_availability(True)
-        _LOGGER.info("Server connected: %s", self.hpid)
+        _LOGGER.debug("Server connected: %s", self.hpid)
         self.on_update()
 
     def on_disconnect(self, ex: Exception | None) -> None:

@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aio_georss_gdacs", "aio_georss_client"],
   "quality_scale": "platinum",
-  "requirements": ["aio-georss-gdacs==0.9"]
+  "requirements": ["aio-georss-gdacs==0.10"]
 }

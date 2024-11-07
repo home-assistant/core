@@ -20,21 +20,16 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
     HASSIO_CONFIGURATION_URL,
 )
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
-from homeassistant.config_entries import (
-    SOURCE_HASSIO,
-    SOURCE_REAUTH,
-    SOURCE_SSDP,
-    SOURCE_USER,
-    ConfigEntry,
-)
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .conftest import API_KEY, BRIDGE_ID
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 BAD_BRIDGEID = "0000000000000000"
@@ -225,7 +220,7 @@ async def test_manual_configuration_after_discovery_ResponseError(
 async def test_manual_configuration_update_configuration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test that manual configuration can update existing config entry."""
     aioclient_mock.get(
@@ -404,15 +399,10 @@ async def test_link_step_fails(
 async def test_reauth_flow_update_configuration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify reauth flow can update gateway API key."""
-    result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
-        data=config_entry_setup.data,
-        context={"source": SOURCE_REAUTH},
-    )
-
+    result = await config_entry_setup.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
@@ -484,7 +474,7 @@ async def test_flow_ssdp_discovery(
 
 
 async def test_ssdp_discovery_update_configuration(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test if a discovered bridge is configured but updates with new attributes."""
     with patch(
@@ -513,7 +503,7 @@ async def test_ssdp_discovery_update_configuration(
 
 
 async def test_ssdp_discovery_dont_update_configuration(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test if a discovered bridge has already been configured."""
 
@@ -538,7 +528,7 @@ async def test_ssdp_discovery_dont_update_configuration(
 
 @pytest.mark.parametrize("config_entry_source", [SOURCE_HASSIO])
 async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
     result = await hass.config_entries.flow.async_init(
@@ -608,7 +598,7 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
 
 async def test_hassio_discovery_update_configuration(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test we can update an existing config entry."""
     with patch(
@@ -664,7 +654,7 @@ async def test_hassio_discovery_dont_update_configuration(hass: HomeAssistant) -
 
 
 async def test_option_flow(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test config flow options."""
     result = await hass.config_entries.options.async_init(config_entry_setup.entry_id)

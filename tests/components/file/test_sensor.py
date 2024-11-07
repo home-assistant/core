@@ -47,7 +47,11 @@ async def test_file_value_entry_setup(
     }
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
+        domain=DOMAIN,
+        data=data,
+        version=2,
+        options={},
+        title=f"test [{data['file_path']}]",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -66,11 +70,17 @@ async def test_file_value_template(
         "platform": "sensor",
         "name": "file2",
         "file_path": get_fixture_path("file_value_template.txt", "file"),
+    }
+    options = {
         "value_template": "{{ value_json.temperature }}",
     }
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
+        domain=DOMAIN,
+        data=data,
+        version=2,
+        options=options,
+        title=f"test [{data['file_path']}]",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -90,7 +100,11 @@ async def test_file_empty(hass: HomeAssistant, mock_is_allowed_path: MagicMock) 
     }
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
+        domain=DOMAIN,
+        data=data,
+        version=2,
+        options={},
+        title=f"test [{data['file_path']}]",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -113,7 +127,11 @@ async def test_file_path_invalid(
     }
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
+        domain=DOMAIN,
+        data=data,
+        version=2,
+        options={},
+        title=f"test [{data['file_path']}]",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

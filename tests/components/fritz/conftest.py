@@ -30,7 +30,7 @@ class FritzServiceMock(Service):
 class FritzConnectionMock:
     """FritzConnection mocking."""
 
-    def __init__(self, services):
+    def __init__(self, services) -> None:
         """Init Mocking class."""
         self.modelname = MOCK_MODELNAME
         self.call_action = self._call_action

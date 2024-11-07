@@ -22,6 +22,7 @@ from homeassistant.components import (
     sensor,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -113,6 +114,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_ONLY_RE = re.compile(r"[^\d.]+")
 VERSION_RE = re.compile(r"([0-9]+)(\.[0-9]+)?(\.[0-9]+)?")
+INVALID_END_CHARS = "-_"
 MAX_VERSION_PART = 2**32 - 1
 
 
@@ -167,9 +169,11 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
-        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(binary_sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+        ),
         vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
-            binary_sensor.DOMAIN
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
@@ -411,7 +415,11 @@ def cleanup_name_for_homekit(name: str | None) -> str:
     # likely isn't a problem
     if name is None:
         return "None"  # None crashes apple watches
-    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
+    return (
+        name.translate(HOMEKIT_CHAR_TRANSLATIONS)
+        .lstrip(INVALID_END_CHARS)[:MAX_NAME_LENGTH]
+        .rstrip(INVALID_END_CHARS)
+    )
 
 
 def temperature_to_homekit(temperature: float, unit: str) -> float:

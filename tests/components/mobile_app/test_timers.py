@@ -61,6 +61,8 @@ async def test_timer_events(
             "channel": "Timers",
             "group": "timers",
             "importance": "high",
+            "ttl": 0,
+            "priority": "high",
             "push": {
                 "interruption-level": "time-sensitive",
             },

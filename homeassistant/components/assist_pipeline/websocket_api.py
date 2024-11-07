@@ -24,6 +24,9 @@ from .const import (
     DEFAULT_WAKE_WORD_TIMEOUT,
     DOMAIN,
     EVENT_RECORDING,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
 )
 from .error import PipelineNotFound
 from .pipeline import (
@@ -92,7 +95,6 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("volume_multiplier"): float,
                             # Advanced use cases/testing
                             vol.Optional("no_vad"): bool,
-                            vol.Optional("no_chunking"): bool,
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -170,9 +172,14 @@ async def websocket_run(
 
             # Yield until we receive an empty chunk
             while chunk := await audio_queue.get():
-                if incoming_sample_rate != 16000:
+                if incoming_sample_rate != SAMPLE_RATE:
                     chunk, state = audioop.ratecv(
-                        chunk, 2, 1, incoming_sample_rate, 16000, state
+                        chunk,
+                        SAMPLE_WIDTH,
+                        SAMPLE_CHANNELS,
+                        incoming_sample_rate,
+                        SAMPLE_RATE,
+                        state,
                     )
                 yield chunk
 
@@ -206,7 +213,6 @@ async def websocket_run(
             auto_gain_dbfs=msg_input.get("auto_gain_dbfs", 0),
             volume_multiplier=msg_input.get("volume_multiplier", 1.0),
             is_vad_enabled=not msg_input.get("no_vad", False),
-            is_chunking_enabled=not msg_input.get("no_chunking", False),
         )
     elif start_stage == PipelineStage.INTENT:
         # Input to conversation agent
@@ -424,9 +430,9 @@ def websocket_list_languages(
     connection.send_result(
         msg["id"],
         {
-            "languages": sorted(pipeline_languages)
-            if pipeline_languages
-            else pipeline_languages
+            "languages": (
+                sorted(pipeline_languages) if pipeline_languages else pipeline_languages
+            )
         },
     )
 

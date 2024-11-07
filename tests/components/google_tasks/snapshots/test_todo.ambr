@@ -79,9 +79,6 @@
     }),
   ])
 # ---
-# name: test_move_todo_item[api_responses0].4
-  None
-# ---
 # name: test_parent_child_ordering[api_responses0]
   list([
     dict({

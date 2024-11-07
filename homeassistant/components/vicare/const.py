@@ -10,6 +10,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.WATER_HEATER,
@@ -22,7 +23,6 @@ UNSUPPORTED_DEVICES = [
     "E3_FloorHeatingCircuitChannel",
     "E3_FloorHeatingCircuitDistributorBox",
     "E3_RoomControl_One_522",
-    "E3_RoomSensor",
 ]
 
 DEVICE_LIST = "device_list"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 import voluptuous as vol
@@ -139,7 +140,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery_confirm(self, user_input=None):
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is None:
             return self.async_show_form(
@@ -149,7 +152,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._create_entry()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -175,7 +180,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_user_form(errors)
 
-    async def async_step_credentials(self, user_input=None):
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle username and password input."""
         errors = {}
 
@@ -200,7 +207,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_credentials_form(errors)
 
-    async def async_step_ws_port(self, user_input=None):
+    async def async_step_ws_port(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle websocket port of discovered node."""
         errors = {}
 
@@ -223,12 +232,12 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_ws_port_form(errors)
 
-    async def async_step_import(self, data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML."""
         reason = None
         try:
-            await validate_http(self.hass, data)
-            await validate_ws(self.hass, data)
+            await validate_http(self.hass, import_data)
+            await validate_ws(self.hass, import_data)
         except InvalidAuth:
             _LOGGER.exception("Invalid Kodi credentials")
             reason = "invalid_auth"
@@ -239,12 +248,16 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             reason = "unknown"
         else:
-            return self.async_create_entry(title=data[CONF_NAME], data=data)
+            return self.async_create_entry(
+                title=import_data[CONF_NAME], data=import_data
+            )
 
         return self.async_abort(reason=reason)
 
     @callback
-    def _show_credentials_form(self, errors=None):
+    def _show_credentials_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         schema = vol.Schema(
             {
                 vol.Optional(
@@ -257,7 +270,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=errors or {}
+            step_id="credentials", data_schema=schema, errors=errors
         )
 
     @callback
@@ -299,7 +312,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _get_data(self):
+    def _get_data(self) -> dict[str, Any]:
         return {
             CONF_NAME: self._name,
             CONF_HOST: self._host,

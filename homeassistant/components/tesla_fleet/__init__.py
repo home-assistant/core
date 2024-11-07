@@ -3,11 +3,19 @@
 import asyncio
 from typing import Final
 
+from aiohttp.client_exceptions import ClientResponseError
 import jwt
-from tesla_fleet_api import EnergySpecific, TeslaFleetApi, VehicleSpecific
+from tesla_fleet_api import (
+    EnergySpecific,
+    TeslaFleetApi,
+    VehicleSigned,
+    VehicleSpecific,
+)
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
+    InvalidRegion,
     InvalidToken,
+    LibraryError,
     LoginRequired,
     OAuthExpired,
     TeslaFleetError,
@@ -26,6 +34,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .config_flow import OAuth2FlowHandler
 from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
@@ -33,8 +42,21 @@ from .coordinator import (
     TeslaFleetVehicleDataCoordinator,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
+from .oauth import TeslaSystemImplementation
 
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
 
@@ -48,8 +70,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     session = async_get_clientsession(hass)
 
     token = jwt.decode(access_token, options={"verify_signature": False})
-    scopes = token["scp"]
-    region = token["ou_code"].lower()
+    scopes: list[Scope] = [Scope(s) for s in token["scp"]]
+    region: str = token["ou_code"].lower()
+
+    OAuth2FlowHandler.async_register_implementation(
+        hass,
+        TeslaSystemImplementation(hass),
+    )
 
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
@@ -57,7 +84,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
     async def _refresh_token() -> str:
         async with refresh_lock:
-            await oauth_session.async_ensure_token_valid()
+            try:
+                await oauth_session.async_ensure_token_valid()
+            except ClientResponseError as e:
+                if e.status == 401:
+                    raise ConfigEntryAuthFailed from e
+                raise ConfigEntryNotReady from e
             token: str = oauth_session.token[CONF_ACCESS_TOKEN]
             return token
 
@@ -68,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         region=region,
         charging_scope=False,
         partner_scope=False,
-        user_scope=False,
         energy_scope=Scope.ENERGY_DEVICE_DATA in scopes,
         vehicle_scope=Scope.VEHICLE_DEVICE_DATA in scopes,
         refresh_hook=_refresh_token,
@@ -77,6 +108,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         products = (await tesla.products())["response"]
     except (InvalidToken, OAuthExpired, LoginRequired) as e:
         raise ConfigEntryAuthFailed from e
+    except InvalidRegion:
+        try:
+            LOGGER.warning("Region is invalid, trying to find the correct region")
+            await tesla.find_server()
+            try:
+                products = (await tesla.products())["response"]
+            except TeslaFleetError as e:
+                raise ConfigEntryNotReady from e
+        except LibraryError as e:
+            raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
@@ -86,11 +127,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     vehicles: list[TeslaFleetVehicleData] = []
     energysites: list[TeslaFleetEnergyData] = []
     for product in products:
-        if "vin" in product and tesla.vehicle:
+        if "vin" in product and hasattr(tesla, "vehicle"):
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
-            api = VehicleSpecific(tesla.vehicle, vin)
+            signing = product["command_signing"] == "required"
+            if signing:
+                if not tesla.private_key:
+                    await tesla.get_private_key("config/tesla_fleet.key")
+                api = VehicleSigned(tesla.vehicle, vin)
+            else:
+                api = VehicleSpecific(tesla.vehicle, vin)
             coordinator = TeslaFleetVehicleDataCoordinator(hass, api, product)
 
             await coordinator.async_config_entry_first_refresh()
@@ -109,9 +156,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     coordinator=coordinator,
                     vin=vin,
                     device=device,
+                    signing=signing,
                 )
             )
-        elif "energy_site_id" in product and tesla.energy:
+        elif "energy_site_id" in product and hasattr(tesla, "energy"):
             site_id = product["energy_site_id"]
             if not (
                 product["components"]["battery"]

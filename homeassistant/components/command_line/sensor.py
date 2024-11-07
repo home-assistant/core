@@ -48,6 +48,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command Sensor."""
+    if not discovery_info:
+        return
 
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     sensor_config = discovery_info
@@ -57,10 +59,8 @@ async def async_setup_platform(
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
     json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
     data = CommandSensorData(hass, command, command_timeout)
-
-    if value_template := sensor_config.get(CONF_VALUE_TEMPLATE):
-        value_template.hass = hass
 
     trigger_entity_config = {
         CONF_NAME: Template(sensor_config[CONF_NAME], hass),

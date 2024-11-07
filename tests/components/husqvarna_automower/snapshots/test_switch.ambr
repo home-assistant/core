@@ -91,6 +91,52 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_snapshot[switch.test_mower_1_back_lawn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_mower_1_back_lawn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Back lawn',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area_work_area',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_654321_work_area',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_snapshot[switch.test_mower_1_back_lawn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Back lawn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_mower_1_back_lawn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_snapshot[switch.test_mower_1_enable_schedule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -131,6 +177,144 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_mower_1_enable_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_snapshot[switch.test_mower_1_front_lawn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_mower_1_front_lawn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Front lawn',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_area_work_area',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_work_area',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_snapshot[switch.test_mower_1_front_lawn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Front lawn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_mower_1_front_lawn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_snapshot[switch.test_mower_1_my_lawn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_mower_1_my_lawn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'My lawn',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'my_lawn_work_area',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_work_area',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_snapshot[switch.test_mower_1_my_lawn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 My lawn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_mower_1_my_lawn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_snapshot[switch.test_mower_2_enable_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_mower_2_enable_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Enable schedule',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'enable_schedule',
+    'unique_id': '1234_enable_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_snapshot[switch.test_mower_2_enable_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 2 Enable schedule',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_mower_2_enable_schedule',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

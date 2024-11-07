@@ -46,8 +46,7 @@ class AsyncConfigEntryAuth:
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
+        await self._oauth_session.async_ensure_token_valid()
         return self._oauth_session.token[CONF_ACCESS_TOKEN]
 
     async def _get_service(self) -> Resource:

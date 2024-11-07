@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.entity_registry as er
@@ -25,7 +24,6 @@ import homeassistant.helpers.entity_registry as er
 from .const import (
     ATTR_LAST_DATA,
     CONF_APP_KEY,
-    DOMAIN,
     LOGGER,
     TYPE_SOLARRADIATION,
     TYPE_SOLARRADIATION_LX,
@@ -37,7 +35,6 @@ DATA_CONFIG = "config"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 type AmbientStationConfigEntry = ConfigEntry[AmbientStation]
 

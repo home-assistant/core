@@ -59,7 +59,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError(f"Key `{key}` is missing from schema")
 
 
 @pytest.mark.parametrize("platform", ["sensor"])

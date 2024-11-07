@@ -41,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SPC component."""
 
-    async def async_upate_callback(spc_object):
+    async def async_update_callback(spc_object):
         if isinstance(spc_object, Area):
             async_dispatcher_send(hass, SIGNAL_UPDATE_ALARM.format(spc_object.id))
         elif isinstance(spc_object, Zone):
@@ -54,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         session=session,
         api_url=config[DOMAIN].get(CONF_API_URL),
         ws_url=config[DOMAIN].get(CONF_WS_URL),
-        async_callback=async_upate_callback,
+        async_callback=async_update_callback,
     )
 
     hass.data[DATA_API] = spc

@@ -1,7 +1,7 @@
 {
   "domain": "homeassistant_hardware",
   "name": "Home Assistant Hardware",
-  "after_dependencies": ["zha"],
+  "after_dependencies": ["hassio", "zha"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_hardware",
   "integration_type": "system"

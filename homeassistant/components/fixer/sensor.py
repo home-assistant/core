@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from fixerio import Fixerio
 from fixerio.exceptions import FixerioException
@@ -89,13 +90,14 @@ class ExchangeRateSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.data.rate is not None:
             return {
                 ATTR_EXCHANGE_RATE: self.data.rate["rates"][self._target],
                 ATTR_TARGET: self._target,
             }
+        return None
 
     def update(self) -> None:
         """Get the latest data and updates the states."""

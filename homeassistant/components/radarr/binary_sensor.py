@@ -13,8 +13,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RadarrConfigEntry, RadarrEntity
+from . import RadarrConfigEntry
 from .const import HEALTH_ISSUES
+from .entity import RadarrEntity
 
 BINARY_SENSOR_TYPE = BinarySensorEntityDescription(
     key="health",

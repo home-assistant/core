@@ -94,7 +94,7 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.components.websocket_api import ActiveConnection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1311,12 +1311,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Remove a node from the network."""
         zha_gateway = get_zha_gateway(hass)
         ieee: EUI64 = service.data[ATTR_IEEE]
-        zha_device: Device | None = zha_gateway.get_device(ieee)
-        if zha_device is not None and zha_device.is_active_coordinator:
-            _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
-            return
         _LOGGER.info("Removing node %s", ieee)
-        await application_controller.remove(ieee)
+        await zha_gateway.async_remove_device(ieee)
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_REMOVE, remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]

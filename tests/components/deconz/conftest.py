@@ -219,7 +219,7 @@ async def fixture_config_entry_factory(
 
 @pytest.fixture(name="config_entry_setup")
 async def fixture_config_entry_setup(
-    config_entry_factory: Callable[[], Coroutine[Any, Any, MockConfigEntry]],
+    config_entry_factory: ConfigEntryFactoryType,
 ) -> MockConfigEntry:
     """Fixture providing a set up instance of deCONZ integration."""
     return await config_entry_factory()

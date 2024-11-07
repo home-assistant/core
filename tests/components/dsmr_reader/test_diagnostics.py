@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -36,4 +37,4 @@ async def test_get_config_entry_diagnostics(
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
-    assert diagnostics == snapshot
+    assert diagnostics == snapshot(exclude=props("created_at", "modified_at"))

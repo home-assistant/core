@@ -38,7 +38,7 @@ async def load_integration_from_entry(
                 return_value=get_train_stop,
             ),
             patch(
-                "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+                "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
             ),
         ):
             await hass.config_entries.async_setup(config_entry_id)

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from xknx import XKNX
 from xknx.devices import Switch as XknxSwitch
 
 from homeassistant import config_entries
@@ -18,9 +17,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -29,14 +30,13 @@ from .const import (
     CONF_INVERT,
     CONF_RESPOND_TO_READ,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
-from .knx_entity import KnxEntity
+from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import SwitchSchema
 from .storage.const import (
-    CONF_DEVICE_INFO,
     CONF_ENTITY,
     CONF_GA_PASSIVE,
     CONF_GA_STATE,
@@ -51,13 +51,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch(es) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    platform = async_get_current_platform()
+    knx_module.config_store.add_platform(
+        platform=Platform.SWITCH,
+        controller=KnxUiEntityPlatformController(
+            knx_module=knx_module,
+            entity_platform=platform,
+            entity_class=KnxUiSwitch,
+        ),
+    )
 
-    entities: list[KnxEntity] = []
-    if yaml_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
+    entities: list[KnxYamlEntity | KnxUiEntity] = []
+    if yaml_platform_config := knx_module.config_yaml.get(Platform.SWITCH):
         entities.extend(
-            KnxYamlSwitch(knx_module.xknx, entity_config)
-            for entity_config in yaml_config
+            KnxYamlSwitch(knx_module, entity_config)
+            for entity_config in yaml_platform_config
         )
     if ui_config := knx_module.config_store.data["entities"].get(Platform.SWITCH):
         entities.extend(
@@ -67,15 +76,8 @@ async def async_setup_entry(
     if entities:
         async_add_entities(entities)
 
-    @callback
-    def add_new_ui_switch(unique_id: str, config: dict[str, Any]) -> None:
-        """Add KNX entity at runtime."""
-        async_add_entities([KnxUiSwitch(knx_module, unique_id, config)])
 
-    knx_module.config_store.async_add_entity[Platform.SWITCH] = add_new_ui_switch
-
-
-class _KnxSwitch(KnxEntity, SwitchEntity, RestoreEntity):
+class _KnxSwitch(SwitchEntity, RestoreEntity):
     """Base class for a KNX switch."""
 
     _device: XknxSwitch
@@ -103,52 +105,52 @@ class _KnxSwitch(KnxEntity, SwitchEntity, RestoreEntity):
         await self._device.set_off()
 
 
-class KnxYamlSwitch(_KnxSwitch):
+class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
     """Representation of a KNX switch configured from YAML."""
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    _device: XknxSwitch
+
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX switch."""
         super().__init__(
+            knx_module=knx_module,
             device=XknxSwitch(
-                xknx,
+                xknx=knx_module.xknx,
                 name=config[CONF_NAME],
                 group_address=config[KNX_ADDRESS],
                 group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
                 respond_to_read=config[CONF_RESPOND_TO_READ],
                 invert=config[SwitchSchema.CONF_INVERT],
-            )
+            ),
         )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_unique_id = str(self._device.switch.group_address)
 
 
-class KnxUiSwitch(_KnxSwitch):
+class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
     """Representation of a KNX switch configured from UI."""
 
-    _attr_has_entity_name = True
+    _device: XknxSwitch
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
     ) -> None:
-        """Initialize of KNX switch."""
+        """Initialize KNX switch."""
         super().__init__(
-            device=XknxSwitch(
-                knx_module.xknx,
-                name=config[CONF_ENTITY][CONF_NAME],
-                group_address=config[DOMAIN][CONF_GA_SWITCH][CONF_GA_WRITE],
-                group_address_state=[
-                    config[DOMAIN][CONF_GA_SWITCH][CONF_GA_STATE],
-                    *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
-                ],
-                respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
-                sync_state=config[DOMAIN][CONF_SYNC_STATE],
-                invert=config[DOMAIN][CONF_INVERT],
-            )
+            knx_module=knx_module,
+            unique_id=unique_id,
+            entity_config=config[CONF_ENTITY],
         )
-        self._attr_entity_category = config[CONF_ENTITY][CONF_ENTITY_CATEGORY]
-        self._attr_unique_id = unique_id
-        if device_info := config[CONF_ENTITY].get(CONF_DEVICE_INFO):
-            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
-
-        knx_module.config_store.entities[unique_id] = self
+        self._device = XknxSwitch(
+            knx_module.xknx,
+            name=config[CONF_ENTITY][CONF_NAME],
+            group_address=config[DOMAIN][CONF_GA_SWITCH][CONF_GA_WRITE],
+            group_address_state=[
+                config[DOMAIN][CONF_GA_SWITCH][CONF_GA_STATE],
+                *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
+            ],
+            respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
+            sync_state=config[DOMAIN][CONF_SYNC_STATE],
+            invert=config[DOMAIN][CONF_INVERT],
+        )

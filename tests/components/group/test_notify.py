@@ -122,7 +122,7 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
             "services": [
                 {"service": "test_service1"},
                 {
-                    "service": "test_service2",
+                    "action": "test_service2",
                     "data": {
                         "target": "unnamed device",
                         "data": {"test": "message", "default": "default"},
@@ -202,6 +202,41 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     )
 
 
+async def test_invalid_configuration(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test failing to set up group with an invalid configuration."""
+    assert await async_setup_component(
+        hass,
+        "group",
+        {},
+    )
+    await hass.async_block_till_done()
+
+    group_setup = [
+        {
+            "platform": "group",
+            "name": "My invalid notification group",
+            "services": [
+                {
+                    "service": "test_service1",
+                    "action": "test_service2",
+                    "data": {
+                        "target": "unnamed device",
+                        "data": {"test": "message", "default": "default"},
+                    },
+                },
+            ],
+        }
+    ]
+    await help_setup_notify(hass, tmp_path, {"service1": 1, "service2": 2}, group_setup)
+    assert not hass.services.has_service("notify", "my_invalid_notification_group")
+    assert (
+        "Invalid config for 'notify' from integration 'group':"
+        " Cannot specify both 'service' and 'action'." in caplog.text
+    )
+
+
 async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
     """Verify we can reload the notify service."""
     assert await async_setup_component(
@@ -219,7 +254,7 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
             {
                 "name": "group_notify",
                 "platform": "group",
-                "services": [{"service": "test_service1"}],
+                "services": [{"action": "test_service1"}],
             }
         ],
     )

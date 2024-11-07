@@ -280,6 +280,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 76,
     },
     {
+        "connectable": True,
+        "domain": "husqvarna_automower_ble",
+        "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
+    },
+    {
         "domain": "ibeacon",
         "manufacturer_data_start": [
             2,
@@ -320,6 +325,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": False,
         "domain": "inkbird",
         "local_name": "tps",
+    },
+    {
+        "connectable": True,
+        "domain": "iron_os",
+        "service_uuid": "9eae1000-9d0d-48c5-aa55-33e27f9bc533",
     },
     {
         "connectable": False,

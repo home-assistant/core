@@ -45,11 +45,11 @@ async def mocked_hub(hass: HomeAssistant) -> Device:
 
     features = [
         _mocked_feature(
-            "temperature", value=20, category=Feature.Category.Primary, unit="celsius"
+            "temperature", value=20.2, category=Feature.Category.Primary, unit="celsius"
         ),
         _mocked_feature(
             "target_temperature",
-            value=22,
+            value=22.2,
             type_=Feature.Type.Number,
             category=Feature.Category.Primary,
             unit="celsius",
@@ -94,8 +94,8 @@ async def test_climate(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_HVAC_ACTION] is HVACAction.HEATING
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20
-    assert state.attributes[ATTR_TEMPERATURE] == 22
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.2
+    assert state.attributes[ATTR_TEMPERATURE] == 22.2
 
 
 async def test_states(
@@ -120,11 +120,12 @@ async def test_set_temperature(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_hub: Device
 ) -> None:
     """Test that set_temperature service calls the setter."""
+    mocked_thermostat = mocked_hub.children[0]
+    mocked_thermostat.features["target_temperature"].minimum_value = 0
+
     await setup_platform_for_device(
         hass, mock_config_entry, Platform.CLIMATE, mocked_hub
     )
-
-    mocked_thermostat = mocked_hub.children[0]
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,

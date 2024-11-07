@@ -178,7 +178,6 @@ class ZhaRadioManager:
         app_config[CONF_DEVICE] = self.device_settings
         app_config[CONF_NWK_BACKUP_ENABLED] = False
         app_config[CONF_USE_THREAD] = False
-        app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
             app_config, auto_form=False, start_radio=False

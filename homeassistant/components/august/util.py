@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from functools import partial
-import socket
 
 import aiohttp
 from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, Activity, ActivityType
@@ -26,14 +25,7 @@ def async_create_august_clientsession(hass: HomeAssistant) -> aiohttp.ClientSess
     # Create an aiohttp session instead of using the default one since the
     # default one is likely to trigger august's WAF if another integration
     # is also using Cloudflare
-    #
-    # The family is set to AF_INET because IPv6 keeps coming up as an issue
-    # see https://github.com/home-assistant/core/issues/97146
-    #
-    # When https://github.com/aio-libs/aiohttp/issues/4451 is implemented
-    # we can allow IPv6 again
-    #
-    return aiohttp_client.async_create_clientsession(hass, family=socket.AF_INET)
+    return aiohttp_client.async_create_clientsession(hass)
 
 
 def retrieve_time_based_activity(
@@ -71,14 +63,9 @@ def _activity_time_based(latest: Activity) -> Activity | None:
     """Get the latest state of the sensor."""
     start = latest.activity_start_time
     end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-    if start <= _native_datetime() <= end:
+    if start <= datetime.now() <= end:
         return latest
     return None
-
-
-def _native_datetime() -> datetime:
-    """Return time in the format august uses without timezone."""
-    return datetime.now()
 
 
 def retrieve_online_state(

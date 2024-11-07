@@ -1,7 +1,6 @@
 """Tests for the Wallbox integration."""
 
 from http import HTTPStatus
-import json
 
 import requests_mock
 
@@ -14,11 +13,15 @@ from homeassistant.components.wallbox.const import (
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
     CHARGER_ENERGY_PRICE_KEY,
+    CHARGER_FEATURES_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_NAME_KEY,
     CHARGER_PART_NUMBER_KEY,
+    CHARGER_PLAN_KEY,
+    CHARGER_POWER_BOOST_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_ID_KEY,
@@ -45,6 +48,8 @@ test_response = {
         CHARGER_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
         CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
         CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
+        CHARGER_MAX_ICP_CURRENT_KEY: 20,
+        CHARGER_PLAN_KEY: {CHARGER_FEATURES_KEY: [CHARGER_POWER_BOOST_KEY]},
     },
 }
 
@@ -64,6 +69,8 @@ test_response_bidir = {
         CHARGER_PART_NUMBER_KEY: "QSP1-0-2-4-9-002-E",
         CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
         CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
+        CHARGER_MAX_ICP_CURRENT_KEY: 20,
+        CHARGER_PLAN_KEY: {CHARGER_FEATURES_KEY: [CHARGER_POWER_BOOST_KEY]},
     },
 }
 
@@ -113,7 +120,7 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=HTTPStatus.OK,
         )
 
@@ -136,7 +143,7 @@ async def setup_integration_bidir(hass: HomeAssistant, entry: MockConfigEntry) -
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=HTTPStatus.OK,
         )
 
@@ -161,7 +168,7 @@ async def setup_integration_connection_error(
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=HTTPStatus.FORBIDDEN,
         )
 

@@ -21,7 +21,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,6 +54,7 @@ from .const import (
     REMINDER_DATE,
     REMINDER_DATE_LANG,
     REMINDER_DATE_STRING,
+    SECTION_NAME,
     SERVICE_NEW_TASK,
     START,
     SUMMARY,
@@ -68,6 +69,7 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONTENT): cv.string,
         vol.Optional(DESCRIPTION): cv.string,
         vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
+        vol.Optional(SECTION_NAME): vol.All(cv.string, vol.Lower),
         vol.Optional(LABELS): cv.ensure_list_csv,
         vol.Optional(ASSIGNEE): cv.string,
         vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
@@ -140,7 +142,7 @@ async def async_setup_platform(
     project_id_lookup = {}
 
     api = TodoistAPIAsync(token)
-    coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api, token)
+    coordinator = TodoistCoordinator(hass, _LOGGER, None, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
 
     async def _shutdown_coordinator(_: Event) -> None:
@@ -201,7 +203,7 @@ async def async_setup_platform(
     async_register_services(hass, coordinator)
 
 
-def async_register_services(
+def async_register_services(  # noqa: C901
     hass: HomeAssistant, coordinator: TodoistCoordinator
 ) -> None:
     """Register services."""
@@ -211,16 +213,42 @@ def async_register_services(
 
     session = async_get_clientsession(hass)
 
-    async def handle_new_task(call: ServiceCall) -> None:
+    async def handle_new_task(call: ServiceCall) -> None:  # noqa: C901
         """Call when a user creates a new Todoist Task from Home Assistant."""
-        project_name = call.data[PROJECT_NAME].lower()
+        project_name = call.data[PROJECT_NAME]
         projects = await coordinator.async_get_projects()
         project_id: str | None = None
         for project in projects:
             if project_name == project.name.lower():
                 project_id = project.id
+                break
         if project_id is None:
-            raise HomeAssistantError(f"Invalid project name '{project_name}'")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="project_invalid",
+                translation_placeholders={
+                    "project": project_name,
+                },
+            )
+
+        # Optional section within project
+        section_id: str | None = None
+        if SECTION_NAME in call.data:
+            section_name = call.data[SECTION_NAME]
+            sections = await coordinator.async_get_sections(project_id)
+            for section in sections:
+                if section_name == section.name.lower():
+                    section_id = section.id
+                    break
+            if section_id is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="section_invalid",
+                    translation_placeholders={
+                        "section": section_name,
+                        "project": project_name,
+                    },
+                )
 
         # Create the task
         content = call.data[CONTENT]
@@ -228,6 +256,10 @@ def async_register_services(
 
         if description := call.data.get(DESCRIPTION):
             data["description"] = description
+
+        if section_id is not None:
+            data["section_id"] = section_id
+
         if task_labels := call.data.get(LABELS):
             data["labels"] = task_labels
 
@@ -299,7 +331,11 @@ def async_register_services(
                         "type": "reminder_add",
                         "temp_id": str(uuid.uuid1()),
                         "uuid": str(uuid.uuid1()),
-                        "args": {"item_id": api_task.id, "due": reminder_due},
+                        "args": {
+                            "item_id": api_task.id,
+                            "type": "absolute",
+                            "due": reminder_due,
+                        },
                     }
                 ]
             }

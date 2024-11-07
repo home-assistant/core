@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge, LinkPlayDevice
 import pytest
 
@@ -14,11 +15,15 @@ NAME = "Smart Zone 1_54B9"
 
 @pytest.fixture
 def mock_linkplay_factory_bridge() -> Generator[AsyncMock]:
-    """Mock for linkplay_factory_bridge."""
+    """Mock for linkplay_factory_httpapi_bridge."""
 
     with (
         patch(
-            "homeassistant.components.linkplay.config_flow.linkplay_factory_bridge"
+            "homeassistant.components.linkplay.config_flow.async_get_client_session",
+            return_value=AsyncMock(spec=ClientSession),
+        ),
+        patch(
+            "homeassistant.components.linkplay.config_flow.linkplay_factory_httpapi_bridge",
         ) as factory,
     ):
         bridge = AsyncMock(spec=LinkPlayBridge)

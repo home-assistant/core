@@ -180,6 +180,7 @@ def _rest_coordinator(
     return DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name="rest data",
         update_method=update_method,
         update_interval=update_interval,
@@ -202,18 +203,13 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     timeout: int = config[CONF_TIMEOUT]
     encoding: str = config[CONF_ENCODING]
     if resource_template is not None:
-        resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
 
     if payload_template is not None:
-        payload_template.hass = hass
         payload = payload_template.async_render(parse_result=False)
 
     if not resource:
         raise HomeAssistantError("Resource not set for RestData")
-
-    template.attach(hass, headers)
-    template.attach(hass, params)
 
     auth: httpx.DigestAuth | tuple[str, str] | None = None
     if username and password:

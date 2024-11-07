@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LutronCasetaDevice
 from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
+from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry, LutronCasetaData
 
 
@@ -65,7 +65,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
+class LutronCasetaButton(LutronCasetaEntity, ButtonEntity):
     """Representation of a Lutron pico and keypad button."""
 
     def __init__(

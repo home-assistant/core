@@ -76,8 +76,8 @@ from .const import (  # noqa: F401
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
+    ENTITY_PLATFORMS,
     MQTT_CONNECTION_STATE,
-    RELOADABLE_PLATFORMS,
     TEMPLATE_ERRORS,
 )
 from .models import (  # noqa: F401
@@ -89,7 +89,7 @@ from .models import (  # noqa: F401
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
+    convert_outgoing_mqtt_payload,
 )
 from .subscription import (  # noqa: F401
     EntitySubscription,
@@ -115,6 +115,7 @@ SERVICE_DUMP = "dump"
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
+ATTR_EVALUATE_PAYLOAD = "evaluate_payload"
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
@@ -166,6 +167,7 @@ MQTT_PUBLISH_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
             vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
             vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
+            vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
             vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
             vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         },
@@ -295,6 +297,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         msg_topic: str | None = call.data.get(ATTR_TOPIC)
         msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
+        evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
         payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
@@ -303,8 +306,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # has been deprecated with HA Core 2024.8.0
             # and will be removed with HA Core 2025.2.0
             rendered_topic: Any = MqttCommandTemplate(
-                template.Template(msg_topic_template),
-                hass=hass,
+                template.Template(msg_topic_template, hass),
             ).async_render()
             ir.async_create_issue(
                 hass,
@@ -353,8 +355,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
             payload = MqttCommandTemplate(
-                template.Template(payload_template), hass=hass
+                template.Template(payload_template, hass)
             ).async_render()
+        elif evaluate_payload:
+            # Convert quoted binary literal to raw data
+            payload = convert_outgoing_mqtt_payload(payload)
 
         if TYPE_CHECKING:
             assert msg_topic is not None
@@ -433,7 +438,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for entity in list(mqtt_platform.entities.values())
             if getattr(entity, "_discovery_data", None) is None
             and mqtt_platform.config_entry
-            and mqtt_platform.domain in RELOADABLE_PLATFORMS
+            and mqtt_platform.domain in ENTITY_PLATFORMS
         ]
         await asyncio.gather(*tasks)
 

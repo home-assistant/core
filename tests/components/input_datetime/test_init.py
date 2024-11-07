@@ -79,7 +79,9 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     return _storage
 
 
-async def async_set_date_and_time(hass, entity_id, dt_value):
+async def async_set_date_and_time(
+    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
@@ -93,7 +95,9 @@ async def async_set_date_and_time(hass, entity_id, dt_value):
     )
 
 
-async def async_set_datetime(hass, entity_id, dt_value):
+async def async_set_datetime(
+    hass: HomeAssistant, entity_id: str, dt_value: datetime.datetime
+) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
@@ -103,7 +107,9 @@ async def async_set_datetime(hass, entity_id, dt_value):
     )
 
 
-async def async_set_timestamp(hass, entity_id, timestamp):
+async def async_set_timestamp(
+    hass: HomeAssistant, entity_id: str, timestamp: float
+) -> None:
     """Set date and / or time of input_datetime."""
     await hass.services.async_call(
         DOMAIN,
