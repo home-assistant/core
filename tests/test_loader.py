@@ -1298,9 +1298,15 @@ async def test_config_folder_not_in_path() -> None:
 @pytest.mark.parametrize(
     ("integration_frame_path", "expected"),
     [
-        ("custom_components/test_integration_frame", True),
-        ("homeassistant/components/test_integration_frame", False),
-        ("homeassistant/test_integration_frame", False),
+        pytest.param(
+            "custom_components/test_integration_frame", True, id="custom integration"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            False,
+            id="core integration",
+        ),
+        pytest.param("homeassistant/test_integration_frame", False, id="core"),
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
@@ -1988,9 +1994,15 @@ async def test_has_services(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("integration_frame_path", "expected"),
     [
-        ("custom_components/test_integration_frame", True),
-        ("homeassistant/components/test_integration_frame", False),
-        ("homeassistant/test_integration_frame", False),
+        pytest.param(
+            "custom_components/test_integration_frame", True, id="custom integration"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            False,
+            id="core integration",
+        ),
+        pytest.param("homeassistant/test_integration_frame", False, id="core"),
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
