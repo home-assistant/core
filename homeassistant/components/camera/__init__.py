@@ -1144,11 +1144,10 @@ async def async_handle_snapshot_service(
     if filename is None:
         filename_date = dt_util.now().strftime("%Y%m%d-%H%M%S")
         media_path = hass.config.path("media")
-        local_media_template = Template(
+        filename = Template(
             f"{media_path}/snapshots/{camera.entity_id}/{filename_date}.jpg",
             camera.hass,
         )
-        filename = local_media_template
 
     snapshot_file = filename.async_render(
         variables={ATTR_ENTITY_ID: _TemplateCameraEntity(camera, SERVICE_SNAPSHOT)}
