@@ -21,15 +21,15 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_AREAS, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
-    from . import NordpoolConfigEntry
+    from . import NordPoolConfigEntry
 
 
 class NordpooolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
     """A Nord Pool Data Update Coordinator."""
 
-    config_entry: NordpoolConfigEntry
+    config_entry: NordPoolConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: NordpoolConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: NordPoolConfigEntry) -> None:
         """Initialize the Nord Pool coordinator."""
         super().__init__(
             hass,

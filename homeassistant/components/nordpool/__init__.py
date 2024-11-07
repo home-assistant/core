@@ -9,10 +9,10 @@ from homeassistant.util import dt as dt_util
 from .const import PLATFORMS
 from .coordinator import NordpooolDataUpdateCoordinator
 
-type NordpoolConfigEntry = ConfigEntry[NordpooolDataUpdateCoordinator]
+type NordPoolConfigEntry = ConfigEntry[NordpooolDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NordpoolConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NordPoolConfigEntry) -> bool:
     """Set up Nord Pool from a config entry."""
 
     coordinator = NordpooolDataUpdateCoordinator(hass, entry)
@@ -24,6 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NordpoolConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NordpoolConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NordPoolConfigEntry) -> bool:
     """Unload Nord Pool config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

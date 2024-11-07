@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from . import NordpoolConfigEntry
+from . import NordPoolConfigEntry
 from .const import LOGGER
 from .coordinator import NordpooolDataUpdateCoordinator
 from .entity import NordpoolBaseEntity
@@ -199,19 +199,14 @@ DAILY_AVERAGE_PRICES_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: NordpoolConfigEntry,
+    entry: NordPoolConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Nord Pool sensor platform."""
 
     coordinator = entry.runtime_data
 
-    entities: list[
-        NordpoolSensor
-        | NordpoolPriceSensor
-        | NordpoolDailyAveragePriceSensor
-        | NordpoolBlockPriceSensor
-    ] = []
+    entities: list[NordpoolBaseEntity] = []
     currency = entry.runtime_data.data.currency
 
     for area in get_prices(entry.runtime_data.data):
