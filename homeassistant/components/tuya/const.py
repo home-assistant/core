@@ -197,6 +197,7 @@ class DPCode(StrEnum):
     FAULT = "fault"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
+    CHARGE_STATE = "charge_state"
     FILTER = "filter"
     FILTER_LIFE = "filter"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
@@ -224,6 +225,9 @@ class DPCode(StrEnum):
     MASTER_MODE = "master_mode"  # alarm mode
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
+    MEAL_PLAN = "meal_plan"
+    QUICK_FEED = "quick_feed"
+    FACTORY_RESET = "factory_reset"
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light

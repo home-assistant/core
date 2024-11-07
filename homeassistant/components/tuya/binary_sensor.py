@@ -140,9 +140,9 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
         TuyaBinarySensorEntityDescription(
-            key=DPCode.FEED_STATE,
-            translation_key="feeding",
-            on_value="feeding",
+            key=DPCode.CHARGE_STATE,
+            translation_key="charge_state",
+            on_value="charge_state",
         ),
     ),
     # Human Presence Sensor

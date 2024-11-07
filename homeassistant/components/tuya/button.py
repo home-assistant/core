@@ -54,6 +54,18 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             translation_key="snooze",
         ),
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        ButtonEntityDescription(
+            key=DPCode.QUICK_FEED,
+            translation_key="quick_feed",
+        ),
+        ButtonEntityDescription(
+            key=DPCode.FACTORY_RESET,
+            translation_key="factory_reset",
+        ),
+    ),
 }
 
 
