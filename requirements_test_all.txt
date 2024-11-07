@@ -140,7 +140,7 @@ advantage-air==0.4.4
 afsapi==0.2.7
 
 # homeassistant.components.agent_dvr
-agent-py==0.0.23
+agent-py==0.0.24
 
 # homeassistant.components.geo_json_events
 aio-geojson-generic-client==0.4
@@ -865,7 +865,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==6.1.3
+google-nest-sdm==6.1.4
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -953,7 +953,7 @@ holidays==0.60
 home-assistant-frontend==20241106.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.11.4
+home-assistant-intents==2024.11.6
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1239,7 +1239,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.26.4
+numpy==2.1.2
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -1841,7 +1841,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.10.0
 
 # homeassistant.components.suez_water
-pysuezV2==0.2.2
+pysuezV2==1.3.1
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2047,7 +2047,7 @@ reolink-aio==0.10.4
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.8
+ring-doorbell==0.9.9
 
 # homeassistant.components.roku
 rokuecp==0.19.3
@@ -2093,7 +2093,7 @@ securetar==2024.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.13.2
+sense-energy==0.13.3
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2455,7 +2455,7 @@ zeversolar==0.3.2
 zha==0.0.37
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.58.1
+zwave-js-server-python==0.59.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
