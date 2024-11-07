@@ -195,4 +195,5 @@ async-timeout==4.0.3
 
 # latest pint 0.24.3 is not yet compatible with flexparser 0.4
 # https://github.com/hgrecco/pint/issues/1969
-flexparser<0.4
+flexparser==0.3.1
+pint==0.24.3
