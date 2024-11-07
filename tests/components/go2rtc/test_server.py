@@ -195,6 +195,75 @@ async def test_server_failed_to_start(
     )
 
 
+@pytest.mark.parametrize(
+    ("server_stdout", "expected_loglevel"),
+    [
+        (
+            [
+                "09:00:03.466 TRC [api] register path path=/",
+                "09:00:03.466 DBG build vcs.time=2024-10-28T19:47:55Z version=go1.23.2",
+                "09:00:03.466 INF go2rtc platform=linux/amd64 revision=780f378 version=1.9.5",
+                "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
+                "09:00:03.466 WRN warning message",
+                '09:00:03.466 ERR [api] listen error="listen tcp 127.0.0.1:11984: bind: address already in use"',
+                "09:00:03.466 FTL fatal message",
+                "09:00:03.466 PNC panic message",
+                "exit with signal: interrupt",  # Example of stderr write
+            ],
+            [
+                logging.DEBUG,
+                logging.DEBUG,
+                logging.DEBUG,
+                logging.DEBUG,
+                logging.WARNING,
+                logging.WARNING,
+                logging.ERROR,
+                logging.ERROR,
+                logging.WARNING,
+            ],
+        )
+    ],
+)
+@patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
+async def test_log_level_mapping(
+    hass: HomeAssistant,
+    mock_create_subprocess: MagicMock,
+    server_stdout: list[str],
+    rest_client: AsyncMock,
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+    expected_loglevel: list[int],
+) -> None:
+    """Log level mapping."""
+    evt = asyncio.Event()
+
+    async def wait_event() -> None:
+        await evt.wait()
+
+    mock_create_subprocess.return_value.wait.side_effect = wait_event
+
+    await server.start()
+
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+
+    # Verify go2rtc binary stdout was logged with default level
+    for i, entry in enumerate(server_stdout):
+        assert (
+            "homeassistant.components.go2rtc.server",
+            expected_loglevel[i],
+            entry,
+        ) in caplog.record_tuples
+
+    evt.set()
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+
+    assert_server_output_logged(server_stdout, caplog, logging.WARNING)
+
+    await server.stop()
+
+
 @patch("homeassistant.components.go2rtc.server._RESPAWN_COOLDOWN", 0)
 async def test_server_restart_process_exit(
     hass: HomeAssistant,

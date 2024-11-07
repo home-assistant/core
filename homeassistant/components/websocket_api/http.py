@@ -330,13 +330,7 @@ class WebSocketHandler:
         if TYPE_CHECKING:
             assert writer is not None
 
-        # aiohttp 3.11.0 changed the method name from _send_frame to send_frame
-        if hasattr(writer, "send_frame"):
-            send_frame = writer.send_frame  # pragma: no cover
-        else:
-            send_frame = writer._send_frame  # noqa: SLF001
-
-        send_bytes_text = partial(send_frame, opcode=WSMsgType.TEXT)
+        send_bytes_text = partial(writer.send_frame, opcode=WSMsgType.TEXT)
         auth = AuthPhase(
             logger, hass, self._send_message, self._cancel, request, send_bytes_text
         )

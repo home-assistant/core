@@ -14,15 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
-from .entity import JewishCalendarEntity
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,17 +167,15 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: JewishCalendarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish calendar sensors ."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
     sensors = [
-        JewishCalendarSensor(config_entry, entry, description)
-        for description in INFO_SENSORS
+        JewishCalendarSensor(config_entry, description) for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(config_entry, entry, description)
+        JewishCalendarTimeSensor(config_entry, description)
         for description in TIME_SENSORS
     )
 
@@ -193,12 +189,11 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
-        data: dict[str, Any],
+        config_entry: JewishCalendarConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
-        super().__init__(config_entry, data, description)
+        super().__init__(config_entry, description)
         self._attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
