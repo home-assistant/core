@@ -9,7 +9,13 @@ import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohasupervisor.models import Discovery, Repository, StoreAddon, StoreInfo
+from aiohasupervisor.models import (
+    Discovery,
+    Repository,
+    ResolutionInfo,
+    StoreAddon,
+    StoreInfo,
+)
 import pytest
 
 from homeassistant.config_entries import (
@@ -474,6 +480,26 @@ def supervisor_is_connected_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.supervisor.ping
 
 
+@pytest.fixture(name="resolution_info")
+def resolution_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock resolution info from supervisor."""
+    supervisor_client.resolution.info.return_value = ResolutionInfo(
+        suggestions=[],
+        unsupported=[],
+        unhealthy=[],
+        issues=[],
+        checks=[],
+    )
+    return supervisor_client.resolution.info
+
+
+@pytest.fixture(name="resolution_suggestions_for_issue")
+def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock suggestions by issue from supervisor resolution."""
+    supervisor_client.resolution.suggestions_for_issue.return_value = []
+    return supervisor_client.resolution.suggestions_for_issue
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -482,6 +508,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.os = AsyncMock()
+    supervisor_client.resolution = AsyncMock()
     supervisor_client.supervisor = AsyncMock()
     with (
         patch(
@@ -505,7 +532,11 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
-            "homeassistant.components.hassio.get_supervisor_client",
+            "homeassistant.components.hassio.issues.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.repairs.get_supervisor_client",
             return_value=supervisor_client,
         ),
     ):
