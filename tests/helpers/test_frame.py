@@ -1,5 +1,6 @@
 """Test the frame helper."""
 
+from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
@@ -247,3 +248,87 @@ async def test_report_error_if_integration(
         ),
     ):
         frame.report("did a bad thing", error_if_integration=True)
+
+
+@pytest.mark.parametrize(
+    ("integration_frame_path", "keywords", "expected_error", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core",
+            {},
+            True,
+            0,
+            id="core default",
+        ),
+        pytest.param(
+            "homeassistant/components/test_core_integration",
+            {},
+            False,
+            1,
+            id="core integration default",
+        ),
+        pytest.param(
+            "custom_components/test_custom_integration",
+            {},
+            False,
+            1,
+            id="custom integration default",
+        ),
+        pytest.param(
+            "custom_components/test_integration_frame",
+            {"log_custom_component_only": True},
+            False,
+            1,
+            id="log_custom_component_only with custom integration",
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            {"log_custom_component_only": True},
+            False,
+            0,
+            id="log_custom_component_only with core integration",
+        ),
+        pytest.param(
+            "homeassistant/test_integration_frame",
+            {"error_if_core": False},
+            False,
+            1,
+            id="disable error_if_core",
+        ),
+        pytest.param(
+            "custom_components/test_integration_frame",
+            {"error_if_integration": True},
+            True,
+            1,
+            id="error_if_integration with custom integration",
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration_frame",
+            {"error_if_integration": True},
+            True,
+            1,
+            id="error_if_integration with core integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_report(
+    caplog: pytest.LogCaptureFixture,
+    keywords: dict[str, Any],
+    expected_error: bool,
+    expected_log: int,
+) -> None:
+    """Test report."""
+
+    what = "test_report_string"
+
+    errored = False
+    try:
+        with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+            frame.report(what, **keywords)
+    except RuntimeError:
+        errored = True
+
+    assert errored == expected_error
+
+    assert caplog.text.count(what) == expected_log

@@ -10,6 +10,7 @@ from mozart_api.models import (
     PlayQueueSettings,
     RenderingState,
     Source,
+    SourceArray,
     WebsocketNotificationTag,
 )
 import pytest
@@ -193,6 +194,37 @@ async def test_async_update_sources_remote(
 
     assert mock_mozart_client.get_available_sources.call_count == 2
     assert mock_mozart_client.get_remote_menu.call_count == 2
+
+
+async def test_async_update_sources_availability(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the playback_source WebSocket event updates available playback sources."""
+    # Remove video sources to simplify test
+    mock_mozart_client.get_remote_menu.return_value = {}
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    playback_source_callback = (
+        mock_mozart_client.get_playback_source_notifications.call_args[0][0]
+    )
+
+    assert mock_mozart_client.get_available_sources.call_count == 1
+
+    # Add a source that is available and playable
+    mock_mozart_client.get_available_sources.return_value = SourceArray(
+        items=[BangOlufsenSource.TIDAL]
+    )
+
+    # Send playback_source. The source is not actually used, so its attributes don't matter
+    playback_source_callback(Source())
+
+    assert mock_mozart_client.get_available_sources.call_count == 2
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states.attributes[ATTR_INPUT_SOURCE_LIST] == [BangOlufsenSource.TIDAL.name]
 
 
 async def test_async_update_playback_metadata(
