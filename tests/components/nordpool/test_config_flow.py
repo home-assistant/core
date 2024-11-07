@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from unittest.mock import patch
 
-from pynordpool.exceptions import NordpoolError
+from pynordpool import NordPoolError
 from pynordpool.model import DeliveryPeriodData
 import pytest
 
@@ -29,7 +29,7 @@ async def test_form(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
 
     with (
         patch(
-            "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
             return_value=get_data,
         ),
     ):
@@ -71,8 +71,8 @@ async def test_cannot_connect(
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch(
-        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
-        side_effect=NordpoolError,
+        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
+        side_effect=NordPoolError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -82,7 +82,7 @@ async def test_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
         return_value=get_data,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -109,7 +109,7 @@ async def test_empty_data(hass: HomeAssistant, get_data: DeliveryPeriodData) -> 
     invalid_data = replace(get_data, raw={})
 
     with patch(
-        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
         return_value=invalid_data,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -120,7 +120,7 @@ async def test_empty_data(hass: HomeAssistant, get_data: DeliveryPeriodData) -> 
     assert result["errors"] == {"base": "no_data"}
 
     with patch(
-        "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
         return_value=get_data,
     ):
         result = await hass.config_entries.flow.async_configure(

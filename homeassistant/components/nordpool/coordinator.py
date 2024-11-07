@@ -6,10 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from pynordpool import NordpoolClient
-from pynordpool.const import Currency
-from pynordpool.exceptions import NordpoolError
-from pynordpool.model import DeliveryPeriodData
+from pynordpool import Currency, DeliveryPeriodData, NordPoolClient, NordPoolError
 
 from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
@@ -37,7 +34,7 @@ class NordpooolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
             config_entry=config_entry,
             name=DOMAIN,
         )
-        self.client = NordpoolClient(session=async_get_clientsession(hass))
+        self.client = NordPoolClient(session=async_get_clientsession(hass))
         self.unsub: Callable[[], None] | None = None
 
     def get_next_interval(self, now: datetime) -> datetime:
@@ -71,7 +68,7 @@ class NordpooolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
                 Currency(self.config_entry.data[CONF_CURRENCY]),
                 self.config_entry.data[CONF_AREAS],
             )
-        except NordpoolError as error:
+        except NordPoolError as error:
             self.async_set_update_error(error)
             return
 

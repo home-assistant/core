@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from pynordpool.model import DeliveryPeriodData
+from pynordpool import DeliveryPeriodData
 
 from homeassistant.components.nordpool.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -26,7 +26,7 @@ async def test_unload_entry(hass: HomeAssistant, get_data: DeliveryPeriodData) -
 
     with (
         patch(
-            "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
             return_value=get_data,
         ),
     ):

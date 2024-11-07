@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from pynordpool.model import DeliveryPeriodData
+from pynordpool import DeliveryPeriodData
 
 from homeassistant.components.sensor import (
     EntityCategory,

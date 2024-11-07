@@ -6,8 +6,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pynordpool.exceptions import NordpoolError
-from pynordpool.model import DeliveryPeriodData
+from pynordpool import DeliveryPeriodData, NordPoolError
 import pytest
 
 from homeassistant.components.nordpool.const import DOMAIN
@@ -38,7 +37,7 @@ async def test_coordinator(
 
     with (
         patch(
-            "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
         ) as mock_data,
     ):
         mock_data.return_value = get_data
@@ -49,7 +48,7 @@ async def test_coordinator(
         assert state.state == "1.01177"
         mock_data.reset_mock()
 
-        mock_data.side_effect = NordpoolError("error")
+        mock_data.side_effect = NordPoolError("error")
         freezer.tick(timedelta(hours=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)

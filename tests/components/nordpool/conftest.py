@@ -7,7 +7,7 @@ import json
 from typing import Any
 from unittest.mock import patch
 
-from pynordpool import NordpoolClient
+from pynordpool import NordPoolClient
 from pynordpool.const import Currency
 from pynordpool.model import DeliveryPeriodData
 import pytest
@@ -39,7 +39,7 @@ async def load_int(
 
     with (
         patch(
-            "homeassistant.components.nordpool.coordinator.NordpoolClient.async_get_delivery_period",
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
             return_value=get_data,
         ),
     ):
@@ -55,8 +55,8 @@ async def get_data_from_library(
 ) -> DeliveryPeriodData:
     """Retrieve data from Nord Pool library."""
 
-    client = NordpoolClient(aioclient_mock.create_session(hass.loop))
-    with patch("pynordpool.NordpoolClient._get", return_value=load_json):
+    client = NordPoolClient(aioclient_mock.create_session(hass.loop))
+    with patch("pynordpool.NordPoolClient._get", return_value=load_json):
         output = await client.async_get_delivery_period(
             datetime(2024, 11, 5, 13, tzinfo=dt_util.UTC), Currency.SEK, ["SE3", "SE4"]
         )

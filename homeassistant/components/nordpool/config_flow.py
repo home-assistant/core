@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from pynordpool import NordpoolClient
-from pynordpool.const import AREAS, Currency
-from pynordpool.exceptions import NordpoolError
+from pynordpool import Currency, NordPoolClient, NordPoolError
+from pynordpool.const import AREAS
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -52,14 +51,14 @@ DATA_SCHEMA = vol.Schema(
 
 async def test_api(hass: HomeAssistant, user_input: dict[str, Any]) -> dict[str, str]:
     """Test fetch data from Nord Pool."""
-    client = NordpoolClient(async_get_clientsession(hass))
+    client = NordPoolClient(async_get_clientsession(hass))
     try:
         data = await client.async_get_delivery_period(
             dt_util.now(),
             Currency(user_input[CONF_CURRENCY]),
             user_input[CONF_AREAS],
         )
-    except NordpoolError:
+    except NordPoolError:
         return {"base": "cannot_connect"}
 
     if not data.raw:
