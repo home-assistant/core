@@ -12,7 +12,7 @@
       "iot_class": "cloud_push"
     },
     "acaia": {
-      "name": "acaia",
+      "name": "Acaia",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "assumed_state"
