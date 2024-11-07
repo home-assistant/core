@@ -11,7 +11,7 @@ from pytedee_async.bridge import TedeeBridge
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -135,11 +135,10 @@ async def test_reauth_flow(
     assert result["reason"] == "reauth_successful"
 
 
-async def test_reconfigure_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tedee: MagicMock
-) -> None:
-    """Test that the reconfigure flow works."""
-
+async def __do_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> ConfigFlowResult:
+    """Initialize a reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
 
     reconfigure_result = await mock_config_entry.start_reconfigure_flow(hass)
@@ -147,10 +146,18 @@ async def test_reconfigure_flow(
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "reconfigure"
 
-    result = await hass.config_entries.flow.async_configure(
+    return await hass.config_entries.flow.async_configure(
         reconfigure_result["flow_id"],
         {CONF_LOCAL_ACCESS_TOKEN: LOCAL_ACCESS_TOKEN, CONF_HOST: "192.168.1.43"},
     )
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tedee: MagicMock
+) -> None:
+    """Test that the reconfigure flow works."""
+
+    result = await __do_reconfigure_flow(hass, mock_config_entry)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -174,17 +181,7 @@ async def test_reconfigure_unique_id_mismatch(
         0, "1111-1111", "Bridge-R2D2"
     )
 
-    mock_config_entry.add_to_hass(hass)
-
-    reconfigure_result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    assert reconfigure_result["type"] is FlowResultType.FORM
-    assert reconfigure_result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        reconfigure_result["flow_id"],
-        {CONF_LOCAL_ACCESS_TOKEN: LOCAL_ACCESS_TOKEN, CONF_HOST: "192.168.1.43"},
-    )
+    result = await __do_reconfigure_flow(hass, mock_config_entry)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
