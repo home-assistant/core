@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
+import enum
 import functools
 import linecache
 import logging
@@ -167,14 +167,14 @@ def report(
     )
 
 
-class ReportBehavior(Enum):
+class ReportBehavior(enum.Enum):
     """Enum for behavior on code usage."""
 
-    IGNORE = 1
+    IGNORE = enum.auto()
     """Ignore the code usage."""
-    LOG = 2
+    LOG = enum.auto()
     """Log the code usage."""
-    ERROR = 3
+    ERROR = enum.auto()
     """Raise an error on code usage."""
 
 
@@ -209,7 +209,7 @@ def report_usage(
 
     if integration_behavior is not ReportBehavior.IGNORE:
         _report_integration(
-            what, integration_frame, level, integration_behavior == ReportBehavior.ERROR
+            what, integration_frame, level, integration_behavior is ReportBehavior.ERROR
         )
 
 
