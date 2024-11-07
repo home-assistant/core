@@ -7224,6 +7224,12 @@ async def test_unique_id_collision_issues(
     for _ in range(6):
         test3.append(MockConfigEntry(domain="test3", unique_id="not_unique"))
         await manager.async_add(test3[-1])
+    # Add an ignored config entry
+    await manager.async_add(
+        MockConfigEntry(
+            domain="test2", unique_id="group_1", source=config_entries.SOURCE_IGNORE
+        )
+    )
 
     # Check we get one issue for domain test2 and one issue for domain test3
     assert len(issue_registry.issues) == 2
@@ -7270,7 +7276,7 @@ async def test_unique_id_collision_issues(
         (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_2"),
     }
 
-    # Remove the last test2 group2 duplicate, a new issue is created
+    # Remove the last test2 group2 duplicate, the issue is cleared
     await manager.async_remove(test2_group_2[1].entry_id)
     assert not issue_registry.issues
 
