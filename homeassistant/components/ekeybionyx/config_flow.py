@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 import logging
-from typing import Any
+from typing import Any, NotRequired, TypedDict
 
 import ekey_bionyxpy
 import voluptuous as vol
@@ -22,6 +22,13 @@ from . import api
 from .const import DOMAIN, SCOPE
 
 
+class EkeyFlowData(TypedDict):
+    """Type for Flow Data."""
+
+    system: NotRequired[ekey_bionyxpy.System]
+    systems: NotRequired[list[ekey_bionyxpy.System]]
+
+
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -32,7 +39,7 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Initialize OAuth2FlowHandler."""
         super().__init__()
-        self._data: dict[str, Any] = {}
+        self._data: EkeyFlowData = {}
 
     @property
     def logger(self) -> logging.Logger:
@@ -54,7 +61,6 @@ class OAuth2FlowHandler(
         if len(system) == 0:
             return self.async_abort(reason="no_own_systems")
         self._data["systems"] = system
-        self._data["data"] = data
         if len(system) == 1:
             # skipping choose_system since there is only one
             self._data["system"] = system[0]
@@ -83,7 +89,7 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None
     ) -> ConfigFlowResult:
         """Dialog to setup webhooks."""
-        system: ekey_bionyxpy.System = self._data["system"]
+        system = self._data["system"]
         await self.async_set_unique_id(system.system_id)
         self._abort_if_unique_id_configured()
         if (
@@ -95,7 +101,7 @@ class OAuth2FlowHandler(
             return await self.async_step_delete_webhooks()
         if user_input is None:
             data_schema: dict[Any, Any] = {
-                vol.Optional(f"Webhook {i+1}"): str
+                vol.Optional(f"Webhook {i+1}"): vol.All(str, vol.Length(max=50))
                 for i in range(self._data["system"].function_webhook_quotas["free"])
             }
             data_schema[
@@ -113,7 +119,7 @@ class OAuth2FlowHandler(
             if webhooks[0] != "url"
         ]
         for webhook in webhook_data:
-            wh_def: ekey_bionyxpy._typing.WebhookData = {
+            wh_def: ekey_bionyxpy.WebhookData = {
                 "integrationName": "Home Assistant",
                 "functionName": webhook["name"],
                 "locationName": "Home Assistant",
@@ -138,8 +144,6 @@ class OAuth2FlowHandler(
         """Form to delete Webhooks."""
         if user_input is None:
             return self.async_show_form(step_id="delete_webhooks")
-        system: ekey_bionyxpy.System = self._data["system"]
-        webhooks = await system.get_webhooks()
-        for webhook in webhooks:
+        for webhook in await self._data["system"].get_webhooks():
             await webhook.delete()
         return self.async_abort(reason="webhook_deletion_requested")
