@@ -314,7 +314,6 @@ async def test_report_error_if_integration(
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_report(
     caplog: pytest.LogCaptureFixture,
-    mock_integration_frame: Mock,
     keywords: dict[str, Any],
     expected_error: bool,
     expected_log: int,
