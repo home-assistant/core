@@ -444,7 +444,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result.get("reason") == "single_instance_allowed"
 
 
 async def test_hassio_confirm(
