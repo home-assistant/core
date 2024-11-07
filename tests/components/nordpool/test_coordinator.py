@@ -6,7 +6,12 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pynordpool import DeliveryPeriodData, NordPoolError
+from pynordpool import (
+    DeliveryPeriodData,
+    NordPoolAuthenticationError,
+    NordPoolError,
+    NordPoolResponseError,
+)
 import pytest
 
 from homeassistant.components.nordpool.const import DOMAIN
@@ -20,11 +25,12 @@ from . import ENTRY_CONFIG
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2024-11-05T12:00:00+00:00")
 async def test_coordinator(
     hass: HomeAssistant,
     get_data: DeliveryPeriodData,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the Nord Pool coordinator with errors."""
     config_entry = MockConfigEntry(
@@ -45,7 +51,7 @@ async def test_coordinator(
         await hass.async_block_till_done()
         mock_data.assert_called_once()
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "1.01177"
+        assert state.state == "0.94949"
         mock_data.reset_mock()
 
         mock_data.side_effect = NordPoolError("error")
@@ -55,6 +61,28 @@ async def test_coordinator(
         mock_data.assert_called_once()
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
+        mock_data.reset_mock()
+
+        assert "Authentication error" not in caplog.text
+        mock_data.side_effect = NordPoolAuthenticationError("Authentication error")
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        mock_data.assert_called_once()
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == STATE_UNAVAILABLE
+        assert "Authentication error" in caplog.text
+        mock_data.reset_mock()
+
+        assert "Response error" not in caplog.text
+        mock_data.side_effect = NordPoolResponseError("Response error")
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        mock_data.assert_called_once()
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == STATE_UNAVAILABLE
+        assert "Response error" in caplog.text
         mock_data.reset_mock()
 
         mock_data.return_value = DeliveryPeriodData(
@@ -83,4 +111,4 @@ async def test_coordinator(
         await hass.async_block_till_done()
         mock_data.assert_called_once()
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == "0.5223"
+        assert state.state == "1.81983"

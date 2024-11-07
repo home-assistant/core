@@ -6,7 +6,14 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from pynordpool import Currency, DeliveryPeriodData, NordPoolClient, NordPoolError
+from pynordpool import (
+    Currency,
+    DeliveryPeriodData,
+    NordPoolAuthenticationError,
+    NordPoolClient,
+    NordPoolError,
+    NordPoolResponseError,
+)
 
 from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
@@ -68,7 +75,16 @@ class NordpooolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
                 Currency(self.config_entry.data[CONF_CURRENCY]),
                 self.config_entry.data[CONF_AREAS],
             )
+        except NordPoolAuthenticationError as error:
+            LOGGER.error("Authentication error: %s", error)
+            self.async_set_update_error(error)
+            return
+        except NordPoolResponseError as error:
+            LOGGER.debug("Response error: %s", error)
+            self.async_set_update_error(error)
+            return
         except NordPoolError as error:
+            LOGGER.debug("Connection error: %s", error)
             self.async_set_update_error(error)
             return
 
