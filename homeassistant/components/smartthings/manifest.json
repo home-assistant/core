@@ -1,6 +1,7 @@
 {
   "domain": "smartthings",
   "name": "SmartThings",
+  "version": "0.0.1",
   "after_dependencies": ["cloud"],
   "codeowners": [],
   "config_flow": true,
