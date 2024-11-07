@@ -654,6 +654,7 @@ FLOWS = {
         "vlc_telnet",
         "vodafone_station",
         "voip",
+        "volkszaehler",
         "volumio",
         "volvooncall",
         "vulcan",
