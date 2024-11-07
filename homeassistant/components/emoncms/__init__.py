@@ -40,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> b
                     )
             hass.config_entries.async_update_entry(
                 entry,
-                data=entry.data,
                 unique_id=emoncms_unique_id,
             )
     else:
