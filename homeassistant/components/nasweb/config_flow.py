@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError
 
@@ -88,6 +89,8 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+                await self.async_set_unique_id(info[CONF_UNIQUE_ID])
+                self._abort_if_unique_id_configured()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -98,12 +101,14 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "missing_nasweb_data"
             except MissingNASwebStatus:
                 errors["base"] = "missing_status"
+            except AbortFlow as e:
+                return self.async_abort(
+                    reason=e.reason, description_placeholders=e.description_placeholders
+                )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info[CONF_UNIQUE_ID])
-                self._abort_if_unique_id_configured({CONF_HOST: user_input[CONF_HOST]})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
