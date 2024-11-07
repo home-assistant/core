@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import selector
 from homeassistant.helpers.typing import ConfigType
@@ -49,18 +49,9 @@ def sensor_name(url: str) -> str:
 
 
 async def get_feed_list(
-    hass: HomeAssistant,
-    url: str,
-    api_key: str,
-    emoncms_client: EmoncmsClient | None = None,
+    emoncms_client: EmoncmsClient,
 ) -> dict[str, Any]:
     """Check connection to emoncms and return feed list if successful."""
-    if not emoncms_client:
-        emoncms_client = EmoncmsClient(
-            url,
-            api_key,
-            session=async_get_clientsession(hass),
-        )
     return await emoncms_client.async_request("/feed/list.json")
 
 
@@ -99,9 +90,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             emoncms_client = EmoncmsClient(
                 self.url, self.api_key, session=async_get_clientsession(self.hass)
             )
-            result = await get_feed_list(
-                self.hass, self.url, self.api_key, emoncms_client=emoncms_client
-            )
+            result = await get_feed_list(emoncms_client)
             if not result[CONF_SUCCESS]:
                 errors["base"] = "api_error"
                 description_placeholders = {"details": result[CONF_MESSAGE]}
@@ -202,7 +191,12 @@ class EmoncmsOptionsFlow(OptionsFlow):
             self.config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID, []),
         )
         options: list = include_only_feeds
-        result = await get_feed_list(self.hass, self._url, self._api_key)
+        emoncms_client = EmoncmsClient(
+            self._url,
+            self._api_key,
+            session=async_get_clientsession(self.hass),
+        )
+        result = await get_feed_list(emoncms_client)
         if not result[CONF_SUCCESS]:
             errors["base"] = "api_error"
             description_placeholders = {"details": result[CONF_MESSAGE]}
