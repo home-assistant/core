@@ -21,22 +21,19 @@ def _migrate_unique_id(
     hass: HomeAssistant, entry: EmonCMSConfigEntry, emoncms_unique_id: str
 ) -> None:
     """Migrate to emoncms unique id if needed."""
-    if entry.unique_id != emoncms_unique_id:
-        ent_reg = er.async_get(hass)
-        entry_entities = ent_reg.entities.get_entries_for_config_entry_id(
-            entry.entry_id
-        )
-        for entity in entry_entities:
-            if entity.unique_id.split("-")[0] == entry.entry_id:
-                feed_id = entity.unique_id.split("-")[-1]
-                LOGGER.debug(f"moving feed {feed_id} to hardware uuid")
-                ent_reg.async_update_entity(
-                    entity.entity_id, new_unique_id=f"{emoncms_unique_id}-{feed_id}"
-                )
-        hass.config_entries.async_update_entry(
-            entry,
-            unique_id=emoncms_unique_id,
-        )
+    ent_reg = er.async_get(hass)
+    entry_entities = ent_reg.entities.get_entries_for_config_entry_id(entry.entry_id)
+    for entity in entry_entities:
+        if entity.unique_id.split("-")[0] == entry.entry_id:
+            feed_id = entity.unique_id.split("-")[-1]
+            LOGGER.debug(f"moving feed {feed_id} to hardware uuid")
+            ent_reg.async_update_entity(
+                entity.entity_id, new_unique_id=f"{emoncms_unique_id}-{feed_id}"
+            )
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id=emoncms_unique_id,
+    )
 
 
 async def _check_unique_id_migration(
@@ -45,7 +42,8 @@ async def _check_unique_id_migration(
     """Check if we can migrate to the emoncms uuid."""
     emoncms_unique_id = await emoncms_client.async_get_uuid()
     if emoncms_unique_id:
-        _migrate_unique_id(hass, entry, emoncms_unique_id)
+        if entry.unique_id != emoncms_unique_id:
+            _migrate_unique_id(hass, entry, emoncms_unique_id)
     else:
         async_create_issue(
             hass,
