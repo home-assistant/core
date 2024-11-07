@@ -5,7 +5,7 @@ from pysuez import AggregatedData, PySuezError, SuezClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import _LOGGER, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
@@ -29,7 +29,13 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedData]):
         )
 
     async def _async_setup(self) -> None:
-        self._suez_client = await self._get_client()
+        self._suez_client = SuezClient(
+            username=self.config_entry.data[CONF_USERNAME],
+            password=self.config_entry.data[CONF_PASSWORD],
+            counter_id=self.config_entry.data[CONF_COUNTER_ID],
+        )
+        if not await self._suez_client.check_credentials():
+            raise ConfigEntryError("Invalid credentials for suez water")
 
     async def _async_update_data(self) -> AggregatedData:
         """Fetch data from API endpoint."""
@@ -42,16 +48,3 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedData]):
             ) from err
         _LOGGER.debug("Successfully fetched suez data")
         return data
-
-    async def _get_client(self) -> SuezClient:
-        try:
-            client = SuezClient(
-                username=self.config_entry.data[CONF_USERNAME],
-                password=self.config_entry.data[CONF_PASSWORD],
-                counter_id=self.config_entry.data[CONF_COUNTER_ID],
-            )
-            if not await client.check_credentials():
-                raise ConfigEntryError("Invalid credentials for suez water")
-        except PySuezError as ex:
-            raise ConfigEntryNotReady from ex
-        return client

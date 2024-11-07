@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -39,7 +39,7 @@ async def test_form(
 
 
 async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client: AsyncMock
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -99,7 +99,7 @@ async def test_form_error(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     exception: Exception,
-    suez_client,
+    suez_client: AsyncMock,
     error: str,
 ) -> None:
     """Test we handle errors."""

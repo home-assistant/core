@@ -34,7 +34,7 @@ async def test_sensors_valid_state(
 
 async def test_sensors_failed_update(
     hass: HomeAssistant,
-    suez_client,
+    suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
