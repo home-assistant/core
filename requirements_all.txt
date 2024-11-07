@@ -1127,7 +1127,7 @@ holidays==0.60
 home-assistant-frontend==20241106.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.11.4
+home-assistant-intents==2024.11.6
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1491,7 +1491,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.26.4
+numpy==2.1.2
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -2626,7 +2626,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.13.2
+sense-energy==0.13.3
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
