@@ -140,7 +140,7 @@ advantage-air==0.4.4
 afsapi==0.2.7
 
 # homeassistant.components.agent_dvr
-agent-py==0.0.23
+agent-py==0.0.24
 
 # homeassistant.components.geo_json_events
 aio-geojson-generic-client==0.4
