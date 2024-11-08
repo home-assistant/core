@@ -725,6 +725,9 @@ class UnitOfPower(StrEnum):
 
     WATT = "W"
     KILO_WATT = "kW"
+    MEGA_WATT = "MW"
+    GIGA_WATT = "GW"
+    TERA_WATT = "TW"
     BTU_PER_HOUR = "BTU/h"
 
 
@@ -770,6 +773,8 @@ class UnitOfEnergy(StrEnum):
     WATT_HOUR = "Wh"
     KILO_WATT_HOUR = "kWh"
     MEGA_WATT_HOUR = "MWh"
+    GIGA_WATT_HOUR = "GWh"
+    TERA_WATT_HOUR = "TWh"
     CALORIE = "cal"
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
