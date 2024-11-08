@@ -1124,7 +1124,7 @@ hole==0.8.0
 holidays==0.60
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241106.1
+home-assistant-frontend==20241106.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.11.6
@@ -2094,6 +2094,9 @@ pynetio==0.1.9.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
+
+# homeassistant.components.nordpool
+pynordpool==0.2.1
 
 # homeassistant.components.nuki
 pynuki==1.6.3
