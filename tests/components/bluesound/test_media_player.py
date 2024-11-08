@@ -130,6 +130,26 @@ async def test_attributes_set(
     assert state == snapshot(exclude=props("media_position_updated_at"))
 
 
+async def test_stop_maps_to_idle(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test the media player stop maps to idle."""
+    player_mocks.player_data.status_long_polling_mock.set(
+        dataclasses.replace(
+            player_mocks.player_data.status_long_polling_mock.get(), state="stop"
+        )
+    )
+
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("media_player.player_name1111").state == MediaPlayerState.IDLE
+    )
+
+
 async def test_status_updated(
     hass: HomeAssistant,
     setup_config_entry: None,

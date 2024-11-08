@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from webrtc_models import RTCIceCandidate
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType
@@ -14,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.setup import async_setup_component
 
-from .common import STREAM_SOURCE, WEBRTC_ANSWER
+from .common import STREAM_SOURCE, WEBRTC_ANSWER, SomeTestProvider
 
 from tests.common import (
     MockConfigEntry,
@@ -155,16 +156,15 @@ def mock_stream_source_fixture() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def mock_camera_webrtc_native_sync_offer(hass: HomeAssistant) -> None:
-    """Initialize a test camera with native sync WebRTC support."""
+async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
+    """Initialize test WebRTC cameras with native RTC support."""
 
     # Cannot use the fixture mock_camera_web_rtc as it's mocking Camera.async_handle_web_rtc_offer
     # and native support is checked by verify the function "async_handle_web_rtc_offer" was
     # overwritten(implemented) or not
-    class MockCamera(camera.Camera):
-        """Mock Camera Entity."""
+    class BaseCamera(camera.Camera):
+        """Base Camera."""
 
-        _attr_name = "Test"
         _attr_supported_features: camera.CameraEntityFeature = (
             camera.CameraEntityFeature.STREAM
         )
@@ -173,8 +173,29 @@ async def mock_camera_webrtc_native_sync_offer(hass: HomeAssistant) -> None:
         async def stream_source(self) -> str | None:
             return STREAM_SOURCE
 
+    class SyncCamera(BaseCamera):
+        """Mock Camera with native sync WebRTC support."""
+
+        _attr_name = "Sync"
+
         async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
             return WEBRTC_ANSWER
+
+    class AsyncCamera(BaseCamera):
+        """Mock Camera with native async WebRTC support."""
+
+        _attr_name = "Async"
+
+        async def async_handle_async_webrtc_offer(
+            self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+        ) -> None:
+            send_message(WebRTCAnswer(WEBRTC_ANSWER))
+
+        async def async_on_webrtc_candidate(
+            self, session_id: str, candidate: RTCIceCandidate
+        ) -> None:
+            """Handle a WebRTC candidate."""
+            # Do nothing
 
     domain = "test"
 
@@ -208,10 +229,24 @@ async def mock_camera_webrtc_native_sync_offer(hass: HomeAssistant) -> None:
         ),
     )
     setup_test_component_platform(
-        hass, camera.DOMAIN, [MockCamera()], from_config_entry=True
+        hass, camera.DOMAIN, [SyncCamera(), AsyncCamera()], from_config_entry=True
     )
     mock_platform(hass, f"{domain}.config_flow", Mock())
 
     with mock_config_flow(domain, ConfigFlow):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def register_test_provider(
+    hass: HomeAssistant,
+) -> AsyncGenerator[SomeTestProvider]:
+    """Add WebRTC test provider."""
+    await async_setup_component(hass, "camera", {})
+
+    provider = SomeTestProvider()
+    unsub = camera.async_register_webrtc_provider(hass, provider)
+    await hass.async_block_till_done()
+    yield provider
+    unsub()
