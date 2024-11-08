@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.1p7k_500006_contactor_failure-entry]
+# name: test_all_entities[binary_sensor.1p7k_500006_ev_diode_short-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_contactor_failure',
+    'entity_id': 'binary_sensor.1p7k_500006_ev_diode_short',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,54 +23,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Contactor failure',
-    'platform': 'lektrico',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'contactor_failure',
-    'unique_id': '500006_contactor_failure',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.1p7k_500006_contactor_failure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Contactor failure',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_contactor_failure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[binary_sensor.1p7k_500006_cp_diode_failure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_cp_diode_failure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Cp diode failure',
+    'original_name': 'Ev diode short',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -79,21 +32,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_cp_diode_failure-state]
+# name: test_all_entities[binary_sensor.1p7k_500006_ev_diode_short-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Cp diode failure',
+      'friendly_name': '1p7k_500006 Ev diode short',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_cp_diode_failure',
+    'entity_id': 'binary_sensor.1p7k_500006_ev_diode_short',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_critical_temp-entry]
+# name: test_all_entities[binary_sensor.1p7k_500006_ev_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -105,7 +58,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_critical_temp',
+    'entity_id': 'binary_sensor.1p7k_500006_ev_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -117,30 +70,30 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Critical temp',
+    'original_name': 'Ev error',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'critical_temp',
-    'unique_id': '500006_critical_temp',
+    'translation_key': 'state_e_activated',
+    'unique_id': '500006_state_e_activated',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_critical_temp-state]
+# name: test_all_entities[binary_sensor.1p7k_500006_ev_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Critical temp',
+      'friendly_name': '1p7k_500006 Ev error',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_critical_temp',
+    'entity_id': 'binary_sensor.1p7k_500006_ev_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_meter_fault-entry]
+# name: test_all_entities[binary_sensor.1p7k_500006_metering_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -152,7 +105,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_meter_fault',
+    'entity_id': 'binary_sensor.1p7k_500006_metering_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -164,7 +117,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Meter fault',
+    'original_name': 'Metering error',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -173,14 +126,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_meter_fault-state]
+# name: test_all_entities[binary_sensor.1p7k_500006_metering_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Meter fault',
+      'friendly_name': '1p7k_500006 Metering error',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_meter_fault',
+    'entity_id': 'binary_sensor.1p7k_500006_metering_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -234,7 +187,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_overtemp-entry]
+# name: test_all_entities[binary_sensor.1p7k_500006_overheating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -246,7 +199,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_overtemp',
+    'entity_id': 'binary_sensor.1p7k_500006_overheating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -258,23 +211,23 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Overtemp',
+    'original_name': 'Overheating',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'overtemp',
-    'unique_id': '500006_overtemp',
+    'translation_key': 'critical_temp',
+    'unique_id': '500006_critical_temp',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_overtemp-state]
+# name: test_all_entities[binary_sensor.1p7k_500006_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Overtemp',
+      'friendly_name': '1p7k_500006 Overheating',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_overtemp',
+    'entity_id': 'binary_sensor.1p7k_500006_overheating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -375,7 +328,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_state_e_activated-entry]
+# name: test_all_entities[binary_sensor.1p7k_500006_relay_contacts_welded-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -387,7 +340,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.1p7k_500006_state_e_activated',
+    'entity_id': 'binary_sensor.1p7k_500006_relay_contacts_welded',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -399,23 +352,70 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'State e activated',
+    'original_name': 'Relay contacts welded',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'state_e_activated',
-    'unique_id': '500006_state_e_activated',
+    'translation_key': 'contactor_failure',
+    'unique_id': '500006_contactor_failure',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.1p7k_500006_state_e_activated-state]
+# name: test_all_entities[binary_sensor.1p7k_500006_relay_contacts_welded-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 State e activated',
+      'friendly_name': '1p7k_500006 Relay contacts welded',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.1p7k_500006_state_e_activated',
+    'entity_id': 'binary_sensor.1p7k_500006_relay_contacts_welded',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.1p7k_500006_thermal_throttling-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.1p7k_500006_thermal_throttling',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Thermal throttling',
+    'platform': 'lektrico',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'overtemp',
+    'unique_id': '500006_overtemp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.1p7k_500006_thermal_throttling-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': '1p7k_500006 Thermal throttling',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.1p7k_500006_thermal_throttling',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

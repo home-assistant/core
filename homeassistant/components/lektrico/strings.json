@@ -24,19 +24,19 @@
   "entity": {
     "binary_sensor": {
       "state_e_activated": {
-        "name": "State e activated"
+        "name": "Ev error"
       },
       "overtemp": {
-        "name": "Overtemp"
+        "name": "Thermal throttling"
       },
       "critical_temp": {
-        "name": "Critical temp"
+        "name": "Overheating"
       },
       "overcurrent": {
         "name": "Overcurrent"
       },
       "meter_fault": {
-        "name": "Meter fault"
+        "name": "Metering error"
       },
       "undervoltage": {
         "name": "Undervoltage"
@@ -48,10 +48,10 @@
         "name": "Rcd error"
       },
       "cp_diode_failure": {
-        "name": "Cp diode failure"
+        "name": "Ev diode short"
       },
       "contactor_failure": {
-        "name": "Contactor failure"
+        "name": "Relay contacts welded"
       }
     },
     "button": {
