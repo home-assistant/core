@@ -44,13 +44,10 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): selector.TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=65535, mode=selector.NumberSelectorMode.BOX
-                )
-            ),
-            vol.Coerce(int),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                as_int=True, min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+            )
         ),
         vol.Optional(CONF_USERNAME): selector.TextSelector(),
         vol.Optional(CONF_PASSWORD): selector.TextSelector(

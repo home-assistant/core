@@ -403,11 +403,22 @@ def test_assist_pipeline_selector_schema(
         ({"mode": "box"}, (10,), ()),
         ({"mode": "box", "step": "any"}, (), ()),
         ({"mode": "slider", "min": 0, "max": 1, "step": "any"}, (), ()),
+        (
+            {"mode": "box", "min": 1, "max": 65535, "step": "any", "as_int": True},
+            (1, 1.2345, 65535, 65535.9999),
+            (-15, 0, 0.9999, 65536),
+        ),
     ],
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test number selector."""
-    _test_selector("number", schema, valid_selections, invalid_selections)
+    _test_selector(
+        "number",
+        schema,
+        valid_selections,
+        invalid_selections,
+        converter=int if schema.get("as_int") else None,
+    )
 
 
 @pytest.mark.parametrize(

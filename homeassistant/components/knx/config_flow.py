@@ -93,13 +93,10 @@ OPTION_MANUAL_TUNNEL: Final = "Manual"
 
 _IA_SELECTOR = selector.TextSelector()
 _IP_SELECTOR = selector.TextSelector()
-_PORT_SELECTOR = vol.All(
-    selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=1, max=65535, mode=selector.NumberSelectorMode.BOX
-        ),
+_PORT_SELECTOR = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        as_int=True, min=1, max=65535, mode=selector.NumberSelectorMode.BOX
     ),
-    vol.Coerce(int),
 )
 
 

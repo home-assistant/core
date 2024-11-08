@@ -1026,6 +1026,7 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 class NumberSelectorConfig(TypedDict, total=False):
     """Class to represent a number selector config."""
 
+    as_int: bool
     min: float
     max: float
     step: float | Literal["any"]
@@ -1060,6 +1061,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
     CONFIG_SCHEMA = vol.All(
         vol.Schema(
             {
+                vol.Optional("as_int", default=False): bool,
                 vol.Optional("min"): vol.Coerce(float),
                 vol.Optional("max"): vol.Coerce(float),
                 # Controls slider steps, and up/down keyboard binding for the box
@@ -1080,9 +1082,13 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> float:
+    def __call__(self, data: Any) -> float | int:
         """Validate the passed selection."""
-        value: float = vol.Coerce(float)(data)
+        value: float | int
+        if self.config["as_int"]:
+            value = vol.Coerce(int)(data)
+        else:
+            value = vol.Coerce(float)(data)
 
         if "min" in self.config and value < self.config["min"]:
             raise vol.Invalid(f"Value {value} is too small")
