@@ -44,8 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=entry.data.get("config_url"),
     )
 
-    # _LOGGER.info("Entry data: %s", entry.data)
-
     # Now add in all the entities for this device.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.loop.create_task(http_api.async_setup(hass))
