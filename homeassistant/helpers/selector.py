@@ -1061,7 +1061,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
     CONFIG_SCHEMA = vol.All(
         vol.Schema(
             {
-                vol.Optional("as_int", default=False): bool,
+                vol.Optional("as_int"): bool,
                 vol.Optional("min"): vol.Coerce(float),
                 vol.Optional("max"): vol.Coerce(float),
                 # Controls slider steps, and up/down keyboard binding for the box
@@ -1085,7 +1085,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
     def __call__(self, data: Any) -> float | int:
         """Validate the passed selection."""
         value: float | int
-        if self.config["as_int"]:
+        if self.config.get("as_int"):
             value = vol.Coerce(int)(data)
         else:
             value = vol.Coerce(float)(data)
