@@ -819,10 +819,6 @@ jobs:
     needs:
       - info
       - base
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
@@ -836,11 +832,11 @@ jobs:
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
