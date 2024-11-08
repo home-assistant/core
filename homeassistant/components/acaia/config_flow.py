@@ -1,5 +1,6 @@
 """Config flow for Acaia integration."""
 
+import logging
 from typing import Any
 
 from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
@@ -11,6 +12,8 @@ from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -38,6 +41,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                 except AcaiaDeviceNotFound:
                     errors["base"] = "device_not_found"
                 except AcaiaError:
+                    _LOGGER.exception("Error occurred while connecting to the scale")
                     errors["base"] = "unknown"
                 except AcaiaUnknownDevice:
                     return self.async_abort(reason="unsupported_device")
@@ -78,10 +82,16 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovery_info.address
             )
         except AcaiaDeviceNotFound:
+            _LOGGER.debug("Device not found during discovery")
             return self.async_abort(reason="device_not_found")
         except AcaiaError:
+            _LOGGER.debug(
+                "Error occurred while connecting to the scale during discovery",
+                exc_info=True,
+            )
             return self.async_abort(reason="unknown")
         except AcaiaUnknownDevice:
+            _LOGGER.debug("Unsupported device during discovery")
             return self.async_abort(reason="unsupported_device")
 
         self._set_confirm_only()
