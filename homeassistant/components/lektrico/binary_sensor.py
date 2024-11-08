@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
@@ -22,7 +22,6 @@ class LektricoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Lektrico binary sensor entity."""
 
     value_fn: Callable[[dict[str, Any]], bool]
-    attributes_fn: Callable[[Any], dict[Any, bool]] | None = None
 
 
 BINARY_SENSORS: tuple[LektricoBinarySensorEntityDescription, ...] = (
@@ -138,12 +137,3 @@ class LektricoBinarySensor(LektricoEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update attributes when the coordinator updates."""
-        if self.entity_description.attributes_fn is not None:
-            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
-                self._coordinator.data
-            )
-            super()._handle_coordinator_update()
