@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
+import pytest
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
 from uiprotect.exceptions import NvrError
@@ -12,8 +13,13 @@ from uiprotect.websocket import WebsocketState
 from homeassistant.components.camera import (
     CameraEntityFeature,
     CameraState,
+    CameraWebRTCProvider,
+    RTCIceCandidate,
+    StreamType,
+    WebRTCSendMessage,
     async_get_image,
     async_get_stream_source,
+    async_register_webrtc_provider,
 )
 from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
@@ -22,6 +28,7 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_HEIGHT,
     ATTR_WIDTH,
     DEFAULT_ATTRIBUTION,
+    DOMAIN,
 )
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.const import (
@@ -31,11 +38,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .utils import (
+    Camera,
     MockUFPFixture,
     adopt_devices,
     assert_entity_counts,
@@ -44,6 +52,45 @@ from .utils import (
     remove_entities,
     time_changed,
 )
+
+
+class MockWebRTCProvider(CameraWebRTCProvider):
+    """WebRTC provider."""
+
+    @property
+    def domain(self) -> str:
+        """Return the integration domain of the provider."""
+        return DOMAIN
+
+    @callback
+    def async_is_supported(self, stream_source: str) -> bool:
+        """Return if this provider is supports the Camera as source."""
+        return True
+
+    async def async_handle_async_webrtc_offer(
+        self,
+        camera: Camera,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+    ) -> None:
+        """Handle the WebRTC offer and return the answer via the provided callback."""
+
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidate
+    ) -> None:
+        """Handle the WebRTC candidate."""
+
+    @callback
+    def async_close_session(self, session_id: str) -> None:
+        """Close the session."""
+
+
+@pytest.fixture
+async def web_rtc_provider(hass: HomeAssistant) -> None:
+    """Fixture to enable WebRTC provider for camera entities."""
+    await async_setup_component(hass, "camera", {})
+    async_register_webrtc_provider(hass, MockWebRTCProvider())
 
 
 def validate_default_camera_entity(
@@ -149,7 +196,7 @@ async def validate_rtsps_camera_state(
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
 
-    assert await async_get_stream_source(hass, entity_id) == channel.rtsps_url
+    assert await async_get_stream_source(hass, entity_id) == channel.rtsps_no_srtp_url
     validate_common_camera_state(hass, channel, entity_id, features)
 
 
@@ -281,6 +328,26 @@ async def test_basic_setup(
 
     entity_id = validate_default_camera_entity(hass, doorbell, 3)
     await validate_no_stream_camera_state(hass, doorbell, 3, entity_id, features=0)
+
+
+@pytest.mark.usefixtures("web_rtc_provider")
+async def test_webrtc_support(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera_all: ProtectCamera,
+) -> None:
+    """Test webrtc support is available."""
+    camera_high_only = camera_all.copy()
+    camera_high_only.channels = [c.copy() for c in camera_all.channels]
+    camera_high_only.name = "Test Camera 1"
+    camera_high_only.channels[0].is_rtsp_enabled = True
+    camera_high_only.channels[1].is_rtsp_enabled = False
+    camera_high_only.channels[2].is_rtsp_enabled = False
+    await init_entry(hass, ufp, [camera_high_only])
+    entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
+    state = hass.states.get(entity_id)
+    assert state
+    assert StreamType.WEB_RTC in state.attributes["frontend_stream_type"]
 
 
 async def test_adopt(

@@ -61,6 +61,14 @@
           "sv-se": "Sweden",
           "tr-tr": "Türkiye"
         }
+      },
+      "list_access": {
+        "name": "List access",
+        "state": {
+          "registered": "Private",
+          "shared": "Shared",
+          "invitation": "Invitation pending"
+        }
       }
     }
   },

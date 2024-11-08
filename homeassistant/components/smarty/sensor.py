@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import REVOLUTIONS_PER_MINUTE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -42,38 +42,40 @@ class SmartySensorDescription(SensorEntityDescription):
 ENTITIES: tuple[SmartySensorDescription, ...] = (
     SmartySensorDescription(
         key="supply_air_temperature",
-        name="Supply Air Temperature",
+        translation_key="supply_air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda smarty: smarty.supply_air_temperature,
     ),
     SmartySensorDescription(
         key="extract_air_temperature",
-        name="Extract Air Temperature",
+        translation_key="extract_air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda smarty: smarty.extract_air_temperature,
     ),
     SmartySensorDescription(
         key="outdoor_air_temperature",
-        name="Outdoor Air Temperature",
+        translation_key="outdoor_air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda smarty: smarty.outdoor_air_temperature,
     ),
     SmartySensorDescription(
         key="supply_fan_speed",
-        name="Supply Fan Speed",
+        translation_key="supply_fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         value_fn=lambda smarty: smarty.supply_fan_speed,
     ),
     SmartySensorDescription(
         key="extract_fan_speed",
-        name="Extract Fan Speed",
+        translation_key="extract_fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         value_fn=lambda smarty: smarty.extract_fan_speed,
     ),
     SmartySensorDescription(
         key="filter_days_left",
-        name="Filter Days Left",
+        translation_key="filter_days_left",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=get_filter_days_left,
     ),
@@ -107,7 +109,6 @@ class SmartySensor(SmartyEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = f"{coordinator.config_entry.title} {entity_description.name}"
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
