@@ -1609,7 +1609,7 @@ async def test_async_beolink_expand(
     )
 
     # Set the source to a beolink expandable source
-    source_change_callback(BangOlufsenSource.TIDAL)
+    source_change_callback(TEST_SOURCE)
 
     await hass.services.async_call(
         DOMAIN,
