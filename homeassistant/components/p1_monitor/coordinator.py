@@ -60,7 +60,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
 
         self.p1monitor = P1Monitor(
             host=self.config_entry.data[CONF_HOST],
-            port=int(self.config_entry.data[CONF_PORT]),
+            port=self.config_entry.data[CONF_PORT],
             session=async_get_clientsession(hass),
         )
 
