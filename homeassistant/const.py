@@ -740,21 +740,6 @@ _DEPRECATED_POWER_KILO_WATT: Final = DeprecatedConstantEnum(
     UnitOfPower.KILO_WATT,
     "2025.1",
 )
-"""Deprecated: please use UnitOfPower.MEGA_WATT."""
-_DEPRECATED_POWER_MEGA_WATT: Final = DeprecatedConstantEnum(
-    UnitOfPower.MEGA_WATT,
-    "2025.1",
-)
-"""Deprecated: please use UnitOfPower.GIGA_WATT."""
-_DEPRECATED_POWER_GIGA_WATT: Final = DeprecatedConstantEnum(
-    UnitOfPower.GIGA_WATT,
-    "2025.1",
-)
-"""Deprecated: please use UnitOfPower.TERA_WATT."""
-_DEPRECATED_POWER_TERA_WATT: Final = DeprecatedConstantEnum(
-    UnitOfPower.TERA_WATT,
-    "2025.1",
-)
 """Deprecated: please use UnitOfPower.KILO_WATT."""
 _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
     UnitOfPower.BTU_PER_HOUR,
