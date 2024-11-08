@@ -42,6 +42,7 @@ DATA_CLIENT = "client"
 DATA_OLD_SERVER_LOG_LEVEL = "old_server_log_level"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
+EVENT_VALUE_UPDATED = "value updated"
 
 LOGGER = logging.getLogger(__package__)
 LIB_LOGGER = logging.getLogger("zwave_js_server")

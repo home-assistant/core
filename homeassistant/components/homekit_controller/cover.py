@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache import cached_property
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,15 +14,10 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,16 +28,24 @@ from .entity import HomeKitEntity
 STATE_STOPPED = "stopped"
 
 CURRENT_GARAGE_STATE_MAP = {
-    0: STATE_OPEN,
-    1: STATE_CLOSED,
-    2: STATE_OPENING,
-    3: STATE_CLOSING,
+    0: CoverState.OPEN,
+    1: CoverState.CLOSED,
+    2: CoverState.OPENING,
+    3: CoverState.CLOSING,
     4: STATE_STOPPED,
 }
 
-TARGET_GARAGE_STATE_MAP = {STATE_OPEN: 0, STATE_CLOSED: 1, STATE_STOPPED: 2}
+TARGET_GARAGE_STATE_MAP = {
+    CoverState.OPEN: 0,
+    CoverState.CLOSED: 1,
+    STATE_STOPPED: 2,
+}
 
-CURRENT_WINDOW_STATE_MAP = {0: STATE_CLOSING, 1: STATE_OPENING, 2: STATE_STOPPED}
+CURRENT_WINDOW_STATE_MAP = {
+    0: CoverState.CLOSING,
+    1: CoverState.OPENING,
+    2: STATE_STOPPED,
+}
 
 
 async def async_setup_entry(
@@ -92,25 +95,25 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
-        return self._state == STATE_CLOSED
+        return self._state == CoverState.CLOSED
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state == STATE_CLOSING
+        return self._state == CoverState.CLOSING
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state == STATE_OPENING
+        return self._state == CoverState.OPENING
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send open command."""
-        await self.set_door_state(STATE_OPEN)
+        await self.set_door_state(CoverState.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send close command."""
-        await self.set_door_state(STATE_CLOSED)
+        await self.set_door_state(CoverState.CLOSED)
 
     async def set_door_state(self, state: str) -> None:
         """Send state command."""
@@ -188,14 +191,14 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         """Return if the cover is closing or not."""
         value = self.service.value(CharacteristicsTypes.POSITION_STATE)
         state = CURRENT_WINDOW_STATE_MAP[value]
-        return state == STATE_CLOSING
+        return state == CoverState.CLOSING
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         value = self.service.value(CharacteristicsTypes.POSITION_STATE)
         state = CURRENT_WINDOW_STATE_MAP[value]
-        return state == STATE_OPENING
+        return state == CoverState.OPENING
 
     @property
     def is_horizontal_tilt(self) -> bool:

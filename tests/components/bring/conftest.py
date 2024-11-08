@@ -46,6 +46,9 @@ def mock_bring_client() -> Generator[AsyncMock]:
         client.login.return_value = cast(BringAuthResponse, {"name": "Bring"})
         client.load_lists.return_value = load_json_object_fixture("lists.json", DOMAIN)
         client.get_list.return_value = load_json_object_fixture("items.json", DOMAIN)
+        client.get_all_user_settings.return_value = load_json_object_fixture(
+            "usersettings.json", DOMAIN
+        )
         yield client
 
 

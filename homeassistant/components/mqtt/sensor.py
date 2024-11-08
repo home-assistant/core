@@ -100,7 +100,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
 
         if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
             raise vol.Invalid(
-                f"The option `{CONF_OPTIONS}` can only be used "
+                f"The option `{CONF_OPTIONS}` must be used "
                 f"together with device class `{SensorDeviceClass.ENUM}`, "
                 f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
             )
@@ -260,14 +260,18 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 msg.topic,
             )
             return
+
+        if payload == PAYLOAD_NONE:
+            self._attr_native_value = None
+            return
+
         if self._numeric_state_expected:
             if payload == "":
                 _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
-            elif payload == PAYLOAD_NONE:
-                self._attr_native_value = None
             else:
                 self._attr_native_value = payload
             return
+
         if self.options and payload not in self.options:
             _LOGGER.warning(
                 "Ignoring invalid option received on topic '%s', got '%s', allowed: %s",

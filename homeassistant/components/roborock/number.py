@@ -13,9 +13,10 @@ from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RoborockConfigEntry
+from . import DOMAIN, RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockEntityV1
 
@@ -107,6 +108,12 @@ class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set number value."""
-        await self.entity_description.update_value(
-            self.get_cache(self.entity_description.cache_key), value
-        )
+        try:
+            await self.entity_description.update_value(
+                self.get_cache(self.entity_description.cache_key), value
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err

@@ -110,14 +110,14 @@ async def test_update_automation_config(
         ),
         (
             {
-                "trigger": {"platform": "automation"},
+                "trigger": {"trigger": "automation"},
                 "action": [],
             },
             "Integration 'automation' does not provide trigger support",
         ),
         (
             {
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "state",
                     # The UUID will fail being resolved to en entity_id
@@ -130,7 +130,7 @@ async def test_update_automation_config(
         ),
         (
             {
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "action": {
                     "condition": "state",
                     # The UUID will fail being resolved to en entity_id
@@ -336,12 +336,12 @@ async def test_bad_formatted_automations(
         [
             {
                 "id": "sun",
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "action": {"service": "test.automation"},
             },
             {
                 "id": "moon",
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {"trigger": "event", "event_type": "test_event"},
                 "action": {"service": "test.automation"},
             },
         ],

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
@@ -37,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -58,6 +60,15 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kLow: "low",
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kWarning: "warning",
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
+}
+
+
+OPERATIONAL_STATE_MAP = {
+    # enum with known Operation state values which we can translate
+    clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
+    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
+    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
+    clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
 
@@ -91,6 +102,42 @@ class MatterSensor(MatterEntity, SensorEntity):
         elif value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
+
+
+class MatterOperationalStateSensor(MatterSensor):
+    """Representation of a sensor for Matter Operational State."""
+
+    states_map: dict[int, str]
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        # the operational state list is a list of the possible operational states
+        # this is a dynamic list and is condition, device and manufacturer specific
+        # therefore it is not possible to provide a fixed list of options
+        # or to provide a mapping to a translateable string for all options
+        operational_state_list = self.get_matter_attribute_value(
+            clusters.OperationalState.Attributes.OperationalStateList
+        )
+        if TYPE_CHECKING:
+            operational_state_list = cast(
+                list[clusters.OperationalState.Structs.OperationalStateStruct],
+                operational_state_list,
+            )
+        states_map: dict[int, str] = {}
+        for state in operational_state_list:
+            # prefer translateable (known) state from mapping,
+            # fallback to the raw state label as given by the device/manufacturer
+            states_map[state.operationalStateID] = OPERATIONAL_STATE_MAP.get(
+                state.operationalStateID, slugify(state.operationalStateLabel)
+            )
+        self.states_map = states_map
+        self._attr_options = list(states_map.values())
+        self._attr_native_value = states_map.get(
+            self.get_matter_attribute_value(
+                clusters.OperationalState.Attributes.OperationalState
+            )
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -582,8 +629,7 @@ DISCOVERY_SCHEMAS = [
             key="SmokeCOAlarmContaminationState",
             translation_key="contamination_state",
             device_class=SensorDeviceClass.ENUM,
-            # convert to set first to remove the duplicate unknown value
-            options=list(set(CONTAMINATION_STATE_MAP.values())),
+            options=list(CONTAMINATION_STATE_MAP.values()),
             measurement_to_ha=CONTAMINATION_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
@@ -600,5 +646,18 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.ExpiryDate,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="OperationalState",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="operational_state",
+        ),
+        entity_class=MatterOperationalStateSensor,
+        required_attributes=(
+            clusters.OperationalState.Attributes.OperationalState,
+            clusters.OperationalState.Attributes.OperationalStateList,
+        ),
     ),
 ]

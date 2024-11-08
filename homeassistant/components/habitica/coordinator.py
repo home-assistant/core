@@ -59,9 +59,9 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
         except ClientResponseError as error:
             if error.status == HTTPStatus.TOO_MANY_REQUESTS:
-                _LOGGER.debug("Currently rate limited, skipping update")
+                _LOGGER.debug("Rate limit exceeded, will try again later")
                 return self.data
-            raise UpdateFailed(f"Error communicating with API: {error}") from error
+            raise UpdateFailed(f"Unable to connect to Habitica: {error}") from error
 
         return HabiticaData(user=user_response, tasks=tasks_response)
 

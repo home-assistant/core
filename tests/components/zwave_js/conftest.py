@@ -3,13 +3,14 @@
 import asyncio
 import copy
 import io
-from typing import Any
-from unittest.mock import DEFAULT, AsyncMock, patch
+from typing import Any, cast
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.node.data_model import NodeDataType
 from zwave_js_server.version import VersionInfo
 
 from homeassistant.components.zwave_js.const import DOMAIN
@@ -488,6 +489,24 @@ def window_covering_outbound_bottom_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("window_covering_outbound_bottom.json", DOMAIN)
 
 
+@pytest.fixture(name="siren_neo_coolcam_state")
+def siren_neo_coolcam_state_state_fixture() -> NodeDataType:
+    """Load node with siren_neo_coolcam_state fixture data."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("siren_neo_coolcam_nas-ab01z_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="aeotec_smart_switch_7_state")
+def aeotec_smart_switch_7_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Aeotec Smart Switch 7."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("aeotec_smart_switch_7_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -798,7 +817,7 @@ def nortek_thermostat_removed_event_fixture(client) -> Node:
 
 
 @pytest.fixture(name="integration")
-async def integration_fixture(hass: HomeAssistant, client) -> Node:
+async def integration_fixture(hass: HomeAssistant, client) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
@@ -1190,5 +1209,25 @@ def window_covering_outbound_bottom_fixture(
 ) -> Node:
     """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
     node = Node(client, copy.deepcopy(window_covering_outbound_bottom_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="siren_neo_coolcam")
+def siren_neo_coolcam_fixture(
+    client: MagicMock, siren_neo_coolcam_state: NodeDataType
+) -> Node:
+    """Load node for neo coolcam siren."""
+    node = Node(client, siren_neo_coolcam_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_smart_switch_7")
+def aeotec_smart_switch_7_fixture(
+    client: MagicMock, aeotec_smart_switch_7_state: NodeDataType
+) -> Node:
+    """Load node for Aeotec Smart Switch 7."""
+    node = Node(client, aeotec_smart_switch_7_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

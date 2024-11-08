@@ -22,8 +22,9 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
-    )
-    assert device_entry is not None
-    assert device_entry == snapshot
+    for entity in ("wordle", "spelling_bee", "connections"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_{entity}")}
+        )
+        assert device_entry is not None
+        assert device_entry == snapshot(name=f"device_{entity}")

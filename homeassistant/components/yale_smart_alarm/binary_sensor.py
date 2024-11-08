@@ -49,9 +49,13 @@ async def async_setup_entry(
     """Set up the Yale binary sensor entry."""
 
     coordinator = entry.runtime_data
-    sensors: list[YaleDoorSensor | YaleProblemSensor] = [
+    sensors: list[YaleDoorSensor | YaleDoorBatterySensor | YaleProblemSensor] = [
         YaleDoorSensor(coordinator, data) for data in coordinator.data["door_windows"]
     ]
+    sensors.extend(
+        YaleDoorBatterySensor(coordinator, data)
+        for data in coordinator.data["door_windows"]
+    )
     sensors.extend(
         YaleProblemSensor(coordinator, description) for description in SENSOR_TYPES
     )
@@ -68,6 +72,27 @@ class YaleDoorSensor(YaleEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self.coordinator.data["sensor_map"][self._attr_unique_id] == "open")
+
+
+class YaleDoorBatterySensor(YaleEntity, BinarySensorEntity):
+    """Representation of a Yale door sensor battery status."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+
+    def __init__(
+        self,
+        coordinator: YaleDataUpdateCoordinator,
+        data: dict,
+    ) -> None:
+        """Initiate Yale door battery Sensor."""
+        super().__init__(coordinator, data)
+        self._attr_unique_id = f"{data["address"]}-battery"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the battery is low."""
+        state: bool = self.coordinator.data["sensor_battery_map"][self._attr_unique_id]
+        return state
 
 
 class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):

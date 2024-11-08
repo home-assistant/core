@@ -10,7 +10,11 @@ import pytest
 import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
-from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.enphase_envoy.const import (
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+    OPTION_DISABLE_KEEP_ALIVE,
+    Platform,
+)
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -331,3 +335,28 @@ async def test_remove_config_entry_device(
     device_entry = device_registry.async_get(entity.device_id)
     response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_option_change_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test options change will reload entity."""
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # option change will take care of COV of init::async_reload_entry
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+            OPTION_DISABLE_KEEP_ALIVE: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+        OPTION_DISABLE_KEEP_ALIVE: True,
+    }

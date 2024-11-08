@@ -75,6 +75,21 @@ async def async_setup_entry(
                 support_release_notes=True,
                 release_url="https://www.example.com/release/1.93.3",
                 device_class=UpdateDeviceClass.FIRMWARE,
+                update_steps=10,
+            ),
+            DemoUpdate(
+                unique_id="update_support_decimal_progress",
+                device_name="Demo Update with Decimal Progress",
+                title="Philips Lamps Firmware",
+                installed_version="1.93.3",
+                latest_version="1.94.2",
+                support_progress=True,
+                release_summary="Added support for effects",
+                support_release_notes=True,
+                release_url="https://www.example.com/release/1.93.3",
+                device_class=UpdateDeviceClass.FIRMWARE,
+                display_precision=2,
+                update_steps=1000,
             ),
         ]
     )
@@ -106,10 +121,13 @@ class DemoUpdate(UpdateEntity):
         support_install: bool = True,
         support_release_notes: bool = False,
         device_class: UpdateDeviceClass | None = None,
+        display_precision: int = 0,
+        update_steps: int = 100,
     ) -> None:
         """Initialize the Demo select entity."""
         self._attr_installed_version = installed_version
         self._attr_device_class = device_class
+        self._attr_display_precision = display_precision
         self._attr_latest_version = latest_version
         self._attr_release_summary = release_summary
         self._attr_release_url = release_url
@@ -119,6 +137,7 @@ class DemoUpdate(UpdateEntity):
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
         )
+        self._update_steps = update_steps
         if support_install:
             self._attr_supported_features |= (
                 UpdateEntityFeature.INSTALL
@@ -136,12 +155,14 @@ class DemoUpdate(UpdateEntity):
     ) -> None:
         """Install an update."""
         if self.supported_features & UpdateEntityFeature.PROGRESS:
-            for progress in range(0, 100, 10):
-                self._attr_in_progress = progress
+            self._attr_in_progress = True
+            for progress in range(0, self._update_steps, 1):
+                self._attr_update_percentage = progress / (self._update_steps / 100)
                 self.async_write_ha_state()
                 await _fake_install()
 
         self._attr_in_progress = False
+        self._attr_update_percentage = None
         self._attr_installed_version = (
             version if version is not None else self.latest_version
         )

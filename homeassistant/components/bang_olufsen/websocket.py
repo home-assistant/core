@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from mozart_api.models import (
+    ListeningModeProps,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -50,6 +51,9 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self._client.get_notification_notifications(self.on_notification_notification)
         self._client.get_on_connection_lost(self.on_connection_lost)
         self._client.get_on_connection(self.on_connection)
+        self._client.get_active_listening_mode_notifications(
+            self.on_active_listening_mode
+        )
         self._client.get_playback_error_notifications(
             self.on_playback_error_notification
         )
@@ -58,6 +62,9 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         )
         self._client.get_playback_progress_notifications(
             self.on_playback_progress_notification
+        )
+        self._client.get_playback_source_notifications(
+            self.on_playback_source_notification
         )
         self._client.get_playback_state_notifications(
             self.on_playback_state_notification
@@ -88,6 +95,14 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Handle WebSocket connection lost."""
         _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
+
+    def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
+        """Send active_listening_mode dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            notification,
+        )
 
     def on_notification_notification(
         self, notification: WebsocketNotificationTag
@@ -142,6 +157,14 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
+            notification,
+        )
+
+    def on_playback_source_notification(self, notification: Source) -> None:
+        """Send playback_source dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_SOURCE}",
             notification,
         )
 

@@ -6,6 +6,7 @@ import logging
 from unittest.mock import AsyncMock, call, patch
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
@@ -554,7 +555,7 @@ async def test_start_addon(
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
@@ -600,16 +601,16 @@ async def test_install_addon(
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
+@pytest.mark.parametrize("addon_info_side_effect", [SupervisorError("Boom")])
 async def test_addon_info_failure(
     hass: HomeAssistant,
     addon_installed,
@@ -747,7 +748,7 @@ async def test_addon_options_changed(
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
-        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0.0", True, 1, 1, SupervisorError("Boom"), None),
         ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
@@ -1574,13 +1575,9 @@ async def test_disabled_entity_on_value_removed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, zp3111, client, integration
 ) -> None:
     """Test that when entity primary values are removed the entity is removed."""
-    # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-    entity_registry.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
-    await hass.async_block_till_done()
 
     # must reload the integration when enabling an entity
     await hass.config_entries.async_unload(integration.entry_id)
@@ -1590,10 +1587,6 @@ async def test_disabled_entity_on_value_removed(
     await hass.config_entries.async_setup(integration.entry_id)
     await hass.async_block_till_done()
     assert integration.state is ConfigEntryState.LOADED
-
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
@@ -1688,10 +1681,6 @@ async def test_disabled_entity_on_value_removed(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -1707,7 +1696,6 @@ async def test_disabled_entity_on_value_removed(
         | {
             battery_level_entity,
             binary_cover_entity,
-            sensor_cover_entity,
             idle_cover_status_button_entity,
         }
         == new_unavailable_entities

@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from lmcloud.exceptions import RequestNotSuccessful
-import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -47,15 +46,14 @@ async def test_binary_sensors(
         assert entry == snapshot(name=f"{serial_number}_{binary_sensor}-entry")
 
 
-@pytest.mark.usefixtures("remove_local_connection")
 async def test_brew_active_does_not_exists(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_no_local_connection: MockConfigEntry,
 ) -> None:
     """Test the La Marzocco currently_making_coffee doesn't exist if host not set."""
 
-    await async_init_integration(hass, mock_config_entry)
+    await async_init_integration(hass, mock_config_entry_no_local_connection)
     state = hass.states.get(f"sensor.{mock_lamarzocco.serial_number}_brewing_active")
     assert state is None
 

@@ -1,8 +1,11 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
     "step": {
       "reauth_confirm": {
-        "description": "Press SUBMIT to reauthenticate"
+        "description": "Select **Submit** to reauthenticate"
       }
     }
   },
@@ -38,7 +41,7 @@
         "step": {
           "confirm": {
             "title": "The power supply needs to be replaced",
-            "description": "Press SUBMIT to confirm the power supply has been replaced"
+            "description": "Select **Submit** to confirm the power supply has been replaced"
           }
         }
       }
@@ -49,7 +52,7 @@
         "step": {
           "confirm": {
             "title": "Blinker fluid needs to be refilled",
-            "description": "Press SUBMIT when blinker fluid has been refilled"
+            "description": "Select **Submit** when blinker fluid has been refilled"
           }
         }
       }

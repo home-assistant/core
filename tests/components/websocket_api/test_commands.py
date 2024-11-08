@@ -2601,7 +2601,7 @@ async def test_validate_config_works(
         (
             "triggers",
             {"platform": "non_existing", "event_type": "hello"},
-            "Invalid platform 'non_existing' specified",
+            "Invalid trigger 'non_existing' specified",
         ),
         # Raises vol.Invalid
         (

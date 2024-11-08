@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from functools import cached_property
 from typing import final
+
+from propcache import cached_property
 
 from homeassistant.components import zone
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +25,7 @@ from homeassistant.helpers.device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
@@ -41,7 +42,7 @@ from .const import (
     SourceType,
 )
 
-DOMAIN_DATA: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
 DATA_KEY: HassKey[dict[str, tuple[str, str]]] = HassKey(f"{DOMAIN}_mac")
 
 # mypy: disallow-any-generics
@@ -54,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN_DATA] = EntityComponent[BaseTrackerEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @callback
@@ -181,7 +182,7 @@ class BaseTrackerEntity(Entity):
         return None
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         if hasattr(self, "_attr_source_type"):
             return self._attr_source_type
@@ -198,6 +199,10 @@ class BaseTrackerEntity(Entity):
         return attr
 
 
+class TrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
 CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
     "latitude",
     "location_accuracy",
@@ -211,6 +216,7 @@ class TrackerEntity(
 ):
     """Base class for a tracked device."""
 
+    entity_description: TrackerEntityDescription
     _attr_latitude: float | None = None
     _attr_location_accuracy: int = 0
     _attr_location_name: str | None = None
@@ -285,6 +291,10 @@ class TrackerEntity(
         return attr
 
 
+class ScannerEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
 CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
     "ip_address",
     "mac_address",
@@ -297,6 +307,7 @@ class ScannerEntity(
 ):
     """Base class for a tracked device that is on a scanned network."""
 
+    entity_description: ScannerEntityDescription
     _attr_hostname: str | None = None
     _attr_ip_address: str | None = None
     _attr_mac_address: str | None = None
