@@ -68,7 +68,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(self, discovery_info) -> ConfigFlowResult:
         """Handle a discovered Bluetooth device."""
-        
+
         self._discovered[CONF_MAC] = discovery_info.address
         self._discovered[CONF_NAME] = discovery_info.name
 
