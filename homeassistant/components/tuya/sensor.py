@@ -213,7 +213,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="voc",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
-        ),    
+        ),
         *BATTERY_SENSORS,
     ),
     # Two-way temperature and humidity switch
