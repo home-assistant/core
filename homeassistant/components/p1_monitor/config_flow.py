@@ -59,6 +59,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST): TextSelector(),
                     vol.Required(CONF_PORT, default=80): NumberSelector(
                         NumberSelectorConfig(
+                            as_int=True,
                             mode=NumberSelectorMode.BOX,
                         )
                     ),
