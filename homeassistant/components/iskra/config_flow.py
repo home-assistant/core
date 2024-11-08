@@ -66,9 +66,7 @@ STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
             vol.Coerce(int), vol.Range(min=0, max=65535)
         ),
         vol.Required(CONF_ADDRESS, default=33): NumberSelector(
-            NumberSelectorConfig(
-                as_int=True, min=1, max=255, mode=NumberSelectorMode.BOX
-            )
+            NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.BOX)
         ),
     }
 )

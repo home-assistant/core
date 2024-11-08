@@ -1061,11 +1061,10 @@ class NumberSelector(Selector[NumberSelectorConfig]):
     CONFIG_SCHEMA = vol.All(
         vol.Schema(
             {
-                vol.Optional("as_int"): bool,
                 vol.Optional("min"): vol.Coerce(float),
                 vol.Optional("max"): vol.Coerce(float),
                 # Controls slider steps, and up/down keyboard binding for the box
-                # user input is not rounded
+                # if step is an integer > 0, a validation of integer will be enforced
                 vol.Optional("step", default=1): vol.Any(
                     "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
                 ),
@@ -1084,11 +1083,12 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 
     def __call__(self, data: Any) -> float | int:
         """Validate the passed selection."""
-        value: float | int
-        if self.config.get("as_int"):
-            value = vol.Coerce(int)(data)
-        else:
-            value = vol.Coerce(float)(data)
+        value: float = vol.Coerce(float)(data)
+
+        if (step := self.config["step"]) != "any" and step.is_integer() and step > 0:
+            if not value.is_integer():
+                raise vol.Invalid("Value must be an integer")
+            value = int(value)
 
         if "min" in self.config and value < self.config["min"]:
             raise vol.Invalid(f"Value {value} is too small")
