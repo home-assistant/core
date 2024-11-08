@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_data": "API connected but the response was empty"
@@ -9,6 +12,12 @@
         "data": {
           "currency": "Currency",
           "areas": "Areas"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "currency": "[%key:component::nordpool::config::step::user::data::currency%]",
+          "areas": "[%key:component::nordpool::config::step::user::data::areas%]"
         }
       }
     }

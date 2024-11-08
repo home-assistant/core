@@ -90,3 +90,22 @@ class NordpoolConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfiguration step."""
+        errors: dict[str, str] = {}
+        if user_input:
+            errors = await test_api(self.hass, user_input)
+            reconfigure_entry = self._get_reconfigure_entry()
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
