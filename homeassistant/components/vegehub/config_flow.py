@@ -43,8 +43,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # When the user has input the IP manually, we need to gather more information first
                 self._hub = VegeHub(str(user_input.get("ip_address")))
 
-                _LOGGER.info("User input of %s", self._hub.ip_address)
-
                 await self._hub.retrieve_mac_address()
 
                 if len(self._hub.mac_address) <= 0:
@@ -73,7 +71,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._config_url = f"http://{self._hub.ip_address}"
 
             if self._hub is not None:
-                _LOGGER.info("Setting up hub %s", self._hub.ip_address)
                 try:
                     hostname = socket.gethostname()  # Get the local hostname
                     await self._hub.setup(
@@ -154,13 +151,10 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entry = list(ip_dict.keys())[
                     list(ip_dict.values()).index(self._hub.mac_address)
                 ]
-                if entry:  # If it's already in the list, then it is connected to another IP address. Remove that entry.
+                if entry:
+                    # If it's already in the list, then it is connected to another
+                    # IP address. Remove that entry.
                     ip_dict.pop(entry)
-                    _LOGGER.info(
-                        "Zeroconf found a new IP address for %s at %s",
-                        self._hub.mac_address,
-                        device_ip,
-                    )
             except ValueError:
                 _LOGGER.info("Zeroconf found new device at %s", device_ip)
 
