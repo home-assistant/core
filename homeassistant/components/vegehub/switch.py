@@ -1,6 +1,5 @@
 """Switch configuration for VegeHub integration."""
 
-import logging
 from typing import Any
 
 from vegehub import VegeHub
@@ -22,8 +21,6 @@ SWITCH_TYPE = SwitchEntityDescription(
     key="switch",
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -41,8 +38,6 @@ async def async_setup_entry(
     if is_ac:
         num_batteries = 0
 
-    _LOGGER.info("Adding %s actuators", num_actuators)
-
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
     for i in range(
@@ -50,14 +45,12 @@ async def async_setup_entry(
     ):  # Add 1 for battery
         if i > num_sensors:
             name = f"VegeHub Actuator {i - num_sensors}"
-            _LOGGER.info("Setting up %s", name)
             sensor = VegeHubSwitch(
                 name=name,
                 sens_slot=i + num_batteries,
                 act_slot=i - num_sensors - 1,
                 config_entry=config_entry,
             )
-            _LOGGER.info("Sensor id %s", sensor.unique_id)
 
             # Store the entity by ID in hass.data
             # if sensor.unique_id not in hass.data[DOMAIN]:
@@ -155,9 +148,8 @@ class VegeHubSwitch(SwitchEntity):
 
     def update(self) -> None:
         """Get the latest data from the smart plug and updates the states."""
-        # self.data.update()
-        _LOGGER.info("Switch Update")
-        # /api/actuators/status
+        # May add functionality to update switch state, but it is already updated by
+        # incoming hub communication whenever it changes.
 
     @property
     def available(self) -> bool:

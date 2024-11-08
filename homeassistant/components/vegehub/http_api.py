@@ -32,26 +32,15 @@ async def async_setup(hass: HomeAssistant) -> bool:
                 for sensor in data["sensors"]:
                     slot = sensor.get("slot")
                     latest_sample = sensor["samples"][-1]
-                    timestamp = latest_sample["t"]
                     value = latest_sample["v"]
 
                     # Use the slot number as part of the entity ID
                     entity_id = f"vegehub_{incoming_key}_{slot}".lower()
 
-                    _LOGGER.info(
-                        "Received sensor data - Slot: %s, Value: %s, Time: %s",
-                        slot,
-                        value,
-                        timestamp,
-                    )
-
                     # Update Home Assistant entity with the new sensor data
                     await self._update_sensor_entity(hass, value, entity_id)
 
             return self.json({"status": "ok"})
-            # except Exception as e:
-            #     _LOGGER.error(f"Error processing POST request: {e}")
-            #     return self.json({"status": "error", "message": str(e)})
 
         async def _update_sensor_entity(
             self, hass: HomeAssistant, value: float, entity_id: str
@@ -67,7 +56,6 @@ async def async_setup(hass: HomeAssistant) -> bool:
                     _LOGGER.error("Sensor entity %s not found", entity_id)
                 else:
                     await entity.async_update_sensor(value)
-                # _LOGGER.info(f"Updated entity {entity_id} with value: {value}")
             except Exception as e:
                 _LOGGER.error("Sensor entity %s not found:%s", entity_id, e)
                 raise
