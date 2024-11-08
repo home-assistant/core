@@ -21,7 +21,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import NordPoolConfigEntry
 from .const import LOGGER
-from .coordinator import NordpooolDataUpdateCoordinator
+from .coordinator import NordPoolDataUpdateCoordinator
 from .entity import NordpoolBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -260,7 +260,7 @@ class NordpoolPriceSensor(NordpoolBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: NordpooolDataUpdateCoordinator,
+        coordinator: NordPoolDataUpdateCoordinator,
         entity_description: NordpoolPricesSensorEntityDescription,
         area: str,
         currency: str,
@@ -284,7 +284,7 @@ class NordpoolBlockPriceSensor(NordpoolBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: NordpooolDataUpdateCoordinator,
+        coordinator: NordPoolDataUpdateCoordinator,
         entity_description: NordpoolBlockPricesSensorEntityDescription,
         area: str,
         currency: str,
@@ -313,7 +313,7 @@ class NordpoolDailyAveragePriceSensor(NordpoolBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: NordpooolDataUpdateCoordinator,
+        coordinator: NordPoolDataUpdateCoordinator,
         entity_description: SensorEntityDescription,
         area: str,
         currency: str,
