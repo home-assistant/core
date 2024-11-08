@@ -15,9 +15,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 CONF_DATA = {CONF_LATITUDE: 200000.1234567890, CONF_LONGITUDE: 450000.1234567890}
 CONF_INPUT = {CONF_LOCATION: {CONF_LATITUDE: 1.0, CONF_LONGITUDE: 1.1}}
 
-A = "a"
 EPSG_URL = f"https://epsg.io/srs/transform/{CONF_INPUT[CONF_LOCATION][CONF_LONGITUDE]},{CONF_INPUT[CONF_LOCATION][CONF_LATITUDE]}.json?key=default&s_srs=4326&t_srs=28992"
-STOOKWIJZER_URL = f"https://data.rivm.nl/geo/{A}lo/wms?service=WMS&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&FORMAT=application%2Fjson&QUERY_LAYERS=stookwijzer&LAYERS=stookwijzer&servicekey=82b124ad-834d-4c10-8bd0-ee730d5c1cc8&STYLES=&BUFFER=1&info_format=application%2Fjson&feature_count=1&I=1&J=1&WIDTH=1&HEIGHT=1&CRS=EPSG%3A28992&BBOX={CONF_DATA[CONF_LATITUDE]}%2C{CONF_DATA[CONF_LONGITUDE]}%2C{CONF_DATA[CONF_LATITUDE]+10}%2C{CONF_DATA[CONF_LONGITUDE]+10}"
+STOOKWIJZER_URL = f"https://data.rivm.nl/geo/{"a"}lo/wms?service=WMS&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&FORMAT=image/png&TRANSPARENT=true&QUERY_LAYERS=stookwijzer_v2&LAYERS=stookwijzer_v2&servicekey=82b124ad-834d-4c10-8bd0-ee730d5c1cc8&STYLES=&BUFFER=1&EXCEPTIONS=INIMAGE&info_format=application/json&feature_count=1&I=139&J=222&WIDTH=256&HEIGHT=256&CRS=EPSG:28992&BBOX={CONF_DATA[CONF_LATITUDE]}%2C{CONF_DATA[CONF_LONGITUDE]}%2C{CONF_DATA[CONF_LATITUDE]+10}%2C{CONF_DATA[CONF_LONGITUDE]+10}"
 
 
 def mock_available(aioclient_mock: AiohttpClientMocker) -> None:
@@ -65,7 +64,7 @@ async def setup_integration(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=1234,
+        unique_id="Stookwijzer-test",
         data=CONF_INPUT,
         version=version,
         title=DOMAIN,
