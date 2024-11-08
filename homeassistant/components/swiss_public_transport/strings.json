@@ -18,11 +18,11 @@
           "from": "Start station",
           "to": "End station",
           "via": "List of up to 5 via stations",
-          "is_arrival": "Select the relevant station",
+          "time_station": "Select the relevant station",
           "time_mode": "Select a time mode"
         },
         "data_description": {
-          "is_arrival": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
+          "time_station": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
           "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station)."
         },
         "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
@@ -106,7 +106,7 @@
     }
   },
   "selector": {
-    "is_arrival": {
+    "time_station": {
       "options": {
         "departure": "Show departure time from start station",
         "arrival": "Show arrival time at end station"

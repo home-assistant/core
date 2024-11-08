@@ -11,11 +11,11 @@ import pytest
 from homeassistant.components.swiss_public_transport import config_flow
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
-    CONF_IS_ARRIVAL,
     CONF_START,
     CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
+    CONF_TIME_STATION,
     CONF_VIA,
     MAX_VIA,
 )
@@ -30,7 +30,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 MOCK_USER_DATA_STEP = {
     CONF_START: "test_start",
     CONF_DESTINATION: "test_destination",
-    CONF_IS_ARRIVAL: "departure",
+    CONF_TIME_STATION: "departure",
     CONF_TIME_MODE: "now",
 }
 
@@ -51,7 +51,7 @@ MOCK_USER_DATA_STEP_TOO_MANY_STATIONS = {
 
 MOCK_USER_DATA_STEP_ARRIVAL = {
     **MOCK_USER_DATA_STEP,
-    CONF_IS_ARRIVAL: "arrival",
+    CONF_TIME_STATION: "arrival",
 }
 
 MOCK_USER_DATA_STEP_TIME_FIXED = {
@@ -157,7 +157,7 @@ async def test_flow_user_init_data_success(
 async def test_flow_user_init_data_error_and_recover_on_step_1(
     hass: HomeAssistant, raise_error, text_error, user_input_error
 ) -> None:
-    """Test unknown errors."""
+    """Test errors in user step."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
@@ -189,7 +189,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_1(
 
 
 @pytest.mark.parametrize(
-    ("raise_error", "text_error", "user_input_error"),
+    ("raise_error", "text_error", "user_input"),
     [
         (
             OpendataTransportConnectionError(),
@@ -201,9 +201,9 @@ async def test_flow_user_init_data_error_and_recover_on_step_1(
     ],
 )
 async def test_flow_user_init_data_error_and_recover_on_step_2(
-    hass: HomeAssistant, raise_error, text_error, user_input_error
+    hass: HomeAssistant, raise_error, text_error, user_input
 ) -> None:
-    """Test unknown errors."""
+    """Test errors in time mode step."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
@@ -232,7 +232,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
     ) as mock_OpendataTransport:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=user_input_error,
+            user_input=user_input,
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -243,7 +243,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
         mock_OpendataTransport.return_value = True
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=user_input_error,
+            user_input=user_input,
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY

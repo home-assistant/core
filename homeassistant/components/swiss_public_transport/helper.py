@@ -10,12 +10,12 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_DESTINATION,
-    CONF_IS_ARRIVAL,
     CONF_START,
     CONF_TIME_FIXED,
     CONF_TIME_OFFSET,
+    CONF_TIME_STATION,
     CONF_VIA,
-    DEFAULT_IS_ARRIVAL,
+    DEFAULT_TIME_STATION,
 )
 
 
@@ -47,7 +47,7 @@ def unique_id_from_config(config: MappingProxyType[str, Any] | dict[str, Any]) -
         )
         + (
             " arrival"
-            if config.get(CONF_IS_ARRIVAL, DEFAULT_IS_ARRIVAL) == "arrival"
+            if config.get(CONF_TIME_STATION, DEFAULT_TIME_STATION) == "arrival"
             else ""
         )
         + (" at " + config[CONF_TIME_FIXED] if CONF_TIME_FIXED in config else "")

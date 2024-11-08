@@ -6,10 +6,10 @@ import pytest
 
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
-    CONF_IS_ARRIVAL,
     CONF_START,
     CONF_TIME_FIXED,
     CONF_TIME_OFFSET,
+    CONF_TIME_STATION,
     CONF_VIA,
     DOMAIN,
 )
@@ -39,7 +39,7 @@ MOCK_DATA_STEP_TIME_FIXED = {
 MOCK_DATA_STEP_TIME_OFFSET = {
     **MOCK_DATA_STEP_VIA,
     CONF_TIME_OFFSET: {"hours": 0, "minutes": 10, "seconds": 0},
-    CONF_IS_ARRIVAL: "arrival",
+    CONF_TIME_STATION: "arrival",
 }
 
 CONNECTIONS = [

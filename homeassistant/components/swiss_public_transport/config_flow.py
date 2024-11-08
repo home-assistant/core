@@ -26,14 +26,14 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_DESTINATION,
-    CONF_IS_ARRIVAL,
     CONF_START,
     CONF_TIME_FIXED,
     CONF_TIME_MODE,
     CONF_TIME_OFFSET,
+    CONF_TIME_STATION,
     CONF_VIA,
-    DEFAULT_IS_ARRIVAL,
     DEFAULT_TIME_MODE,
+    DEFAULT_TIME_STATION,
     DOMAIN,
     IS_ARRIVAL_OPTIONS,
     MAX_VIA,
@@ -59,11 +59,11 @@ USER_DATA_SCHEMA = vol.Schema(
                 translation_key="time_mode",
             ),
         ),
-        vol.Optional(CONF_IS_ARRIVAL, default=DEFAULT_IS_ARRIVAL): SelectSelector(
+        vol.Optional(CONF_TIME_STATION, default=DEFAULT_TIME_STATION): SelectSelector(
             SelectSelectorConfig(
                 options=IS_ARRIVAL_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
-                translation_key="is_arrival",
+                translation_key="time_station",
             ),
         ),
     }
@@ -92,15 +92,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             if CONF_VIA in user_input and len(user_input[CONF_VIA]) > MAX_VIA:
                 errors["base"] = "too_many_via_stations"
             else:
-                session = async_get_clientsession(self.hass)
-                opendata = OpendataTransport(
-                    user_input[CONF_START],
-                    user_input[CONF_DESTINATION],
-                    session,
-                    via=user_input.get(CONF_VIA),
-                    time=user_input.get(CONF_TIME_FIXED),
-                )
-                err = await self.fetch_connections(opendata)
+                err = await self.fetch_connections(user_input)
                 if err:
                     errors["base"] = err
                 else:
@@ -159,18 +151,10 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
-            session = async_get_clientsession(self.hass)
-            time_offset: dict[str, int] | None = time_mode_input.get(CONF_TIME_OFFSET)
-            opendata = OpendataTransport(
-                self.user_input[CONF_START],
-                self.user_input[CONF_DESTINATION],
-                session,
-                via=self.user_input.get(CONF_VIA),
-                time=time_mode_input.get(CONF_TIME_FIXED),
+            err = await self.fetch_connections(
+                {**self.user_input, **time_mode_input},
+                time_mode_input.get(CONF_TIME_OFFSET),
             )
-            if time_offset:
-                offset_opendata(opendata, time_offset)
-            err = await self.fetch_connections(opendata)
             if err:
                 errors["base"] = err
             else:
@@ -186,9 +170,21 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=PLACEHOLDERS,
         )
 
-    async def fetch_connections(self, opendata: OpendataTransport) -> str | None:
+    async def fetch_connections(
+        self, input: dict[str, Any], time_offset: dict[str, int] | None = None
+    ) -> str | None:
         """Fetch the connections and advancedly return an error."""
         try:
+            session = async_get_clientsession(self.hass)
+            opendata = OpendataTransport(
+                input[CONF_START],
+                input[CONF_DESTINATION],
+                session,
+                via=input.get(CONF_VIA),
+                time=input.get(CONF_TIME_FIXED),
+            )
+            if time_offset:
+                offset_opendata(opendata, time_offset)
             await opendata.async_get_data()
         except OpendataTransportConnectionError:
             return "cannot_connect"
