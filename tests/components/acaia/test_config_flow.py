@@ -10,7 +10,8 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+
+from . import service_info
 
 from tests.common import MockConfigEntry
 
@@ -43,22 +44,12 @@ async def test_form(
     }
 
 
-async def test_bluetooth_discovery_error(
+async def test_bluetooth_discovery(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_verify: AsyncMock,
 ) -> None:
     """Test we can discover a device."""
-
-    service_info = BluetoothServiceInfo(
-        name="LUNAR_123456",
-        address="aa:bb:cc:dd:ee:ff",
-        rssi=-63,
-        manufacturer_data={},
-        service_data={},
-        service_uuids=[],
-        source="local",
-    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
@@ -78,6 +69,31 @@ async def test_bluetooth_discovery_error(
         CONF_NAME: service_info.name,
         CONF_IS_NEW_STYLE_SCALE: True,
     }
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AcaiaDeviceNotFound("Error"), "device_not_found"),
+        (AcaiaError, "unknown"),
+        (AcaiaUnknownDevice, "unsupported_device"),
+    ],
+)
+async def test_bluetooth_discovery_errors(
+    hass: HomeAssistant,
+    mock_verify: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test abortions of Bluetooth discovery."""
+    mock_verify.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == error
 
 
 async def test_already_configured(

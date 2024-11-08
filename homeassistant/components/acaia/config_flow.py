@@ -17,7 +17,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered: dict[str, str] = {}
+        self._discovered: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -27,16 +27,17 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                is_new = await is_new_scale(
-                    self._discovered.get(CONF_MAC) or user_input[CONF_MAC]
-                )
-            except AcaiaDeviceNotFound:
-                errors["base"] = "device_not_found"
-            except AcaiaError:
-                errors["base"] = "unknown"
-            except AcaiaUnknownDevice:
-                return self.async_abort(reason="unsupported_device")
+            if self.source == SOURCE_USER:
+                try:
+                    user_input[CONF_IS_NEW_STYLE_SCALE] = await is_new_scale(
+                        user_input[CONF_MAC]
+                    )
+                except AcaiaDeviceNotFound:
+                    errors["base"] = "device_not_found"
+                except AcaiaError:
+                    errors["base"] = "unknown"
+                except AcaiaUnknownDevice:
+                    return self.async_abort(reason="unsupported_device")
 
             if not errors:
                 if self.source == SOURCE_USER:
@@ -47,7 +48,6 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         **self._discovered,
                         **user_input,
-                        CONF_IS_NEW_STYLE_SCALE: is_new,
                     },
                 )
 
@@ -69,6 +69,16 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
+        try:
+            self._discovered[CONF_IS_NEW_STYLE_SCALE] = await is_new_scale(
+                discovery_info.address
+            )
+        except AcaiaDeviceNotFound:
+            return self.async_abort(reason="device_not_found")
+        except AcaiaError:
+            return self.async_abort(reason="unknown")
+        except AcaiaUnknownDevice:
+            return self.async_abort(reason="unsupported_device")
 
         self._set_confirm_only()
         return self.async_show_form(step_id="user")
