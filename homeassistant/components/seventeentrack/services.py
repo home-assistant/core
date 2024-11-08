@@ -1,8 +1,8 @@
 """Services for the seventeentrack integration."""
 
-from typing import Final
+from typing import Any, Final
 
-from pyseventeentrack.package import PACKAGE_STATUS_MAP
+from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -99,7 +99,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
         await seventeen_coordinator.client.profile.archive_package(tracking_number)
 
-    def package_to_dict(package):
+    def package_to_dict(package: Package) -> dict[str, Any]:
         result = {
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_ORIGIN_COUNTRY: package.origin_country,
