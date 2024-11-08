@@ -7118,6 +7118,41 @@ async def test_async_update_entry_unique_id_collision(
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
 
+@pytest.mark.parametrize("domain", ["flipr"])
+async def test_async_update_entry_unique_id_collision_allowed_domain(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+    domain: str,
+) -> None:
+    """Test we warn when async_update_entry creates a unique_id collision.
+
+    This tests we don't warn and don't create issues for domains which have
+    their own migration path.
+    """
+    assert len(issue_registry.issues) == 0
+
+    entry1 = MockConfigEntry(domain=domain, unique_id=None)
+    entry2 = MockConfigEntry(domain=domain, unique_id="not none")
+    entry3 = MockConfigEntry(domain=domain, unique_id="very unique")
+    entry4 = MockConfigEntry(domain=domain, unique_id="also very unique")
+    entry1.add_to_manager(manager)
+    entry2.add_to_manager(manager)
+    entry3.add_to_manager(manager)
+    entry4.add_to_manager(manager)
+
+    manager.async_update_entry(entry2, unique_id=None)
+    assert len(issue_registry.issues) == 0
+    assert len(caplog.record_tuples) == 0
+
+    manager.async_update_entry(entry4, unique_id="very unique")
+    assert len(issue_registry.issues) == 0
+    assert len(caplog.record_tuples) == 0
+
+    assert ("already in use") not in caplog.text
+
+
 async def test_unique_id_collision_issues(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -7147,6 +7182,12 @@ async def test_unique_id_collision_issues(
     for _ in range(6):
         test3.append(MockConfigEntry(domain="test3", unique_id="not_unique"))
         await manager.async_add(test3[-1])
+    # Add an ignored config entry
+    await manager.async_add(
+        MockConfigEntry(
+            domain="test2", unique_id="group_1", source=config_entries.SOURCE_IGNORE
+        )
+    )
 
     # Check we get one issue for domain test2 and one issue for domain test3
     assert len(issue_registry.issues) == 2
@@ -7193,7 +7234,7 @@ async def test_unique_id_collision_issues(
         (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_2"),
     }
 
-    # Remove the last test2 group2 duplicate, a new issue is created
+    # Remove the last test2 group2 duplicate, the issue is cleared
     await manager.async_remove(test2_group_2[1].entry_id)
     assert not issue_registry.issues
 
