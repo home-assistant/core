@@ -244,7 +244,7 @@ class WebRTCProvider(CameraWebRTCProvider):
 
         if self._data.managed:
             # HA manages the go2rtc instance
-            stream_org_name = camera.entity_id + "_orginal"
+            stream_org_name = f"{camera.entity_id}_orginal"
             stream_redirect_sources = [
                 f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{stream_org_name}",
                 f"ffmpeg:{stream_org_name}#audio=opus",

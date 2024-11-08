@@ -313,7 +313,7 @@ async def test_setup_managed(
     camera = init_test_integration
 
     entity_id = camera.entity_id
-    stream_name_orginal = camera.entity_id + "_orginal"
+    stream_name_orginal = f"{camera.entity_id}_orginal"
     assert camera.frontend_stream_type == StreamType.HLS
 
     assert await async_setup_component(hass, DOMAIN, config)
