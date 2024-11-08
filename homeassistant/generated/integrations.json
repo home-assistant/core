@@ -4016,6 +4016,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "nasweb": {
+      "name": "NASweb",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "neato": {
       "name": "Neato Botvac",
       "integration_type": "hub",

@@ -569,6 +569,8 @@ async def _ensure_translation_exists(
     component: str,
     key: str,
     description_placeholders: dict[str, str] | None,
+    *,
+    translation_required: bool = True,
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
@@ -577,6 +579,9 @@ async def _ensure_translation_exists(
         _validate_translation_placeholders(
             full_key, translation, description_placeholders
         )
+        return
+
+    if not translation_required:
         return
 
     if full_key in ignore_translations:
@@ -626,6 +631,20 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
 
         if result["type"] is FlowResultType.FORM:
+            if step_id := result.get("step_id"):
+                # neither title nor description are required
+                # - title defaults to integration name
+                # - description is optional
+                for header in ("title", "description"):
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"step.{step_id}.{header}",
+                        result["description_placeholders"],
+                        translation_required=False,
+                    )
             if errors := result.get("errors"):
                 for error in errors.values():
                     await _ensure_translation_exists(
