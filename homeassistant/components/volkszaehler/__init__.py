@@ -34,11 +34,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {"imported_entries": set()}
 
-    # Check if the configuration is present in the YAML file
     if "sensor" in config:
         for entry in config["sensor"]:
             if entry.get("platform") == DOMAIN:
-                # Create a unique identifier for the entry, e.g., using UUID or Host+Port
                 uuid = entry.get(CONF_UUID).strip()
                 uuid = re.sub(r"[\x00-\x1F]+", "", uuid)
                 host = entry.get(CONF_HOST, DEFAULT_HOST)
@@ -52,7 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 uuid = entry.get(CONF_UUID).strip()
                 uuid = re.sub(r"[\x00-\x1F]+", "", uuid)
 
-                # Convert timedelta to seconds if necessary
                 if isinstance(scan_interval, timedelta):
                     scan_interval = int(scan_interval.seconds)
 
@@ -73,9 +70,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                     continue
 
-                # Import if this entry has not been imported yet
                 if unique_id not in hass.data[DOMAIN]["imported_entries"]:
-                    # Extrahiere relevante Daten aus YAML
                     yaml_config = {
                         CONF_HOST: host,
                         CONF_PORT: port,
@@ -89,14 +84,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         ),
                     }
 
-                    # Import the YAML configuration into the ConfigFlow
                     hass.async_create_task(
                         hass.config_entries.flow.async_init(
                             DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config
                         )
                     )
 
-                    # Mark the entry as imported
                     hass.data[DOMAIN]["imported_entries"].add(unique_id)
                     _LOGGER.info("Imported Volkszaehler entry: %s", unique_id)
 
