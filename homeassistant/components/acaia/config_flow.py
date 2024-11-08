@@ -7,7 +7,10 @@ from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnkno
 from pyacaia_async.helpers import is_new_scale
 import voluptuous as vol
 
-from homeassistant.components.bluetooth import async_discovered_service_info
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
@@ -98,7 +101,9 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_bluetooth(self, discovery_info) -> ConfigFlowResult:
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> ConfigFlowResult:
         """Handle a discovered Bluetooth device."""
 
         self._discovered[CONF_MAC] = discovery_info.address
@@ -125,4 +130,4 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unsupported_device")
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
+        return self.async_show_form(step_id="user")
