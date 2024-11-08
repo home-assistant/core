@@ -100,7 +100,7 @@ def setup_services(hass: HomeAssistant) -> None:
         await seventeen_coordinator.client.profile.archive_package(tracking_number)
 
     def package_to_dict(package):
-        return {
+        result = {
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_ORIGIN_COUNTRY: package.origin_country,
             ATTR_PACKAGE_TYPE: package.package_type,
