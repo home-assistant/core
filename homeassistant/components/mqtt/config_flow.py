@@ -121,13 +121,14 @@ PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWO
 QOS_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2, as_int=True)
 )
-KEEPALIVE_SELECTOR = vol.All(
-    NumberSelector(
-        NumberSelectorConfig(
-            mode=NumberSelectorMode.BOX, min=15, step="any", unit_of_measurement="sec"
-        )
-    ),
-    vol.Coerce(int),
+KEEPALIVE_SELECTOR = NumberSelector(
+    NumberSelectorConfig(
+        mode=NumberSelectorMode.BOX,
+        min=15,
+        step="any",
+        unit_of_measurement="sec",
+        as_int=True,
+    )
 )
 PROTOCOL_SELECTOR = SelectSelector(
     SelectSelectorConfig(

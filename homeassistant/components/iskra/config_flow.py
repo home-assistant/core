@@ -66,7 +66,9 @@ STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
             vol.Coerce(int), vol.Range(min=0, max=65535)
         ),
         vol.Required(CONF_ADDRESS, default=33): NumberSelector(
-            NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(
+                as_int=True, min=1, max=255, mode=NumberSelectorMode.BOX
+            )
         ),
     }
 )
@@ -199,9 +201,6 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
 
         # If there's user_input, check the connection.
         if user_input is not None:
-            # convert to integer
-            user_input[CONF_ADDRESS] = int(user_input[CONF_ADDRESS])
-
             try:
                 device_info = await test_modbus_connection(self.host, user_input)
 

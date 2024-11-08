@@ -37,13 +37,10 @@ from .const import (
     LOGGER,
 )
 
-PORT_SELECTOR = vol.All(
-    selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=1, step=1, max=65535, mode=selector.NumberSelectorMode.BOX
-        )
-    ),
-    vol.Coerce(int),
+PORT_SELECTOR = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        as_int=True, min=1, step=1, max=65535, mode=selector.NumberSelectorMode.BOX
+    )
 )
 
 STEP_NIBEGW_DATA_SCHEMA = vol.Schema(
@@ -61,13 +58,10 @@ STEP_MODBUS_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
         vol.Required(CONF_MODBUS_URL): selector.TextSelector(),
-        vol.Required(CONF_MODBUS_UNIT, default=0): vol.All(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, step=1, mode=selector.NumberSelectorMode.BOX
-                )
-            ),
-            vol.Coerce(int),
+        vol.Required(CONF_MODBUS_UNIT, default=0): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                as_int=True, min=0, step=1, mode=selector.NumberSelectorMode.BOX
+            )
         ),
     }
 )

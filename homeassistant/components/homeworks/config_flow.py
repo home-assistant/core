@@ -65,6 +65,7 @@ CONTROLLER_EDIT = {
     vol.Required(CONF_HOST): selector.TextSelector(),
     vol.Required(CONF_PORT): selector.NumberSelector(
         selector.NumberSelectorConfig(
+            as_int=True,
             min=1,
             max=65535,
             mode=selector.NumberSelectorMode.BOX,
