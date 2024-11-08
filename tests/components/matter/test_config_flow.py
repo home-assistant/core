@@ -13,11 +13,11 @@ from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 

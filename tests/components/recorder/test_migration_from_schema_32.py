@@ -49,6 +49,7 @@ from .common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
 )
+from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceGenerator
@@ -266,33 +267,37 @@ async def test_migrate_events_context_ids(
             return {event.event_type: _object_as_dict(event) for event in events}
 
     # Run again with new schema, let migration run
-    with freeze_time(now):
-        async with (
-            async_test_home_assistant() as hass,
-            async_test_recorder(hass) as instance,
-        ):
-            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+    async with async_test_home_assistant() as hass:
+        with freeze_time(now), instrument_migration(hass) as instrumented_migration:
+            async with async_test_recorder(
+                hass, wait_recorder=False, wait_recorder_setup=False
+            ) as instance:
+                # Check the context ID migrator is considered non-live
+                assert recorder.util.async_migration_is_live(hass) is False
+                instrumented_migration.migration_stall.set()
+                instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
-            await hass.async_block_till_done()
-            await async_wait_recording_done(hass)
-            await async_wait_recording_done(hass)
+                await hass.async_block_till_done()
+                await async_wait_recording_done(hass)
+                await async_wait_recording_done(hass)
 
-            events_by_type = await instance.async_add_executor_job(
-                _fetch_migrated_events
-            )
-
-            migration_changes = await instance.async_add_executor_job(
-                _get_migration_id, hass
-            )
-
-            # Check the index which will be removed by the migrator no longer exists
-            with session_scope(hass=hass) as session:
-                assert (
-                    get_index_by_name(session, "events", "ix_events_context_id") is None
+                events_by_type = await instance.async_add_executor_job(
+                    _fetch_migrated_events
                 )
 
-            await hass.async_stop()
-            await hass.async_block_till_done()
+                migration_changes = await instance.async_add_executor_job(
+                    _get_migration_id, hass
+                )
+
+                # Check the index which will be removed by the migrator no longer exists
+                with session_scope(hass=hass) as session:
+                    assert (
+                        get_index_by_name(session, "events", "ix_events_context_id")
+                        is None
+                    )
+
+                await hass.async_stop()
+                await hass.async_block_till_done()
 
     old_uuid_context_id_event = events_by_type["old_uuid_context_id_event"]
     assert old_uuid_context_id_event["context_id"] is None
@@ -602,30 +607,37 @@ async def test_migrate_states_context_ids(
             return {state.entity_id: _object_as_dict(state) for state in events}
 
     # Run again with new schema, let migration run
-    async with (
-        async_test_home_assistant() as hass,
-        async_test_recorder(hass) as instance,
-    ):
-        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+    async with async_test_home_assistant() as hass:
+        with instrument_migration(hass) as instrumented_migration:
+            async with async_test_recorder(
+                hass, wait_recorder=False, wait_recorder_setup=False
+            ) as instance:
+                # Check the context ID migrator is considered non-live
+                assert recorder.util.async_migration_is_live(hass) is False
+                instrumented_migration.migration_stall.set()
+                instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
-        await hass.async_block_till_done()
-        await async_wait_recording_done(hass)
-        await async_wait_recording_done(hass)
+                await hass.async_block_till_done()
+                await async_wait_recording_done(hass)
+                await async_wait_recording_done(hass)
 
-        states_by_entity_id = await instance.async_add_executor_job(
-            _fetch_migrated_states
-        )
+                states_by_entity_id = await instance.async_add_executor_job(
+                    _fetch_migrated_states
+                )
 
-        migration_changes = await instance.async_add_executor_job(
-            _get_migration_id, hass
-        )
+                migration_changes = await instance.async_add_executor_job(
+                    _get_migration_id, hass
+                )
 
-        # Check the index which will be removed by the migrator no longer exists
-        with session_scope(hass=hass) as session:
-            assert get_index_by_name(session, "states", "ix_states_context_id") is None
+                # Check the index which will be removed by the migrator no longer exists
+                with session_scope(hass=hass) as session:
+                    assert (
+                        get_index_by_name(session, "states", "ix_states_context_id")
+                        is None
+                    )
 
-        await hass.async_stop()
-        await hass.async_block_till_done()
+                await hass.async_stop()
+                await hass.async_block_till_done()
 
     old_uuid_context_id = states_by_entity_id["state.old_uuid_context_id"]
     assert old_uuid_context_id["context_id"] is None
