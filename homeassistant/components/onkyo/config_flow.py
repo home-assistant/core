@@ -6,11 +6,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -46,13 +46,11 @@ CONF_DEVICE = "device"
 INPUT_SOURCES_ALL_MEANINGS = [
     input_source.value_meaning for input_source in InputSource
 ]
+STEP_MANUAL_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 STEP_CONFIGURE_SCHEMA = vol.Schema(
     {
-        vol.Required(
-            OPTION_VOLUME_RESOLUTION,
-            default=OPTION_VOLUME_RESOLUTION_DEFAULT,
-        ): vol.In(VOLUME_RESOLUTION_ALLOWED),
-        vol.Required(OPTION_INPUT_SOURCES, default=[]): SelectSelector(
+        vol.Required(OPTION_VOLUME_RESOLUTION): vol.In(VOLUME_RESOLUTION_ALLOWED),
+        vol.Required(OPTION_INPUT_SOURCES): SelectSelector(
             SelectSelectorConfig(
                 options=INPUT_SOURCES_ALL_MEANINGS,
                 multiple=True,
@@ -96,15 +94,28 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 else:
                     self._receiver_info = info
+
                     await self.async_set_unique_id(
                         info.identifier, raise_on_progress=False
                     )
-                    self._abort_if_unique_id_configured(updates=user_input)
+                    if self.source == SOURCE_RECONFIGURE:
+                        self._abort_if_unique_id_mismatch()
+                    else:
+                        self._abort_if_unique_id_configured()
+
                     return await self.async_step_configure_receiver()
+
+        suggested_values = user_input
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = {
+                CONF_HOST: self._get_reconfigure_entry().data[CONF_HOST]
+            }
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_MANUAL_SCHEMA, suggested_values
+            ),
             errors=errors,
         )
 
@@ -160,6 +171,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the configuration of a single receiver."""
         errors = {}
 
+        entry = None
+        entry_options = None
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            entry_options = entry.options
+
         if user_input is not None:
             source_meanings: list[str] = user_input[OPTION_INPUT_SOURCES]
             if not source_meanings:
@@ -168,32 +185,79 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 sources_store: dict[str, str] = {}
                 for source_meaning in source_meanings:
                     source = InputSource.from_meaning(source_meaning)
-                    sources_store[source.value] = source_meaning
 
-                result = self.async_create_entry(
-                    title=self._receiver_info.model_name,
-                    data={
-                        CONF_HOST: self._receiver_info.host,
-                    },
-                    options={
-                        OPTION_VOLUME_RESOLUTION: user_input[OPTION_VOLUME_RESOLUTION],
-                        OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
-                        OPTION_INPUT_SOURCES: sources_store,
-                    },
-                )
+                    source_name = source_meaning
+                    if entry_options is not None:
+                        source_name = entry_options[OPTION_INPUT_SOURCES].get(
+                            source.value, source_name
+                        )
+                    sources_store[source.value] = source_name
+
+                volume_resolution = user_input[OPTION_VOLUME_RESOLUTION]
+
+                if entry_options is None:
+                    result = self.async_create_entry(
+                        title=self._receiver_info.model_name,
+                        data={
+                            CONF_HOST: self._receiver_info.host,
+                        },
+                        options={
+                            OPTION_VOLUME_RESOLUTION: volume_resolution,
+                            OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
+                            OPTION_INPUT_SOURCES: sources_store,
+                        },
+                    )
+                else:
+                    assert entry is not None
+                    result = self.async_update_reload_and_abort(
+                        entry,
+                        data={
+                            CONF_HOST: self._receiver_info.host,
+                        },
+                        options={
+                            OPTION_VOLUME_RESOLUTION: volume_resolution,
+                            OPTION_MAX_VOLUME: entry_options[OPTION_MAX_VOLUME],
+                            OPTION_INPUT_SOURCES: sources_store,
+                        },
+                    )
+
                 _LOGGER.debug("Configured receiver, result: %s", result)
                 return result
 
         _LOGGER.debug("Configuring receiver, info: %s", self._receiver_info)
 
+        suggested_values = user_input
+        if suggested_values is None:
+            if entry_options is None:
+                suggested_values = {
+                    OPTION_VOLUME_RESOLUTION: OPTION_VOLUME_RESOLUTION_DEFAULT,
+                    OPTION_INPUT_SOURCES: [],
+                }
+            else:
+                suggested_values = {
+                    OPTION_VOLUME_RESOLUTION: entry_options[OPTION_VOLUME_RESOLUTION],
+                    OPTION_INPUT_SOURCES: [
+                        InputSource(input_source).value_meaning
+                        for input_source in entry_options[OPTION_INPUT_SOURCES]
+                    ],
+                }
+
         return self.async_show_form(
             step_id="configure_receiver",
-            data_schema=STEP_CONFIGURE_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_CONFIGURE_SCHEMA, suggested_values
+            ),
             errors=errors,
             description_placeholders={
                 "name": f"{self._receiver_info.model_name} ({self._receiver_info.host})"
             },
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the receiver."""
+        return await self.async_step_manual()
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
@@ -258,16 +322,13 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         return OnkyoOptionsFlowHandler(config_entry)
 
 
-class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OnkyoOptionsFlowHandler(OptionsFlow):
     """Handle an options flow for Onkyo."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
-
-        sources_store: dict[str, str] = self.options[OPTION_INPUT_SOURCES]
-        sources = {InputSource(k): v for k, v in sources_store.items()}
-        self.options[OPTION_INPUT_SOURCES] = sources
+        sources_store: dict[str, str] = config_entry.options[OPTION_INPUT_SOURCES]
+        self._input_sources = {InputSource(k): v for k, v in sources_store.items()}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -282,7 +343,9 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
             return self.async_create_entry(
                 data={
-                    OPTION_VOLUME_RESOLUTION: self.options[OPTION_VOLUME_RESOLUTION],
+                    OPTION_VOLUME_RESOLUTION: self.config_entry.options[
+                        OPTION_VOLUME_RESOLUTION
+                    ],
                     OPTION_MAX_VOLUME: user_input[OPTION_MAX_VOLUME],
                     OPTION_INPUT_SOURCES: sources_store,
                 }
@@ -290,22 +353,19 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         schema_dict: dict[Any, Selector] = {}
 
-        max_volume: float = self.options[OPTION_MAX_VOLUME]
+        max_volume: float = self.config_entry.options[OPTION_MAX_VOLUME]
         schema_dict[vol.Required(OPTION_MAX_VOLUME, default=max_volume)] = (
             NumberSelector(
                 NumberSelectorConfig(min=1, max=100, mode=NumberSelectorMode.BOX)
             )
         )
 
-        sources: dict[InputSource, str] = self.options[OPTION_INPUT_SOURCES]
-        for source in sources:
-            schema_dict[vol.Required(source.value_meaning, default=sources[source])] = (
+        for source, source_name in self._input_sources.items():
+            schema_dict[vol.Required(source.value_meaning, default=source_name)] = (
                 TextSelector()
             )
 
-        schema = vol.Schema(schema_dict)
-
         return self.async_show_form(
             step_id="init",
-            data_schema=schema,
+            data_schema=vol.Schema(schema_dict),
         )

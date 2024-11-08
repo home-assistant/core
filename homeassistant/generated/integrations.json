@@ -3398,7 +3398,7 @@
     "local_file": {
       "name": "Local File",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "local_ip": {
@@ -3944,6 +3944,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "music_assistant": {
+      "name": "Music Assistant",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mutesync": {
       "name": "mutesync",
       "integration_type": "hub",
@@ -4006,6 +4012,12 @@
     },
     "nanoleaf": {
       "name": "Nanoleaf",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "nasweb": {
+      "name": "NASweb",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -4174,6 +4186,13 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "nordpool": {
+      "name": "Nord Pool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "norway_air": {
       "name": "Om Luftkvalitet i Norge (Norway Air)",

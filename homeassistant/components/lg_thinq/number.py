@@ -39,6 +39,7 @@ NUMBER_DESC: dict[ThinQProperty, NumberEntityDescription] = {
         key=ThinQProperty.TARGET_HUMIDITY,
         device_class=NumberDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        translation_key=ThinQProperty.TARGET_HUMIDITY,
     ),
     ThinQProperty.TARGET_TEMPERATURE: NumberEntityDescription(
         key=ThinQProperty.TARGET_TEMPERATURE,
