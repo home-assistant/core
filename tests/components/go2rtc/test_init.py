@@ -313,7 +313,7 @@ async def test_setup_managed(
     camera = init_test_integration
 
     entity_id = camera.entity_id
-    stream_name_orginal = f"{camera.entity_id}_orginal"
+    stream_name_original = f"{camera.entity_id}_original"
     assert camera.frontend_stream_type == StreamType.HLS
 
     assert await async_setup_component(hass, DOMAIN, config)
@@ -346,12 +346,12 @@ async def test_setup_managed(
     await test()
 
     stream_added_calls = [
-        call(stream_name_orginal, "rtsp://stream"),
+        call(stream_name_original, "rtsp://stream"),
         call(
             entity_id,
             [
-                f"rtsp://127.0.0.1:18554/{stream_name_orginal}",
-                f"ffmpeg:{stream_name_orginal}#audio=opus",
+                f"rtsp://127.0.0.1:18554/{stream_name_original}",
+                f"ffmpeg:{stream_name_original}#audio=opus",
             ],
         ),
     ]
@@ -362,8 +362,8 @@ async def test_setup_managed(
     rest_client.streams.list.return_value = {
         entity_id: Stream(
             [
-                Producer(f"rtsp://127.0.0.1:18554/{stream_name_orginal}"),
-                Producer(f"ffmpeg:{stream_name_orginal}#audio=opus"),
+                Producer(f"rtsp://127.0.0.1:18554/{stream_name_original}"),
+                Producer(f"ffmpeg:{stream_name_original}#audio=opus"),
             ]
         )
     }
@@ -377,11 +377,11 @@ async def test_setup_managed(
     # Stream original source different
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        stream_name_orginal: Stream([Producer("rtsp://different")]),
+        stream_name_original: Stream([Producer("rtsp://different")]),
         entity_id: Stream(
             [
-                Producer(f"rtsp://127.0.0.1:18554/{stream_name_orginal}"),
-                Producer(f"ffmpeg:{stream_name_orginal}#audio=opus"),
+                Producer(f"rtsp://127.0.0.1:18554/{stream_name_original}"),
+                Producer(f"ffmpeg:{stream_name_original}#audio=opus"),
             ]
         ),
     }
@@ -395,7 +395,7 @@ async def test_setup_managed(
     # Stream source different
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        stream_name_orginal: Stream([Producer("rtsp://stream")]),
+        stream_name_original: Stream([Producer("rtsp://stream")]),
         entity_id: Stream([Producer("rtsp://different")]),
     }
 
@@ -408,11 +408,11 @@ async def test_setup_managed(
     # If the stream is already added, the stream should not be added again.
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        stream_name_orginal: Stream([Producer("rtsp://stream")]),
+        stream_name_original: Stream([Producer("rtsp://stream")]),
         entity_id: Stream(
             [
-                Producer(f"rtsp://127.0.0.1:18554/{stream_name_orginal}"),
-                Producer(f"ffmpeg:{stream_name_orginal}#audio=opus"),
+                Producer(f"rtsp://127.0.0.1:18554/{stream_name_original}"),
+                Producer(f"ffmpeg:{stream_name_original}#audio=opus"),
             ]
         ),
     }
