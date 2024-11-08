@@ -42,9 +42,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                 except AcaiaUnknownDevice:
                     return self.async_abort(reason="unsupported_device")
                 else:
-                    await self.async_set_unique_id(
-                        format_mac(user_input[CONF_MAC])
-                    )
+                    await self.async_set_unique_id(format_mac(user_input[CONF_MAC]))
                     self._abort_if_unique_id_configured()
 
             if not errors:
