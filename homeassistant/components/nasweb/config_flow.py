@@ -101,10 +101,8 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "missing_nasweb_data"
             except MissingNASwebStatus:
                 errors["base"] = "missing_status"
-            except AbortFlow as e:
-                return self.async_abort(
-                    reason=e.reason, description_placeholders=e.description_placeholders
-                )
+            except AbortFlow:
+                raise
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
