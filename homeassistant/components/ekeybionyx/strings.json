@@ -29,6 +29,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "no_availible_webhooks": "There are no availible webhooks in the ekey Bionyx plattform. Please delete some and try again.",
+      "no_own_systems": "Your account does not have admin access to any systems",
       "webhook_deletion_requested": "Please go to the ekey Bionyx App and confirm the deletion of the webhooks. Afterwards set the integration up again."
     },
     "create_entry": {
