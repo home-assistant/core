@@ -1,19 +1,10 @@
-beolink_join:
+beolink_allstandby:
   target:
     entity:
       integration: bang_olufsen
       domain: media_player
     device:
       integration: bang_olufsen
-  fields:
-    jid_options:
-      collapsed: false
-      fields:
-        beolink_jid:
-          required: false
-          example: 1111.2222222.33333333@products.bang-olufsen.com
-          selector:
-            text:
 
 beolink_expand:
   target:
@@ -41,6 +32,31 @@ beolink_expand:
           selector:
             object:
 
+beolink_join:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+  fields:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jid:
+          required: false
+          example: 1111.2222222.33333333@products.bang-olufsen.com
+          selector:
+            text:
+
+beolink_leave:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+
 beolink_unexpand:
   target:
     entity:
@@ -61,19 +77,3 @@ beolink_unexpand:
             ]
           selector:
             object:
-
-beolink_leave:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: media_player
-    device:
-      integration: bang_olufsen
-
-beolink_allstandby:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: media_player
-    device:
-      integration: bang_olufsen

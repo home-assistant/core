@@ -30,21 +30,9 @@
     }
   },
   "services": {
-    "beolink_join": {
-      "name": "Beolink join",
-      "description": "Join a Beolink experience.",
-      "fields": {
-        "beolink_jid": {
-          "name": "Beolink JID",
-          "description": "Manually specify Beolink JID to join."
-        }
-      },
-      "sections": {
-        "jid_options": {
-          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
-          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
-        }
-      }
+    "beolink_allstandby": {
+      "name": "Beolink all standby",
+      "description": "Set all Connected Beolink devices to standby."
     },
     "beolink_expand": {
       "name": "Beolink expand",
@@ -66,6 +54,26 @@
         }
       }
     },
+    "beolink_join": {
+      "name": "Beolink join",
+      "description": "Join a Beolink experience.",
+      "fields": {
+        "beolink_jid": {
+          "name": "Beolink JID",
+          "description": "Manually specify Beolink JID to join."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+    "beolink_leave": {
+      "name": "Beolink leave",
+      "description": "Leave a Beolink experience."
+    },
     "beolink_unexpand": {
       "name": "Beolink unexpand",
       "description": "Unexpand from current Beolink experience.",
@@ -81,14 +89,6 @@
           "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
         }
       }
-    },
-    "beolink_leave": {
-      "name": "Beolink leave",
-      "description": "Leave a Beolink experience."
-    },
-    "beolink_allstandby": {
-      "name": "Beolink all standby",
-      "description": "Set all Connected Beolink devices to standby."
     }
   },
   "exceptions": {
