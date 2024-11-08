@@ -130,15 +130,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Extract the IP address from the zeroconf discovery info
         device_ip = discovery_info.host
 
-        # discovery_info contains data similar to:
-        #     (ip_address=ZeroconfIPv4Address('192.168.0.104'), ip_addresses=[ZeroconfIPv4Address('192.168.0.104'),
-        #     ZeroconfIPv6Address('fe80::fab3:b7ff:fe21:a620')], port=80, hostname='Vege_A6_20.local.',
-        #     type='_vege._tcp.local.', name='Vege_A6_20._vege._tcp.local.',
-        #     properties={'version': '5.1.1', 'type': 'hub', 'receiver': '/api/vsens/data_in', 'sensors': '1',
-        #     'actuators': '0', 'sens_1': 'Sensor1', 'power_mode': '0'})
-
         have_mac = False
-
         if device_ip in ip_dict:
             have_mac = True
 
