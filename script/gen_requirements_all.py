@@ -183,7 +183,7 @@ get-mac==1000000000.0.0
 charset-normalizer==3.4.0
 
 # dacite: Ensure we have a version that is able to handle type unions for
-# Roborock, NAM, Brother, and GIOS.
+# NAM, Brother, and GIOS.
 dacite>=1.7.0
 
 # chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
@@ -207,11 +207,6 @@ tenacity!=8.4.0
 # 5.0.0 breaks Timeout as a context manager
 # TypeError: 'Timeout' object does not support the context manager protocol
 async-timeout==4.0.3
-
-# latest pint 0.24.3 is not yet compatible with flexparser 0.4
-# https://github.com/hgrecco/pint/issues/1969
-flexparser==0.3.1
-pint==0.24.3
 """
 
 GENERATED_MESSAGE = (

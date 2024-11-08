@@ -1507,10 +1507,14 @@ class ConfigEntriesFlowManager(
             version=result["version"],
         )
 
+        if existing_entry is not None:
+            # Unload and remove the existing entry
+            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
-            await self.config_entries.async_remove(existing_entry.entry_id)
+            # Clean up devices and entities belonging to the existing entry
+            self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
         return result
@@ -1900,7 +1904,21 @@ class ConfigEntries:
         self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
-        """Remove an entry."""
+        """Remove, unload and clean up after an entry."""
+        unload_success, entry = await self._async_remove(entry_id)
+        self._async_clean_up(entry)
+
+        for discovery_domain in entry.discovery_keys:
+            async_dispatcher_send_internal(
+                self.hass,
+                signal_discovered_config_entry_removed(discovery_domain),
+                entry,
+            )
+
+        return {"require_restart": not unload_success}
+
+    async def _async_remove(self, entry_id: str) -> tuple[bool, ConfigEntry]:
+        """Remove and unload an entry."""
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
@@ -1915,6 +1933,13 @@ class ConfigEntries:
             del self._entries[entry.entry_id]
             self.async_update_issues()
             self._async_schedule_save()
+
+        return (unload_success, entry)
+
+    @callback
+    def _async_clean_up(self, entry: ConfigEntry) -> None:
+        """Clean up after an entry."""
+        entry_id = entry.entry_id
 
         dev_reg = device_registry.async_get(self.hass)
         ent_reg = entity_registry.async_get(self.hass)
@@ -1934,13 +1959,6 @@ class ConfigEntries:
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
-        for discovery_domain in entry.discovery_keys:
-            async_dispatcher_send_internal(
-                self.hass,
-                signal_discovered_config_entry_removed(discovery_domain),
-                entry,
-            )
-        return {"require_restart": not unload_success}
 
     @callback
     def _async_shutdown(self, event: Event) -> None:
@@ -2158,7 +2176,12 @@ class ConfigEntries:
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
-                unique_id is not None
+                # flipr creates duplicates during migration, and asks users to
+                # remove the duplicate. We don't need warn about it here too.
+                # We should remove the special case for "flipr" in HA Core 2025.4,
+                # when the flipr migration period ends
+                entry.domain != "flipr"
+                and unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
@@ -2436,6 +2459,12 @@ class ConfigEntries:
             issues.add(issue.issue_id)
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+            # flipr creates duplicates during migration, and asks users to
+            # remove the duplicate. We don't need warn about it here too.
+            # We should remove the special case for "flipr" in HA Core 2025.4,
+            # when the flipr migration period ends
+            if domain == "flipr":
+                continue
             for unique_id, entries in unique_ids.items():
                 # We might mutate the list of entries, so we need a copy to not mess up
                 # the index

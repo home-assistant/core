@@ -950,7 +950,7 @@ hole==0.8.0
 holidays==0.60
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241106.0
+home-assistant-frontend==20241106.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.11.6
@@ -968,7 +968,7 @@ httplib2==0.20.4
 huawei-lte-api==1.10.0
 
 # homeassistant.components.huum
-huum==0.7.10
+huum==0.7.11
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -1917,7 +1917,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.6.1
+python-roborock==2.7.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2371,6 +2371,9 @@ watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.0.6
+
+# homeassistant.components.nasweb
+webio-api==0.1.8
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
