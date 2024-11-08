@@ -110,12 +110,10 @@ def setup_services(hass: HomeAssistant) -> None:
             ATTR_STATUS: package.status,
             ATTR_INFO_TEXT: package.info_text,
             ATTR_FRIENDLY_NAME: package.friendly_name,
-            **(
-                {ATTR_TIMESTAMP: package.timestamp.isoformat()}
-                if package.timestamp
-                else {}
-            ),
         }
+        if timestamp := package.timestamp:
+            result[ATTR_TIMESTAMP] = timestamp.isoformat()
+        return result
 
     async def _validate_service(config_entry_id):
         entry: ConfigEntry | None = hass.config_entries.async_get_entry(config_entry_id)
