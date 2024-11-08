@@ -132,7 +132,7 @@ async def test_form_error(
 async def test_form_auto_counter(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test form set counter if not set by user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
