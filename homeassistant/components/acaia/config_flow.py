@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
 
@@ -41,7 +42,9 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                 except AcaiaUnknownDevice:
                     return self.async_abort(reason="unsupported_device")
                 else:
-                    await self.async_set_unique_id(user_input[CONF_MAC])
+                    await self.async_set_unique_id(
+                        format_mac(user_input[CONF_MAC])
+                    )
                     self._abort_if_unique_id_configured()
 
             if not errors:
@@ -65,12 +68,13 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(self, discovery_info) -> ConfigFlowResult:
         """Handle a discovered Bluetooth device."""
-
+        
         self._discovered[CONF_MAC] = discovery_info.address
         self._discovered[CONF_NAME] = discovery_info.name
 
-        await self.async_set_unique_id(discovery_info.address)
+        await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
+
         try:
             self._discovered[CONF_IS_NEW_STYLE_SCALE] = await is_new_scale(
                 discovery_info.address
