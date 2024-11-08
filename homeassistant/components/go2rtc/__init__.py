@@ -244,21 +244,21 @@ class WebRTCProvider(CameraWebRTCProvider):
 
         if self._data.managed:
             # HA manages the go2rtc instance
-            stream_org_name = camera.entity_id + "_orginal"
+            stream_original_name = f"{camera.entity_id}_orginal"
             stream_redirect_sources = [
-                f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{stream_org_name}",
-                f"ffmpeg:{stream_org_name}#audio=opus",
+                f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{stream_original_name}",
+                f"ffmpeg:{stream_original_name}#audio=opus",
             ]
 
             if (
-                (stream_org := streams.get(stream_org_name)) is None
+                (stream_org := streams.get(stream_original_name)) is None
                 or not any(
                     stream_source == producer.url for producer in stream_org.producers
                 )
                 or (stream_redirect := streams.get(camera.entity_id)) is None
                 or stream_redirect_sources != [p.url for p in stream_redirect.producers]
             ):
-                await self._rest_client.streams.add(stream_org_name, stream_source)
+                await self._rest_client.streams.add(stream_original_name, stream_source)
                 await self._rest_client.streams.add(
                     camera.entity_id, stream_redirect_sources
                 )
