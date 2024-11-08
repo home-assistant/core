@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cookidoo_api import (
     DEFAULT_COOKIDOO_CONFIG,
@@ -53,21 +53,27 @@ AUTH_DATA_SCHEMA = {
 class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
 
-    reauth_entry: CookidooConfigEntry
-    reconfigure_entry: CookidooConfigEntry
-    AUTH_DATA_SCHEMA: dict
-    LOCALIZATION_DATA_SCHEMA: dict
-    country_codes: list[str]
-    languages: list[str]
-    localizations: list[CookidooLocalizationConfig]
+    def __init__(self) -> None:
+        """Init config flow."""
+        super().__init__()
+        self.reauth_entry: CookidooConfigEntry | None = None
+        self.reconfigure_entry: CookidooConfigEntry | None = None
+        self.LOCALIZATION_DATA_SCHEMA: dict | None = None
+        self.localizations: list[CookidooLocalizationConfig] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
-        if user_input is not None and not (
-            errors := await self.validate_input(user_input)
+
+        if TYPE_CHECKING:
+            assert self.LOCALIZATION_DATA_SCHEMA
+
+        if (
+            user_input is not None
+            and not (errors := await self.validate_input(user_input))
+            and self.LOCALIZATION_DATA_SCHEMA is not None
         ):
             self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
             return self.async_create_entry(title="Cookidoo", data=user_input)
@@ -96,6 +102,10 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Allow reconfiguration of localization and ignore auth."""
         errors: dict[str, str] = {}
+
+        if TYPE_CHECKING:
+            assert self.LOCALIZATION_DATA_SCHEMA
+            assert self.reconfigure_entry
 
         if user_input is not None:
             if not (
@@ -129,6 +139,9 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
+
+        if TYPE_CHECKING:
+            assert self.reauth_entry
 
         if user_input is not None:
             if not (
