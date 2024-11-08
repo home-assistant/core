@@ -25,20 +25,17 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
-    # Assuming we have a list of sensor data from the device
     sensors = []
-    mac_address = str(
-        config_entry.data.get("mac_address")
-    )  # Use the device's MAC address
-    ip_addr = str(config_entry.data.get("ip_addr"))  # Use the device's MAC address
+    mac_address = str(config_entry.data.get("mac_address"))
+    ip_addr = str(config_entry.data.get("ip_addr"))
     num_sensors = int(config_entry.data.get("hub", {}).get("num_channels") or 0)
     is_ac = int(config_entry.data.get("hub", {}).get("is_ac") or 0)
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
     for i in range(num_sensors + 1):  # Add 1 for battery
-        if i > num_sensors:  # Now we're in to actuators
-            continue  # Those will be taken care of by binary sensors
+        if i > num_sensors:  # Now we're into actuators
+            continue  # Those will be taken care of by switch.py
 
         if i == num_sensors and is_ac:
             # Skipping battery slot for AC hub
@@ -61,8 +58,6 @@ async def async_setup_entry(
             chan_type=chan_type,
         )
 
-        # Store the entity by slot in hass.data
-        # if sensor.unique_id not in hass.data[DOMAIN]:
         hass.data[DOMAIN][sensor.unique_id] = sensor
 
         sensors.append(sensor)
