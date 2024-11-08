@@ -139,3 +139,40 @@ def get_recurrence_rule(recurrence: rrule) -> str:
 
     """
     return str(recurrence).split("RRULE:")[1]
+
+
+def get_attribute_points(
+    user: dict[str, Any], content: dict[str, Any], attribute: str
+) -> dict[str, float]:
+    """Get modifiers contributing to strength attribute."""
+
+    gear_set = {
+        "weapon",
+        "armor",
+        "head",
+        "shield",
+        "back",
+        "headAccessory",
+        "eyewear",
+        "body",
+    }
+    equipment = 0
+    class_bonus = 0
+    for gear in gear_set:
+        if (equipped := user["items"]["gear"]["equipped"].get(gear)) and (
+            stats := content["gear"]["flat"].get(equipped)
+        ):
+            equipment = equipment + stats[attribute]
+            class_bonus += (
+                (stats[attribute] / 2)
+                if stats["klass"] == user["stats"]["class"]
+                else 0
+            )
+
+    return {
+        "level": min(round(user["stats"]["lvl"] / 2), 50),
+        "equipment": equipment,
+        "class": class_bonus,
+        "allocated": user["stats"][attribute],
+        "buffs": user["stats"]["buffs"][attribute],
+    }

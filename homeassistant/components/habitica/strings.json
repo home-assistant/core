@@ -164,6 +164,86 @@
       },
       "rewards": {
         "name": "Rewards"
+      },
+      "strength": {
+        "name": "Strength",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "Battle gear"
+          },
+          "class": {
+            "name": "Class bonus"
+          },
+          "allocated": {
+            "name": "Allocated attribute points"
+          },
+          "buffs": {
+            "name": "Buffs"
+          }
+        }
+      },
+      "intelligence": {
+        "name": "Intelligence",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::equipment::name%]"
+          },
+          "class": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::class::name%]"
+          },
+          "allocated": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::allocated::name%]"
+          },
+          "buffs": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
+          }
+        }
+      },
+      "perception": {
+        "name": "Perception",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::equipment::name%]"
+          },
+          "class": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::class::name%]"
+          },
+          "allocated": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::allocated::name%]"
+          },
+          "buffs": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
+          }
+        }
+      },
+      "constitution": {
+        "name": "Constitution",
+        "state_attributes": {
+          "level": {
+            "name": "[%key:component::habitica::entity::sensor::level::name%]"
+          },
+          "equipment": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::equipment::name%]"
+          },
+          "class": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::class::name%]"
+          },
+          "allocated": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::allocated::name%]"
+          },
+          "buffs": {
+            "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
+          }
+        }
       }
     },
     "switch": {
