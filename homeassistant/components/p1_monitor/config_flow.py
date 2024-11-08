@@ -62,8 +62,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                             NumberSelectorConfig(
                                 min=1, max=65535, mode=NumberSelectorMode.BOX
                             ),
-                        ),
-                        vol.Coerce(int),
+                        )
                     ),
                 }
             ),
