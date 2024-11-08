@@ -702,7 +702,7 @@ connect-box==0.3.1
 construct==2.10.68
 
 # homeassistant.components.utility_meter
-croniter==2.0.2
+cronsim==2.6
 
 # homeassistant.components.crownstone
 crownstone-cloud==1.4.11
