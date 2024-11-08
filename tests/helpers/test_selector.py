@@ -1271,3 +1271,32 @@ def test_label_selector_schema(schema, valid_selections, invalid_selections) -> 
 def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test floor selector."""
     _test_selector("floor", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "input_value", "expected_output", "expected_type"),
+    [
+        ({"min": 10, "max": 50}, 15, 15, float),
+        ({"min": 10, "max": 50}, 15.7, 15.7, float),
+        ({"min": -100, "max": 100, "step": 1}, 6, 6, float),
+        ({"min": -20, "max": -10, "mode": "box"}, "-15", -15, float),
+        ({"min": 10, "max": 50, "as_int": True}, 15, 15, int),
+        ({"min": 10, "max": 50, "as_int": True}, 15.7, 15, int),
+        ({"min": -100, "max": 100, "step": 1, "as_int": True}, 6, 6, int),
+        ({"min": -20, "max": -10, "mode": "box", "as_int": True}, "-15", -15, int),
+    ],
+)
+def test_number_as_int(
+    schema: selector.NumberSelectorConfig,
+    input_value: Any,
+    expected_output: Any,
+    expected_type: type,
+) -> None:
+    """Test number selector."""
+    selector_instance = selector.selector({"number": schema})
+
+    # Use selector in schema and validate
+    vol_schema = vol.Schema({"selection": selector_instance})
+    result = vol_schema({"selection": input_value})
+    assert result == {"selection": expected_output}
+    assert type(result["selection"]) is expected_type
