@@ -106,7 +106,6 @@ CONFIG_ENTRY = {
 
 async def test_options_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
