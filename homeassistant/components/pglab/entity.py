@@ -48,6 +48,8 @@ class PGLabEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
+
+        await self._entity.subscribe_topics()
         await super().async_added_to_hass()
 
         # Inform PGLab discovery instance that a new entity is available.
