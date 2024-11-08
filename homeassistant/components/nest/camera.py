@@ -235,7 +235,9 @@ class NestWebRTCEntity(NestCameraBaseEntity):
     async def _async_refresh_stream(self) -> None:
         """Refresh stream to extend expiration time."""
         now = utcnow()
-        for webrtc_stream in list(self._webrtc_sessions.values()):
+        for session_id, webrtc_stream in list(self._webrtc_sessions.items()):
+            if session_id not in self._webrtc_sessions:
+                continue
             if now < (webrtc_stream.expires_at - STREAM_EXPIRATION_BUFFER):
                 _LOGGER.debug(
                     "Stream does not yet expire: %s", webrtc_stream.expires_at
@@ -247,7 +249,8 @@ class NestWebRTCEntity(NestCameraBaseEntity):
             except ApiException as err:
                 _LOGGER.debug("Failed to extend stream: %s", err)
             else:
-                self._webrtc_sessions[webrtc_stream.media_session_id] = webrtc_stream
+                if session_id in self._webrtc_sessions:
+                    self._webrtc_sessions[session_id] = webrtc_stream
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
