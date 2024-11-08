@@ -35,6 +35,7 @@
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by toutsurmoneau.fr',
       'device_class': 'monetary',
       'friendly_name': 'Suez mock device Water price',
       'unit_of_measurement': '€',
@@ -83,7 +84,7 @@
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'suez water mock test',
+      'attribution': 'Data provided by toutsurmoneau.fr',
       'device_class': 'water',
       'friendly_name': 'Suez mock device Water usage yesterday',
       'highest_monthly_consumption': 2558,
