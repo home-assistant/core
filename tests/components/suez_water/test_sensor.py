@@ -33,7 +33,7 @@ async def test_sensors_valid_state(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize("method", [("aggregated"), ("price")])
+@pytest.mark.parametrize("method", [("fetch_aggregated_data"), ("get_price")])
 async def test_sensors_failed_update(
     hass: HomeAssistant,
     suez_client: AsyncMock,
@@ -55,14 +55,7 @@ async def test_sensors_failed_update(
         assert entity
         assert state.state != STATE_UNAVAILABLE
 
-    if method == "price":
-        suez_client.get_price.side_effect = PySuezError("Should fail to update")
-    elif method == "aggregated":
-        suez_client.fetch_aggregated_data.side_effect = PySuezError(
-            "Should fail to update"
-        )
-    else:
-        pytest.fail("Unknown update method")
+    getattr(suez_client, method).side_effect = PySuezError("Should fail to update")
 
     freezer.tick(DATA_REFRESH_INTERVAL)
     async_fire_time_changed(hass)

@@ -69,6 +69,7 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
     """Representation of a Suez water sensor."""
 
     _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
     entity_description: SuezWaterSensorEntityDescription
 
     def __init__(
@@ -91,11 +92,6 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def attribution(self) -> str:
-        """Return data attribution message."""
-        return ATTRIBUTION
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
