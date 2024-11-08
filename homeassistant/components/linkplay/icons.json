@@ -1,4 +1,14 @@
 {
+  "entity": {
+    "button": {
+      "timesync": {
+        "default": "mdi:clock"
+      },
+      "restart": {
+        "default": "mdi:restart"
+      }
+    }
+  },
   "services": {
     "play_preset": {
       "service": "mdi:play-box-outline"
