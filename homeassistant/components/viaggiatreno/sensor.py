@@ -106,12 +106,10 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._state = None
         self._attributes = {}
         self._icon = ICON
+        self._train_id = train_id
         self._station_id = station_id
         self._name = name
 
-        self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id, train_id=train_id, timestamp=int(time.time()) * 1000
-        )
 
     @property
     def name(self):
@@ -161,7 +159,9 @@ class ViaggiaTrenoSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        uri = self.uri
+        uri = VIAGGIATRENO_ENDPOINT.format(
+            station_id=self._station_id, train_id=self._train_id, timestamp=int(time.time()) * 1000
+            )
         res = await async_http_request(self.hass, uri)
         if res.get("error", ""):
             if res["error"] == 204:
