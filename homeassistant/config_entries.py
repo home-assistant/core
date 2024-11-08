@@ -1260,14 +1260,31 @@ class ConfigEntriesFlowManager(
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        # reauth/reconfigure flows should be linked to a config entry
+        if (source := context["source"]) in {
+            SOURCE_REAUTH,
+            SOURCE_RECONFIGURE,
+        } and "entry_id" not in context:
+            # Deprecated in 2024.12, should fail in 2025.12
+            report(
+                f"initialises a {source} flow without a link to the config entry",
+                error_if_integration=False,
+                error_if_core=True,
+            )
+
         flow_id = ulid_util.ulid_now()
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
-            context.get("source")
-            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
-            and self.config_entries.async_has_entries(handler, include_ignore=False)
+            source not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_RECONFIGURE}
+            and (
+                self.config_entries.async_has_entries(handler, include_ignore=False)
+                or (
+                    self.config_entries.async_has_entries(handler, include_ignore=True)
+                    and source != SOURCE_USER
+                )
+            )
             and await _support_single_config_entry_only(self.hass, handler)
         ):
             return ConfigFlowResult(
@@ -1280,7 +1297,7 @@ class ConfigEntriesFlowManager(
 
         loop = self.hass.loop
 
-        if context["source"] == SOURCE_IMPORT:
+        if source == SOURCE_IMPORT:
             self._pending_import_flows[handler][flow_id] = loop.create_future()
 
         cancel_init_future = loop.create_future()
@@ -1446,6 +1463,7 @@ class ConfigEntriesFlowManager(
                 or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
             ):
                 self.async_abort(progress_flow_id)
+                continue
 
             # Abort any flows in progress for the same handler
             # when integration allows only one config entry
@@ -1489,10 +1507,14 @@ class ConfigEntriesFlowManager(
             version=result["version"],
         )
 
+        if existing_entry is not None:
+            # Unload and remove the existing entry
+            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
-            await self.config_entries.async_remove(existing_entry.entry_id)
+            # Clean up devices and entities belonging to the existing entry
+            self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
         return result
@@ -1882,7 +1904,21 @@ class ConfigEntries:
         self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
-        """Remove an entry."""
+        """Remove, unload and clean up after an entry."""
+        unload_success, entry = await self._async_remove(entry_id)
+        self._async_clean_up(entry)
+
+        for discovery_domain in entry.discovery_keys:
+            async_dispatcher_send_internal(
+                self.hass,
+                signal_discovered_config_entry_removed(discovery_domain),
+                entry,
+            )
+
+        return {"require_restart": not unload_success}
+
+    async def _async_remove(self, entry_id: str) -> tuple[bool, ConfigEntry]:
+        """Remove and unload an entry."""
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
@@ -1897,6 +1933,13 @@ class ConfigEntries:
             del self._entries[entry.entry_id]
             self.async_update_issues()
             self._async_schedule_save()
+
+        return (unload_success, entry)
+
+    @callback
+    def _async_clean_up(self, entry: ConfigEntry) -> None:
+        """Clean up after an entry."""
+        entry_id = entry.entry_id
 
         dev_reg = device_registry.async_get(self.hass)
         ent_reg = entity_registry.async_get(self.hass)
@@ -1916,13 +1959,6 @@ class ConfigEntries:
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
-        for discovery_domain in entry.discovery_keys:
-            async_dispatcher_send_internal(
-                self.hass,
-                signal_discovered_config_entry_removed(discovery_domain),
-                entry,
-            )
-        return {"require_restart": not unload_success}
 
     @callback
     def _async_shutdown(self, event: Event) -> None:
@@ -2140,7 +2176,12 @@ class ConfigEntries:
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
-                unique_id is not None
+                # flipr creates duplicates during migration, and asks users to
+                # remove the duplicate. We don't need warn about it here too.
+                # We should remove the special case for "flipr" in HA Core 2025.4,
+                # when the flipr migration period ends
+                entry.domain != "flipr"
+                and unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
@@ -2418,7 +2459,24 @@ class ConfigEntries:
             issues.add(issue.issue_id)
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+            # flipr creates duplicates during migration, and asks users to
+            # remove the duplicate. We don't need warn about it here too.
+            # We should remove the special case for "flipr" in HA Core 2025.4,
+            # when the flipr migration period ends
+            if domain == "flipr":
+                continue
             for unique_id, entries in unique_ids.items():
+                # We might mutate the list of entries, so we need a copy to not mess up
+                # the index
+                entries = list(entries)
+
+                # There's no need to raise an issue for ignored entries, we can
+                # safely remove them once we no longer allow unique id collisions.
+                # Iterate over a copy of the copy to allow mutating while iterating
+                for entry in list(entries):
+                    if entry.source == SOURCE_IGNORE:
+                        entries.remove(entry)
+
                 if len(entries) < 2:
                     continue
                 issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
@@ -3044,6 +3102,9 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
     handler: str
 
+    _config_entry: ConfigEntry
+    """For compatibility only - to be removed in 2025.12"""
+
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
@@ -3052,18 +3113,58 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
         Requires `already_configured` in strings.json in user visible flows.
         """
-
-        config_entry = cast(
-            ConfigEntry, self.hass.config_entries.async_get_entry(self.handler)
-        )
         _async_abort_entries_match(
             [
                 entry
-                for entry in self.hass.config_entries.async_entries(config_entry.domain)
-                if entry is not config_entry and entry.source != SOURCE_IGNORE
+                for entry in self.hass.config_entries.async_entries(
+                    self.config_entry.domain
+                )
+                if entry is not self.config_entry and entry.source != SOURCE_IGNORE
             ],
             match_dict,
         )
+
+    @property
+    def _config_entry_id(self) -> str:
+        """Return config entry id.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
+        # This is the same as handler, but that's an implementation detail
+        if self.handler is None:
+            raise ValueError(
+                "The config entry id is not available during initialisation"
+            )
+        return self.handler
+
+    @property
+    def config_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current options flow.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
+        # For compatibility only - to be removed in 2025.12
+        if hasattr(self, "_config_entry"):
+            return self._config_entry
+
+        if self.hass is None:
+            raise ValueError("The config entry is not available during initialisation")
+        if entry := self.hass.config_entries.async_get_entry(self._config_entry_id):
+            return entry
+        raise UnknownEntry
+
+    @config_entry.setter
+    def config_entry(self, value: ConfigEntry) -> None:
+        """Set the config entry value."""
+        report(
+            "sets option flow config_entry explicitly, which is deprecated "
+            "and will stop working in 2025.12",
+            error_if_integration=False,
+            error_if_core=True,
+        )
+        self._config_entry = value
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
@@ -3073,11 +3174,12 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
         """Initialize options flow."""
         self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
-
-    @property
-    def config_entry(self) -> ConfigEntry:
-        """Return the config entry."""
-        return self._config_entry
+        report(
+            "inherits from OptionsFlowWithConfigEntry, which is deprecated "
+            "and will stop working in 2025.12",
+            error_if_integration=False,
+            error_if_core=True,
+        )
 
     @property
     def options(self) -> dict[str, Any]:
