@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from . import NordPoolConfigEntry
 
 
-class NordpooolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
+class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
     """A Nord Pool Data Update Coordinator."""
 
     config_entry: NordPoolConfigEntry

@@ -40,7 +40,7 @@
         "name": "{block} lowest price"
       },
       "block_max": {
-        "name": "{block} Highest price"
+        "name": "{block} highest price"
       },
       "block_start_time": {
         "name": "{block} time from"

@@ -7,15 +7,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .const import PLATFORMS
-from .coordinator import NordpooolDataUpdateCoordinator
+from .coordinator import NordPoolDataUpdateCoordinator
 
-type NordPoolConfigEntry = ConfigEntry[NordpooolDataUpdateCoordinator]
+type NordPoolConfigEntry = ConfigEntry[NordPoolDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NordPoolConfigEntry) -> bool:
     """Set up Nord Pool from a config entry."""
 
-    coordinator = NordpooolDataUpdateCoordinator(hass, entry)
+    coordinator = NordPoolDataUpdateCoordinator(hass, entry)
     await coordinator.fetch_data(dt_util.utcnow())
     entry.runtime_data = coordinator
 

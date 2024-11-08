@@ -7,18 +7,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import NordpooolDataUpdateCoordinator
+from .coordinator import NordPoolDataUpdateCoordinator
 
 
-class NordpoolBaseEntity(CoordinatorEntity[NordpooolDataUpdateCoordinator]):
+class NordpoolBaseEntity(CoordinatorEntity[NordPoolDataUpdateCoordinator]):
     """Representation of a Nord Pool base entity."""
 
-    entity_description: EntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: NordpooolDataUpdateCoordinator,
+        coordinator: NordPoolDataUpdateCoordinator,
         entity_description: EntityDescription,
         area: str,
     ) -> None:

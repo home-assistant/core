@@ -78,12 +78,10 @@ class NordpoolConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input:
-            areas = user_input[CONF_AREAS]
-
             errors = await test_api(self.hass, user_input)
             if not errors:
                 return self.async_create_entry(
-                    title=f"{DEFAULT_NAME} {",".join(areas)}",
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
 
