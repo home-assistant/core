@@ -26,6 +26,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_verify() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.acaia.config_flow.is_new_scale", return_value=True
+    ) as mock_verify:
+        yield mock_verify
+
+
+@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(

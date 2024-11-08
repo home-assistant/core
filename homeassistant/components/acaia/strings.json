@@ -1,18 +1,21 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unsupported_device": "This device is not supported."
+    },
+    "error": {
+      "device_not_found": "Device could not be found.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "title": "Set up your acaia scale",
         "data": {
-          "mac_address": "MAC address",
-          "is_new_style_scale": "Modern scale"
+          "mac_address": "MAC address"
         },
         "data_description": {
-          "mac_address": "The MAC address of your scale",
-          "is_new_style_scale": "Is this a modern (newer than 2021) scale?"
+          "mac_address": "The MAC address of your scale"
         }
       }
     }

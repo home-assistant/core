@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
+from pyacaia_async.helpers import is_new_scale
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
@@ -22,24 +24,41 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
-        if user_input is not None:
-            if self.source == SOURCE_USER:
-                await self.async_set_unique_id(user_input[CONF_MAC])
-                self._abort_if_unique_id_configured()
+        errors: dict[str, str] = {}
 
-            return self.async_create_entry(
-                title="acaia",
-                data={**self._discovered, **user_input},
-            )
+        if user_input is not None:
+            try:
+                is_new = await is_new_scale(
+                    self._discovered.get(CONF_MAC) or user_input[CONF_MAC]
+                )
+            except AcaiaDeviceNotFound:
+                errors["base"] = "device_not_found"
+            except AcaiaError:
+                errors["base"] = "unknown"
+            except AcaiaUnknownDevice:
+                return self.async_abort(reason="unsupported_device")
+
+            if not errors:
+                if self.source == SOURCE_USER:
+                    await self.async_set_unique_id(user_input[CONF_MAC])
+                    self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title="acaia",
+                    data={
+                        **self._discovered,
+                        **user_input,
+                        CONF_IS_NEW_STYLE_SCALE: is_new,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_MAC): str,
-                    vol.Optional(CONF_IS_NEW_STYLE_SCALE, default=True): bool,
                 },
             ),
+            errors=errors,
         )
 
     async def async_step_bluetooth(self, discovery_info) -> ConfigFlowResult:
@@ -51,9 +70,5 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_IS_NEW_STYLE_SCALE, default=True): bool}
-            ),
-        )
+        self._set_confirm_only()
+        return self.async_show_form(step_id="user")

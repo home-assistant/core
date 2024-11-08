@@ -6,7 +6,16 @@
       "manufacturer_id": 16962
     },
     {
-      "local_name": "PROCHBT001"
+      "local_name": "ACAIA*"
+    },
+    {
+      "local_name": "PYXIS*"
+    },
+    {
+      "local_name": "LUNAR*"
+    },
+    {
+      "local_name": "PROCH*"
     }
   ],
   "codeowners": ["@zweckj"],
@@ -16,5 +25,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["pyacaia_async"],
-  "requirements": ["pyacaia_async==0.1.0"]
+  "requirements": ["pyacaia_async==0.1.1"]
 }
