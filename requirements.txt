@@ -44,5 +44,6 @@ uv==0.4.28
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.5
-yarl==1.17.1
+webauthn==2.2.0
 webrtc-models==0.2.0
+yarl==1.17.1
