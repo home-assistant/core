@@ -13,24 +13,8 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .errors import CannotConnect, InvalidHost, InvalidPort
-
 from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
-
-DATA_SCHEMA_ENTITIES = vol.Schema(
-    {
-        vol.Required("lights", default=True): bool,
-        vol.Required("covers", default=True): bool,
-        vol.Required("fans", default=True): bool,
-    }
-)
-
-DATA_SCHEMA_OPTIONAL = vol.Schema(
-    {
-        vol.Optional("treatAsDevice", default=True): bool,
-        vol.Optional("importLocations", default=True): bool,
-    }
-)
+from .errors import CannotConnect, InvalidHost, InvalidPort
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int]:
@@ -86,8 +70,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-                self._config = user_input
-                return await self.async_step_entities()
+                return self.async_create_entry(
+                    title=DOMAIN,
+                    data={
+                        "config": self._config,
+                        "options": user_input,
+                        "entities": self._entities,
+                    },
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidHost:
@@ -100,34 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_entities(self, user_input=None) -> ConfigFlowResult:
-        """Import a config entry."""
-        if user_input is not None:
-            self._entities = user_input
-            return await self.async_step_optional()
-
-        return self.async_show_form(
-            step_id="entities", data_schema=DATA_SCHEMA_ENTITIES
-        )
-
-    async def async_step_optional(self, user_input=None) -> ConfigFlowResult:
-        """Handle the optional step."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=DOMAIN,
-                data={
-                    "config": self._config,
-                    "options": user_input,
-                    "entities": self._entities,
-                },
-            )
-
-        return self.async_show_form(
-            step_id="optional", data_schema=DATA_SCHEMA_OPTIONAL
-        )
-
     async def async_step_import(self, import_info) -> ConfigFlowResult:
         """Import a config entry."""
         self._import_info = import_info
         return await self.async_step_user(None)
-
