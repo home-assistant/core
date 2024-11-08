@@ -89,7 +89,9 @@ def setup_services(hass: HomeAssistant) -> None:
                     ATTR_TRACKING_NUMBER: package.tracking_number,
                     ATTR_LOCATION: package.location,
                     ATTR_STATUS: package.status,
-                    ATTR_TIMESTAMP: package.timestamp.isoformat(),
+                    ATTR_TIMESTAMP: package.timestamp.isoformat()
+                    if package.timestamp
+                    else "",
                     ATTR_INFO_TEXT: package.info_text,
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                 }
