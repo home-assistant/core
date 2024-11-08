@@ -27,6 +27,8 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # we already check compatibility in the discovery step
+            # only check if the user has entered the MAC manually
             if self.source == SOURCE_USER:
                 try:
                     user_input[CONF_IS_NEW_STYLE_SCALE] = await is_new_scale(
@@ -38,11 +40,11 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
                 except AcaiaUnknownDevice:
                     return self.async_abort(reason="unsupported_device")
-
-            if not errors:
-                if self.source == SOURCE_USER:
+                else:
                     await self.async_set_unique_id(user_input[CONF_MAC])
                     self._abort_if_unique_id_configured()
+
+            if not errors:
                 return self.async_create_entry(
                     title="acaia",
                     data={
