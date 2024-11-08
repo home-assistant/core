@@ -12,7 +12,7 @@ from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-# If your integration is only set up through the UI (config flow)
+# The integration is only set up through the UI (config flow)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -25,11 +25,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up VegeHub from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Register the device in the device registrys
+    # Register the device in the device registries
     device_registry = dr.async_get(hass)
 
     if device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}):
-        _LOGGER.error("Device %s is already registered!", entry.entry_id)
+        _LOGGER.error("Device %s is already registered", entry.entry_id)
         return False
 
     # Register the device
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a VegeHub config entry."""
 
-    # Unload platforms (like sensor)
+    # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # If successful, clean up resources

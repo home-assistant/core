@@ -14,7 +14,7 @@ async def async_setup(hass: HomeAssistant) -> bool:
     """Set up the HTTP endpoint for VegeHub data."""
 
     class VegeHubView(http.HomeAssistantView):
-        """Test the HTTP views."""
+        """Class for VegeHub view."""
 
         name = "api:vegehub:update"
         url = API_PATH
@@ -23,21 +23,20 @@ async def async_setup(hass: HomeAssistant) -> bool:
 
         async def post(self, request):
             """Handle POST requests and process the JSON data."""
-            # try:
             data = await request.json()
             incoming_key = data.get("api_key")
 
-            # Process sensor data like before
+            # Process sensor data
             if "sensors" in data:
                 for sensor in data["sensors"]:
                     slot = sensor.get("slot")
                     latest_sample = sensor["samples"][-1]
                     value = latest_sample["v"]
 
-                    # Use the slot number as part of the entity ID
+                    # Use the slot number and key to find entity
                     entity_id = f"vegehub_{incoming_key}_{slot}".lower()
 
-                    # Update Home Assistant entity with the new sensor data
+                    # Update entity with the new sensor data
                     await self._update_sensor_entity(hass, value, entity_id)
 
             return self.json({"status": "ok"})
@@ -57,11 +56,11 @@ async def async_setup(hass: HomeAssistant) -> bool:
                 else:
                     await entity.async_update_sensor(value)
             except Exception as e:
-                _LOGGER.error("Sensor entity %s not found:%s", entity_id, e)
+                _LOGGER.error("Sensor entity %s not found: %s", entity_id, e)
                 raise
 
     _LOGGER.info("Registering api endpoint view at %s", API_PATH)
-    # Register the route with Home Assistant
+    # Register the view with Home Assistant
     hass.http.register_view(VegeHubView)
 
     return True

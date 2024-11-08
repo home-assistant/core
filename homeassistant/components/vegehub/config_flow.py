@@ -40,7 +40,8 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if "ip_address" in user_input and self._hub is None:
-                # When the user has input the IP manually, we need to gather more information first
+                # When the user has input the IP manually, we need to gather more information
+                # from the Hub before we can continue setup.
                 self._hub = VegeHub(str(user_input.get("ip_address")))
 
                 await self._hub.retrieve_mac_address()
@@ -73,9 +74,10 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._hub is not None:
                 try:
                     hostname = socket.gethostname()  # Get the local hostname
+                    # Use the ".local" domain for local mDNS resolution
                     await self._hub.setup(
                         self._hub.mac_address,
-                        f"http://{hostname}.local:8123/api/vegehub/update",  # Use the ".local" domain for local mDNS resolution
+                        f"http://{hostname}.local:8123/api/vegehub/update",
                     )
 
                     info_data = self._hub.info
@@ -86,7 +88,8 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     info_data["sw_ver"] = self._properties.get("version")
                     info_data["config_url"] = self._config_url
 
-                    # Create a task to ask the hub for an update when it can, so that we have initial data
+                    # Create a task to ask the hub for an update when it can,
+                    # so that we have initial data
                     self.hass.async_create_task(self._hub.request_update())
 
                     # Create the config entry for the new device
@@ -108,9 +111,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required(
-                            "ip_address"
-                        ): str,  # Use Home Assistant's IP validator if needed
+                        vol.Required("ip_address"): str,
                     }
                 ),
                 errors={},
@@ -127,6 +128,10 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Extract the IP address from the zeroconf discovery info
         device_ip = discovery_info.host
 
+        # Keep track of which IP addresses have already had their MAC addresses
+        # discovered. This allows us to skip the MAC address retrieval for devices
+        # that don't need it. This stops us from waking up a hub every time we see
+        # it come on-line.
         have_mac = False
         if device_ip in ip_dict:
             have_mac = True
@@ -211,7 +216,7 @@ class VegehubOptionsFlowHandler(config_entries.OptionsFlow):
         options_schema: dict[Any, Any] = {}
 
         if num_sensors > 0:
-            # Define the schema for the options that the user can modify
+            # Define data_type fields depending on the number of sensors this hub has
             options_schema.update(
                 {
                     vol.Required(
@@ -228,6 +233,7 @@ class VegehubOptionsFlowHandler(config_entries.OptionsFlow):
         if num_actuators > 0:
             # Get the current duration value from the config entry
             current_duration = self.config_entry.options.get("user_act_duration", 0)
+            # If the current duration is invalid, make it default to 600 seconds
             if current_duration <= 0:
                 current_duration = 600
 
@@ -235,7 +241,7 @@ class VegehubOptionsFlowHandler(config_entries.OptionsFlow):
                 {vol.Required("user_act_duration", default=current_duration): int}
             )
 
-        # Show the form to the user with the current options
+        # Show the form to the user with the available options
         return self.async_show_form(
             step_id="init", data_schema=vol.Schema(options_schema)
         )

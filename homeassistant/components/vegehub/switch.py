@@ -28,7 +28,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
-    # Assuming we have a list of sensor data from the device
     sensors = []
     num_sensors = int(config_entry.data.get("hub", {}).get("num_channels") or 0)
     num_actuators = int(config_entry.data.get("hub", {}).get("num_actuators") or 0)
@@ -53,7 +52,6 @@ async def async_setup_entry(
             )
 
             # Store the entity by ID in hass.data
-            # if sensor.unique_id not in hass.data[DOMAIN]:
             hass.data[DOMAIN][sensor.unique_id] = sensor
 
             sensors.append(sensor)
@@ -155,7 +153,7 @@ class VegeHubSwitch(SwitchEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
 
-        # Maybe in the future have this ping the hub and see if it's there.
+        # In the future have this ping the hub and see if it's there.
         # If not, return false and the actuator isn't available?
         return True
 
