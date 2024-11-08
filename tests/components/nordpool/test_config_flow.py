@@ -5,8 +5,13 @@ from __future__ import annotations
 from dataclasses import replace
 from unittest.mock import patch
 
-from pynordpool import NordPoolError
-from pynordpool.model import DeliveryPeriodData
+from pynordpool import (
+    DeliveryPeriodData,
+    NordPoolAuthenticationError,
+    NordPoolConnectionError,
+    NordPoolError,
+    NordPoolResponseError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -59,8 +64,20 @@ async def test_single_config_entry(
 
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.parametrize(
+    ("error_message", "p_error"),
+    [
+        (NordPoolConnectionError, "cannot_connect"),
+        (NordPoolAuthenticationError, "cannot_connect"),
+        (NordPoolError, "cannot_connect"),
+        (NordPoolResponseError, "cannot_connect"),
+    ],
+)
 async def test_cannot_connect(
-    hass: HomeAssistant, get_data: DeliveryPeriodData
+    hass: HomeAssistant,
+    get_data: DeliveryPeriodData,
+    error_message: Exception,
+    p_error: str,
 ) -> None:
     """Test cannot connect error."""
 
@@ -73,14 +90,14 @@ async def test_cannot_connect(
 
     with patch(
         "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-        side_effect=NordPoolError,
+        side_effect=error_message,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=ENTRY_CONFIG,
         )
 
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": p_error}
 
     with patch(
         "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
