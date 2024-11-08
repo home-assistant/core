@@ -65,6 +65,7 @@ DEVICE_CLASS_MAP = {
     "Recording Failure": None,
     "Exiting Region": BinarySensorDeviceClass.MOTION,
     "Entering Region": BinarySensorDeviceClass.MOTION,
+    "Thermometry": BinarySensorDeviceClass.MOTION,
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema(
