@@ -1,0 +1,26 @@
+get_prices_for_date:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: nordpool
+    date:
+      required: true
+      selector:
+        date:
+    areas:
+      selector:
+        text:
+          multiple: true
+    currency:
+      selector:
+        select:
+          options:
+            - "DKK"
+            - "EUR"
+            - "NOK"
+            - "PLN"
+            - "SEK"
+          mode: dropdown
+          translation_key: "currency"

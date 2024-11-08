@@ -70,9 +70,56 @@
       }
     }
   },
+  "services": {
+    "get_prices_for_date": {
+      "name": "Get prices for date",
+      "description": "Retrieve the prices for a specific date.",
+      "fields": {
+        "config_entry": {
+          "name": "Select Nord Pool configuration entry",
+          "description": "Choose the configuration entry."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Only dates two months in the past and one day in the future is allowed."
+        },
+        "areas": {
+          "name": "Areas",
+          "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured."
+        },
+        "currency": {
+          "name": "Currency",
+          "description": "Currency to get prices in. If left empty it will use the currency already configured."
+        }
+      }
+    }
+  },
+  "selector": {
+    "currency": {
+      "options": {
+        "dkk": "DKK",
+        "eur": "EUR",
+        "nok": "NOK",
+        "pln": "PLN",
+        "sek": "SEK"
+      }
+    }
+  },
   "exceptions": {
     "initial_update_failed": {
       "message": "Initial update failed on startup with error {error}"
+    },
+    "entry_not_found": {
+      "message": "The selected character is not configured in Home Assistant."
+    },
+    "entry_not_loaded": {
+      "message": "The selected character is currently not loaded or disabled in Home Assistant."
+    },
+    "date_to_far_in_past": {
+      "message": "Only dates two months in the past is allowed."
+    },
+    "date_to_far_in_future": {
+      "message": "Only dates one day in the future is allowed."
     }
   }
 }
