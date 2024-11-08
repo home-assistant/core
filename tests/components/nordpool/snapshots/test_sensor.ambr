@@ -379,7 +379,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Off-peak 1 Highest price',
+    'original_name': 'Off-peak 1 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -391,7 +391,7 @@
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 1 Highest price',
+      'friendly_name': 'Nord Pool SE3 Off-peak 1 highest price',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SEK/kWh',
     }),
@@ -632,7 +632,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Off-peak 2 Highest price',
+    'original_name': 'Off-peak 2 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -644,7 +644,7 @@
 # name: test_sensor[sensor.nord_pool_se3_off_peak_2_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Off-peak 2 Highest price',
+      'friendly_name': 'Nord Pool SE3 Off-peak 2 highest price',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SEK/kWh',
     }),
@@ -885,7 +885,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Peak Highest price',
+    'original_name': 'Peak highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -897,7 +897,7 @@
 # name: test_sensor[sensor.nord_pool_se3_peak_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Peak Highest price',
+      'friendly_name': 'Nord Pool SE3 Peak highest price',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SEK/kWh',
     }),
@@ -1486,7 +1486,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Off-peak 1 Highest price',
+    'original_name': 'Off-peak 1 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1498,7 +1498,7 @@
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 1 Highest price',
+      'friendly_name': 'Nord Pool SE4 Off-peak 1 highest price',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SEK/kWh',
     }),
@@ -1739,7 +1739,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Off-peak 2 Highest price',
+    'original_name': 'Off-peak 2 highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1751,7 +1751,7 @@
 # name: test_sensor[sensor.nord_pool_se4_off_peak_2_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Off-peak 2 Highest price',
+      'friendly_name': 'Nord Pool SE4 Off-peak 2 highest price',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SEK/kWh',
     }),
@@ -1992,7 +1992,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Peak Highest price',
+    'original_name': 'Peak highest price',
     'platform': 'nordpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2004,7 +2004,7 @@
 # name: test_sensor[sensor.nord_pool_se4_peak_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Peak Highest price',
+      'friendly_name': 'Nord Pool SE4 Peak highest price',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SEK/kWh',
     }),
