@@ -1889,7 +1889,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.7
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.17
+python-linkplay==0.0.18
 
 # homeassistant.components.matter
 python-matter-server==6.6.0
