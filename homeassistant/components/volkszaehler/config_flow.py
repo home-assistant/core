@@ -51,23 +51,17 @@ class VolkszaehlerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("UUID is missing in import config")
             return self.async_abort(reason="missing_uuid")
 
-        # Extrahiere Host und Port
         host = import_data.get(CONF_HOST, DEFAULT_HOST)
         port = import_data.get(CONF_PORT, DEFAULT_PORT)
         name = import_data.get(CONF_NAME, DEFAULT_NAME)
-
-        # Extrahiere 'from' und 'to'
         param_from = import_data.get(CONF_FROM, "")
         param_to = import_data.get(CONF_TO, "")
 
-        # Erstellen einer eindeutigen ID basierend auf UUID, Host, Port, From und To
         unique_id = f"{name}_{uuid}_{host}_{port}_{param_from}_{param_to}"
 
-        # Setzen der eindeutigen ID, um Duplikate zu vermeiden
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        # Trennen von data und options
         data = {
             CONF_HOST: host,
             CONF_PORT: port,
@@ -84,11 +78,10 @@ class VolkszaehlerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         }
 
-        # Erstellen des ConfigEntries mit getrennten data und options
         return self.async_create_entry(
             title=name,
             data=data,
-            options=options,  # Optionen getrennt übergeben
+            options=options,
         )
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
@@ -96,12 +89,9 @@ class VolkszaehlerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Eingabe validieren und die API-Verbindung testen
             scan_interval = user_input.get(CONF_SCANINTERVAL, DEFAULT_SCANINTERVAL)
 
-            # Validate the polling interval
             if scan_interval < MIN_SCANINTERVAL:
-                # errors["scan_interval"] = "too_low"
                 errors["base"] = "too_low"
 
             try:
@@ -203,7 +193,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options for the Volkszaehler integration."""
         if user_input is not None:
-            # await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data=user_input)
 
         options_schema = vol.Schema(

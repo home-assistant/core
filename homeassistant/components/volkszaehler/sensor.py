@@ -94,7 +94,6 @@ async def async_setup_entry(
         scaninterval,
     )
 
-    # Session und API-Client
     session = async_get_clientsession(hass)
     vz_api = Volkszaehler(
         session,
@@ -115,7 +114,6 @@ async def async_setup_entry(
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    # # add sensor
     entities = [
         VolkszaehlerSensor(coordinator, name, SENSOR_TYPES[condition], uuid)
         for condition in monitored_conditions
