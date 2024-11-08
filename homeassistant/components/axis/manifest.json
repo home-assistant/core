@@ -1,7 +1,7 @@
 {
   "domain": "axis",
   "name": "Axis",
-  "after_dependencies": ["mqtt"],
+  "after_dependencies": ["mqtt", "ffmpeg"],
   "codeowners": ["@Kane610"],
   "config_flow": true,
   "dhcp": [
