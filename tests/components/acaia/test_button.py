@@ -7,10 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.acaia.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import async_fire_time_changed
 
@@ -27,13 +28,18 @@ BUTTONS = (
 async def test_button_presses(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
     mock_scale: MagicMock,
 ) -> None:
     """Test the acaia buttons."""
 
+    device = device_registry.async_get_device({(DOMAIN, mock_scale.mac)})
+    assert device
+    assert device == snapshot(name="device")
+
     for button in BUTTONS:
-        state = hass.states.get(f"button.lunar_123456_{button}")
+        state = hass.states.get(f"button.lunar_ddeeff_{button}")
         assert state
         assert state == snapshot(name=f"state_button_{button}")
 
@@ -45,7 +51,7 @@ async def test_button_presses(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: f"button.lunar_123456_{button}",
+                ATTR_ENTITY_ID: f"button.lunar_ddeeff_{button}",
             },
             blocking=True,
         )
@@ -62,7 +68,7 @@ async def test_buttons_unavailable_on_disconnected_scale(
     """Test the acaia buttons are unavailable when the scale is disconnected."""
 
     for button in BUTTONS:
-        state = hass.states.get(f"button.lunar_123456_{button}")
+        state = hass.states.get(f"button.lunar_ddeeff_{button}")
         assert state
         assert state.state == STATE_UNKNOWN
 
@@ -72,6 +78,6 @@ async def test_buttons_unavailable_on_disconnected_scale(
     await hass.async_block_till_done()
 
     for button in BUTTONS:
-        state = hass.states.get(f"button.lunar_123456_{button}")
+        state = hass.states.get(f"button.lunar_ddeeff_{button}")
         assert state
         assert state.state == STATE_UNAVAILABLE

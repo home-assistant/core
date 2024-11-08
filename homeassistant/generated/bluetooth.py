@@ -18,11 +18,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "acaia",
-        "local_name": "PYXIS*",
+        "local_name": "PYXIS-*",
     },
     {
         "domain": "acaia",
-        "local_name": "LUNAR*",
+        "local_name": "LUNAR-*",
     },
     {
         "domain": "acaia",

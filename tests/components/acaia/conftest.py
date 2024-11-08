@@ -8,10 +8,10 @@ from pyacaia_async.const import UnitMass as AcaiaUnitOfMass
 import pytest
 
 from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from . import service_info, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_verify() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
+    """Override is_new_scale check."""
     with patch(
         "homeassistant.components.acaia.config_flow.is_new_scale", return_value=True
     ) as mock_verify:
@@ -35,14 +35,23 @@ def mock_verify() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_discovered_service_info() -> Generator[AsyncMock]:
+    """Override getting Bluetooth service info."""
+    with patch(
+        "homeassistant.components.acaia.config_flow.async_discovered_service_info",
+        return_value=[service_info],
+    ) as mock_discovered_service_info:
+        yield mock_discovered_service_info
+
+
+@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="My scale",
+        title="LUNAR-DDEEFF",
         domain=DOMAIN,
         version=1,
         data={
-            CONF_NAME: "LUNAR_123456",
             CONF_MAC: "aa:bb:cc:dd:ee:ff",
             CONF_IS_NEW_STYLE_SCALE: True,
         },

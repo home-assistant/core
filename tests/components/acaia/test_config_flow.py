@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -20,6 +20,7 @@ async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_verify: AsyncMock,
+    mock_discovered_service_info: AsyncMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -37,7 +38,7 @@ async def test_form(
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "acaia"
+    assert result2["title"] == "LUNAR-DDEEFF"
     assert result2["data"] == {
         **user_input,
         CONF_IS_NEW_STYLE_SCALE: True,
@@ -64,9 +65,9 @@ async def test_bluetooth_discovery(
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == service_info.name
     assert result2["data"] == {
         CONF_MAC: service_info.address,
-        CONF_NAME: service_info.name,
         CONF_IS_NEW_STYLE_SCALE: True,
     }
 
@@ -100,6 +101,7 @@ async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_verify: AsyncMock,
+    mock_discovered_service_info: AsyncMock,
 ) -> None:
     """Ensure we can't add the same device twice."""
 
@@ -133,6 +135,7 @@ async def test_recoverable_config_flow_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_verify: AsyncMock,
+    mock_discovered_service_info: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -168,6 +171,7 @@ async def test_unsupported_device(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_verify: AsyncMock,
+    mock_discovered_service_info: AsyncMock,
 ) -> None:
     """Test flow aborts on unsupported device."""
     mock_verify.side_effect = AcaiaUnknownDevice
@@ -185,3 +189,18 @@ async def test_unsupported_device(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "unsupported_device"
+
+
+async def test_no_bluetooth_devices(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test flow aborts on unsupported device."""
+    mock_discovered_service_info.return_value = []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"

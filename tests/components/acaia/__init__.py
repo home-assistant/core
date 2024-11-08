@@ -18,7 +18,7 @@ async def setup_integration(
 
 
 service_info = BluetoothServiceInfo(
-    name="LUNAR_123456",
+    name="LUNAR-DDEEFF",
     address="aa:bb:cc:dd:ee:ff",
     rssi=-63,
     manufacturer_data={},

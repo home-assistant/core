@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -31,8 +30,13 @@ class AcaiaEntity(CoordinatorEntity[AcaiaCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._scale.mac)},
-            name=coordinator.config_entry.data.get(CONF_NAME),
-            manufacturer="acaia",
+            manufacturer="Acaia",
+            model=(
+                coordinator.config_entry.title.split("-")[0].capitalize()
+                if "-" in coordinator.config_entry.title
+                else None
+            ),
+            suggested_area="Kitchen",
         )
 
     @property

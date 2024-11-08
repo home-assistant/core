@@ -7,9 +7,16 @@ from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnkno
 from pyacaia_async.helpers import is_new_scale
 import voluptuous as vol
 
+from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
 
@@ -22,6 +29,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered: dict[str, Any] = {}
+        self._discovered_devices: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -35,9 +43,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             # only check if the user has entered the MAC manually
             if self.source == SOURCE_USER:
                 try:
-                    user_input[CONF_IS_NEW_STYLE_SCALE] = await is_new_scale(
-                        user_input[CONF_MAC]
-                    )
+                    is_new_style_scale = await is_new_scale(user_input[CONF_MAC])
                 except AcaiaDeviceNotFound:
                     errors["base"] = "device_not_found"
                 except AcaiaError:
@@ -51,19 +57,43 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title="acaia",
+                    title=self._discovered.get(CONF_NAME)
+                    or self._discovered_devices[user_input[CONF_MAC]],
                     data={
-                        **self._discovered,
-                        **user_input,
+                        CONF_MAC: self._discovered.get(CONF_MAC)
+                        or user_input[CONF_MAC],
+                        CONF_IS_NEW_STYLE_SCALE: self._discovered.get(
+                            CONF_IS_NEW_STYLE_SCALE
+                        )
+                        or is_new_style_scale,
                     },
                 )
+
+        for device in async_discovered_service_info(self.hass):
+            self._discovered_devices[device.address] = device.name
+
+        if not self._discovered_devices:
+            return self.async_abort(reason="no_devices_found")
+
+        options = [
+            SelectOptionDict(
+                value=device_mac,
+                label=f"{device_name} ({device_mac})",
+            )
+            for device_mac, device_name in self._discovered_devices.items()
+        ]
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_MAC): str,
-                },
+                    vol.Required(CONF_MAC): SelectSelector(
+                        SelectSelectorConfig(
+                            options=options,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
             ),
             errors=errors,
         )
@@ -95,4 +125,4 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unsupported_device")
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="user")
+        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))

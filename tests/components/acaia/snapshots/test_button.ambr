@@ -1,4 +1,36 @@
 # serializer version: 1
+# name: test_button_presses[device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'kitchen',
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'acaia',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Acaia',
+    'model': 'Lunar',
+    'model_id': None,
+    'name': 'LUNAR-DDEEFF',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': 'Kitchen',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_button_presses[entry_button_reset_timer]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11,7 +43,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lunar_123456_reset_timer',
+    'entity_id': 'button.lunar_ddeeff_reset_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -44,7 +76,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lunar_123456_start_stop_timer',
+    'entity_id': 'button.lunar_ddeeff_start_stop_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -77,7 +109,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lunar_123456_tare',
+    'entity_id': 'button.lunar_ddeeff_tare',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -101,10 +133,10 @@
 # name: test_button_presses[state_button_reset_timer]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR_123456 Reset timer',
+      'friendly_name': 'LUNAR-DDEEFF Reset timer',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lunar_123456_reset_timer',
+    'entity_id': 'button.lunar_ddeeff_reset_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -114,10 +146,10 @@
 # name: test_button_presses[state_button_start_stop_timer]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR_123456 Start/stop timer',
+      'friendly_name': 'LUNAR-DDEEFF Start/stop timer',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lunar_123456_start_stop_timer',
+    'entity_id': 'button.lunar_ddeeff_start_stop_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -127,10 +159,10 @@
 # name: test_button_presses[state_button_tare]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR_123456 Tare',
+      'friendly_name': 'LUNAR-DDEEFF Tare',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lunar_123456_tare',
+    'entity_id': 'button.lunar_ddeeff_tare',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
