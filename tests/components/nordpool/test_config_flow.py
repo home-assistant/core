@@ -41,6 +41,7 @@ async def test_form(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
+    assert result["title"] == "Nord Pool"
     assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
 
 
@@ -91,7 +92,7 @@ async def test_cannot_connect(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Nord Pool SE3,SE4"
+    assert result["title"] == "Nord Pool"
     assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
 
 
@@ -129,5 +130,5 @@ async def test_empty_data(hass: HomeAssistant, get_data: DeliveryPeriodData) -> 
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Nord Pool SE3,SE4"
+    assert result["title"] == "Nord Pool"
     assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
