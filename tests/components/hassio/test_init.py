@@ -67,6 +67,7 @@ def mock_all(
     addon_info: AsyncMock,
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
+    resolution_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -203,19 +204,6 @@ def mock_all(
     addon_info.side_effect = mock_addon_info
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",

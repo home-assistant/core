@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import callback
@@ -56,7 +56,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> PVPCOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return PVPCOptionsFlowHandler(config_entry)
+        return PVPCOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -178,7 +178,7 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="reauth_confirm", data_schema=data_schema)
 
 
-class PVPCOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class PVPCOptionsFlowHandler(OptionsFlow):
     """Handle PVPC options."""
 
     _power: float | None = None
@@ -199,7 +199,7 @@ class PVPCOptionsFlowHandler(OptionsFlowWithConfigEntry):
             )
 
         # Fill options with entry data
-        api_token = self.options.get(
+        api_token = self.config_entry.options.get(
             CONF_API_TOKEN, self.config_entry.data.get(CONF_API_TOKEN)
         )
         return self.async_show_form(
@@ -229,13 +229,11 @@ class PVPCOptionsFlowHandler(OptionsFlowWithConfigEntry):
             )
 
         # Fill options with entry data
-        power = self.options.get(ATTR_POWER, self.config_entry.data[ATTR_POWER])
-        power_valley = self.options.get(
-            ATTR_POWER_P3, self.config_entry.data[ATTR_POWER_P3]
-        )
-        api_token = self.options.get(
-            CONF_API_TOKEN, self.config_entry.data.get(CONF_API_TOKEN)
-        )
+        options = self.config_entry.options
+        data = self.config_entry.data
+        power = options.get(ATTR_POWER, data[ATTR_POWER])
+        power_valley = options.get(ATTR_POWER_P3, data[ATTR_POWER_P3])
+        api_token = options.get(CONF_API_TOKEN, data.get(CONF_API_TOKEN))
         use_api_token = api_token is not None
         schema = vol.Schema(
             {

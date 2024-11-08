@@ -324,7 +324,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> GenericOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return GenericOptionsFlowHandler(config_entry)
+        return GenericOptionsFlowHandler()
 
     def check_for_existing(self, options: dict[str, Any]) -> bool:
         """Check whether an existing entry is using the same URLs."""
@@ -409,9 +409,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 class GenericOptionsFlowHandler(OptionsFlow):
     """Handle Generic IP Camera options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize Generic IP Camera options flow."""
-        self.config_entry = config_entry
         self.preview_cam: dict[str, Any] = {}
         self.user_input: dict[str, Any] = {}
 

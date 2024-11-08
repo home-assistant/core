@@ -9,7 +9,7 @@ from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 from typing import Any, Self
 
-from croniter import croniter
+from cronsim import CronSim
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -405,6 +405,16 @@ class UtilityMeterSensor(RestoreSensor):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
         self._next_reset = None
+        self.scheduler = (
+            CronSim(
+                self._cron_pattern,
+                dt_util.now(
+                    dt_util.get_default_time_zone()
+                ),  # we need timezone for DST purposes (see issue #102984)
+            )
+            if self._cron_pattern
+            else None
+        )
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
@@ -543,11 +553,10 @@ class UtilityMeterSensor(RestoreSensor):
 
     async def _program_reset(self):
         """Program the reset of the utility meter."""
-        if self._cron_pattern is not None:
-            tz = dt_util.get_default_time_zone()
-            self._next_reset = croniter(self._cron_pattern, dt_util.now(tz)).get_next(
-                datetime
-            )  # we need timezone for DST purposes (see issue #102984)
+        if self.scheduler:
+            self._next_reset = next(self.scheduler)
+
+            _LOGGER.debug("Next reset of %s is %s", self.entity_id, self._next_reset)
             self.async_on_remove(
                 async_track_point_in_time(
                     self.hass,
