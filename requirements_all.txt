@@ -982,6 +982,9 @@ gitterpy==0.1.7
 # homeassistant.components.glances
 glances-api==0.8.0
 
+# homeassistant.components.victronvenus
+gmqtt==0.6.16
+
 # homeassistant.components.go2rtc
 go2rtc-client==0.0.1b0
 
