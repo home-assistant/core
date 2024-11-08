@@ -162,7 +162,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -171,7 +171,7 @@ class NumberDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -279,7 +279,7 @@ class NumberDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
     """
 
     PRECIPITATION = "precipitation"
