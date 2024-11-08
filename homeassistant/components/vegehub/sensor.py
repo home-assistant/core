@@ -1,6 +1,5 @@
 """Sensor configuration for VegeHub integration."""
 
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -19,8 +18,6 @@ from .const import (
     OPTION_DATA_TYPE_CHOICES,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,8 +33,6 @@ async def async_setup_entry(
     ip_addr = str(config_entry.data.get("ip_addr"))  # Use the device's MAC address
     num_sensors = int(config_entry.data.get("hub", {}).get("num_channels") or 0)
     is_ac = int(config_entry.data.get("hub", {}).get("is_ac") or 0)
-
-    _LOGGER.info("Adding %s sensors", num_sensors)
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
