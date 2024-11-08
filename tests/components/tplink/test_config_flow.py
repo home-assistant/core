@@ -666,11 +666,24 @@ async def test_manual_auth_errors(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("host_str", "host", "port"),
+    [
+        (f"{IP_ADDRESS}:1234", IP_ADDRESS, 1234),
+        ("[2001:db8:0::1]:4321", "2001:db8:0::1", 4321),
+    ],
+)
 async def test_manual_port_override(
-    hass: HomeAssistant, mock_connect: AsyncMock, mock_discovery: AsyncMock
+    hass: HomeAssistant,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+    host_str,
+    host,
+    port,
 ) -> None:
     """Test manually setup."""
-    mock_discovery["mock_device"].config.port_override = 1234
+    mock_discovery["mock_device"].config.port_override = port
+    mock_discovery["mock_device"].host = host
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -684,7 +697,7 @@ async def test_manual_port_override(
     mock_connect["connect"].side_effect = AuthenticationError
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: f"{IP_ADDRESS}:1234"}
+        result["flow_id"], {CONF_HOST: host_str}
     )
     await hass.async_block_till_done()
 
@@ -702,11 +715,15 @@ async def test_manual_port_override(
     )
     await hass.async_block_till_done()
     mock_discovery["try_connect_all"].assert_called_once_with(
-        "127.0.0.1", credentials=creds, port=1234, http_client=ANY
+        host, credentials=creds, port=port, http_client=ANY
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == {**CREATE_ENTRY_DATA_KLAP, CONF_PORT: 1234}
+    assert result3["data"] == {
+        **CREATE_ENTRY_DATA_KLAP,
+        CONF_PORT: port,
+        CONF_HOST: host,
+    }
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 

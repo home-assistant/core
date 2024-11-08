@@ -272,7 +272,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
-            host, _, port_str = host.partition(":")
+            if "[" in host:
+                _, _, bracketed = host.partition("[")
+                host, _, port_str = bracketed.partition("]")
+                _, _, port_str = port_str.partition(":")
+            else:
+                host, _, port_str = host.partition(":")
             match_dict = {CONF_HOST: host}
             if port_str:
                 try:
