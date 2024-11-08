@@ -81,20 +81,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
         return {
             "packages": [
-                {
-                    ATTR_DESTINATION_COUNTRY: package.destination_country,
-                    ATTR_ORIGIN_COUNTRY: package.origin_country,
-                    ATTR_PACKAGE_TYPE: package.package_type,
-                    ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
-                    ATTR_TRACKING_NUMBER: package.tracking_number,
-                    ATTR_LOCATION: package.location,
-                    ATTR_STATUS: package.status,
-                    ATTR_TIMESTAMP: package.timestamp.isoformat()
-                    if package.timestamp
-                    else "",
-                    ATTR_INFO_TEXT: package.info_text,
-                    ATTR_FRIENDLY_NAME: package.friendly_name,
-                }
+                package_to_dict(package)
                 for package in live_packages
                 if slugify(package.status) in package_states or package_states == []
             ]
@@ -111,6 +98,24 @@ def setup_services(hass: HomeAssistant) -> None:
         ]
 
         await seventeen_coordinator.client.profile.archive_package(tracking_number)
+
+    def package_to_dict(package):
+        return {
+            ATTR_DESTINATION_COUNTRY: package.destination_country,
+            ATTR_ORIGIN_COUNTRY: package.origin_country,
+            ATTR_PACKAGE_TYPE: package.package_type,
+            ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
+            ATTR_TRACKING_NUMBER: package.tracking_number,
+            ATTR_LOCATION: package.location,
+            ATTR_STATUS: package.status,
+            ATTR_INFO_TEXT: package.info_text,
+            ATTR_FRIENDLY_NAME: package.friendly_name,
+            **(
+                {ATTR_TIMESTAMP: package.timestamp.isoformat()}
+                if package.timestamp
+                else {}
+            ),
+        }
 
     async def _validate_service(config_entry_id):
         entry: ConfigEntry | None = hass.config_entries.async_get_entry(config_entry_id)

@@ -82,7 +82,6 @@
         'origin_country': 'Belgium',
         'package_type': 'Registered Parcel',
         'status': 'In Transit',
-        'timestamp': '',
         'tracking_info_language': 'Unknown',
         'tracking_number': '456',
       }),
