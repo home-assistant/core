@@ -117,7 +117,6 @@ async def validate_add_controller(
     """Validate controller setup."""
     _validate_credentials(user_input)
     user_input[CONF_CONTROLLER_ID] = slugify(user_input[CONF_NAME])
-    user_input[CONF_PORT] = int(user_input[CONF_PORT])
     try:
         handler._async_abort_entries_match(  # noqa: SLF001
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
@@ -563,7 +562,6 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, Any]:
         """Validate controller setup."""
         _validate_credentials(user_input)
-        user_input[CONF_PORT] = int(user_input[CONF_PORT])
 
         if any(
             entry.entry_id != reconfigure_entry.entry_id
