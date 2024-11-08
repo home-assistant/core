@@ -262,6 +262,26 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
+    @staticmethod
+    def _async_get_host_port(host_str: str) -> tuple[str, int | None]:
+        """Parse the host string for host and port."""
+        if "[" in host_str:
+            _, _, bracketed = host_str.partition("[")
+            host, _, port_str = bracketed.partition("]")
+            _, _, port_str = port_str.partition(":")
+        else:
+            host, _, port_str = host_str.partition(":")
+
+        if not port_str:
+            return host, None
+
+        try:
+            port = int(port_str)
+        except ValueError:
+            return host, None
+
+        return host, port
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -272,23 +292,15 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
-            if "[" in host:
-                _, _, bracketed = host.partition("[")
-                host, _, port_str = bracketed.partition("]")
-                _, _, port_str = port_str.partition(":")
-            else:
-                host, _, port_str = host.partition(":")
+
+            host, port = self._async_get_host_port(host)
+
             match_dict = {CONF_HOST: host}
-            if port_str:
-                try:
-                    port = int(port_str)
-                    self.port = port
-                    match_dict[CONF_PORT] = port
-                except ValueError:
-                    port = None
-            else:
-                port = None
+            if port:
+                self.port = port
+                match_dict[CONF_PORT] = port
             self._async_abort_entries_match(match_dict)
+
             self.host = host
             credentials = await get_credentials(self.hass)
             try:
