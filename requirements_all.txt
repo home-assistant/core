@@ -172,6 +172,9 @@ aio-geojson-usgs-earthquakes==0.3
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.10
 
+# homeassistant.components.acaia
+aioacaia==0.1.2
+
 # homeassistant.components.airq
 aioairq==0.3.2
 
@@ -1745,9 +1748,6 @@ pyW215==0.7.0
 
 # homeassistant.components.w800rf32
 pyW800rf32==0.4
-
-# homeassistant.components.acaia
-pyacaia_async==0.1.2
 
 # homeassistant.components.ads
 pyads==3.4.0

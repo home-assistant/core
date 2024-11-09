@@ -3,8 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyacaia_async.acaiascale import AcaiaDeviceState
-from pyacaia_async.const import UnitMass as AcaiaUnitOfMass
+from aioacaia.acaiascale import AcaiaDeviceState
+from aioacaia.const import UnitMass as AcaiaUnitOfMass
 import pytest
 
 from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
+from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
 import pytest
 
 from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN

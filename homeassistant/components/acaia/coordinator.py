@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pyacaia_async.acaiascale import AcaiaScale
-from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError
+from aioacaia.acaiascale import AcaiaScale
+from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC

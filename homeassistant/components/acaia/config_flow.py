@@ -3,8 +3,8 @@
 import logging
 from typing import Any
 
-from pyacaia_async.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
-from pyacaia_async.helpers import is_new_scale
+from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
+from aioacaia.helpers import is_new_scale
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
