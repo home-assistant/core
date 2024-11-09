@@ -76,9 +76,15 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 1: Smoke Alarm - State Id's 4, 5, 7, 8
+        key=NOTIFICATION_SMOKE_ALARM,
+        states=("4", "5", "7", "8"),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 1: Smoke Alarm - All other State Id's
         key=NOTIFICATION_SMOKE_ALARM,
-        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
