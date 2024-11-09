@@ -2144,7 +2144,7 @@ smhi-pkg==1.0.18
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.4
+soco==0.30.6
 
 # homeassistant.components.solarlog
 solarlog_cli==0.3.2
