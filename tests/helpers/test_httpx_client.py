@@ -5,7 +5,8 @@ from unittest.mock import Mock, patch
 import httpx
 import pytest
 
-from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.httpx_client as client
 
 from tests.common import MockModule, extract_stack_to_frame, mock_integration

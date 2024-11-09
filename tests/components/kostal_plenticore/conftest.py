@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pykoplenti import MeData, VersionData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant

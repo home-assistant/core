@@ -1,6 +1,7 @@
 """Test the Open Exchange Rates config flow."""
 
 import asyncio
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -9,7 +10,6 @@ from aioopenexchangerates import (
     OpenExchangeRatesClientError,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.openexchangerates.const import DOMAIN
@@ -200,16 +200,7 @@ async def test_reauth(
 ) -> None:
     """Test we can reauthenticate the config entry."""
     mock_config_entry.add_to_hass(hass)
-    flow_context = {
-        "source": config_entries.SOURCE_REAUTH,
-        "entry_id": mock_config_entry.entry_id,
-        "title_placeholders": {"name": mock_config_entry.title},
-        "unique_id": mock_config_entry.unique_id,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context=flow_context, data=mock_config_entry.data
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 

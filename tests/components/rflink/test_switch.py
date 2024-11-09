@@ -5,7 +5,9 @@ control of Rflink switch devices.
 
 """
 
-from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
+import pytest
+
+from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -33,7 +35,9 @@ CONFIG = {
 }
 
 
-async def test_default_setup(hass: HomeAssistant, monkeypatch) -> None:
+async def test_default_setup(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test all basic functionality of the rflink switch component."""
     # setup mocking rflink module
     event_callback, create, protocol, _ = await mock_rflink(
@@ -93,7 +97,9 @@ async def test_default_setup(hass: HomeAssistant, monkeypatch) -> None:
     assert protocol.send_command_ack.call_args_list[1][0][1] == "on"
 
 
-async def test_group_alias(hass: HomeAssistant, monkeypatch) -> None:
+async def test_group_alias(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Group aliases should only respond to group commands (allon/alloff)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -123,7 +129,9 @@ async def test_group_alias(hass: HomeAssistant, monkeypatch) -> None:
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_nogroup_alias(hass: HomeAssistant, monkeypatch) -> None:
+async def test_nogroup_alias(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Non group aliases should not respond to group commands."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -156,7 +164,9 @@ async def test_nogroup_alias(hass: HomeAssistant, monkeypatch) -> None:
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_nogroup_device_id(hass: HomeAssistant, monkeypatch) -> None:
+async def test_nogroup_device_id(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Device id that do not respond to group commands (allon/alloff)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -184,7 +194,9 @@ async def test_nogroup_device_id(hass: HomeAssistant, monkeypatch) -> None:
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_device_defaults(hass: HomeAssistant, monkeypatch) -> None:
+async def test_device_defaults(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Event should fire if device_defaults config says so."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -216,7 +228,9 @@ async def test_device_defaults(hass: HomeAssistant, monkeypatch) -> None:
     assert calls[0].data == {"state": "off", "entity_id": f"{DOMAIN}.test"}
 
 
-async def test_not_firing_default(hass: HomeAssistant, monkeypatch) -> None:
+async def test_not_firing_default(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """By default no bus events should be fired."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -246,7 +260,9 @@ async def test_not_firing_default(hass: HomeAssistant, monkeypatch) -> None:
     assert not calls, "an event has been fired"
 
 
-async def test_restore_state(hass: HomeAssistant, monkeypatch) -> None:
+async def test_restore_state(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Ensure states are restored on startup."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},

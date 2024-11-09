@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -26,7 +26,7 @@ from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK, MochadCtrl
 _LOGGER = logging.getLogger(__name__)
 CONF_BRIGHTNESS_LEVELS = "brightness_levels"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         CONF_DEVICES: [

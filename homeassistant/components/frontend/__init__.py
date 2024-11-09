@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from functools import lru_cache
+from collections.abc import Callable, Iterator
+from functools import lru_cache, partial
 import logging
 import os
 import pathlib
@@ -11,12 +11,13 @@ from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
+from propcache import cached_property
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
     CONF_MODE,
@@ -33,6 +34,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.util.hass_dict import HassKey
 
 from .storage import async_setup_frontend_storage
 
@@ -55,6 +57,10 @@ DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
 DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
+
+DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = HassKey(
+    "frontend_ws_subscribers"
+)
 
 THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
 THEMES_STORAGE_VERSION = 1
@@ -184,7 +190,7 @@ MANIFEST_JSON = Manifest(
         ],
         "lang": "en-US",
         "name": "Home Assistant",
-        "short_name": "Assistant",
+        "short_name": "Home Assistant",
         "start_url": "/?homescreen=1",
         "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
@@ -204,17 +210,24 @@ class UrlManager:
     on hass.data
     """
 
-    def __init__(self, urls: list[str]) -> None:
+    def __init__(
+        self,
+        on_change: Callable[[str, str], None],
+        urls: list[str],
+    ) -> None:
         """Init the url manager."""
+        self._on_change = on_change
         self.urls = frozenset(urls)
 
     def add(self, url: str) -> None:
         """Add a url to the set."""
         self.urls = frozenset([*self.urls, url])
+        self._on_change("added", url)
 
     def remove(self, url: str) -> None:
         """Remove a url from the set."""
         self.urls = self.urls - {url}
+        self._on_change("removed", url)
 
 
 class Panel:
@@ -311,12 +324,16 @@ def async_register_built_in_panel(
 
 @bind_hass
 @callback
-def async_remove_panel(hass: HomeAssistant, frontend_url_path: str) -> None:
+def async_remove_panel(
+    hass: HomeAssistant, frontend_url_path: str, *, warn_if_unknown: bool = True
+) -> None:
     """Remove a built-in panel."""
     panel = hass.data.get(DATA_PANELS, {}).pop(frontend_url_path, None)
 
     if panel is None:
-        _LOGGER.warning("Removing unknown panel %s", frontend_url_path)
+        if warn_if_unknown:
+            _LOGGER.warning("Removing unknown panel %s", frontend_url_path)
+        return
 
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
@@ -363,6 +380,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_themes)
     websocket_api.async_register_command(hass, websocket_get_translations)
     websocket_api.async_register_command(hass, websocket_get_version)
+    websocket_api.async_register_command(hass, websocket_subscribe_extra_js)
     hass.http.register_view(ManifestJSONView())
 
     conf = config.get(DOMAIN, {})
@@ -382,6 +400,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for path, should_cache in (
         ("service_worker.js", False),
+        ("sw-modern.js", False),
+        ("sw-modern.js.map", False),
+        ("sw-legacy.js", False),
+        ("sw-legacy.js.map", False),
         ("robots.txt", False),
         ("onboarding.html", not is_dev),
         ("static", not is_dev),
@@ -420,8 +442,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         sidebar_icon="hass:hammer",
     )
 
-    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(conf.get(CONF_EXTRA_MODULE_URL, []))
-    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager(conf.get(CONF_EXTRA_JS_URL_ES5, []))
+    @callback
+    def async_change_listener(
+        resource_type: str,
+        change_type: str,
+        url: str,
+    ) -> None:
+        subscribers = hass.data[DATA_WS_SUBSCRIBERS]
+        json_msg = {
+            "change_type": change_type,
+            "item": {"type": resource_type, "url": url},
+        }
+        for connection, msg_id in subscribers:
+            connection.send_message(websocket_api.event_message(msg_id, json_msg))
+
+    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(
+        partial(async_change_listener, "module"), conf.get(CONF_EXTRA_MODULE_URL, [])
+    )
+    hass.data[DATA_EXTRA_JS_URL_ES5] = UrlManager(
+        partial(async_change_listener, "es5"), conf.get(CONF_EXTRA_JS_URL_ES5, [])
+    )
+    hass.data[DATA_WS_SUBSCRIBERS] = set()
 
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
 
@@ -549,12 +590,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         self.hass = hass
         self._template_cache: jinja2.Template | None = None
 
-    @property
+    @cached_property
     def canonical(self) -> str:
         """Return resource's canonical path."""
         return "/"
 
-    @property
+    @cached_property
     def _route(self) -> web_urldispatcher.ResourceRoute:
         """Return the index route."""
         return web_urldispatcher.ResourceRoute("GET", self.get, self)
@@ -781,6 +822,24 @@ async def websocket_get_version(
         connection.send_error(msg["id"], "unknown_version", "Version not found")
     else:
         connection.send_result(msg["id"], {"version": frontend})
+
+
+@callback
+@websocket_api.websocket_command({"type": "frontend/subscribe_extra_js"})
+def websocket_subscribe_extra_js(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to URL manager updates."""
+
+    subscribers = hass.data[DATA_WS_SUBSCRIBERS]
+    subscribers.add((connection, msg["id"]))
+
+    @callback
+    def cancel_subscription() -> None:
+        subscribers.remove((connection, msg["id"]))
+
+    connection.subscriptions[msg["id"]] = cancel_subscription
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 class PanelRespons(TypedDict):

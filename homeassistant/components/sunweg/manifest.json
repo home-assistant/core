@@ -3,8 +3,8 @@
   "name": "Sun WEG",
   "codeowners": ["@rokam"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/sunweg/",
+  "documentation": "https://www.home-assistant.io/integrations/sunweg",
   "iot_class": "cloud_polling",
   "loggers": ["sunweg"],
-  "requirements": ["sunweg==3.0.1"]
+  "requirements": ["sunweg==3.0.2"]
 }

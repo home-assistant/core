@@ -101,7 +101,6 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Netatmo options flow."""
-        self.config_entry = config_entry
         self.options = dict(config_entry.options)
         self.options.setdefault(CONF_WEATHER_AREAS, {})
 
@@ -197,7 +196,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                 vol.Required(
                     CONF_PUBLIC_MODE,
                     default=orig_options.get(CONF_PUBLIC_MODE, "avg"),
-                ): vol.In(["avg", "max"]),
+                ): vol.In(["avg", "max", "min"]),
                 vol.Required(
                     CONF_SHOW_ON_MAP,
                     default=orig_options.get(CONF_SHOW_ON_MAP, False),

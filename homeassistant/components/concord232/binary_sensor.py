@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -36,7 +36,7 @@ SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
             cv.ensure_list, [cv.positive_int]
@@ -80,7 +80,7 @@ def setup_platform(
     client.zones.sort(key=lambda zone: zone["number"])
 
     for zone in client.zones:
-        _LOGGER.info("Loading Zone found: %s", zone["name"])
+        _LOGGER.debug("Loading Zone found: %s", zone["name"])
         if zone["number"] not in exclude:
             sensors.append(
                 Concord232ZoneSensor(

@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+from typing import TYPE_CHECKING, Any
 
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
+if TYPE_CHECKING:
+    from hass_nabucasa import Cloud
+
+    from .client import CloudClient
+
 DOMAIN = "cloud"
-DATA_PLATFORMS_SETUP = "cloud_platforms_setup"
+DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
+DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
+    "cloud_platforms_setup"
+)
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
@@ -33,6 +43,7 @@ PREF_GOOGLE_SETTINGS_VERSION = "google_settings_version"
 PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 PREF_GOOGLE_CONNECTED = "google_connected"
 PREF_REMOTE_ALLOW_REMOTE_ENABLE = "remote_allow_remote_enable"
+PREF_ENABLE_CLOUD_ICE_SERVERS = "cloud_ice_servers_enabled"
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "JennyNeural")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True

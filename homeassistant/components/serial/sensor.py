@@ -10,7 +10,10 @@ from serial import SerialException
 import serial_asyncio_fast as serial_asyncio
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +40,7 @@ DEFAULT_XONXOFF = False
 DEFAULT_RTSCTS = False
 DEFAULT_DSRDTR = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
@@ -90,9 +93,7 @@ async def async_setup_platform(
     xonxoff = config.get(CONF_XONXOFF)
     rtscts = config.get(CONF_RTSCTS)
     dsrdtr = config.get(CONF_DSRDTR)
-
-    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
-        value_template.hass = hass
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
     sensor = SerialSensor(
         name,
@@ -195,7 +196,7 @@ class SerialSensor(SensorEntity):
                     logged_error = True
                 await self._handle_error()
             else:
-                _LOGGER.info("Serial device %s connected", device)
+                _LOGGER.debug("Serial device %s connected", device)
                 while True:
                     try:
                         line = await reader.readline()

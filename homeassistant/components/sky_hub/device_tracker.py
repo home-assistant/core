@@ -8,8 +8,8 @@ from pyskyqhub.skyq_hub import SkyQHub
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -20,14 +20,16 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_HOST): cv.string}
+)
 
 
 async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> SkyHubDeviceScanner | None:
     """Return a Sky Hub scanner if successful."""
-    host = config[DOMAIN].get(CONF_HOST, "192.168.1.254")
+    host = config[DEVICE_TRACKER_DOMAIN].get(CONF_HOST, "192.168.1.254")
     websession = async_get_clientsession(hass)
     hub = SkyQHub(websession, host)
 

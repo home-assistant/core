@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from enum import Enum
+from types import ModuleType
 from typing import Any
 
 import pytest
 
+from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     DOMAIN,
     SERVICE_CLEAN_SPOT,
@@ -30,9 +33,43 @@ from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
     mock_integration,
     setup_test_component_platform,
 )
+
+
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
+    return [(enum_field, constant_prefix) for enum_field in enum if enum_field]
+
+
+@pytest.mark.parametrize(
+    "module",
+    [vacuum],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumEntityFeature, "SUPPORT_")
+)
+@pytest.mark.parametrize(
+    "module",
+    [vacuum],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.10"
+    )
 
 
 @pytest.mark.parametrize(

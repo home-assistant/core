@@ -13,10 +13,12 @@ import voluptuous as vol
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -30,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.network import is_link_local
 
 from . import AxisConfigEntry
@@ -56,14 +59,16 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> AxisOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> AxisOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return AxisOptionsFlowHandler(config_entry)
+        return AxisOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the Axis config flow."""
         self.config: dict[str, Any] = {}
-        self.discovery_schema: dict[vol.Required, type[str | int]] | None = None
+        self.discovery_schema: VolDictType | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -86,26 +91,29 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
             else:
                 serial = api.vapix.serial_number
-                await self.async_set_unique_id(format_mac(serial))
-
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_PROTOCOL: user_input[CONF_PROTOCOL],
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    }
-                )
-
-                self.config = {
+                config = {
                     CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_MODEL: api.vapix.product_number,
                 }
+
+                await self.async_set_unique_id(format_mac(serial))
+
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=config
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=config
+                    )
+                self._abort_if_unique_id_configured()
+
+                self.config = config | {CONF_MODEL: api.vapix.product_number}
 
                 return await self._create_entry(serial)
 
@@ -148,12 +156,12 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         return self.async_create_entry(title=title, data=self.config)
 
     async def async_step_reconfigure(
-        self, user_input: Mapping[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Trigger a reconfiguration flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-        return await self._redo_configuration(entry.data, keep_password=True)
+        return await self._redo_configuration(
+            self._get_reconfigure_entry().data, keep_password=True
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -258,7 +266,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         return await self.async_step_user()
 
 
-class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class AxisOptionsFlowHandler(OptionsFlow):
     """Handle Axis device options."""
 
     config_entry: AxisConfigEntry
@@ -276,8 +284,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the Axis device stream options."""
         if user_input is not None:
-            self.options.update(user_input)
-            return self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(data=self.config_entry.options | user_input)
 
         schema = {}
 

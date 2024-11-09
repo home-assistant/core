@@ -141,7 +141,7 @@ async def test_get_operation_modes(
     await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert [
+    assert state.attributes.get("operation_list") == [
         STATE_ECO,
         STATE_ELECTRIC,
         STATE_GAS,
@@ -149,14 +149,12 @@ async def test_get_operation_modes(
         STATE_HIGH_DEMAND,
         STATE_PERFORMANCE,
         STATE_OFF,
-    ] == state.attributes.get("operation_list")
+    ]
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_set_operation_mode_bad_attr_and_state(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting operation mode without required attribute."""
     await mqtt_mock_entry()
@@ -164,7 +162,7 @@ async def test_set_operation_mode_bad_attr_and_state(
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "off"
     with pytest.raises(vol.Invalid) as excinfo:
-        await common.async_set_operation_mode(hass, None, ENTITY_WATER_HEATER)
+        await common.async_set_operation_mode(hass, None, ENTITY_WATER_HEATER)  # type:ignore[arg-type]
     assert "string value is None for dictionary value @ data['operation_mode']" in str(
         excinfo.value
     )
@@ -615,8 +613,7 @@ async def test_get_with_templates(
     ],
 )
 async def test_set_and_templates(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting various attributes with templates."""
     mqtt_mock = await mqtt_mock_entry()
@@ -834,11 +831,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        water_heater.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, water_heater.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -849,26 +842,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        water_heater.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, water_heater.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        water_heater.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, water_heater.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -933,34 +916,26 @@ async def test_encoding_subscribable_topics(
 
 
 async def test_discovery_removal_water_heater(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered water heater."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][water_heater.DOMAIN])
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, water_heater.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, water_heater.DOMAIN, data)
 
 
 async def test_discovery_update_water_heater(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered water heater."""
     config1 = {"name": "Beer"}
     config2 = {"name": "Milk"}
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, water_heater.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, water_heater.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_water_heater(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered water heater."""
     data1 = '{ "name": "Beer" }'
@@ -968,26 +943,19 @@ async def test_discovery_update_unchanged_water_heater(
         "homeassistant.components.mqtt.water_heater.MqttWaterHeater.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            water_heater.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, water_heater.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer", "mode_command_topic": "test_topic#" }'
     data2 = '{ "name": "Milk", "mode_command_topic": "test_topic" }'
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, water_heater.DOMAIN, data1, data2
+        hass, mqtt_mock_entry, water_heater.DOMAIN, data1, data2
     )
 
 
@@ -1041,11 +1009,7 @@ async def test_entity_id_update_subscriptions(
         }
     }
     await help_test_entity_id_update_subscriptions(
-        hass,
-        mqtt_mock_entry,
-        water_heater.DOMAIN,
-        config,
-        ["test-topic", "avty-topic"],
+        hass, mqtt_mock_entry, water_heater.DOMAIN, config, ["test-topic", "avty-topic"]
     )
 
 
@@ -1221,8 +1185,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = water_heater.DOMAIN

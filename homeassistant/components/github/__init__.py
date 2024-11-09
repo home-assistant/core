@@ -19,10 +19,11 @@ from .coordinator import GitHubDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up GitHub from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+type GithubConfigEntry = ConfigEntry[dict[str, GitHubDataUpdateCoordinator]]
 
+
+async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
+    """Set up GitHub from a config entry."""
     client = GitHubAPI(
         token=entry.data[CONF_ACCESS_TOKEN],
         session=async_get_clientsession(hass),
@@ -31,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     repositories: list[str] = entry.options[CONF_REPOSITORIES]
 
+    entry.runtime_data = {}
     for repository in repositories:
         coordinator = GitHubDataUpdateCoordinator(
             hass=hass,
@@ -43,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not entry.pref_disable_polling:
             await coordinator.subscribe()
 
-        hass.data[DOMAIN][repository] = coordinator
+        entry.runtime_data[repository] = coordinator
 
     async_cleanup_device_registry(hass=hass, entry=entry)
 
@@ -81,15 +83,13 @@ def async_cleanup_device_registry(
                 break
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
     """Unload a config entry."""
-    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
+    repositories = entry.runtime_data
     for coordinator in repositories.values():
         coordinator.unsubscribe()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

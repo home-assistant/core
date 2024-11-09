@@ -1,10 +1,11 @@
 """Unit test for CCM15 coordinator component."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from ccm15 import CCM15DeviceState
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ccm15.const import DOMAIN
@@ -27,11 +28,11 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("ccm15_device")
 async def test_climate_state(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    ccm15_device: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the coordinator."""

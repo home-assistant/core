@@ -1,12 +1,12 @@
 """Test config flow."""
 
+from collections.abc import Generator
 from ipaddress import IPv4Address, ip_address
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -16,6 +16,7 @@ from homeassistant.components.apple_tv.const import (
     CONF_START_OFF,
     DOMAIN,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -1189,18 +1190,17 @@ async def test_reconfigure_update_credentials(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "reauth"},
-        data={"identifier": "mrpid", "name": "apple tv"},
-    )
+    result = await config_entry.start_reauth_flow(hass, data={"name": "apple tv"})
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["description_placeholders"] == {"protocol": "MRP"}
+    assert result2["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        "protocol": "MRP",
+    }
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1111}

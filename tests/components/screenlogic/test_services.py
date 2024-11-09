@@ -1,12 +1,12 @@
 """Tests for ScreenLogic integration service calls."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.device_const.system import COLOR_MODE
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.components.screenlogic.const import (
@@ -18,11 +18,9 @@ from homeassistant.components.screenlogic.const import (
     SERVICE_STOP_SUPER_CHLORINATION,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.util import slugify
 
 from . import (
     DATA_FULL_CHEM,
@@ -102,22 +100,6 @@ async def setup_screenlogic_services_fixture(
             },
             None,
         ),
-        (
-            {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower(),
-            },
-            {
-                ATTR_AREA_ID: MOCK_DEVICE_AREA,
-            },
-        ),
-        (
-            {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower(),
-            },
-            {
-                ATTR_ENTITY_ID: f"{Platform.SENSOR}.{slugify(f'{MOCK_ADAPTER_NAME} Air Temperature')}",
-            },
-        ),
     ],
 )
 async def test_service_set_color_mode(
@@ -148,30 +130,6 @@ async def test_service_set_color_mode(
     mocked_async_set_color_lights.assert_awaited_once()
 
 
-async def test_service_set_color_mode_with_device(
-    hass: HomeAssistant,
-    service_fixture: dict[str, Any],
-) -> None:
-    """Test set_color_mode service with a device target."""
-    mocked_async_set_color_lights: AsyncMock = service_fixture["gateway"][
-        "async_set_color_lights"
-    ]
-
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
-
-    sl_device: dr.DeviceEntry = service_fixture["device"]
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_COLOR_MODE,
-        service_data={ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower()},
-        blocking=True,
-        target={ATTR_DEVICE_ID: sl_device.id},
-    )
-
-    mocked_async_set_color_lights.assert_awaited_once()
-
-
 @pytest.mark.parametrize(
     ("data", "target", "error_msg"),
     [
@@ -192,36 +150,6 @@ async def test_service_set_color_mode_with_device(
             None,
             f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry "
             "'test' is not a screenlogic config",
-        ),
-        (
-            {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower(),
-            },
-            {
-                ATTR_AREA_ID: "invalidareaid",
-            },
-            f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry for "
-            "target not found",
-        ),
-        (
-            {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower(),
-            },
-            {
-                ATTR_DEVICE_ID: "invaliddeviceid",
-            },
-            f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry for "
-            "target not found",
-        ),
-        (
-            {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_ON.name.lower(),
-            },
-            {
-                ATTR_ENTITY_ID: "sensor.invalidentityid",
-            },
-            f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry for "
-            "target not found",
         ),
     ],
 )

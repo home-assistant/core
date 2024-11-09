@@ -1,12 +1,12 @@
 """Fixtures for component."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyatv import conf
 from pyatv.const import PairingRequirement, Protocol
 from pyatv.support import http
 import pytest
-from typing_extensions import Generator
 
 from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
 

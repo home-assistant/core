@@ -18,7 +18,7 @@ from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import CLIENT_ID, CLIENT_SECRET, PROJECT_ID, PlatformSetup
+from .common import CLIENT_ID, CLIENT_SECRET, PROJECT_ID, FakeSubscriber, PlatformSetup
 from .conftest import FAKE_REFRESH_TOKEN, FAKE_TOKEN
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -27,7 +27,7 @@ FAKE_UPDATED_TOKEN = "fake-updated-token"
 
 
 @pytest.fixture
-def subscriber() -> None:
+def subscriber() -> FakeSubscriber | None:
     """Disable default subscriber since tests use their own patch."""
     return None
 

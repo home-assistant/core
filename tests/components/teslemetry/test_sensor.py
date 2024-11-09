@@ -1,8 +1,10 @@
 """Test the Teslemetry sensor platform."""
 
+from unittest.mock import AsyncMock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import Platform
@@ -21,7 +23,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the sensor entities are correct."""
 

@@ -8,6 +8,7 @@ from typing import Any
 from aioesphomeapi import (
     DeviceInfo as ESPHomeDeviceInfo,
     EntityInfo,
+    UpdateCommand,
     UpdateInfo,
     UpdateState,
 )
@@ -97,6 +98,7 @@ class ESPHomeDashboardUpdateEntity(
     _attr_title = "ESPHome"
     _attr_name = "Firmware"
     _attr_release_url = "https://esphome.io/changelog/"
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboardCoordinator
@@ -228,10 +230,8 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
 
     @property
     @esphome_state_property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
         """Return if the update is in progress."""
-        if self._state.has_progress:
-            return int(self._state.progress)
         return self._state.in_progress
 
     @property
@@ -258,9 +258,23 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
         """Return the title of the update."""
         return self._state.title
 
+    @property
+    @esphome_state_property
+    def update_percentage(self) -> int | None:
+        """Return if the update is in progress."""
+        if self._state.has_progress:
+            return int(self._state.progress)
+        return None
+
+    @convert_api_error_ha_error
+    async def async_update(self) -> None:
+        """Command device to check for update."""
+        if self.available:
+            self._client.update_command(key=self._key, command=UpdateCommand.CHECK)
+
     @convert_api_error_ha_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
-        """Update the current value."""
-        self._client.update_command(key=self._key, install=True)
+        """Command device to install update."""
+        self._client.update_command(key=self._key, command=UpdateCommand.INSTALL)

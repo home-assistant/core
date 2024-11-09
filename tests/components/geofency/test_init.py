@@ -10,7 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components import zone
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -137,7 +137,7 @@ async def geofency_client(
 
 
 @pytest.fixture(autouse=True)
-async def setup_zones(hass):
+async def setup_zones(hass: HomeAssistant) -> None:
     """Set up Zone config in HA."""
     assert await async_setup_component(
         hass,
@@ -155,7 +155,7 @@ async def setup_zones(hass):
 
 
 @pytest.fixture
-async def webhook_id(hass, geofency_client):
+async def webhook_id(hass: HomeAssistant) -> str:
     """Initialize the Geofency component and get the webhook_id."""
     await async_process_ha_core_config(
         hass,
@@ -173,7 +173,7 @@ async def webhook_id(hass, geofency_client):
     return result["result"].data["webhook_id"]
 
 
-async def test_data_validation(geofency_client, webhook_id) -> None:
+async def test_data_validation(geofency_client: TestClient, webhook_id: str) -> None:
     """Test data validation."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -195,8 +195,8 @@ async def test_gps_enter_and_exit_home(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    geofency_client,
-    webhook_id,
+    geofency_client: TestClient,
+    webhook_id: str,
 ) -> None:
     """Test GPS based zone enter and exit."""
     url = f"/api/webhook/{webhook_id}"
@@ -240,7 +240,7 @@ async def test_gps_enter_and_exit_home(
 
 
 async def test_beacon_enter_and_exit_home(
-    hass: HomeAssistant, geofency_client, webhook_id
+    hass: HomeAssistant, geofency_client: TestClient, webhook_id: str
 ) -> None:
     """Test iBeacon based zone enter and exit - a.k.a stationary iBeacon."""
     url = f"/api/webhook/{webhook_id}"
@@ -263,7 +263,7 @@ async def test_beacon_enter_and_exit_home(
 
 
 async def test_beacon_enter_and_exit_car(
-    hass: HomeAssistant, geofency_client, webhook_id
+    hass: HomeAssistant, geofency_client: TestClient, webhook_id: str
 ) -> None:
     """Test use of mobile iBeacon."""
     url = f"/api/webhook/{webhook_id}"
@@ -305,7 +305,7 @@ async def test_beacon_enter_and_exit_car(
 
 
 async def test_load_unload_entry(
-    hass: HomeAssistant, geofency_client, webhook_id
+    hass: HomeAssistant, geofency_client: TestClient, webhook_id: str
 ) -> None:
     """Test that the appropriate dispatch signals are added and removed."""
     url = f"/api/webhook/{webhook_id}"

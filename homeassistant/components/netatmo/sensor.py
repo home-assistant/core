@@ -776,6 +776,8 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
                 self._attr_native_value = round(sum(values) / len(values), 1)
             elif self._mode == "max":
                 self._attr_native_value = max(values)
+            elif self._mode == "min":
+                self._attr_native_value = min(values)
 
         self._attr_available = self.native_value is not None
         self.async_write_ha_state()

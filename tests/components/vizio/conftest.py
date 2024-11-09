@@ -1,5 +1,6 @@
 """Configure py.test."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -29,19 +30,19 @@ from .const import (
 class MockInput:
     """Mock Vizio device input."""
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         """Initialize mock Vizio device input."""
         self.meta_name = name
         self.name = name
 
 
-def get_mock_inputs(input_list):
+def get_mock_inputs(input_list) -> list[MockInput]:
     """Return list of MockInput."""
     return [MockInput(device_input) for device_input in input_list]
 
 
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
-def vizio_get_unique_id_fixture():
+def vizio_get_unique_id_fixture() -> Generator[None]:
     """Mock get vizio unique ID."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
@@ -51,7 +52,7 @@ def vizio_get_unique_id_fixture():
 
 
 @pytest.fixture(name="vizio_data_coordinator_update", autouse=True)
-def vizio_data_coordinator_update_fixture():
+def vizio_data_coordinator_update_fixture() -> Generator[None]:
     """Mock get data coordinator update."""
     with patch(
         "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
@@ -61,7 +62,7 @@ def vizio_data_coordinator_update_fixture():
 
 
 @pytest.fixture(name="vizio_data_coordinator_update_failure")
-def vizio_data_coordinator_update_failure_fixture():
+def vizio_data_coordinator_update_failure_fixture() -> Generator[None]:
     """Mock get data coordinator update failure."""
     with patch(
         "homeassistant.components.vizio.coordinator.gen_apps_list_from_url",
@@ -71,7 +72,7 @@ def vizio_data_coordinator_update_failure_fixture():
 
 
 @pytest.fixture(name="vizio_no_unique_id")
-def vizio_no_unique_id_fixture():
+def vizio_no_unique_id_fixture() -> Generator[None]:
     """Mock no vizio unique ID returrned."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
@@ -81,7 +82,7 @@ def vizio_no_unique_id_fixture():
 
 
 @pytest.fixture(name="vizio_connect")
-def vizio_connect_fixture():
+def vizio_connect_fixture() -> Generator[None]:
     """Mock valid vizio device and entry setup."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
@@ -91,7 +92,7 @@ def vizio_connect_fixture():
 
 
 @pytest.fixture(name="vizio_complete_pairing")
-def vizio_complete_pairing_fixture():
+def vizio_complete_pairing_fixture() -> Generator[None]:
     """Mock complete vizio pairing workflow."""
     with (
         patch(
@@ -107,7 +108,7 @@ def vizio_complete_pairing_fixture():
 
 
 @pytest.fixture(name="vizio_start_pairing_failure")
-def vizio_start_pairing_failure_fixture():
+def vizio_start_pairing_failure_fixture() -> Generator[None]:
     """Mock vizio start pairing failure."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.start_pair",
@@ -117,7 +118,7 @@ def vizio_start_pairing_failure_fixture():
 
 
 @pytest.fixture(name="vizio_invalid_pin_failure")
-def vizio_invalid_pin_failure_fixture():
+def vizio_invalid_pin_failure_fixture() -> Generator[None]:
     """Mock vizio failure due to invalid pin."""
     with (
         patch(
@@ -133,14 +134,14 @@ def vizio_invalid_pin_failure_fixture():
 
 
 @pytest.fixture(name="vizio_bypass_setup")
-def vizio_bypass_setup_fixture():
+def vizio_bypass_setup_fixture() -> Generator[None]:
     """Mock component setup."""
     with patch("homeassistant.components.vizio.async_setup_entry", return_value=True):
         yield
 
 
 @pytest.fixture(name="vizio_bypass_update")
-def vizio_bypass_update_fixture():
+def vizio_bypass_update_fixture() -> Generator[None]:
     """Mock component update."""
     with (
         patch(
@@ -153,7 +154,7 @@ def vizio_bypass_update_fixture():
 
 
 @pytest.fixture(name="vizio_guess_device_type")
-def vizio_guess_device_type_fixture():
+def vizio_guess_device_type_fixture() -> Generator[None]:
     """Mock vizio async_guess_device_type function."""
     with patch(
         "homeassistant.components.vizio.config_flow.async_guess_device_type",
@@ -163,7 +164,7 @@ def vizio_guess_device_type_fixture():
 
 
 @pytest.fixture(name="vizio_cant_connect")
-def vizio_cant_connect_fixture():
+def vizio_cant_connect_fixture() -> Generator[None]:
     """Mock vizio device can't connect with valid auth."""
     with (
         patch(
@@ -179,7 +180,7 @@ def vizio_cant_connect_fixture():
 
 
 @pytest.fixture(name="vizio_update")
-def vizio_update_fixture():
+def vizio_update_fixture() -> Generator[None]:
     """Mock valid updates to vizio device."""
     with (
         patch(
@@ -223,7 +224,7 @@ def vizio_update_fixture():
 
 
 @pytest.fixture(name="vizio_update_with_apps")
-def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
+def vizio_update_with_apps_fixture(vizio_update: None) -> Generator[None]:
     """Mock valid updates to vizio device that supports apps."""
     with (
         patch(
@@ -243,7 +244,7 @@ def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
 
 
 @pytest.fixture(name="vizio_update_with_apps_on_input")
-def vizio_update_with_apps_on_input_fixture(vizio_update: pytest.fixture):
+def vizio_update_with_apps_on_input_fixture(vizio_update: None) -> Generator[None]:
     """Mock valid updates to vizio device that supports apps but is on a TV input."""
     with (
         patch(
@@ -263,7 +264,7 @@ def vizio_update_with_apps_on_input_fixture(vizio_update: pytest.fixture):
 
 
 @pytest.fixture(name="vizio_hostname_check")
-def vizio_hostname_check():
+def vizio_hostname_check() -> Generator[None]:
     """Mock vizio hostname resolution."""
     with patch(
         "homeassistant.components.vizio.config_flow.socket.gethostbyname",

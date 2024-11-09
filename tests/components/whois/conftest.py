@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.whois.const import DOMAIN
 from homeassistant.const import CONF_DOMAIN
@@ -74,7 +75,7 @@ def mock_whois_missing_some_attrs() -> Generator[Mock]:
     class LimitedWhoisMock:
         """A limited mock of whois_query."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Mock only attributes the library always sets being available."""
             self.creation_date = datetime(2019, 1, 1, 0, 0, 0)
             self.dnssec = True

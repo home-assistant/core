@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from google.api_core.exceptions import ClientError, DeadlineExceeded
-from google.rpc.error_details_pb2 import ErrorInfo
+from google.rpc.error_details_pb2 import ErrorInfo  # pylint: disable=no-name-in-module
 import pytest
 
 from homeassistant import config_entries
@@ -154,10 +154,10 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_options_switching(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
+    mock_config_entry: MockConfigEntry,
     mock_models,
     current_options,
     new_options,

@@ -1,11 +1,11 @@
 """Test APRS device tracker."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, Mock, patch
 
 import aprslib
 from aprslib import IS
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.aprs import device_tracker
 from homeassistant.core import HomeAssistant

@@ -7,7 +7,8 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.samsungtv import DOMAIN, device_trigger
+from homeassistant.components.samsungtv import device_trigger
+from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
@@ -45,7 +46,9 @@ async def test_get_triggers(
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
@@ -95,11 +98,11 @@ async def test_if_fires_on_turn_on_request(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
-    assert calls[1].data["some"] == entity_id
-    assert calls[1].data["id"] == 0
+    assert len(service_calls) == 3
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
+    assert service_calls[2].data["some"] == entity_id
+    assert service_calls[2].data["id"] == 0
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")

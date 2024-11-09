@@ -29,11 +29,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
-        self._ignore_cec = set()
-        self._known_hosts = set()
-        self._wanted_uuid = set()
+        self._ignore_cec = set[str]()
+        self._known_hosts = set[str]()
+        self._wanted_uuid = set[str]()
 
     @staticmethod
     @callback
@@ -41,27 +41,25 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return CastOptionsFlowHandler(config_entry)
+        return CastOptionsFlowHandler()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_config()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         await self.async_set_unique_id(DOMAIN)
 
         return await self.async_step_confirm()
 
-    async def async_step_config(self, user_input=None):
+    async def async_step_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm the setup."""
         errors = {}
         data = {CONF_KNOWN_HOSTS: self._known_hosts}
@@ -88,7 +86,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="config", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm the setup."""
 
         data = self._get_data()
@@ -109,18 +109,19 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class CastOptionsFlowHandler(OptionsFlow):
     """Handle Google Cast options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize Google Cast options flow."""
-        self.config_entry = config_entry
         self.updated_config: dict[str, Any] = {}
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the Google Cast options."""
         return await self.async_step_basic_options()
 
-    async def async_step_basic_options(self, user_input=None):
+    async def async_step_basic_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the Google Cast options."""
-        errors = {}
+        errors: dict[str, str] = {}
         current_config = self.config_entry.data
         if user_input is not None:
             bad_hosts, known_hosts = _string_to_list(
@@ -137,9 +138,9 @@ class CastOptionsFlowHandler(OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=self.updated_config
                 )
-                return self.async_create_entry(title="", data=None)
+                return self.async_create_entry(title="", data={})
 
-        fields = {}
+        fields: dict[vol.Marker, type[str]] = {}
         suggested_value = _list_to_string(current_config.get(CONF_KNOWN_HOSTS))
         _add_with_suggestion(fields, CONF_KNOWN_HOSTS, suggested_value)
 
@@ -150,9 +151,11 @@ class CastOptionsFlowHandler(OptionsFlow):
             last_step=not self.show_advanced_options,
         )
 
-    async def async_step_advanced_options(self, user_input=None):
+    async def async_step_advanced_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the Google Cast options."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             bad_cec, ignore_cec = _string_to_list(
                 user_input.get(CONF_IGNORE_CEC, ""), IGNORE_CEC_SCHEMA
@@ -167,9 +170,9 @@ class CastOptionsFlowHandler(OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=self.updated_config
                 )
-                return self.async_create_entry(title="", data=None)
+                return self.async_create_entry(title="", data={})
 
-        fields = {}
+        fields: dict[vol.Marker, type[str]] = {}
         current_config = self.config_entry.data
         suggested_value = _list_to_string(current_config.get(CONF_UUID))
         _add_with_suggestion(fields, CONF_UUID, suggested_value)
@@ -202,5 +205,7 @@ def _string_to_list(string, schema):
     return invalid, items
 
 
-def _add_with_suggestion(fields, key, suggested_value):
+def _add_with_suggestion(
+    fields: dict[vol.Marker, type[str]], key: str, suggested_value: str
+) -> None:
     fields[vol.Optional(key, description={"suggested_value": suggested_value})] = str

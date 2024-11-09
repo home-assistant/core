@@ -1,10 +1,10 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
 
+from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from pykoplenti import ApiClient, AuthenticationException, SettingsData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN

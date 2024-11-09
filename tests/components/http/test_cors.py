@@ -20,7 +20,7 @@ import pytest
 from homeassistant.components.http.cors import setup_cors
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.http import KEY_ALLOW_CONFIGRED_CORS
+from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
@@ -62,7 +62,7 @@ def client(
     """Fixture to set up a web.Application."""
     app = web.Application()
     setup_cors(app, [TRUSTED_ORIGIN])
-    app[KEY_ALLOW_CONFIGRED_CORS](app.router.add_get("/", mock_handler))
+    app[KEY_ALLOW_CONFIGURED_CORS](app.router.add_get("/", mock_handler))
     return event_loop.run_until_complete(aiohttp_client(app))
 
 
@@ -119,7 +119,7 @@ async def test_cors_middleware_with_cors_allowed_view(hass: HomeAssistant) -> No
         requires_auth = False
         cors_allowed = True
 
-        def __init__(self, url, name):
+        def __init__(self, url, name) -> None:
             """Initialize test view."""
             self.url = url
             self.name = name

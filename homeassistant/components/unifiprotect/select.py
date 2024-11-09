@@ -21,7 +21,6 @@ from uiprotect.data import (
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     RecordingMode,
     Sensor,
     Viewer,
@@ -33,9 +32,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import TYPE_EMPTY_VALUE
-from .data import ProtectData, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
@@ -371,7 +376,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         entity_description = self.entity_description
         # entities with categories are not exposed for voice

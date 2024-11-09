@@ -8,7 +8,11 @@ import logging
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
@@ -72,6 +76,8 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, config_entry, name, api_key, origin, destination, client):
         """Initialize the sensor."""

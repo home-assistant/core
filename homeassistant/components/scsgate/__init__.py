@@ -43,7 +43,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def stop_monitor(event):
         """Stop the SCSGate."""
-        _LOGGER.info("Stopping SCSGate monitor thread")
+        _LOGGER.debug("Stopping SCSGate monitor thread")
         scsgate.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_monitor)

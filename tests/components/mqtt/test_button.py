@@ -25,6 +25,7 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_icon_and_entity_picture,
     help_test_entity_id_update_discovery_update,
     help_test_entity_name,
     help_test_publishing_with_custom_encoding,
@@ -159,13 +160,7 @@ async def test_default_availability_payload(
         }
     }
     await help_test_default_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        button.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "1",
+        hass, mqtt_mock_entry, button.DOMAIN, config, True, "state-topic", "1"
     )
 
 
@@ -184,13 +179,7 @@ async def test_custom_availability_payload(
     }
 
     await help_test_custom_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        button.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "1",
+        hass, mqtt_mock_entry, button.DOMAIN, config, True, "state-topic", "1"
     )
 
 
@@ -228,11 +217,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        button.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, button.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -243,26 +228,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        button.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, button.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        button.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, button.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -295,21 +270,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_button(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered button."""
     data = '{ "name": "test", "command_topic": "test_topic" }'
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, button.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, button.DOMAIN, data)
 
 
 async def test_discovery_update_button(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered button."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][button.DOMAIN])
@@ -318,19 +287,12 @@ async def test_discovery_update_button(
     config2["name"] = "Milk"
 
     await help_test_discovery_update(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        button.DOMAIN,
-        config1,
-        config2,
+        hass, mqtt_mock_entry, button.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_button(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered button."""
     data1 = (
@@ -342,27 +304,18 @@ async def test_discovery_update_unchanged_button(
         "homeassistant.components.mqtt.button.MqttButton.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            button.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, button.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, button.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, button.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -528,8 +481,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = button.DOMAIN
@@ -552,8 +504,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = button.DOMAIN
@@ -583,4 +534,16 @@ async def test_entity_name(
     config = DEFAULT_CONFIG
     await help_test_entity_name(
         hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
+    )
+
+
+async def test_entity_icon_and_entity_picture(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the entity icon or picture setup."""
+    domain = button.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_icon_and_entity_picture(
+        hass, mqtt_mock_entry, domain, config
     )

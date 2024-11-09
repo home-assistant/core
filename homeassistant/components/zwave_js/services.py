@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Generator, Sequence
 import logging
 import math
 from typing import Any
 
-from typing_extensions import Generator
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
@@ -48,6 +47,12 @@ from .helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 type _NodeOrEndpointType = ZwaveNode | Endpoint
+
+TARGET_VALIDATORS = {
+    vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+}
 
 
 def parameter_name_does_not_need_bitmask(
@@ -262,13 +267,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
                             vol.Coerce(int), cv.string
@@ -306,13 +305,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
@@ -357,13 +350,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
                         vol.Required(const.ATTR_PROPERTY): vol.Any(
                             vol.Coerce(int), str
@@ -392,13 +379,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
                         vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
                         vol.Required(const.ATTR_PROPERTY): vol.Any(
@@ -429,15 +410,7 @@ class ZWaveServices:
             self.async_ping,
             schema=vol.Schema(
                 vol.All(
-                    {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    },
+                    TARGET_VALIDATORS,
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
                     ),
@@ -454,13 +427,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Required(const.ATTR_COMMAND_CLASS): vol.All(
                             vol.Coerce(int), vol.Coerce(CommandClass)
                         ),
@@ -484,13 +451,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
-                        vol.Optional(ATTR_AREA_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_DEVICE_ID): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        **TARGET_VALIDATORS,
                         vol.Required(const.ATTR_NOTIFICATION_TYPE): vol.All(
                             vol.Coerce(int), vol.Coerce(NotificationType)
                         ),
@@ -568,8 +529,15 @@ class ZWaveServices:
             for node_or_endpoint, result in get_valid_responses_from_results(
                 nodes_or_endpoints_list, _results
             ):
-                zwave_value = result[0]
-                cmd_status = result[1]
+                if value_size is None:
+                    # async_set_config_parameter still returns (Value, SetConfigParameterResult)
+                    zwave_value = result[0]
+                    cmd_status = result[1]
+                else:
+                    # async_set_raw_config_parameter_value now returns just SetConfigParameterResult
+                    cmd_status = result
+                    zwave_value = f"parameter {property_or_property_name}"
+
                 if cmd_status.status == CommandStatus.ACCEPTED:
                     msg = "Set configuration parameter %s on Node %s with value %s"
                 else:

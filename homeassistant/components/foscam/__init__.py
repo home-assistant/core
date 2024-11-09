@@ -17,7 +17,7 @@ from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 from .coordinator import FoscamCoordinator
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.CAMERA, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -89,6 +89,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unique_id=None,
         )
 
-    LOGGER.info("Migration to version %s successful", entry.version)
+    LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True

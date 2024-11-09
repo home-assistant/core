@@ -7,7 +7,16 @@ import pytest
 
 from homeassistant.components.azure_devops.const import DOMAIN
 
-from . import DEVOPS_BUILD, DEVOPS_PROJECT, FIXTURE_USER_INPUT, PAT, UNIQUE_ID
+from . import (
+    DEVOPS_BUILD,
+    DEVOPS_PROJECT,
+    DEVOPS_WORK_ITEM_IDS,
+    DEVOPS_WORK_ITEM_TYPES,
+    DEVOPS_WORK_ITEMS,
+    FIXTURE_USER_INPUT,
+    PAT,
+    UNIQUE_ID,
+)
 
 from tests.common import MockConfigEntry
 
@@ -33,8 +42,9 @@ async def mock_devops_client() -> AsyncGenerator[MagicMock]:
         devops_client.get_project.return_value = DEVOPS_PROJECT
         devops_client.get_builds.return_value = [DEVOPS_BUILD]
         devops_client.get_build.return_value = DEVOPS_BUILD
-        devops_client.get_work_item_ids.return_value = None
-        devops_client.get_work_items.return_value = None
+        devops_client.get_work_item_types.return_value = DEVOPS_WORK_ITEM_TYPES
+        devops_client.get_work_item_ids.return_value = DEVOPS_WORK_ITEM_IDS
+        devops_client.get_work_items.return_value = DEVOPS_WORK_ITEMS
 
         yield devops_client
 

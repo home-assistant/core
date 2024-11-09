@@ -38,10 +38,6 @@ CONFIG_SCHEMA = vol.Schema(
 class OptionsFlowHandler(OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Init object."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -75,7 +71,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Motionblinds flow."""
         self._host: str | None = None
         self._ips: list[str] = []
-        self._config_settings = None
+        self._config_settings: vol.Schema | None = None
 
     @staticmethod
     @callback
@@ -83,7 +79,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo

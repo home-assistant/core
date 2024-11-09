@@ -10,7 +10,7 @@ from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
 )
-from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
+from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -102,7 +102,7 @@ async def test_send_command_service(hass: HomeAssistant, remoteencws: Mock) -> N
 async def test_turn_on_wol(hass: HomeAssistant) -> None:
     """Test turn on."""
     entry = MockConfigEntry(
-        domain=SAMSUNGTV_DOMAIN,
+        domain=DOMAIN,
         data=MOCK_ENTRY_WS_WITH_MAC,
         unique_id="any",
     )

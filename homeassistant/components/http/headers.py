@@ -31,13 +31,10 @@ def setup_headers(app: Application, use_x_frame_options: bool) -> None:
         try:
             response = await handler(request)
         except HTTPException as err:
-            for key, value in added_headers.items():
-                err.headers[key] = value
+            err.headers.update(added_headers)
             raise
 
-        for key, value in added_headers.items():
-            response.headers[key] = value
-
+        response.headers.update(added_headers)
         return response
 
     app.middlewares.append(headers_middleware)

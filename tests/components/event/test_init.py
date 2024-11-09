@@ -1,10 +1,10 @@
 """The tests for the event integration."""
 
+from collections.abc import Generator
 from typing import Any
 
 from freezegun import freeze_time
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,

@@ -82,7 +82,7 @@
       'media_class': 'album',
       'media_content_id': "A:ALBUM/A%20Hard%20Day's%20Night",
       'media_content_type': 'album',
-      'thumbnail': "http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/The%20Beatles/A%20Hard%20Day's%20Night/01%20A%20Hard%20Day's%20Night%201.m4a&v=53",
+      'thumbnail': 'http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/The%20Beatles/A%20Hard%20Day%27s%20Night/01%20A%20Hard%20Day%27s%20Night%201.m4a&v=53',
       'title': "A Hard Day's Night",
     }),
     dict({
@@ -104,6 +104,16 @@
       'media_content_type': 'album',
       'thumbnail': 'http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/Santana/A%20Between%20Good%20And%20Evil/02%20A%20Persuasion.m4a&v=53',
       'title': 'Between Good And Evil',
+    }),
+    dict({
+      'can_expand': True,
+      'can_play': True,
+      'children_media_class': None,
+      'media_class': 'album',
+      'media_content_id': "A:ALBUM/Special%20Characters,'()+",
+      'media_content_type': 'album',
+      'thumbnail': 'http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.100/music/Special/A%20Special%20Characters%2C%28%29%2B/01%20A%20TheFirstTrack.m4a&v=53',
+      'title': "Special Characters,'()+",
     }),
   ])
 # ---

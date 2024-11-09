@@ -10,7 +10,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -28,7 +28,7 @@ DEFAULT_FILTER = "*"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FOLDER_PATHS): cv.isdir,
         vol.Optional(CONF_FILTER, default=DEFAULT_FILTER): cv.string,

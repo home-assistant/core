@@ -7,29 +7,32 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN
-from .coordinator import SolarlogData
+from .const import CONF_HAS_PWD
+from .coordinator import SolarLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
+type SolarlogConfigEntry = ConfigEntry[SolarLogCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
     """Set up a config entry for solarlog."""
-    coordinator = SolarlogData(hass, entry)
+    coordinator = SolarLogCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SolarlogConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -55,12 +58,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         entity.entity_id, new_unique_id=new_uid
                     )
 
+        if config_entry.minor_version < 3:
             # migrate config_entry
             new = {**config_entry.data}
-            new["extended_data"] = False
+            new[CONF_HAS_PWD] = False
 
             hass.config_entries.async_update_entry(
-                config_entry, data=new, minor_version=2, version=1
+                config_entry, data=new, minor_version=3, version=1
             )
 
     _LOGGER.debug(

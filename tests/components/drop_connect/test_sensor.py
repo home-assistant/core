@@ -11,6 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    TEST_DATA_ALERT,
+    TEST_DATA_ALERT_RESET,
+    TEST_DATA_ALERT_TOPIC,
     TEST_DATA_FILTER,
     TEST_DATA_FILTER_RESET,
     TEST_DATA_FILTER_TOPIC,
@@ -32,6 +35,7 @@ from .common import (
     TEST_DATA_SOFTENER,
     TEST_DATA_SOFTENER_RESET,
     TEST_DATA_SOFTENER_TOPIC,
+    config_entry_alert,
     config_entry_filter,
     config_entry_hub,
     config_entry_leak,
@@ -47,7 +51,7 @@ from tests.typing import MqttMockHAClient
 
 
 @pytest.fixture(autouse=True)
-def only_sensor_platform() -> Generator[[], None]:
+def only_sensor_platform() -> Generator[None]:
     """Only setup the DROP sensor platform."""
     with patch("homeassistant.components.drop_connect.PLATFORMS", [Platform.SENSOR]):
         yield
@@ -57,6 +61,12 @@ def only_sensor_platform() -> Generator[[], None]:
     ("config_entry", "topic", "reset", "data"),
     [
         (config_entry_hub(), TEST_DATA_HUB_TOPIC, TEST_DATA_HUB_RESET, TEST_DATA_HUB),
+        (
+            config_entry_alert(),
+            TEST_DATA_ALERT_TOPIC,
+            TEST_DATA_ALERT_RESET,
+            TEST_DATA_ALERT,
+        ),
         (
             config_entry_leak(),
             TEST_DATA_LEAK_TOPIC,
@@ -96,6 +106,7 @@ def only_sensor_platform() -> Generator[[], None]:
     ],
     ids=[
         "hub",
+        "alert",
         "leak",
         "softener",
         "filter",

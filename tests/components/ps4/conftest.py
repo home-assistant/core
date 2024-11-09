@@ -1,10 +1,10 @@
 """Test configuration for PS4."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT, DDPProtocol
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

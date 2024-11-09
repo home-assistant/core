@@ -7,7 +7,17 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
+from homeassistant.components.todo import (
+    ATTR_DESCRIPTION,
+    ATTR_DUE_DATE,
+    ATTR_DUE_DATETIME,
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_ENTITY
@@ -76,17 +86,17 @@ EXPECTED_ADD_ITEM = {
     ("item_data", "expected_item_data"),
     [
         ({}, EXPECTED_ADD_ITEM),
-        ({"due_date": "2023-11-17"}, {**EXPECTED_ADD_ITEM, "due": "2023-11-17"}),
+        ({ATTR_DUE_DATE: "2023-11-17"}, {**EXPECTED_ADD_ITEM, "due": "2023-11-17"}),
         (
-            {"due_datetime": "2023-11-17T11:30:00+00:00"},
+            {ATTR_DUE_DATETIME: "2023-11-17T11:30:00+00:00"},
             {**EXPECTED_ADD_ITEM, "due": "2023-11-17T05:30:00-06:00"},
         ),
         (
-            {"description": "Additional detail"},
+            {ATTR_DESCRIPTION: "Additional detail"},
             {**EXPECTED_ADD_ITEM, "description": "Additional detail"},
         ),
-        ({"description": ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
-        ({"description": None}, EXPECTED_ADD_ITEM),
+        ({ATTR_DESCRIPTION: ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
+        ({ATTR_DESCRIPTION: None}, EXPECTED_ADD_ITEM),
     ],
 )
 async def test_add_item(
@@ -105,9 +115,9 @@ async def test_add_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "replace batteries", **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "replace batteries", **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -127,12 +137,12 @@ async def test_add_item(
     ("item_data", "expected_item_data"),
     [
         ({}, {}),
-        ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}),
+        ({ATTR_DUE_DATE: "2023-11-17"}, {"due": "2023-11-17"}),
         (
             {"due_datetime": "2023-11-17T11:30:00+00:00"},
             {"due": "2023-11-17T05:30:00-06:00"},
         ),
-        ({"description": "Additional detail"}, {"description": "Additional detail"}),
+        ({ATTR_DESCRIPTION: "Additional detail"}, {"description": "Additional detail"}),
     ],
 )
 async def test_remove_item(
@@ -145,9 +155,9 @@ async def test_remove_item(
     """Test removing a todo item."""
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "replace batteries", **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "replace batteries", **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -165,9 +175,9 @@ async def test_remove_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": [items[0]["uid"]]},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: [items[0]["uid"]]},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -188,9 +198,9 @@ async def test_bulk_remove(
     for i in range(5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
-            {"item": f"soda #{i}"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: f"soda #{i}"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -204,9 +214,9 @@ async def test_bulk_remove(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": uids},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: uids},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -227,19 +237,23 @@ EXPECTED_UPDATE_ITEM = {
 @pytest.mark.parametrize(
     ("item_data", "expected_item_data", "expected_state"),
     [
-        ({"status": "completed"}, {**EXPECTED_UPDATE_ITEM, "status": "completed"}, "0"),
         (
-            {"due_date": "2023-11-17"},
+            {ATTR_STATUS: "completed"},
+            {**EXPECTED_UPDATE_ITEM, "status": "completed"},
+            "0",
+        ),
+        (
+            {ATTR_DUE_DATE: "2023-11-17"},
             {**EXPECTED_UPDATE_ITEM, "due": "2023-11-17"},
             "1",
         ),
         (
-            {"due_datetime": "2023-11-17T11:30:00+00:00"},
+            {ATTR_DUE_DATETIME: "2023-11-17T11:30:00+00:00"},
             {**EXPECTED_UPDATE_ITEM, "due": "2023-11-17T05:30:00-06:00"},
             "1",
         ),
         (
-            {"description": "Additional detail"},
+            {ATTR_DESCRIPTION: "Additional detail"},
             {**EXPECTED_UPDATE_ITEM, "description": "Additional detail"},
             "1",
         ),
@@ -258,9 +272,9 @@ async def test_update_item(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -279,9 +293,9 @@ async def test_update_item(
     # Update item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": item["uid"], **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item["uid"], **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -303,7 +317,7 @@ async def test_update_item(
     ("item_data", "expected_item_data"),
     [
         (
-            {"status": "completed"},
+            {ATTR_STATUS: "completed"},
             {
                 "summary": "soda",
                 "status": "completed",
@@ -312,7 +326,7 @@ async def test_update_item(
             },
         ),
         (
-            {"due_date": "2024-01-02"},
+            {ATTR_DUE_DATE: "2024-01-02"},
             {
                 "summary": "soda",
                 "status": "needs_action",
@@ -321,7 +335,7 @@ async def test_update_item(
             },
         ),
         (
-            {"due_date": None},
+            {ATTR_DUE_DATE: None},
             {
                 "summary": "soda",
                 "status": "needs_action",
@@ -329,7 +343,7 @@ async def test_update_item(
             },
         ),
         (
-            {"due_datetime": "2024-01-01 10:30:00"},
+            {ATTR_DUE_DATETIME: "2024-01-01 10:30:00"},
             {
                 "summary": "soda",
                 "status": "needs_action",
@@ -338,7 +352,7 @@ async def test_update_item(
             },
         ),
         (
-            {"due_datetime": None},
+            {ATTR_DUE_DATETIME: None},
             {
                 "summary": "soda",
                 "status": "needs_action",
@@ -346,7 +360,7 @@ async def test_update_item(
             },
         ),
         (
-            {"description": "updated description"},
+            {ATTR_DESCRIPTION: "updated description"},
             {
                 "summary": "soda",
                 "status": "needs_action",
@@ -355,7 +369,7 @@ async def test_update_item(
             },
         ),
         (
-            {"description": None},
+            {ATTR_DESCRIPTION: None},
             {"summary": "soda", "status": "needs_action", "due": "2024-01-01"},
         ),
     ],
@@ -381,9 +395,13 @@ async def test_update_existing_field(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda", "description": "Additional detail", "due_date": "2024-01-01"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {
+            ATTR_ITEM: "soda",
+            ATTR_DESCRIPTION: "Additional detail",
+            ATTR_DUE_DATE: "2024-01-01",
+        },
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -398,9 +416,9 @@ async def test_update_existing_field(
     # Perform update
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": item["uid"], **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item["uid"], **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -424,9 +442,9 @@ async def test_rename(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -444,9 +462,9 @@ async def test_rename(
     # Rename item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": item["uid"], "rename": "water"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: item["uid"], ATTR_RENAME: "water"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -501,9 +519,9 @@ async def test_move_item(
     for i in range(1, 5):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
-            {"item": f"item {i}"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: f"item {i}"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -559,9 +577,9 @@ async def test_move_item_previous_unknown(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "item 1"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "item 1"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     items = await ws_get_items()
@@ -732,9 +750,9 @@ async def test_susbcribe(
     # Create new item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "soda"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -765,9 +783,9 @@ async def test_susbcribe(
     # Rename item
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": uid, "rename": "milk"},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: uid, ATTR_RENAME: "milk"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 

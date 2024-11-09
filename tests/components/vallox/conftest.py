@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from vallox_websocket_api import MetricData
 
-from homeassistant import config_entries
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -79,13 +78,7 @@ async def init_reconfigure_flow(
     hass: HomeAssistant, mock_entry, setup_vallox_entry
 ) -> tuple[MockConfigEntry, ConfigFlowResult]:
     """Initialize a config entry and a reconfigure flow for it."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_entry.entry_id,
-        },
-    )
+    result = await mock_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -112,9 +105,9 @@ def default_metrics():
         "A_CYC_UUID5": 10,
         "A_CYC_UUID6": 11,
         "A_CYC_UUID7": 12,
-        "A_CYC_BOOST_TIMER": 30,
-        "A_CYC_FIREPLACE_TIMER": 30,
-        "A_CYC_EXTRA_TIMER": 30,
+        "A_CYC_BOOST_TIMER": 0,
+        "A_CYC_FIREPLACE_TIMER": 0,
+        "A_CYC_EXTRA_TIMER": 0,
         "A_CYC_MODE": 0,
         "A_CYC_STATE": 0,
         "A_CYC_FILTER_CHANGED_YEAR": 24,

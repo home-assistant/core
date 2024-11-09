@@ -1,0 +1,24 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'host': '**REDACTED**',
+      'password': '**REDACTED**',
+      'port': 8000,
+      'ssl': True,
+      'username': '**REDACTED**',
+      'verify_ssl': False,
+    }),
+    'pyload_data': dict({
+      'active': 1,
+      'captcha': False,
+      'download': True,
+      'free_space': 99999999999,
+      'pause': False,
+      'queue': 6,
+      'reconnect': False,
+      'speed': 5405963.0,
+      'total': 37,
+    }),
+  })
+# ---

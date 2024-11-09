@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, CalendarType
 from .coordinator import EGSCalendarUpdateCoordinator
 
-DateRange = namedtuple("DateRange", ["start", "end"])
+DateRange = namedtuple("DateRange", ["start", "end"])  # noqa: PYI024
 
 
 async def async_setup_entry(

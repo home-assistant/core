@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from functools import cache
 
 from matter_server.client import MatterClient
-from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.client.exceptions import (
+    CannotConnect,
+    InvalidServerVersion,
+    NotConnected,
+    ServerVersionTooNew,
+    ServerVersionTooOld,
+)
 from matter_server.common.errors import MatterError, NodeNotExists
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
@@ -71,17 +76,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (CannotConnect, TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
-        if use_addon:
-            addon_manager = _get_addon_manager(hass)
-            addon_manager.async_schedule_update_addon(catch_error=True)
-        else:
+        if isinstance(err, ServerVersionTooOld):
+            if use_addon:
+                addon_manager = _get_addon_manager(hass)
+                addon_manager.async_schedule_update_addon(catch_error=True)
+            else:
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "server_version_version_too_old",
+                    is_fixable=False,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="server_version_version_too_old",
+                )
+        elif isinstance(err, ServerVersionTooNew):
             async_create_issue(
                 hass,
                 DOMAIN,
-                "invalid_server_version",
+                "server_version_version_too_new",
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
-                translation_key="invalid_server_version",
+                translation_key="server_version_version_too_new",
             )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
@@ -91,7 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Unknown error connecting to the Matter server"
         ) from err
 
-    async_delete_issue(hass, DOMAIN, "invalid_server_version")
+    async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
+    async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
@@ -116,6 +132,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except TimeoutError as err:
         listen_task.cancel()
         raise ConfigEntryNotReady("Matter client not ready") from err
+
+    # Set default fabric
+    try:
+        await matter_client.set_default_fabric_label(
+            hass.config.location_name or "Home"
+        )
+    except (NotConnected, MatterError) as err:
+        listen_task.cancel()
+        raise ConfigEntryNotReady("Failed to set default fabric label") from err
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -210,6 +235,19 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
 
 
+def _remove_via_devices(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> None:
+    """Remove all via devices associated with a device."""
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    for device in devices:
+        if device.via_device_id == device_entry.id:
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=config_entry.entry_id
+            )
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
@@ -217,23 +255,25 @@ async def async_remove_config_entry_device(
     node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:
+        # In case this was a bridge
+        _remove_via_devices(hass, config_entry, device_entry)
+        # Always allow users to remove orphan devices
         return True
 
-    if node.is_bridge_device:
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(
-            device_registry, config_entry.entry_id
-        )
-        for device in devices:
-            if device.via_device_id == device_entry.id:
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=config_entry.entry_id
-                )
+    if device_entry.via_device_id:
+        # Do not allow to delete devices that exposed via bridge.
+        return False
 
     matter = get_matter(hass)
-    with suppress(NodeNotExists):
-        # ignore if the server has already removed the node.
+    try:
         await matter.matter_client.remove_node(node.node_id)
+    except NodeNotExists:
+        # Ignore if the server has already removed the node.
+        LOGGER.debug("Node %s didn't exist on the Matter server", node.node_id)
+    finally:
+        # Make sure potentially orphan devices of a bridge are removed too.
+        if node.is_bridge_device:
+            _remove_via_devices(hass, config_entry, device_entry)
 
     return True
 

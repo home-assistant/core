@@ -484,12 +484,12 @@ async def test_restore_entity_end_to_end(
     class MockRestoreEntity(RestoreEntity):
         """Mock restore entity."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             """Initialize the mock entity."""
             self._state: str | None = None
 
         @property
-        def state(self):
+        def state(self) -> str | None:
             """Return the state."""
             return self._state
 

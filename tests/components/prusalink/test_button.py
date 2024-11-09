@@ -93,7 +93,7 @@ async def test_button_resume_cancel(
     with (
         patch(f"pyprusalink.PrusaLink.{method}") as mock_meth,
         patch(
-            "homeassistant.components.prusalink.PrusaLinkUpdateCoordinator._fetch_data"
+            "homeassistant.components.prusalink.coordinator.PrusaLinkUpdateCoordinator._fetch_data"
         ),
     ):
         await hass.services.async_call(

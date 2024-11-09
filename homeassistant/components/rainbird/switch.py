@@ -14,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, DOMAIN, MANUFACTURER
@@ -23,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 
-SERVICE_SCHEMA_IRRIGATION = {
+SERVICE_SCHEMA_IRRIGATION: VolDictType = {
     vol.Required(ATTR_DURATION): cv.positive_float,
 }
 

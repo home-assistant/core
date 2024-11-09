@@ -27,8 +27,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .base_platform import BaseStructPlatform
 from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
+from .entity import BaseStructPlatform
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         super().__init__(hass, hub, entry)
         if slave_count:
             self._count = self._count * (slave_count + 1)
-        self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
+        self._coordinator: DataUpdateCoordinator[list[float] | None] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -91,6 +91,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=None,
             name=name,
         )
 
@@ -142,7 +143,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
+    CoordinatorEntity[DataUpdateCoordinator[list[float] | None]],
     RestoreSensor,
     SensorEntity,
 ):
@@ -150,7 +151,7 @@ class SlaveSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[int] | None],
+        coordinator: DataUpdateCoordinator[list[float] | None],
         idx: int,
         entry: dict[str, Any],
     ) -> None:

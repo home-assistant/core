@@ -1,16 +1,19 @@
 """Fixtures for PrusaLink."""
 
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.prusalink import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry(hass):
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a PrusaLink config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -23,7 +26,7 @@ def mock_config_entry(hass):
 
 
 @pytest.fixture
-def mock_version_api(hass):
+def mock_version_api() -> Generator[dict[str, str]]:
     """Mock PrusaLink version API."""
     resp = {
         "api": "2.0.0",
@@ -36,7 +39,7 @@ def mock_version_api(hass):
 
 
 @pytest.fixture
-def mock_info_api(hass):
+def mock_info_api() -> Generator[dict[str, Any]]:
     """Mock PrusaLink info API."""
     resp = {
         "nozzle_diameter": 0.40,
@@ -50,7 +53,7 @@ def mock_info_api(hass):
 
 
 @pytest.fixture
-def mock_get_legacy_printer(hass):
+def mock_get_legacy_printer() -> Generator[dict[str, Any]]:
     """Mock PrusaLink printer API."""
     resp = {"telemetry": {"material": "PLA"}}
     with patch("pyprusalink.PrusaLink.get_legacy_printer", return_value=resp):
@@ -58,7 +61,7 @@ def mock_get_legacy_printer(hass):
 
 
 @pytest.fixture
-def mock_get_status_idle(hass):
+def mock_get_status_idle() -> Generator[dict[str, Any]]:
     """Mock PrusaLink printer API."""
     resp = {
         "storage": {
@@ -86,7 +89,7 @@ def mock_get_status_idle(hass):
 
 
 @pytest.fixture
-def mock_get_status_printing(hass):
+def mock_get_status_printing() -> Generator[dict[str, Any]]:
     """Mock PrusaLink printer API."""
     resp = {
         "job": {
@@ -114,7 +117,7 @@ def mock_get_status_printing(hass):
 
 
 @pytest.fixture
-def mock_job_api_idle(hass):
+def mock_job_api_idle() -> Generator[dict[str, Any]]:
     """Mock PrusaLink job API having no job."""
     resp = {}
     with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
@@ -122,7 +125,7 @@ def mock_job_api_idle(hass):
 
 
 @pytest.fixture
-def mock_job_api_idle_mk3(hass):
+def mock_job_api_idle_mk3() -> Generator[dict[str, Any]]:
     """Mock PrusaLink job API having a job with idle state (MK3)."""
     resp = {
         "id": 129,
@@ -148,7 +151,7 @@ def mock_job_api_idle_mk3(hass):
 
 
 @pytest.fixture
-def mock_job_api_printing(hass):
+def mock_job_api_printing() -> Generator[dict[str, Any]]:
     """Mock PrusaLink printing."""
     resp = {
         "id": 129,
@@ -174,7 +177,9 @@ def mock_job_api_printing(hass):
 
 
 @pytest.fixture
-def mock_job_api_paused(hass, mock_get_status_printing, mock_job_api_printing):
+def mock_job_api_paused(
+    mock_get_status_printing: dict[str, Any], mock_job_api_printing: dict[str, Any]
+) -> None:
     """Mock PrusaLink paused printing."""
     mock_job_api_printing["state"] = "PAUSED"
     mock_get_status_printing["printer"]["state"] = "PAUSED"
@@ -182,10 +187,10 @@ def mock_job_api_paused(hass, mock_get_status_printing, mock_job_api_printing):
 
 @pytest.fixture
 def mock_api(
-    mock_version_api,
-    mock_info_api,
-    mock_get_legacy_printer,
-    mock_get_status_idle,
-    mock_job_api_idle,
-):
+    mock_version_api: dict[str, str],
+    mock_info_api: dict[str, Any],
+    mock_get_legacy_printer: dict[str, Any],
+    mock_get_status_idle: dict[str, Any],
+    mock_job_api_idle: dict[str, Any],
+) -> None:
     """Mock PrusaLink API."""

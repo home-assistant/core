@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/justnimbus",
   "iot_class": "cloud_polling",
-  "requirements": ["justnimbus==0.7.3"]
+  "requirements": ["justnimbus==0.7.4"]
 }

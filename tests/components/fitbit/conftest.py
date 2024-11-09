@@ -1,6 +1,6 @@
 """Test fixtures for fitbit."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 import datetime
 from http import HTTPStatus
 import time
@@ -9,7 +9,6 @@ from unittest.mock import patch
 
 import pytest
 from requests_mock.mocker import Mocker
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,

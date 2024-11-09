@@ -1,7 +1,8 @@
 """Test climate intents."""
 
+from collections.abc import Generator
+
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import conversation
 from homeassistant.components.climate import (
@@ -370,7 +371,7 @@ async def test_not_exposed(
             {"name": {"value": climate_1.name}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
 
     # Expose first, hide second
     async_expose_entity(hass, conversation.DOMAIN, climate_1.entity_id, True)

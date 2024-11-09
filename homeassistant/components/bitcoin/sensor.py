@@ -9,7 +9,7 @@ from blockchain import exchangerates, statistics
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -127,7 +127,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 OPTION_KEYS = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DISPLAY_OPTIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(OPTION_KEYS)]

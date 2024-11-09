@@ -87,7 +87,6 @@ from .const import (
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
     CONF_MAX_VALUE,
     CONF_MIN_TEMP,
@@ -96,7 +95,6 @@ from .const import (
     CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_RETRIES,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
@@ -139,7 +137,6 @@ from .const import (
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
     hvac_fixedsize_reglist_validator,
@@ -163,7 +160,6 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
-        vol.Optional(CONF_LAZY_ERROR): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -235,8 +231,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_STATE_OFF): vol.All(
+                    cv.ensure_list, [cv.positive_int]
+                ),
+                vol.Optional(CONF_STATE_ON): vol.All(cv.ensure_list, [cv.positive_int]),
                 vol.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
@@ -321,7 +319,6 @@ CLIMATE_SCHEMA = vol.All(
             ),
         },
     ),
-    check_hvac_target_temp_registers,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
@@ -395,7 +392,6 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRIES): cv.positive_int,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
@@ -466,7 +462,7 @@ async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> No
     if DOMAIN not in hass.data:
         _LOGGER.error("Modbus cannot reload, because it was never loaded")
         return
-    _LOGGER.info("Modbus reloading")
+    _LOGGER.debug("Modbus reloading")
     hubs = hass.data[DOMAIN]
     for name in hubs:
         await hubs[name].async_close()

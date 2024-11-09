@@ -7,7 +7,11 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
+from .const import (
+    MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE,
+    TICKER_INFORMATION_RESPONSE,
+    TRADEABLE_ASSET_PAIR_RESPONSE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -94,3 +98,64 @@ async def test_options(hass: HomeAssistant) -> None:
         assert ada_eth_sensor.state == "0.0003494"
 
         assert hass.states.get("sensor.xbt_usd_ask") is None
+
+
+async def test_deselect_removed_pair(hass: HomeAssistant) -> None:
+    """Test options for Kraken."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            CONF_SCAN_INTERVAL: 60,
+            CONF_TRACKED_ASSET_PAIRS: [
+                "XBT/USD",
+            ],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.kraken.config_flow.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.kraken.config_flow.KrakenAPI.get_tradable_asset_pairs",
+            return_value=MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        schema = result["data_schema"].schema
+        assert "XBT/USD" in schema.get(CONF_TRACKED_ASSET_PAIRS).options
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_SCAN_INTERVAL: 10,
+                CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"],
+            },
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+
+        ada_eth_sensor = hass.states.get("sensor.ada_eth_ask")
+        assert ada_eth_sensor.state == "0.0003494"

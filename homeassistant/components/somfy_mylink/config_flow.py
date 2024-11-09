@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import logging
+from typing import Any
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
@@ -61,11 +62,11 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the somfy_mylink flow."""
-        self.host = None
-        self.mac = None
-        self.ip_address = None
+        self.host: str | None = None
+        self.mac: str | None = None
+        self.ip_address: str | None = None
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -82,7 +83,9 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -113,11 +116,6 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-        return await self.async_step_user(user_input)
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -132,9 +130,8 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))
-        self._target_id = None
+        self._target_id: str | None = None
 
     @callback
     def _async_callback_targets(self):
@@ -152,7 +149,9 @@ class OptionsFlowHandler(OptionsFlow):
                 return cover["name"]
         raise KeyError
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow."""
 
         if self.config_entry.state is not ConfigEntryState.LOADED:
@@ -175,9 +174,13 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors={})
 
-    async def async_step_target_config(self, user_input=None, target_id=None):
+    async def async_step_target_config(
+        self, user_input: dict[str, bool] | None = None, target_id: str | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow for target."""
-        reversed_target_ids = self.options.setdefault(CONF_REVERSED_TARGET_IDS, {})
+        reversed_target_ids: dict[str | None, bool] = self.options.setdefault(
+            CONF_REVERSED_TARGET_IDS, {}
+        )
 
         if user_input is not None:
             if user_input[CONF_REVERSE] != reversed_target_ids.get(self._target_id):

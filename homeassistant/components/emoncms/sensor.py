@@ -2,34 +2,44 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
-    STATE_UNKNOWN,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .config_flow import sensor_name
+from .const import (
+    CONF_EXCLUDE_FEEDID,
+    CONF_ONLY_INCLUDE_FEEDID,
+    DOMAIN,
+    FEED_ID,
+    FEED_NAME,
+    FEED_TAG,
+)
+from .coordinator import EmoncmsCoordinator
 
 ATTR_FEEDID = "FeedId"
 ATTR_FEEDNAME = "FeedName"
@@ -38,17 +48,13 @@ ATTR_LASTUPDATETIMESTR = "LastUpdatedStr"
 ATTR_SIZE = "Size"
 ATTR_TAG = "Tag"
 ATTR_USERID = "UserId"
-
-CONF_EXCLUDE_FEEDID = "exclude_feed_id"
-CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
 CONF_SENSOR_NAMES = "sensor_names"
-
 DECIMALS = 2
 DEFAULT_UNIT = UnitOfPower.WATT
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_URL): cv.string,
@@ -74,88 +80,116 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Emoncms sensor."""
-    apikey = config[CONF_API_KEY]
-    url = config[CONF_URL]
-    sensorid = config[CONF_ID]
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
-    include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
-    sensor_names = config.get(CONF_SENSOR_NAMES)
+    """Import config from yaml."""
+    if CONF_VALUE_TEMPLATE in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"remove_{CONF_VALUE_TEMPLATE}_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.ERROR,
+            translation_key=f"remove_{CONF_VALUE_TEMPLATE}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "parameter": CONF_VALUE_TEMPLATE,
+            },
+        )
+        return
+    if CONF_ONLY_INCLUDE_FEEDID not in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"missing_{CONF_ONLY_INCLUDE_FEEDID}_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"missing_{CONF_ONLY_INCLUDE_FEEDID}",
+            translation_placeholders={
+                "domain": DOMAIN,
+            },
+        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result.get("type") == FlowResultType.CREATE_ENTRY
+        or result.get("reason") == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2025.3.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "emoncms",
+            },
+        )
 
-    if value_template is not None:
-        value_template.hass = hass
 
-    emoncms_client = EmoncmsClient(url, apikey)
-    elems = await emoncms_client.async_list_feeds()
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the emoncms sensors."""
+    name = sensor_name(entry.data[CONF_URL])
+    exclude_feeds = entry.data.get(CONF_EXCLUDE_FEEDID)
+    include_only_feeds = entry.options.get(
+        CONF_ONLY_INCLUDE_FEEDID, entry.data.get(CONF_ONLY_INCLUDE_FEEDID)
+    )
 
-    if elems is None:
+    if exclude_feeds is None and include_only_feeds is None:
         return
 
-    sensors = []
+    coordinator = entry.runtime_data
+    # uuid was added in emoncms database 11.5.7
+    unique_id = entry.unique_id if entry.unique_id else entry.entry_id
+    elems = coordinator.data
+    if not elems:
+        return
+    sensors: list[EmonCmsSensor] = []
 
-    for elem in elems:
-        if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
+    for idx, elem in enumerate(elems):
+        if include_only_feeds is not None and elem[FEED_ID] not in include_only_feeds:
             continue
-
-        if include_only_feeds is not None and int(elem["id"]) not in include_only_feeds:
-            continue
-
-        name = None
-        if sensor_names is not None:
-            name = sensor_names.get(int(elem["id"]), None)
-
-        if unit := elem.get("unit"):
-            unit_of_measurement = unit
-        else:
-            unit_of_measurement = config_unit
-
         sensors.append(
             EmonCmsSensor(
-                hass,
-                emoncms_client,
+                coordinator,
+                unique_id,
+                elem["unit"],
                 name,
-                value_template,
-                unit_of_measurement,
-                str(sensorid),
-                elem,
+                idx,
             )
         )
     async_add_entities(sensors)
 
 
-class EmonCmsSensor(SensorEntity):
+class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     """Implementation of an Emoncms sensor."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        emoncms_client: EmoncmsClient,
-        name: str | None,
-        value_template: template.Template | None,
+        coordinator: EmoncmsCoordinator,
+        unique_id: str,
         unit_of_measurement: str | None,
-        sensorid: str,
-        elem: dict[str, Any],
+        name: str,
+        idx: int,
     ) -> None:
         """Initialize the sensor."""
-        if name is None:
-            # Suppress ID in sensor name if it's 1, since most people won't
-            # have more than one EmonCMS source and it's redundant to show the
-            # ID if there's only one.
-            id_for_name = "" if str(sensorid) == "1" else sensorid
-            # Use the feed name assigned in EmonCMS or fall back to the feed ID
-            feed_name = elem.get("name") or f"Feed {elem['id']}"
-            self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
-        else:
-            self._attr_name = name
-        self._hass = hass
-        self._emoncms_client = emoncms_client
-        self._value_template = value_template
+        super().__init__(coordinator)
+        self.idx = idx
+        elem = {}
+        if self.coordinator.data:
+            elem = self.coordinator.data[self.idx]
+        self._attr_name = f"{name} {elem[FEED_NAME]}"
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._sensorid = sensorid
-        self._feed_id = elem["id"]
-
+        self._attr_unique_id = f"{unique_id}-{elem[FEED_ID]}"
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -185,9 +219,9 @@ class EmonCmsSensor(SensorEntity):
     def _update_attributes(self, elem: dict[str, Any]) -> None:
         """Update entity attributes."""
         self._attr_extra_state_attributes = {
-            ATTR_FEEDID: elem["id"],
-            ATTR_TAG: elem["tag"],
-            ATTR_FEEDNAME: elem["name"],
+            ATTR_FEEDID: elem[FEED_ID],
+            ATTR_TAG: elem[FEED_TAG],
+            ATTR_FEEDNAME: elem[FEED_NAME],
         }
         if elem["value"] is not None:
             self._attr_extra_state_attributes[ATTR_SIZE] = elem["size"]
@@ -198,18 +232,13 @@ class EmonCmsSensor(SensorEntity):
             )
 
         self._attr_native_value = None
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
-            )
-        elif elem["value"] is not None:
+        if elem["value"] is not None:
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
-    async def async_update(self) -> None:
-        """Get the latest data and updates the state."""
-        elem = await self._emoncms_client.async_get_feed_fields(self._feed_id)
-        if elem is None:
-            return
-        self._update_attributes(elem)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        data = self.coordinator.data
+        if data:
+            self._update_attributes(data[self.idx])
+        super()._handle_coordinator_update()

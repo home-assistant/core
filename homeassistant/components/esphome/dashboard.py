@@ -106,7 +106,7 @@ class ESPHomeDashboardManager:
         reloads = [
             hass.config_entries.async_reload(entry.entry_id)
             for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state == ConfigEntryState.LOADED
+            if entry.state is ConfigEntryState.LOADED
         ]
         # Re-auth flows will check the dashboard for encryption key when the form is requested
         # but we only trigger reauth if the dashboard is available.

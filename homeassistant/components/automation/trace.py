@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
-
-from typing_extensions import Generator
 
 from homeassistant.components.trace import (
     CONF_STORED_TRACES,

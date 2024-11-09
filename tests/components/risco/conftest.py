@@ -1,7 +1,10 @@
 """Fixtures for Risco tests."""
 
+from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from pyrisco.cloud.event import Event
 import pytest
 
 from homeassistant.components.risco.const import DOMAIN, TYPE_LOCAL
@@ -13,6 +16,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from .util import TEST_SITE_NAME, TEST_SITE_UUID, system_mock, zone_mock
 
@@ -116,19 +120,19 @@ def two_zone_local():
 
 
 @pytest.fixture
-def options():
+def options() -> dict[str, Any]:
     """Fixture for default (empty) options."""
     return {}
 
 
 @pytest.fixture
-def events():
+def events() -> list[Event]:
     """Fixture for default (empty) events."""
     return []
 
 
 @pytest.fixture
-def cloud_config_entry(hass, options):
+def cloud_config_entry(hass: HomeAssistant, options: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a cloud config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -151,7 +155,9 @@ def login_with_error(exception):
 
 
 @pytest.fixture
-async def setup_risco_cloud(hass, cloud_config_entry, events):
+async def setup_risco_cloud(
+    hass: HomeAssistant, cloud_config_entry: MockConfigEntry, events: list[Event]
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up a Risco integration for testing."""
     with (
         patch(
@@ -181,7 +187,7 @@ async def setup_risco_cloud(hass, cloud_config_entry, events):
 
 
 @pytest.fixture
-def local_config_entry(hass, options):
+def local_config_entry(hass: HomeAssistant, options: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a local config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=TEST_LOCAL_CONFIG, options=options
@@ -201,7 +207,9 @@ def connect_with_error(exception):
 
 
 @pytest.fixture
-async def setup_risco_local(hass, local_config_entry):
+async def setup_risco_local(
+    hass: HomeAssistant, local_config_entry: MockConfigEntry
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up a local Risco integration for testing."""
     with (
         patch(

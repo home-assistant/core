@@ -2,10 +2,10 @@
 
 import copy
 import json
-from unittest.mock import ANY, AsyncMock, patch
+from typing import Any
+from unittest.mock import ANY, AsyncMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
@@ -20,7 +20,7 @@ from tests.common import (
     async_fire_mqtt_message,
     async_get_device_automations,
 )
-from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, WebSocketGenerator
+from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 DEFAULT_CONFIG_DEVICE = {
     "device": {"identifiers": ["0AFFD2"]},
@@ -44,13 +44,6 @@ DEFAULT_TAG_SCAN = "E9F35959"
 DEFAULT_TAG_SCAN_JSON = (
     '{"Time":"2020-09-28T17:02:10","PN532":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
 )
-
-
-@pytest.fixture
-def tag_mock() -> Generator[AsyncMock]:
-    """Fixture to mock tag."""
-    with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
-        yield mock_tag
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -102,9 +95,7 @@ async def test_if_fires_on_mqtt_message_with_device(
 
 
 async def test_if_fires_on_mqtt_message_without_device(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    tag_mock: AsyncMock,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, tag_mock: AsyncMock
 ) -> None:
     """Test tag scanning, without device."""
     await mqtt_mock_entry()
@@ -140,9 +131,7 @@ async def test_if_fires_on_mqtt_message_with_template(
 
 
 async def test_strip_tag_id(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    tag_mock: AsyncMock,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, tag_mock: AsyncMock
 ) -> None:
     """Test strip whitespace from tag_id."""
     await mqtt_mock_entry()
@@ -208,9 +197,7 @@ async def test_if_fires_on_mqtt_message_after_update_with_device(
 
 
 async def test_if_fires_on_mqtt_message_after_update_without_device(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    tag_mock: AsyncMock,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, tag_mock: AsyncMock
 ) -> None:
     """Test tag scanning after update."""
     await mqtt_mock_entry()
@@ -359,9 +346,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_with_device(
 
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_without_device(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    tag_mock: AsyncMock,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, tag_mock: AsyncMock
 ) -> None:
     """Test tag scanning not firing after removal."""
     await mqtt_mock_entry()
@@ -512,7 +497,7 @@ async def test_entity_device_info_update(
     """Test device registry update."""
     await mqtt_mock_entry()
 
-    config = {
+    config: dict[str, Any] = {
         "topic": "test-topic",
         "device": {
             "identifiers": ["helloworld"],
@@ -587,7 +572,7 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")}
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == [config_entry.entry_id, mqtt_entry.entry_id]
+    assert device_entry1.config_entries == {config_entry.entry_id, mqtt_entry.entry_id}
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
 
@@ -599,7 +584,7 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")}
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == [mqtt_entry.entry_id]
+    assert device_entry1.config_entries == {mqtt_entry.entry_id}
     device_entry2 = device_registry.async_get_device(identifiers={("mqtt", "hejhopp")})
     assert device_entry2 is not None
     mqtt_mock.async_publish.assert_not_called()
@@ -904,11 +889,9 @@ async def test_update_with_bad_config_not_breaks_discovery(
     tag_mock.assert_called_once_with(ANY, "12345", ANY)
 
 
+@pytest.mark.usefixtures("mqtt_mock")
 async def test_unload_entry(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mqtt_mock: MqttMockHAClient,
-    tag_mock: AsyncMock,
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, tag_mock: AsyncMock
 ) -> None:
     """Test unloading the MQTT entry."""
 
@@ -934,12 +917,9 @@ async def test_unload_entry(
     tag_mock.assert_not_called()
 
 
+@pytest.mark.usefixtures("mqtt_mock", "tag_mock")
 async def test_value_template_fails(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mqtt_mock: MqttMockHAClient,
-    tag_mock: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the rendering of MQTT value template fails."""
     config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)

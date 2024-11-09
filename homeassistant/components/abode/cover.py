@@ -3,7 +3,6 @@
 from typing import Any
 
 from jaraco.abode.devices.cover import Cover
-from jaraco.abode.helpers.constants import TYPE_COVER
 
 from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +22,7 @@ async def async_setup_entry(
 
     async_add_entities(
         AbodeCover(data, device)
-        for device in data.abode.get_devices(generic_type=TYPE_COVER)
+        for device in data.abode.get_devices(generic_type="cover")
     )
 
 

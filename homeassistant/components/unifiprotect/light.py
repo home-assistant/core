@@ -5,18 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from uiprotect.data import (
-    Light,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-)
+from uiprotect.data import Light, ModelType, ProtectAdoptableDeviceModel
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import UFPConfigEntry
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +61,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
         self._attr_is_on = updated_device.is_light_on

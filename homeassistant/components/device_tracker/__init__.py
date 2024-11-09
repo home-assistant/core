@@ -14,10 +14,11 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import group as group_pre_import  # noqa: F401
 from .config_entry import (  # noqa: F401
     ScannerEntity,
+    ScannerEntityDescription,
     TrackerEntity,
+    TrackerEntityDescription,
     async_setup_entry,
     async_unload_entry,
 )

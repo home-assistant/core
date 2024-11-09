@@ -34,7 +34,8 @@
     "field_white_description": "Set the light to white mode.",
     "field_white_name": "White",
     "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
-    "field_xy_color_name": "XY-color"
+    "field_xy_color_name": "XY-color",
+    "section_advanced_fields_name": "Advanced options"
   },
   "device_automation": {
     "action_type": {
@@ -354,6 +355,11 @@
           "name": "[%key:component::light::common::field_effect_name%]",
           "description": "[%key:component::light::common::field_effect_description%]"
         }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        }
       }
     },
     "turn_off": {
@@ -367,6 +373,11 @@
         "flash": {
           "name": "[%key:component::light::common::field_flash_name%]",
           "description": "[%key:component::light::common::field_flash_description%]"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "[%key:component::light::common::section_advanced_fields_name%]"
         }
       }
     },
@@ -433,6 +444,11 @@
         "effect": {
           "name": "[%key:component::light::common::field_effect_name%]",
           "description": "[%key:component::light::common::field_effect_description%]"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "[%key:component::light::common::section_advanced_fields_name%]"
         }
       }
     }

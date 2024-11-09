@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.models import LaMarzoccoMachineConfig
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,7 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -43,6 +43,13 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=lambda config: config.brew_active,
         available_fn=lambda device: device.websocket_connected,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LaMarzoccoBinarySensorEntityDescription(
+        key="backflush_enabled",
+        translation_key="backflush_enabled",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        is_on_fn=lambda config: config.backflush_enabled,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

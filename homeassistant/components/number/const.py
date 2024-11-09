@@ -14,10 +14,11 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfBloodGlucoseConcentration,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,6 +31,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -108,6 +110,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
+    """Blood glucose concentration.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
+    """
+
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
@@ -118,6 +126,12 @@ class NumberDeviceClass(StrEnum):
     """Carbon Dioxide gas concentration.
 
     Unit of measurement: `ppm` (parts per million)
+    """
+
+    CONDUCTIVITY = "conductivity"
+    """Conductivity.
+
+    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
     """
 
     CURRENT = "current"
@@ -155,7 +169,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -164,7 +178,7 @@ class NumberDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -272,7 +286,7 @@ class NumberDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
     """
 
     PRECIPITATION = "precipitation"
@@ -422,8 +436,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.AQI: {None},
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
+    NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     NumberDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     NumberDeviceClass.DATA_RATE: set(UnitOfDataRate),
     NumberDeviceClass.DATA_SIZE: set(UnitOfInformation),
@@ -460,7 +476,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
-    NumberDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    NumberDeviceClass.REACTIVE_POWER: {UnitOfReactivePower.VOLT_AMPERE_REACTIVE},
     NumberDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,

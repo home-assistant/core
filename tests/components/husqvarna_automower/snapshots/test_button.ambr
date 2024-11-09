@@ -1,0 +1,139 @@
+# serializer version: 1
+# name: test_button_snapshot[button.test_mower_1_confirm_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_mower_1_confirm_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Confirm error',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'confirm_error',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_confirm_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_snapshot[button.test_mower_1_confirm_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Confirm error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_mower_1_confirm_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_button_snapshot[button.test_mower_1_sync_clock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_mower_1_sync_clock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync clock',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_clock',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_sync_clock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_snapshot[button.test_mower_1_sync_clock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 1 Sync clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_mower_1_sync_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_snapshot[button.test_mower_2_sync_clock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_mower_2_sync_clock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync clock',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_clock',
+    'unique_id': '1234_sync_clock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_snapshot[button.test_mower_2_sync_clock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 2 Sync clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_mower_2_sync_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

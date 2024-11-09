@@ -49,16 +49,27 @@ class BucketHolder:
             test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
         )
         for tests in sorted_tests:
-            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
             if tests.added_to_bucket:
                 # Already added to bucket
                 continue
 
+            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
             smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
+            is_file = isinstance(tests, TestFile)
             if (
                 smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
-            ) or isinstance(tests, TestFile):
+            ) or is_file:
                 smallest_bucket.add(tests)
+                # Ensure all files from the same folder are in the same bucket
+                # to ensure that syrupy correctly identifies unused snapshots
+                if is_file:
+                    for other_test in tests.parent.children.values():
+                        if other_test is tests or isinstance(other_test, TestFolder):
+                            continue
+                        print(
+                            f"{other_test.total_tests:>{digits}} tests in {other_test.path} (same bucket)"
+                        )
+                        smallest_bucket.add(other_test)
 
         # verify that all tests are added to a bucket
         if not test_folder.added_to_bucket:
@@ -66,7 +77,7 @@ class BucketHolder:
 
     def create_ouput_file(self) -> None:
         """Create output file."""
-        with open("pytest_buckets.txt", "w") as file:
+        with Path("pytest_buckets.txt").open("w") as file:
             for idx, bucket in enumerate(self._buckets):
                 print(f"Bucket {idx+1} has {bucket.total_tests} tests")
                 file.write(bucket.get_paths_line())
@@ -79,6 +90,7 @@ class TestFile:
     total_tests: int
     path: Path
     added_to_bucket: bool = field(default=False, init=False)
+    parent: TestFolder | None = field(default=None, init=False)
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
@@ -125,6 +137,7 @@ class TestFolder:
     def add_test_file(self, file: TestFile) -> None:
         """Add test file to folder."""
         path = file.path
+        file.parent = self
         relative_path = path.relative_to(self.path)
         if not relative_path.parts:
             raise ValueError("Path is not a child of this folder")

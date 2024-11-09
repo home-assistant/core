@@ -7,10 +7,11 @@ import pytest
 
 from homeassistant.auth import AuthManager, auth_store, models as auth_models
 from homeassistant.auth.providers import insecure_example
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-async def store(hass):
+async def store(hass: HomeAssistant) -> auth_store.AuthStore:
     """Mock store."""
     store = auth_store.AuthStore(hass)
     await store.async_load()
@@ -18,7 +19,9 @@ async def store(hass):
 
 
 @pytest.fixture
-def provider(hass, store):
+def provider(
+    hass: HomeAssistant, store: auth_store.AuthStore
+) -> insecure_example.ExampleAuthProvider:
     """Mock provider."""
     return insecure_example.ExampleAuthProvider(
         hass,
@@ -38,12 +41,18 @@ def provider(hass, store):
 
 
 @pytest.fixture
-def manager(hass, store, provider):
+def manager(
+    hass: HomeAssistant,
+    store: auth_store.AuthStore,
+    provider: insecure_example.ExampleAuthProvider,
+) -> AuthManager:
     """Mock manager."""
     return AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
 
 
-async def test_create_new_credential(manager, provider) -> None:
+async def test_create_new_credential(
+    manager: AuthManager, provider: insecure_example.ExampleAuthProvider
+) -> None:
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials(
         {"username": "user-test", "password": "password-test"}
@@ -55,7 +64,9 @@ async def test_create_new_credential(manager, provider) -> None:
     assert user.is_active
 
 
-async def test_match_existing_credentials(store, provider) -> None:
+async def test_match_existing_credentials(
+    provider: insecure_example.ExampleAuthProvider,
+) -> None:
     """See if we match existing users."""
     existing = auth_models.Credentials(
         id=uuid.uuid4(),
@@ -71,19 +82,21 @@ async def test_match_existing_credentials(store, provider) -> None:
     assert credentials is existing
 
 
-async def test_verify_username(provider) -> None:
+async def test_verify_username(provider: insecure_example.ExampleAuthProvider) -> None:
     """Test we raise if incorrect user specified."""
     with pytest.raises(insecure_example.InvalidAuthError):
         await provider.async_validate_login("non-existing-user", "password-test")
 
 
-async def test_verify_password(provider) -> None:
+async def test_verify_password(provider: insecure_example.ExampleAuthProvider) -> None:
     """Test we raise if incorrect user specified."""
     with pytest.raises(insecure_example.InvalidAuthError):
         await provider.async_validate_login("user-test", "incorrect-password")
 
 
-async def test_utf_8_username_password(provider) -> None:
+async def test_utf_8_username_password(
+    provider: insecure_example.ExampleAuthProvider,
+) -> None:
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials(
         {"username": "🎉", "password": "😎"}

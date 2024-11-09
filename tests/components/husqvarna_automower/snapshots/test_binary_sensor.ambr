@@ -138,3 +138,142 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_mower_2_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_mower_2_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Charging',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234_battery_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_mower_2_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'Test Mower 2 Charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_mower_2_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_mower_2_leaving_dock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_mower_2_leaving_dock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Leaving dock',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'leaving_dock',
+    'unique_id': '1234_leaving_dock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_mower_2_leaving_dock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 2 Leaving dock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_mower_2_leaving_dock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_mower_2_returning_to_dock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_mower_2_returning_to_dock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Returning to dock',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'returning_to_dock',
+    'unique_id': '1234_returning_to_dock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_mower_2_returning_to_dock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Mower 2 Returning to dock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_mower_2_returning_to_dock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

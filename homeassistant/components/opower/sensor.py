@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -91,6 +91,22 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         suggested_display_precision=0,
         value_fn=lambda data: data.typical_cost,
     ),
+    OpowerEntityDescription(
+        key="elec_start_date",
+        name="Current bill electric start date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.start_date,
+    ),
+    OpowerEntityDescription(
+        key="elec_end_date",
+        name="Current bill electric end date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.end_date,
+    ),
 )
 GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
     OpowerEntityDescription(
@@ -146,6 +162,22 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
         value_fn=lambda data: data.typical_cost,
+    ),
+    OpowerEntityDescription(
+        key="gas_start_date",
+        name="Current bill gas start date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.start_date,
+    ),
+    OpowerEntityDescription(
+        key="gas_end_date",
+        name="Current bill gas end date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.end_date,
     ),
 )
 

@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     EFFECT_RANDOM,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -45,7 +45,7 @@ DEFAULT_ALLOW_LIGHTIFY_SWITCHES = True
 DEFAULT_INTERVAL_LIGHTIFY_STATUS = 5
 DEFAULT_INTERVAL_LIGHTIFY_CONF = 3600
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(

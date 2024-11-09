@@ -1,11 +1,10 @@
 """Configure pytest for D-Link tests."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import dhcp
 from homeassistant.components.dlink.const import CONF_USE_LEGACY_PROTOCOL, DOMAIN

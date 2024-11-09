@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -26,28 +26,31 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, PLATFORMS
+from . import HistoryStatsConfigEntry
+from .const import (
+    CONF_DURATION,
+    CONF_END,
+    CONF_PERIOD_KEYS,
+    CONF_START,
+    CONF_TYPE_COUNT,
+    CONF_TYPE_KEYS,
+    CONF_TYPE_RATIO,
+    CONF_TYPE_TIME,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
 from .helpers import pretty_ratio
 
-CONF_START = "start"
-CONF_END = "end"
-CONF_DURATION = "duration"
-CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
-
-CONF_TYPE_TIME = "time"
-CONF_TYPE_RATIO = "ratio"
-CONF_TYPE_COUNT = "count"
-CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
-
-DEFAULT_NAME = "unnamed statistics"
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
@@ -66,7 +69,7 @@ def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
 
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_STATE): vol.All(cv.ensure_list, [cv.string]),
@@ -82,7 +85,6 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-# noinspection PyUnusedLocal
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -101,16 +103,33 @@ async def async_setup_platform(
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
-    for template in (start, end):
-        if template is not None:
-            template.hass = hass
-
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
-    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, name)
+    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady from coordinator.last_exception
-    async_add_entities([HistoryStatsSensor(coordinator, sensor_type, name, unique_id)])
+    async_add_entities(
+        [HistoryStatsSensor(hass, coordinator, sensor_type, name, unique_id, entity_id)]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HistoryStatsConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the History stats sensor entry."""
+
+    sensor_type: str = entry.options[CONF_TYPE]
+    coordinator = entry.runtime_data
+    entity_id: str = entry.options[CONF_ENTITY_ID]
+    async_add_entities(
+        [
+            HistoryStatsSensor(
+                hass, coordinator, sensor_type, entry.title, entry.entry_id, entity_id
+            )
+        ]
+    )
 
 
 class HistoryStatsSensorBase(
@@ -152,16 +171,22 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: HistoryStatsUpdateCoordinator,
         sensor_type: str,
         name: str,
         unique_id: str | None,
+        source_entity_id: str,
     ) -> None:
         """Initialize the HistoryStats sensor."""
         super().__init__(coordinator, name)
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
         self._attr_unique_id = unique_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            source_entity_id,
+        )
         self._process_update()
         if self._type == CONF_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION

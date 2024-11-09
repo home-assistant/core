@@ -1,10 +1,10 @@
 """Common fixtures for Hunter Douglas Powerview tests."""
 
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiopvapi.resources.shade import ShadePosition
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
@@ -29,19 +29,19 @@ def mock_hunterdouglas_hub(
     rooms_json: str,
     scenes_json: str,
     shades_json: str,
-) -> Generator[MagicMock]:
+) -> Generator[None]:
     """Return a mocked Powerview Hub with all data populated."""
     with (
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_raw_data",
             return_value=load_json_object_fixture(device_json, DOMAIN),
         ),
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_home_data",
             return_value=load_json_object_fixture(home_json, DOMAIN),
         ),
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_raw_firmware",
             return_value=load_json_object_fixture(firmware_json, DOMAIN),
         ),
         patch(
@@ -111,7 +111,7 @@ def firmware_json(api_version: int) -> str:
 def rooms_json(api_version: int) -> str:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
-        return "gen2/rooms.json"
+        return "gen1/rooms.json"
     if api_version == 2:
         return "gen2/rooms.json"
     if api_version == 3:
@@ -124,7 +124,7 @@ def rooms_json(api_version: int) -> str:
 def scenes_json(api_version: int) -> str:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
-        return "gen2/scenes.json"
+        return "gen1/scenes.json"
     if api_version == 2:
         return "gen2/scenes.json"
     if api_version == 3:
@@ -137,7 +137,7 @@ def scenes_json(api_version: int) -> str:
 def shades_json(api_version: int) -> str:
     """Return the get_resources fixture for a specific device."""
     if api_version == 1:
-        return "gen2/shades.json"
+        return "gen1/shades.json"
     if api_version == 2:
         return "gen2/shades.json"
     if api_version == 3:

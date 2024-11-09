@@ -4,7 +4,11 @@ This is not a test module. These test methods are used by the platform test modu
 """
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import threading
+from typing import Any
+
+import pywemo
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.wemo.coordinator import async_get_coordinator
@@ -17,6 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -40,7 +45,12 @@ def _perform_async_update(coordinator):
     return async_callback
 
 
-async def _async_multiple_call_helper(hass, pywemo_device, call1, call2):
+async def _async_multiple_call_helper(
+    hass: HomeAssistant,
+    pywemo_device: pywemo.WeMoDevice,
+    call1: Callable[[], Coroutine[Any, Any, None]],
+    call2: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
     """Create two calls (call1 & call2) in parallel; verify only one polls the device.
 
     There should only be one poll on the device at a time. Any parallel updates
@@ -87,7 +97,7 @@ async def _async_multiple_call_helper(hass, pywemo_device, call1, call2):
 
 
 async def test_async_update_locked_callback_and_update(
-    hass: HomeAssistant, pywemo_device, wemo_entity
+    hass: HomeAssistant, pywemo_device: pywemo.WeMoDevice, wemo_entity: er.RegistryEntry
 ) -> None:
     """Test that a callback and a state update request can't both happen at the same time.
 
@@ -102,7 +112,7 @@ async def test_async_update_locked_callback_and_update(
 
 
 async def test_async_update_locked_multiple_updates(
-    hass: HomeAssistant, pywemo_device, wemo_entity
+    hass: HomeAssistant, pywemo_device: pywemo.WeMoDevice, wemo_entity: er.RegistryEntry
 ) -> None:
     """Test that two hass async_update state updates do not proceed at the same time."""
     coordinator = async_get_coordinator(hass, wemo_entity.device_id)
@@ -112,7 +122,7 @@ async def test_async_update_locked_multiple_updates(
 
 
 async def test_async_update_locked_multiple_callbacks(
-    hass: HomeAssistant, pywemo_device, wemo_entity
+    hass: HomeAssistant, pywemo_device: pywemo.WeMoDevice, wemo_entity: er.RegistryEntry
 ) -> None:
     """Test that two device callback state updates do not proceed at the same time."""
     coordinator = async_get_coordinator(hass, wemo_entity.device_id)
@@ -158,24 +168,33 @@ class EntityTestHelpers:
     """Common state update helpers."""
 
     async def test_async_update_locked_multiple_updates(
-        self, hass, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Test that two hass async_update state updates do not proceed at the same time."""
         await test_async_update_locked_multiple_updates(
             hass, pywemo_device, wemo_entity
         )
 
     async def test_async_update_locked_multiple_callbacks(
-        self, hass, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Test that two device callback state updates do not proceed at the same time."""
         await test_async_update_locked_multiple_callbacks(
             hass, pywemo_device, wemo_entity
         )
 
     async def test_async_update_locked_callback_and_update(
-        self, hass, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Test that a callback and a state update request can't both happen at the same time.
 
         When a state update is received via a callback from the device at the same time

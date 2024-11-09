@@ -38,7 +38,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def _get_connection_form(
     hass: HomeAssistant, connection_type: str
-) -> FlowResultType:
+) -> config_entries.ConfigFlowResult:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

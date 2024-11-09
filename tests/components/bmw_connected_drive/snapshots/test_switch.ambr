@@ -35,7 +35,6 @@
 # name: test_entity_state_attrs[switch.i4_edrive40_climate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i4 eDrive40 Climate',
     }),
     'context': <ANY>,
@@ -82,7 +81,6 @@
 # name: test_entity_state_attrs[switch.ix_xdrive50_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'iX xDrive50 Charging',
     }),
     'context': <ANY>,
@@ -129,7 +127,6 @@
 # name: test_entity_state_attrs[switch.ix_xdrive50_climate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'iX xDrive50 Climate',
     }),
     'context': <ANY>,
@@ -176,7 +173,6 @@
 # name: test_entity_state_attrs[switch.m340i_xdrive_climate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'M340i xDrive Climate',
     }),
     'context': <ANY>,

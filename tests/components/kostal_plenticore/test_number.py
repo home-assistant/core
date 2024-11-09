@@ -1,11 +1,11 @@
 """Test Kostal Plenticore number."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
 from pykoplenti import ApiClient, SettingsData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.number import (
     ATTR_MAX,

@@ -2,29 +2,15 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 from aioesphomeapi import EntityInfo, Event, EventInfo
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import EsphomeEntity, platform_async_setup_entry
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome event based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=EventInfo,
-        entity_type=EsphomeEvent,
-        state_type=Event,
-    )
 
 
 class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
@@ -46,3 +32,11 @@ class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
         self._update_state_from_entry_data()
         self._trigger_event(self._state.event_type)
         self.async_write_ha_state()
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=EventInfo,
+    entity_type=EsphomeEvent,
+    state_type=Event,
+)

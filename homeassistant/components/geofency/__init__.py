@@ -89,7 +89,9 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle incoming webhook from Geofency."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))

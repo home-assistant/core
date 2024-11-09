@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': '192.168.1.123',
+        'mac': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'modern_forms',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'device': dict({
+      'info': dict({
+        'client_id': 'MF_000000000000',
+        'device_name': 'ModernFormsFan',
+        'fan_motor_type': 'DC125X25',
+        'fan_type': '1818-56',
+        'federated_identity': 'us-east-1:f3da237b-c19c-4f61-b387-0e6dde2e470b',
+        'firmware_url': '',
+        'firmware_version': '01.03.0025',
+        'light_type': 'F6IN-120V-R1-30',
+        'mac_address': '**REDACTED**',
+        'main_mcu_firmware_version': '01.03.3008',
+        'owner': '**REDACTED**',
+        'product_sku': '',
+        'production_lot_number': '',
+      }),
+      'status': dict({
+        'adaptive_learning_enabled': False,
+        'away_mode_enabled': False,
+        'fan_direction': 'forward',
+        'fan_on': True,
+        'fan_sleep_timer': 0,
+        'fan_speed': 3,
+        'light_brightness': 50,
+        'light_on': True,
+        'light_sleep_timer': 0,
+      }),
+    }),
+  })
+# ---

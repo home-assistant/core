@@ -7,10 +7,12 @@ from datetime import timedelta
 from openerz_api.main import OpenERZConnector
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,7 +22,7 @@ CONF_ZIP = "zip"
 CONF_WASTE_TYPE = "waste_type"
 CONF_NAME = "name"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ZIP): cv.positive_int,
         vol.Required(CONF_WASTE_TYPE, default="waste"): cv.string,

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Literal, cast
-
 import openai
 import voluptuous as vol
 
@@ -20,11 +18,8 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import (
-    config_validation as cv,
-    issue_registry as ir,
-    selector,
-)
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
@@ -53,32 +48,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         client: openai.AsyncClient = entry.runtime_data
 
-        if call.data["size"] in ("256", "512", "1024"):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "image_size_deprecated_format",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                is_persistent=True,
-                learn_more_url="https://www.home-assistant.io/integrations/openai_conversation/",
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="image_size_deprecated_format",
-            )
-            size = "1024x1024"
-        else:
-            size = call.data["size"]
-
-        size = cast(
-            Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"],
-            size,
-        )  # size is selector, so no need to check further
-
         try:
             response = await client.images.generate(
                 model="dall-e-3",
                 prompt=call.data["prompt"],
-                size=size,
+                size=call.data["size"],
                 quality=call.data["quality"],
                 style=call.data["style"],
                 response_format="url",
@@ -102,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ),
                 vol.Required("prompt"): cv.string,
                 vol.Optional("size", default="1024x1024"): vol.In(
-                    ("1024x1024", "1024x1792", "1792x1024", "256", "512", "1024")
+                    ("1024x1024", "1024x1792", "1792x1024")
                 ),
                 vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
                 vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
@@ -115,7 +89,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
-    client = openai.AsyncOpenAI(api_key=entry.data[CONF_API_KEY])
+    client = openai.AsyncOpenAI(
+        api_key=entry.data[CONF_API_KEY],
+        http_client=get_async_client(hass),
+    )
+
+    # Cache current platform data which gets added to each request (caching done by library)
+    _ = await hass.async_add_executor_job(client.platform_headers)
+
     try:
         await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
     except openai.AuthenticationError as err:

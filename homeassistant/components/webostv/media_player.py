@@ -239,7 +239,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         self._attr_assumed_state = True
         if (
-            self._client.media_state is not None
+            self._client.is_on
+            and self._client.media_state is not None
             and self._client.media_state.get("foregroundAppInfo") is not None
         ):
             self._attr_assumed_state = False
@@ -421,13 +422,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     partial_match_channel_id = channel["channelId"]
 
             if perfect_match_channel_id is not None:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Switching to channel <%s> with perfect match",
                     perfect_match_channel_id,
                 )
                 await self._client.set_channel(perfect_match_channel_id)
             elif partial_match_channel_id is not None:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Switching to channel <%s> with partial match",
                     partial_match_channel_id,
                 )

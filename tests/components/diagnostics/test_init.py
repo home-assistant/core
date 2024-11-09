@@ -19,7 +19,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def mock_diagnostics_integration(hass):
+async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
     """Mock a diagnostics integration."""
     hass.config.components.add("fake_integration")
     mock_platform(
@@ -174,6 +174,7 @@ async def test_download_diagnostics(
             "dependencies": [],
             "domain": "fake_integration",
             "is_built_in": True,
+            "overwrites_built_in": False,
             "name": "fake_integration",
             "requirements": [],
         },
@@ -260,6 +261,7 @@ async def test_download_diagnostics(
             "dependencies": [],
             "domain": "fake_integration",
             "is_built_in": True,
+            "overwrites_built_in": False,
             "name": "fake_integration",
             "requirements": [],
         },

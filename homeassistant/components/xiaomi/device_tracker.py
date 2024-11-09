@@ -9,8 +9,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME, default="admin"): cv.string,
@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> XiaomiDeviceScanner | None:
     """Validate the configuration and return a Xiaomi Device Scanner."""
-    scanner = XiaomiDeviceScanner(config[DOMAIN])
+    scanner = XiaomiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -139,7 +139,7 @@ def _retrieve_list(host, token, **kwargs):
             _LOGGER.exception("No list in response from mi router. %s", result)
             return None
     else:
-        _LOGGER.info(
+        _LOGGER.warning(
             "Receive wrong Xiaomi code %s, expected 0 in response %s",
             xiaomi_code,
             result,
@@ -172,7 +172,6 @@ def _get_token(host, username, password):
             )
             _LOGGER.exception(error_message, url, data, result)
             return None
-    else:
-        _LOGGER.error(
-            "Invalid response: [%s] at url: [%s] with data [%s]", res, url, data
-        )
+
+    _LOGGER.error("Invalid response: [%s] at url: [%s] with data [%s]", res, url, data)
+    return None

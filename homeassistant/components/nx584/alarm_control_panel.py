@@ -10,20 +10,13 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -41,7 +34,7 @@ SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 ATTR_ZONE = "zone"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -95,7 +88,6 @@ class NX584Alarm(AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
     _attr_code_format = CodeFormat.NUMBER
-    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -118,11 +110,11 @@ class NX584Alarm(AlarmControlPanelEntity):
                 "Unable to connect to %(host)s: %(reason)s",
                 {"host": self._url, "reason": ex},
             )
-            self._attr_state = None
+            self._attr_alarm_state = None
             zones = []
         except IndexError:
             _LOGGER.error("NX584 reports no partitions")
-            self._attr_state = None
+            self._attr_alarm_state = None
             zones = []
 
         bypassed = False
@@ -136,15 +128,15 @@ class NX584Alarm(AlarmControlPanelEntity):
                 break
 
         if not part["armed"]:
-            self._attr_state = STATE_ALARM_DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
         elif bypassed:
-            self._attr_state = STATE_ALARM_ARMED_HOME
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
         else:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
         for flag in part["condition_flags"]:
             if flag == "Siren on":
-                self._attr_state = STATE_ALARM_TRIGGERED
+                self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

@@ -250,7 +250,7 @@ async def test_search(
                 {
                     "id": "unique_id",
                     "alias": "blueprint_automation_1",
-                    "trigger": {"platform": "template", "value_template": "true"},
+                    "triggers": {"platform": "template", "value_template": "true"},
                     "use_blueprint": {
                         "path": "test_event_service.yaml",
                         "input": {
@@ -262,7 +262,7 @@ async def test_search(
                 },
                 {
                     "alias": "blueprint_automation_2",
-                    "trigger": {"platform": "template", "value_template": "true"},
+                    "triggers": {"platform": "template", "value_template": "true"},
                     "use_blueprint": {
                         "path": "test_event_service.yaml",
                         "input": {
@@ -534,12 +534,14 @@ async def test_search(
         ItemType.DEVICE: {wled_device.id},
         ItemType.ENTITY: {wled_segment_1_entity.entity_id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"wled"},
     }
     assert search(ItemType.AUTOMATION, "automation.wled_device") == {
         ItemType.AREA: {living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"wled"},
     }
     assert search(ItemType.AUTOMATION, "automation.floor") == {
         ItemType.FLOOR: {first_floor.floor_id},
@@ -561,6 +563,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
         ItemType.GROUP: {"group.wled_hue"},
+        ItemType.INTEGRATION: {"hue", "wled"},
     }
     assert search(ItemType.AUTOMATION, "automation.scene") == {
         ItemType.AREA: {bedroom_area.id, kitchen_area.id, living_room_area.id},
@@ -574,6 +577,7 @@ async def test_search(
             scene_wled_hue_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
+        ItemType.INTEGRATION: {"hue", "wled"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
     assert search(ItemType.AUTOMATION, "automation.script") == {
@@ -589,6 +593,7 @@ async def test_search(
             script_scene_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
+        ItemType.INTEGRATION: {"hue", "wled"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
@@ -611,6 +616,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.GROUP: {"group.hue", "group.wled_hue"},
+        ItemType.INTEGRATION: {"hue"},
         ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.device", "script.hue"},
     }
@@ -624,6 +630,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
         ItemType.GROUP: {"group.wled", "group.wled_hue"},
+        ItemType.INTEGRATION: {"wled"},
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
     }
@@ -639,6 +646,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
         ItemType.GROUP: {"group.wled", "group.wled_hue"},
+        ItemType.INTEGRATION: {"wled"},
         ItemType.LABEL: {label_christmas.label_id},
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
@@ -652,6 +660,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.GROUP: {"group.hue", "group.wled_hue"},
+        ItemType.INTEGRATION: {"hue"},
         ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.device", "script.hue"},
     }
@@ -664,6 +673,7 @@ async def test_search(
         ItemType.DEVICE: {wled_device.id},
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.GROUP: {"group.wled", "group.wled_hue"},
+        ItemType.INTEGRATION: {"wled"},
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
     }
@@ -673,6 +683,7 @@ async def test_search(
         ItemType.DEVICE: {wled_device.id},
         ItemType.FLOOR: {second_floor.floor_id},
         ItemType.GROUP: {"group.wled", "group.wled_hue"},
+        ItemType.INTEGRATION: {"wled"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
     assert search(ItemType.ENTITY, hue_segment_1_entity.entity_id) == {
@@ -681,6 +692,7 @@ async def test_search(
         ItemType.DEVICE: {hue_device.id},
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.GROUP: {"group.hue", "group.wled_hue"},
+        ItemType.INTEGRATION: {"hue"},
         ItemType.LABEL: {label_energy.label_id},
         ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.hue"},
@@ -691,6 +703,7 @@ async def test_search(
         ItemType.DEVICE: {hue_device.id},
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.GROUP: {"group.hue", "group.wled_hue"},
+        ItemType.INTEGRATION: {"hue"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
     assert not search(ItemType.ENTITY, "automation.wled")
@@ -722,6 +735,7 @@ async def test_search(
     }
     assert search(ItemType.ENTITY, "light.wled_config_entry_source") == {
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
+        ItemType.INTEGRATION: {"wled"},
     }
 
     assert not search(ItemType.FLOOR, "unknown")
@@ -780,6 +794,7 @@ async def test_search(
             wled_segment_2_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
+        ItemType.INTEGRATION: {"wled"},
     }
     assert search(ItemType.GROUP, "group.hue") == {
         ItemType.AREA: {kitchen_area.id},
@@ -790,6 +805,7 @@ async def test_search(
             hue_segment_2_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"hue"},
     }
     assert search(ItemType.GROUP, "group.wled_hue") == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
@@ -803,6 +819,7 @@ async def test_search(
             hue_segment_2_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
+        ItemType.INTEGRATION: {"hue", "wled"},
         ItemType.SCRIPT: {"script.group"},
     }
 
@@ -841,6 +858,7 @@ async def test_search(
         ItemType.DEVICE: {wled_device.id},
         ItemType.ENTITY: {wled_segment_1_entity.entity_id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"wled"},
     }
     assert search(ItemType.SCENE, "scene.scene_hue_seg_1") == {
         ItemType.AREA: {kitchen_area.id},
@@ -848,6 +866,7 @@ async def test_search(
         ItemType.DEVICE: {hue_device.id},
         ItemType.ENTITY: {hue_segment_1_entity.entity_id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"hue"},
     }
     assert search(ItemType.SCENE, scene_wled_hue_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
@@ -861,6 +880,7 @@ async def test_search(
             hue_segment_2_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
+        ItemType.INTEGRATION: {"hue", "wled"},
         ItemType.LABEL: {label_other.label_id},
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
@@ -880,6 +900,7 @@ async def test_search(
         ItemType.DEVICE: {wled_device.id},
         ItemType.ENTITY: {wled_segment_1_entity.entity_id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"wled"},
     }
     assert search(ItemType.SCRIPT, "script.hue") == {
         ItemType.AREA: {kitchen_area.id},
@@ -887,6 +908,7 @@ async def test_search(
         ItemType.DEVICE: {hue_device.id},
         ItemType.ENTITY: {hue_segment_1_entity.entity_id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"hue"},
     }
     assert search(ItemType.SCRIPT, "script.script_with_templated_services") == {}
     assert search(ItemType.SCRIPT, "script.device") == {
@@ -894,6 +916,7 @@ async def test_search(
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
         ItemType.FLOOR: {first_floor.floor_id},
+        ItemType.INTEGRATION: {"hue"},
     }
     assert search(ItemType.SCRIPT, "script.floor") == {
         ItemType.FLOOR: {first_floor.floor_id},
@@ -915,6 +938,7 @@ async def test_search(
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
         ItemType.GROUP: {"group.wled_hue"},
+        ItemType.INTEGRATION: {"hue", "wled"},
     }
     assert search(ItemType.SCRIPT, script_scene_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id, kitchen_area.id, living_room_area.id},
@@ -928,6 +952,7 @@ async def test_search(
             scene_wled_hue_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
+        ItemType.INTEGRATION: {"hue", "wled"},
         ItemType.LABEL: {label_other.label_id},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
@@ -944,6 +969,7 @@ async def test_search(
             script_scene_entity.entity_id,
         },
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
+        ItemType.INTEGRATION: {"hue", "wled"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
@@ -981,6 +1007,7 @@ async def test_search(
         ),
         ItemType.CONFIG_ENTRY: [hue_config_entry.entry_id],
         ItemType.FLOOR: [first_floor.floor_id],
+        ItemType.INTEGRATION: ["hue"],
         ItemType.SCENE: unordered(
             ["scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id]
         ),

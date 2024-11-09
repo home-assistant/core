@@ -26,6 +26,8 @@ from .entity import (
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeslemetryBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -163,6 +165,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
 ENERGY_LIVE_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(key="backup_capable"),
     BinarySensorEntityDescription(key="grid_services_active"),
+    BinarySensorEntityDescription(key="storm_mode_active"),
 )
 
 

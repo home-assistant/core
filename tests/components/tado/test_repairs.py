@@ -29,9 +29,9 @@ async def test_manage_water_heater_fallback_issue_not_created(
     """Test water heater fallback issue is not needed."""
     zone_name = "Hot Water"
     expected_issue_id = f"{WATER_HEATER_FALLBACK_REPAIR}_{zone_name}"
-    water_heater_entities = [MockWaterHeater(zone_name)]
+    water_heater_names = [zone_name]
     manage_water_heater_fallback_issue(
-        water_heater_entities=water_heater_entities,
+        water_heater_names=water_heater_names,
         integration_overlay_fallback=CONST_OVERLAY_TADO_MODE,
         hass=hass,
     )
@@ -52,9 +52,9 @@ async def test_manage_water_heater_fallback_issue_created(
     """Test water heater fallback issue created cases."""
     zone_name = "Hot Water"
     expected_issue_id = f"{WATER_HEATER_FALLBACK_REPAIR}_{zone_name}"
-    water_heater_entities = [MockWaterHeater(zone_name)]
+    water_heater_names = [zone_name]
     manage_water_heater_fallback_issue(
-        water_heater_entities=water_heater_entities,
+        water_heater_names=water_heater_names,
         integration_overlay_fallback=integration_overlay_fallback,
         hass=hass,
     )

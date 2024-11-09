@@ -1,11 +1,11 @@
 """Common fixtures for the IMGW-PIB tests."""
 
+from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from imgw_pib import HydrologicalData, SensorData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.imgw_pib.const import DOMAIN
 

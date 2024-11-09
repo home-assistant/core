@@ -67,7 +67,8 @@ class YeelightScanner:
     async def async_setup(self) -> None:
         """Set up the scanner."""
         if self._setup_future is not None:
-            return await self._setup_future
+            await self._setup_future
+            return
 
         self._setup_future = self._hass.loop.create_future()
         connected_futures: list[asyncio.Future[None]] = []

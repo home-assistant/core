@@ -271,7 +271,7 @@ async def _async_setup_with_adapter(
 class MockBleakClient(BleakClient):
     """Mock bleak client."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock init."""
         super().__init__(*args, **kwargs)
         self._device_path = "/dev/test"

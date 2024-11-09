@@ -11,7 +11,7 @@
       },
       "link": {
         "title": "Link Access point",
-        "description": "Press the blue button on the access point and the submit button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)"
+        "description": "Press the blue button on the access point and the **Submit** button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)"
       }
     },
     "error": {
@@ -24,6 +24,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "connection_aborted": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "access_point_not_found": {
+      "message": "No matching access point found for access point id {id}"
     }
   },
   "services": {
@@ -132,6 +137,20 @@
         "entity_id": {
           "name": "Entity",
           "description": "The ID of the measuring entity. Use 'all' keyword to reset all energy counters."
+        }
+      }
+    },
+    "set_home_cooling_mode": {
+      "name": "Set home cooling mode",
+      "description": "Set the heating/cooling mode for the entire home",
+      "fields": {
+        "accesspoint_id": {
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
+        },
+        "cooling": {
+          "name": "Cooling",
+          "description": "Enable for cooling mode, disable for heating mode"
         }
       }
     }

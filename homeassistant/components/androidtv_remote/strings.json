@@ -39,7 +39,18 @@
     "step": {
       "init": {
         "data": {
+          "apps": "Configure applications list",
           "enable_ime": "Enable IME. Needed for getting the current app. Disable for devices that show 'Use keyboard on mobile device screen' instead of the on screen keyboard."
+        }
+      },
+      "apps": {
+        "title": "Configure Android Apps",
+        "description": "Configure application id {app_id}",
+        "data": {
+          "app_name": "Application Name",
+          "app_id": "Application ID",
+          "app_icon": "Application Icon",
+          "app_delete": "Check to delete this application"
         }
       }
     }

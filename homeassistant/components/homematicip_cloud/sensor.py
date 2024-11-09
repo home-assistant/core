@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncEnergySensorsInterface,
+    AsyncFloorTerminalBlock6,
+    AsyncFloorTerminalBlock10,
+    AsyncFloorTerminalBlock12,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
     AsyncHeatingThermostatCompact,
@@ -26,8 +31,13 @@ from homematicip.aio.device import (
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
     AsyncWeatherSensorPro,
+    AsyncWiredFloorTerminalBlock12,
 )
-from homematicip.base.enums import ValveState
+from homematicip.base.enums import FunctionalChannelType, ValveState
+from homematicip.base.functionalChannels import (
+    FloorTerminalBlockMechanicChannel,
+    FunctionalChannel,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -43,12 +53,17 @@ from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
+from .const import DOMAIN
+from .entity import HomematicipGenericEntity
 from .hap import HomematicipHAP
+from .helpers import get_channels_from_device
 
 ATTR_CURRENT_ILLUMINATION = "current_illumination"
 ATTR_LOWEST_ILLUMINATION = "lowest_illumination"
@@ -58,6 +73,18 @@ ATTR_RIGHT_COUNTER = "right_counter"
 ATTR_TEMPERATURE_OFFSET = "temperature_offset"
 ATTR_WIND_DIRECTION = "wind_direction"
 ATTR_WIND_DIRECTION_VARIATION = "wind_direction_variation_in_degree"
+ATTR_ESI_TYPE = "type"
+ESI_TYPE_UNKNOWN = "UNKNOWN"
+ESI_CONNECTED_SENSOR_TYPE_IEC = "ES_IEC"
+ESI_CONNECTED_SENSOR_TYPE_GAS = "ES_GAS"
+ESI_CONNECTED_SENSOR_TYPE_LED = "ES_LED"
+
+ESI_TYPE_CURRENT_POWER_CONSUMPTION = "CurrentPowerConsumption"
+ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF = "ENERGY_COUNTER_USAGE_HIGH_TARIFF"
+ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF = "ENERGY_COUNTER_USAGE_LOW_TARIFF"
+ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF = "ENERGY_COUNTER_INPUT_SINGLE_TARIFF"
+ESI_TYPE_CURRENT_GAS_FLOW = "CurrentGasFlow"
+ESI_TYPE_CURRENT_GAS_VOLUME = "GasVolume"
 
 ILLUMINATION_DEVICE_ATTRIBUTES = {
     "currentIllumination": ATTR_CURRENT_ILLUMINATION,
@@ -66,13 +93,13 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    hap = hass.data[DOMAIN][config_entry.unique_id]
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, AsyncHomeControlAccessPoint):
@@ -138,8 +165,98 @@ async def async_setup_entry(
             entities.append(HomematicpTemperatureExternalSensorCh1(hap, device))
             entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
             entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
+        if isinstance(device, AsyncEnergySensorsInterface):
+            for ch in get_channels_from_device(
+                device, FunctionalChannelType.ENERGY_SENSORS_INTERFACE_CHANNEL
+            ):
+                if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_IEC:
+                    if ch.currentPowerConsumption is not None:
+                        entities.append(HmipEsiIecPowerConsumption(hap, device))
+                    if ch.energyCounterOneType != ESI_TYPE_UNKNOWN:
+                        entities.append(HmipEsiIecEnergyCounterHighTariff(hap, device))
+                    if ch.energyCounterTwoType != ESI_TYPE_UNKNOWN:
+                        entities.append(HmipEsiIecEnergyCounterLowTariff(hap, device))
+                    if ch.energyCounterThreeType != ESI_TYPE_UNKNOWN:
+                        entities.append(
+                            HmipEsiIecEnergyCounterInputSingleTariff(hap, device)
+                        )
+
+                if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_GAS:
+                    if ch.currentGasFlow is not None:
+                        entities.append(HmipEsiGasCurrentGasFlow(hap, device))
+                    if ch.gasVolume is not None:
+                        entities.append(HmipEsiGasGasVolume(hap, device))
+
+                if ch.connectedEnergySensorType == ESI_CONNECTED_SENSOR_TYPE_LED:
+                    if ch.currentPowerConsumption is not None:
+                        entities.append(HmipEsiLedCurrentPowerConsumption(hap, device))
+                    entities.append(HmipEsiLedEnergyCounterHighTariff(hap, device))
+        if isinstance(
+            device,
+            (
+                AsyncFloorTerminalBlock6,
+                AsyncFloorTerminalBlock10,
+                AsyncFloorTerminalBlock12,
+                AsyncWiredFloorTerminalBlock12,
+            ),
+        ):
+            entities.extend(
+                HomematicipFloorTerminalBlockMechanicChannelValve(
+                    hap, device, channel=channel.index
+                )
+                for channel in device.functionalChannels
+                if isinstance(channel, FloorTerminalBlockMechanicChannel)
+                and getattr(channel, "valvePosition", None) is not None
+            )
 
     async_add_entities(entities)
+
+
+class HomematicipFloorTerminalBlockMechanicChannelValve(
+    HomematicipGenericEntity, SensorEntity
+):
+    """Representation of the HomematicIP floor terminal block."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, hap: HomematicipHAP, device, channel, is_multi_channel=True
+    ) -> None:
+        """Initialize floor terminal block 12 device."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            post="Valve Position",
+        )
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        if super().icon:
+            return super().icon
+        channel = next(
+            channel
+            for channel in self._device.functionalChannels
+            if channel.index == self._channel
+        )
+        if channel.valveState != ValveState.ADAPTION_DONE:
+            return "mdi:alert"
+        return "mdi:heating-coil"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the floor terminal block mechanical channel valve position."""
+        channel = next(
+            channel
+            for channel in self._device.functionalChannels
+            if channel.index == self._channel
+        )
+        if channel.valveState != ValveState.ADAPTION_DONE:
+            return None
+        return round(channel.valvePosition * 100)
 
 
 class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
@@ -303,6 +420,7 @@ class HomematicipWindspeedSensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.WIND_SPEED
     _attr_native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the windspeed sensor."""
@@ -334,6 +452,7 @@ class HomematicipTodayRainSensor(HomematicipGenericEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.PRECIPITATION
     _attr_native_unit_of_measurement = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
@@ -394,6 +513,187 @@ class HomematicpTemperatureExternalSensorDelta(HomematicipGenericEntity, SensorE
     def native_value(self) -> float:
         """Return the state."""
         return self._device.temperatureExternalDelta
+
+
+class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):
+    """EntityDescription for HmIP-ESI Sensors."""
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: HomematicipGenericEntity,
+        key: str,
+        value_fn: Callable[[FunctionalChannel], StateType],
+        type_fn: Callable[[FunctionalChannel], str],
+    ) -> None:
+        """Initialize Sensor Entity."""
+        super().__init__(
+            hap=hap,
+            device=device,
+            channel=1,
+            post=key,
+            is_multi_channel=False,
+        )
+
+        self._value_fn = value_fn
+        self._type_fn = type_fn
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the esi sensor."""
+        state_attr = super().extra_state_attributes
+        state_attr[ATTR_ESI_TYPE] = self._type_fn(self.functional_channel)
+
+        return state_attr
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the state of the sensor."""
+        return str(self._value_fn(self.functional_channel))
+
+
+class HmipEsiIecPowerConsumption(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI IEC currentPowerConsumption sensor."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the  device."""
+        super().__init__(
+            hap,
+            device,
+            key="CurrentPowerConsumption",
+            value_fn=lambda channel: channel.currentPowerConsumption,
+            type_fn=lambda channel: "CurrentPowerConsumption",
+        )
+
+
+class HmipEsiIecEnergyCounterHighTariff(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI IEC energyCounterOne sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the  device."""
+        super().__init__(
+            hap,
+            device,
+            key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
+            value_fn=lambda channel: channel.energyCounterOne,
+            type_fn=lambda channel: channel.energyCounterOneType,
+        )
+
+
+class HmipEsiIecEnergyCounterLowTariff(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI IEC energyCounterTwo sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the  device."""
+        super().__init__(
+            hap,
+            device,
+            key=ESI_TYPE_ENERGY_COUNTER_USAGE_LOW_TARIFF,
+            value_fn=lambda channel: channel.energyCounterTwo,
+            type_fn=lambda channel: channel.energyCounterTwoType,
+        )
+
+
+class HmipEsiIecEnergyCounterInputSingleTariff(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI IEC energyCounterThree sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the device."""
+        super().__init__(
+            hap,
+            device,
+            key=ESI_TYPE_ENERGY_COUNTER_INPUT_SINGLE_TARIFF,
+            value_fn=lambda channel: channel.energyCounterThree,
+            type_fn=lambda channel: channel.energyCounterThreeType,
+        )
+
+
+class HmipEsiGasCurrentGasFlow(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI Gas currentGasFlow sensor."""
+
+    _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
+    _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the device."""
+        super().__init__(
+            hap,
+            device,
+            key="CurrentGasFlow",
+            value_fn=lambda channel: channel.currentGasFlow,
+            type_fn=lambda channel: "CurrentGasFlow",
+        )
+
+
+class HmipEsiGasGasVolume(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI Gas gasVolume sensor."""
+
+    _attr_device_class = SensorDeviceClass.GAS
+    _attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the device."""
+        super().__init__(
+            hap,
+            device,
+            key="GasVolume",
+            value_fn=lambda channel: channel.gasVolume,
+            type_fn=lambda channel: "GasVolume",
+        )
+
+
+class HmipEsiLedCurrentPowerConsumption(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI LED currentPowerConsumption sensor."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the device."""
+        super().__init__(
+            hap,
+            device,
+            key="CurrentPowerConsumption",
+            value_fn=lambda channel: channel.currentPowerConsumption,
+            type_fn=lambda channel: "CurrentPowerConsumption",
+        )
+
+
+class HmipEsiLedEnergyCounterHighTariff(HmipEsiSensorEntity):
+    """Representation of the Hmip-ESI LED energyCounterOne sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the device."""
+        super().__init__(
+            hap,
+            device,
+            key=ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
+            value_fn=lambda channel: channel.energyCounterOne,
+            type_fn=lambda channel: ESI_TYPE_ENERGY_COUNTER_USAGE_HIGH_TARIFF,
+        )
 
 
 class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEntity):

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -12,7 +12,6 @@ from pytradfri.command import Command
 from pytradfri.const import ATTR_FIRMWARE_VERSION, ATTR_GATEWAY_ID
 from pytradfri.device import Device
 from pytradfri.gateway import Gateway
-from typing_extensions import Generator
 
 from homeassistant.components.tradfri.const import DOMAIN
 

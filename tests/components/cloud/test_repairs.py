@@ -6,8 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.cloud import DOMAIN
-import homeassistant.components.cloud.repairs as cloud_repairs
+from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud.repairs import (
+    async_manage_legacy_subscription_issue,
+)
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
@@ -65,12 +67,12 @@ async def test_legacy_subscription_delete_issue_if_no_longer_legacy(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that we delete the legacy subscription issue if no longer legacy."""
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
+    async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
     assert issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {})
+    async_manage_legacy_subscription_issue(hass, {})
     assert not issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
@@ -93,7 +95,7 @@ async def test_legacy_subscription_repair_flow(
         json={"url": "https://paypal.com"},
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
+    async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
     repair_issue = issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )
@@ -174,7 +176,7 @@ async def test_legacy_subscription_repair_flow_timeout(
         status=403,
     )
 
-    cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
+    async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})
     repair_issue = issue_registry.async_get_issue(
         domain="cloud", issue_id="legacy_subscription"
     )

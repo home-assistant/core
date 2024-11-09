@@ -12,7 +12,7 @@ import geopy.distance
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SeeCallback,
 )
 from homeassistant.const import (
@@ -53,7 +53,7 @@ FILTER_PORT = 14580
 
 MSG_FORMATS = ["compressed", "uncompressed", "mic-e", "object"]
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CALLSIGNS): cv.ensure_list,
         vol.Required(CONF_USERNAME): cv.string,
@@ -159,7 +159,7 @@ class AprsListenerThread(threading.Thread):
         self.ais.set_filter(self.server_filter)
 
         try:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Opening connection to %s with callsign %s", self.host, self.callsign
             )
             self.ais.connect()
@@ -170,7 +170,7 @@ class AprsListenerThread(threading.Thread):
         except (AprsConnectionError, LoginError) as err:
             self.start_complete(False, str(err))
         except OSError:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Closing connection to %s with callsign %s", self.host, self.callsign
             )
 

@@ -27,7 +27,6 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -36,7 +35,6 @@ from .coordinator import GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 

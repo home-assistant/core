@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -73,7 +73,7 @@ CITYBIKES_NETWORKS = "citybikes_networks"
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME, default=""): cv.string,
             vol.Optional(CONF_NETWORK): cv.string,

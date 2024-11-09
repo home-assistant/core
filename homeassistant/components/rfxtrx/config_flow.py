@@ -38,6 +38,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import VolDictType
 
 from . import (
     DOMAIN,
@@ -86,9 +87,8 @@ class RfxtrxOptionsFlow(OptionsFlow):
     _device_registry: dr.DeviceRegistry
     _device_entries: list[dr.DeviceEntry]
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize rfxtrx options flow."""
-        self._config_entry = config_entry
         self._global_options: dict[str, Any] = {}
         self._selected_device: dict[str, Any] = {}
         self._selected_device_entry_id: str | None = None
@@ -119,9 +119,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
                 event_code = device_data["event_code"]
                 assert event_code
                 self._selected_device_event_code = event_code
-                self._selected_device = self._config_entry.data[CONF_DEVICES][
-                    event_code
-                ]
+                self._selected_device = self.config_entry.data[CONF_DEVICES][event_code]
                 self._selected_device_object = get_rfx_object(event_code)
                 return await self.async_step_set_device_options()
             if CONF_EVENT_CODE in user_input:
@@ -147,7 +145,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
 
         device_registry = dr.async_get(self.hass)
         device_entries = dr.async_entries_for_config_entry(
-            device_registry, self._config_entry.entry_id
+            device_registry, self.config_entry.entry_id
         )
         self._device_registry = device_registry
         self._device_entries = device_entries
@@ -161,11 +159,11 @@ class RfxtrxOptionsFlow(OptionsFlow):
         options = {
             vol.Optional(
                 CONF_AUTOMATIC_ADD,
-                default=self._config_entry.data[CONF_AUTOMATIC_ADD],
+                default=self.config_entry.data[CONF_AUTOMATIC_ADD],
             ): bool,
             vol.Optional(
                 CONF_PROTOCOLS,
-                default=self._config_entry.data.get(CONF_PROTOCOLS) or [],
+                default=self.config_entry.data.get(CONF_PROTOCOLS) or [],
             ): cv.multi_select(RECV_MODES),
             vol.Optional(CONF_EVENT_CODE): str,
             vol.Optional(CONF_DEVICE): vol.In(configure_devices),
@@ -245,9 +243,10 @@ class RfxtrxOptionsFlow(OptionsFlow):
 
         device_data = self._selected_device
 
-        data_schema = {}
+        data_schema: VolDictType = {}
 
         if binary_supported(self._selected_device_object):
+            off_delay_schema: VolDictType
             if device_data.get(CONF_OFF_DELAY):
                 off_delay_schema = {
                     vol.Optional(
@@ -423,7 +422,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
     def _can_add_device(self, new_rfx_obj: rfxtrxmod.RFXtrxEvent) -> bool:
         """Check if device does not already exist."""
         new_device_id = get_device_id(new_rfx_obj.device)
-        for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
+        for packet_id, entity_info in self.config_entry.data[CONF_DEVICES].items():
             rfx_obj = get_rfx_object(packet_id)
             assert rfx_obj
 
@@ -466,7 +465,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
         assert entry
         device_id = get_device_tuple_from_identifiers(entry.identifiers)
         assert device_id
-        for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
+        for packet_id, entity_info in self.config_entry.data[CONF_DEVICES].items():
             if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
                 event_code = cast(str, packet_id)
                 break
@@ -479,8 +478,8 @@ class RfxtrxOptionsFlow(OptionsFlow):
         devices: dict[str, Any] | None = None,
     ) -> None:
         """Update data in ConfigEntry."""
-        entry_data = self._config_entry.data.copy()
-        entry_data[CONF_DEVICES] = copy.deepcopy(self._config_entry.data[CONF_DEVICES])
+        entry_data = self.config_entry.data.copy()
+        entry_data[CONF_DEVICES] = copy.deepcopy(self.config_entry.data[CONF_DEVICES])
         if global_options:
             entry_data.update(global_options)
         if devices:
@@ -492,9 +491,9 @@ class RfxtrxOptionsFlow(OptionsFlow):
                     entry_data[CONF_DEVICES].pop(event_code, None)
                 else:
                     entry_data[CONF_DEVICES][event_code] = options
-        self.hass.config_entries.async_update_entry(self._config_entry, data=entry_data)
+        self.hass.config_entries.async_update_entry(self.config_entry, data=entry_data)
         self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self._config_entry.entry_id)
+            self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
 
 
@@ -635,9 +634,11 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> RfxtrxOptionsFlow:
         """Get the options flow for this handler."""
-        return RfxtrxOptionsFlow(config_entry)
+        return RfxtrxOptionsFlow()
 
 
 def _test_transport(host: str | None, port: int | None, device: str | None) -> bool:

@@ -1,10 +1,10 @@
 """Configuration for Flexit Nordic (BACnet) tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from flexit_bacnet import FlexitBACnet
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.flexit_bacnet.const import DOMAIN

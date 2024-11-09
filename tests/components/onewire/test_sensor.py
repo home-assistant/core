@@ -1,5 +1,6 @@
 """Tests for 1-Wire sensors."""
 
+from collections.abc import Generator
 from copy import deepcopy
 import logging
 from unittest.mock import MagicMock, _patch_dict, patch
@@ -7,7 +8,6 @@ from unittest.mock import MagicMock, _patch_dict, patch
 from pyownet.protocol import OwnetError
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

@@ -1,16 +1,13 @@
 """Common fixtures and objects for the LG webOS integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
-from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import CHANNEL_1, CHANNEL_2, CLIENT_KEY, FAKE_UUID, MOCK_APPS, MOCK_INPUTS
-
-from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -20,12 +17,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.webostv.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(name="client")

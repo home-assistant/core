@@ -3,19 +3,22 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Self
 from unittest import mock
 
 from freezegun import freeze_time
 import prometheus_client
+from prometheus_client.utils import floatToGoString
 import pytest
 
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     climate,
     counter,
     cover,
     device_tracker,
+    fan,
     humidifier,
     input_boolean,
     input_number,
@@ -28,14 +31,28 @@ from homeassistant.components import (
     switch,
     update,
 )
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
 )
+from homeassistant.components.fan import (
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+)
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
+from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -51,14 +68,13 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
-    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
+    STATE_UNKNOWN,
     UnitOfEnergy,
     UnitOfTemperature,
 )
@@ -72,12 +88,376 @@ from tests.typing import ClientSessionGenerator
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
 
+class EntityMetric:
+    """Represents a Prometheus metric for a Home Assistant entity."""
+
+    metric_name: str
+    labels: dict[str, str]
+
+    @classmethod
+    def required_labels(cls) -> list[str]:
+        """List of all required labels for a Prometheus metric."""
+        return [
+            "domain",
+            "friendly_name",
+            "entity",
+        ]
+
+    def __init__(self, metric_name: str, **kwargs: Any) -> None:
+        """Create a new EntityMetric based on metric name and labels."""
+        self.metric_name = metric_name
+        self.labels = kwargs
+
+        # Labels that are required for all entities.
+        for labelname in self.required_labels():
+            assert labelname in self.labels
+            assert self.labels[labelname] != ""
+
+    def withValue(self, value: float) -> Self:
+        """Return a metric with value."""
+        return EntityMetricWithValue(self, value)
+
+    @property
+    def _metric_name_string(self) -> str:
+        """Return a full metric name as a string."""
+        labels = ",".join(
+            f'{key}="{value}"' for key, value in sorted(self.labels.items())
+        )
+        return f"{self.metric_name}{{{labels}}}"
+
+    def _in_metrics(self, metrics: list[str]) -> bool:
+        """Report whether this metric exists in the provided Prometheus output."""
+        return any(line.startswith(self._metric_name_string) for line in metrics)
+
+    def assert_in_metrics(self, metrics: list[str]) -> None:
+        """Assert that this metric exists in the provided Prometheus output."""
+        assert self._in_metrics(metrics)
+
+    def assert_not_in_metrics(self, metrics: list[str]) -> None:
+        """Assert that this metric does not exist in Prometheus output."""
+        assert not self._in_metrics(metrics)
+
+
+class EntityMetricWithValue(EntityMetric):
+    """Represents a Prometheus metric with a value."""
+
+    value: float
+
+    def __init__(self, metric: EntityMetric, value: float) -> None:
+        """Create a new metric with a value based on a metric."""
+        super().__init__(metric.metric_name, **metric.labels)
+        self.value = value
+
+    @property
+    def _metric_string(self) -> str:
+        """Return a full metric string."""
+        value = floatToGoString(self.value)
+        return f"{self._metric_name_string} {value}"
+
+    def assert_in_metrics(self, metrics: list[str]) -> None:
+        """Assert that this metric exists in the provided Prometheus output."""
+        assert self._metric_string in metrics
+
+
 @dataclass
 class FilterTest:
     """Class for capturing a filter test."""
 
     id: str
     should_pass: bool
+
+
+def test_entity_metric_generates_metric_name_string_without_value() -> None:
+    """Test using EntityMetric to format a simple metric string without any value."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain=domain,
+        friendly_name="Outside Temperature",
+        entity=f"{domain}.{object_id}",
+    )
+    assert entity_metric._metric_name_string == (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"}'
+    )
+
+
+def test_entity_metric_generates_metric_string_with_value() -> None:
+    """Test using EntityMetric to format a simple metric string but with a metric value included."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain=domain,
+        friendly_name="Outside Temperature",
+        entity=f"{domain}.{object_id}",
+    ).withValue(17.2)
+    assert entity_metric._metric_string == (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"}'
+        " 17.2"
+    )
+
+
+def test_entity_metric_raises_exception_without_required_labels() -> None:
+    """Test using EntityMetric to raise exception when required labels are missing."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    test_kwargs = {
+        "metric_name": "homeassistant_sensor_temperature_celsius",
+        "domain": domain,
+        "friendly_name": "Outside Temperature",
+        "entity": f"{domain}.{object_id}",
+    }
+
+    assert len(EntityMetric.required_labels()) > 0
+
+    for labelname in EntityMetric.required_labels():
+        label_kwargs = dict(test_kwargs)
+        # Delete the required label and ensure we get an exception
+        del label_kwargs[labelname]
+        with pytest.raises(AssertionError):
+            EntityMetric(**label_kwargs)
+
+
+def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> None:
+    """Test using EntityMetric to raise exception when required label value is empty string."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+    test_kwargs = {
+        "metric_name": "homeassistant_sensor_temperature_celsius",
+        "domain": domain,
+        "friendly_name": "Outside Temperature",
+        "entity": f"{domain}.{object_id}",
+    }
+
+    assert len(EntityMetric.required_labels()) > 0
+
+    for labelname in EntityMetric.required_labels():
+        label_kwargs = dict(test_kwargs)
+        # Replace the required label with "" and ensure we get an exception
+        label_kwargs[labelname] = ""
+        with pytest.raises(AssertionError):
+            EntityMetric(**label_kwargs)
+
+
+def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
+    """Test using EntityMetric to format a simple metric string with labels alphabetically ordered."""
+    domain = "sensor"
+    object_id = "outside_temperature"
+
+    static_metric_string = (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature",'
+        'zed_label="foo"'
+        "}"
+        " 17.2"
+    )
+
+    ordered_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain=domain,
+        entity=f"{domain}.{object_id}",
+        friendly_name="Outside Temperature",
+        zed_label="foo",
+    ).withValue(17.2)
+    assert ordered_entity_metric._metric_string == static_metric_string
+
+    unordered_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        zed_label="foo",
+        entity=f"{domain}.{object_id}",
+        friendly_name="Outside Temperature",
+        domain=domain,
+    ).withValue(17.2)
+    assert unordered_entity_metric._metric_string == static_metric_string
+
+
+def test_entity_metric_generates_metric_string_with_non_required_labels() -> None:
+    """Test using EntityMetric to format a simple metric string but with extra labels and values included."""
+    mode_entity_metric = EntityMetric(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="away",
+    ).withValue(1)
+    assert mode_entity_metric._metric_string == (
+        "climate_preset_mode{"
+        'domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"'
+        "}"
+        " 1.0"
+    )
+
+    action_entity_metric = EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+        action="heating",
+    ).withValue(1)
+    assert action_entity_metric._metric_string == (
+        "climate_action{"
+        'action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"'
+        "}"
+        " 1.0"
+    )
+
+    state_entity_metric = EntityMetric(
+        metric_name="cover_state",
+        domain="cover",
+        friendly_name="Curtain",
+        entity="cover.curtain",
+        state="open",
+    ).withValue(1)
+    assert state_entity_metric._metric_string == (
+        "cover_state{"
+        'domain="cover",'
+        'entity="cover.curtain",'
+        'friendly_name="Curtain",'
+        'state="open"'
+        "}"
+        " 1.0"
+    )
+
+    foo_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+        foo="bar",
+    ).withValue(17.2)
+    assert foo_entity_metric._metric_string == (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'foo="bar",'
+        'friendly_name="Outside Temperature"'
+        "}"
+        " 17.2"
+    )
+
+
+def test_entity_metric_assert_helpers() -> None:
+    """Test using EntityMetric for both assert_in_metrics and assert_not_in_metrics."""
+    temp_metric = (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'foo="bar",'
+        'friendly_name="Outside Temperature"'
+        "}"
+    )
+    climate_metric = (
+        "climate_preset_mode{"
+        'domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"'
+        "}"
+    )
+    excluded_cover_metric = (
+        "cover_state{"
+        'domain="cover",'
+        'entity="cover.curtain",'
+        'friendly_name="Curtain",'
+        'state="open"'
+        "}"
+    )
+    metrics = [
+        temp_metric,
+        climate_metric,
+    ]
+    # First make sure the excluded metric is not present
+    assert excluded_cover_metric not in metrics
+    # now check for actual metrics
+    temp_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+        foo="bar",
+    )
+    assert temp_entity_metric._metric_name_string == temp_metric
+    temp_entity_metric.assert_in_metrics(metrics)
+
+    climate_entity_metric = EntityMetric(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="away",
+    )
+    assert climate_entity_metric._metric_name_string == climate_metric
+    climate_entity_metric.assert_in_metrics(metrics)
+
+    excluded_cover_entity_metric = EntityMetric(
+        metric_name="cover_state",
+        domain="cover",
+        friendly_name="Curtain",
+        entity="cover.curtain",
+        state="open",
+    )
+    assert excluded_cover_entity_metric._metric_name_string == excluded_cover_metric
+    excluded_cover_entity_metric.assert_not_in_metrics(metrics)
+
+
+def test_entity_metric_with_value_assert_helpers() -> None:
+    """Test using EntityMetricWithValue helpers, which is only assert_in_metrics."""
+    temp_metric = (
+        "homeassistant_sensor_temperature_celsius{"
+        'domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'foo="bar",'
+        'friendly_name="Outside Temperature"'
+        "}"
+        " 17.2"
+    )
+    climate_metric = (
+        "climate_preset_mode{"
+        'domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee",'
+        'mode="away"'
+        "}"
+        " 1.0"
+    )
+    metrics = [
+        temp_metric,
+        climate_metric,
+    ]
+    temp_entity_metric = EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+        foo="bar",
+    ).withValue(17.2)
+    assert temp_entity_metric._metric_string == temp_metric
+    temp_entity_metric.assert_in_metrics(metrics)
+
+    climate_entity_metric = EntityMetric(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="away",
+    ).withValue(1)
+    assert climate_entity_metric._metric_string == climate_metric
+    climate_entity_metric.assert_in_metrics(metrics)
 
 
 @pytest.fixture(name="client")
@@ -138,16 +518,18 @@ async def test_setup_enumeration(
         suggested_object_id="outside_temperature",
         original_name="Outside Temperature",
     )
-    set_state_with_entry(hass, sensor_1, 12.3, {})
+    state = 12.3
+    set_state_with_entry(hass, sensor_1, state, {})
     assert await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
 
     client = await hass_client()
     body = await generate_latest_metrics(client)
-    assert (
-        'homeassistant_sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 12.3' in body
-    )
+    EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(state).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -163,17 +545,19 @@ async def test_view_empty_namespace(
         "Objects collected during gc" in body
     )
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Radio Energy",
+        entity="sensor.radio_energy",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'last_updated_time_seconds{domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 86400.0' in body
-    )
+    EntityMetric(
+        metric_name="last_updated_time_seconds",
+        domain="sensor",
+        friendly_name="Radio Energy",
+        entity="sensor.radio_energy",
+    ).withValue(86400.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [None])
@@ -189,11 +573,12 @@ async def test_view_default_namespace(
         "Objects collected during gc" in body
     )
 
-    assert (
-        'homeassistant_sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="homeassistant_sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -203,29 +588,33 @@ async def test_sensor_unit(
     """Test prometheus metrics for sensors with a unit."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_unit_kwh{domain="sensor",'
-        'entity="sensor.television_energy",'
-        'friendly_name="Television Energy"} 74.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_unit_kwh",
+        domain="sensor",
+        friendly_name="Television Energy",
+        entity="sensor.television_energy",
+    ).withValue(74.0).assert_in_metrics(body)
 
-    assert (
-        'sensor_unit_sek_per_kwh{domain="sensor",'
-        'entity="sensor.electricity_price",'
-        'friendly_name="Electricity price"} 0.123' in body
-    )
+    EntityMetric(
+        metric_name="sensor_unit_sek_per_kwh",
+        domain="sensor",
+        friendly_name="Electricity price",
+        entity="sensor.electricity_price",
+    ).withValue(0.123).assert_in_metrics(body)
 
-    assert (
-        'sensor_unit_u0xb0{domain="sensor",'
-        'entity="sensor.wind_direction",'
-        'friendly_name="Wind Direction"} 25.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_unit_u0xb0",
+        domain="sensor",
+        friendly_name="Wind Direction",
+        entity="sensor.wind_direction",
+    ).withValue(25.0).assert_in_metrics(body)
 
-    assert (
-        'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
-        'entity="sensor.sps30_pm_1um_weight_concentration",'
-        'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
-    )
+    EntityMetric(
+        metric_name="sensor_unit_u0xb5g_per_mu0xb3",
+        domain="sensor",
+        friendly_name="SPS30 PM <1µm Weight concentration",
+        entity="sensor.sps30_pm_1um_weight_concentration",
+    ).withValue(3.7069).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -235,23 +624,26 @@ async def test_sensor_without_unit(
     """Test prometheus metrics for sensors without a unit."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_state{domain="sensor",'
-        'entity="sensor.trend_gradient",'
-        'friendly_name="Trend Gradient"} 0.002' in body
-    )
+    EntityMetric(
+        metric_name="sensor_state",
+        domain="sensor",
+        friendly_name="Trend Gradient",
+        entity="sensor.trend_gradient",
+    ).withValue(0.002).assert_in_metrics(body)
 
-    assert (
-        'sensor_state{domain="sensor",'
-        'entity="sensor.text",'
-        'friendly_name="Text"} 0' not in body
-    )
+    EntityMetric(
+        metric_name="sensor_state",
+        domain="sensor",
+        friendly_name="Text",
+        entity="sensor.text",
+    ).assert_not_in_metrics(body)
 
-    assert (
-        'sensor_unit_text{domain="sensor",'
-        'entity="sensor.text_unit",'
-        'friendly_name="Text Unit"} 0' not in body
-    )
+    EntityMetric(
+        metric_name="sensor_unit_text",
+        domain="sensor",
+        friendly_name="Text Unit",
+        entity="sensor.text_unit",
+    ).assert_not_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -261,35 +653,40 @@ async def test_sensor_device_class(
     """Test prometheus metrics for sensor with a device_class."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.fahrenheit",'
-        'friendly_name="Fahrenheit"} 10.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Fahrenheit",
+        entity="sensor.fahrenheit",
+    ).withValue(10.0).assert_in_metrics(body)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'sensor_power_kwh{domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 14.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_power_kwh",
+        domain="sensor",
+        friendly_name="Radio Energy",
+        entity="sensor.radio_energy",
+    ).withValue(14.0).assert_in_metrics(body)
 
-    assert (
-        'sensor_timestamp_seconds{domain="sensor",'
-        'entity="sensor.timestamp",'
-        'friendly_name="Timestamp"} 1.691445808136036e+09' in body
-    )
+    EntityMetric(
+        metric_name="sensor_timestamp_seconds",
+        domain="sensor",
+        friendly_name="Timestamp",
+        entity="sensor.timestamp",
+    ).withValue(1.691445808136036e09).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -299,23 +696,33 @@ async def test_input_number(
     """Test prometheus metrics for input_number."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'input_number_state{domain="input_number",'
-        'entity="input_number.threshold",'
-        'friendly_name="Threshold"} 5.2' in body
-    )
+    EntityMetric(
+        metric_name="input_number_state",
+        domain="input_number",
+        friendly_name="Threshold",
+        entity="input_number.threshold",
+    ).withValue(5.2).assert_in_metrics(body)
 
-    assert (
-        'input_number_state{domain="input_number",'
-        'entity="input_number.brightness",'
-        'friendly_name="None"} 60.0' in body
-    )
+    EntityMetric(
+        metric_name="input_number_state",
+        domain="input_number",
+        friendly_name="None",
+        entity="input_number.brightness",
+    ).withValue(60.0).assert_in_metrics(body)
 
-    assert (
-        'input_number_state_celsius{domain="input_number",'
-        'entity="input_number.target_temperature",'
-        'friendly_name="Target temperature"} 22.7' in body
-    )
+    EntityMetric(
+        metric_name="input_number_state_celsius",
+        domain="input_number",
+        friendly_name="Target temperature",
+        entity="input_number.target_temperature",
+    ).withValue(22.7).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="input_number_state_celsius",
+        domain="input_number",
+        friendly_name="Converted temperature",
+        entity="input_number.converted_temperature",
+    ).withValue(100).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -325,23 +732,26 @@ async def test_number(
     """Test prometheus metrics for number."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'number_state{domain="number",'
-        'entity="number.threshold",'
-        'friendly_name="Threshold"} 5.2' in body
-    )
+    EntityMetric(
+        metric_name="number_state",
+        domain="number",
+        friendly_name="Threshold",
+        entity="number.threshold",
+    ).withValue(5.2).assert_in_metrics(body)
 
-    assert (
-        'number_state{domain="number",'
-        'entity="number.brightness",'
-        'friendly_name="None"} 60.0' in body
-    )
+    EntityMetric(
+        metric_name="number_state",
+        domain="number",
+        friendly_name="None",
+        entity="number.brightness",
+    ).withValue(60.0).assert_in_metrics(body)
 
-    assert (
-        'number_state_celsius{domain="number",'
-        'entity="number.target_temperature",'
-        'friendly_name="Target temperature"} 22.7' in body
-    )
+    EntityMetric(
+        metric_name="number_state_celsius",
+        domain="number",
+        friendly_name="Target temperature",
+        entity="number.target_temperature",
+    ).withValue(22.7).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -351,11 +761,12 @@ async def test_battery(
     """Test prometheus metrics for battery."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'battery_level_percent{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 12.0' in body
-    )
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(12.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -366,35 +777,56 @@ async def test_climate(
     """Test prometheus metrics for climate entities."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'climate_current_temperature_celsius{domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 25.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_current_temperature_celsius",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+    ).withValue(25.0).assert_in_metrics(body)
 
-    assert (
-        'climate_target_temperature_celsius{domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 20.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_target_temperature_celsius",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+    ).withValue(20.0).assert_in_metrics(body)
 
-    assert (
-        'climate_target_temperature_low_celsius{domain="climate",'
-        'entity="climate.ecobee",'
-        'friendly_name="Ecobee"} 21.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_target_temperature_low_celsius",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+    ).withValue(21.0).assert_in_metrics(body)
 
-    assert (
-        'climate_target_temperature_high_celsius{domain="climate",'
-        'entity="climate.ecobee",'
-        'friendly_name="Ecobee"} 24.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_target_temperature_high_celsius",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+    ).withValue(24.0).assert_in_metrics(body)
 
-    assert (
-        'climate_target_temperature_celsius{domain="climate",'
-        'entity="climate.fritzdect",'
-        'friendly_name="Fritz!DECT"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_target_temperature_celsius",
+        domain="climate",
+        friendly_name="Fritz!DECT",
+        entity="climate.fritzdect",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_preset_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="away",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_fan_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="auto",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -405,30 +837,35 @@ async def test_humidifier(
     """Test prometheus metrics for humidifier entities."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'humidifier_target_humidity_percent{domain="humidifier",'
-        'entity="humidifier.humidifier",'
-        'friendly_name="Humidifier"} 68.0' in body
-    )
+    EntityMetric(
+        metric_name="humidifier_target_humidity_percent",
+        domain="humidifier",
+        friendly_name="Humidifier",
+        entity="humidifier.humidifier",
+    ).withValue(68.0).assert_in_metrics(body)
 
-    assert (
-        'humidifier_state{domain="humidifier",'
-        'entity="humidifier.dehumidifier",'
-        'friendly_name="Dehumidifier"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="humidifier_state",
+        domain="humidifier",
+        friendly_name="Dehumidifier",
+        entity="humidifier.dehumidifier",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'humidifier_mode{domain="humidifier",'
-        'entity="humidifier.hygrostat",'
-        'friendly_name="Hygrostat",'
-        'mode="home"} 1.0' in body
-    )
-    assert (
-        'humidifier_mode{domain="humidifier",'
-        'entity="humidifier.hygrostat",'
-        'friendly_name="Hygrostat",'
-        'mode="eco"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="humidifier_mode",
+        domain="humidifier",
+        friendly_name="Hygrostat",
+        entity="humidifier.hygrostat",
+        mode="home",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="humidifier_mode",
+        domain="humidifier",
+        friendly_name="Hygrostat",
+        entity="humidifier.hygrostat",
+        mode="eco",
+    ).withValue(0.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -439,29 +876,33 @@ async def test_attributes(
     """Test prometheus metrics for entity attributes."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'switch_state{domain="switch",'
-        'entity="switch.boolean",'
-        'friendly_name="Boolean"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="switch_state",
+        domain="switch",
+        friendly_name="Boolean",
+        entity="switch.boolean",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'switch_attr_boolean{domain="switch",'
-        'entity="switch.boolean",'
-        'friendly_name="Boolean"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="switch_attr_boolean",
+        domain="switch",
+        friendly_name="Boolean",
+        entity="switch.boolean",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'switch_state{domain="switch",'
-        'entity="switch.number",'
-        'friendly_name="Number"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="switch_state",
+        domain="switch",
+        friendly_name="Number",
+        entity="switch.number",
+    ).withValue(0.0).assert_in_metrics(body)
 
-    assert (
-        'switch_attr_number{domain="switch",'
-        'entity="switch.number",'
-        'friendly_name="Number"} 10.2' in body
-    )
+    EntityMetric(
+        metric_name="switch_attr_number",
+        domain="switch",
+        friendly_name="Number",
+        entity="switch.number",
+    ).withValue(10.2).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -471,17 +912,19 @@ async def test_binary_sensor(
     """Test prometheus metrics for binary_sensor."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'binary_sensor_state{domain="binary_sensor",'
-        'entity="binary_sensor.door",'
-        'friendly_name="Door"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="binary_sensor_state",
+        domain="binary_sensor",
+        friendly_name="Door",
+        entity="binary_sensor.door",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'binary_sensor_state{domain="binary_sensor",'
-        'entity="binary_sensor.window",'
-        'friendly_name="Window"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="binary_sensor_state",
+        domain="binary_sensor",
+        friendly_name="Window",
+        entity="binary_sensor.window",
+    ).withValue(0.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -491,17 +934,19 @@ async def test_input_boolean(
     """Test prometheus metrics for input_boolean."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'input_boolean_state{domain="input_boolean",'
-        'entity="input_boolean.test",'
-        'friendly_name="Test"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="input_boolean_state",
+        domain="input_boolean",
+        friendly_name="Test",
+        entity="input_boolean.test",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'input_boolean_state{domain="input_boolean",'
-        'entity="input_boolean.helper",'
-        'friendly_name="Helper"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="input_boolean_state",
+        domain="input_boolean",
+        friendly_name="Helper",
+        entity="input_boolean.helper",
+    ).withValue(0.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -511,35 +956,40 @@ async def test_light(
     """Test prometheus metrics for lights."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'light_brightness_percent{domain="light",'
-        'entity="light.desk",'
-        'friendly_name="Desk"} 100.0' in body
-    )
+    EntityMetric(
+        metric_name="light_brightness_percent",
+        domain="light",
+        friendly_name="Desk",
+        entity="light.desk",
+    ).withValue(100.0).assert_in_metrics(body)
 
-    assert (
-        'light_brightness_percent{domain="light",'
-        'entity="light.wall",'
-        'friendly_name="Wall"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="light_brightness_percent",
+        domain="light",
+        friendly_name="Wall",
+        entity="light.wall",
+    ).withValue(0.0).assert_in_metrics(body)
 
-    assert (
-        'light_brightness_percent{domain="light",'
-        'entity="light.tv",'
-        'friendly_name="TV"} 100.0' in body
-    )
+    EntityMetric(
+        metric_name="light_brightness_percent",
+        domain="light",
+        friendly_name="TV",
+        entity="light.tv",
+    ).withValue(100.0).assert_in_metrics(body)
 
-    assert (
-        'light_brightness_percent{domain="light",'
-        'entity="light.pc",'
-        'friendly_name="PC"} 70.58823529411765' in body
-    )
+    EntityMetric(
+        metric_name="light_brightness_percent",
+        domain="light",
+        friendly_name="PC",
+        entity="light.pc",
+    ).withValue(70.58823529411765).assert_in_metrics(body)
 
-    assert (
-        'light_brightness_percent{domain="light",'
-        'entity="light.hallway",'
-        'friendly_name="Hallway"} 100.0' in body
-    )
+    EntityMetric(
+        metric_name="light_brightness_percent",
+        domain="light",
+        friendly_name="Hallway",
+        entity="light.hallway",
+    ).withValue(100.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -549,17 +999,111 @@ async def test_lock(
     """Test prometheus metrics for lock."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'lock_state{domain="lock",'
-        'entity="lock.front_door",'
-        'friendly_name="Front Door"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="lock_state",
+        domain="lock",
+        friendly_name="Front Door",
+        entity="lock.front_door",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'lock_state{domain="lock",'
-        'entity="lock.kitchen_door",'
-        'friendly_name="Kitchen Door"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="lock_state",
+        domain="lock",
+        friendly_name="Kitchen Door",
+        entity="lock.kitchen_door",
+    ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_fan(
+    client: ClientSessionGenerator, fan_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for fan."""
+    body = await generate_latest_metrics(client)
+
+    EntityMetric(
+        metric_name="fan_state",
+        domain="fan",
+        friendly_name="Fan 1",
+        entity="fan.fan_1",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_speed_percent",
+        domain="fan",
+        friendly_name="Fan 1",
+        entity="fan.fan_1",
+    ).withValue(33.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_is_oscillating",
+        domain="fan",
+        friendly_name="Fan 1",
+        entity="fan.fan_1",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_direction_reversed",
+        domain="fan",
+        friendly_name="Fan 1",
+        entity="fan.fan_1",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_preset_mode",
+        domain="fan",
+        friendly_name="Fan 1",
+        entity="fan.fan_1",
+        mode="LO",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="fan_direction_reversed",
+        domain="fan",
+        friendly_name="Reverse Fan",
+        entity="fan.fan_2",
+    ).withValue(1).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_alarm_control_panel(
+    client: ClientSessionGenerator,
+    alarm_control_panel_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test prometheus metrics for alarm control panel."""
+    body = await generate_latest_metrics(client)
+
+    EntityMetric(
+        metric_name="alarm_control_panel_state",
+        domain="alarm_control_panel",
+        friendly_name="Alarm Control Panel 1",
+        entity="alarm_control_panel.alarm_control_panel_1",
+        state="armed_away",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="alarm_control_panel_state",
+        domain="alarm_control_panel",
+        friendly_name="Alarm Control Panel 1",
+        entity="alarm_control_panel.alarm_control_panel_1",
+        state="disarmed",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="alarm_control_panel_state",
+        domain="alarm_control_panel",
+        friendly_name="Alarm Control Panel 2",
+        entity="alarm_control_panel.alarm_control_panel_2",
+        state="armed_home",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="alarm_control_panel_state",
+        domain="alarm_control_panel",
+        friendly_name="Alarm Control Panel 2",
+        entity="alarm_control_panel.alarm_control_panel_2",
+        state="armed_away",
+    ).withValue(0.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -572,55 +1116,61 @@ async def test_cover(
 
     open_covers = ["cover_open", "cover_position", "cover_tilt_position"]
     for testcover in data:
-        open_metric = (
-            f'cover_state{{domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="open"}} {1.0 if cover_entities[testcover].unique_id in open_covers else 0.0}'
-        )
-        assert open_metric in body
+        EntityMetric(
+            metric_name="cover_state",
+            domain="cover",
+            friendly_name=cover_entities[testcover].original_name,
+            entity=cover_entities[testcover].entity_id,
+            state="open",
+        ).withValue(
+            1.0 if cover_entities[testcover].unique_id in open_covers else 0.0
+        ).assert_in_metrics(body)
 
-        closed_metric = (
-            f'cover_state{{domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="closed"}} {1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0}'
-        )
-        assert closed_metric in body
+        EntityMetric(
+            metric_name="cover_state",
+            domain="cover",
+            friendly_name=cover_entities[testcover].original_name,
+            entity=cover_entities[testcover].entity_id,
+            state="closed",
+        ).withValue(
+            1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0
+        ).assert_in_metrics(body)
 
-        opening_metric = (
-            f'cover_state{{domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="opening"}} {1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0}'
-        )
-        assert opening_metric in body
+        EntityMetric(
+            metric_name="cover_state",
+            domain="cover",
+            friendly_name=cover_entities[testcover].original_name,
+            entity=cover_entities[testcover].entity_id,
+            state="opening",
+        ).withValue(
+            1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0
+        ).assert_in_metrics(body)
 
-        closing_metric = (
-            f'cover_state{{domain="cover",'
-            f'entity="{cover_entities[testcover].entity_id}",'
-            f'friendly_name="{cover_entities[testcover].original_name}",'
-            f'state="closing"}} {1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0}'
-        )
-        assert closing_metric in body
+        EntityMetric(
+            metric_name="cover_state",
+            domain="cover",
+            friendly_name=cover_entities[testcover].original_name,
+            entity=cover_entities[testcover].entity_id,
+            state="closing",
+        ).withValue(
+            1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0
+        ).assert_in_metrics(body)
 
         if testcover == "cover_position":
-            position_metric = (
-                f'cover_position{{domain="cover",'
-                f'entity="{cover_entities[testcover].entity_id}",'
-                f'friendly_name="{cover_entities[testcover].original_name}"'
-                f"}} 50.0"
-            )
-            assert position_metric in body
+            EntityMetric(
+                metric_name="cover_position",
+                domain="cover",
+                friendly_name=cover_entities[testcover].original_name,
+                entity=cover_entities[testcover].entity_id,
+            ).withValue(50.0).assert_in_metrics(body)
 
         if testcover == "cover_tilt_position":
-            tilt_position_metric = (
-                f'cover_tilt_position{{domain="cover",'
-                f'entity="{cover_entities[testcover].entity_id}",'
-                f'friendly_name="{cover_entities[testcover].original_name}"'
-                f"}} 50.0"
-            )
-            assert tilt_position_metric in body
+            EntityMetric(
+                metric_name="cover_tilt_position",
+                domain="cover",
+                friendly_name=cover_entities[testcover].original_name,
+                entity=cover_entities[testcover].entity_id,
+            ).withValue(50.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -630,16 +1180,40 @@ async def test_device_tracker(
     """Test prometheus metrics for device_tracker."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'device_tracker_state{domain="device_tracker",'
-        'entity="device_tracker.phone",'
-        'friendly_name="Phone"} 1.0' in body
-    )
-    assert (
-        'device_tracker_state{domain="device_tracker",'
-        'entity="device_tracker.watch",'
-        'friendly_name="Watch"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="device_tracker_state",
+        domain="device_tracker",
+        friendly_name="Phone",
+        entity="device_tracker.phone",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="device_tracker_state",
+        domain="device_tracker",
+        friendly_name="Watch",
+        entity="device_tracker.watch",
+    ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_person(
+    client: ClientSessionGenerator, person_entities: dict[str, er.RegistryEntry]
+) -> None:
+    """Test prometheus metrics for person."""
+    body = await generate_latest_metrics(client)
+
+    EntityMetric(
+        metric_name="person_state",
+        domain="person",
+        friendly_name="Bob",
+        entity="person.bob",
+    ).withValue(1).assert_in_metrics(body)
+    EntityMetric(
+        metric_name="person_state",
+        domain="person",
+        friendly_name="Alice",
+        entity="person.alice",
+    ).withValue(0.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -649,11 +1223,12 @@ async def test_counter(
     """Test prometheus metrics for counter."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'counter_value{domain="counter",'
-        'entity="counter.counter",'
-        'friendly_name="None"} 2.0' in body
-    )
+    EntityMetric(
+        metric_name="counter_value",
+        domain="counter",
+        friendly_name="None",
+        entity="counter.counter",
+    ).withValue(2.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -663,16 +1238,18 @@ async def test_update(
     """Test prometheus metrics for update."""
     body = await generate_latest_metrics(client)
 
-    assert (
-        'update_state{domain="update",'
-        'entity="update.firmware",'
-        'friendly_name="Firmware"} 1.0' in body
-    )
-    assert (
-        'update_state{domain="update",'
-        'entity="update.addon",'
-        'friendly_name="Addon"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="update_state",
+        domain="update",
+        friendly_name="Firmware",
+        entity="update.firmware",
+    ).withValue(1).assert_in_metrics(body)
+    EntityMetric(
+        metric_name="update_state",
+        domain="update",
+        friendly_name="Addon",
+        entity="update.addon",
+    ).withValue(0.0).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -687,43 +1264,49 @@ async def test_renaming_entity_name(
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+        action="heating",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+        action="cooling",
+    ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
     assert "climate.heatpump" in entity_registry.entities
@@ -761,44 +1344,50 @@ async def test_renaming_entity_name(
     assert 'friendly_name="HeatPump"' not in body_line
 
     # Check if new metrics created
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature Renamed"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature Renamed",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature Renamed"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature Renamed",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump Renamed"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump Renamed",
+        entity="climate.heatpump",
+        action="heating",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump Renamed"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump Renamed",
+        entity="climate.heatpump",
+        action="cooling",
+    ).withValue(0.0).assert_in_metrics(body)
 
     # Keep other sensors
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -813,29 +1402,33 @@ async def test_renaming_entity_id(
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
     assert "climate.heatpump" in entity_registry.entities
@@ -855,30 +1448,33 @@ async def test_renaming_entity_id(
     assert 'entity="sensor.outside_temperature"' not in body_line
 
     # Check if new metrics created
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature_renamed",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature_renamed",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature_renamed",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature_renamed",
+    ).withValue(1).assert_in_metrics(body)
 
     # Keep other sensors
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
-
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -893,43 +1489,49 @@ async def test_deleting_entity(
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+        action="heating",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+        action="cooling",
+    ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
     assert "climate.heatpump" in entity_registry.entities
@@ -947,17 +1549,19 @@ async def test_deleting_entity(
     assert 'friendly_name="HeatPump"' not in body_line
 
     # Keep other sensors
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -974,50 +1578,56 @@ async def test_disabling_entity(
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="state_change_total",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert any(
-        'state_change_created{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"}' in metric
-        for metric in body
-    )
+    EntityMetric(
+        metric_name="state_change_created",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_in_metrics(body)
 
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+        action="heating",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'climate_action{action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="climate_action",
+        domain="climate",
+        friendly_name="HeatPump",
+        entity="climate.heatpump",
+        action="cooling",
+    ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
     assert "climate.heatpump" in entity_registry.entities
@@ -1041,137 +1651,191 @@ async def test_disabling_entity(
     assert 'friendly_name="HeatPump"' not in body_line
 
     # Keep other sensors
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_entity_becomes_unavailable_with_export(
+@pytest.mark.parametrize("unavailable_state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
+async def test_entity_becomes_unavailable(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     client: ClientSessionGenerator,
     sensor_entities: dict[str, er.RegistryEntry],
+    unavailable_state: str,
 ) -> None:
-    """Test an entity that becomes unavailable is still exported."""
+    """Test an entity that becomes unavailable/unknown is no longer exported."""
     data = {**sensor_entities}
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(15.6).assert_in_metrics(body)
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="state_change_total",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="last_updated_time_seconds",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_in_metrics(body)
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(12.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    # Make sensor_1 unavailable.
+    EntityMetric(
+        metric_name="state_change_total",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
+
+    # Make sensor_1 unavailable/unknown.
     set_state_with_entry(
-        hass, data["sensor_1"], STATE_UNAVAILABLE, data["sensor_1_attributes"]
+        hass, data["sensor_1"], unavailable_state, data["sensor_1_attributes"]
     )
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    # Check that only the availability changed on sensor_1.
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
+    # Check that the availability changed on sensor_1 and the metric with the value is gone.
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_not_in_metrics(body)
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 2.0' in body
-    )
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_not_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 0.0' in body
-    )
+    EntityMetric(
+        metric_name="state_change_total",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(2.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(0.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="last_updated_time_seconds",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).assert_in_metrics(body)
 
     # The other sensor should be unchanged.
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_humidity_percent",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(54.0).assert_in_metrics(body)
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="state_change_total",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Humidity",
+        entity="sensor.outside_humidity",
+    ).withValue(1).assert_in_metrics(body)
 
-    # Bring sensor_1 back and check that it is correct.
-    set_state_with_entry(hass, data["sensor_1"], 200.0, data["sensor_1_attributes"])
+    # Bring sensor_1 back and check that it returned.
+    set_state_with_entry(hass, data["sensor_1"], 201.0, data["sensor_1_attributes"])
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 200.0' in body
-    )
+    EntityMetric(
+        metric_name="sensor_temperature_celsius",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(201.0).assert_in_metrics(body)
 
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 3.0' in body
-    )
+    EntityMetric(
+        metric_name="battery_level_percent",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(12.0).assert_in_metrics(body)
 
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' in body
-    )
+    EntityMetric(
+        metric_name="state_change_total",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(3.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="entity_available",
+        domain="sensor",
+        friendly_name="Outside Temperature",
+        entity="sensor.outside_temperature",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.fixture(name="sensor_entities")
@@ -1359,6 +2023,11 @@ async def climate_fixture(
         ATTR_TARGET_TEMP_LOW: 21,
         ATTR_TARGET_TEMP_HIGH: 24,
         ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
+        ATTR_HVAC_MODES: ["off", "heat", "cool", "heat_cool"],
+        ATTR_PRESET_MODE: "away",
+        ATTR_PRESET_MODES: ["away", "home", "sleep"],
+        ATTR_FAN_MODE: "auto",
+        ATTR_FAN_MODES: ["auto", "on"],
     }
     set_state_with_entry(
         hass, climate_2, climate.HVACAction.HEATING, climate_2_attributes
@@ -1456,7 +2125,7 @@ async def lock_fixture(
         suggested_object_id="front_door",
         original_name="Front Door",
     )
-    set_state_with_entry(hass, lock_1, STATE_LOCKED)
+    set_state_with_entry(hass, lock_1, LockState.LOCKED)
     data["lock_1"] = lock_1
 
     lock_2 = entity_registry.async_get_or_create(
@@ -1466,7 +2135,7 @@ async def lock_fixture(
         suggested_object_id="kitchen_door",
         original_name="Kitchen Door",
     )
-    set_state_with_entry(hass, lock_2, STATE_UNLOCKED)
+    set_state_with_entry(hass, lock_2, LockState.UNLOCKED)
     data["lock_2"] = lock_2
 
     await hass.async_block_till_done()
@@ -1582,6 +2251,17 @@ async def input_number_fixture(
     )
     set_state_with_entry(hass, input_number_3, 22.7)
     data["input_number_3"] = input_number_3
+
+    input_number_4 = entity_registry.async_get_or_create(
+        domain=input_number.DOMAIN,
+        platform="test",
+        unique_id="input_number_4",
+        suggested_object_id="converted_temperature",
+        original_name="Converted temperature",
+        unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+    )
+    set_state_with_entry(hass, input_number_4, 212)
+    data["input_number_4"] = input_number_4
 
     await hass.async_block_till_done()
     return data
@@ -1783,6 +2463,76 @@ async def switch_fixture(
     set_state_with_entry(hass, switch_2, STATE_OFF, switch_2_attributes)
     data["switch_2"] = switch_2
     data["switch_2_attributes"] = switch_2_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="fan_entities")
+async def fan_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate fan entities."""
+    data = {}
+    fan_1 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_1",
+        suggested_object_id="fan_1",
+        original_name="Fan 1",
+    )
+    fan_1_attributes = {
+        ATTR_DIRECTION: DIRECTION_FORWARD,
+        ATTR_OSCILLATING: True,
+        ATTR_PERCENTAGE: 33,
+        ATTR_PRESET_MODE: "LO",
+        ATTR_PRESET_MODES: ["LO", "OFF", "HI"],
+    }
+    set_state_with_entry(hass, fan_1, STATE_ON, fan_1_attributes)
+    data["fan_1"] = fan_1
+    data["fan_1_attributes"] = fan_1_attributes
+
+    fan_2 = entity_registry.async_get_or_create(
+        domain=fan.DOMAIN,
+        platform="test",
+        unique_id="fan_2",
+        suggested_object_id="fan_2",
+        original_name="Reverse Fan",
+    )
+    fan_2_attributes = {ATTR_DIRECTION: DIRECTION_REVERSE}
+    set_state_with_entry(hass, fan_2, STATE_ON, fan_2_attributes)
+    data["fan_2"] = fan_2
+    data["fan_2_attributes"] = fan_2_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="alarm_control_panel_entities")
+async def alarm_control_panel_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate alarm control panel entities."""
+    data = {}
+    alarm_control_panel_1 = entity_registry.async_get_or_create(
+        domain=alarm_control_panel.DOMAIN,
+        platform="test",
+        unique_id="alarm_control_panel_1",
+        suggested_object_id="alarm_control_panel_1",
+        original_name="Alarm Control Panel 1",
+    )
+    set_state_with_entry(hass, alarm_control_panel_1, AlarmControlPanelState.ARMED_AWAY)
+    data["alarm_control_panel_1"] = alarm_control_panel_1
+
+    alarm_control_panel_2 = entity_registry.async_get_or_create(
+        domain=alarm_control_panel.DOMAIN,
+        platform="test",
+        unique_id="alarm_control_panel_2",
+        suggested_object_id="alarm_control_panel_2",
+        original_name="Alarm Control Panel 2",
+    )
+    set_state_with_entry(hass, alarm_control_panel_2, AlarmControlPanelState.ARMED_HOME)
+    data["alarm_control_panel_2"] = alarm_control_panel_2
 
     await hass.async_block_till_done()
     return data

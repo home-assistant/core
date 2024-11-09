@@ -6,19 +6,13 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +23,7 @@ async def setup_comp(hass: HomeAssistant) -> None:
 
 
 async def test_if_fires_on_event(
-    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the firing of events."""
     assert await async_setup_component(
@@ -62,8 +56,10 @@ async def test_if_fires_on_event(
     assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["data"] == {
+    assert len(service_calls) == 2
+    assert service_calls[1].domain == "test"
+    assert service_calls[1].service == "automation"
+    assert service_calls[1].data["data"] == {
         "alias": None,
         "id": "0",
         "idx": "0",
@@ -75,7 +71,7 @@ async def test_if_fires_on_event(
     }
 
 
-async def test_response(hass: HomeAssistant, setup_comp) -> None:
+async def test_response(hass: HomeAssistant) -> None:
     """Test the conversation response action."""
     response = "I'm sorry, Dave. I'm afraid I can't do that"
     assert await async_setup_component(
@@ -106,7 +102,7 @@ async def test_response(hass: HomeAssistant, setup_comp) -> None:
     assert service_response["response"]["speech"]["plain"]["speech"] == response
 
 
-async def test_empty_response(hass: HomeAssistant, setup_comp) -> None:
+async def test_empty_response(hass: HomeAssistant) -> None:
     """Test the conversation response action with an empty response."""
     assert await async_setup_component(
         hass,
@@ -137,7 +133,7 @@ async def test_empty_response(hass: HomeAssistant, setup_comp) -> None:
 
 
 async def test_response_same_sentence(
-    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the conversation response action with multiple triggers using the same sentence."""
     assert await async_setup_component(
@@ -186,8 +182,10 @@ async def test_response_same_sentence(
     assert service_response["response"]["speech"]["plain"]["speech"] == "response 1"
 
     # Service should still have been called
-    assert len(calls) == 1
-    assert calls[0].data["data"] == {
+    assert len(service_calls) == 2
+    assert service_calls[1].domain == "test"
+    assert service_calls[1].service == "automation"
+    assert service_calls[1].data["data"] == {
         "alias": None,
         "id": "trigger1",
         "idx": "0",
@@ -201,8 +199,6 @@ async def test_response_same_sentence(
 
 async def test_response_same_sentence_with_error(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
-    setup_comp: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the conversation response action with multiple triggers using the same sentence and an error."""
@@ -253,7 +249,7 @@ async def test_response_same_sentence_with_error(
 
 
 async def test_subscribe_trigger_does_not_interfere_with_responses(
-    hass: HomeAssistant, setup_comp, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that subscribing to a trigger from the websocket API does not interfere with responses."""
     websocket_client = await hass_ws_client()
@@ -310,7 +306,7 @@ async def test_subscribe_trigger_does_not_interfere_with_responses(
 
 
 async def test_same_trigger_multiple_sentences(
-    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test matching of multiple sentences from the same trigger."""
     assert await async_setup_component(
@@ -341,8 +337,10 @@ async def test_same_trigger_multiple_sentences(
 
     # Only triggers once
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["data"] == {
+    assert len(service_calls) == 2
+    assert service_calls[1].domain == "test"
+    assert service_calls[1].service == "automation"
+    assert service_calls[1].data["data"] == {
         "alias": None,
         "id": "0",
         "idx": "0",
@@ -355,7 +353,7 @@ async def test_same_trigger_multiple_sentences(
 
 
 async def test_same_sentence_multiple_triggers(
-    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test use of the same sentence in multiple triggers."""
     assert await async_setup_component(
@@ -403,11 +401,12 @@ async def test_same_sentence_multiple_triggers(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 3
 
     # The calls may come in any order
     call_datas: set[tuple[str, str, str]] = set()
-    for call in calls:
+    service_calls.pop(0)  # First call is the call to conversation.process
+    for call in service_calls:
         call_data = call.data["data"]
         call_datas.add((call_data["id"], call_data["platform"], call_data["sentence"]))
 
@@ -474,9 +473,7 @@ async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
         )
 
 
-async def test_wildcards(
-    hass: HomeAssistant, calls: list[ServiceCall], setup_comp: None
-) -> None:
+async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) -> None:
     """Test wildcards in trigger sentences."""
     assert await async_setup_component(
         hass,
@@ -507,8 +504,10 @@ async def test_wildcards(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["data"] == {
+    assert len(service_calls) == 2
+    assert service_calls[1].domain == "test"
+    assert service_calls[1].service == "automation"
+    assert service_calls[1].data["data"] == {
         "alias": None,
         "id": "0",
         "idx": "0",
@@ -536,8 +535,6 @@ async def test_wildcards(
 
 async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
     """Test that a trigger receives a device_id."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(
         hass,
         "automation",
@@ -554,7 +551,7 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
         },
     )
 
-    agent = default_agent.async_get_default_agent(hass)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
     assert isinstance(agent, default_agent.DefaultAgent)
 
     result = await agent.async_process(

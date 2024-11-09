@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+import logging
+from typing import TYPE_CHECKING, Any, Self
 
 from kasa import (
-    AuthenticationException,
+    AuthenticationError,
     Credentials,
+    Device,
     DeviceConfig,
     Discover,
-    SmartDevice,
-    SmartDeviceException,
-    TimeoutException,
+    KasaException,
+    TimeoutError,
 )
 import voluptuous as vol
 
@@ -31,6 +32,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -44,7 +46,17 @@ from . import (
     mac_alias,
     set_credentials,
 )
-from .const import CONF_DEVICE_CONFIG, CONNECT_TIMEOUT, DOMAIN
+from .const import (
+    CONF_AES_KEYS,
+    CONF_CONFIG_ENTRY_MINOR_VERSION,
+    CONF_CONNECTION_PARAMETERS,
+    CONF_CREDENTIALS_HASH,
+    CONF_USES_HTTP,
+    CONNECT_TIMEOUT,
+    DOMAIN,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -55,13 +67,15 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tplink."""
 
     VERSION = 1
-    MINOR_VERSION = 2
-    reauth_entry: ConfigEntry | None = None
+    MINOR_VERSION = CONF_CONFIG_ENTRY_MINOR_VERSION
+
+    host: str | None = None
+    port: int | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_devices: dict[str, SmartDevice] = {}
-        self._discovered_device: SmartDevice | None = None
+        self._discovered_devices: dict[str, Device] = {}
+        self._discovered_device: Device | None = None
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -78,12 +92,43 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST],
             discovery_info[CONF_MAC],
-            discovery_info[CONF_DEVICE_CONFIG],
+            discovery_info[CONF_DEVICE],
         )
 
     @callback
+    def _get_config_updates(
+        self, entry: ConfigEntry, host: str, device: Device | None
+    ) -> dict | None:
+        """Return updates if the host or device config has changed."""
+        entry_data = entry.data
+        updates: dict[str, Any] = {}
+        new_connection_params = False
+        if entry_data[CONF_HOST] != host:
+            updates[CONF_HOST] = host
+        if device:
+            device_conn_params_dict = device.config.connection_type.to_dict()
+            entry_conn_params_dict = entry_data.get(CONF_CONNECTION_PARAMETERS)
+            if device_conn_params_dict != entry_conn_params_dict:
+                new_connection_params = True
+                updates[CONF_CONNECTION_PARAMETERS] = device_conn_params_dict
+                updates[CONF_USES_HTTP] = device.config.uses_http
+        if not updates:
+            return None
+        updates = {**entry.data, **updates}
+        # If the connection parameters have changed the credentials_hash will be invalid.
+        if new_connection_params:
+            updates.pop(CONF_CREDENTIALS_HASH, None)
+            _LOGGER.debug(
+                "Connection type changed for %s from %s to: %s",
+                host,
+                entry_conn_params_dict,
+                device_conn_params_dict,
+            )
+        return updates
+
+    @callback
     def _update_config_if_entry_in_setup_error(
-        self, entry: ConfigEntry, host: str, config: dict
+        self, entry: ConfigEntry, host: str, device: Device | None
     ) -> ConfigFlowResult | None:
         """If discovery encounters a device that is in SETUP_ERROR or SETUP_RETRY update the device config."""
         if entry.state not in (
@@ -91,50 +136,55 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             ConfigEntryState.SETUP_RETRY,
         ):
             return None
-        entry_data = entry.data
-        entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
-        if entry_config_dict == config and entry_data[CONF_HOST] == host:
-            return None
-        return self.async_update_reload_and_abort(
-            entry,
-            data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host},
-            reason="already_configured",
-        )
+        if updates := self._get_config_updates(entry, host, device):
+            return self.async_update_reload_and_abort(
+                entry,
+                data=updates,
+                reason="already_configured",
+            )
+        return None
 
     async def _async_handle_discovery(
-        self, host: str, formatted_mac: str, config: dict | None = None
+        self, host: str, formatted_mac: str, device: Device | None = None
     ) -> ConfigFlowResult:
         """Handle any discovery."""
         current_entry = await self.async_set_unique_id(
             formatted_mac, raise_on_progress=False
         )
-        if (
-            config
-            and current_entry
-            and (
-                result := self._update_config_if_entry_in_setup_error(
-                    current_entry, host, config
-                )
+        if current_entry and (
+            result := self._update_config_if_entry_in_setup_error(
+                current_entry, host, device
             )
         ):
             return result
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
-        self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self.host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         credentials = await get_credentials(self.hass)
         try:
-            await self._async_try_discover_and_update(
-                host, credentials, raise_on_progress=True
-            )
-        except AuthenticationException:
+            # If integration discovery there will be a device or None for dhcp
+            if device:
+                self._discovered_device = device
+                await self._async_try_connect(device, credentials)
+            else:
+                await self._async_try_discover_and_update(
+                    host,
+                    credentials,
+                    raise_on_progress=True,
+                    raise_on_timeout=True,
+                )
+        except AuthenticationError:
             return await self.async_step_discovery_auth_confirm()
-        except SmartDeviceException:
+        except KasaException:
             return self.async_abort(reason="cannot_connect")
 
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow.host == self.host
 
     async def async_step_discovery_auth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -149,7 +199,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException:
+            except AuthenticationError:
                 pass  # Authentication exceptions should continue to the rest of the step
             else:
                 self._discovered_device = device
@@ -165,10 +215,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException as ex:
+            except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
-            except SmartDeviceException as ex:
+            except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
             else:
@@ -212,6 +262,26 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
+    @staticmethod
+    def _async_get_host_port(host_str: str) -> tuple[str, int | None]:
+        """Parse the host string for host and port."""
+        if "[" in host_str:
+            _, _, bracketed = host_str.partition("[")
+            host, _, port_str = bracketed.partition("]")
+            _, _, port_str = port_str.partition(":")
+        else:
+            host, _, port_str = host_str.partition(":")
+
+        if not port_str:
+            return host, None
+
+        try:
+            port = int(port_str)
+        except ValueError:
+            return host, None
+
+        return host, port
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -222,19 +292,38 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
-            self._async_abort_entries_match({CONF_HOST: host})
-            self.context[CONF_HOST] = host
+
+            host, port = self._async_get_host_port(host)
+
+            match_dict = {CONF_HOST: host}
+            if port:
+                self.port = port
+                match_dict[CONF_PORT] = port
+            self._async_abort_entries_match(match_dict)
+
+            self.host = host
             credentials = await get_credentials(self.hass)
             try:
                 device = await self._async_try_discover_and_update(
-                    host, credentials, raise_on_progress=False
+                    host,
+                    credentials,
+                    raise_on_progress=False,
+                    raise_on_timeout=False,
+                    port=port,
+                ) or await self._async_try_connect_all(
+                    host,
+                    credentials=credentials,
+                    raise_on_progress=False,
+                    port=port,
                 )
-            except AuthenticationException:
+            except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
-            except SmartDeviceException as ex:
+            except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
             else:
+                if not device:
+                    return await self.async_step_user_auth_confirm()
                 return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
@@ -249,30 +338,44 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that auth is required."""
         errors: dict[str, str] = {}
-        host = self.context[CONF_HOST]
-        placeholders: dict[str, str] = {CONF_HOST: host}
+        if TYPE_CHECKING:
+            # self.host is set by async_step_user and async_step_pick_device
+            assert self.host is not None
+        placeholders: dict[str, str] = {CONF_HOST: self.host}
 
-        assert self._discovered_device is not None
         if user_input:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             credentials = Credentials(username, password)
+            device: Device | None
             try:
-                device = await self._async_try_connect(
-                    self._discovered_device, credentials
-                )
-            except AuthenticationException as ex:
+                if self._discovered_device:
+                    device = await self._async_try_connect(
+                        self._discovered_device, credentials
+                    )
+                else:
+                    device = await self._async_try_connect_all(
+                        self.host,
+                        credentials=credentials,
+                        raise_on_progress=False,
+                        port=self.port,
+                    )
+            except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
-            except SmartDeviceException as ex:
+            except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
             else:
-                await set_credentials(self.hass, username, password)
-                self.hass.async_create_task(
-                    self._async_reload_requires_auth_entries(), eager_start=False
-                )
-                return self._async_create_entry_from_device(device)
+                if not device:
+                    errors["base"] = "cannot_connect"
+                    placeholders["error"] = "try_connect_all failed"
+                else:
+                    await set_credentials(self.hass, username, password)
+                    self.hass.async_create_task(
+                        self._async_reload_requires_auth_entries(), eager_start=False
+                    )
+                    return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
             step_id="user_auth_confirm",
@@ -289,18 +392,16 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
             self._discovered_device = self._discovered_devices[mac]
-            host = self._discovered_device.host
-
-            self.context[CONF_HOST] = host
+            self.host = self._discovered_device.host
             credentials = await get_credentials(self.hass)
 
             try:
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException:
+            except AuthenticationError:
                 return await self.async_step_user_auth_confirm()
-            except SmartDeviceException:
+            except KasaException:
                 return self.async_abort(reason="cannot_connect")
             return self._async_create_entry_from_device(device)
 
@@ -327,13 +428,13 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reload any in progress config flow that now have credentials."""
         _config_entries = self.hass.config_entries
 
-        if reauth_entry := self.reauth_entry:
-            await _config_entries.async_reload(reauth_entry.entry_id)
+        if self.source == SOURCE_REAUTH:
+            await _config_entries.async_reload(self._get_reauth_entry().entry_id)
 
         for flow in _config_entries.flow.async_progress_by_handler(
             DOMAIN, include_uninitialized=True
         ):
-            context: dict[str, Any] = flow["context"]
+            context = flow["context"]
             if context.get("source") != SOURCE_REAUTH:
                 continue
             entry_id: str = context["entry_id"]
@@ -343,58 +444,107 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     _config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
-    def _async_create_entry_from_device(self, device: SmartDevice) -> ConfigFlowResult:
+    def _async_create_entry_from_device(self, device: Device) -> ConfigFlowResult:
         """Create a config entry from a smart device."""
+        # This is only ever called after a successful device update so we know that
+        # the credential_hash is correct and should be saved.
         self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
+        data: dict[str, Any] = {
+            CONF_HOST: device.host,
+            CONF_ALIAS: device.alias,
+            CONF_MODEL: device.model,
+            CONF_CONNECTION_PARAMETERS: device.config.connection_type.to_dict(),
+            CONF_USES_HTTP: device.config.uses_http,
+        }
+        if device.config.aes_keys:
+            data[CONF_AES_KEYS] = device.config.aes_keys
+        if device.credentials_hash:
+            data[CONF_CREDENTIALS_HASH] = device.credentials_hash
+        if port := device.config.port_override:
+            data[CONF_PORT] = port
         return self.async_create_entry(
             title=f"{device.alias} {device.model}",
-            data={
-                CONF_HOST: device.host,
-                CONF_ALIAS: device.alias,
-                CONF_MODEL: device.model,
-                CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=device.credentials_hash,
-                    exclude_credentials=True,
-                ),
-            },
+            data=data,
         )
+
+    async def _async_try_connect_all(
+        self,
+        host: str,
+        credentials: Credentials | None,
+        raise_on_progress: bool,
+        *,
+        port: int | None = None,
+    ) -> Device | None:
+        """Try to connect to the device speculatively.
+
+        The connection parameters aren't known but discovery has failed so try
+        to connect with tcp.
+        """
+        if credentials:
+            device = await Discover.try_connect_all(
+                host,
+                credentials=credentials,
+                http_client=create_async_tplink_clientsession(self.hass),
+                port=port,
+            )
+        else:
+            # This will just try the legacy protocol that doesn't require auth
+            # and doesn't use http
+            try:
+                device = await Device.connect(
+                    config=DeviceConfig(host, port_override=port)
+                )
+            except Exception:  # noqa: BLE001
+                return None
+        if device:
+            await self.async_set_unique_id(
+                dr.format_mac(device.mac),
+                raise_on_progress=raise_on_progress,
+            )
+        return device
 
     async def _async_try_discover_and_update(
         self,
         host: str,
         credentials: Credentials | None,
         raise_on_progress: bool,
-    ) -> SmartDevice:
+        raise_on_timeout: bool,
+        *,
+        port: int | None = None,
+    ) -> Device | None:
         """Try to discover the device and call update.
 
-        Will try to connect to legacy devices if discovery fails.
+        Will try to connect directly if discovery fails.
         """
+        self._discovered_device = None
         try:
             self._discovered_device = await Discover.discover_single(
-                host, credentials=credentials
+                host,
+                credentials=credentials,
+                port=port,
             )
-        except TimeoutException:
-            # Try connect() to legacy devices if discovery fails
-            self._discovered_device = await SmartDevice.connect(
-                config=DeviceConfig(host)
-            )
-        else:
-            if self._discovered_device.config.uses_http:
-                self._discovered_device.config.http_client = (
-                    create_async_tplink_clientsession(self.hass)
-                )
-            await self._discovered_device.update()
+        except TimeoutError as ex:
+            if raise_on_timeout:
+                raise ex from ex
+            return None
+        if TYPE_CHECKING:
+            assert self._discovered_device
         await self.async_set_unique_id(
             dr.format_mac(self._discovered_device.mac),
             raise_on_progress=raise_on_progress,
         )
+        if self._discovered_device.config.uses_http:
+            self._discovered_device.config.http_client = (
+                create_async_tplink_clientsession(self.hass)
+            )
+        await self._discovered_device.update()
         return self._discovered_device
 
     async def _async_try_connect(
         self,
-        discovered_device: SmartDevice,
+        discovered_device: Device,
         credentials: Credentials | None,
-    ) -> SmartDevice:
+    ) -> Device:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: discovered_device.host})
 
@@ -405,7 +555,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if config.uses_http:
             config.http_client = create_async_tplink_clientsession(self.hass)
 
-        self._discovered_device = await SmartDevice.connect(config=config)
+        self._discovered_device = await Device.connect(config=config)
         await self.async_set_unique_id(
             dr.format_mac(self._discovered_device.mac),
             raise_on_progress=False,
@@ -416,9 +566,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Start the reauthentication flow if the device needs updated credentials."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -427,33 +574,52 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
-        reauth_entry = self.reauth_entry
-        assert reauth_entry is not None
+        reauth_entry = self._get_reauth_entry()
         entry_data = reauth_entry.data
         host = entry_data[CONF_HOST]
+        port = entry_data.get(CONF_PORT)
 
         if user_input:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             credentials = Credentials(username, password)
             try:
-                await self._async_try_discover_and_update(
+                device = await self._async_try_discover_and_update(
                     host,
                     credentials=credentials,
-                    raise_on_progress=True,
+                    raise_on_progress=False,
+                    raise_on_timeout=False,
+                    port=port,
+                ) or await self._async_try_connect_all(
+                    host,
+                    credentials=credentials,
+                    raise_on_progress=False,
+                    port=port,
                 )
-            except AuthenticationException as ex:
+            except AuthenticationError as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 placeholders["error"] = str(ex)
-            except SmartDeviceException as ex:
+            except KasaException as ex:
                 errors["base"] = "cannot_connect"
                 placeholders["error"] = str(ex)
             else:
-                await set_credentials(self.hass, username, password)
-                self.hass.async_create_task(
-                    self._async_reload_requires_auth_entries(), eager_start=False
-                )
-                return self.async_abort(reason="reauth_successful")
+                if not device:
+                    errors["base"] = "cannot_connect"
+                    placeholders["error"] = "try_connect_all failed"
+                else:
+                    await self.async_set_unique_id(
+                        dr.format_mac(device.mac),
+                        raise_on_progress=False,
+                    )
+                    await set_credentials(self.hass, username, password)
+                    if updates := self._get_config_updates(reauth_entry, host, device):
+                        self.hass.config_entries.async_update_entry(
+                            reauth_entry, data=updates
+                        )
+                    self.hass.async_create_task(
+                        self._async_reload_requires_auth_entries(), eager_start=False
+                    )
+                    return self.async_abort(reason="reauth_successful")
 
         # Old config entries will not have these values.
         alias = entry_data.get(CONF_ALIAS) or "unknown"

@@ -11,18 +11,10 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
 
-from tests.common import async_mock_service
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
 
 async def test_telegram_trigger(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     knx: KNXTestKit,
 ) -> None:
     """Test telegram triggers firing."""
@@ -73,24 +65,24 @@ async def test_telegram_trigger(
 
     # "specific" shall ignore destination address
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 0/0/1"
     assert test_call.data["id"] == 0
 
     await knx.receive_write("1/2/4", (0x03, 0x2F))
-    assert len(calls) == 2
-    test_call = calls.pop()
+    assert len(service_calls) == 2
+    test_call = service_calls.pop()
     assert test_call.data["specific"] == "telegram - 1/2/4"
     assert test_call.data["id"] == "test-id"
-    test_call = calls.pop()
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
     # "specific" shall ignore GroupValueRead
     await knx.receive_read("1/2/4")
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
@@ -105,7 +97,7 @@ async def test_telegram_trigger(
 )
 async def test_telegram_trigger_dpt_option(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     knx: KNXTestKit,
     payload: tuple[int, ...],
     type_option: dict[str, bool],
@@ -138,16 +130,16 @@ async def test_telegram_trigger_dpt_option(
     )
     await knx.receive_write("0/0/1", payload)
 
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 0/0/1"
     assert test_call.data["trigger"]["value"] == expected_value
     assert test_call.data["trigger"]["unit"] == expected_unit
 
     await knx.receive_read("0/0/1")
 
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 0/0/1"
     assert test_call.data["trigger"]["value"] is None
     assert test_call.data["trigger"]["unit"] is None
@@ -192,7 +184,7 @@ async def test_telegram_trigger_dpt_option(
 )
 async def test_telegram_trigger_options(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     knx: KNXTestKit,
     group_value_options: dict[str, bool],
     direction_options: dict[str, bool],
@@ -225,28 +217,28 @@ async def test_telegram_trigger_options(
     if group_value_options.get("group_value_write", True) and direction_options.get(
         "incoming", True
     ):
-        assert len(calls) == 1
-        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+        assert len(service_calls) == 1
+        assert service_calls.pop().data["catch_all"] == "telegram - 0/0/1"
     else:
-        assert len(calls) == 0
+        assert len(service_calls) == 0
 
     await knx.receive_response("0/0/1", 1)
     if group_value_options["group_value_response"] and direction_options.get(
         "incoming", True
     ):
-        assert len(calls) == 1
-        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+        assert len(service_calls) == 1
+        assert service_calls.pop().data["catch_all"] == "telegram - 0/0/1"
     else:
-        assert len(calls) == 0
+        assert len(service_calls) == 0
 
     await knx.receive_read("0/0/1")
     if group_value_options["group_value_read"] and direction_options.get(
         "incoming", True
     ):
-        assert len(calls) == 1
-        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+        assert len(service_calls) == 1
+        assert service_calls.pop().data["catch_all"] == "telegram - 0/0/1"
     else:
-        assert len(calls) == 0
+        assert len(service_calls) == 0
 
     await hass.services.async_call(
         "knx",
@@ -254,20 +246,22 @@ async def test_telegram_trigger_options(
         {"address": "0/0/1", "payload": True},
         blocking=True,
     )
+    assert len(service_calls) == 1
+
     await knx.assert_write("0/0/1", True)
     if (
         group_value_options.get("group_value_write", True)
         and direction_options["outgoing"]
     ):
-        assert len(calls) == 1
-        assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+        assert len(service_calls) == 2
+        assert service_calls.pop().data["catch_all"] == "telegram - 0/0/1"
     else:
-        assert len(calls) == 0
+        assert len(service_calls) == 1
 
 
 async def test_remove_telegram_trigger(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     knx: KNXTestKit,
 ) -> None:
     """Test for removed callback when telegram trigger not used."""
@@ -296,8 +290,8 @@ async def test_remove_telegram_trigger(
     )
 
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    assert len(service_calls) == 1
+    assert service_calls.pop().data["catch_all"] == "telegram - 0/0/1"
 
     await hass.services.async_call(
         automation.DOMAIN,
@@ -305,8 +299,10 @@ async def test_remove_telegram_trigger(
         {ATTR_ENTITY_ID: f"automation.{automation_name}"},
         blocking=True,
     )
+    assert len(service_calls) == 1
+
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 0
+    assert len(service_calls) == 1
 
 
 async def test_invalid_trigger(
@@ -338,7 +334,6 @@ async def test_invalid_trigger(
                 ]
             },
         )
-        await hass.async_block_till_done()
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
             "extra keys not allowed @ data['invalid']. Got None"

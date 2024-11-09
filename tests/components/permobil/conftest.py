@@ -1,10 +1,10 @@
 """Common fixtures for the MyPermobil tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from mypermobil import MyPermobil
 import pytest
-from typing_extensions import Generator
 
 from .const import MOCK_REGION_NAME, MOCK_TOKEN, MOCK_URL
 

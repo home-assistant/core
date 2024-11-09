@@ -1,6 +1,5 @@
 """Tests for the srp_energy sensor platform."""
 
-import time
 from unittest.mock import patch
 
 from requests.models import HTTPError
@@ -80,7 +79,7 @@ async def test_srp_entity_timeout(
     ):
         client = srp_energy_mock.return_value
         client.validate.return_value = True
-        client.usage = lambda _, __, ___: time.sleep(1)
+        client.usage = lambda _, __, ___: None
         mock_config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

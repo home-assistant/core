@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .dynalitebase import DynaliteBase, async_setup_entry_base
+from .entity import DynaliteBase, async_setup_entry_base
 
 
 async def async_setup_entry(

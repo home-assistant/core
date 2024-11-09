@@ -14,10 +14,11 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfBloodGlucoseConcentration,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,6 +31,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -46,6 +48,8 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    BloodGlugoseConcentrationConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -125,6 +129,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
+    """Blood glucose concentration.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
+    """
+
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
@@ -135,6 +145,12 @@ class SensorDeviceClass(StrEnum):
     """Carbon Dioxide gas concentration.
 
     Unit of measurement: `ppm` (parts per million)
+    """
+
+    CONDUCTIVITY = "conductivity"
+    """Conductivity.
+
+    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
     """
 
     CURRENT = "current"
@@ -174,7 +190,7 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -183,7 +199,7 @@ class SensorDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -291,7 +307,7 @@ class SensorDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
     """
 
     PRECIPITATION = "precipitation"
@@ -342,8 +358,8 @@ class SensorDeviceClass(StrEnum):
     """Generic speed.
 
     Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
-    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
-    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`, `mm/s`
+    - USCS / imperial: `in/d`, `in/h`, `in/s`, `ft/s`, `mph`
     - Nautical: `kn`
     - Beaufort: `Beaufort`
     """
@@ -485,6 +501,8 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlugoseConcentrationConverter,
+    SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DATA_SIZE: InformationConverter,
@@ -515,8 +533,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.AQI: {None},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     SensorDeviceClass.BATTERY: {PERCENTAGE},
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
     SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
@@ -553,7 +573,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
-    SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    SensorDeviceClass.REACTIVE_POWER: {UnitOfReactivePower.VOLT_AMPERE_REACTIVE},
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -589,8 +609,10 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.CONDUCTIVITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CURRENT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_SIZE: set(SensorStateClass),

@@ -17,11 +17,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MockHDMIDevice
+from .conftest import CecEntityCreator, HDMINetworkCreator
 
 
 @pytest.mark.parametrize("config", [{}, {"platform": "switch"}])
 async def test_load_platform(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity, config
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
+    config,
 ) -> None:
     """Test that switch entity is loaded."""
     hdmi_network = await create_hdmi_network(config=config)
@@ -36,7 +40,9 @@ async def test_load_platform(
 
 
 async def test_load_types(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test that switch entity is loaded when types is set."""
     config = {"platform": "media_player", "types": {"hdmi_cec.hdmi_3": "switch"}}
@@ -61,7 +67,9 @@ async def test_load_types(
 
 
 async def test_service_on(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test that switch triggers on `on` service."""
     hdmi_network = await create_hdmi_network()
@@ -81,7 +89,9 @@ async def test_service_on(
 
 
 async def test_service_off(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test that switch triggers on `off` service."""
     hdmi_network = await create_hdmi_network()
@@ -118,8 +128,8 @@ async def test_service_off(
 )
 async def test_device_status_change(
     hass: HomeAssistant,
-    create_hdmi_network,
-    create_cec_entity,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
     power_status,
     expected_state,
     status,
@@ -154,7 +164,11 @@ async def test_device_status_change(
     ],
 )
 async def test_friendly_name(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity, device_values, expected
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
+    device_values,
+    expected,
 ) -> None:
     """Test friendly name setup."""
     hdmi_network = await create_hdmi_network()
@@ -207,8 +221,8 @@ async def test_friendly_name(
 )
 async def test_extra_state_attributes(
     hass: HomeAssistant,
-    create_hdmi_network,
-    create_cec_entity,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
     device_values,
     expected_attributes,
 ) -> None:
@@ -239,8 +253,8 @@ async def test_extra_state_attributes(
 )
 async def test_icon(
     hass: HomeAssistant,
-    create_hdmi_network,
-    create_cec_entity,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
     device_type,
     expected_icon,
 ) -> None:
@@ -254,7 +268,9 @@ async def test_icon(
 
 
 async def test_unavailable_status(
-    hass: HomeAssistant, create_hdmi_network, create_cec_entity
+    hass: HomeAssistant,
+    create_hdmi_network: HDMINetworkCreator,
+    create_cec_entity: CecEntityCreator,
 ) -> None:
     """Test entity goes into unavailable status when expected."""
     hdmi_network = await create_hdmi_network()

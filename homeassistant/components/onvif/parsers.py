@@ -711,3 +711,29 @@ async def async_parse_count_aggregation_counter(uid: str, msg) -> Event | None:
         )
     except (AttributeError, KeyError):
         return None
+
+
+@PARSERS.register("tns1:UserAlarm/IVA/HumanShapeDetect")
+async def async_parse_human_shape_detect(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:UserAlarm/IVA/HumanShapeDetect
+    """
+    try:
+        topic, payload = extract_message(msg)
+        video_source = ""
+        for source in payload.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = _normalize_video_source(source.Value)
+                break
+
+        return Event(
+            f"{uid}_{topic}_{video_source}",
+            "Human Shape Detect",
+            "binary_sensor",
+            "motion",
+            None,
+            payload.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None

@@ -86,8 +86,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Format the weather response correctly."""
         _LOGGER.debug("OWM weather response: %s", weather_report)
 
+        current_weather = (
+            self._get_current_weather_data(weather_report.current)
+            if weather_report.current is not None
+            else {}
+        )
+
         return {
-            ATTR_API_CURRENT: self._get_current_weather_data(weather_report.current),
+            ATTR_API_CURRENT: current_weather,
             ATTR_API_HOURLY_FORECAST: [
                 self._get_hourly_forecast_weather_data(item)
                 for item in weather_report.hourly_forecast
@@ -122,6 +128,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         }
 
     def _get_hourly_forecast_weather_data(self, forecast: HourlyWeatherForecast):
+        uv_index = float(forecast.uv_index) if forecast.uv_index is not None else None
+
         return Forecast(
             datetime=forecast.date_time.isoformat(),
             condition=self._get_condition(forecast.condition.id),
@@ -134,12 +142,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             wind_speed=forecast.wind_speed,
             native_wind_gust_speed=forecast.wind_gust,
             wind_bearing=forecast.wind_bearing,
-            uv_index=float(forecast.uv_index),
+            uv_index=uv_index,
             precipitation_probability=round(forecast.precipitation_probability * 100),
             precipitation=self._calc_precipitation(forecast.rain, forecast.snow),
         )
 
     def _get_daily_forecast_weather_data(self, forecast: DailyWeatherForecast):
+        uv_index = float(forecast.uv_index) if forecast.uv_index is not None else None
+
         return Forecast(
             datetime=forecast.date_time.isoformat(),
             condition=self._get_condition(forecast.condition.id),
@@ -153,7 +163,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             wind_speed=forecast.wind_speed,
             native_wind_gust_speed=forecast.wind_gust,
             wind_bearing=forecast.wind_bearing,
-            uv_index=float(forecast.uv_index),
+            uv_index=uv_index,
             precipitation_probability=round(forecast.precipitation_probability * 100),
             precipitation=round(forecast.rain + forecast.snow, 2),
         )
@@ -182,12 +192,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_precipitation_value(precipitation):
         """Get precipitation value from weather data."""
-        if "all" in precipitation:
-            return round(precipitation["all"], 2)
-        if "3h" in precipitation:
-            return round(precipitation["3h"], 2)
-        if "1h" in precipitation:
-            return round(precipitation["1h"], 2)
+        if precipitation is not None:
+            if "all" in precipitation:
+                return round(precipitation["all"], 2)
+            if "3h" in precipitation:
+                return round(precipitation["3h"], 2)
+            if "1h" in precipitation:
+                return round(precipitation["1h"], 2)
         return 0
 
     def _get_condition(self, weather_code, timestamp=None):

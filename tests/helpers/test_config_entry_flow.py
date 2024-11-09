@@ -1,13 +1,13 @@
 """Tests for the Config Entry Flow helper."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform

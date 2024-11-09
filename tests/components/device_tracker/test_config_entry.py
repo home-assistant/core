@@ -1,9 +1,9 @@
 """Test Device Tracker config entry things."""
 
+from collections.abc import Generator
 from typing import Any
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
@@ -162,7 +162,7 @@ class MockTrackerEntity(TrackerEntity):
         return self._battery_level
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
 
@@ -249,7 +249,7 @@ class MockScannerEntity(ScannerEntity):
         return False
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.ROUTER
 
@@ -505,8 +505,7 @@ async def test_scanner_entity_state(
 def test_tracker_entity() -> None:
     """Test coverage for base TrackerEntity class."""
     entity = TrackerEntity()
-    with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+    assert entity.source_type is SourceType.GPS
     assert entity.latitude is None
     assert entity.longitude is None
     assert entity.location_name is None
@@ -539,8 +538,7 @@ def test_tracker_entity() -> None:
 def test_scanner_entity() -> None:
     """Test coverage for base ScannerEntity entity class."""
     entity = ScannerEntity()
-    with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+    assert entity.source_type is SourceType.ROUTER
     with pytest.raises(NotImplementedError):
         assert entity.is_connected is None
     with pytest.raises(NotImplementedError):

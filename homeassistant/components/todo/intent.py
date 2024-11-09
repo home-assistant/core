@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-from homeassistant.helpers.entity_component import EntityComponent
 
-from . import DOMAIN, TodoItem, TodoItemStatus, TodoListEntity
+from . import TodoItem, TodoItemStatus, TodoListEntity
+from .const import DATA_COMPONENT, DOMAIN
 
 INTENT_LIST_ADD_ITEM = "HassListAddItem"
 
@@ -21,7 +23,10 @@ class ListAddItemIntent(intent.IntentHandler):
 
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
-    slot_schema = {"item": intent.non_empty_string, "name": intent.non_empty_string}
+    slot_schema = {
+        vol.Required("item"): intent.non_empty_string,
+        vol.Required("name"): intent.non_empty_string,
+    }
     platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
@@ -29,10 +34,9 @@ class ListAddItemIntent(intent.IntentHandler):
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         list_name = slots["name"]["value"]
 
-        component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
         target_list: TodoListEntity | None = None
 
         # Find matching list
@@ -45,7 +49,9 @@ class ListAddItemIntent(intent.IntentHandler):
                 result=match_result, constraints=match_constraints
             )
 
-        target_list = component.get_entity(match_result.states[0].entity_id)
+        target_list = hass.data[DATA_COMPONENT].get_entity(
+            match_result.states[0].entity_id
+        )
         if target_list is None:
             raise intent.IntentHandleError(f"No to-do list: {list_name}")
 
@@ -56,4 +62,13 @@ class ListAddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE
+        response.async_set_results(
+            [
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=list_name,
+                    id=match_result.states[0].entity_id,
+                )
+            ]
+        )
         return response

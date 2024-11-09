@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 from vehicle import Vehicle
 
 from homeassistant.components.rdw.const import CONF_LICENSE_PLATE, DOMAIN

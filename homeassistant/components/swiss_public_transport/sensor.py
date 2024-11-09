@@ -8,21 +8,24 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from homeassistant import config_entries, core
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import UnitOfTime
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SENSOR_CONNECTIONS_COUNT
-from .coordinator import DataConnection, SwissPublicTransportDataUpdateCoordinator
+from .const import CONNECTIONS_COUNT, DOMAIN
+from .coordinator import (
+    DataConnection,
+    SwissPublicTransportConfigEntry,
+    SwissPublicTransportDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +39,6 @@ class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[DataConnection], StateType | datetime]
 
     index: int = 0
-    has_legacy_attributes: bool = False
 
 
 SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
@@ -45,11 +47,10 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             key=f"departure{i or ''}",
             translation_key=f"departure{i}",
             device_class=SensorDeviceClass.TIMESTAMP,
-            has_legacy_attributes=i == 0,
             value_fn=lambda data_connection: data_connection["departure"],
             index=i,
         )
-        for i in range(SENSOR_CONNECTIONS_COUNT)
+        for i in range(CONNECTIONS_COUNT)
     ],
     SwissPublicTransportSensorEntityDescription(
         key="duration",
@@ -74,24 +75,27 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda data_connection: data_connection["delay"],
     ),
+    SwissPublicTransportSensorEntityDescription(
+        key="line",
+        translation_key="line",
+        value_fn=lambda data_connection: data_connection["line"],
+    ),
 )
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    hass: HomeAssistant,
+    config_entry: SwissPublicTransportConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
     unique_id = config_entry.unique_id
 
     if TYPE_CHECKING:
         assert unique_id
 
     async_add_entities(
-        SwissPublicTransportSensor(coordinator, description, unique_id)
+        SwissPublicTransportSensor(config_entry.runtime_data, description, unique_id)
         for description in SENSORS
     )
 
@@ -127,28 +131,3 @@ class SwissPublicTransportSensor(
         return self.entity_description.value_fn(
             self.coordinator.data[self.entity_description.index]
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Prepare the extra attributes at start."""
-        if self.entity_description.has_legacy_attributes:
-            self._async_update_attrs()
-        await super().async_added_to_hass()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle the state update and prepare the extra state attributes."""
-        if self.entity_description.has_legacy_attributes:
-            self._async_update_attrs()
-        return super()._handle_coordinator_update()
-
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Update the extra state attributes based on the coordinator data."""
-        if self.entity_description.has_legacy_attributes:
-            self._attr_extra_state_attributes = {
-                key: value
-                for key, value in self.coordinator.data[
-                    self.entity_description.index
-                ].items()
-                if key not in {"departure"}
-            }

@@ -1,5 +1,6 @@
 """HomeKit controller session fixtures."""
 
+from collections.abc import Callable, Generator
 import datetime
 from unittest.mock import MagicMock, patch
 
@@ -7,7 +8,6 @@ from aiohomekit.testing import FakeController
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 import homeassistant.util.dt as dt_util
 
@@ -44,3 +44,16 @@ def hk_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
 @pytest.fixture(autouse=True)
 def auto_mock_bluetooth(mock_bluetooth: None) -> None:
     """Auto mock bluetooth."""
+
+
+@pytest.fixture
+def get_next_aid() -> Generator[Callable[[], int]]:
+    """Generate a function that returns increasing accessory ids."""
+    id_counter = 0
+
+    def _get_id():
+        nonlocal id_counter
+        id_counter += 1
+        return id_counter
+
+    return _get_id

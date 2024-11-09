@@ -3,8 +3,8 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from aiotedee import TedeeLock
 from freezegun.api import FrozenDateTimeFactory
-from pytedee_async import TedeeLock
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -15,20 +15,17 @@ from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
-BINARY_SENSORS = (
-    "charging",
-    "semi_locked",
-    "pullspring_enabled",
-)
+BINARY_SENSORS = ("charging", "semi_locked", "pullspring_enabled", "lock_uncalibrated")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test tedee battery charging sensor."""
+    """Test tedee binary sensor."""
     for key in BINARY_SENSORS:
         state = hass.states.get(f"binary_sensor.lock_1a2b_{key}")
         assert state
@@ -39,6 +36,7 @@ async def test_binary_sensors(
         assert entry == snapshot(name=f"entry-{key}")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_new_binary_sensors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
@@ -23,11 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
 from .const import (
     API_RETRY_TIMES,
@@ -50,7 +44,8 @@ PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 async def call_c4_api_retry(func, *func_args):
     """Call C4 API function and retry on failure."""
-    for i in range(API_RETRY_TIMES):
+    # Ruff doesn't understand this loop - the exception is always raised after the retries
+    for i in range(API_RETRY_TIMES):  # noqa: RET503
         try:
             return await func(*func_args)
         except client_exceptions.ClientError as exception:
@@ -165,41 +160,3 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
         for item in director_all_items
         if "categories" in item and category in item["categories"]
     ]
-
-
-class Control4Entity(CoordinatorEntity[Any]):
-    """Base entity for Control4."""
-
-    def __init__(
-        self,
-        entry_data: dict,
-        coordinator: DataUpdateCoordinator[Any],
-        name: str | None,
-        idx: int,
-        device_name: str | None,
-        device_manufacturer: str | None,
-        device_model: str | None,
-        device_id: int,
-    ) -> None:
-        """Initialize a Control4 entity."""
-        super().__init__(coordinator)
-        self.entry_data = entry_data
-        self._attr_name = name
-        self._attr_unique_id = str(idx)
-        self._idx = idx
-        self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
-        self._device_name = device_name
-        self._device_manufacturer = device_manufacturer
-        self._device_model = device_model
-        self._device_id = device_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return info of parent Control4 device of entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_id))},
-            manufacturer=self._device_manufacturer,
-            model=self._device_model,
-            name=self._device_name,
-            via_device=(DOMAIN, self._controller_unique_id),
-        )

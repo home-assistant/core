@@ -11,7 +11,6 @@ from switchbot import (
     SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotLock,
-    SwitchbotModel,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -39,12 +38,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
+    CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    SUPPORTED_LOCK_MODELS,
     SUPPORTED_MODEL_TYPES,
+    SupportedModels,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +80,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SwitchbotOptionsFlowHandler(config_entry)
+        return SwitchbotOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -109,7 +112,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": data["modelFriendlyName"],
             "address": short_address(discovery_info.address),
         }
-        if model_name == SwitchbotModel.LOCK:
+        if model_name in SUPPORTED_LOCK_MODELS:
             return await self.async_step_lock_choose_method()
         if self._discovered_adv.data["isEncrypted"]:
             return await self.async_step_password()
@@ -240,6 +243,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
                 user_input[CONF_ENCRYPTION_KEY],
+                model=self._discovered_adv.data["modelName"],
             ):
                 errors = {
                     "base": "encryption_key_invalid",
@@ -305,7 +309,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+            if device_adv.data.get("modelName") in SUPPORTED_LOCK_MODELS:
                 return await self.async_step_lock_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
@@ -317,7 +321,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             # or simply confirm it
             device_adv = list(self._discovered_advs.values())[0]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") == SwitchbotModel.LOCK:
+            if device_adv.data.get("modelName") in SUPPORTED_LOCK_MODELS:
                 return await self.async_step_lock_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
@@ -342,10 +346,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 class SwitchbotOptionsFlowHandler(OptionsFlow):
     """Handle Switchbot options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -354,7 +354,7 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             # Update common entity options for all other entities.
             return self.async_create_entry(title="", data=user_input)
 
-        options = {
+        options: dict[vol.Optional, Any] = {
             vol.Optional(
                 CONF_RETRY_COUNT,
                 default=self.config_entry.options.get(
@@ -362,5 +362,16 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
+        if self.config_entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.LOCK_PRO:
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_LOCK_NIGHTLATCH,
+                        default=self.config_entry.options.get(
+                            CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+                        ),
+                    ): bool
+                }
+            )
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

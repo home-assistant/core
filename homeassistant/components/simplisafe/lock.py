@@ -15,8 +15,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import DOMAIN, LOGGER
+from .entity import SimpliSafeEntity
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
@@ -38,7 +39,7 @@ async def async_setup_entry(
 
     for system in simplisafe.systems.values():
         if system.version == 2:
-            LOGGER.info("Skipping lock setup for V2 system: %s", system.system_id)
+            LOGGER.warning("Skipping lock setup for V2 system: %s", system.system_id)
             continue
 
         locks.extend(

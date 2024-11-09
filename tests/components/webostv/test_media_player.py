@@ -144,7 +144,7 @@ async def test_media_play_pause(hass: HomeAssistant, client) -> None:
     ],
 )
 async def test_media_next_previous_track(
-    hass: HomeAssistant, client, service, client_call, monkeypatch
+    hass: HomeAssistant, client, service, client_call, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test media next/previous track services."""
     await setup_webostv(hass)
@@ -270,7 +270,10 @@ async def test_select_sound_output(hass: HomeAssistant, client) -> None:
 
 
 async def test_device_info_startup_off(
-    hass: HomeAssistant, client, monkeypatch, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    client,
+    monkeypatch: pytest.MonkeyPatch,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device info when device is off at startup."""
     monkeypatch.setattr(client, "system_info", None)
@@ -291,7 +294,10 @@ async def test_device_info_startup_off(
 
 
 async def test_entity_attributes(
-    hass: HomeAssistant, client, monkeypatch, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    client,
+    monkeypatch: pytest.MonkeyPatch,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test entity attributes."""
     entry = await setup_webostv(hass)
@@ -383,7 +389,7 @@ async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
 
 
 async def test_update_sources_live_tv_find(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test finding live TV app id in update sources."""
     await setup_webostv(hass)
@@ -466,7 +472,9 @@ async def test_update_sources_live_tv_find(
     assert len(sources) == 1
 
 
-async def test_client_disconnected(hass: HomeAssistant, client, monkeypatch) -> None:
+async def test_client_disconnected(
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
@@ -477,7 +485,10 @@ async def test_client_disconnected(hass: HomeAssistant, client, monkeypatch) -> 
 
 
 async def test_control_error_handling(
-    hass: HomeAssistant, client, caplog: pytest.LogCaptureFixture, monkeypatch
+    hass: HomeAssistant,
+    client,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test control errors handling."""
     await setup_webostv(hass)
@@ -507,7 +518,9 @@ async def test_control_error_handling(
     )
 
 
-async def test_supported_features(hass: HomeAssistant, client, monkeypatch) -> None:
+async def test_supported_features(
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test test supported features."""
     monkeypatch.setattr(client, "sound_output", "lineout")
     await setup_webostv(hass)
@@ -565,7 +578,7 @@ async def test_supported_features(hass: HomeAssistant, client, monkeypatch) -> N
 
 
 async def test_cached_supported_features(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test test supported features."""
     monkeypatch.setattr(client, "is_on", False)
@@ -672,7 +685,7 @@ async def test_cached_supported_features(
 
 
 async def test_supported_features_no_cache(
-    hass: HomeAssistant, client, monkeypatch
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test supported features if device is off and no cache."""
     monkeypatch.setattr(client, "is_on", False)
@@ -716,7 +729,7 @@ async def test_get_image_http(
     client,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test get image via http."""
     url = "http://something/valid_icon"
@@ -742,7 +755,7 @@ async def test_get_image_http_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test get image via http error."""
     url = "http://something/icon_error"
@@ -769,7 +782,7 @@ async def test_get_image_https(
     client,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test get image via http."""
     url = "https://something/valid_icon_https"
@@ -789,7 +802,9 @@ async def test_get_image_https(
     assert content == b"https_image"
 
 
-async def test_reauth_reconnect(hass: HomeAssistant, client, monkeypatch) -> None:
+async def test_reauth_reconnect(
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test reauth flow triggered by reconnect."""
     entry = await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
@@ -814,7 +829,9 @@ async def test_reauth_reconnect(hass: HomeAssistant, client, monkeypatch) -> Non
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_update_media_state(hass: HomeAssistant, client, monkeypatch) -> None:
+async def test_update_media_state(
+    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test updating media state."""
     await setup_webostv(hass)
 
@@ -832,3 +849,7 @@ async def test_update_media_state(hass: HomeAssistant, client, monkeypatch) -> N
     monkeypatch.setattr(client, "media_state", data)
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
+
+    monkeypatch.setattr(client, "is_on", False)
+    await client.mock_state_update()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF

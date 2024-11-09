@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_alarm_control_panel[sensor_payload0-alarm_system_payload0][alarm_control_panel.keypad-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.keypad',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keypad',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': <AlarmControlPanelEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:00-00',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_control_panel[sensor_payload0-alarm_system_payload0][alarm_control_panel.keypad-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': None,
+      'code_arm_required': True,
+      'code_format': <CodeFormat.NUMBER: 'number'>,
+      'friendly_name': 'Keypad',
+      'supported_features': <AlarmControlPanelEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.keypad',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

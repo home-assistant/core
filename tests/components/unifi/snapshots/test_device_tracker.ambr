@@ -1,0 +1,149 @@
+# serializer version: 1
+# name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.switch_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.switch_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch 1',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:01:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.switch_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Switch 1',
+      'ip': '10.0.1.1',
+      'mac': '00:00:00:00:01:01',
+      'source_type': <SourceType.ROUTER: 'router'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.switch_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.wd_client_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.wd_client_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'wd_client_1',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'site_id-00:00:00:00:00:02',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.wd_client_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'wd_client_1',
+      'host_name': 'wd_client_1',
+      'mac': '00:00:00:00:00:02',
+      'source_type': <SourceType.ROUTER: 'router'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.wd_client_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.ws_client_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.ws_client_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ws_client_1',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'site_id-00:00:00:00:00:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.ws_client_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ws_client_1',
+      'host_name': 'ws_client_1',
+      'ip': '10.0.0.1',
+      'mac': '00:00:00:00:00:01',
+      'source_type': <SourceType.ROUTER: 'router'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.ws_client_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---

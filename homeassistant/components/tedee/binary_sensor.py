@@ -3,8 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pytedee_async import TedeeLock
-from pytedee_async.lock import TedeeLockState
+from aiotedee import TedeeLock
+from aiotedee.lock import TedeeLockState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TedeeConfigEntry
+from .coordinator import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
 
 
@@ -46,6 +46,14 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
         translation_key="pullspring_enabled",
         is_on_fn=lambda lock: lock.is_enabled_pullspring,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TedeeBinarySensorEntityDescription(
+        key="uncalibrated",
+        translation_key="uncalibrated",
+        is_on_fn=lambda lock: lock.state == TedeeLockState.UNCALIBRATED,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 

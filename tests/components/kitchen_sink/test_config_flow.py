@@ -1,12 +1,27 @@
 """Test the Everything but the Kitchen Sink config flow."""
 
+from collections.abc import Generator
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def no_platforms() -> Generator[None]:
+    """Don't enable any platforms."""
+    with patch(
+        "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",
+        [],
+    ):
+        yield
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -66,3 +81,26 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("no_platforms")
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options_1"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"section_1": {"bool": True, "int": 15}},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"section_1": {"bool": True, "int": 15}}
+
+    await hass.async_block_till_done()

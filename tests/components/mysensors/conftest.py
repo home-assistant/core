@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable, Generator
 from copy import deepcopy
 import json
 from typing import Any
@@ -12,7 +12,6 @@ from mysensors import BaseSyncGateway
 from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
@@ -142,7 +141,7 @@ async def integration_fixture(
     config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.mysensors.device.Debouncer", autospec=True
+        "homeassistant.components.mysensors.entity.Debouncer", autospec=True
     ) as debouncer_class:
 
         def debouncer(

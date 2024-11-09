@@ -195,9 +195,9 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
             for schedule in schedules + flex_schedules
         )
     entities.extend(
-        RachioValve(person, base_station, valve, base_station.coordinator)
+        RachioValve(person, base_station, valve, base_station.status_coordinator)
         for base_station in person.base_stations
-        for valve in base_station.coordinator.data.values()
+        for valve in base_station.status_coordinator.data.values()
     )
     return entities
 

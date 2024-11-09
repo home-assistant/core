@@ -10,16 +10,24 @@ import voluptuous as vol
 
 from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpServiceInfo
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
+    CONFIG_ENTRY_FORCE_POLL,
     CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
+    DEFAULT_CONFIG_ENTRY_FORCE_POLL,
     DOMAIN,
     DOMAIN_DISCOVERIES,
     LOGGER,
@@ -82,6 +90,14 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     # Paths:
     # 1: ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
     # 2: user(None): scan --> user({...}) --> create_entry()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> UpnpOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return UpnpOptionsFlowHandler()
 
     @property
     def _discoveries(self) -> dict[str, SsdpServiceInfo]:
@@ -249,9 +265,14 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
             CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
         }
+        options = {
+            CONFIG_ENTRY_FORCE_POLL: False,
+        }
 
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
-        return self.async_create_entry(title=user_input["title"], data=data)
+        return self.async_create_entry(
+            title=user_input["title"], data=data, options=options
+        )
 
     async def _async_create_entry_from_discovery(
         self,
@@ -273,4 +294,30 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
         }
-        return self.async_create_entry(title=title, data=data)
+        options = {
+            CONFIG_ENTRY_FORCE_POLL: False,
+        }
+        return self.async_create_entry(title=title, data=data, options=options)
+
+
+class UpnpOptionsFlowHandler(OptionsFlow):
+    """Handle an options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONFIG_ENTRY_FORCE_POLL,
+                    default=self.config_entry.options.get(
+                        CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL
+                    ),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

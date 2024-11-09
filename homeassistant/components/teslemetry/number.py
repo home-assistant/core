@@ -26,6 +26,8 @@ from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeslemetryNumberVehicleEntityDescription(NumberEntityDescription):
@@ -162,7 +164,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         value = int(value)
-        self.raise_for_scope()
+        self.raise_for_scope(self.entity_description.scopes[0])
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
@@ -198,7 +200,7 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         value = int(value)
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
         self.async_write_ha_state()

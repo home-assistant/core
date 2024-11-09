@@ -3,24 +3,28 @@
 from __future__ import annotations
 
 from aioaquacell import AquacellApi
+from aioaquacell.const import Brand
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_BRAND
 from .coordinator import AquacellCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
+type AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> bool:
     """Set up Aquacell from a config entry."""
     session = async_get_clientsession(hass)
 
-    aquacell_api = AquacellApi(session)
+    brand = entry.data.get(CONF_BRAND, Brand.AQUACELL)
+
+    aquacell_api = AquacellApi(session, brand)
 
     coordinator = AquacellCoordinator(hass, aquacell_api)
 

@@ -18,7 +18,7 @@
           "type": "[%key:component::brother::config::step::user::data::type%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Update configuration for {printer_name}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

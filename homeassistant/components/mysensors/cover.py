@@ -12,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -36,7 +37,7 @@ async def async_setup_entry(
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors cover."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.COVER,
             discovery_info,
@@ -55,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsCover(mysensors.device.MySensorsChildEntity, CoverEntity):
+class MySensorsCover(MySensorsChildEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
     def get_cover_state(self) -> CoverState:

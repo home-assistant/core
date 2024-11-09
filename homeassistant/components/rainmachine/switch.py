@@ -18,8 +18,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
+from . import RainMachineConfigEntry, RainMachineData, async_update_programs_and_zones
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -30,9 +31,8 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
-    DOMAIN,
 )
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import RUN_STATE_MAP, key_exists
 
 ATTR_ACTIVITY_TYPE = "activity_type"
@@ -172,13 +172,15 @@ RESTRICTIONS_SWITCH_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RainMachineConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
     platform = entity_platform.async_get_current_platform()
 
-    for service_name, schema, method in (
-        ("start_program", {}, "async_start_program"),
+    services: tuple[tuple[str, VolDictType | None, str], ...] = (
+        ("start_program", None, "async_start_program"),
         (
             "start_zone",
             {
@@ -188,12 +190,13 @@ async def async_setup_entry(
             },
             "async_start_zone",
         ),
-        ("stop_program", {}, "async_stop_program"),
-        ("stop_zone", {}, "async_stop_zone"),
-    ):
+        ("stop_program", None, "async_stop_program"),
+        ("stop_zone", None, "async_stop_zone"),
+    )
+    for service_name, schema, method in services:
         platform.async_register_entity_service(service_name, schema, method)
 
-    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[RainMachineBaseSwitch] = []
 
     for kind, api_category, switch_class, switch_enabled_class in (

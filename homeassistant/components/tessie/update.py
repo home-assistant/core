@@ -12,8 +12,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import TessieUpdateStatus
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -34,10 +36,10 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the Update."""
-        super().__init__(coordinator, "update")
+        super().__init__(vehicle, "update")
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
@@ -69,14 +71,22 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         return self.installed_version
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
+        """Update installation progress."""
+        return (
+            self.get("vehicle_state_software_update_status")
+            == TessieUpdateStatus.INSTALLING
+        )
+
+    @property
+    def update_percentage(self) -> int | None:
         """Update installation progress."""
         if (
             self.get("vehicle_state_software_update_status")
             == TessieUpdateStatus.INSTALLING
         ):
             return self.get("vehicle_state_software_update_install_perc")
-        return False
+        return None
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

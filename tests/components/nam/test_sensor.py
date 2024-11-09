@@ -77,7 +77,7 @@ async def test_incompleta_data_after_device_restart(hass: HomeAssistant) -> None
 
     state = hass.states.get("sensor.nettigo_air_monitor_heca_temperature")
     assert state
-    assert state.state == "8.0"
+    assert state.state == "7.95"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
@@ -110,7 +110,7 @@ async def test_availability(
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "7.6"
+    assert state.state == "7.56"
 
     with (
         patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
@@ -142,7 +142,7 @@ async def test_availability(
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "7.6"
+    assert state.state == "7.56"
 
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:

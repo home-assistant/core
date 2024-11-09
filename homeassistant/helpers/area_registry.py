@@ -5,11 +5,12 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
-from functools import cached_property
-from typing import Any, Literal, TypedDict
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import slugify
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
@@ -18,12 +19,18 @@ from .json import json_bytes, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
-    normalize_name,
 )
 from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
+
+if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with dataclasses
+    from propcache import cached_property as under_cached_property
+else:
+    from propcache import under_cached_property
+
 
 DATA_REGISTRY: HassKey[AreaRegistry] = HassKey("area_registry")
 EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType(
@@ -31,7 +38,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 6
+STORAGE_VERSION_MINOR = 7
 
 
 class _AreaStoreData(TypedDict):
@@ -44,6 +51,8 @@ class _AreaStoreData(TypedDict):
     labels: list[str]
     name: str
     picture: str | None
+    created_at: str
+    modified_at: str
 
 
 class AreasRegistryStoreData(TypedDict):
@@ -59,7 +68,7 @@ class EventAreaRegistryUpdatedData(TypedDict):
     area_id: str
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class AreaEntry(NormalizedNameBaseRegistryEntry):
     """Area Registry Entry."""
 
@@ -67,10 +76,11 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     floor_id: str | None
     icon: str | None
     id: str
-    labels: set[str] = dataclasses.field(default_factory=set)
+    labels: set[str] = field(default_factory=set)
     picture: str | None
+    _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
-    @cached_property
+    @under_cached_property
     def json_fragment(self) -> json_fragment:
         """Return a JSON representation of this AreaEntry."""
         return json_fragment(
@@ -83,6 +93,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
+                    "created_at": self.created_at.timestamp(),
+                    "modified_at": self.modified_at.timestamp(),
                 }
             )
         )
@@ -125,6 +137,12 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 for area in old_data["areas"]:
                     area["labels"] = []
 
+            if old_minor_version < 7:
+                # Version 1.7 adds created_at and modiefied_at
+                created_at = utc_from_timestamp(0).isoformat()
+                for area in old_data["areas"]:
+                    area["created_at"] = area["modified_at"] = created_at
+
         if old_major_version > 1:
             raise NotImplementedError
         return old_data  # type: ignore[return-value]
@@ -141,22 +159,23 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
+        super()._index_entry(key, entry)
         if entry.floor_id is not None:
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
-        super()._index_entry(key, entry)
 
     def _unindex_entry(
         self, key: str, replacement_entry: AreaEntry | None = None
     ) -> None:
+        # always call base class before other indices
+        super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if labels := entry.labels:
             for label in labels:
                 self._unindex_entry_value(key, label, self._labels_index)
         if floor_id := entry.floor_id:
             self._unindex_entry_value(key, floor_id, self._floors_index)
-        return super()._unindex_entry(key, replacement_entry)
 
     def get_areas_for_label(self, label: str) -> list[AreaEntry]:
         """Get areas for label."""
@@ -212,6 +231,10 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             return area
         return self.async_create(name)
 
+    def _generate_id(self, name: str) -> str:
+        """Generate area ID."""
+        return self.areas.generate_id_from_name(name)
+
     @callback
     def async_create(
         self,
@@ -225,28 +248,28 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     ) -> AreaEntry:
         """Create a new area."""
         self.hass.verify_event_loop_thread("area_registry.async_create")
-        normalized_name = normalize_name(name)
 
-        if self.async_get_area_by_name(name):
-            raise ValueError(f"The name {name} ({normalized_name}) is already in use")
+        if area := self.async_get_area_by_name(name):
+            raise ValueError(
+                f"The name {name} ({area.normalized_name}) is already in use"
+            )
 
-        area_id = self._generate_area_id(name)
         area = AreaEntry(
             aliases=aliases or set(),
             floor_id=floor_id,
             icon=icon,
-            id=area_id,
+            id=self._generate_id(name),
             labels=labels or set(),
             name=name,
-            normalized_name=normalized_name,
             picture=picture,
         )
-        assert area.id is not None
-        self.areas[area.id] = area
+        area_id = area.id
+        self.areas[area_id] = area
         self.async_schedule_save()
+
         self.hass.bus.async_fire_internal(
             EVENT_AREA_REGISTRY_UPDATED,
-            EventAreaRegistryUpdatedData(action="create", area_id=area.id),
+            EventAreaRegistryUpdatedData(action="create", area_id=area_id),
         )
         return area
 
@@ -315,27 +338,28 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         """Update name of area."""
         old = self.areas[area_id]
 
-        new_values = {}
-
-        for attr_name, value in (
-            ("aliases", aliases),
-            ("icon", icon),
-            ("labels", labels),
-            ("picture", picture),
-            ("floor_id", floor_id),
-        ):
-            if value is not UNDEFINED and value != getattr(old, attr_name):
-                new_values[attr_name] = value
+        new_values: dict[str, Any] = {
+            attr_name: value
+            for attr_name, value in (
+                ("aliases", aliases),
+                ("icon", icon),
+                ("labels", labels),
+                ("picture", picture),
+                ("floor_id", floor_id),
+            )
+            if value is not UNDEFINED and value != getattr(old, attr_name)
+        }
 
         if name is not UNDEFINED and name != old.name:
             new_values["name"] = name
-            new_values["normalized_name"] = normalize_name(name)
 
         if not new_values:
             return old
 
+        new_values["modified_at"] = utcnow()
+
         self.hass.verify_event_loop_thread("area_registry.async_update")
-        new = self.areas[area_id] = dataclasses.replace(old, **new_values)  # type: ignore[arg-type]
+        new = self.areas[area_id] = dataclasses.replace(old, **new_values)
 
         self.async_schedule_save()
         return new
@@ -351,7 +375,6 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         if data is not None:
             for area in data["areas"]:
                 assert area["name"] is not None and area["id"] is not None
-                normalized_name = normalize_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     aliases=set(area["aliases"]),
                     floor_id=area["floor_id"],
@@ -359,8 +382,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     id=area["id"],
                     labels=set(area["labels"]),
                     name=area["name"],
-                    normalized_name=normalized_name,
                     picture=area["picture"],
+                    created_at=datetime.fromisoformat(area["created_at"]),
+                    modified_at=datetime.fromisoformat(area["modified_at"]),
                 )
 
         self.areas = areas
@@ -379,19 +403,12 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     "labels": list(entry.labels),
                     "name": entry.name,
                     "picture": entry.picture,
+                    "created_at": entry.created_at.isoformat(),
+                    "modified_at": entry.modified_at.isoformat(),
                 }
                 for entry in self.areas.values()
             ]
         }
-
-    def _generate_area_id(self, name: str) -> str:
-        """Generate area ID."""
-        suggestion = suggestion_base = slugify(name)
-        tries = 1
-        while suggestion in self.areas:
-            tries += 1
-            suggestion = f"{suggestion_base}_{tries}"
-        return suggestion
 
     @callback
     def _async_setup_cleanup(self) -> None:

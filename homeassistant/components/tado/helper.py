@@ -1,11 +1,11 @@
 """Helper methods for Tado."""
 
-from . import TadoConnector
 from .const import (
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TIMER,
 )
+from .tado_connector import TadoConnector
 
 
 def decide_overlay_mode(
@@ -49,3 +49,15 @@ def decide_duration(
         )
 
     return duration
+
+
+def generate_supported_fanmodes(tado_to_ha_mapping: dict[str, str], options: list[str]):
+    """Return correct list of fan modes or None."""
+    supported_fanmodes = [
+        tado_to_ha_mapping.get(option)
+        for option in options
+        if tado_to_ha_mapping.get(option) is not None
+    ]
+    if not supported_fanmodes:
+        return None
+    return supported_fanmodes

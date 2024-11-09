@@ -1,17 +1,17 @@
 """Tests for the homewizard component."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
-from homewizard_energy.errors import DisabledError, HomeWizardEnergyException
+from freezegun.api import FrozenDateTimeFactory
+from homewizard_energy.errors import DisabledError
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload(
@@ -97,206 +97,36 @@ async def test_load_removes_reauth_flow(
     assert len(flows) == 0
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [
-        HomeWizardEnergyException,
-        Exception,
-    ],
-)
-async def test_load_handles_homewizardenergy_exception(
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_disablederror_reloads_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
-    exception: Exception,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test setup handles exception from API."""
-    mock_homewizardenergy.device.side_effect = exception
+    """Test DisabledError reloads integration."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state in (
-        ConfigEntryState.SETUP_RETRY,
-        ConfigEntryState.SETUP_ERROR,
-    )
+    # Make sure current state is loaded and not reauth flow is active
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
 
+    # Simulate DisabledError and wait for next update
+    mock_homewizardenergy.device.side_effect = DisabledError()
 
-@pytest.mark.parametrize(
-    ("device_fixture", "old_unique_id", "new_unique_id"),
-    [
-        (
-            "HWE-SKT-11",
-            "aabbccddeeff_total_power_import_t1_kwh",
-            "aabbccddeeff_total_power_import_kwh",
-        ),
-        (
-            "HWE-SKT-11",
-            "aabbccddeeff_total_power_export_t1_kwh",
-            "aabbccddeeff_total_power_export_kwh",
-        ),
-        (
-            "HWE-SKT-21",
-            "aabbccddeeff_total_power_import_t1_kwh",
-            "aabbccddeeff_total_power_import_kwh",
-        ),
-        (
-            "HWE-SKT-21",
-            "aabbccddeeff_total_power_export_t1_kwh",
-            "aabbccddeeff_total_power_export_kwh",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_homewizardenergy")
-async def test_sensor_migration(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    old_unique_id: str,
-    new_unique_id: str,
-) -> None:
-    """Test total power T1 sensors are migrated."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=mock_config_entry,
-    )
-
-    assert entity.unique_id == old_unique_id
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    entity_migrated = entity_registry.async_get(entity.entity_id)
-    assert entity_migrated
-    assert entity_migrated.unique_id == new_unique_id
-    assert entity_migrated.previous_unique_id == old_unique_id
+    # State should be setup retry and reauth flow should be active
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
 
-@pytest.mark.parametrize(
-    ("device_fixture", "old_unique_id", "new_unique_id"),
-    [
-        (
-            "HWE-SKT-11",
-            "aabbccddeeff_total_power_import_t1_kwh",
-            "aabbccddeeff_total_power_import_kwh",
-        ),
-        (
-            "HWE-SKT-11",
-            "aabbccddeeff_total_power_export_t1_kwh",
-            "aabbccddeeff_total_power_export_kwh",
-        ),
-        (
-            "HWE-SKT-21",
-            "aabbccddeeff_total_power_import_t1_kwh",
-            "aabbccddeeff_total_power_import_kwh",
-        ),
-        (
-            "HWE-SKT-21",
-            "aabbccddeeff_total_power_export_t1_kwh",
-            "aabbccddeeff_total_power_export_kwh",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_homewizardenergy")
-async def test_sensor_migration_does_not_trigger(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    old_unique_id: str,
-    new_unique_id: str,
-) -> None:
-    """Test total power T1 sensors are not migrated when not possible."""
-    mock_config_entry.add_to_hass(hass)
-
-    old_entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=mock_config_entry,
-    )
-
-    new_entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=new_unique_id,
-        config_entry=mock_config_entry,
-    )
-
-    assert old_entity.unique_id == old_unique_id
-    assert new_entity.unique_id == new_unique_id
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity = entity_registry.async_get(old_entity.entity_id)
-    assert entity
-    assert entity.unique_id == old_unique_id
-    assert entity.previous_unique_id is None
-
-    entity = entity_registry.async_get(new_entity.entity_id)
-    assert entity
-    assert entity.unique_id == new_unique_id
-    assert entity.previous_unique_id is None
-
-
-@pytest.mark.parametrize(
-    ("device_fixture", "old_unique_id", "new_unique_id"),
-    [
-        (
-            "HWE-P1",
-            "homewizard_G001",
-            "homewizard_gas_meter_G001",
-        ),
-        (
-            "HWE-P1",
-            "homewizard_W001",
-            "homewizard_water_meter_W001",
-        ),
-        (
-            "HWE-P1",
-            "homewizard_WW001",
-            "homewizard_warm_water_meter_WW001",
-        ),
-        (
-            "HWE-P1",
-            "homewizard_H001",
-            "homewizard_heat_meter_H001",
-        ),
-        (
-            "HWE-P1",
-            "homewizard_IH001",
-            "homewizard_inlet_heat_meter_IH001",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_homewizardenergy")
-async def test_external_sensor_migration(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    old_unique_id: str,
-    new_unique_id: str,
-) -> None:
-    """Test unique ID or External sensors are migrated."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=mock_config_entry,
-    )
-
-    assert entity.unique_id == old_unique_id
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_migrated = entity_registry.async_get(entity.entity_id)
-    assert entity_migrated
-    assert entity_migrated.unique_id == new_unique_id
-    assert entity_migrated.previous_unique_id == old_unique_id
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN

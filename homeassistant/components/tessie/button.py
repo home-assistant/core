@@ -19,8 +19,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,11 +69,11 @@ class TessieButtonEntity(TessieEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieButtonEntityDescription,
     ) -> None:
         """Initialize the Button."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     async def async_press(self) -> None:

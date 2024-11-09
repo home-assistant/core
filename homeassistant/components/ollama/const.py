@@ -4,76 +4,17 @@ DOMAIN = "ollama"
 
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = """{%- set used_domains = set([
-  "binary_sensor",
-  "climate",
-  "cover",
-  "fan",
-  "light",
-  "lock",
-  "sensor",
-  "switch",
-  "weather",
-]) %}
-{%- set used_attributes = set([
-  "temperature",
-  "current_temperature",
-  "temperature_unit",
-  "brightness",
-  "humidity",
-  "unit_of_measurement",
-  "device_class",
-  "current_position",
-  "percentage",
-]) %}
 
-This smart home is controlled by Home Assistant.
-The current time is {{ now().strftime("%X") }}.
-Today's date is {{ now().strftime("%x") }}.
-
-An overview of the areas and the devices in this smart home:
-```yaml
-{%- for entity in exposed_entities: %}
-{%- if entity.domain not in used_domains: %}
-  {%- continue %}
-{%- endif %}
-
-- domain: {{ entity.domain }}
-{%- if entity.names | length == 1: %}
-  name: {{ entity.names[0] }}
-{%- else: %}
-  names:
-{%- for name in entity.names: %}
-  - {{ name }}
-{%- endfor %}
-{%- endif %}
-{%- if entity.area_names | length == 1: %}
-  area: {{ entity.area_names[0] }}
-{%- elif entity.area_names: %}
-  areas:
-{%- for area_name in entity.area_names: %}
-  - {{ area_name }}
-{%- endfor %}
-{%- endif %}
-  state: {{ entity.state.state }}
-  {%- set attributes_key_printed = False %}
-{%- for attr_name, attr_value in entity.state.attributes.items(): %}
-    {%- if attr_name in used_attributes: %}
-    {%- if not attributes_key_printed: %}
-  attributes:
-    {%- set attributes_key_printed = True %}
-    {%- endif %}
-    {{ attr_name }}: {{ attr_value }}
-    {%- endif %}
-{%- endfor %}
-{%- endfor %}
-```
-
-Answer the user's questions using the information about this smart home.
-Keep your answers brief and do not apologize."""
+CONF_KEEP_ALIVE = "keep_alive"
+DEFAULT_KEEP_ALIVE = -1  # seconds. -1 = indefinite, 0 = never
 
 KEEP_ALIVE_FOREVER = -1
 DEFAULT_TIMEOUT = 5.0  # seconds
+
+CONF_NUM_CTX = "num_ctx"
+DEFAULT_NUM_CTX = 8192
+MIN_NUM_CTX = 2048
+MAX_NUM_CTX = 131072
 
 CONF_MAX_HISTORY = "max_history"
 DEFAULT_MAX_HISTORY = 20
@@ -83,17 +24,27 @@ MAX_HISTORY_SECONDS = 60 * 60  # 1 hour
 MODEL_NAMES = [  # https://ollama.com/library
     "alfred",
     "all-minilm",
+    "aya-expanse",
+    "aya",
     "bakllava",
+    "bespoke-minicheck",
+    "bge-large",
+    "bge-m3",
     "codebooga",
+    "codegeex4",
     "codegemma",
     "codellama",
     "codeqwen",
+    "codestral",
     "codeup",
-    "command-r",
     "command-r-plus",
+    "command-r",
     "dbrx",
+    "deepseek-coder-v2",
     "deepseek-coder",
     "deepseek-llm",
+    "deepseek-v2.5",
+    "deepseek-v2",
     "dolphin-llama3",
     "dolphin-mistral",
     "dolphin-mixtral",
@@ -102,42 +53,80 @@ MODEL_NAMES = [  # https://ollama.com/library
     "duckdb-nsql",
     "everythinglm",
     "falcon",
+    "falcon2",
+    "firefunction-v2",
     "gemma",
+    "gemma2",
+    "glm4",
     "goliath",
+    "granite-code",
+    "granite3-dense",
+    "granite3-guardian" "granite3-moe",
+    "hermes3",
+    "internlm2",
+    "llama-guard3",
     "llama-pro",
-    "llama2",
     "llama2-chinese",
     "llama2-uncensored",
+    "llama2",
+    "llama3-chatqa",
+    "llama3-gradient",
+    "llama3-groq-tool-use",
+    "llama3.1",
+    "llama3.2",
     "llama3",
+    "llava-llama3",
+    "llava-phi3",
     "llava",
     "magicoder",
+    "mathstral",
     "meditron",
     "medllama2",
     "megadolphin",
-    "mistral",
+    "minicpm-v",
+    "mistral-large",
+    "mistral-nemo",
     "mistral-openorca",
+    "mistral-small",
+    "mistral",
     "mistrallite",
     "mixtral",
+    "moondream",
     "mxbai-embed-large",
+    "nemotron-mini",
+    "nemotron",
     "neural-chat",
     "nexusraven",
     "nomic-embed-text",
     "notus",
     "notux",
     "nous-hermes",
-    "nous-hermes2",
     "nous-hermes2-mixtral",
+    "nous-hermes2",
+    "nuextract",
     "open-orca-platypus2",
     "openchat",
     "openhermes",
     "orca-mini",
     "orca2",
+    "paraphrase-multilingual",
     "phi",
+    "phi3.5",
     "phi3",
     "phind-codellama",
     "qwen",
+    "qwen2-math",
+    "qwen2.5-coder",
+    "qwen2.5",
+    "qwen2",
+    "reader-lm",
+    "reflection",
     "samantha-mistral",
+    "shieldgemma",
+    "smollm",
+    "smollm2",
     "snowflake-arctic-embed",
+    "solar-pro",
     "solar",
     "sqlcoder",
     "stable-beluga",
@@ -151,16 +140,17 @@ MODEL_NAMES = [  # https://ollama.com/library
     "tinyllama",
     "vicuna",
     "wizard-math",
-    "wizard-vicuna",
     "wizard-vicuna-uncensored",
+    "wizard-vicuna",
     "wizardcoder",
-    "wizardlm",
     "wizardlm-uncensored",
+    "wizardlm",
     "wizardlm2",
     "xwinlm",
     "yarn-llama2",
     "yarn-mistral",
+    "yi-coder",
     "yi",
     "zephyr",
 ]
-DEFAULT_MODEL = "llama2:latest"
+DEFAULT_MODEL = "llama3.2:latest"

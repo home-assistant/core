@@ -12,14 +12,11 @@ import voluptuous as vol
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ADDRESS,
-    CONF_COMMAND_OFF,
-    CONF_COMMAND_ON,
     CONF_COUNT,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
-    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -29,24 +26,14 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import (
     CONF_DATA_TYPE,
-    CONF_DEVICE_ADDRESS,
-    CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
-    CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER,
-    CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
-    CONF_RETRIES,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
-    CONF_SWING_MODE_REGISTER,
     CONF_SWING_MODE_VALUES,
-    CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
-    CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
@@ -57,7 +44,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTRY = namedtuple(
+ENTRY = namedtuple(  # noqa: PYI024
     "ENTRY",
     [
         "struct_id",
@@ -71,7 +58,7 @@ ILLEGAL = "I"
 OPTIONAL = "O"
 DEMANDED = "D"
 
-PARM_IS_LEGAL = namedtuple(
+PARM_IS_LEGAL = namedtuple(  # noqa: PYI024
     "PARM_IS_LEGAL",
     [
         "count",
@@ -273,45 +260,6 @@ def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
     return config
 
 
-def check_hvac_target_temp_registers(config: dict) -> dict:
-    """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes, Swing Modes."""
-
-    if (
-        CONF_HVAC_MODE_REGISTER in config
-        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!"
-        _LOGGER.warning(wrn)
-        del config[CONF_HVAC_MODE_REGISTER]
-    if (
-        CONF_HVAC_ONOFF_REGISTER in config
-        and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!"
-        _LOGGER.warning(wrn)
-        del config[CONF_HVAC_ONOFF_REGISTER]
-    if (
-        CONF_FAN_MODE_REGISTER in config
-        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
-    ):
-        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
-        _LOGGER.warning(wrn)
-        del config[CONF_FAN_MODE_REGISTER]
-
-    if CONF_SWING_MODE_REGISTER in config:
-        regToTest = (
-            config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
-            if isinstance(config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS], int)
-            else config[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]
-        )
-        if regToTest in config[CONF_TARGET_TEMP]:
-            wrn = f"{CONF_SWING_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_SWING_MODE_REGISTER} is not loaded!"
-            _LOGGER.warning(wrn)
-            del config[CONF_SWING_MODE_REGISTER]
-
-    return config
-
-
 def register_int_list_validator(value: Any) -> Any:
     """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
     if isinstance(value, int) and value >= 0:
@@ -334,27 +282,6 @@ def validate_modbus(
     hub_name_inx: int,
 ) -> bool:
     """Validate modbus entries."""
-    if CONF_RETRIES in hub:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_retries",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_retries",
-            translation_placeholders={
-                "config_key": "retries",
-                "integration": DOMAIN,
-                "url": "https://www.home-assistant.io/integrations/modbus",
-            },
-        )
-        _LOGGER.warning(
-            "`retries`: is deprecated and will be removed in version 2024.7"
-        )
-    else:
-        hub[CONF_RETRIES] = 3
-
     host: str = (
         hub[CONF_PORT]
         if hub[CONF_TYPE] == SERIAL
@@ -403,26 +330,7 @@ def validate_entity(
     ent_addr: set[str],
 ) -> bool:
     """Validate entity."""
-    if CONF_LAZY_ERROR in entity:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_lazy_error_count",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="removed_lazy_error_count",
-            translation_placeholders={
-                "config_key": "lazy_error_count",
-                "integration": DOMAIN,
-                "url": "https://www.home-assistant.io/integrations/modbus",
-            },
-        )
-        _LOGGER.warning(
-            "`lazy_error_count`: is deprecated and will be removed in version 2024.7"
-        )
     name = f"{component}.{entity[CONF_NAME]}"
-    addr = f"{hub_name}{entity[CONF_ADDRESS]}"
     scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     if 0 < scan_interval < 5:
         err = (
@@ -432,44 +340,6 @@ def validate_entity(
         _LOGGER.warning(err)
     entity[CONF_SCAN_INTERVAL] = scan_interval
     minimum_scan_interval = min(scan_interval, minimum_scan_interval)
-    for conf_type in (
-        CONF_INPUT_TYPE,
-        CONF_WRITE_TYPE,
-        CONF_COMMAND_ON,
-        CONF_COMMAND_OFF,
-    ):
-        if conf_type in entity:
-            addr += f"_{entity[conf_type]}"
-    inx = entity.get(CONF_SLAVE) or entity.get(CONF_DEVICE_ADDRESS, 0)
-    addr += f"_{inx}"
-    loc_addr: set[str] = {addr}
-    if CONF_TARGET_TEMP in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
-    if CONF_HVAC_MODE_REGISTER in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
-    if CONF_FAN_MODE_REGISTER in entity:
-        loc_addr.add(f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
-    if CONF_SWING_MODE_REGISTER in entity:
-        loc_addr.add(
-            f"{hub_name}{entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS]
-                         if isinstance(entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS],int)
-                         else entity[CONF_SWING_MODE_REGISTER][CONF_ADDRESS][0]}_{inx}"
-        )
-
-    dup_addrs = ent_addr.intersection(loc_addr)
-    if len(dup_addrs) > 0:
-        for addr in dup_addrs:
-            modbus_create_issue(
-                hass,
-                "duplicate_entity_entry",
-                [
-                    f"{hub_name}/{name}",
-                    addr,
-                    "",
-                ],
-                f"Modbus {hub_name}/{name} address {addr} is duplicate, second entry not loaded!",
-            )
-        return False
     if name in ent_names:
         modbus_create_issue(
             hass,
@@ -483,7 +353,6 @@ def validate_entity(
         )
         return False
     ent_names.add(name)
-    ent_addr.update(loc_addr)
     return True
 
 

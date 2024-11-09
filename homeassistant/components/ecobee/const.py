@@ -23,6 +23,8 @@ DOMAIN = "ecobee"
 DATA_ECOBEE_CONFIG = "ecobee_config"
 DATA_HASS_CONFIG = "ecobee_hass_config"
 ATTR_CONFIG_ENTRY_ID = "entry_id"
+ATTR_AVAILABLE_SENSORS = "available_sensors"
+ATTR_ACTIVE_SENSORS = "active_sensors"
 
 CONF_REFRESH_TOKEN = "refresh_token"
 
@@ -54,6 +56,8 @@ PLATFORMS = [
 ]
 
 MANUFACTURER = "ecobee"
+
+ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
 
 # Translates ecobee API weatherSymbol to Home Assistant usable names
 # https://www.ecobee.com/home/developer/api/documentation/v1/objects/WeatherForecast.shtml

@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -179,12 +179,12 @@ class Fan(HomeAccessory):
                 "%s: Set auto to 1 (%s)", self.entity_id, self.preset_modes[0]
             )
             params[ATTR_PRESET_MODE] = self.preset_modes[0]
-            self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_SET_PRESET_MODE, params)
         elif current_state := self.hass.states.get(self.entity_id):
             percentage: float = current_state.attributes.get(ATTR_PERCENTAGE) or 50.0
             params[ATTR_PERCENTAGE] = percentage
             _LOGGER.debug("%s: Set auto to 0", self.entity_id)
-            self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_TURN_ON, params)
 
     def set_preset_mode(self, value: int, preset_mode: str) -> None:
         """Set preset_mode if call came from HomeKit."""
@@ -194,36 +194,36 @@ class Fan(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if value:
             params[ATTR_PRESET_MODE] = preset_mode
-            self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_SET_PRESET_MODE, params)
         else:
-            self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
+            self.async_call_service(FAN_DOMAIN, SERVICE_TURN_ON, params)
 
     def set_state(self, value: int) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(FAN_DOMAIN, service, params)
 
     def set_direction(self, value: int) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set direction to %d", self.entity_id, value)
         direction = DIRECTION_REVERSE if value == 1 else DIRECTION_FORWARD
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_DIRECTION: direction}
-        self.async_call_service(DOMAIN, SERVICE_SET_DIRECTION, params, direction)
+        self.async_call_service(FAN_DOMAIN, SERVICE_SET_DIRECTION, params, direction)
 
     def set_oscillating(self, value: int) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set oscillating to %d", self.entity_id, value)
         oscillating = value == 1
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_OSCILLATING: oscillating}
-        self.async_call_service(DOMAIN, SERVICE_OSCILLATE, params, oscillating)
+        self.async_call_service(FAN_DOMAIN, SERVICE_OSCILLATE, params, oscillating)
 
     def set_percentage(self, value: float) -> None:
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set speed to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_PERCENTAGE: value}
-        self.async_call_service(DOMAIN, SERVICE_SET_PERCENTAGE, params, value)
+        self.async_call_service(FAN_DOMAIN, SERVICE_SET_PERCENTAGE, params, value)
 
     @callback
     def async_update_state(self, new_state: State) -> None:

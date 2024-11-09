@@ -29,7 +29,7 @@ class NodeStrClass(str):
 
     def __voluptuous_compile__(self, schema: vol.Schema) -> Any:
         """Needed because vol.Schema.compile does not handle str subclasses."""
-        return _compile_scalar(self)
+        return _compile_scalar(self)  # type: ignore[no-untyped-call]
 
 
 class NodeDictClass(dict):

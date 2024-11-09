@@ -291,7 +291,6 @@ class SlackNotificationService(BaseNotificationService):
         if ATTR_FILE not in data:
             if ATTR_BLOCKS_TEMPLATE in data:
                 value = cv.template_complex(data[ATTR_BLOCKS_TEMPLATE])
-                template.attach(self._hass, value)
                 blocks = template.render_complex(value)
             elif ATTR_BLOCKS in data:
                 blocks = data[ATTR_BLOCKS]

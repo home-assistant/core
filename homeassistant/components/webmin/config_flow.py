@@ -26,7 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, LOGGER
 from .helpers import get_instance_from_options, get_sorted_mac_addresses
 
 
@@ -45,17 +45,17 @@ async def validate_user_input(
             raise SchemaFlowError("invalid_auth") from err
         raise SchemaFlowError("cannot_connect") from err
     except Fault as fault:
-        raise SchemaFlowError(
-            f"Fault {fault.faultCode}: {fault.faultString}"
-        ) from fault
+        LOGGER.exception(f"Fault {fault.faultCode}: {fault.faultString}")
+        raise SchemaFlowError("unknown") from fault
     except ClientConnectionError as err:
         raise SchemaFlowError("cannot_connect") from err
     except Exception as err:
         raise SchemaFlowError("unknown") from err
 
-    await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
-        get_sorted_mac_addresses(data)[0]
-    )
+    if len(mac_addresses := get_sorted_mac_addresses(data)) > 0:
+        await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
+            mac_addresses[0]
+        )
     return user_input
 
 

@@ -1,6 +1,7 @@
 """Test selectors."""
 
 from enum import Enum
+from typing import Any
 
 import pytest
 import voluptuous as vol
@@ -55,6 +56,8 @@ def _test_selector(
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    assert selector_instance == selector.selector(config)
+    assert selector_instance != 5
     # We do not allow enums in the config, as they cannot serialize
     assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
@@ -737,12 +740,13 @@ def test_attribute_selector_schema(
             (
                 {"seconds": 10},
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
+                {"milliseconds": 500},
             ),
             (None, {}),
         ),
         (
-            {"enable_day": True},
-            ({"seconds": 10}, {"days": 10}),
+            {"enable_day": True, "enable_millisecond": True},
+            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
             (None, {}),
         ),
         (
@@ -1111,6 +1115,13 @@ def test_condition_selector_schema(
                         "below": 20,
                     }
                 ],
+                [
+                    {
+                        "platform": "numeric_state",
+                        "entity_id": ["sensor.temperature"],
+                        "below": 20,
+                    }
+                ],
                 [],
             ),
             ("abc"),
@@ -1119,7 +1130,24 @@ def test_condition_selector_schema(
 )
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
-    _test_selector("trigger", schema, valid_selections, invalid_selections)
+
+    def _custom_trigger_serializer(
+        triggers: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        res = []
+        for trigger in triggers:
+            if "trigger" in trigger:
+                trigger["platform"] = trigger.pop("trigger")
+            res.append(trigger)
+        return res
+
+    _test_selector(
+        "trigger",
+        schema,
+        valid_selections,
+        invalid_selections,
+        _custom_trigger_serializer,
+    )
 
 
 @pytest.mark.parametrize(

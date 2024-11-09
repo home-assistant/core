@@ -1,11 +1,11 @@
 """Provide common SFR Box fixtures."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
-from typing_extensions import Generator
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry

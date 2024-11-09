@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
     Camera,
 )
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
@@ -40,7 +40,7 @@ FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
-    PARENT_PLATFORM_SCHEMA.extend(
+    CAMERA_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(
                 CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS

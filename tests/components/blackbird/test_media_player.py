@@ -35,7 +35,7 @@ class AttrDict(dict):
 class MockBlackbird:
     """Mock for pyblackbird object."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init mock object."""
         self.zones = defaultdict(lambda: AttrDict(power=True, av=1))
 

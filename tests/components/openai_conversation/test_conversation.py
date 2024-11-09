@@ -27,6 +27,33 @@ from homeassistant.util import ulid
 from tests.common import MockConfigEntry
 
 
+async def test_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test entity properties."""
+    state = hass.states.get("conversation.openai")
+    assert state
+    assert state.attributes["supported_features"] == 0
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_LLM_HASS_API: "assist",
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    state = hass.states.get("conversation.openai")
+    assert state
+    assert (
+        state.attributes["supported_features"]
+        == conversation.ConversationEntityFeature.CONTROL
+    )
+
+
 async def test_error_handling(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
@@ -267,7 +294,7 @@ async def test_function_call(
     assert [event["event_type"] for event in trace_events] == [
         trace.ConversationTraceEventType.ASYNC_PROCESS,
         trace.ConversationTraceEventType.AGENT_DETAIL,
-        trace.ConversationTraceEventType.LLM_TOOL_CALL,
+        trace.ConversationTraceEventType.TOOL_CALL,
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
@@ -276,6 +303,7 @@ async def test_function_call(
         "Today's date is 2024-06-03."
         in trace_events[1]["data"]["messages"][0]["content"]
     )
+    assert [t.name for t in detail_event["data"]["tools"]] == ["test_tool"]
 
     # Call it again, make sure we have updated prompt
     with (
@@ -492,6 +520,8 @@ async def test_unknown_hass_api(
             CONF_LLM_HASS_API: "non-existing",
         },
     )
+
+    await hass.async_block_till_done()
 
     result = await conversation.async_converse(
         hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id

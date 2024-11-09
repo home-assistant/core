@@ -1,6 +1,6 @@
 """Test fixtures for TP-Link Omada integration."""
 
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -17,7 +17,6 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from typing_extensions import Generator
 
 from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -130,6 +129,7 @@ def _get_mock_client(mac: str) -> OmadaNetworkClient:
             if c["wireless"]:
                 return OmadaWirelessClient(c)
             return OmadaWiredClient(c)
+    raise ValueError(f"Client with MAC {mac} not found in mock data")
 
 
 @pytest.fixture
@@ -163,21 +163,10 @@ def mock_omada_clients_only_client(
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
 ) -> MockConfigEntry:
     """Set up the TP-Link Omada integration for testing."""
-    mock_config_entry = MockConfigEntry(
-        title="Test Omada Controller",
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PASSWORD: "mocked-password",
-            CONF_USERNAME: "mocked-user",
-            CONF_VERIFY_SSL: False,
-            CONF_SITE: "Default",
-        },
-        unique_id="12345",
-    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

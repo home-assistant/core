@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -18,12 +17,12 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.util.network import is_ip_address
 
-from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,42 +60,17 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(
-        self, import_info: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Import an entry."""
-
-        to_import = {
-            CONF_HOST: import_info[CONF_HOST],
-            CONF_PING_COUNT: import_info[CONF_PING_COUNT],
-            CONF_CONSIDER_HOME: import_info.get(
-                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
-            ).seconds,
-        }
-        title = import_info.get(CONF_NAME, import_info[CONF_HOST])
-
-        self._async_abort_entries_match({CONF_HOST: to_import[CONF_HOST]})
-        return self.async_create_entry(
-            title=title,
-            data={CONF_IMPORTED_BY: import_info[CONF_IMPORTED_BY]},
-            options=to_import,
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle an options flow for Ping."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

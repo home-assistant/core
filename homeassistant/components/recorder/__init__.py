@@ -23,6 +23,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
@@ -30,10 +31,9 @@ from homeassistant.util.event_type import EventType
 from . import entity_registry, websocket_api
 from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
-    DATA_INSTANCE,
     DOMAIN,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
-    INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD,
+    INTEGRATION_PLATFORM_METHODS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -189,10 +189,7 @@ async def _async_setup_integration_platform(
         """Process a recorder platform."""
         # If the platform has a compile_statistics method, we need to
         # add it to the recorder queue to be processed.
-        if any(
-            hasattr(platform, _attr)
-            for _attr in INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD
-        ):
+        if any(hasattr(platform, _attr) for _attr in INTEGRATION_PLATFORM_METHODS):
             instance.queue_task(AddRecorderPlatformTask(domain, platform))
 
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)

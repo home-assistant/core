@@ -67,7 +67,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
+async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test that the user step works."""
     with (
         patch(
@@ -102,7 +102,9 @@ async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
         assert result["type"] is FlowResultType.ABORT
 
 
-async def test_zeroconf_updates_title(hass: HomeAssistant, config_entry) -> None:
+async def test_zeroconf_updates_title(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test that zeroconf updates title and aborts with same host."""
     MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "different host"}).add_to_hass(hass)
     config_entry.add_to_hass(hass)
@@ -125,7 +127,9 @@ async def test_zeroconf_updates_title(hass: HomeAssistant, config_entry) -> None
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
-async def test_config_flow_no_websocket(hass: HomeAssistant, config_entry) -> None:
+async def test_config_flow_no_websocket(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test config flow setup without websocket enabled on server."""
     with patch(
         "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
@@ -224,7 +228,7 @@ async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
 
 
-async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
+async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
 
     with patch(
@@ -251,7 +255,9 @@ async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_async_setup_entry_not_ready(hass: HomeAssistant, config_entry) -> None:
+async def test_async_setup_entry_not_ready(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test that a PlatformNotReady exception is thrown during platform setup."""
 
     with patch(

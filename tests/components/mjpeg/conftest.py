@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from requests_mock import Mocker
-from typing_extensions import Generator
 
 from homeassistant.components.mjpeg.const import (
     CONF_MJPEG_URL,

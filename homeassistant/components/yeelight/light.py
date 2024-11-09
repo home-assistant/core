@@ -38,6 +38,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import VolDictType
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
@@ -170,22 +171,22 @@ EFFECTS_MAP = {
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
-SERVICE_SCHEMA_SET_MODE = {
+SERVICE_SCHEMA_SET_MODE: VolDictType = {
     vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
 }
 
-SERVICE_SCHEMA_SET_MUSIC_MODE = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
+SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_COLOR_SCENE = {
+SERVICE_SCHEMA_SET_COLOR_SCENE: VolDictType = {
     vol.Required(ATTR_RGB_COLOR): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
-SERVICE_SCHEMA_SET_HSV_SCENE = {
+SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
     vol.Required(ATTR_HS_COLOR): vol.All(
         vol.Coerce(tuple),
         vol.ExactSequence(
@@ -198,14 +199,14 @@ SERVICE_SCHEMA_SET_HSV_SCENE = {
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
-SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE = {
+SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE: VolDictType = {
     vol.Required(ATTR_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1700, max=6500)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE = {
+SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE: VolDictType = {
     vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }

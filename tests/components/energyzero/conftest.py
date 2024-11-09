@@ -1,11 +1,11 @@
 """Fixtures for EnergyZero integration tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from energyzero import Electricity, Gas
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant

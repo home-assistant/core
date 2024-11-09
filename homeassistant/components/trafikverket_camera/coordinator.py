@@ -8,13 +8,15 @@ from io import BytesIO
 import logging
 from typing import TYPE_CHECKING
 
+import aiohttp
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
     MultipleCamerasFound,
     NoCameraFound,
     UnknownError,
 )
-from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
+from pytrafikverket.models import CameraInfoModel
+from pytrafikverket.trafikverket_camera import TrafikverketCamera
 
 from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.core import HomeAssistant
@@ -35,7 +37,7 @@ TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 class CameraData:
     """Dataclass for Camera data."""
 
-    data: CameraInfo
+    data: CameraInfoModel
     image: bytes | None
 
 
@@ -60,7 +62,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
 
     async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
-        camera_data: CameraInfo
+        camera_data: CameraInfoModel
         image: bytes | None = None
         try:
             camera_data = await self._camera_api.async_get_camera(self._id)
@@ -76,7 +78,9 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         if camera_data.fullsizephoto:
             image_url = f"{camera_data.photourl}?type=fullsize"
 
-        async with self.session.get(image_url, timeout=10) as get_image:
+        async with self.session.get(
+            image_url, timeout=aiohttp.ClientTimeout(total=10)
+        ) as get_image:
             if get_image.status not in range(200, 299):
                 raise UpdateFailed("Could not retrieve image")
             image = BytesIO(await get_image.read()).getvalue()

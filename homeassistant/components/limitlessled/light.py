@@ -27,7 +27,7 @@ from homeassistant.components.light import (
     EFFECT_COLORLOOP,
     EFFECT_WHITE,
     FLASH_LONG,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -75,7 +75,7 @@ SUPPORT_LIMITLESSLED_RGBWW = (
     LightEntityFeature.EFFECT | LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BRIDGES): vol.All(
             cv.ensure_list,
@@ -119,13 +119,13 @@ def rewrite_legacy(config: ConfigType) -> ConfigType:
         else:
             _LOGGER.warning("Legacy configuration format detected")
             for i in range(1, 5):
-                name_key = "group_%d_name" % i
+                name_key = f"group_{i}_name"
                 if name_key in bridge_conf:
                     groups.append(
                         {
                             "number": i,
                             "type": bridge_conf.get(
-                                "group_%d_type" % i, DEFAULT_LED_TYPE
+                                f"group_{i}_type", DEFAULT_LED_TYPE
                             ),
                             "name": bridge_conf.get(name_key),
                         }

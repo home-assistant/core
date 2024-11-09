@@ -86,6 +86,7 @@ def device():
     mock_device.system_mode = "off"
     mock_device.name = "device1"
     mock_device.current_temperature = CURRENTTEMPERATURE
+    mock_device.temperature_unit = "C"
     mock_device.mac_address = "macaddress1"
     mock_device.outdoor_temperature = None
     mock_device.outdoor_humidity = None

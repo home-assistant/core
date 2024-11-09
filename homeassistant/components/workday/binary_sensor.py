@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 from typing import Final
 
 from holidays import (
+    PUBLIC,
     HolidayBase,
     __version__ as python_holidays_version,
     country_holidays,
@@ -35,6 +36,7 @@ from homeassistant.util import dt as dt_util, slugify
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
+    CONF_CATEGORY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
@@ -69,17 +71,28 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
 
 
 def _get_obj_holidays(
-    country: str | None, province: str | None, year: int, language: str | None
+    country: str | None,
+    province: str | None,
+    year: int,
+    language: str | None,
+    categories: list[str] | None,
 ) -> HolidayBase:
     """Get the object for the requested country and year."""
     if not country:
         return HolidayBase()
 
+    set_categories = None
+    if categories:
+        category_list = [PUBLIC]
+        category_list.extend(categories)
+        set_categories = tuple(category_list)
+
     obj_holidays: HolidayBase = country_holidays(
         country,
         subdiv=province,
-        years=year,
+        years=[year, year + 1],
         language=language,
+        categories=set_categories,
     )
     if (supported_languages := obj_holidays.supported_languages) and language == "en":
         for lang in supported_languages:
@@ -89,6 +102,7 @@ def _get_obj_holidays(
                     subdiv=province,
                     years=year,
                     language=lang,
+                    categories=set_categories,
                 )
             LOGGER.debug("Changing language from %s to %s", language, lang)
     return obj_holidays
@@ -107,13 +121,15 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     language: str | None = entry.options.get(CONF_LANGUAGE)
+    categories: list[str] | None = entry.options.get(CONF_CATEGORY)
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
     obj_holidays: HolidayBase = await hass.async_add_executor_job(
-        _get_obj_holidays, country, province, year, language
+        _get_obj_holidays, country, province, year, language, categories
     )
     calc_add_holidays: list[str] = validate_dates(add_holidays)
     calc_remove_holidays: list[str] = validate_dates(remove_holidays)
+    next_year = dt_util.now().year + 1
 
     # Add custom holidays
     try:
@@ -137,26 +153,28 @@ async def async_setup_entry(
                     LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
         except KeyError as unmatched:
             LOGGER.warning("No holiday found matching %s", unmatched)
-            if dt_util.parse_date(remove_holiday):
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
-                    is_fixable=True,
-                    is_persistent=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="bad_date_holiday",
-                    translation_placeholders={
-                        CONF_COUNTRY: country if country else "-",
-                        "title": entry.title,
-                        CONF_REMOVE_HOLIDAYS: remove_holiday,
-                    },
-                    data={
-                        "entry_id": entry.entry_id,
-                        "country": country,
-                        "named_holiday": remove_holiday,
-                    },
-                )
+            if _date := dt_util.parse_date(remove_holiday):
+                if _date.year <= next_year:
+                    # Only check and raise issues for current and next year
+                    async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                        is_fixable=True,
+                        is_persistent=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="bad_date_holiday",
+                        translation_placeholders={
+                            CONF_COUNTRY: country if country else "-",
+                            "title": entry.title,
+                            CONF_REMOVE_HOLIDAYS: remove_holiday,
+                        },
+                        data={
+                            "entry_id": entry.entry_id,
+                            "country": country,
+                            "named_holiday": remove_holiday,
+                        },
+                    )
             else:
                 async_create_issue(
                     hass,

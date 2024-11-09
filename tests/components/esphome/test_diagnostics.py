@@ -1,9 +1,11 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
+from typing import Any
 from unittest.mock import ANY
 
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
@@ -20,13 +22,13 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
 async def test_diagnostics_with_bluetooth(
@@ -60,6 +62,7 @@ async def test_diagnostics_with_bluetooth(
             },
         },
         "config": {
+            "created_at": ANY,
             "data": {
                 "device_name": "test",
                 "host": "test.local",
@@ -67,9 +70,11 @@ async def test_diagnostics_with_bluetooth(
                 "port": 6053,
             },
             "disabled_by": None,
+            "discovery_keys": {},
             "domain": "esphome",
             "entry_id": ANY,
             "minor_version": 1,
+            "modified_at": ANY,
             "options": {"allow_service_calls": False},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,

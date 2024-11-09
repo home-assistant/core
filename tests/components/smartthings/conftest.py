@@ -38,7 +38,6 @@ from homeassistant.components.smartthings.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -47,6 +46,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -91,7 +91,7 @@ async def setup_component(
     await async_setup_component(hass, "smartthings", {})
 
 
-def _create_location():
+def _create_location() -> Mock:
     loc = Mock(Location)
     loc.name = "Test Location"
     loc.location_id = str(uuid4())
@@ -99,19 +99,19 @@ def _create_location():
 
 
 @pytest.fixture(name="location")
-def location_fixture():
+def location_fixture() -> Mock:
     """Fixture for a single location."""
     return _create_location()
 
 
 @pytest.fixture(name="locations")
-def locations_fixture(location):
+def locations_fixture(location: Mock) -> list[Mock]:
     """Fixture for 2 locations."""
     return [location, _create_location()]
 
 
 @pytest.fixture(name="app")
-async def app_fixture(hass, config_file):
+async def app_fixture(hass: HomeAssistant, config_file: dict[str, str]) -> Mock:
     """Fixture for a single app."""
     app = Mock(AppEntity)
     app.app_name = APP_NAME_PREFIX + str(uuid4())
@@ -133,7 +133,7 @@ async def app_fixture(hass, config_file):
 
 
 @pytest.fixture(name="app_oauth_client")
-def app_oauth_client_fixture():
+def app_oauth_client_fixture() -> Mock:
     """Fixture for a single app's oauth."""
     client = Mock(AppOAuthClient)
     client.client_id = str(uuid4())
@@ -150,7 +150,7 @@ def app_settings_fixture(app, config_file):
     return settings
 
 
-def _create_installed_app(location_id, app_id):
+def _create_installed_app(location_id: str, app_id: str) -> Mock:
     item = Mock(InstalledApp)
     item.installed_app_id = str(uuid4())
     item.installed_app_status = InstalledAppStatus.AUTHORIZED
@@ -161,7 +161,7 @@ def _create_installed_app(location_id, app_id):
 
 
 @pytest.fixture(name="installed_app")
-def installed_app_fixture(location, app):
+def installed_app_fixture(location: Mock, app: Mock) -> Mock:
     """Fixture for a single installed app."""
     return _create_installed_app(location.location_id, app.app_id)
 
@@ -222,7 +222,7 @@ def device_fixture(location):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, installed_app, location):
+def config_entry_fixture(installed_app: Mock, location: Mock) -> MockConfigEntry:
     """Fixture representing a config entry."""
     data = {
         CONF_ACCESS_TOKEN: str(uuid4()),

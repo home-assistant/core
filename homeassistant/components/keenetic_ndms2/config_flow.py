@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -46,13 +47,15 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    host: str | bytes | None = None
+
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> KeeneticOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return KeeneticOptionsFlowHandler(config_entry)
+        return KeeneticOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -60,7 +63,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            host = self.context.get(CONF_HOST) or user_input[CONF_HOST]
+            host = self.host or user_input[CONF_HOST]
             self._async_abort_entries_match({CONF_HOST: host})
 
             _client = Client(
@@ -84,8 +87,8 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=router_info.name, data={CONF_HOST: host, **user_input}
                 )
 
-        host_schema = (
-            {vol.Required(CONF_HOST): str} if CONF_HOST not in self.context else {}
+        host_schema: VolDictType = (
+            {vol.Required(CONF_HOST): str} if not self.host else {}
         )
 
         return self.async_show_form(
@@ -115,13 +118,15 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         if not discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             return self.async_abort(reason="no_udn")
 
-        host = urlparse(discovery_info.ssdp_location).hostname
+        # We can cast the hostname to str because the ssdp_location is not bytes and
+        # not a relative url
+        host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._async_abort_entries_match({CONF_HOST: host})
 
-        self.context[CONF_HOST] = host
+        self.host = host
         self.context["title_placeholders"] = {
             "name": friendly_name,
             "host": host,
@@ -133,9 +138,8 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self._interface_options: dict[str, str] = {}
 
     async def async_step_init(

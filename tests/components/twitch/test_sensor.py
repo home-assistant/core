@@ -3,6 +3,7 @@
 from datetime import datetime
 from unittest.mock import AsyncMock
 
+from dateutil.tz import tzutc
 from twitchAPI.object.api import FollowedChannel, Stream, UserSubscription
 from twitchAPI.type import TwitchResourceNotFound
 
@@ -20,8 +21,8 @@ async def test_offline(
     hass: HomeAssistant, twitch_mock: AsyncMock, config_entry: MockConfigEntry
 ) -> None:
     """Test offline state."""
-    twitch_mock.return_value.get_streams.return_value = get_generator_from_data(
-        [], Stream
+    twitch_mock.return_value.get_followed_streams.return_value = (
+        get_generator_from_data([], Stream)
     )
     await setup_integration(hass, config_entry)
 
@@ -41,6 +42,10 @@ async def test_streaming(
     assert sensor_state.attributes["entity_picture"] == "stream-medium.png"
     assert sensor_state.attributes["game"] == "Good game"
     assert sensor_state.attributes["title"] == "Title"
+    assert sensor_state.attributes["started_at"] == datetime(
+        year=2021, month=3, day=10, hour=3, minute=18, second=11, tzinfo=tzutc()
+    )
+    assert sensor_state.attributes["viewers"] == 42
 
 
 async def test_oauth_without_sub_and_follow(
@@ -75,6 +80,7 @@ async def test_oauth_with_sub(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is True
     assert sensor_state.attributes["subscription_is_gifted"] is False
+    assert sensor_state.attributes["subscription_tier"] == 1
     assert sensor_state.attributes["following"] is False
 
 

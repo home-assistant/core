@@ -1,4 +1,15 @@
 {
+  "entity": {
+    "sensor": {
+      "hebrew_date": {
+        "state_attributes": {
+          "hebrew_year": { "name": "Hebrew Year" },
+          "hebrew_month_name": { "name": "Hebrew Month Name" },
+          "hebrew_day": { "name": "Hebrew Day" }
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -16,7 +27,8 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {

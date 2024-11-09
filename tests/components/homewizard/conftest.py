@@ -1,11 +1,11 @@
 """Fixtures for HomeWizard integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homewizard_energy.errors import NotFoundError
 from homewizard_energy.models import Data, Device, State, System
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS

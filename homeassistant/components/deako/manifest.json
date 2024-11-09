@@ -1,0 +1,13 @@
+{
+  "domain": "deako",
+  "name": "Deako",
+  "codeowners": ["@sebirdman", "@balake", "@deakolights"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/deako",
+  "iot_class": "local_polling",
+  "loggers": ["pydeako"],
+  "requirements": ["pydeako==0.5.4"],
+  "single_config_entry": true,
+  "zeroconf": ["_deako._tcp.local."]
+}

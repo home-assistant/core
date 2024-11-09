@@ -20,6 +20,10 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    host: str | None = None
+    mac: str | None = None
+    name: str | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -33,14 +37,10 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         host = discovery_info.hostname.rstrip(".")
         name, _ = host.rsplit(".")
 
-        self.context.update(
-            {
-                CONF_HOST: discovery_info.host,
-                CONF_NAME: name,
-                CONF_MAC: discovery_info.properties.get(CONF_MAC),
-                "title_placeholders": {"name": name},
-            }
-        )
+        self.context["title_placeholders"] = {"name": name}
+        self.host = discovery_info.host
+        self.mac = discovery_info.properties.get(CONF_MAC)
+        self.name = name
 
         # Prepare configuration flow
         return await self._handle_config_flow({}, True)
@@ -55,7 +55,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None, prepare: bool = False
     ) -> ConfigFlowResult:
         """Config flow handler for ModernForms."""
-        source = self.context.get("source")
+        source = self.context["source"]
 
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
@@ -66,8 +66,8 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._show_setup_form()
 
         if source == SOURCE_ZEROCONF:
-            user_input[CONF_HOST] = self.context.get(CONF_HOST)
-            user_input[CONF_MAC] = self.context.get(CONF_MAC)
+            user_input[CONF_HOST] = self.host
+            user_input[CONF_MAC] = self.mac
 
         if user_input.get(CONF_MAC) is None or not prepare:
             session = async_get_clientsession(self.hass)
@@ -87,7 +87,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         title = device.info.device_name
         if source == SOURCE_ZEROCONF:
-            title = self.context.get(CONF_NAME)
+            title = self.name
 
         if prepare:
             return await self.async_step_zeroconf_confirm()
@@ -107,9 +107,8 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _show_confirm_dialog(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the confirm dialog to the user."""
-        name = self.context.get(CONF_NAME)
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={"name": name},
+            description_placeholders={"name": self.name},
             errors=errors or {},
         )

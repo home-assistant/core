@@ -9,7 +9,7 @@ from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnec
 from jvcprojector.projector import DEFAULT_PORT
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_host_valid
@@ -21,8 +21,6 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for the JVC Projector integration."""
 
     VERSION = 1
-
-    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -37,7 +35,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 if not is_host_valid(host):
-                    raise InvalidHost
+                    raise InvalidHost  # noqa: TRY301
 
                 mac = await get_mac_address(host, port, password)
             except InvalidHost:
@@ -74,25 +72,21 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth on password authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        assert self._reauth_entry
-
         errors = {}
 
         if user_input is not None:
-            host = self._reauth_entry.data[CONF_HOST]
-            port = self._reauth_entry.data[CONF_PORT]
+            reauth_entry = self._get_reauth_entry()
+            host = reauth_entry.data[CONF_HOST]
+            port = reauth_entry.data[CONF_PORT]
             password = user_input[CONF_PASSWORD]
 
             try:
@@ -102,12 +96,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             except JvcProjectorAuthError:
                 errors["base"] = "invalid_auth"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
-                    data={CONF_HOST: host, CONF_PORT: port, CONF_PASSWORD: password},
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

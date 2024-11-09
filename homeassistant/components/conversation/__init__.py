@@ -35,29 +35,36 @@ from .const import (
     ATTR_CONVERSATION_ID,
     ATTR_LANGUAGE,
     ATTR_TEXT,
+    DATA_COMPONENT,
+    DATA_DEFAULT_ENTITY,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     OLD_HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
+    ConversationEntityFeature,
 )
-from .default_agent import async_get_default_agent, async_setup_default_agent
+from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
     "OLD_HOME_ASSISTANT_AGENT",
+    "ConversationEntity",
+    "ConversationEntityFeature",
+    "ConversationInput",
+    "ConversationResult",
+    "ConversationTraceEventType",
+    "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
-    "ConversationEntity",
-    "ConversationInput",
-    "ConversationResult",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +123,8 @@ def async_unset_agent(
     get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
 
-async def async_get_conversation_languages(
+@callback
+def async_get_conversation_languages(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> set[str] | Literal["*"]:
     """Return languages supported by conversation agents.
@@ -126,7 +134,6 @@ async def async_get_conversation_languages(
     all conversation agents.
     """
     agent_manager = get_agent_manager(hass)
-    entity_component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
     agents: list[ConversationEntity | AbstractConversationAgent]
 
     if agent_id:
@@ -142,7 +149,7 @@ async def async_get_conversation_languages(
         agents = [agent]
 
     else:
-        agents = list(entity_component.entities)
+        agents = list(hass.data[DATA_COMPONENT].entities)
         for info in agent_manager.async_get_agent_info():
             agent = agent_manager.async_get_agent(info.id)
             assert agent is not None
@@ -188,12 +195,22 @@ def async_get_agent_info(
     return None
 
 
+async def async_prepare_agent(
+    hass: HomeAssistant, agent_id: str | None, language: str
+) -> None:
+    """Prepare given agent."""
+    agent = async_get_agent(hass, agent_id)
+
+    if agent is None:
+        raise ValueError("Invalid agent specified")
+
+    await agent.async_prepare(language)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    entity_component: EntityComponent[ConversationEntity] = EntityComponent(
-        _LOGGER, DOMAIN, hass
-    )
-    hass.data[DOMAIN] = entity_component
+    entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
+    hass.data[DATA_COMPONENT] = entity_component
 
     await async_setup_default_agent(
         hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
@@ -231,8 +248,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_reload(service: ServiceCall) -> None:
         """Reload intents."""
-        agent = async_get_default_agent(hass)
-        await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
+        await hass.data[DATA_DEFAULT_ENTITY].async_reload(
+            language=service.data.get(ATTR_LANGUAGE)
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -251,11 +269,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)

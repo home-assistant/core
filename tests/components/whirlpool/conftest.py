@@ -145,6 +145,8 @@ def side_effect_function(*args, **kwargs):
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
 
+    return None
+
 
 def get_sensor_mock(said):
     """Get a mock of a sensor."""

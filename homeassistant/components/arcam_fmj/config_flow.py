@@ -10,24 +10,20 @@ from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
-
-
-def get_entry_client(hass: HomeAssistant, entry: ConfigEntry) -> Client:
-    """Retrieve client associated with a config entry."""
-    client: Client = hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id]
-    return client
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 
 class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle config flow."""
 
     VERSION = 1
+
+    host: str
+    port: int
 
     async def _async_set_unique_id_and_update(
         self, host: str, port: int, uuid: str
@@ -81,16 +77,11 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
-        context = self.context
-        placeholders = {
-            "host": context[CONF_HOST],
-        }
-        context["title_placeholders"] = placeholders
+        placeholders = {"host": self.host}
+        self.context["title_placeholders"] = placeholders
 
         if user_input is not None:
-            return await self._async_check_and_create(
-                context[CONF_HOST], context[CONF_PORT]
-            )
+            return await self._async_check_and_create(self.host, self.port)
 
         return self.async_show_form(
             step_id="confirm", description_placeholders=placeholders
@@ -108,7 +99,6 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 
-        context = self.context
-        context[CONF_HOST] = host
-        context[CONF_PORT] = DEFAULT_PORT
+        self.host = host
+        self.port = DEFAULT_PORT
         return await self.async_step_confirm()

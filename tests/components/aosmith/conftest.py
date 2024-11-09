@@ -1,5 +1,6 @@
 """Common fixtures for the A. O. Smith tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from py_aosmith import AOSmithAPIClient
@@ -9,12 +10,10 @@ from py_aosmith.models import (
     DeviceType,
     EnergyUseData,
     EnergyUseHistoryEntry,
-    HotWaterStatus,
     OperationMode,
     SupportedOperationModeInfo,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.aosmith.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -93,7 +92,7 @@ def build_device_fixture(
             temperature_setpoint_pending=setpoint_pending,
             temperature_setpoint_previous=130,
             temperature_setpoint_maximum=130,
-            hot_water_status=HotWaterStatus.LOW,
+            hot_water_status=90,
         ),
     )
 

@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.samsungtv import DOMAIN
+from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
@@ -21,7 +21,7 @@ from tests.common import MockEntity, MockEntityPlatform
 @pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_turn_on_trigger_device_id(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_domain: str,
 ) -> None:
@@ -60,14 +60,14 @@ async def test_turn_on_trigger_device_id(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
 
     with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    calls.clear()
+    service_calls.clear()
 
     # Ensure WOL backup is called when trigger not present
     with patch(
@@ -78,14 +78,14 @@ async def test_turn_on_trigger_device_id(
         )
         await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(service_calls) == 1
     mock_send_magic_packet.assert_called()
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 @pytest.mark.parametrize("entity_domain", ["media_player", "remote"])
 async def test_turn_on_trigger_entity_id(
-    hass: HomeAssistant, calls: list[ServiceCall], entity_domain: str
+    hass: HomeAssistant, service_calls: list[ServiceCall], entity_domain: str
 ) -> None:
     """Test for turn_on triggers by entity_id firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
@@ -119,9 +119,9 @@ async def test_turn_on_trigger_entity_id(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == entity_id
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == entity_id
+    assert service_calls[1].data["id"] == 0
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")

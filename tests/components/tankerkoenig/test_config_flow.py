@@ -9,7 +9,7 @@ from homeassistant.components.tankerkoenig.const import (
     CONF_STATIONS,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -162,6 +162,10 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
 async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test starting a flow by user to re-auth."""
     config_entry.add_to_hass(hass)
+    # re-auth initialized
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch(
@@ -171,15 +175,6 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
         ) as mock_nearby_stations,
     ):
-        # re-auth initialized
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
-            data=config_entry.data,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         # re-auth unsuccessful
         mock_nearby_stations.side_effect = TankerkoenigInvalidKeyError("Booom!")
         result = await hass.config_entries.flow.async_configure(

@@ -5,12 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from uiprotect.data import (
-    Camera,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-    StateType,
-)
+from uiprotect.data import Camera, ProtectAdoptableDeviceModel, StateType
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -28,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import UFPConfigEntry
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +72,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
     _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
         self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
