@@ -8,11 +8,11 @@ import logging
 from time import time
 from typing import Any
 
-from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.client_cloud import LaMarzoccoCloudClient
+from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.lm_machine import LaMarzoccoMachine
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_NAME, EVENT_HOMEASSISTANT_STOP

@@ -1090,9 +1090,6 @@ libsoundtouch==0.8
 # homeassistant.components.linear_garage_door
 linear-garage-door==0.2.9
 
-# homeassistant.components.lamarzocco
-lmcloud==1.2.3
-
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
@@ -1630,6 +1627,9 @@ pykrakenapi==0.1.8
 
 # homeassistant.components.kulersky
 pykulersky==0.5.2
+
+# homeassistant.components.lamarzocco
+pylamarzocco==1.2.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
