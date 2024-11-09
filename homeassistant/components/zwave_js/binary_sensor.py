@@ -88,9 +88,15 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.CO,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 2: Carbon Monoxide - State Id 4, 5, 7
+        key=NOTIFICATION_CARBON_MONOOXIDE,
+        states=("4", "5", "7"),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - All other State Id's
         key=NOTIFICATION_CARBON_MONOOXIDE,
-        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
@@ -100,9 +106,15 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.GAS,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 3: Carbon Dioxide - State Id's 4, 5, 7
+        key=NOTIFICATION_CARBON_DIOXIDE,
+        states=("4", "5", "7"),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 3: Carbon Dioxide - All other State Id's
         key=NOTIFICATION_CARBON_DIOXIDE,
-        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
@@ -112,9 +124,15 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.HEAT,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 4: Heat - State ID's 7, 8, A, B
+        key=NOTIFICATION_HEAT,
+        states=("7", "8", "10", "11"),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 4: Heat - All other State Id's
         key=NOTIFICATION_HEAT,
-        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
@@ -124,9 +142,15 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 5: Water - State Id's B
+        key=NOTIFICATION_WATER,
+        states=("11",),
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 5: Water - All other State Id's
         key=NOTIFICATION_WATER,
-        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
@@ -219,16 +243,22 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.SOUND,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 18: Gas
+        # NotificationType 18: Gas - State Id's 1, 2, 3, 4
         key=NOTIFICATION_GAS,
         states=("1", "2", "3", "4"),
         device_class=BinarySensorDeviceClass.GAS,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 18: Gas
+        # NotificationType 18: Gas - State Id 6
         key=NOTIFICATION_GAS,
         states=("6",),
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 18: Gas - All other State Id's
+        key=NOTIFICATION_GAS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
