@@ -18,6 +18,7 @@ from homeassistant.components.mqtt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
+from .const import LOGGER
 from .discovery import PGLabDiscovery, create_discovery
 
 type PGLABConfigEntry = ConfigEntry[PGLabDiscovery]
@@ -53,6 +54,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
 
     async def mqtt_unsubscribe(sub_state: PyPGLabSubState) -> None:
         async_unsubscribe_topics(hass, sub_state)
+
+        # Make sure MQTT integration is enabled and the client is available
+
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        LOGGER.error("MQTT integration is not available")
+        return False
 
     # Create an MQTT client for PGLab used for PGLab python module.
     pglab_mqtt = PyPGLabMqttClient(mqtt_publish, mqtt_subscribe, mqtt_unsubscribe)
