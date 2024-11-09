@@ -59,6 +59,61 @@
     'state': 'wizard',
   })
 # ---
+# name: test_sensors[sensor.test_user_constitution-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_constitution',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Constitution',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.CONSTITUTION: 'constitution'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_constitution',
+    'unit_of_measurement': 'CON',
+  })
+# ---
+# name: test_sensors[sensor.test_user_constitution-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 20,
+      'friendly_name': 'test-user Constitution',
+      'level': 19,
+      'unit_of_measurement': 'CON',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_constitution',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
 # name: test_sensors[sensor.test_user_dailies-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -567,6 +622,61 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[sensor.test_user_intelligence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_intelligence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intelligence',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.INTELLIGENCE: 'intelligence'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_intelligence',
+    'unit_of_measurement': 'INT',
+  })
+# ---
+# name: test_sensors[sensor.test_user_intelligence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 0,
+      'friendly_name': 'test-user Intelligence',
+      'level': 19,
+      'unit_of_measurement': 'INT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_intelligence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
 # name: test_sensors[sensor.test_user_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -854,6 +964,61 @@
     'state': '880',
   })
 # ---
+# name: test_sensors[sensor.test_user_perception-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_perception',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Perception',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.PERCEPTION: 'perception'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_perception',
+    'unit_of_measurement': 'PER',
+  })
+# ---
+# name: test_sensors[sensor.test_user_perception-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 8,
+      'friendly_name': 'test-user Perception',
+      'level': 19,
+      'unit_of_measurement': 'PER',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_perception',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '68',
+  })
+# ---
 # name: test_sensors[sensor.test_user_rewards-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -913,6 +1078,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Strength',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.STRENGTH: 'strength'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_strength',
+    'unit_of_measurement': 'STR',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 27,
+      'friendly_name': 'test-user Strength',
+      'level': 19,
+      'unit_of_measurement': 'STR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '87',
   })
 # ---
 # name: test_sensors[sensor.test_user_to_do_s-entry]

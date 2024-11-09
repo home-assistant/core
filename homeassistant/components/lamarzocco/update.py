@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import FirmwareType
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.exceptions import RequestNotSuccessful
 
 from homeassistant.components.update import (
     UpdateDeviceClass,

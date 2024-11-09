@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -171,6 +172,17 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.INCHES,
         UnitOfLength.YARDS,
     }
+
+
+class BloodGlugoseConcentrationConverter(BaseUnitConverter):
+    """Utility to convert blood glucose concentration values."""
+
+    UNIT_CLASS = "blood_glucose_concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER: 1,
+    }
+    VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
 
 
 class ConductivityConverter(BaseUnitConverter):
