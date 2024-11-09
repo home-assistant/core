@@ -37,7 +37,7 @@
   "entity": {
     "sensor": {
       "carbon_intensity": {
-        "name": "Electricity Maps",
+        "name": "CO2 intensity",
         "state_attributes": {
           "country_code": {
             "name": "Country code"
