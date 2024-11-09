@@ -175,7 +175,7 @@
             "name": "Battle gear"
           },
           "class": {
-            "name": "Class bonus"
+            "name": "Class equip bonus"
           },
           "allocated": {
             "name": "Allocated attribute points"

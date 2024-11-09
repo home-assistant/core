@@ -157,18 +157,21 @@ def get_attribute_points(
         "eyewear",
         "body",
     }
-    equipment = 0
-    class_bonus = 0
-    for gear in gear_set:
-        if (equipped := user["items"]["gear"]["equipped"].get(gear)) and (
-            stats := content["gear"]["flat"].get(equipped)
-        ):
-            equipment = equipment + stats[attribute]
-            class_bonus += (
-                (stats[attribute] / 2)
-                if stats["klass"] == user["stats"]["class"]
-                else 0
-            )
+
+    equipment = sum(
+        stats[attribute]
+        for gear in gear_set
+        if (equipped := user["items"]["gear"]["equipped"].get(gear))
+        and (stats := content["gear"]["flat"].get(equipped))
+    )
+
+    class_bonus = sum(
+        stats[attribute] / 2
+        for gear in gear_set
+        if (equipped := user["items"]["gear"]["equipped"].get(gear))
+        and (stats := content["gear"]["flat"].get(equipped))
+        and stats["klass"] == user["stats"]["class"]
+    )
 
     return {
         "level": min(round(user["stats"]["lvl"] / 2), 50),
