@@ -101,6 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = coordinators[tile_uuid] = DataUpdateCoordinator(
             hass,
             LOGGER,
+            config_entry=entry,
             name=tile.name,
             update_interval=DEFAULT_UPDATE_INTERVAL,
             update_method=partial(async_update_tile, tile),

@@ -10,21 +10,12 @@ from aiocomelit.const import ALARM_AREAS, AlarmAreaState
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -112,7 +103,7 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         return super().available
 
     @property
-    def state(self) -> StateType:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
 
         _LOGGER.debug(
@@ -123,16 +114,16 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         )
         if self._area.human_status == AlarmAreaState.ARMED:
             if self._area.armed == ALARM_AREA_ARMED_STATUS[AWAY]:
-                return STATE_ALARM_ARMED_AWAY
+                return AlarmControlPanelState.ARMED_AWAY
             if self._area.armed == ALARM_AREA_ARMED_STATUS[NIGHT]:
-                return STATE_ALARM_ARMED_NIGHT
-            return STATE_ALARM_ARMED_HOME
+                return AlarmControlPanelState.ARMED_NIGHT
+            return AlarmControlPanelState.ARMED_HOME
 
         return {
-            AlarmAreaState.DISARMED: STATE_ALARM_DISARMED,
-            AlarmAreaState.ENTRY_DELAY: STATE_ALARM_DISARMING,
-            AlarmAreaState.EXIT_DELAY: STATE_ALARM_ARMING,
-            AlarmAreaState.TRIGGERED: STATE_ALARM_TRIGGERED,
+            AlarmAreaState.DISARMED: AlarmControlPanelState.DISARMED,
+            AlarmAreaState.ENTRY_DELAY: AlarmControlPanelState.DISARMING,
+            AlarmAreaState.EXIT_DELAY: AlarmControlPanelState.ARMING,
+            AlarmAreaState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
         }.get(self._area.human_status)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

@@ -1,5 +1,7 @@
 """Config flow for file integration."""
 
+from __future__ import annotations
+
 from copy import deepcopy
 import os
 from typing import Any
@@ -11,7 +13,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_FILE_PATH,
@@ -74,9 +75,11 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> FileOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return FileOptionsFlowHandler(config_entry)
+        return FileOptionsFlowHandler()
 
     async def validate_file_path(self, file_path: str) -> bool:
         """Ensure the file path is valid."""
@@ -151,7 +154,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=data, options=options)
 
 
-class FileOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class FileOptionsFlowHandler(OptionsFlow):
     """Handle File options."""
 
     async def async_step_init(

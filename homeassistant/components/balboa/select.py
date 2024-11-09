@@ -1,22 +1,23 @@
 """Support for Spa Client selects."""
 
-from pybalboa import SpaClient, SpaControl
+from pybalboa import SpaControl
 from pybalboa.enums import LowHighRange
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import BalboaConfigEntry
 from .entity import BalboaEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BalboaConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the spa select entity."""
-    spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
+    spa = entry.runtime_data
     async_add_entities([BalboaTempRangeSelectEntity(spa.temperature_range)])
 
 

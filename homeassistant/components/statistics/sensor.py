@@ -17,6 +17,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
+    DEVICE_CLASS_UNITS,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -37,6 +38,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
     EventStateChangedData,
+    EventStateReportedData,
     HomeAssistant,
     State,
     callback,
@@ -48,9 +50,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
+    async_track_state_report_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -358,23 +360,20 @@ class StatisticsSensor(SensorEntity):
         self.samples_keep_last: bool = samples_keep_last
         self._precision: int = precision
         self._percentile: int = percentile
-        self._value: StateType | datetime = None
-        self._unit_of_measurement: str | None = None
-        self._available: bool = False
+        self._attr_available: bool = False
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
         self.attributes: dict[str, StateType] = {}
 
-        self._state_characteristic_fn: Callable[[], StateType | datetime] = (
+        self._state_characteristic_fn: Callable[[], float | int | datetime | None] = (
             self._callable_characteristic_fn(self._state_characteristic)
         )
 
         self._update_listener: CALLBACK_TYPE | None = None
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
-    @callback
-    def async_start_preview(
+    async def async_start_preview(
         self,
         preview_callback: Callable[[str, Mapping[str, Any]], None],
     ) -> CALLBACK_TYPE:
@@ -385,23 +384,22 @@ class StatisticsSensor(SensorEntity):
         if not self._source_entity_id or (
             self._samples_max_buffer_size is None and self._samples_max_age is None
         ):
-            self._available = False
+            self._attr_available = False
             calculated_state = self._async_calculate_state()
             preview_callback(calculated_state.state, calculated_state.attributes)
             return self._call_on_remove_callbacks
 
         self._preview_callback = preview_callback
 
-        self._async_stats_sensor_startup(self.hass)
+        await self._async_stats_sensor_startup()
         return self._call_on_remove_callbacks
 
-    @callback
-    def _async_stats_sensor_state_listener(
+    def _async_handle_new_state(
         self,
-        event: Event[EventStateChangedData],
+        reported_state: State | None,
     ) -> None:
         """Handle the sensor state changes."""
-        if (new_state := event.data["new_state"]) is None:
+        if (new_state := reported_state) is None:
             return
         self._add_state_to_queue(new_state)
         self._async_purge_update_and_schedule()
@@ -414,28 +412,55 @@ class StatisticsSensor(SensorEntity):
             self.async_write_ha_state()
 
     @callback
-    def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
-        """Add listener and get recorded state."""
+    def _async_stats_sensor_state_change_listener(
+        self,
+        event: Event[EventStateChangedData],
+    ) -> None:
+        self._async_handle_new_state(event.data["new_state"])
+
+    @callback
+    def _async_stats_sensor_state_report_listener(
+        self,
+        event: Event[EventStateReportedData],
+    ) -> None:
+        self._async_handle_new_state(event.data["new_state"])
+
+    async def _async_stats_sensor_startup(self) -> None:
+        """Add listener and get recorded state.
+
+        Historical data needs to be loaded from the database first before we
+        can start accepting new incoming changes.
+        This is needed to ensure that the buffer is properly sorted by time.
+        """
         _LOGGER.debug("Startup for %s", self.entity_id)
+        if "recorder" in self.hass.config.components:
+            await self._initialize_from_database()
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
                 [self._source_entity_id],
-                self._async_stats_sensor_state_listener,
+                self._async_stats_sensor_state_change_listener,
             )
         )
-        if "recorder" in self.hass.config.components:
-            self.hass.async_create_task(self._initialize_from_database())
+        self.async_on_remove(
+            async_track_state_report_event(
+                self.hass,
+                [self._source_entity_id],
+                self._async_stats_sensor_state_report_listener,
+            )
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(
-            async_at_start(self.hass, self._async_stats_sensor_startup)
-        )
+        await self._async_stats_sensor_startup()
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
-        self._available = new_state.state != STATE_UNAVAILABLE
+
+        # Attention: it is not safe to store the new_state object,
+        # since the "last_reported" value will be updated over time.
+        # Here we make a copy the current value, which is okay.
+        self._attr_available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
             self.attributes[STAT_SOURCE_VALUE_VALID] = None
             return
@@ -449,7 +474,7 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state == "on")
             else:
                 self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_updated)
+            self.ages.append(new_state.last_reported)
             self.attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
@@ -460,11 +485,28 @@ class StatisticsSensor(SensorEntity):
             )
             return
 
-        self._unit_of_measurement = self._derive_unit_of_measurement(new_state)
+        self._calculate_state_attributes(new_state)
 
-    def _derive_unit_of_measurement(self, new_state: State) -> str | None:
+    def _calculate_state_attributes(self, new_state: State) -> None:
+        """Set the entity state attributes."""
+
+        self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
+            new_state
+        )
+        self._attr_device_class = self._calculate_device_class(
+            new_state, self._attr_native_unit_of_measurement
+        )
+        self._attr_state_class = self._calculate_state_class(new_state)
+
+    def _calculate_unit_of_measurement(self, new_state: State) -> str | None:
+        """Return the calculated unit of measurement.
+
+        The unit of measurement is that of the source sensor, adjusted based on the
+        state characteristics.
+        """
+
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        unit: str | None
+        unit: str | None = None
         if self.is_binary and self._state_characteristic in STATS_BINARY_PERCENTAGE:
             unit = PERCENTAGE
         elif not base_unit:
@@ -487,52 +529,60 @@ class StatisticsSensor(SensorEntity):
             unit = base_unit + "/sample"
         elif self._state_characteristic == STAT_CHANGE_SECOND:
             unit = base_unit + "/s"
+
         return unit
 
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this device."""
+    def _calculate_device_class(
+        self, new_state: State, unit: str | None
+    ) -> SensorDeviceClass | None:
+        """Return the calculated device class.
+
+        The device class is calculated based on the state characteristics,
+        the source device class and the unit of measurement is
+        in the device class units list.
+        """
+
+        device_class: SensorDeviceClass | None = None
         if self._state_characteristic in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         if self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
-            source_state = self.hass.states.get(self._source_entity_id)
-            if source_state is None:
+            device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+            if device_class is None:
                 return None
-            source_device_class = source_state.attributes.get(ATTR_DEVICE_CLASS)
-            if source_device_class is None:
+            if (
+                sensor_device_class := try_parse_enum(SensorDeviceClass, device_class)
+            ) is None:
                 return None
-            sensor_device_class = try_parse_enum(SensorDeviceClass, source_device_class)
-            if sensor_device_class is None:
+            if (
+                sensor_device_class
+                and (
+                    sensor_state_classes := DEVICE_CLASS_STATE_CLASSES.get(
+                        sensor_device_class
+                    )
+                )
+                and sensor_state_classes
+                and SensorStateClass.MEASUREMENT not in sensor_state_classes
+            ):
                 return None
-            sensor_state_classes = DEVICE_CLASS_STATE_CLASSES.get(
-                sensor_device_class, set()
-            )
-            if SensorStateClass.MEASUREMENT not in sensor_state_classes:
+            if device_class not in DEVICE_CLASS_UNITS:
                 return None
-            return sensor_device_class
-        return None
+            if (
+                device_class in DEVICE_CLASS_UNITS
+                and unit not in DEVICE_CLASS_UNITS[device_class]
+            ):
+                return None
 
-    @property
-    def state_class(self) -> SensorStateClass | None:
-        """Return the state class of this entity."""
+        return device_class
+
+    def _calculate_state_class(self, new_state: State) -> SensorStateClass | None:
+        """Return the calculated state class.
+
+        Will be None if the characteristics is not numerical, otherwise
+        SensorStateClass.MEASUREMENT.
+        """
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
         return SensorStateClass.MEASUREMENT
-
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the sensor."""
-        return self._value
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def available(self) -> bool:
-        """Return the availability of the sensor linked to the source sensor."""
-        return self._available
 
     @property
     def extra_state_attributes(self) -> dict[str, StateType] | None:
@@ -677,7 +727,7 @@ class StatisticsSensor(SensorEntity):
         ):
             for state in reversed(states):
                 self._add_state_to_queue(state)
-
+                self._calculate_state_attributes(state)
         self._async_purge_update_and_schedule()
 
         # only write state to the state machine if we are not in preview mode
@@ -712,19 +762,21 @@ class StatisticsSensor(SensorEntity):
         """
 
         value = self._state_characteristic_fn()
-
+        _LOGGER.debug(
+            "Updating value: states: %s, ages: %s => %s", self.states, self.ages, value
+        )
         if self._state_characteristic not in STATS_NOT_A_NUMBER:
             with contextlib.suppress(TypeError):
                 value = round(cast(float, value), self._precision)
                 if self._precision == 0:
                     value = int(value)
-        self._value = value
+        self._attr_native_value = value
 
     def _callable_characteristic_fn(
         self, characteristic: str
-    ) -> Callable[[], StateType | datetime]:
+    ) -> Callable[[], float | int | datetime | None]:
         """Return the function callable of one characteristic function."""
-        function: Callable[[], StateType | datetime] = getattr(
+        function: Callable[[], float | int | datetime | None] = getattr(
             self,
             f"_stat_binary_{characteristic}"
             if self.is_binary
@@ -735,6 +787,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for numeric sensor
 
     def _stat_average_linear(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -748,6 +802,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             area: float = 0
             for i in range(1, len(self.states)):
@@ -803,12 +859,12 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 1.96 * cast(float, self._stat_standard_deviation())
         return None
 
     def _stat_distance_99_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 2.58 * cast(float, self._stat_standard_deviation())
         return None
 
@@ -835,17 +891,23 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_noisiness(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
     def _stat_percentile(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
             return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.stdev(self.states)
         return None
@@ -856,6 +918,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 abs(j - i)
@@ -864,6 +928,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences_nonnegative(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 (j - i if j >= i else j - 0)
@@ -885,6 +951,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_variance(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.variance(self.states)
         return None
@@ -892,6 +960,8 @@ class StatisticsSensor(SensorEntity):
     # Statistics for binary sensor
 
     def _stat_binary_average_step(self) -> StateType:
+        if len(self.states) == 1:
+            return 100.0 * int(self.states[0] is True)
         if len(self.states) >= 2:
             on_seconds: float = 0
             for i in range(1, len(self.states)):
