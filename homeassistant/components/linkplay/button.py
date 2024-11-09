@@ -34,7 +34,7 @@ BUTTON_TYPES: tuple[LinkPlayButtonEntityDescription, ...] = (
     LinkPlayButtonEntityDescription(
         key="timesync",
         translation_key="timesync",
-        remote_function=lambda linkplay_bridge: linkplay_bridge.player.timesync(),
+        remote_function=lambda linkplay_bridge: linkplay_bridge.device.timesync(),
         entity_category=EntityCategory.CONFIG,
     ),
     LinkPlayButtonEntityDescription(
