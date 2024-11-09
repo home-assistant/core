@@ -17,9 +17,7 @@ from .const import DOMAIN, LOGGER
 class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Palazzetti config flow."""
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._discovered_device: PalazzettiClient | None = None
+    _discovered_device: PalazzettiClient
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,15 +61,12 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
             "DHCP discovery detected Palazzetti: %s", discovery_info.macaddress
         )
 
-        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
-
         await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
         self._discovered_device = PalazzettiClient(hostname=discovery_info.ip)
         try:
             await self._discovered_device.connect()
         except CommunicationError:
-            LOGGER.exception("Communication error")
             return self.async_abort(reason="cannot_connect")
 
         return await self.async_step_discovery_confirm()
@@ -80,8 +75,6 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        assert self._discovered_device is not None
-
         if user_input is not None:
             return self.async_create_entry(
                 title=self._discovered_device.name,
