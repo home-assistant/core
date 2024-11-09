@@ -110,10 +110,10 @@
       "message": "Initial update failed on startup with error {error}"
     },
     "entry_not_found": {
-      "message": "The selected character is not configured in Home Assistant."
+      "message": "The Nord Pool integration is not configured in Home Assistant."
     },
     "entry_not_loaded": {
-      "message": "The selected character is currently not loaded or disabled in Home Assistant."
+      "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
     },
     "date_to_far_in_past": {
       "message": "Only dates two months in the past is allowed."
