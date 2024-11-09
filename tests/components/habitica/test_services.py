@@ -30,6 +30,9 @@ from .conftest import mock_called_with
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica, try again later"
+RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again later"
+
 
 @pytest.fixture(autouse=True)
 def services_only() -> Generator[None]:
@@ -174,7 +177,7 @@ async def test_cast_skill(
             },
             HTTPStatus.TOO_MANY_REQUESTS,
             ServiceValidationError,
-            "Rate limit exceeded, try again later",
+            RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
             {
@@ -201,7 +204,7 @@ async def test_cast_skill(
             },
             HTTPStatus.BAD_REQUEST,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
         ),
     ],
 )
@@ -330,7 +333,7 @@ async def test_handle_quests(
         (
             HTTPStatus.TOO_MANY_REQUESTS,
             ServiceValidationError,
-            "Rate limit exceeded, try again later",
+            RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
             HTTPStatus.NOT_FOUND,
@@ -345,7 +348,7 @@ async def test_handle_quests(
         (
             HTTPStatus.BAD_REQUEST,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
         ),
     ],
 )
