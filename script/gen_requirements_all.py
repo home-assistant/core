@@ -58,8 +58,16 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 # will be included in requirements_all_{action}.txt
 
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
-    "pytest": {"exclude": set(), "include": {"python-gammu"}},
-    "wheels_aarch64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "pytest": {
+        "exclude": set(),
+        "include": {"python-gammu"},
+        "markers": {},
+    },
+    "wheels_aarch64": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
     # Pandas has issues building on armhf, it is expected they
     # will drop the platform in the near future (they consider it
     # "flimsy" on 386). The following packages depend on pandas,
@@ -67,10 +75,23 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "wheels_armhf": {
         "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
         "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
     },
-    "wheels_armv7": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
-    "wheels_amd64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
-    "wheels_i386": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "wheels_armv7": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    "wheels_amd64": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    "wheels_i386": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -127,7 +148,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.1.2
+numpy==2.1.3
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -183,7 +204,7 @@ get-mac==1000000000.0.0
 charset-normalizer==3.4.0
 
 # dacite: Ensure we have a version that is able to handle type unions for
-# Roborock, NAM, Brother, and GIOS.
+# NAM, Brother, and GIOS.
 dacite>=1.7.0
 
 # chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
@@ -311,6 +332,10 @@ def process_action_requirement(req: str, action: str) -> str:
         return req
     if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL:
         return f"# {req}"
+    if markers := OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["markers"].get(
+        normalized_package_name, None
+    ):
+        return f"{req};{markers}"
     return req
 
 
