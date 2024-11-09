@@ -19,9 +19,9 @@ on:
 env:
   DEFAULT_PYTHON: "3.13"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name}}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref_name}}
+#   cancel-in-progress: true
 
 jobs:
   init:
@@ -101,7 +101,7 @@ jobs:
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
-    if: github.repository_owner == 'home-assistant'
+    if: false && github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ${{ matrix.os }}
     strategy:
@@ -177,8 +177,32 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
+      - name: Create requirements file for custom build
+        run: |
+          touch requirements_custom.txt
+
+      - name: Modify requirements file for custom build
+        id: modify-requirements
+        run: |
+          echo "  # force update" >> requirements_custom.txt
+          echo "skip_binary=cython" >> $GITHUB_OUTPUT
+
+      - name: Build wheels (custom)
+        uses: cdce8p/wheels@master
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          skip-binary: ${{ steps.modify-requirements.outputs.skip_binary }}
+          constraints: "homeassistant/package_constraints.txt"
+          requirements: "requirements_custom.txt"
+          verbose: true
+
       - name: Build wheels
         uses: *home-assistant-wheels
+        if: false
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
