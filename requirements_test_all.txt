@@ -1692,7 +1692,7 @@ pynetgear==0.10.10
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.1
+pynordpool==0.2.2
 
 # homeassistant.components.nuki
 pynuki==1.6.3
