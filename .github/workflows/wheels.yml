@@ -180,6 +180,7 @@ jobs:
       - name: Create requirements file for custom build
         run: |
           touch requirements_custom.txt
+          echo -n "cython==3.2.1" >> requirements_custom.txt
 
       - name: Modify requirements file for custom build
         id: modify-requirements
