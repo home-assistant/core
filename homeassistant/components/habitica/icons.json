@@ -163,6 +163,24 @@
     },
     "cast_skill": {
       "service": "mdi:creation-outline"
+    },
+    "accept_quest": {
+      "service": "mdi:script-text"
+    },
+    "reject_quest": {
+      "service": "mdi:script-text"
+    },
+    "leave_quest": {
+      "service": "mdi:script-text"
+    },
+    "abort_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "cancel_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "start_quest": {
+      "service": "mdi:script-text-key"
     }
   }
 }

@@ -1,7 +1,8 @@
 {
   "common": {
     "todos": "To-Do's",
-    "dailies": "Dailies"
+    "dailies": "Dailies",
+    "config_entry_name": "Select character"
   },
   "config": {
     "abort": {
@@ -311,6 +312,12 @@
     },
     "task_not_found": {
       "message": "Unable to cast skill, could not find the task {task}"
+    },
+    "quest_action_unallowed": {
+      "message": "Action not allowed, only quest leader or group leader can perform this action"
+    },
+    "quest_not_found": {
+      "message": "Unable to complete action, quest or group not found"
     }
   },
   "issues": {
@@ -353,6 +360,66 @@
         "task": {
           "name": "Task name",
           "description": "The name (or task ID) of the task you want to target with the skill or spell."
+        }
+      }
+    },
+    "accept_quest": {
+      "name": "Accept a quest invitation",
+      "description": "Accept a pending invitation to a quest.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Choose the Habitica character for which to perform the action."
+        }
+      }
+    },
+    "reject_quest": {
+      "name": "Reject a quest invitation",
+      "description": "Reject a pending invitation to a quest.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "leave_quest": {
+      "name": "Leave a quest",
+      "description": "Leave the current quest you are participating in.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "abort_quest": {
+      "name": "Abort an active quest",
+      "description": "Terminate your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "cancel_quest": {
+      "name": "Cancel a pending quest",
+      "description": "Cancel a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
+        }
+      }
+    },
+    "start_quest": {
+      "name": "Force-start a pending quest",
+      "description": "Begin the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "[%key:component::habitica::services::accept_quest::fields::config_entry::description%]"
         }
       }
     }
