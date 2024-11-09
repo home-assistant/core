@@ -17,12 +17,12 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 

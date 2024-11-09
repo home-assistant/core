@@ -4,16 +4,16 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.exceptions import RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
 from .const import DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 

@@ -79,10 +79,16 @@ async def async_setup_entry(
 
     sense_monitor_id = data.sense_monitor_id
 
-    entities: list[SensorEntity] = [
-        SenseDevicePowerSensor(device, sense_monitor_id, realtime_coordinator)
-        for device in config_entry.runtime_data.data.devices
-    ]
+    entities: list[SensorEntity] = []
+
+    for device in config_entry.runtime_data.data.devices:
+        entities.append(
+            SenseDevicePowerSensor(device, sense_monitor_id, realtime_coordinator)
+        )
+        entities.extend(
+            SenseDeviceEnergySensor(device, scale, trends_coordinator, sense_monitor_id)
+            for scale in Scale
+        )
 
     for variant_id, variant_name in SENSOR_VARIANTS:
         entities.append(
@@ -242,3 +248,35 @@ class SenseDevicePowerSensor(SenseDeviceEntity, SensorEntity):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._device.power_w
+
+
+class SenseDeviceEnergySensor(SenseDeviceEntity, SensorEntity):
+    """Implementation of a Sense device energy sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.ENERGY
+
+    def __init__(
+        self,
+        device: SenseDevice,
+        scale: Scale,
+        coordinator: SenseTrendCoordinator,
+        sense_monitor_id: str,
+    ) -> None:
+        """Initialize the Sense device sensor."""
+        super().__init__(
+            device,
+            coordinator,
+            sense_monitor_id,
+            f"{device.id}-{TRENDS_SENSOR_TYPES[scale].lower()}-energy",
+        )
+        self._attr_translation_key = f"{TRENDS_SENSOR_TYPES[scale].lower()}_energy"
+        self._attr_suggested_display_precision = 2
+        self._scale = scale
+        self._device = device
+
+    @property
+    def native_value(self) -> float:
+        """Return the state of the sensor."""
+        return self._device.energy_kwh[self._scale]

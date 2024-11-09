@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from webrtc_models import RTCIceCandidate, RTCIceServer
 
 from homeassistant.components.camera import (
     DATA_ICE_SERVERS,
@@ -13,13 +14,13 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
     CameraWebRTCProvider,
-    RTCIceServer,
     StreamType,
     WebRTCAnswer,
     WebRTCCandidate,
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
+    async_get_supported_legacy_provider,
     async_register_ice_servers,
     async_register_rtsp_to_web_rtc_provider,
     async_register_webrtc_provider,
@@ -30,9 +31,10 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .common import STREAM_SOURCE, WEBRTC_ANSWER
+from .common import STREAM_SOURCE, WEBRTC_ANSWER, SomeTestProvider
 
 from tests.common import (
     MockConfigEntry,
@@ -49,36 +51,13 @@ HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
 TEST_INTEGRATION_DOMAIN = "test"
 
 
-class TestProvider(CameraWebRTCProvider):
-    """Test provider."""
+class Go2RTCProvider(SomeTestProvider):
+    """go2rtc provider."""
 
-    def __init__(self) -> None:
-        """Initialize the provider."""
-        self._is_supported = True
-
-    def async_is_supported(self, stream_source: str) -> bool:
-        """Determine if the provider supports the stream source."""
-        return self._is_supported
-
-    async def async_handle_async_webrtc_offer(
-        self,
-        camera: Camera,
-        offer_sdp: str,
-        session_id: str,
-        send_message: WebRTCSendMessage,
-    ) -> None:
-        """Handle the WebRTC offer and return the answer via the provided callback.
-
-        Return value determines if the offer was handled successfully.
-        """
-        send_message(WebRTCAnswer(answer="answer"))
-
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
-        """Handle the WebRTC candidate."""
-
-    @callback
-    def async_close_session(self, session_id: str) -> None:
-        """Close the session."""
+    @property
+    def domain(self) -> str:
+        """Return the integration domain of the provider."""
+        return "go2rtc"
 
 
 class MockCamera(Camera):
@@ -160,18 +139,6 @@ async def init_test_integration(
     return test_camera
 
 
-@pytest.fixture
-async def register_test_provider(hass: HomeAssistant) -> AsyncGenerator[TestProvider]:
-    """Add WebRTC test provider."""
-    await async_setup_component(hass, "camera", {})
-
-    provider = TestProvider()
-    unsub = async_register_webrtc_provider(hass, provider)
-    await hass.async_block_till_done()
-    yield provider
-    unsub()
-
-
 @pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_stream_source")
 async def test_async_register_webrtc_provider(
     hass: HomeAssistant,
@@ -182,7 +149,7 @@ async def test_async_register_webrtc_provider(
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
     assert camera.frontend_stream_type is StreamType.HLS
 
-    provider = TestProvider()
+    provider = SomeTestProvider()
     unregister = async_register_webrtc_provider(hass, provider)
     await hass.async_block_till_done()
 
@@ -210,7 +177,7 @@ async def test_async_register_webrtc_provider(
 @pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_stream_source")
 async def test_async_register_webrtc_provider_twice(
     hass: HomeAssistant,
-    register_test_provider: TestProvider,
+    register_test_provider: SomeTestProvider,
 ) -> None:
     """Test registering a WebRTC provider twice should raise."""
     with pytest.raises(ValueError, match="Provider already registered"):
@@ -222,7 +189,7 @@ async def test_async_register_webrtc_provider_camera_not_loaded(
 ) -> None:
     """Test registering a WebRTC provider when camera is not loaded."""
     with pytest.raises(ValueError, match="Unexpected state, camera not loaded"):
-        async_register_webrtc_provider(hass, TestProvider())
+        async_register_webrtc_provider(hass, SomeTestProvider())
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_stream_source")
@@ -328,7 +295,14 @@ async def test_ws_get_client_config(
     assert msg["success"]
     assert msg["result"] == {
         "configuration": {
-            "iceServers": [{"urls": "stun:stun.home-assistant.io:80"}],
+            "iceServers": [
+                {
+                    "urls": [
+                        "stun:stun.home-assistant.io:80",
+                        "stun:stun.home-assistant.io:3478",
+                    ]
+                },
+            ],
         },
         "getCandidatesUpfront": False,
     }
@@ -356,7 +330,12 @@ async def test_ws_get_client_config(
     assert msg["result"] == {
         "configuration": {
             "iceServers": [
-                {"urls": "stun:stun.home-assistant.io:80"},
+                {
+                    "urls": [
+                        "stun:stun.home-assistant.io:80",
+                        "stun:stun.home-assistant.io:3478",
+                    ]
+                },
                 {
                     "urls": ["stun:example2.com", "turn:example2.com"],
                     "username": "user",
@@ -365,6 +344,29 @@ async def test_ws_get_client_config(
             ],
         },
         "getCandidatesUpfront": False,
+    }
+
+
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+async def test_ws_get_client_config_sync_offer(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get WebRTC client config, when camera is supporting sync offer."""
+    await async_setup_component(hass, "camera", {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "camera/webrtc/get_client_config", "entity_id": "camera.sync"}
+    )
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "configuration": {},
+        "getCandidatesUpfront": True,
     }
 
 
@@ -480,7 +482,10 @@ async def test_websocket_webrtc_offer(
 @pytest.mark.parametrize(
     ("message", "expected_frontend_message"),
     [
-        (WebRTCCandidate("candidate"), {"type": "candidate", "candidate": "candidate"}),
+        (
+            WebRTCCandidate(RTCIceCandidate("candidate")),
+            {"type": "candidate", "candidate": "candidate"},
+        ),
         (
             WebRTCError("webrtc_offer_failed", "error"),
             {"type": "error", "code": "webrtc_offer_failed", "message": "error"},
@@ -493,7 +498,7 @@ async def test_websocket_webrtc_offer(
 async def test_websocket_webrtc_offer_webrtc_provider(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    register_test_provider: TestProvider,
+    register_test_provider: SomeTestProvider,
     message: WebRTCMessage,
     expected_frontend_message: dict[str, Any],
 ) -> None:
@@ -966,7 +971,9 @@ async def test_ws_webrtc_candidate(
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
-        mock_on_webrtc_candidate.assert_called_once_with(session_id, candidate)
+        mock_on_webrtc_candidate.assert_called_once_with(
+            session_id, RTCIceCandidate(candidate)
+        )
 
 
 @pytest.mark.usefixtures("mock_camera_webrtc")
@@ -996,7 +1003,7 @@ async def test_ws_webrtc_candidate_not_supported(
 async def test_ws_webrtc_candidate_webrtc_provider(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    register_test_provider: TestProvider,
+    register_test_provider: SomeTestProvider,
 ) -> None:
     """Test ws webrtc candidate command with WebRTC provider."""
     with patch.object(
@@ -1016,7 +1023,9 @@ async def test_ws_webrtc_candidate_webrtc_provider(
         response = await client.receive_json()
         assert response["type"] == TYPE_RESULT
         assert response["success"]
-        mock_on_webrtc_candidate.assert_called_once_with(session_id, candidate)
+        mock_on_webrtc_candidate.assert_called_once_with(
+            session_id, RTCIceCandidate(candidate)
+        )
 
 
 @pytest.mark.usefixtures("mock_camera_webrtc")
@@ -1044,7 +1053,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
 
 
 @pytest.mark.usefixtures("mock_camera_webrtc")
-async def test_ws_webrtc_canidate_missing_candidtae(
+async def test_ws_webrtc_canidate_missing_candidate(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test ws WebRTC candidate command with missing required fields."""
@@ -1085,3 +1094,123 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
         "code": "webrtc_candidate_failed",
         "message": "Camera does not support WebRTC, frontend_stream_type=hls",
     }
+
+
+async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
+    """Test optional interface for WebRTC provider."""
+
+    class OnlyRequiredInterfaceProvider(CameraWebRTCProvider):
+        """Test provider."""
+
+        @property
+        def domain(self) -> str:
+            """Return the domain of the provider."""
+            return "test"
+
+        @callback
+        def async_is_supported(self, stream_source: str) -> bool:
+            """Determine if the provider supports the stream source."""
+            return True
+
+        async def async_handle_async_webrtc_offer(
+            self,
+            camera: Camera,
+            offer_sdp: str,
+            session_id: str,
+            send_message: WebRTCSendMessage,
+        ) -> None:
+            """Handle the WebRTC offer and return the answer via the provided callback.
+
+            Return value determines if the offer was handled successfully.
+            """
+            send_message(WebRTCAnswer(answer="answer"))
+
+        async def async_on_webrtc_candidate(
+            self, session_id: str, candidate: RTCIceCandidate
+        ) -> None:
+            """Handle the WebRTC candidate."""
+
+    provider = OnlyRequiredInterfaceProvider()
+    # Call all interface methods
+    assert provider.async_is_supported("stream_source") is True
+    await provider.async_handle_async_webrtc_offer(
+        Mock(), "offer_sdp", "session_id", Mock()
+    )
+    await provider.async_on_webrtc_candidate("session_id", RTCIceCandidate("candidate"))
+    provider.async_close_session("session_id")
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_repair_issue_legacy_provider(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue created for legacy provider."""
+    # Ensure no issue if no provider is registered
+    assert not issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
+
+    # Register a legacy provider
+    legacy_provider = Mock(side_effect=provide_webrtc_answer)
+    unsub_legacy_provider = async_register_rtsp_to_web_rtc_provider(
+        hass, "mock_domain", legacy_provider
+    )
+    await hass.async_block_till_done()
+
+    # Ensure no issue if only legacy provider is registered
+    assert not issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
+
+    provider = Go2RTCProvider()
+    unsub_go2rtc_provider = async_register_webrtc_provider(hass, provider)
+    await hass.async_block_till_done()
+
+    # Ensure issue when legacy and builtin provider are registered
+    issue = issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
+    assert issue
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.issue_domain == "mock_domain"
+    assert issue.learn_more_url == "https://www.home-assistant.io/integrations/go2rtc/"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.issue_id == "legacy_webrtc_provider_mock_domain"
+    assert issue.translation_key == "legacy_webrtc_provider"
+    assert issue.translation_placeholders == {
+        "legacy_integration": "mock_domain",
+        "builtin_integration": "go2rtc",
+    }
+
+    unsub_legacy_provider()
+    unsub_go2rtc_provider()
+
+
+@pytest.mark.usefixtures("mock_camera", "register_test_provider", "mock_rtsp_to_webrtc")
+async def test_no_repair_issue_without_new_provider(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issue not created if no go2rtc provider exists."""
+    assert not issue_registry.async_get_issue(
+        "camera", "legacy_webrtc_provider_mock_domain"
+    )
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_rtsp_to_webrtc")
+async def test_registering_same_legacy_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering the same legacy provider twice."""
+    legacy_provider = Mock(side_effect=provide_webrtc_answer)
+    with pytest.raises(ValueError, match="Provider already registered"):
+        async_register_rtsp_to_web_rtc_provider(hass, "mock_domain", legacy_provider)
+
+
+@pytest.mark.usefixtures("mock_hls_stream_source", "mock_camera", "mock_rtsp_to_webrtc")
+async def test_get_not_supported_legacy_provider(hass: HomeAssistant) -> None:
+    """Test getting a not supported legacy provider."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert await async_get_supported_legacy_provider(hass, camera) is None

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TypedDict, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Update"
 
+CONF_DISPLAY_PRECISION = "display_precision"
 CONF_LATEST_VERSION_TEMPLATE = "latest_version_template"
 CONF_LATEST_VERSION_TOPIC = "latest_version_topic"
 CONF_PAYLOAD_INSTALL = "payload_install"
@@ -46,6 +47,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
+        vol.Optional(CONF_DISPLAY_PRECISION, default=0): cv.positive_int,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
@@ -61,15 +63,18 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
 
-class _MqttUpdatePayloadType(TypedDict, total=False):
-    """Presentation of supported JSON payload to process state updates."""
-
-    installed_version: str
-    latest_version: str
-    title: str
-    release_summary: str
-    release_url: str
-    entity_picture: str
+MQTT_JSON_UPDATE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("installed_version"): cv.string,
+        vol.Optional("latest_version"): cv.string,
+        vol.Optional("title"): cv.string,
+        vol.Optional("release_summary"): cv.string,
+        vol.Optional("release_url"): cv.url,
+        vol.Optional("entity_picture"): cv.url,
+        vol.Optional("in_progress"): cv.boolean,
+        vol.Optional("update_percentage"): vol.Any(vol.Range(min=0, max=100), None),
+    }
+)
 
 
 async def async_setup_entry(
@@ -111,6 +116,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+        self._attr_display_precision = self._config[CONF_DISPLAY_PRECISION]
         self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
         self._attr_release_url = self._config.get(CONF_RELEASE_URL)
         self._attr_title = self._config.get(CONF_TITLE)
@@ -138,7 +144,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             )
             return
 
-        json_payload: _MqttUpdatePayloadType = {}
+        json_payload: dict[str, Any] = {}
         try:
             rendered_json_payload = json_loads(payload)
             if isinstance(rendered_json_payload, dict):
@@ -150,7 +156,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     rendered_json_payload,
                     msg.topic,
                 )
-                json_payload = cast(_MqttUpdatePayloadType, rendered_json_payload)
+                json_payload = MQTT_JSON_UPDATE_SCHEMA(rendered_json_payload)
             else:
                 _LOGGER.debug(
                     (
@@ -161,14 +167,27 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     msg.topic,
                 )
                 json_payload = {"installed_version": str(payload)}
+        except vol.MultipleInvalid as exc:
+            _LOGGER.warning(
+                (
+                    "Schema violation after processing payload '%s'"
+                    " on topic '%s' for entity '%s': %s"
+                ),
+                payload,
+                msg.topic,
+                self.entity_id,
+                exc,
+            )
+            return
         except JSON_DECODE_EXCEPTIONS:
             _LOGGER.debug(
                 (
                     "No valid (JSON) payload detected after processing payload '%s'"
-                    " on topic %s"
+                    " on topic '%s' for entity '%s'"
                 ),
                 payload,
                 msg.topic,
+                self.entity_id,
             )
             json_payload["installed_version"] = str(payload)
 
@@ -190,6 +209,13 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         if "entity_picture" in json_payload:
             self._attr_entity_picture = json_payload["entity_picture"]
 
+        if "update_percentage" in json_payload:
+            self._attr_update_percentage = json_payload["update_percentage"]
+            self._attr_in_progress = self._attr_update_percentage is not None
+
+        if "in_progress" in json_payload:
+            self._attr_in_progress = json_payload["in_progress"]
+
     @callback
     def _handle_latest_version_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving latest version via MQTT."""
@@ -206,11 +232,13 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             self._handle_state_message_received,
             {
                 "_attr_entity_picture",
+                "_attr_in_progress",
                 "_attr_installed_version",
                 "_attr_latest_version",
                 "_attr_title",
                 "_attr_release_summary",
                 "_attr_release_url",
+                "_attr_update_percentage",
             },
         )
         self.add_subscription(
@@ -233,7 +261,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     @property
     def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""
-        support = UpdateEntityFeature(0)
+        support = UpdateEntityFeature(UpdateEntityFeature.PROGRESS)
 
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             support |= UpdateEntityFeature.INSTALL
