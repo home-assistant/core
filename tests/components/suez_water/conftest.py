@@ -3,10 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pysuez import AggregatedData, PriceResult
+from pysuez.const import ATTRIBUTION
 import pytest
 
 from homeassistant.components.suez_water.const import DOMAIN
-from homeassistant.components.suez_water.coordinator import AggregatedData
 
 from tests.common import MockConfigEntry
 
@@ -38,7 +39,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="suez_client")
-def mock_suez_data() -> Generator[AsyncMock]:
+def mock_suez_client() -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
     with (
         patch(
@@ -64,7 +65,7 @@ def mock_suez_data() -> Generator[AsyncMock]:
             },
             current_year=1500,
             previous_year=1000,
-            attribution="suez water mock test",
+            attribution=ATTRIBUTION,
             highest_monthly_consumption=2558,
             history={
                 "2024-01-01": 130,
@@ -75,4 +76,5 @@ def mock_suez_data() -> Generator[AsyncMock]:
         )
 
         suez_client.fetch_aggregated_data.return_value = result
+        suez_client.get_price.return_value = PriceResult("4.74")
         yield suez_client
