@@ -374,6 +374,9 @@ aiosyncthing==0.5.1
 # homeassistant.components.tankerkoenig
 aiotankerkoenig==0.4.2
 
+# homeassistant.components.tedee
+aiotedee==0.2.20
+
 # homeassistant.components.tractive
 aiotractive==0.6.0
 
@@ -1851,9 +1854,6 @@ pyswitchbee==1.8.3
 
 # homeassistant.components.tautulli
 pytautulli==23.1.1
-
-# homeassistant.components.tedee
-pytedee-async==0.2.20
 
 # homeassistant.components.motionmount
 python-MotionMount==2.2.0
