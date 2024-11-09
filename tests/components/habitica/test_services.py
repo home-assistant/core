@@ -1597,10 +1597,18 @@ async def test_update_daily_exceptions(
 
 
 @pytest.mark.parametrize(
-    ("status", "exception"),
+    ("status", "exception", "exception_msg"),
     [
-        (HTTPStatus.TOO_MANY_REQUESTS, ServiceValidationError),
-        (HTTPStatus.BAD_GATEWAY, HomeAssistantError),
+        (
+            HTTPStatus.TOO_MANY_REQUESTS,
+            ServiceValidationError,
+            RATE_LIMIT_EXCEPTION_MSG,
+        ),
+        (
+            HTTPStatus.BAD_GATEWAY,
+            HomeAssistantError,
+            REQUEST_EXCEPTION_MSG,
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_habitica")
@@ -1610,6 +1618,7 @@ async def test_update_task_exceptions(
     mock_habitica: AiohttpClientMocker,
     status: HTTPStatus,
     exception: Exception,
+    exception_msg: str,
 ) -> None:
     """Test Habitica task action exceptions."""
     task_id = "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
@@ -1618,7 +1627,7 @@ async def test_update_task_exceptions(
         f"{DEFAULT_URL}/api/v3/tasks/{task_id}",
         status=status,
     )
-    with pytest.raises(exception):
+    with pytest.raises(exception, match=exception_msg):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_DAILY,
@@ -1891,10 +1900,18 @@ async def test_create_new_tag(
 
 
 @pytest.mark.parametrize(
-    ("status", "exception"),
+    ("status", "exception", "exception_msg"),
     [
-        (HTTPStatus.TOO_MANY_REQUESTS, ServiceValidationError),
-        (HTTPStatus.BAD_GATEWAY, HomeAssistantError),
+        (
+            HTTPStatus.TOO_MANY_REQUESTS,
+            ServiceValidationError,
+            RATE_LIMIT_EXCEPTION_MSG,
+        ),
+        (
+            HTTPStatus.BAD_GATEWAY,
+            HomeAssistantError,
+            REQUEST_EXCEPTION_MSG,
+        ),
     ],
 )
 async def test_create_new_tag_exception(
@@ -1903,11 +1920,12 @@ async def test_create_new_tag_exception(
     mock_habitica: AiohttpClientMocker,
     status: HTTPStatus,
     exception: Exception,
+    exception_msg: str,
 ) -> None:
     """Test create new tag exception."""
     task_id = "88de7cd9-af2b-49ce-9afd-bf941d87336b"
     mock_habitica.post(f"{DEFAULT_URL}/api/v3/tags", status=status)
-    with pytest.raises(exception):
+    with pytest.raises(exception, match=exception_msg):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_TODO,
