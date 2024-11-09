@@ -62,7 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     async def handle_reconnect_client(call: ServiceCall) -> None:
         """Handle the service action call."""
-        mac = call.data.get("mac")
+        mac: str | None = call.data.get("mac")
+        if not mac:
+            return
 
         await site_client.reconnect_client(mac)
 
