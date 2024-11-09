@@ -38,9 +38,9 @@ from .const import (
     SERVICE_CAST_SKILL,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
-    SERVICE_START_QUEST,
     SERVICE_SCORE_HABIT,
     SERVICE_SCORE_REWARD,
+    SERVICE_START_QUEST,
 )
 from .types import HabiticaConfigEntry
 
@@ -92,7 +92,7 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
     return entry
 
 
-def async_setup_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up services for Habitica integration."""
 
     async def handle_api_call(call: ServiceCall) -> None:
