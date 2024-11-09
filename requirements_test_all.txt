@@ -1349,7 +1349,7 @@ prometheus-client==0.21.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.0.0
+psutil==6.1.0
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
