@@ -441,7 +441,7 @@ airtouch5py==0.2.10
 alpha-vantage==2.3.1
 
 # homeassistant.components.amberelectric
-amberelectric==2.0.3
+amberelectric==2.0.4
 
 # homeassistant.components.amcrest
 amcrest==1.9.8
