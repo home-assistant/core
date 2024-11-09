@@ -9,7 +9,7 @@ from typing import Any, Concatenate
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
-from linkplay.exceptions import LinkPlayException, LinkPlayRequestException
+from linkplay.exceptions import LinkPlayRequestException
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -201,9 +201,8 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         try:
             await self._bridge.player.update_status()
             self._update_properties()
-        except LinkPlayException:
+        except LinkPlayRequestException:
             self._attr_available = False
-            raise
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:
