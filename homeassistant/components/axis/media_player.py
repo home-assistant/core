@@ -93,13 +93,8 @@ class AxisSpeaker(AxisEntity, MediaPlayerEntity):
         output = await ffmpeg_cmd(ffmpeg_manager.binary, media_id)
 
         uri = "/axis-cgi/audio/transmit.cgi"
-        conf = self.hub.config
-        url = f"{conf.protocol}://{conf.host}:{conf.port}{uri}"
-        auth = httpx.DigestAuth(self.hub.config.username, self.hub.config.password)
         headers = {"Content-Type": "audio/axis-mulaw-128"}
-
-        client = get_async_client(self.hass, verify_ssl=False)
-        await client.post(url, headers=headers, content=output, auth=auth)
+        await self.hub.api.vapix.request("post", uri, headers=headers, content=output)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
