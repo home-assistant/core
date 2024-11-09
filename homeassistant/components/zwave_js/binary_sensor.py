@@ -124,9 +124,9 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.HEAT,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 4: Heat - State ID's 7, 8, A, B
+        # NotificationType 4: Heat - State ID's 8, A, B
         key=NOTIFICATION_HEAT,
-        states=("7", "8", "10", "11"),
+        states=("8", "10", "11"),
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
