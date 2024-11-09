@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohttp import ClientResponseError
 import voluptuous as vol
@@ -408,7 +408,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
-        response = coordinator.data.tasks
+        response: list[dict[str, Any]] = coordinator.data.tasks
 
         if types := call.data.get(ATTR_TYPE):
             response = [task for task in response if task["type"] in types]
@@ -455,12 +455,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     for item in task.get("checklist", [])
                 )
             ]
-        return cast(
-            ServiceResponse,
-            {
-                "tasks": response,
-            },
-        )
+        result: dict[str, Any] = {"tasks": response}
+        return result
 
     hass.services.async_register(
         DOMAIN,
