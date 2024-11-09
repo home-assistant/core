@@ -168,7 +168,7 @@ async def test_cast_skill(
             },
             HTTPStatus.TOO_MANY_REQUESTS,
             ServiceValidationError,
-            "Currently rate limited, try again later",
+            "Rate limit exceeded, try again later",
         ),
         (
             {
