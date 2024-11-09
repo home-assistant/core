@@ -44,7 +44,7 @@ mutagen==1.47.0
 orjson==3.10.11
 packaging>=23.1
 paho-mqtt==1.6.1
-Pillow==10.4.0
+Pillow==11.0.0
 propcache==0.2.0
 psutil-home-assistant==0.0.1
 PyJWT==2.9.0
