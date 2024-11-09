@@ -67,7 +67,7 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
 
 
 # Mappings for Notification sensors
-# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/notifications.json
+# https://github.com/zwave-js/specs/blob/master/Registries/Notification%20Command%20Class%2C%20list%20of%20assigned%20Notifications.xlsx
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
     NotificationZWaveJSEntityDescription(
         # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
@@ -118,9 +118,9 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 5: Water - State Id's 1, 2, 3, 4
+        # NotificationType 5: Water - State Id's 1, 2, 3, 4, 6, 7, 8, 9, 0A
         key=NOTIFICATION_WATER,
-        states=("1", "2", "3", "4"),
+        states=("1", "2", "3", "4", "6", "7", "8", "9", "10"),
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     NotificationZWaveJSEntityDescription(
