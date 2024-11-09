@@ -126,6 +126,18 @@
       },
       "rewards": {
         "default": "mdi:treasure-chest"
+      },
+      "strength": {
+        "default": "mdi:arm-flex-outline"
+      },
+      "intelligence": {
+        "default": "mdi:head-snowflake-outline"
+      },
+      "perception": {
+        "default": "mdi:eye-outline"
+      },
+      "constitution": {
+        "default": "mdi:run-fast"
       }
     },
     "switch": {

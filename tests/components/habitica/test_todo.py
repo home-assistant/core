@@ -672,6 +672,11 @@ async def test_next_due_date(
         f"{DEFAULT_URL}/api/v3/tasks/user",
         json=load_json_object_fixture(fixture, DOMAIN),
     )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/content",
+        params={"language": "en"},
+        json=load_json_object_fixture("content.json", DOMAIN),
+    )
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
