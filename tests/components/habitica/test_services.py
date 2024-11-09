@@ -701,7 +701,7 @@ async def test_transformation(
             HTTPStatus.TOO_MANY_REQUESTS,
             HTTPStatus.OK,
             ServiceValidationError,
-            "Rate limit exceeded, try again later",
+            RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
             {
@@ -731,7 +731,7 @@ async def test_transformation(
             HTTPStatus.OK,
             HTTPStatus.TOO_MANY_REQUESTS,
             ServiceValidationError,
-            "Rate limit exceeded, try again later",
+            RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
             {
