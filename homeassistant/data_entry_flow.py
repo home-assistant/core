@@ -26,7 +26,7 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .helpers.frame import report
+from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
 
@@ -530,12 +530,12 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
-            report(
+            report_usage(
                 (
                     "does not use FlowResultType enum for data entry flow result type. "
                     "This is deprecated and will stop working in Home Assistant 2025.1"
                 ),
-                error_if_core=False,
+                core_behavior=ReportBehavior.LOG,
             )
 
         if (

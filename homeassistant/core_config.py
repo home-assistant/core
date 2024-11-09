@@ -60,7 +60,7 @@ from .core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
-from .helpers.frame import report
+from .helpers.frame import ReportBehavior, report_usage
 from .helpers.storage import Store
 from .helpers.typing import UNDEFINED, UndefinedType
 from .util import dt as dt_util, location
@@ -695,11 +695,11 @@ class Config:
 
         It will be removed in Home Assistant 2025.6.
         """
-        report(
+        report_usage(
             "set the time zone using set_time_zone instead of async_set_time_zone"
             " which will stop working in Home Assistant 2025.6",
-            error_if_core=True,
-            error_if_integration=True,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.ERROR,
         )
         if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str

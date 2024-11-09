@@ -20,7 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache import cached_property, under_cached_property
 import voluptuous as vol
-from webrtc_models import RTCIceServer
+from webrtc_models import RTCIceCandidate, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -421,8 +421,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if hass.config.webrtc.ice_servers:
             return hass.config.webrtc.ice_servers
         return [
-            RTCIceServer(urls="stun:stun.home-assistant.io:80"),
-            RTCIceServer(urls="stun:stun.home-assistant.io:3478"),
+            RTCIceServer(
+                urls=[
+                    "stun:stun.home-assistant.io:80",
+                    "stun:stun.home-assistant.io:3478",
+                ]
+            ),
         ]
 
     async_register_ice_servers(hass, get_ice_servers)
@@ -472,6 +476,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_state: None = None  # State is determined by is_on
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
 
+    __supports_stream: CameraEntityFeature | None = None
+
     def __init__(self) -> None:
         """Initialize a camera."""
         self._cache: dict[str, Any] = {}
@@ -484,8 +490,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._create_stream_lock: asyncio.Lock | None = None
         self._webrtc_provider: CameraWebRTCProvider | None = None
         self._legacy_webrtc_provider: CameraWebRTCLegacyProvider | None = None
-        self._webrtc_sync_offer = (
+        self._supports_native_sync_webrtc = (
             type(self).async_handle_web_rtc_offer != Camera.async_handle_web_rtc_offer
+        )
+        self._supports_native_async_webrtc = (
+            type(self).async_handle_async_webrtc_offer
+            != Camera.async_handle_async_webrtc_offer
         )
 
     @cached_property
@@ -623,7 +633,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Integrations can override with a native WebRTC implementation.
         """
-        if self._webrtc_sync_offer:
+        if self._supports_native_sync_webrtc:
             try:
                 answer = await self.async_handle_web_rtc_offer(offer_sdp)
             except ValueError as ex:
@@ -779,6 +789,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
+        self.__supports_stream = (
+            self.supported_features_compat & CameraEntityFeature.STREAM
+        )
         await self.async_refresh_providers(write_state=False)
 
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
@@ -788,17 +801,24 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         providers or inputs to the state attributes change.
         """
         old_provider = self._webrtc_provider
-        new_provider = await self._async_get_supported_webrtc_provider(
-            async_get_supported_provider
-        )
-
         old_legacy_provider = self._legacy_webrtc_provider
+        new_provider = None
         new_legacy_provider = None
-        if new_provider is None:
-            # Only add the legacy provider if the new provider is not available
-            new_legacy_provider = await self._async_get_supported_webrtc_provider(
-                async_get_supported_legacy_provider
+
+        # Skip all providers if the camera has a native WebRTC implementation
+        if not (
+            self._supports_native_sync_webrtc or self._supports_native_async_webrtc
+        ):
+            # Camera doesn't have a native WebRTC implementation
+            new_provider = await self._async_get_supported_webrtc_provider(
+                async_get_supported_provider
             )
+
+            if new_provider is None:
+                # Only add the legacy provider if the new provider is not available
+                new_legacy_provider = await self._async_get_supported_webrtc_provider(
+                    async_get_supported_legacy_provider
+                )
 
         if old_provider != new_provider or old_legacy_provider != new_legacy_provider:
             self._webrtc_provider = new_provider
@@ -827,20 +847,26 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
         config = self._async_get_webrtc_client_configuration()
 
-        ice_servers = [
-            server
-            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
-            for server in servers()
-        ]
-        config.configuration.ice_servers.extend(ice_servers)
+        if not self._supports_native_sync_webrtc:
+            # Until 2024.11, the frontend was not resolving any ice servers
+            # The async approach was added 2024.11 and new integrations need to use it
+            ice_servers = [
+                server
+                for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
+                for server in servers()
+            ]
+            config.configuration.ice_servers.extend(ice_servers)
 
         config.get_candidates_upfront = (
-            self._webrtc_sync_offer or self._legacy_webrtc_provider is not None
+            self._supports_native_sync_webrtc
+            or self._legacy_webrtc_provider is not None
         )
 
         return config
 
-    async def async_on_webrtc_candidate(self, session_id: str, candidate: str) -> None:
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidate
+    ) -> None:
         """Handle a WebRTC candidate."""
         if self._webrtc_provider:
             await self._webrtc_provider.async_on_webrtc_candidate(session_id, candidate)
@@ -864,12 +890,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the camera capabilities."""
         frontend_stream_types = set()
         if CameraEntityFeature.STREAM in self.supported_features_compat:
-            if (
-                type(self).async_handle_web_rtc_offer
-                != Camera.async_handle_web_rtc_offer
-                or type(self).async_handle_async_webrtc_offer
-                != Camera.async_handle_async_webrtc_offer
-            ):
+            if self._supports_native_sync_webrtc or self._supports_native_async_webrtc:
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)
             else:
@@ -879,6 +900,21 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
         return CameraCapabilities(frontend_stream_types)
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
+
+        Schedules async_refresh_providers if support of streams have changed.
+        """
+        super().async_write_ha_state()
+        if self.__supports_stream != (
+            supports_stream := self.supported_features_compat
+            & CameraEntityFeature.STREAM
+        ):
+            self.__supports_stream = supports_stream
+            self._invalidate_camera_capabilities_cache()
+            self.hass.async_create_task(self.async_refresh_providers())
 
 
 class CameraView(HomeAssistantView):

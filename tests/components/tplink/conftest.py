@@ -37,7 +37,7 @@ def mock_discovery():
         device = _mocked_device(
             device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
             credentials_hash=CREDENTIALS_HASH_KLAP,
-            alias=None,
+            alias="My Bulb",
         )
         devices = {
             "127.0.0.1": _mocked_device(
