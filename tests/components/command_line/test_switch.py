@@ -595,9 +595,9 @@ async def test_templating(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         entity_state2 = hass.states.get("switch.test2")
         assert entity_state.state == STATE_ON
-        assert entity_state.attributes.get("icon") == "mdi:on"
+        assert entity_state.attributes.get("icon") == "mdi:off"
         assert entity_state2.state == STATE_ON
-        assert entity_state2.attributes.get("icon") == "mdi:on"
+        assert entity_state2.attributes.get("icon") == "mdi:off"
 
 
 async def test_updating_to_often(

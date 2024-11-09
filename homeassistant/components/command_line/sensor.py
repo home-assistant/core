@@ -177,23 +177,18 @@ class CommandSensor(ManualTriggerSensorEntity):
 
         self._attr_native_value = None
         if self._value_template is not None and value is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value,
-                None,
-            )
+            value = self._value_template.async_render_with_possible_json_value(value)
 
         if self.device_class not in {
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
         }:
             self._attr_native_value = value
-            self._process_manual_data(value)
-            return
-
-        if value is not None:
+        elif value is not None:
             self._attr_native_value = async_parse_date_datetime(
                 value, self.entity_id, self.device_class
             )
+
         self._process_manual_data(value)
         self.async_write_ha_state()
 

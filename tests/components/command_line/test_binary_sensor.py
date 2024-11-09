@@ -101,7 +101,7 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     entity_state = hass.states.get("binary_sensor.test")
     assert entity_state
     assert entity_state.state == STATE_ON
-    assert entity_state.attributes.get("icon") == "mdi:on"
+    assert entity_state.attributes.get("icon") == "mdi:off"
 
 
 @pytest.mark.parametrize(

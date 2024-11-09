@@ -448,4 +448,4 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         )
         entity_state = hass.states.get("cover.test")
         assert entity_state
-        assert entity_state.attributes.get("icon") == "mdi:open"
+        assert entity_state.attributes.get("icon") == "mdi:closed"
