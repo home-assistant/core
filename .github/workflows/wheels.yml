@@ -236,6 +236,7 @@ jobs:
       - name: Create requirements file for custom build
         run: |
           touch requirements_custom.txt
+          echo -n "cython==3.1.4" >> requirements_custom.txt
 
       - name: Modify requirements file for custom build
         if: contains(fromJSON('["armv7", "armhf"]'), matrix.arch)
