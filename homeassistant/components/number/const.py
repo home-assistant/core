@@ -18,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
     UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -116,6 +117,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
+    """Blood glucose concentration.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
+    """
+
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
@@ -169,7 +176,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -178,7 +185,7 @@ class NumberDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -286,7 +293,7 @@ class NumberDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
     """
 
     PRECIPITATION = "precipitation"
@@ -437,6 +444,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.AREA: set(UnitOfArea),
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
+    NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),

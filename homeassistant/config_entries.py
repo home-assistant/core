@@ -63,7 +63,7 @@ from .helpers.event import (
     RANDOM_MICROSECOND_MIN,
     async_call_later,
 )
-from .helpers.frame import report
+from .helpers.frame import ReportBehavior, report, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
@@ -1507,10 +1507,14 @@ class ConfigEntriesFlowManager(
             version=result["version"],
         )
 
+        if existing_entry is not None:
+            # Unload and remove the existing entry
+            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
-            await self.config_entries.async_remove(existing_entry.entry_id)
+            # Clean up devices and entities belonging to the existing entry
+            self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
         return result
@@ -1900,7 +1904,21 @@ class ConfigEntries:
         self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
-        """Remove an entry."""
+        """Remove, unload and clean up after an entry."""
+        unload_success, entry = await self._async_remove(entry_id)
+        self._async_clean_up(entry)
+
+        for discovery_domain in entry.discovery_keys:
+            async_dispatcher_send_internal(
+                self.hass,
+                signal_discovered_config_entry_removed(discovery_domain),
+                entry,
+            )
+
+        return {"require_restart": not unload_success}
+
+    async def _async_remove(self, entry_id: str) -> tuple[bool, ConfigEntry]:
+        """Remove and unload an entry."""
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
@@ -1915,6 +1933,13 @@ class ConfigEntries:
             del self._entries[entry.entry_id]
             self.async_update_issues()
             self._async_schedule_save()
+
+        return (unload_success, entry)
+
+    @callback
+    def _async_clean_up(self, entry: ConfigEntry) -> None:
+        """Clean up after an entry."""
+        entry_id = entry.entry_id
 
         dev_reg = device_registry.async_get(self.hass)
         ent_reg = entity_registry.async_get(self.hass)
@@ -1934,13 +1959,6 @@ class ConfigEntries:
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
-        for discovery_domain in entry.discovery_keys:
-            async_dispatcher_send_internal(
-                self.hass,
-                signal_discovered_config_entry_removed(discovery_domain),
-                entry,
-            )
-        return {"require_restart": not unload_success}
 
     @callback
     def _async_shutdown(self, event: Event) -> None:
@@ -3150,17 +3168,21 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
-    """Base class for options flows with config entry and options."""
+    """Base class for options flows with config entry and options.
+
+    This class is being phased out, and should not be referenced in new code.
+    It is kept only for backward compatibility, and only for custom integrations.
+    """
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
-        report(
-            "inherits from OptionsFlowWithConfigEntry, which is deprecated "
-            "and will stop working in 2025.12",
-            error_if_integration=False,
-            error_if_core=True,
+        report_usage(
+            "inherits from OptionsFlowWithConfigEntry",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
         )
 
     @property

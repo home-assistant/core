@@ -17,7 +17,7 @@ api_call:
         object:
 cast_skill:
   fields:
-    config_entry:
+    config_entry: &config_entry
       required: true
       selector:
         config_entry:
@@ -37,3 +37,21 @@ cast_skill:
       required: true
       selector:
         text:
+accept_quest:
+  fields:
+    config_entry: *config_entry
+reject_quest:
+  fields:
+    config_entry: *config_entry
+start_quest:
+  fields:
+    config_entry: *config_entry
+cancel_quest:
+  fields:
+    config_entry: *config_entry
+abort_quest:
+  fields:
+    config_entry: *config_entry
+leave_quest:
+  fields:
+    config_entry: *config_entry

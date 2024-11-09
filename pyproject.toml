@@ -28,7 +28,7 @@ dependencies    = [
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
     "aiohasupervisor==0.2.1",
-    "aiohttp==3.11.0b3",
+    "aiohttp==3.11.0b4",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
     "aiozoneinfo==0.2.1",
@@ -57,7 +57,7 @@ dependencies    = [
     "Pillow==10.4.0",
     "propcache==0.2.0",
     "pyOpenSSL==24.2.1",
-    "orjson==3.10.10",
+    "orjson==3.10.11",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
@@ -71,7 +71,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.4.28",
+    "uv==0.5.0",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
