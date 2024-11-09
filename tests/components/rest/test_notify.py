@@ -1,6 +1,8 @@
 """The tests for the rest.notify platform."""
 
+import json
 from unittest.mock import patch
+import urllib.parse
 
 import respx
 
@@ -12,6 +14,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
+
+
+async def setup_notify_component(
+    hass: HomeAssistant, platform_name, resource, method, **kwargs
+):
+    """Set up the notify component."""
+    config = {
+        notify.DOMAIN: {
+            "platform": "rest",
+            "name": platform_name,
+            "resource": resource,
+            "method": method,
+            **kwargs,
+        }
+    }
+    assert await async_setup_component(hass, notify.DOMAIN, config)
+    await hass.async_block_till_done()
+    assert hass.services.has_service(notify.DOMAIN, platform_name)
 
 
 @respx.mock
@@ -49,3 +69,244 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
 
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.services.has_service(notify.DOMAIN, "rest_reloaded")
+
+
+@respx.mock
+async def test_rest_notify_get(hass: HomeAssistant) -> None:
+    """Test sending notification with GET method."""
+    # Mock the REST endpoint
+    respx.get("http://example.com/notify")
+
+    await setup_notify_component(
+        hass,
+        "rest_test",
+        "http://example.com/notify",
+        "GET",
+    )
+
+    # Send a message through the service registry
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "rest_test",
+        {
+            "message": "Test message",
+        },
+        blocking=True,
+    )
+
+    # Verify the request
+    assert len(respx.calls) == 1
+    request = respx.calls[0].request
+    assert request.method == "GET"
+    assert request.url.params["message"] == "Test message"
+
+
+@respx.mock
+async def test_rest_notify_post_json(hass: HomeAssistant) -> None:
+    """Test sending notification with POST_JSON method."""
+    # Mock the REST endpoint
+    respx.post("http://example.com/notify")
+
+    await setup_notify_component(
+        hass,
+        "rest_test",
+        "http://example.com/notify",
+        "POST_JSON",
+        title_param_name="title",
+    )
+
+    # Send a message through the service registry
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "rest_test",
+        {
+            "message": "Test message",
+            "title": "Test title",
+        },
+        blocking=True,
+    )
+
+    # Verify the request
+    assert len(respx.calls) == 1
+    request = respx.calls[0].request
+    assert request.method == "POST"
+    assert request.headers["Content-Type"] == "application/json"
+    assert json.loads(request.content) == {
+        "message": "Test message",
+        "title": "Test title",
+    }
+
+
+@respx.mock
+async def test_rest_notify_post(hass: HomeAssistant) -> None:
+    """Test sending notification with POST method."""
+    # Mock the REST endpoint
+    respx.post("http://example.com/notify")
+
+    await setup_notify_component(
+        hass,
+        "rest_test",
+        "http://example.com/notify",
+        "POST",
+        title_param_name="title",
+    )
+
+    # Send a message through the service registry
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "rest_test",
+        {
+            "message": "Test message",
+            "title": "Test title",
+        },
+        blocking=True,
+    )
+
+    # Verify the request
+    assert len(respx.calls) == 1
+    request = respx.calls[0].request
+    assert request.method == "POST"
+    assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"
+    assert "message=Test+message" in request.content.decode()
+    assert "title=Test+title" in request.content.decode()
+
+
+@respx.mock
+async def test_rest_notify_multiple_targets_post_json(hass: HomeAssistant) -> None:
+    """Test sending notification with multiple targets."""
+    # Mock the REST endpoint
+    respx.post("http://example.com/notify")
+
+    await setup_notify_component(
+        hass,
+        "rest_test",
+        "http://example.com/notify",
+        "POST_JSON",
+        target_param_name="targets",
+        allow_multiple_targets=True,
+    )
+
+    # Send a message through the service registry
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "rest_test",
+        {
+            "message": "Test message",
+            "target": ["target1", "target2"],
+        },
+        blocking=True,
+    )
+
+    # Verify the request
+    assert len(respx.calls) == 1
+    request = respx.calls[0].request
+    assert request.method == "POST"
+    assert request.headers["Content-Type"] == "application/json"
+    assert json.loads(request.content) == {
+        "message": "Test message",
+        "targets": ["target1", "target2"],
+    }
+
+
+@respx.mock
+async def test_rest_notify_multiple_targets_post(hass: HomeAssistant) -> None:
+    """Test sending notification with POST method and form data."""
+    respx.post("http://example.com/notify")
+
+    await setup_notify_component(
+        hass,
+        "rest_test_post",
+        "http://example.com/notify",
+        "POST",
+        target_param_name="targets",
+        allow_multiple_targets=True,
+    )
+
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "rest_test_post",
+        {
+            "message": "Test message",
+            "target": ["target1", "target2"],
+        },
+        blocking=True,
+    )
+
+    assert len(respx.calls) == 1
+    request = respx.calls[0].request
+    assert request.method == "POST"
+    assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"
+    assert urllib.parse.parse_qs(request.content.decode()) == {
+        "message": ["Test message"],
+        "targets": ["target1", "target2"],
+    }
+
+
+@respx.mock
+async def test_rest_notify_multiple_targets_get(hass: HomeAssistant) -> None:
+    """Test sending notification with GET method and query parameters."""
+    respx.get("http://example.com/notify")
+
+    await setup_notify_component(
+        hass,
+        "rest_test_get",
+        "http://example.com/notify",
+        "GET",
+        target_param_name="targets",
+        allow_multiple_targets=True,
+    )
+
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "rest_test_get",
+        {
+            "message": "Test message",
+            "target": ["target1", "target2"],
+        },
+        blocking=True,
+    )
+
+    assert len(respx.calls) == 1
+    request = respx.calls[0].request
+    assert request.method == "GET"
+    assert urllib.parse.parse_qs(request.url.query.decode()) == {
+        "message": ["Test message"],
+        "targets": ["target1", "target2"],
+    }
+
+
+@respx.mock
+async def test_rest_notify_single_target(hass: HomeAssistant) -> None:
+    """Test sending notification with single target when multiple targets not allowed."""
+    # Mock the REST endpoint
+    respx.post("http://example.com/notify")
+
+    await setup_notify_component(
+        hass,
+        "rest_test",
+        "http://example.com/notify",
+        "POST_JSON",
+        target_param_name="target",
+        allow_multiple_targets=False,
+    )
+
+    # Send a message through the service registry
+    await hass.services.async_call(
+        notify.DOMAIN,
+        "rest_test",
+        {
+            "message": "Test message",
+            "target": ["target1", "target2"],  # Only first target should be used
+        },
+        blocking=True,
+    )
+
+    # Verify the request
+    assert len(respx.calls) == 1
+    request = respx.calls[0].request
+    assert request.method == "POST"
+    assert request.headers["Content-Type"] == "application/json"
+    assert json.loads(request.content) == {
+        "message": "Test message",
+        "target": "target1",
+    }
