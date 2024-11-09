@@ -223,7 +223,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 confidence = f_co
                 for attr in (ATTR_NAME, ATTR_MOTION):
                     if attr in face:
-                        state = face[attr]  # type: ignore[literal-required]
+                        state = face[attr]
                         break
 
         return state

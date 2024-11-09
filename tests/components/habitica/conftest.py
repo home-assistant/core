@@ -56,6 +56,11 @@ def mock_habitica(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
         f"{DEFAULT_URL}/api/v3/tasks/user",
         json=load_json_object_fixture("tasks.json", DOMAIN),
     )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/content",
+        params={"language": "en"},
+        json=load_json_object_fixture("content.json", DOMAIN),
+    )
 
     return aioclient_mock
 

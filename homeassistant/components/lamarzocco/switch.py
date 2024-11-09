@@ -4,10 +4,10 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import BoilerType
-from lmcloud.exceptions import RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoMachineConfig
+from pylamarzocco.const import BoilerType
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
 
