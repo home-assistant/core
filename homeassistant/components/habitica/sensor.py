@@ -6,7 +6,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from math import floor
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
@@ -28,7 +27,7 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN, UNIT_TASKS
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
-from .util import entity_used_in, get_attribute_points
+from .util import entity_used_in, get_attribute_points, get_attributes_total
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,14 +160,7 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.STRENGTH,
         translation_key=HabitipySensorEntity.STRENGTH,
-        value_fn=(
-            lambda user, content: floor(
-                sum(
-                    value
-                    for value in get_attribute_points(user, content, "str").values()
-                )
-            )
-        ),
+        value_fn=lambda user, content: get_attributes_total(user, content, "str"),
         attributes_fn=lambda user, content: get_attribute_points(user, content, "str"),
         suggested_display_precision=0,
         native_unit_of_measurement="STR",
@@ -176,14 +168,7 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.INTELLIGENCE,
         translation_key=HabitipySensorEntity.INTELLIGENCE,
-        value_fn=(
-            lambda user, content: floor(
-                sum(
-                    value
-                    for value in get_attribute_points(user, content, "int").values()
-                )
-            )
-        ),
+        value_fn=lambda user, content: get_attributes_total(user, content, "int"),
         attributes_fn=lambda user, content: get_attribute_points(user, content, "int"),
         suggested_display_precision=0,
         native_unit_of_measurement="INT",
@@ -191,14 +176,7 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.PERCEPTION,
         translation_key=HabitipySensorEntity.PERCEPTION,
-        value_fn=(
-            lambda user, content: floor(
-                sum(
-                    value
-                    for value in get_attribute_points(user, content, "per").values()
-                )
-            )
-        ),
+        value_fn=lambda user, content: get_attributes_total(user, content, "per"),
         attributes_fn=lambda user, content: get_attribute_points(user, content, "per"),
         suggested_display_precision=0,
         native_unit_of_measurement="PER",
@@ -206,14 +184,7 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.CONSTITUTION,
         translation_key=HabitipySensorEntity.CONSTITUTION,
-        value_fn=(
-            lambda user, content: floor(
-                sum(
-                    value
-                    for value in get_attribute_points(user, content, "con").values()
-                )
-            )
-        ),
+        value_fn=lambda user, content: get_attributes_total(user, content, "con"),
         attributes_fn=lambda user, content: get_attribute_points(user, content, "con"),
         suggested_display_precision=0,
         native_unit_of_measurement="CON",

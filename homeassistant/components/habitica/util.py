@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+from math import floor
 from typing import TYPE_CHECKING, Any
 
 from dateutil.rrule import (
@@ -176,3 +177,12 @@ def get_attribute_points(
         "allocated": user["stats"][attribute],
         "buffs": user["stats"]["buffs"][attribute],
     }
+
+
+def get_attributes_total(
+    user: dict[str, Any], content: dict[str, Any], attribute: str
+) -> int:
+    """Get total attribute points."""
+    return floor(
+        sum(value for value in get_attribute_points(user, content, attribute).values())
+    )
