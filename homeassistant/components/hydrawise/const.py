@@ -10,7 +10,7 @@ DEFAULT_WATERING_TIME = timedelta(minutes=15)
 
 MANUFACTURER = "Hydrawise"
 
-SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = 120  # seconds
 
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
 
