@@ -490,7 +490,7 @@ async def test_score_task(
             },
             HTTPStatus.TOO_MANY_REQUESTS,
             ServiceValidationError,
-            "Rate limit exceeded, try again later",
+            RATE_LIMIT_EXCEPTION_MSG,
         ),
         (
             {
@@ -499,7 +499,7 @@ async def test_score_task(
             },
             HTTPStatus.BAD_REQUEST,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
         ),
         (
             {
