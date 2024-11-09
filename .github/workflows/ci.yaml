@@ -819,6 +819,10 @@ jobs:
     needs:
       - info
       - base
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
@@ -832,11 +836,11 @@ jobs:
             libgammu-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
@@ -854,7 +858,7 @@ jobs:
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@v4.4.3
         with:
-          name: pytest_buckets
+          name: pytest_buckets-${{ matrix.python-version }}
           path: pytest_buckets.txt
           overwrite: true
 
@@ -919,7 +923,7 @@ jobs:
       - name: Download pytest_buckets
         uses: actions/download-artifact@v4.1.8
         with:
-          name: pytest_buckets
+          name: pytest_buckets-${{ matrix.python-version }}
       - name: Compile English translations
         run: |
           . venv/bin/activate
