@@ -1358,6 +1358,13 @@ CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
 
+class UnitOfBloodGlucoseConcentration(StrEnum):
+    """Blood glucose concentration units."""
+
+    MILLIGRAMS_PER_DECILITER = "mg/dL"
+    MILLIMOLE_PER_LITER = "mmol/L"
+
+
 # Speed units
 class UnitOfSpeed(StrEnum):
     """Speed units."""

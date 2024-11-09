@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -32,6 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    BloodGlugoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -59,6 +61,7 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
+        BloodGlugoseConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -80,6 +83,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    BloodGlugoseConcentrationConverter: (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+        18,
+    ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
         UnitOfConductivity.MILLISIEMENS_PER_CM,
@@ -130,6 +138,20 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    BloodGlugoseConcentrationConverter: [
+        (
+            90,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+            5,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+        ),
+        (
+            1,
+            UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
+            18,
+            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        ),
+    ],
     ConductivityConverter: [
         # Deprecated to deprecated
         (5, UnitOfConductivity.SIEMENS, 5e3, UnitOfConductivity.MILLISIEMENS),
