@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADD_ENTITIES_CALLBACKS,
@@ -47,9 +48,24 @@ from .websocket import register_panel_and_ws_api
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the LCN component."""
+    hass.data.setdefault(DOMAIN, {})
+
+    # register service calls
+    for service_name, service in SERVICES:
+        if not hass.services.has_service(DOMAIN, service_name):
+            hass.services.async_register(
+                DOMAIN, service_name, service(hass).async_call_service, service.schema
+            )
+
+    # register frontend panel
+    await register_panel_and_ws_api(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     if config_entry.entry_id in hass.data[DOMAIN]:
         return False
 
@@ -109,15 +125,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     lcn_connection.register_for_inputs(input_received)
 
-    # register service calls
-    for service_name, service in SERVICES:
-        if not hass.services.has_service(DOMAIN, service_name):
-            hass.services.async_register(
-                DOMAIN, service_name, service(hass).async_call_service, service.schema
-            )
-
-    await register_panel_and_ws_api(hass)
-
     return True
 
 
@@ -168,8 +175,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         host = hass.data[DOMAIN].pop(config_entry.entry_id)
         await host[CONNECTION].async_close()
 
-    # unregister service calls
-    if unload_ok and not hass.data[DOMAIN]:  # check if this is the last entry to unload
+    # unregister service calls if this is the last entry to unload
+    if unload_ok and not hass.data[DOMAIN]:
         for service_name, _ in SERVICES:
             hass.services.async_remove(DOMAIN, service_name)
 
