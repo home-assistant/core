@@ -904,7 +904,7 @@ growattServer==1.5.0
 gspread==5.5.0
 
 # homeassistant.components.profiler
-guppy3==3.1.4.post1
+guppy3==3.1.4.post1;python_version<'3.13'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -971,7 +971,7 @@ httplib2==0.20.4
 huawei-lte-api==1.10.0
 
 # homeassistant.components.huum
-huum==0.7.11
+huum==0.7.11;python_version<'3.13'
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -1349,7 +1349,7 @@ prometheus-client==0.21.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.0.0
+psutil==6.1.0
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
@@ -1692,7 +1692,7 @@ pynetgear==0.10.10
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.1
+pynordpool==0.2.2
 
 # homeassistant.components.nuki
 pynuki==1.6.3
