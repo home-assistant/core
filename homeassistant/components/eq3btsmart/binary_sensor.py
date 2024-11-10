@@ -52,8 +52,7 @@ class BusySensor(Eq3Entity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return if the thermostat connection is busy."""
 
-        is_busy: bool = self._thermostat.is_busy
-        return is_busy
+        return self._thermostat.is_busy
 
     @property
     def available(self) -> bool:
@@ -73,8 +72,7 @@ class ConnectedSensor(Eq3Entity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return if the thermostat is connected."""
 
-        is_connected: bool = self._thermostat.is_connected
-        return is_connected
+        return self._thermostat.is_connected
 
     @property
     def available(self) -> bool:
@@ -97,8 +95,7 @@ class BatterySensor(Eq3Entity, BinarySensorEntity):
         if self._thermostat.status is None:
             return None
 
-        is_low_battery: bool = self._thermostat.status.is_low_battery
-        return is_low_battery
+        return self._thermostat.status.is_low_battery
 
 
 class WindowOpenSensor(Eq3Entity, BinarySensorEntity):
@@ -114,8 +111,7 @@ class WindowOpenSensor(Eq3Entity, BinarySensorEntity):
         if self._thermostat.status is None:
             return None
 
-        is_window_open: bool = self._thermostat.status.is_window_open
-        return is_window_open
+        return self._thermostat.status.is_window_open
 
 
 class DSTSensor(Eq3Entity, BinarySensorEntity):
@@ -131,5 +127,4 @@ class DSTSensor(Eq3Entity, BinarySensorEntity):
         if self._thermostat.status is None:
             return None
 
-        is_dst: bool = self._thermostat.status.is_dst
-        return is_dst
+        return self._thermostat.status.is_dst

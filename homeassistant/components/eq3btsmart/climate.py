@@ -89,6 +89,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _async_on_status_updated(self) -> None:
         """Handle updated status from the thermostat."""
 
+        if self._thermostat.status is None:
+            return
+
         self._target_temperature = self._thermostat.status.target_temperature.value
         self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
         self._attr_current_temperature = self._get_current_temperature()
@@ -100,13 +103,16 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _async_on_device_updated(self) -> None:
         """Handle updated device data from the thermostat."""
 
+        if self._thermostat.device_data is None:
+            return
+
         device_registry = dr.async_get(self.hass)
         if device := device_registry.async_get_device(
             connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
         ):
             device_registry.async_update_device(
                 device.id,
-                sw_version=self._thermostat.device_data.firmware_version,
+                sw_version=str(self._thermostat.device_data.firmware_version),
                 serial_number=self._thermostat.device_data.device_serial.value,
             )
 
@@ -211,7 +217,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self.async_write_ha_state()
 
         try:
-            await self._thermostat.async_set_temperature(self._target_temperature)
+            await self._thermostat.async_set_temperature(temperature)
         except Eq3Exception:
             _LOGGER.error(
                 "[%s] Failed setting temperature", self._eq3_config.mac_address
