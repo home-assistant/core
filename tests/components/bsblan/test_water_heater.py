@@ -170,7 +170,9 @@ async def test_set_temperature_failure(
 
     mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
-    with pytest.raises(HomeAssistantError, match="set_temperature_error"):
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while setting the temperature"
+    ):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
             service=SERVICE_SET_TEMPERATURE,
@@ -195,7 +197,7 @@ async def test_operation_mode_error(
     mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
     with pytest.raises(
-        HomeAssistantError, match="Failed to set operation mode for water heater"
+        HomeAssistantError, match="An error occurred while setting the operation mode"
     ):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
