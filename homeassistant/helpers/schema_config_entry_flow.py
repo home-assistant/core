@@ -421,8 +421,6 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         options, which is the union of stored options and user input from the options
         flow steps.
         """
-        # Although `self.options` is most likely unused, it is safer to keep both
-        # `self.options` and `self._common_handler.options` referring to the same object
         self._options = copy.deepcopy(dict(config_entry.options))
         self._common_handler = SchemaCommonFlowHandler(self, options_flow, self.options)
         self._async_options_flow_finished = async_options_flow_finished
@@ -436,6 +434,11 @@ class SchemaOptionsFlowHandler(OptionsFlow):
 
         if async_setup_preview:
             setattr(self, "async_setup_preview", async_setup_preview)
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options."""
+        return self._options
 
     @staticmethod
     def _async_step(

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import HA_MANAGED_API_PORT, HA_MANAGED_URL
+from .const import HA_MANAGED_API_PORT, HA_MANAGED_RTSP_PORT, HA_MANAGED_URL
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
@@ -24,15 +24,16 @@ _RESPAWN_COOLDOWN = 1
 
 # Default configuration for HA
 # - Api is listening only on localhost
-# - Disable rtsp listener
+# - Enable rtsp for localhost only as ffmpeg needs it
 # - Clear default ice servers
-_GO2RTC_CONFIG_FORMAT = r"""
+_GO2RTC_CONFIG_FORMAT = r"""# This file is managed by Home Assistant
+# Do not edit it manually
+
 api:
   listen: "{api_ip}:{api_port}"
 
 rtsp:
-  # ffmpeg needs rtsp for opus audio transcoding
-  listen: "127.0.0.1:18554"
+  listen: "127.0.0.1:{rtsp_port}"
 
 webrtc:
   listen: ":18555/tcp"
@@ -67,7 +68,9 @@ def _create_temp_file(api_ip: str) -> str:
     with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
         file.write(
             _GO2RTC_CONFIG_FORMAT.format(
-                api_ip=api_ip, api_port=HA_MANAGED_API_PORT
+                api_ip=api_ip,
+                api_port=HA_MANAGED_API_PORT,
+                rtsp_port=HA_MANAGED_RTSP_PORT,
             ).encode()
         )
         return file.name

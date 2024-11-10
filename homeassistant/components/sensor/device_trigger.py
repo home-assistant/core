@@ -36,6 +36,7 @@ CONF_APPARENT_POWER = "apparent_power"
 CONF_AQI = "aqi"
 CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_BATTERY_LEVEL = "battery_level"
+CONF_BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CONDUCTIVITY = "conductivity"
@@ -86,6 +87,9 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_AQI}],
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: [
+        {CONF_TYPE: CONF_BLOOD_GLUCOSE_CONCENTRATION}
+    ],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
     SensorDeviceClass.CONDUCTIVITY: [{CONF_TYPE: CONF_CONDUCTIVITY}],
@@ -151,6 +155,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_AQI,
                     CONF_ATMOSPHERIC_PRESSURE,
                     CONF_BATTERY_LEVEL,
+                    CONF_BLOOD_GLUCOSE_CONCENTRATION,
                     CONF_CO,
                     CONF_CO2,
                     CONF_CONDUCTIVITY,

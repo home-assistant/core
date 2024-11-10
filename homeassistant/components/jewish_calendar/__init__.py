@@ -5,23 +5,17 @@ from __future__ import annotations
 from functools import partial
 
 from hdate import Location
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     CONF_TIME_ZONE,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BINARY_SENSORS
 from .const import (
@@ -32,39 +26,12 @@ from .const import (
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
-    DEFAULT_NAME,
     DOMAIN,
 )
 from .entity import JewishCalendarConfigEntry, JewishCalendarData
 from .sensor import INFO_SENSORS, TIME_SENSORS
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(DOMAIN),
-            {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
-                    ["hebrew", "english"]
-                ),
-                vol.Optional(
-                    CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT
-                ): int,
-                # Default of 0 means use 8.5 degrees / 'three_stars' time.
-                vol.Optional(
-                    CONF_HAVDALAH_OFFSET_MINUTES,
-                    default=DEFAULT_HAVDALAH_OFFSET_MINUTES,
-                ): int,
-            },
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def get_unique_prefix(
@@ -89,35 +56,6 @@ def get_unique_prefix(
     ]
     prefix = "_".join(map(str, config_properties))
     return f"{prefix}"
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Jewish Calendar component."""
-    if DOMAIN not in config:
-        return True
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        breaks_in_ha_version="2024.12.0",
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": DEFAULT_NAME,
-        },
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(
