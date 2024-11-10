@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONTROLLER, DOMAIN
+from .const import DOMAIN
 from .controller import ZimiController
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,9 +57,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_registry.async_remove_device(device_id=zimi_device.id)
 
-    if not device_registry.async_get_device(
-        identifiers={(DOMAIN, controller.controller.mac)}
-    ):
-        hass.data.pop(CONTROLLER)
-        return True
     return False
