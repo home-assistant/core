@@ -27,6 +27,9 @@ ENTITY_NAME_CONNECTED = "Connected"
 ENTITY_NAME_DST = "dSt"
 ENTITY_NAME_WINDOW_OPEN = "Window Open"
 
+TRANSLATION_KEY_BUSY = "busy"
+TRANSLATION_KEY_DST = "dst"
+
 VALUE_KEY_BUSY = "is_busy"
 VALUE_KEY_CONNECTED = "is_connected"
 VALUE_KEY_LOW_BATTERY = "is_low_battery"
