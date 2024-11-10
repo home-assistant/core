@@ -19,6 +19,7 @@ from .const import DOMAIN, SIGNAL_THERMOSTAT_CONNECTED, SIGNAL_THERMOSTAT_DISCON
 from .models import Eq3Config, Eq3ConfigEntryData
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
 ]
 
