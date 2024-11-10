@@ -19,6 +19,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import (
@@ -96,6 +97,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up services for Habitica integration."""
 
     async def handle_api_call(call: ServiceCall) -> None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_api_call",
+            breaks_in_ha_version="2025.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_api_call",
+        )
+        _LOGGER.warning(
+            "Deprecated action called: 'habitica.api_call' is deprecated and will be removed in Home Assistant version 2025.6.0"
+        )
+
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
