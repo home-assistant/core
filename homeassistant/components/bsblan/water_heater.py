@@ -87,7 +87,6 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
             await self.coordinator.client.set_hot_water(nominal_setpoint=temperature)
         except BSBLANError as err:
             raise HomeAssistantError(
-                "Failed to set target temperature for water heater",
                 translation_domain=DOMAIN,
                 translation_key="set_temperature_error",
             ) from err
