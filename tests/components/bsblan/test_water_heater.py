@@ -170,9 +170,7 @@ async def test_set_temperature_failure(
 
     mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
-    with pytest.raises(
-        HomeAssistantError, match="Failed to set target temperature for water heater"
-    ):
+    with pytest.raises(HomeAssistantError, match="set_temperature_error"):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
             service=SERVICE_SET_TEMPERATURE,
