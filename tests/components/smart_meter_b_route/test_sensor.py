@@ -1,6 +1,6 @@
 """Tests for the Smart Meter B-Route sensor."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from momonga import MomongaError
 import pytest
@@ -65,11 +65,9 @@ async def test_smart_meter_b_route_sensor_no_update(
     config_entry = configure_integration(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    with patch.object(
-        mock_momonga, "get_instantaneous_current", side_effect=MomongaError
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_momonga.return_value.get_instantaneous_current.side_effect = MomongaError
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
     assert entity.state is STATE_UNAVAILABLE
