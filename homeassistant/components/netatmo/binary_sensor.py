@@ -35,10 +35,7 @@ def process_open_status(status: StateType) -> bool | None:
     if not isinstance(status, str):
         return None
 
-    if status == "open":
-        return True
-
-    return False
+    return status == "open"
 
 
 def process_monitoring_status(status: StateType) -> bool | None:
