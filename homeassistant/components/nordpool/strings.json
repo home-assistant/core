@@ -115,11 +115,14 @@
     "entry_not_loaded": {
       "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
     },
-    "date_to_far_in_past": {
-      "message": "Only dates two months in the past is allowed."
+    "authentication_error": {
+      "message": "There was an authentication error as you tried to retrieve data too far in the past."
     },
-    "date_to_far_in_future": {
-      "message": "Only dates one day in the future is allowed."
+    "empty_response": {
+      "message": "Nord Pool has not posted market prices for the provided date."
+    },
+    "connection_error": {
+      "message": "There was a connection error connecting to the API. Try again later."
     }
   }
 }

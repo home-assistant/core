@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 import logging
 from typing import TYPE_CHECKING
 
-from pynordpool import Currency
+from pynordpool import (
+    Currency,
+    NordPoolAuthenticationError,
+    NordPoolEmptyResponseError,
+    NordPoolError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -66,40 +71,41 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         asked_date: date = call.data[ATTR_DATE]
         client = entry.runtime_data.client
-        areas = call.data.get(ATTR_AREAS)
+        areas: list[str] | None = call.data.get(ATTR_AREAS)
         if not areas:
             areas = entry.data[ATTR_AREAS]
-        currency = call.data.get(ATTR_CURRENCY)
+        currency: str | None = call.data.get(ATTR_CURRENCY)
         if not currency:
             currency = entry.data[ATTR_CURRENCY]
 
+        if TYPE_CHECKING:
+            assert isinstance(areas, list)
+            assert isinstance(currency, str)
         areas = [area.upper() for area in areas]
         currency = currency.upper()
 
-        today = dt_util.utcnow().date()
-        if asked_date.month - 2 < 1:
-            month = 12 + (today.month - 2)
-            past_date_valid = date(today.year - 1, month, today.day)
-        else:
-            past_date_valid = date(today.year, today.month - 2, today.day)
-
-        if asked_date < past_date_valid:
+        try:
+            price_data = await client.async_get_delivery_period(
+                datetime.combine(asked_date, dt_util.utcnow().time()),
+                Currency(currency),
+                areas,
+            )
+        except NordPoolAuthenticationError as error:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="date_to_far_in_past",
-            )
-        if asked_date > (date.today() + timedelta(days=1)):
+                translation_key="authentication_error",
+            ) from error
+        except NordPoolEmptyResponseError as error:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="date_to_far_in_future",
-            )
+                translation_key="empty_response",
+            ) from error
+        except NordPoolError as error:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from error
 
-        # Change to Auth error + Emtpty response
-        price_data = await client.async_get_delivery_period(
-            datetime.combine(asked_date, dt_util.utcnow().time()),
-            Currency(currency),
-            areas,
-        )
         result: dict[str, JsonValueType] = {}
         for area in areas:
             result[area] = [
