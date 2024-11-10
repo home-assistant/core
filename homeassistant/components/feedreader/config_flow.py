@@ -15,7 +15,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -46,9 +45,11 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return FeedReaderOptionsFlowHandler(config_entry)
+        return FeedReaderOptionsFlowHandler()
 
     def show_user_form(
         self,
@@ -147,7 +148,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reconfigure_successful")
 
 
-class FeedReaderOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class FeedReaderOptionsFlowHandler(OptionsFlow):
     """Handle an options flow."""
 
     async def async_step_init(
@@ -162,7 +163,9 @@ class FeedReaderOptionsFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_MAX_ENTRIES,
-                    default=self.options.get(CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES),
+                    default=self.config_entry.options.get(
+                        CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES
+                    ),
                 ): cv.positive_int,
             }
         )

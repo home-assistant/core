@@ -13,9 +13,9 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONNECT_TIMEOUT, STREAM_MAGIC_EXCEPTIONS
+from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SELECT]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,13 @@ async def async_setup_entry(
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await client.connect()
     except STREAM_MAGIC_EXCEPTIONS as err:
-        raise ConfigEntryNotReady(f"Error while connecting to {client.host}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="entry_cannot_connect",
+            translation_placeholders={
+                "host": client.host,
+            },
+        ) from err
     entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

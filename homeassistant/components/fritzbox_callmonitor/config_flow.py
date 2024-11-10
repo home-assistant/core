@@ -141,7 +141,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> FritzBoxCallMonitorOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return FritzBoxCallMonitorOptionsFlowHandler(config_entry)
+        return FritzBoxCallMonitorOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -277,10 +277,6 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class FritzBoxCallMonitorOptionsFlowHandler(OptionsFlow):
     """Handle a fritzbox_callmonitor options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     @classmethod
     def _are_prefixes_valid(cls, prefixes: str | None) -> bool:

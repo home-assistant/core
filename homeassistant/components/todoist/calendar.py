@@ -142,7 +142,7 @@ async def async_setup_platform(
     project_id_lookup = {}
 
     api = TodoistAPIAsync(token)
-    coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api, token)
+    coordinator = TodoistCoordinator(hass, _LOGGER, None, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
 
     async def _shutdown_coordinator(_: Event) -> None:
