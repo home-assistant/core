@@ -3,8 +3,6 @@
 from abc import ABC
 from dataclasses import dataclass
 
-from eq3btsmart.thermostat import Thermostat
-
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -16,13 +14,13 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util import slugify
 
+from . import Eq3ConfigEntry
 from .const import (
     DEVICE_MODEL,
     MANUFACTURER,
     SIGNAL_THERMOSTAT_CONNECTED,
     SIGNAL_THERMOSTAT_DISCONNECTED,
 )
-from .models import Eq3Config
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,8 +37,7 @@ class Eq3Entity(Entity, ABC):
 
     def __init__(
         self,
-        eq3_config: Eq3Config,
-        thermostat: Thermostat,
+        entry: Eq3ConfigEntry,
         entity_description: Eq3EntityDescription,
     ) -> None:
         """Initialize the eq3 entity."""
@@ -48,8 +45,8 @@ class Eq3Entity(Entity, ABC):
         self.entity_description: Eq3EntityDescription = entity_description
         super().__init__()
 
-        self._eq3_config = eq3_config
-        self._thermostat = thermostat
+        self._eq3_config = entry.runtime_data.eq3_config
+        self._thermostat = entry.runtime_data.thermostat
         self._attr_device_info = DeviceInfo(
             name=slugify(self._eq3_config.mac_address),
             manufacturer=MANUFACTURER,

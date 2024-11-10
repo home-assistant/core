@@ -10,14 +10,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Eq3ConfigEntry
 from .const import (
-    DOMAIN,
     ENTITY_NAME_BATTERY,
     ENTITY_NAME_BUSY,
     ENTITY_NAME_CONNECTED,
@@ -25,7 +24,6 @@ from .const import (
     ENTITY_NAME_WINDOW_OPEN,
 )
 from .entity import Eq3Entity, Eq3EntityDescription
-from .models import Eq3Config, Eq3ConfigEntryData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -85,16 +83,14 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: Eq3ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the entry."""
 
-    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][config_entry.entry_id]
     entities_to_add: list[Entity] = [
         Eq3BinarySensorEntity(
-            eq3_config_entry.eq3_config,
-            eq3_config_entry.thermostat,
+            entry,
             entity_description,
         )
         for entity_description in BINARY_SENSOR_ENTITY_DESCRIPTIONS
@@ -108,13 +104,12 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
 
     def __init__(
         self,
-        eq3_config: Eq3Config,
-        thermostat: Thermostat,
+        entry: Eq3ConfigEntry,
         entity_description: Eq3BinarySensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
 
-        super().__init__(eq3_config, thermostat, entity_description)
+        super().__init__(entry, entity_description)
         self.entity_description: Eq3BinarySensorEntityDescription = entity_description
 
     @property

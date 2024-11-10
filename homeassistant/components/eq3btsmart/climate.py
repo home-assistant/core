@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
 from eq3btsmart.exceptions import Eq3Exception
 
@@ -17,7 +16,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -25,8 +23,8 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import Eq3ConfigEntry
 from .const import (
-    DOMAIN,
     ENTITY_KEY_CLIMATE,
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
@@ -35,7 +33,6 @@ from .const import (
     TargetTemperatureSelector,
 )
 from .entity import Eq3Entity, Eq3EntityDescription
-from .models import Eq3Config, Eq3ConfigEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,18 +44,15 @@ class Eq3ClimateEntityDescription(Eq3EntityDescription, ClimateEntityDescription
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: Eq3ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Handle config entry setup."""
 
-    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][config_entry.entry_id]
-
     async_add_entities(
         [
             Eq3Climate(
-                eq3_config_entry.eq3_config,
-                eq3_config_entry.thermostat,
+                entry,
                 Eq3ClimateEntityDescription(key=ENTITY_KEY_CLIMATE, name=None),
             )
         ],
@@ -89,13 +83,12 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
     def __init__(
         self,
-        eq3_config: Eq3Config,
-        thermostat: Thermostat,
+        entry: Eq3ConfigEntry,
         entity_description: Eq3ClimateEntityDescription,
     ) -> None:
         """Initialize the entity."""
 
-        super().__init__(eq3_config, thermostat, entity_description)
+        super().__init__(entry, entity_description)
         self.entity_description: Eq3ClimateEntityDescription = entity_description
 
     @callback
