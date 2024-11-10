@@ -107,6 +107,7 @@ class FakeSubscriber(GoogleNestSubscriber):
     def __init__(self) -> None:  # pylint: disable=super-init-not-called
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
+        self._subscriber_name = "fake-name"
 
     def set_update_callback(self, target: Callable[[EventMessage], Awaitable[None]]):
         """Capture the callback set by Home Assistant."""
