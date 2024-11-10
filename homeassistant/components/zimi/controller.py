@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS, TIMEOUT, VERBOSITY, WATCHDOG
+from .const import CONF_TIMEOUT, CONF_VERBOSITY, CONF_WATCHDOG, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class ZimiController:
         self.hass = hass
         self.config_entry = config
 
-        if self.config_entry.data.get(VERBOSITY, 0) > 1:
+        if self.config_entry.data.get(CONF_VERBOSITY, 0) > 1:
             _LOGGER.setLevel(logging.DEBUG)
 
         _LOGGER.debug("Initialising:\n%s", pprint.pformat(self.config_entry.data))
@@ -50,7 +50,7 @@ class ZimiController:
     @property
     def timeout(self) -> int:
         """Return the timeout of this hub."""
-        return self.config_entry.data[TIMEOUT]
+        return self.config_entry.data[CONF_TIMEOUT]
 
     async def connect(self) -> bool:
         """Initialize Connection with the Zimi Controller."""
@@ -100,14 +100,16 @@ class ZimiController:
     @property
     def verbosity(self) -> int:
         """Return the verbosity of this hub."""
-        return self.config_entry.data[VERBOSITY]
+        return self.config_entry.data[CONF_VERBOSITY]
 
     @property
     def watchdog(self) -> int:
         """Return the watchdog timer of this hub."""
-        return self.config_entry.data[WATCHDOG]
+        return self.config_entry.data[CONF_WATCHDOG]
 
     @property
     def zcc_verbosity(self) -> int:
         """Return the verbosity of the zcc-helper."""
-        return self.config_entry.data[VERBOSITY] - 1  # Reduced verbosity for zcc-helper
+        return (
+            self.config_entry.data[CONF_VERBOSITY] - 1
+        )  # Reduced verbosity for zcc-helper

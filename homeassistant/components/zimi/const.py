@@ -4,7 +4,6 @@ CONTROLLER = "zimi_controller"
 DOMAIN = "zimi"
 PLATFORMS = ["light"]
 
-TIMEOUT = "timeout"
-VERBOSITY = "verbosity"
-WATCHDOG = "watchdog"
-MAC = "mac"
+CONF_TIMEOUT = "timeout"
+CONF_VERBOSITY = "verbosity"
+CONF_WATCHDOG = "watchdog"

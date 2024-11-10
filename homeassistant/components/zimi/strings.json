@@ -3,13 +3,16 @@
     "step": {
       "user": {
         "title": "Zimi",
-        "description": "You can find the MAC on the back of your Zimi Cloud Connect.",
+        "description": "Specify details of your Zimi Cloud Connect device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "mac": "MAC"
         },
         "data_description": {
-          "mac": "You can find the MAC on the back of your Zimi Cloud Connect."
+          "host": "Optional - If not entered HA will attempt to discover on LAN.",
+          "port": "Optional - If not entered HA will attempt to use the defualt value.",
+          "mac": "Mandatory - You can find the MAC on the back of your Zimi Cloud Connect."
         }
       }
     },
@@ -19,8 +22,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "timeout": "Connection timed out]",
       "invalid_host": "Invalid host name",
+      "invalid_mac": "Invalid MAC address",
       "connection_refused": "Connection refused",
-      "discovery_failure": "ZCC discovery via UDP failed."
+      "discovery_failure": "ZCC discovery on LAN failed - specify host and try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
