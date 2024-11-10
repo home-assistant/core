@@ -1,7 +1,7 @@
 """Common fixtures for the Smart Meter B-route tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -17,30 +17,25 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_momonga(exception=None) -> Generator[Mock]:
+def mock_momonga(exception=None) -> Generator[AsyncMock]:
     """Mock for Momonga class."""
 
-    class MockMomonga:
-        def __init__(self, *args, **kwargs) -> None:
-            if exception:
-                raise exception
-
-        def open(self):
-            pass
-
-        def get_instantaneous_current(self) -> dict[str, float]:
-            return {
-                "r phase current": 1,
-                "t phase current": 2,
-            }
-
-        def get_instantaneous_power(self) -> float:
-            return 3
-
-        def get_measured_cumulative_energy(self) -> float:
-            return 4
-
-    with patch(
-        "homeassistant.components.smart_meter_b_route.coordinator.Momonga", MockMomonga
+    with (
+        patch(
+            "homeassistant.components.smart_meter_b_route.coordinator.Momonga",
+            autospec=True,
+        ) as mock_momonga,
+        patch(
+            "homeassistant.components.smart_meter_b_route.config_flow.Momonga",
+            new=mock_momonga,
+        ),
     ):
-        yield MockMomonga
+        client = mock_momonga.return_value
+        client.__enter__.return_value = client
+        client.get_instantaneous_current.return_value = {
+            "r phase current": 1,
+            "t phase current": 2,
+        }
+        client.get_instantaneous_power.return_value = 3
+        client.get_measured_cumulative_energy.return_value = 4
+        yield mock_momonga

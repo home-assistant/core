@@ -1,6 +1,6 @@
 """Tests for the Smart Meter B Route Coordinator."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock
 
 from momonga import MomongaError
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 async def test_broute_update_coordinator(
-    hass: HomeAssistant, mock_momonga: Mock
+    hass: HomeAssistant, mock_momonga: AsyncMock
 ) -> None:
     """Test the BRouteUpdateCoordinator."""
     coordinator = BRouteUpdateCoordinator(hass, "device", "id", "password")
@@ -32,11 +32,9 @@ async def test_broute_update_coordinator(
         ATTR_API_TOTAL_CONSUMPTION: 4,
     }
 
-    with patch.object(
-        mock_momonga, "get_instantaneous_current", side_effect=MomongaError
-    ):
-        await coordinator.async_refresh()
+    mock_momonga.return_value.get_instantaneous_current.side_effect = MomongaError
+    await coordinator.async_refresh()
 
-        assert coordinator.last_update_success is False
-        assert coordinator.last_exception is not None
-        assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_update_success is False
+    assert coordinator.last_exception is not None
+    assert isinstance(coordinator.last_exception, UpdateFailed)
