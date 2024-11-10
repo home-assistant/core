@@ -177,7 +177,9 @@ class CommandSensor(ManualTriggerSensorEntity):
 
         self._attr_native_value = None
         if self._value_template is not None and value is not None:
-            value = self._value_template.async_render_with_possible_json_value(value)
+            value = self._value_template.async_render_with_possible_json_value(
+                value, None
+            )
 
         if self.device_class not in {
             SensorDeviceClass.DATE,
