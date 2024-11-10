@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from pysnooz.api import SnoozDeviceState, UnknownSnoozState
 from pysnooz.commands import SnoozCommandResult, SnoozCommandResultStatus
@@ -31,6 +31,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import SnoozFixture, create_mock_snooz, create_mock_snooz_config_entry
+
+from tests.components.bluetooth import generate_ble_device
 
 
 async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
@@ -200,7 +202,14 @@ async def test_restore_state(
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
-    await create_mock_snooz_config_entry(hass, device)
+    with (
+        patch("homeassistant.components.snooz.SnoozDevice", return_value=device),
+        patch(
+            "homeassistant.components.snooz.async_ble_device_from_address",
+            return_value=generate_ble_device(device.address, device.name),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
 
     # should match last known state
     state = hass.states.get(entity_id)
@@ -225,7 +234,14 @@ async def test_restore_unknown_state(
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
-    await create_mock_snooz_config_entry(hass, device)
+    with (
+        patch("homeassistant.components.snooz.SnoozDevice", return_value=device),
+        patch(
+            "homeassistant.components.snooz.async_ble_device_from_address",
+            return_value=generate_ble_device(device.address, device.name),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
 
     # should match last known state
     state = hass.states.get(entity_id)

@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_water_heater[water_heater.test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 75,
+      'min_temp': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.test_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'osoenergy',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 9>,
+    'translation_key': None,
+    'unique_id': 'osoenergy_water_heater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_heater[water_heater.test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 60,
+      'friendly_name': 'TEST DEVICE',
+      'max_temp': 75,
+      'min_temp': 10,
+      'supported_features': <WaterHeaterEntityFeature: 9>,
+      'target_temp_high': 63,
+      'target_temp_low': 57,
+      'temperature': 60,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'eco',
+  })
+# ---

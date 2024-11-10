@@ -150,6 +150,28 @@ async def test_archive_package(
     )
 
 
+async def test_packages_with_none_timestamp(
+    hass: HomeAssistant,
+    mock_seventeentrack: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure service returns all packages when non provided."""
+    await _mock_invalid_packages(mock_seventeentrack)
+    await init_integration(hass, mock_config_entry)
+    service_response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PACKAGES,
+        {
+            CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert service_response == snapshot
+
+
 async def _mock_packages(mock_seventeentrack):
     package1 = get_package(status=10)
     package2 = get_package(
@@ -166,4 +188,20 @@ async def _mock_packages(mock_seventeentrack):
         package1,
         package2,
         package3,
+    ]
+
+
+async def _mock_invalid_packages(mock_seventeentrack):
+    package1 = get_package(
+        status=10,
+        timestamp=None,
+    )
+    package2 = get_package(
+        tracking_number="789",
+        friendly_name="friendly name 2",
+        status=40,
+    )
+    mock_seventeentrack.return_value.profile.packages.return_value = [
+        package1,
+        package2,
     ]

@@ -6,7 +6,7 @@ from typing import Any
 from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -32,7 +32,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     host: str | None = None
     verify_ssl: bool = True
-    entry: ConfigEntry
 
     async def check_connection(
         self, api_token: str
@@ -89,7 +88,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an API authentication error."""
         self.host = entry_data[CONF_HOST]
         self.verify_ssl = entry_data.get(CONF_VERIFY_SSL, True)
-        self.entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -102,15 +100,12 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_TOKEN],
             )
             if not errors:
-                if self.entry.unique_id == user_id:
-                    return self.async_update_reload_and_abort(
-                        self.entry,
-                        data={
-                            **self.entry.data,
-                            CONF_API_TOKEN: user_input[CONF_API_TOKEN],
-                        },
-                    )
-                return self.async_abort(reason="wrong_account")
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
+                )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
@@ -121,13 +116,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        self.entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration confirmation."""
         errors: dict[str, str] = {}
         if user_input:
             self.host = user_input[CONF_HOST]
@@ -136,20 +124,18 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_TOKEN],
             )
             if not errors:
-                if self.entry.unique_id == user_id:
-                    return self.async_update_reload_and_abort(
-                        self.entry,
-                        data={
-                            **self.entry.data,
-                            CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                            CONF_HOST: user_input[CONF_HOST],
-                            CONF_API_TOKEN: user_input[CONF_API_TOKEN],
-                        },
-                        reason="reconfigure_successful",
-                    )
-                return self.async_abort(reason="wrong_account")
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                    },
+                )
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=USER_SCHEMA,
             errors=errors,
         )

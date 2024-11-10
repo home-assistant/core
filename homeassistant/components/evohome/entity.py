@@ -42,7 +42,6 @@ class EvoDevice(Entity):
         """Initialize an evohome-compatible entity (TCS, DHW, zone)."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
-        self._evo_tcs = evo_broker.tcs
 
         self._device_state_attrs: dict[str, Any] = {}
 
@@ -100,6 +99,8 @@ class EvoChild(EvoDevice):
     ) -> None:
         """Initialize an evohome-compatible child entity (DHW, zone)."""
         super().__init__(evo_broker, evo_device)
+
+        self._evo_tcs = evo_device.tcs
 
         self._schedule: dict[str, Any] = {}
         self._setpoints: dict[str, Any] = {}
