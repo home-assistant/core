@@ -1,8 +1,10 @@
 """Platform for eQ-3 climate entities."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
+from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
 from eq3btsmart.exceptions import Eq3Exception
 
@@ -10,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     PRESET_NONE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -24,16 +27,22 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
+    ENTITY_KEY_CLIMATE,
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
     CurrentTemperatureSelector,
     Preset,
     TargetTemperatureSelector,
 )
-from .entity import Eq3Entity
-from .models import Eq3ConfigEntryData
+from .entity import Eq3Entity, Eq3EntityDescription
+from .models import Eq3Config, Eq3ConfigEntryData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class Eq3ClimateEntityDescription(Eq3EntityDescription, ClimateEntityDescription):
+    """Entity description for eQ-3 climate devices."""
 
 
 async def async_setup_entry(
@@ -46,14 +55,19 @@ async def async_setup_entry(
     eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [Eq3Climate(eq3_config_entry.eq3_config, eq3_config_entry.thermostat)],
+        [
+            Eq3Climate(
+                eq3_config_entry.eq3_config,
+                eq3_config_entry.thermostat,
+                Eq3ClimateEntityDescription(key=ENTITY_KEY_CLIMATE, name=None),
+            )
+        ],
     )
 
 
 class Eq3Climate(Eq3Entity, ClimateEntity):
     """Climate entity to represent a eQ-3 thermostat."""
 
-    _attr_name = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
@@ -72,6 +86,17 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _attr_hvac_action: HVACAction | None = None
     _attr_preset_mode: str | None = None
     _target_temperature: float | None = None
+
+    def __init__(
+        self,
+        eq3_config: Eq3Config,
+        thermostat: Thermostat,
+        entity_description: Eq3ClimateEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+
+        super().__init__(eq3_config, thermostat, entity_description)
+        self.entity_description: Eq3ClimateEntityDescription = entity_description
 
     @callback
     def _async_on_updated(self) -> None:

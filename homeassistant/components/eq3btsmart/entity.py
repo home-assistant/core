@@ -1,6 +1,7 @@
 """Base class for all eQ-3 entities."""
 
 from abc import ABC
+from dataclasses import dataclass
 
 from eq3btsmart.thermostat import Thermostat
 
@@ -11,7 +12,7 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util import slugify
 
@@ -24,17 +25,31 @@ from .const import (
 from .models import Eq3Config
 
 
+@dataclass(frozen=True, kw_only=True)
+class Eq3EntityDescription(EntityDescription):
+    """Entity description for eQ-3 devices."""
+
+    always_available: bool = False
+
+
 class Eq3Entity(Entity, ABC):
     """Base class for all eQ-3 entities."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, eq3_config: Eq3Config, thermostat: Thermostat) -> None:
+    def __init__(
+        self,
+        eq3_config: Eq3Config,
+        thermostat: Thermostat,
+        entity_description: Eq3EntityDescription,
+    ) -> None:
         """Initialize the eq3 entity."""
+
+        self.entity_description: Eq3EntityDescription = entity_description
+        super().__init__()
 
         self._eq3_config = eq3_config
         self._thermostat = thermostat
-
         self._attr_device_info = DeviceInfo(
             name=slugify(self._eq3_config.mac_address),
             manufacturer=MANUFACTURER,
@@ -84,10 +99,12 @@ class Eq3Entity(Entity, ABC):
 
     @callback
     def _async_on_disconnected(self) -> None:
-        self._attr_available = False
+        if not self.entity_description.always_available:
+            self._attr_available = False
         self.async_write_ha_state()
 
     @callback
     def _async_on_connected(self) -> None:
-        self._attr_available = True
+        if not self.entity_description.always_available:
+            self._attr_available = True
         self.async_write_ha_state()
