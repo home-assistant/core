@@ -155,7 +155,7 @@ class SecuritySystem(HomeAccessory):
     def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state: str | AlarmControlPanelState = new_state.state
-        if hass_state == "None" or hass_state in {STATE_UNKNOWN, STATE_UNAVAILABLE}:
+        if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
             # Bail out early for no state, state unknown or state unavailable
             return
         if hass_state is not None:
