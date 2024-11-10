@@ -78,21 +78,6 @@ METER_PRO_CO2_SENSOR_DESCRIPTIONS = (
     ),
 )
 
-HUB2_SENSOR_DESCRIPTIONS = (
-    SensorEntityDescription(
-        key=SENSOR_TYPE_TEMPERATURE,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
-    SensorEntityDescription(
-        key=SENSOR_TYPE_HUMIDITY,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
