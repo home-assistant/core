@@ -17,8 +17,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController, FibaroDevice
+from . import FibaroController
 from .const import DOMAIN
+from .entity import FibaroEntity
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", BinarySensorDeviceClass.MOISTURE],
@@ -56,7 +57,7 @@ async def async_setup_entry(
     )
 
 
-class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
+class FibaroBinarySensor(FibaroEntity, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
     def __init__(self, fibaro_device: DeviceModel) -> None:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 
 import voluptuous as vol
 
@@ -20,10 +19,11 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
+from . import CertExpiryConfigEntry
 from .const import DEFAULT_PORT, DOMAIN
+from .coordinator import CertExpiryDataUpdateCoordinator
+from .entity import CertExpiryEntity
 
 SCAN_INTERVAL = timedelta(hours=12)
 
@@ -71,20 +71,6 @@ async def async_setup_entry(
     sensors = [SSLCertificateTimestamp(coordinator)]
 
     async_add_entities(sensors, True)
-
-
-class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
-    """Defines a base Cert Expiry entity."""
-
-    _attr_has_entity_name = True
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return additional sensor state attributes."""
-        return {
-            "is_valid": self.coordinator.is_cert_valid,
-            "error": str(self.coordinator.cert_error),
-        }
 
 
 class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):

@@ -57,7 +57,9 @@ def main():
         )
 
     for key in sorted(msg):
-        print("\n{}\n - {}".format(key, "\n - ".join(msg[key])))
+        print(f"\n{key}")
+        for val in msg[key]:
+            print(f" - {val}")
 
 
 if __name__ == "__main__":

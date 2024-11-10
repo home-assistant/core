@@ -336,6 +336,22 @@ async def test_zeroconf_cannot_connect(
     assert result2["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_legacy_cannot_connect(
+    hass: HomeAssistant, mock_smlight_client: MagicMock
+) -> None:
+    """Test we abort flow on zeroconf discovery unsupported firmware."""
+    mock_smlight_client.get_info.side_effect = SmlightConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO_LEGACY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 @pytest.mark.usefixtures("mock_smlight_client")
 async def test_zeroconf_legacy_mac(
     hass: HomeAssistant, mock_smlight_client: MagicMock, mock_setup_entry: AsyncMock

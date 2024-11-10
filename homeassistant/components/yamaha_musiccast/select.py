@@ -9,8 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
-from .const import TRANSLATION_KEY_MAPPING
+from .const import DOMAIN, TRANSLATION_KEY_MAPPING
+from .coordinator import MusicCastDataUpdateCoordinator
+from .entity import MusicCastCapabilityEntity
 
 
 async def async_setup_entry(

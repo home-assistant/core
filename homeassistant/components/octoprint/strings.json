@@ -33,7 +33,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "progress": {
-      "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."
+      "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
     }
   },
   "exceptions": {

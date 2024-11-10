@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
 from .const import CONF_PAYLOAD_LENGTH, KNX_ADDRESS, KNX_MODULE_KEY
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 
 
 async def async_setup_entry(

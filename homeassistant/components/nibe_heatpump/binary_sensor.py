@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import CoilEntity, Coordinator
+from .coordinator import CoilCoordinator
+from .entity import CoilEntity
 
 
 async def async_setup_entry(
@@ -21,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         BinarySensor(coordinator, coil)
@@ -35,7 +36,7 @@ class BinarySensor(CoilEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
+    def __init__(self, coordinator: CoilCoordinator, coil: Coil) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
 

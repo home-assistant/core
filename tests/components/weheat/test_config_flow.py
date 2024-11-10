@@ -1,6 +1,6 @@
 """Test the Weheat config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -23,6 +23,7 @@ from .const import (
     MOCK_ACCESS_TOKEN,
     MOCK_REFRESH_TOKEN,
     USER_UUID_1,
+    USER_UUID_2,
 )
 
 from tests.common import MockConfigEntry
@@ -97,6 +98,51 @@ async def test_duplicate_unique_id(
     # only care that the config flow is aborted
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("logged_in_user", "expected_reason"),
+    [(USER_UUID_1, "reauth_successful"), (USER_UUID_2, "wrong_account")],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_user_id: AsyncMock,
+    mock_weheat_discover: AsyncMock,
+    setup_credentials,
+    logged_in_user: str,
+    expected_reason: str,
+) -> None:
+    """Check reauth flow both with and without the correct logged in user."""
+    mock_user_id.return_value = logged_in_user
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=USER_UUID_1,
+    )
+
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"],
+        user_input={},
+    )
+
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == expected_reason
+    assert entry.unique_id == USER_UUID_1
 
 
 async def handle_oauth(

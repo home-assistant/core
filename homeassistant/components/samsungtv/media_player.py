@@ -284,7 +284,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def _async_launch_app(self, app_id: str) -> None:
         """Send launch_app to the tv."""
         if self._bridge.power_off_in_progress:
-            LOGGER.info("TV is powering off, not sending launch_app command")
+            LOGGER.debug("TV is powering off, not sending launch_app command")
             return
         assert isinstance(self._bridge, SamsungTVWSBridge)
         await self._bridge.async_launch_app(app_id)
@@ -293,7 +293,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         """Send a key to the tv and handles exceptions."""
         assert keys
         if self._bridge.power_off_in_progress and keys[0] != "KEY_POWEROFF":
-            LOGGER.info("TV is powering off, not sending keys: %s", keys)
+            LOGGER.debug("TV is powering off, not sending keys: %s", keys)
             return
         await self._bridge.async_send_keys(keys)
 
@@ -304,7 +304,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
         if (dmr_device := self._dmr_device) is None:
-            LOGGER.info("Upnp services are not available on %s", self._host)
+            LOGGER.warning("Upnp services are not available on %s", self._host)
             return
         try:
             await dmr_device.async_set_volume_level(volume)

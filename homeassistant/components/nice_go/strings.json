@@ -53,5 +53,25 @@
       "title": "Firmware update required",
       "description": "Your device ({device_name}) requires a firmware update on the Nice G.O. app in order to work with this integration. Please update the firmware on the Nice G.O. app and reconfigure this integration."
     }
+  },
+  "exceptions": {
+    "close_cover_error": {
+      "message": "Error closing the barrier: {exception}"
+    },
+    "open_cover_error": {
+      "message": "Error opening the barrier: {exception}"
+    },
+    "light_on_error": {
+      "message": "Error while turning on the light: {exception}"
+    },
+    "light_off_error": {
+      "message": "Error while turning off the light: {exception}"
+    },
+    "switch_on_error": {
+      "message": "Error while turning on the switch: {exception}"
+    },
+    "switch_off_error": {
+      "message": "Error while turning off the switch: {exception}"
+    }
   }
 }

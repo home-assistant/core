@@ -312,7 +312,7 @@ async def test_auth_access_signed_path_with_refresh_token(
     assert data["user_id"] == refresh_token.user.id
 
     # Use signature on other path
-    req = await client.get("/another_path?{}".format(signed_path.split("?")[1]))
+    req = await client.get(f"/another_path?{signed_path.split('?')[1]}")
     assert req.status == HTTPStatus.UNAUTHORIZED
 
     # We only allow GET

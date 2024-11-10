@@ -18,7 +18,15 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
-LIBRARY = ["Favorites", "Artists", "Albums", "Tracks", "Playlists", "Genres"]
+LIBRARY = [
+    "Favorites",
+    "Artists",
+    "Albums",
+    "Tracks",
+    "Playlists",
+    "Genres",
+    "New Music",
+]
 
 MEDIA_TYPE_TO_SQUEEZEBOX = {
     "Favorites": "favorites",
@@ -27,6 +35,7 @@ MEDIA_TYPE_TO_SQUEEZEBOX = {
     "Tracks": "titles",
     "Playlists": "playlists",
     "Genres": "genres",
+    "New Music": "new music",
     MediaType.ALBUM: "album",
     MediaType.ARTIST: "artist",
     MediaType.TRACK: "title",
@@ -50,6 +59,7 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | None]] = 
     "Tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
     "Playlists": {"item": MediaClass.DIRECTORY, "children": MediaClass.PLAYLIST},
     "Genres": {"item": MediaClass.DIRECTORY, "children": MediaClass.GENRE},
+    "New Music": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
     MediaType.ALBUM: {"item": MediaClass.ALBUM, "children": MediaClass.TRACK},
     MediaType.ARTIST: {"item": MediaClass.ARTIST, "children": MediaClass.ALBUM},
     MediaType.TRACK: {"item": MediaClass.TRACK, "children": None},
@@ -68,6 +78,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Playlists": MediaType.PLAYLIST,
     "Genres": MediaType.GENRE,
     "Favorites": None,  # can only be determined after inspecting the item
+    "New Music": MediaType.ALBUM,
 }
 
 BROWSE_LIMIT = 1000
@@ -131,12 +142,12 @@ async def build_item_response(
                     can_expand = False
                     can_play = True
 
-            if artwork_track_id := item.get("artwork_track_id") and item_type:
+            if artwork_track_id := item.get("artwork_track_id"):
                 if internal_request:
                     item_thumbnail = player.generate_image_url_from_track_id(
                         artwork_track_id
                     )
-                else:
+                elif item_type is not None:
                     item_thumbnail = entity.get_browse_image_url(
                         item_type, item_id, artwork_track_id
                     )

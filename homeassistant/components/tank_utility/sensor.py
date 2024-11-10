@@ -125,7 +125,7 @@ class TankUtilitySensor(SensorEntity):
                 requests.codes.unauthorized,
                 requests.codes.bad_request,
             ):
-                _LOGGER.info("Getting new token")
+                _LOGGER.debug("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)
                 data = tank_monitor.get_device_data(self._token, self.device)
             else:

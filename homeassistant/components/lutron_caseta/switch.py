@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LutronCasetaDeviceUpdatableEntity
+from .entity import LutronCasetaUpdatableEntity
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, SwitchEntity):
+class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
     """Representation of a Lutron Caseta switch."""
 
     def __init__(self, device, data):

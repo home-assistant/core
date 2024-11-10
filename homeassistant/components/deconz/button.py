@@ -19,7 +19,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice, DeconzSceneMixin
+from .entity import DeconzDevice, DeconzSceneMixin
 from .hub import DeconzHub
 
 

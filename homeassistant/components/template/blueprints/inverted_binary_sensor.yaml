@@ -1,0 +1,27 @@
+blueprint:
+  name: Invert a binary sensor
+  description: Creates a binary_sensor which holds the inverted value of a reference binary_sensor
+  domain: template
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/template/blueprints/inverted_binary_sensor.yaml
+  input:
+    reference_entity:
+      name: Binary sensor to be inverted
+      description: The binary_sensor which needs to have its value inverted
+      selector:
+        entity:
+          domain: binary_sensor
+variables:
+  reference_entity: !input reference_entity
+binary_sensor:
+  state: >
+    {% if states(reference_entity) == 'on' %}
+      off
+    {% elif states(reference_entity) == 'off' %}
+      on
+    {% else %}
+      {{ states(reference_entity) }}
+    {% endif %}
+  # delay_on: not_used in this example
+  # delay_off: not_used in this example
+  # auto_off: not_used in this example
+  availability: "{{ states(reference_entity) not in ('unknown', 'unavailable') }}"

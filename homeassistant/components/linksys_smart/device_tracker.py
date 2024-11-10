@@ -62,7 +62,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Check for connected devices."""
-        _LOGGER.info("Checking Linksys Smart Wifi")
+        _LOGGER.debug("Checking Linksys Smart Wifi")
 
         self.last_results = {}
         response = self._make_request()

@@ -118,7 +118,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                 return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Reconnected to %s",
                 self.name or afsapi.webfsapi_endpoint,
             )

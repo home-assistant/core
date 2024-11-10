@@ -40,7 +40,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_bsblan() -> Generator[MagicMock, None, None]:
+def mock_bsblan() -> Generator[MagicMock]:
     """Return a mocked BSBLAN client."""
     with (
         patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock,

@@ -47,8 +47,6 @@ async def test_lock_service_calls(
     hass: HomeAssistant,
     get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Yale Smart Alarm lock."""
 
@@ -101,8 +99,6 @@ async def test_lock_service_call_fails(
     hass: HomeAssistant,
     get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Yale Smart Alarm lock service call fails."""
 
@@ -153,8 +149,6 @@ async def test_lock_service_call_fails_with_incorrect_status(
     hass: HomeAssistant,
     get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Yale Smart Alarm lock service call fails with incorrect return state."""
 
@@ -163,9 +157,7 @@ async def test_lock_service_call_fails_with_incorrect_status(
     data = deepcopy(get_data.cycle)
     data["data"] = data["data"].pop("device_status")
 
-    client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(return_value={"code": "FFF"})
-    client.lock_api = YaleDoorManAPI(client.auth)
 
     state = hass.states.get("lock.device1")
     assert state.state == "locked"

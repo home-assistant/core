@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 
@@ -102,7 +102,6 @@ def get_config_entry(
 ) -> AsyncWebSocketCommandHandler:
     """Websocket decorator to ensure the config_entry exists and return it."""
 
-    @callback
     @wraps(func)
     async def get_entry(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict

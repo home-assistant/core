@@ -461,7 +461,7 @@ class MotionTDBUDevice(MotionBaseDevice):
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
-        target_width = kwargs.get(ATTR_WIDTH, None)
+        target_width = kwargs.get(ATTR_WIDTH)
 
         async with self._api_lock:
             await self.hass.async_add_executor_job(

@@ -9,7 +9,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import script
-from homeassistant.components.blueprint import Blueprint, DomainBlueprints
+from homeassistant.components.blueprint import (
+    BLUEPRINT_SCHEMA,
+    Blueprint,
+    DomainBlueprints,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, template
@@ -33,7 +37,10 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
             return orig_load(self, path)
 
         return Blueprint(
-            yaml.load_yaml(data_path), expected_domain=self.domain, path=path
+            yaml.load_yaml(data_path),
+            expected_domain=self.domain,
+            path=path,
+            schema=BLUEPRINT_SCHEMA,
         )
 
     with patch(

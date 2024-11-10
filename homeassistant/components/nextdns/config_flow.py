@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError, NextDns
 from tenacity import RetryError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -36,7 +36,6 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.nextdns: NextDns
         self.api_key: str
-        self.entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -97,7 +96,6 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -116,11 +114,8 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
-                if TYPE_CHECKING:
-                    assert self.entry is not None
-
                 return self.async_update_reload_and_abort(
-                    self.entry, data={**self.entry.data, **user_input}
+                    self._get_reauth_entry(), data_updates=user_input
                 )
 
         return self.async_show_form(

@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -158,10 +159,12 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.FEET: 1 / _FOOT_TO_M,
         UnitOfLength.YARDS: 1 / _YARD_TO_M,
         UnitOfLength.MILES: 1 / _MILE_TO_M,
+        UnitOfLength.NAUTICAL_MILES: 1 / _NAUTICAL_MILE_TO_M,
     }
     VALID_UNITS = {
         UnitOfLength.KILOMETERS,
         UnitOfLength.MILES,
+        UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.FEET,
         UnitOfLength.METERS,
         UnitOfLength.CENTIMETERS,
@@ -171,14 +174,25 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
+class BloodGlugoseConcentrationConverter(BaseUnitConverter):
+    """Utility to convert blood glucose concentration values."""
+
+    UNIT_CLASS = "blood_glucose_concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER: 1,
+    }
+    VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
+
+
 class ConductivityConverter(BaseUnitConverter):
     """Utility to convert electric current values."""
 
     UNIT_CLASS = "conductivity"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfConductivity.MICROSIEMENS: 1,
-        UnitOfConductivity.MILLISIEMENS: 1e-3,
-        UnitOfConductivity.SIEMENS: 1e-6,
+        UnitOfConductivity.MICROSIEMENS_PER_CM: 1,
+        UnitOfConductivity.MILLISIEMENS_PER_CM: 1e-3,
+        UnitOfConductivity.SIEMENS_PER_CM: 1e-6,
     }
     VALID_UNITS = set(UnitOfConductivity)
 
@@ -220,6 +234,8 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
+        UnitOfEnergy.GIGA_WATT_HOUR: 1 / 1e6,
+        UnitOfEnergy.TERA_WATT_HOUR: 1 / 1e9,
         UnitOfEnergy.CALORIE: _WH_TO_CAL * 1e3,
         UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
         UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
@@ -290,10 +306,16 @@ class PowerConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
+        UnitOfPower.MEGA_WATT: 1 / 1e6,
+        UnitOfPower.GIGA_WATT: 1 / 1e9,
+        UnitOfPower.TERA_WATT: 1 / 1e12,
     }
     VALID_UNITS = {
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
+        UnitOfPower.MEGA_WATT,
+        UnitOfPower.GIGA_WATT,
+        UnitOfPower.TERA_WATT,
     }
 
 
@@ -337,9 +359,11 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
         UnitOfSpeed.FEET_PER_SECOND: 1 / _FOOT_TO_M,
+        UnitOfSpeed.INCHES_PER_SECOND: 1 / _IN_TO_M,
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
         UnitOfSpeed.METERS_PER_SECOND: 1,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         UnitOfSpeed.BEAUFORT: 1,
     }
@@ -348,11 +372,13 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        UnitOfSpeed.INCHES_PER_SECOND,
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfSpeed.BEAUFORT,
     }
 

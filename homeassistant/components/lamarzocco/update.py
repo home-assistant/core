@@ -3,7 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import FirmwareType
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.exceptions import RequestNotSuccessful
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -16,7 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
+from .const import DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -94,10 +96,25 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         """Install an update."""
         self._attr_in_progress = True
         self.async_write_ha_state()
-        success = await self.coordinator.device.update_firmware(
-            self.entity_description.component
-        )
+        try:
+            success = await self.coordinator.device.update_firmware(
+                self.entity_description.component
+            )
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={
+                    "key": self.entity_description.key,
+                },
+            ) from exc
         if not success:
-            raise HomeAssistantError("Update failed")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={
+                    "key": self.entity_description.key,
+                },
+            )
         self._attr_in_progress = False
         await self.coordinator.async_request_refresh()
