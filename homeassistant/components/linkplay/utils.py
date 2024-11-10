@@ -35,7 +35,7 @@ MODELS_MEDION_MD_43970: Final[str] = "Life P66970 (MD 43970)"
 MODELS_GENERIC: Final[str] = "Generic"
 
 
-def get_info_from_project(project: str) -> tuple[str, str]:
+def get_info_from_project(project: str) -> tuple[str, str]: # noqa: C901
     """Get manufacturer and model info based on given project."""
     match project:
         case "SMART_ZONE4_AMP":
