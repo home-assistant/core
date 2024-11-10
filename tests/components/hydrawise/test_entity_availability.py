@@ -8,7 +8,7 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Controller
 
-from homeassistant.components.hydrawise.const import SCAN_INTERVAL
+from homeassistant.components.hydrawise.const import MAIN_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -42,7 +42,7 @@ async def test_api_offline(
     config_entry = await mock_add_config_entry()
     mock_pydrawise.get_user.reset_mock(return_value=True)
     mock_pydrawise.get_user.side_effect = ClientError
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(MAIN_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     _test_availability(hass, config_entry, entity_registry)
