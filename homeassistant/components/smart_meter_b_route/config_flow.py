@@ -79,15 +79,7 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         device_options = await self._get_usb_devices()
-        if (
-            user_input is not None
-            and CONF_DEVICE in user_input
-            and user_input[CONF_DEVICE]
-            and CONF_ID in user_input
-            and user_input[CONF_ID]
-            and CONF_PASSWORD in user_input
-            and user_input[CONF_PASSWORD]
-        ):
+        if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
                     _validate_input,
@@ -137,8 +129,6 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle a step triggered by USB device detection."""
         self.device = discovery_info
-        await self.async_set_unique_id(
-            _generate_unique_id(self.device)
-        )
+        await self.async_set_unique_id(_generate_unique_id(self.device))
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
