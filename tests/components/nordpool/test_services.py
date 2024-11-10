@@ -97,8 +97,6 @@ async def test_service_call(
 async def test_service_call_failures(
     hass: HomeAssistant,
     load_int: MockConfigEntry,
-    get_data: DeliveryPeriodData,
-    snapshot: SnapshotAssertion,
     error: Exception,
     key: str,
 ) -> None:
@@ -128,7 +126,6 @@ async def test_service_call_config_entry_bad_state(
     hass: HomeAssistant,
     load_int: MockConfigEntry,
     get_data: DeliveryPeriodData,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_prices_for_date service call when config entry bad state."""
 
