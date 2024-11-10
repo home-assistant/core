@@ -43,7 +43,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])")
+RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])|(?=\d)(?<=\D)")
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
