@@ -31,7 +31,7 @@ SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="exhaust_temperature",
+        key="wood_combustion_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -83,6 +83,7 @@ class PalazzettiSensor(SensorEntity):
 
     entity_description: SensorEntityDescription
     coordinator: PalazzettiDataUpdateCoordinator
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -93,6 +94,7 @@ class PalazzettiSensor(SensorEntity):
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.client.mac}-{description.key}"
+        self._attr_name = f"{description.key}"
 
     @property
     def native_value(self) -> StateType:
