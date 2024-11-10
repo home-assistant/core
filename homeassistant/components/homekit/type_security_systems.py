@@ -156,7 +156,7 @@ class SecuritySystem(HomeAccessory):
         """Update security state after state changed."""
         hass_state: str | AlarmControlPanelState = new_state.state
         if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
-            # Bail out early for no state, state unknown or state unavailable
+            # Bail out early for no state, unknown or unavailable
             return
         if hass_state is not None:
             hass_state = AlarmControlPanelState(hass_state)
