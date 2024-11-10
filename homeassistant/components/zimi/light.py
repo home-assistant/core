@@ -25,20 +25,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zimi Light platform."""
-    # Assign configuration variables.
-    # The configuration check takes care they are present.
-    # host = config_entry.data[CONF_HOST]
-    # port = config_entry.data[CONF_PORT]
 
     debug = config_entry.data.get("debug", False)
 
     controller: ZimiController = config_entry.runtime_data
-
-    # entities = []
-
-    # for key, device in controller.api.devices.items():
-    # for device in controller.controller.lights:
-    # entities.append(ZimiLight(device, debug=debug))
 
     entities = [
         ZimiLight(device, debug=debug) for device in controller.controller.lights
