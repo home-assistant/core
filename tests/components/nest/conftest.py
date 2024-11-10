@@ -22,6 +22,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import CONF_SUBSCRIBER_ID, SDM_SCOPES
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -287,6 +288,8 @@ async def setup_base_platform(
             await hass.async_block_till_done()
 
         yield _setup_func
+        if config_entry and config_entry.state == ConfigEntryState.LOADED:
+            await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.fixture

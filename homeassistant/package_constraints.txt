@@ -5,7 +5,7 @@ aiodiscover==2.1.0
 aiodns==3.2.0
 aiohasupervisor==0.2.1
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.10.10
+aiohttp==3.11.0rc0
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -13,6 +13,7 @@ async-interrupt==1.2.0
 async-upnp-client==0.41.0
 atomicwrites-homeassistant==1.4.1
 attrs==24.2.0
+audioop-lts==0.2.1;python_version>='3.13'
 av==13.1.0
 awesomeversion==24.6.0
 bcrypt==4.2.0
@@ -27,20 +28,20 @@ ciso8601==2.3.1
 cryptography==43.0.1
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
-go2rtc-client==0.0.1b5
-ha-ffmpeg==3.2.1
+go2rtc-client==0.1.0
+ha-ffmpeg==3.2.2
 habluetooth==3.6.0
 hass-nabucasa==0.84.0
 hassil==1.7.4
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20241106.0
-home-assistant-intents==2024.11.4
+home-assistant-frontend==20241106.2
+home-assistant-intents==2024.11.6
 httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.10.10
+orjson==3.10.11
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.4.0
@@ -59,10 +60,12 @@ PyYAML==6.0.2
 requests==2.32.3
 securetar==2024.2.1
 SQLAlchemy==2.0.31
+standard-aifc==3.13.0;python_version>='3.13'
+standard-telnetlib==3.13.0;python_version>='3.13'
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
-uv==0.4.28
+uv==0.5.0
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
@@ -81,9 +84,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.66.2
-grpcio-status==1.66.2
-grpcio-reflection==1.66.2
+grpcio==1.67.1
+grpcio-status==1.67.1
+grpcio-reflection==1.67.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -112,7 +115,8 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.26.4
+numpy==2.1.3
+pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -167,11 +171,8 @@ get-mac==1000000000.0.0
 charset-normalizer==3.4.0
 
 # dacite: Ensure we have a version that is able to handle type unions for
-# Roborock, NAM, Brother, and GIOS.
+# NAM, Brother, and GIOS.
 dacite>=1.7.0
-
-# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
-pandas==2.1.4
 
 # chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
 chacha20poly1305-reuseable>=0.13.0
