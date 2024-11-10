@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import CCLEntity
 
 CCL_BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
@@ -36,7 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors for passed config entry in HA."""
-    device: CCLDevice = hass.data[DOMAIN][entry.entry_id]
+    device: CCLDevice = entry.runtime_data
 
     def _new_binary_sensor(sensor: CCLSensor) -> None:
         """Add a binary sensor to the data entry."""

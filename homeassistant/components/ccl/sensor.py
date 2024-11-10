@@ -32,7 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import CCLEntity
 
 CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
@@ -176,7 +175,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors for passed config entry in HA."""
-    device: CCLDevice = hass.data[DOMAIN][entry.entry_id]
+    device: CCLDevice = entry.runtime_data
 
     def _new_sensor(sensor: CCLSensor) -> None:
         """Add a sensor to the data entry."""

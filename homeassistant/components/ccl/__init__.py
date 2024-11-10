@@ -15,9 +15,9 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = CCLDevice(entry.data["passkey"])
+    entry.runtime_data = CCLDevice(entry.data["passkey"])
 
-    CCLServer.add_copy(hass.data[DOMAIN][entry.entry_id])
+    CCLServer.add_copy(entry.runtime_data)
     await CCLServer.run()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
