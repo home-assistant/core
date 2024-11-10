@@ -11,12 +11,12 @@
     },
     "step": {
       "user": {
-        "title": "Set up your acaia scale",
+        "title": "Set up your Acaia scale",
         "data": {
-          "mac_address": "MAC address"
+          "mac": "MAC address"
         },
         "data_description": {
-          "mac_address": "The MAC address of your scale"
+          "mac": "The MAC address of your scale"
         }
       }
     }
