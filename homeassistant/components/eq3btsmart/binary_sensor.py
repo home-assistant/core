@@ -44,6 +44,7 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS = [
         key=ENTITY_NAME_BUSY,
         entity_category=EntityCategory.DIAGNOSTIC,
         name=ENTITY_NAME_BUSY,
+        entity_registry_enabled_default=False,
     ),
     Eq3BinarySensorEntityDescription(
         value_func=lambda thermostat: thermostat.is_connected,
@@ -52,6 +53,7 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         name=ENTITY_NAME_CONNECTED,
+        entity_registry_enabled_default=False,
     ),
     Eq3BinarySensorEntityDescription(
         value_func=lambda thermostat: thermostat.status.is_low_battery
