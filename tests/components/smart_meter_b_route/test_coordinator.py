@@ -1,6 +1,6 @@
 """Tests for the Smart Meter B Route Coordinator."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from momonga import MomongaError
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 async def test_broute_update_coordinator(
-    hass: HomeAssistant, mock_momonga: AsyncMock
+    hass: HomeAssistant, mock_momonga: Mock
 ) -> None:
     """Test the BRouteUpdateCoordinator."""
     coordinator = BRouteUpdateCoordinator(hass, "device", "id", "password")

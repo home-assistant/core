@@ -1,7 +1,7 @@
 """Common fixtures for the Smart Meter B-route tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -17,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_momonga(exception=None) -> Generator[AsyncMock]:
+def mock_momonga(exception=None) -> Generator[Mock]:
     """Mock for Momonga class."""
 
     with (

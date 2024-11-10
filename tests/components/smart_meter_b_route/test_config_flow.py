@@ -1,7 +1,7 @@
 """Test the Smart Meter B-route config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from momonga import MomongaSkJoinFailure, MomongaSkScanFailure
 import pytest
@@ -31,7 +31,7 @@ async def test_step_user_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_comports: AsyncMock,
-    mock_momonga: AsyncMock,
+    mock_momonga: Mock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
