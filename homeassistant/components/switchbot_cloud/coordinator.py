@@ -44,7 +44,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
             _LOGGER.debug("Refreshing %s", self._device_id)
             async with timeout(10):
                 status: Status = await self._api.get_status(self._device_id)
-                _LOGGER.debug("Refreshing %s with %s", self._device_id, status)
+                _LOGGER.info("Refreshing %s with %s", self._device_id, status)
                 return status
         except CannotConnect as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

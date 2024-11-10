@@ -31,7 +31,6 @@ class SwitchbotDevices:
     climates: list[Remote] = field(default_factory=list)
     switches: list[Device | Remote] = field(default_factory=list)
     sensors: list[Device] = field(default_factory=list)
-    co2sensors: list[Device] = field(default_factory=list)
     vacuums: list[Device] = field(default_factory=list)
     locks: list[Device] = field(default_factory=list)
 
@@ -68,7 +67,6 @@ def make_device_data(
     """Make device data."""
     devices_data = SwitchbotDevices()
     for device in devices:
-        _LOGGER.info("Device: %s", device)
         if isinstance(device, Remote) and device.device_type.endswith(
             "Air Conditioner"
         ):
@@ -87,8 +85,8 @@ def make_device_data(
             "Meter",
             "MeterPlus",
             "WoIOSensor",
-            "MeterPro",
             "Hub 2",
+            "MeterPro",
             "MeterPro(CO2)",
         ]:
             devices_data.sensors.append(
