@@ -25,6 +25,7 @@ from .const import (
     ATTR_ARGS,
     ATTR_CONFIG_ENTRY,
     ATTR_DATA,
+    ATTR_DIRECTION,
     ATTR_PATH,
     ATTR_SKILL,
     ATTR_TASK,
@@ -37,6 +38,8 @@ from .const import (
     SERVICE_CAST_SKILL,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
+    SERVICE_SCORE_HABIT,
+    SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
 )
 from .types import HabiticaConfigEntry
@@ -65,6 +68,13 @@ SERVICE_MANAGE_QUEST_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
     }
 )
+SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_TASK): cv.string,
+        vol.Optional(ATTR_DIRECTION): cv.string,
+    }
+)
 
 
 def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
@@ -82,7 +92,7 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
     return entry
 
 
-def async_setup_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up services for Habitica integration."""
 
     async def handle_api_call(call: ServiceCall) -> None:
@@ -223,6 +233,53 @@ def async_setup_services(hass: HomeAssistant) -> None:
             supports_response=SupportsResponse.ONLY,
         )
 
+    async def score_task(call: ServiceCall) -> ServiceResponse:
+        """Score a task action."""
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        coordinator = entry.runtime_data
+        try:
+            task_id, task_value = next(
+                (task["id"], task.get("value"))
+                for task in coordinator.data.tasks
+                if call.data[ATTR_TASK] in (task["id"], task.get("alias"))
+                or call.data[ATTR_TASK] == task["text"]
+            )
+        except StopIteration as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="task_not_found",
+                translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
+            ) from e
+
+        try:
+            response: dict[str, Any] = (
+                await coordinator.api.tasks[task_id]
+                .score[call.data.get(ATTR_DIRECTION, "up")]
+                .post()
+            )
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                ) from e
+            if e.status == HTTPStatus.UNAUTHORIZED and task_value is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_enough_gold",
+                    translation_placeholders={
+                        "gold": f"{coordinator.data.user["stats"]["gp"]:.2f} GP",
+                        "cost": f"{task_value} GP",
+                    },
+                ) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
+        else:
+            await coordinator.async_request_refresh()
+            return response
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_API_CALL,
@@ -235,5 +292,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_CAST_SKILL,
         cast_skill,
         schema=SERVICE_CAST_SKILL_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SCORE_HABIT,
+        score_task,
+        schema=SERVICE_SCORE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SCORE_REWARD,
+        score_task,
+        schema=SERVICE_SCORE_TASK_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

@@ -181,6 +181,12 @@
     },
     "start_quest": {
       "service": "mdi:script-text-key"
+    },
+    "score_habit": {
+      "service": "mdi:counter"
+    },
+    "score_reward": {
+      "service": "mdi:sack"
     }
   }
 }
