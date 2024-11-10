@@ -100,7 +100,6 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
             await self.coordinator.client.set_hot_water(operating_mode=bsblan_mode)
         except BSBLANError as err:
             raise HomeAssistantError(
-                "Failed to set operation mode for water heater",
                 translation_domain=DOMAIN,
                 translation_key="set_operation_mode_error",
             ) from err
