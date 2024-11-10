@@ -62,6 +62,34 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_PRO_V3
         case "ARYLIC_V20":
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_PLATE_AMP
+        case "UP2STREAM_MINI_V3":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "UP2STREAM_AMP_2P1":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "RP0014_A50C_S":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "ARYLIC_A30":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "ARYLIC_SUBWOOFER":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "ARYLIC_S50A":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "RP0010_D5_S":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "RP0001":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "RP0013_WA31S":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "RP0010_D5":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "RP0013_WA31S_S":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "RP0014_A50D_S":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "ARYLIC_A50TE":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
+        case "ARYLIC_A50N":
+            return MANUFACTURER_ARYLIC, MODELS_GENERIC
         case "iEAST-02":
             return MANUFACTURER_IEAST, MODELS_IEAST_AUDIOCAST_M5
         case "GGMM_E2A":
