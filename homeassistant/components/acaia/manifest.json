@@ -15,7 +15,7 @@
       "local_name": "LUNAR-*"
     },
     {
-      "local_name": "PROCH*"
+      "local_name": "PROCHBT001"
     }
   ],
   "codeowners": ["@zweckj"],

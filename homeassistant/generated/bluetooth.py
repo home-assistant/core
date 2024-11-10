@@ -26,7 +26,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "acaia",
-        "local_name": "PROCH*",
+        "local_name": "PROCHBT001",
     },
     {
         "domain": "airthings_ble",
