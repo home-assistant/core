@@ -1,11 +1,11 @@
 """Test the Hydrawise config flow."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from pydrawise.exceptions import NotAuthorizedError
 from pydrawise.schema import User
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.hydrawise.const import DOMAIN
@@ -14,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(
@@ -148,3 +146,40 @@ async def test_reauth(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_options(
+    hass: HomeAssistant,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+) -> None:
+    """Test that re-authorization works."""
+    mock_config_entry = await mock_add_config_entry()
+    await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert coordinator.update_interval.total_seconds() == 120
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "scan_interval": 300,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"scan_interval": 300}
+    assert mock_config_entry.options == {
+        "scan_interval": 300,
+    }
+
+    # Check config entry is reloaded with new options
+    await hass.async_block_till_done()
+
+    # Check the entity was updated, no new entity was created
+    assert len(hass.states.async_all()) == 22
+
+    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert coordinator.update_interval.total_seconds() == 300
