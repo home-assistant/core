@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from zcc.device import ControlPointDevice
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -28,7 +30,9 @@ async def async_setup_entry(
 
     controller: ZimiController = config_entry.runtime_data
 
-    entities = [ZimiLight(device) for device in controller.controller.lights]
+    entities = [
+        ZimiLight(device, controller) for device in controller.controller.lights
+    ]
 
     async_add_entities(entities)
 
@@ -36,7 +40,7 @@ async def async_setup_entry(
 class ZimiLight(LightEntity):
     """Representation of a Zimi Light."""
 
-    def __init__(self, light) -> None:
+    def __init__(self, light: ControlPointDevice, controller: ZimiController) -> None:
         """Initialize an ZimiLight."""
 
         self._attr_unique_id = light.identifier
@@ -55,6 +59,7 @@ class ZimiLight(LightEntity):
             identifiers={(DOMAIN, light.identifier)},
             name=self._light.name,
             suggested_area=self._light.room,
+            via_device=(DOMAIN, controller.host + ":" + str(controller.port)),
         )
         self.update()
         _LOGGER.debug("Initialising %s in %s", self.name, self._light.room)
