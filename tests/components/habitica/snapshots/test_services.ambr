@@ -109,6 +109,7 @@
       }),
       dict({
         '_id': 'e97659e0-2c42-4599-a7bb-00282adc410d',
+        'alias': 'create_a_task',
         'attribute': 'str',
         'byHabitica': False,
         'challenge': dict({
@@ -880,6 +881,7 @@
       }),
       dict({
         '_id': 'e97659e0-2c42-4599-a7bb-00282adc410d',
+        'alias': 'create_a_task',
         'attribute': 'str',
         'byHabitica': False,
         'challenge': dict({
@@ -1445,6 +1447,7 @@
       }),
       dict({
         '_id': 'e97659e0-2c42-4599-a7bb-00282adc410d',
+        'alias': 'create_a_task',
         'attribute': 'str',
         'byHabitica': False,
         'challenge': dict({
@@ -2159,6 +2162,7 @@
       }),
       dict({
         '_id': 'e97659e0-2c42-4599-a7bb-00282adc410d',
+        'alias': 'create_a_task',
         'attribute': 'str',
         'byHabitica': False,
         'challenge': dict({
@@ -2965,6 +2969,7 @@
       }),
       dict({
         '_id': 'e97659e0-2c42-4599-a7bb-00282adc410d',
+        'alias': 'create_a_task',
         'attribute': 'str',
         'byHabitica': False,
         'challenge': dict({
