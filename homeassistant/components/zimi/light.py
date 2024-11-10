@@ -26,13 +26,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zimi Light platform."""
 
-    debug = config_entry.data.get("debug", False)
-
     controller: ZimiController = config_entry.runtime_data
 
-    entities = [
-        ZimiLight(device, debug=debug) for device in controller.controller.lights
-    ]
+    entities = [ZimiLight(device) for device in controller.controller.lights]
 
     async_add_entities(entities)
 
@@ -40,11 +36,8 @@ async def async_setup_entry(
 class ZimiLight(LightEntity):
     """Representation of a Zimi Light."""
 
-    def __init__(self, light, debug=False) -> None:
+    def __init__(self, light) -> None:
         """Initialize an ZimiLight."""
-
-        if debug:
-            _LOGGER.setLevel(logging.DEBUG)
 
         self._attr_unique_id = light.identifier
         self._attr_should_poll = False
