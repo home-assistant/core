@@ -291,7 +291,10 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     @exception_wrap
     async def async_play_preset(self, preset_number: int) -> None:
         """Play preset number."""
-        await self._bridge.player.play_preset(preset_number)
+        try:
+            await self._bridge.player.play_preset(preset_number)
+        except ValueError as err:
+            raise HomeAssistantError(err) from err
 
     @exception_wrap
     async def async_join_players(self, group_members: list[str]) -> None:
