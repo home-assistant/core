@@ -330,6 +330,7 @@ homeassistant.components.mysensors.*
 homeassistant.components.myuplink.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
+homeassistant.components.nasweb.*
 homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
@@ -339,6 +340,7 @@ homeassistant.components.nfandroidtv.*
 homeassistant.components.nightscout.*
 homeassistant.components.nissan_leaf.*
 homeassistant.components.no_ip.*
+homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*

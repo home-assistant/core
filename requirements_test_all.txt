@@ -374,6 +374,9 @@ aiosyncthing==0.5.1
 # homeassistant.components.tankerkoenig
 aiotankerkoenig==0.4.2
 
+# homeassistant.components.tedee
+aiotedee==0.2.20
+
 # homeassistant.components.tractive
 aiotractive==0.6.0
 
@@ -598,7 +601,7 @@ colorthief==0.2.1
 construct==2.10.68
 
 # homeassistant.components.utility_meter
-croniter==2.0.2
+cronsim==2.6
 
 # homeassistant.components.crownstone
 crownstone-cloud==1.4.11
@@ -865,7 +868,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==6.1.4
+google-nest-sdm==6.1.5
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -907,7 +910,7 @@ guppy3==3.1.4.post1
 h2==4.1.0
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==3.2.1
+ha-ffmpeg==3.2.2
 
 # homeassistant.components.iotawatt
 ha-iotawattpy==0.1.2
@@ -950,7 +953,7 @@ hole==0.8.0
 holidays==0.60
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241106.0
+home-assistant-frontend==20241106.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.11.6
@@ -1087,9 +1090,6 @@ libsoundtouch==0.8
 # homeassistant.components.linear_garage_door
 linear-garage-door==0.2.9
 
-# homeassistant.components.lamarzocco
-lmcloud==1.2.3
-
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
@@ -1217,7 +1217,7 @@ nextdns==3.3.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.9
+nice-go==0.3.10
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1239,7 +1239,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.1.2
+numpy==2.1.3
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -1415,7 +1415,7 @@ pyElectra==1.2.4
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.30.4
+pyTibber==0.30.7
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1628,6 +1628,9 @@ pykrakenapi==0.1.8
 # homeassistant.components.kulersky
 pykulersky==0.5.2
 
+# homeassistant.components.lamarzocco
+pylamarzocco==1.2.3
+
 # homeassistant.components.lastfm
 pylast==5.1.0
 
@@ -1687,6 +1690,9 @@ pynetgear==0.10.10
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
+
+# homeassistant.components.nordpool
+pynordpool==0.2.1
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -1849,9 +1855,6 @@ pyswitchbee==1.8.3
 # homeassistant.components.tautulli
 pytautulli==23.1.1
 
-# homeassistant.components.tedee
-pytedee-async==0.2.20
-
 # homeassistant.components.motionmount
 python-MotionMount==2.2.0
 
@@ -1886,7 +1889,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.7
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.17
+python-linkplay==0.0.18
 
 # homeassistant.components.matter
 python-matter-server==6.6.0
@@ -1917,7 +1920,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.6.1
+python-roborock==2.7.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2141,7 +2144,7 @@ smhi-pkg==1.0.18
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.4
+soco==0.30.6
 
 # homeassistant.components.solarlog
 solarlog_cli==0.3.2
@@ -2162,7 +2165,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==0.8.5
+spotifyaio==0.8.7
 
 # homeassistant.components.sql
 sqlparse==0.5.0
@@ -2268,7 +2271,7 @@ toonapi==0.3.0
 total-connect-client==2024.5
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.2
+tplink-omada-client==1.4.3
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -2371,6 +2374,9 @@ watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.0.6
+
+# homeassistant.components.nasweb
+webio-api==0.1.8
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
