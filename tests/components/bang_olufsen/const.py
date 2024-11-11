@@ -16,6 +16,7 @@ from mozart_api.models import (
     PlayQueueItemType,
     RenderingState,
     SceneProperties,
+    Source,
     UserFlow,
     VolumeLevel,
     VolumeMute,
@@ -125,11 +126,15 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
     },
 )
 
-TEST_AUDIO_SOURCES = [BangOlufsenSource.TIDAL.name, BangOlufsenSource.LINE_IN.name]
+TEST_SOURCE = Source(
+    name="Tidal", id="tidal", is_seekable=True, is_enabled=True, is_playable=True
+)
+TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BangOlufsenSource.LINE_IN.name]
 TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [
     "Audio Streamer",
+    "Bluetooth",
     "Spotify Connect",
     "Line-In",
     "Optical",

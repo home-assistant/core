@@ -7,12 +7,13 @@ FROM ${BUILD_FROM}
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
-    UV_SYSTEM_PYTHON=true
+    UV_SYSTEM_PYTHON=true \
+    UV_NO_CACHE=true
 
 ARG QEMU_CPU
 
 # Install uv
-RUN pip3 install uv==0.4.28
+RUN pip3 install uv==0.5.0
 
 WORKDIR /usr/src
 

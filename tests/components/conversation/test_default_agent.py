@@ -418,6 +418,44 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     assert len(callback.mock_calls) == 0
 
 
+@pytest.mark.parametrize(
+    ("language", "expected"),
+    [("en", "English done"), ("de", "German done"), ("not_translated", "Done")],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_trigger_sentence_response_translation(
+    hass: HomeAssistant, language: str, expected: str
+) -> None:
+    """Test translation of default response 'done'."""
+    hass.config.language = language
+
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    translations = {
+        "en": {"component.conversation.conversation.agent.done": "English done"},
+        "de": {"component.conversation.conversation.agent.done": "German done"},
+        "not_translated": {},
+    }
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.translation.async_get_translations",
+        return_value=translations.get(language),
+    ):
+        unregister = agent.register_trigger(
+            ["test sentence"], AsyncMock(return_value=None)
+        )
+        result = await conversation.async_converse(
+            hass, "test sentence", None, Context()
+        )
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.speech == {
+            "plain": {"speech": expected, "extra_data": None}
+        }
+
+        unregister()
+
+
 @pytest.mark.usefixtures("init_components", "sl_setup")
 async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
     """Test adding an item to the shopping list through the default agent."""
@@ -431,7 +469,7 @@ async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_nevermind_item(hass: HomeAssistant) -> None:
+async def test_nevermind_intent(hass: HomeAssistant) -> None:
     """Test HassNevermind intent through the default agent."""
     result = await conversation.async_converse(hass, "nevermind", None, Context())
     assert result.response.intent is not None
@@ -439,6 +477,17 @@ async def test_nevermind_item(hass: HomeAssistant) -> None:
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert not result.response.speech
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_respond_intent(hass: HomeAssistant) -> None:
+    """Test HassRespond intent through the default agent."""
+    result = await conversation.async_converse(hass, "hello", None, Context())
+    assert result.response.intent is not None
+    assert result.response.intent.intent_type == intent.INTENT_RESPOND
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Hello from Home Assistant."
 
 
 @pytest.mark.usefixtures("init_components")
