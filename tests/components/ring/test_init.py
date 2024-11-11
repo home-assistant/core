@@ -329,7 +329,7 @@ async def test_update_unique_id_existing(
 
     assert (
         f"Cannot migrate to unique_id '{old_unique_id}', "
-        f"already exists for '{entity_existing.entity_id}'."
+        f"already exists for '{entity_existing.entity_id}'"
     ) in caplog.text
 
 
