@@ -69,6 +69,8 @@ SOURCE_MAP: dict[PlayingMode, str] = {
     PlayingMode.FM: "FM Radio",
     PlayingMode.RCA: "RCA",
     PlayingMode.UDISK: "USB",
+    PlayingMode.SPOTIFY: "Spotify",
+    PlayingMode.TIDAL: "Tidal",
     PlayingMode.FOLLOWER: "Follower",
 }
 
@@ -297,6 +299,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             raise HomeAssistantError(err) from err
 
     @exception_wrap
+    async def async_media_seek(self, position: float) -> None:
+        """Seek to a position."""
+        await self._bridge.player.seek(round(position))
+
+    @exception_wrap
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
@@ -381,9 +388,9 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
                 )
 
             self._attr_source = SOURCE_MAP.get(self._bridge.player.play_mode, "other")
-            self._attr_media_position = self._bridge.player.current_position / 1000
+            self._attr_media_position = self._bridge.player.current_position_in_seconds
             self._attr_media_position_updated_at = utcnow()
-            self._attr_media_duration = self._bridge.player.total_length / 1000
+            self._attr_media_duration = self._bridge.player.total_length_in_seconds
             self._attr_media_artist = self._bridge.player.artist
             self._attr_media_title = self._bridge.player.title
             self._attr_media_album_name = self._bridge.player.album

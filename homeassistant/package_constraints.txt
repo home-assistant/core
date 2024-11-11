@@ -44,7 +44,7 @@ mutagen==1.47.0
 orjson==3.10.11
 packaging>=23.1
 paho-mqtt==1.6.1
-Pillow==10.4.0
+Pillow==11.0.0
 propcache==0.2.0
 psutil-home-assistant==0.0.1
 PyJWT==2.9.0
@@ -127,7 +127,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.18
+pydantic==1.10.19
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
