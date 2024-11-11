@@ -6,11 +6,11 @@ from collections.abc import Callable
 from contextlib import suppress
 import dataclasses
 from datetime import timedelta
-from functools import cached_property
 import logging
 from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Self, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

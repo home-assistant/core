@@ -4,20 +4,9 @@ import voluptuous as vol
 
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_BINARY_SENSORS,
-    CONF_COVERS,
-    CONF_HOST,
-    CONF_LIGHTS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_SCENE,
-    CONF_SENSORS,
     CONF_SOURCE,
-    CONF_SWITCHES,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
     UnitOfTemperature,
 )
 import homeassistant.helpers.config_validation as cv
@@ -25,9 +14,6 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     BINSENSOR_PORTS,
-    CONF_CLIMATES,
-    CONF_CONNECTIONS,
-    CONF_DIM_MODE,
     CONF_DIMMABLE,
     CONF_LOCKABLE,
     CONF_MAX_TEMP,
@@ -37,12 +23,8 @@ from .const import (
     CONF_OUTPUTS,
     CONF_REGISTER,
     CONF_REVERSE_TIME,
-    CONF_SCENES,
     CONF_SETPOINT,
-    CONF_SK_NUM_TRIES,
     CONF_TRANSITION,
-    DIM_MODES,
-    DOMAIN,
     KEYS,
     LED_PORTS,
     LOGICOP_PORTS,
@@ -56,7 +38,6 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import has_unique_host_names, is_address
 
 ADDRESS_SCHEMA = vol.Coerce(tuple)
 
@@ -95,7 +76,7 @@ DOMAIN_DATA_LIGHT: VolDictType = {
     vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS)),
     vol.Optional(CONF_DIMMABLE, default=False): vol.Coerce(bool),
     vol.Optional(CONF_TRANSITION, default=0): vol.All(
-        vol.Coerce(float), vol.Range(min=0.0, max=486.0), lambda value: value * 1000
+        vol.Coerce(float), vol.Range(min=0.0, max=486.0)
     ),
 }
 
@@ -106,13 +87,8 @@ DOMAIN_DATA_SCENE: VolDictType = {
     vol.Optional(CONF_OUTPUTS, default=[]): vol.All(
         cv.ensure_list, [vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS))]
     ),
-    vol.Optional(CONF_TRANSITION, default=None): vol.Any(
-        vol.All(
-            vol.Coerce(int),
-            vol.Range(min=0.0, max=486.0),
-            lambda value: value * 1000,
-        ),
-        None,
+    vol.Optional(CONF_TRANSITION, default=0): vol.Any(
+        vol.All(vol.Coerce(int), vol.Range(min=0.0, max=486.0))
     ),
 }
 
@@ -130,73 +106,8 @@ DOMAIN_DATA_SENSOR: VolDictType = {
 
 
 DOMAIN_DATA_SWITCH: VolDictType = {
-    vol.Required(CONF_OUTPUT): vol.All(vol.Upper, vol.In(OUTPUT_PORTS + RELAY_PORTS)),
-}
-
-#
-# Configuration
-#
-
-DOMAIN_DATA_BASE: VolDictType = {
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_ADDRESS): is_address,
-}
-
-BINARY_SENSORS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_BINARY_SENSOR})
-
-CLIMATES_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_CLIMATE})
-
-COVERS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_COVER})
-
-LIGHTS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_LIGHT})
-
-SCENES_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SCENE})
-
-SENSORS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SENSOR})
-
-SWITCHES_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SWITCH})
-
-CONNECTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
-        vol.Optional(CONF_DIM_MODE, default="steps50"): vol.All(
-            vol.Upper, vol.In(DIM_MODES)
-        ),
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CONNECTIONS): vol.All(
-                        cv.ensure_list, has_unique_host_names, [CONNECTION_SCHEMA]
-                    ),
-                    vol.Optional(CONF_BINARY_SENSORS): vol.All(
-                        cv.ensure_list, [BINARY_SENSORS_SCHEMA]
-                    ),
-                    vol.Optional(CONF_CLIMATES): vol.All(
-                        cv.ensure_list, [CLIMATES_SCHEMA]
-                    ),
-                    vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
-                    vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
-                    vol.Optional(CONF_SCENES): vol.All(cv.ensure_list, [SCENES_SCHEMA]),
-                    vol.Optional(CONF_SENSORS): vol.All(
-                        cv.ensure_list, [SENSORS_SCHEMA]
-                    ),
-                    vol.Optional(CONF_SWITCHES): vol.All(
-                        cv.ensure_list, [SWITCHES_SCHEMA]
-                    ),
-                },
-            )
-        },
+    vol.Required(CONF_OUTPUT): vol.All(
+        vol.Upper,
+        vol.In(OUTPUT_PORTS + RELAY_PORTS + SETPOINTS + KEYS),
     ),
-    extra=vol.ALLOW_EXTRA,
-)
+}

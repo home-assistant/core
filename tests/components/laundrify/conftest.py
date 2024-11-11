@@ -41,6 +41,7 @@ async def laundrify_setup_config_entry(
         domain=DOMAIN,
         unique_id=VALID_ACCOUNT_ID,
         data={CONF_ACCESS_TOKEN: access_token},
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -54,7 +55,7 @@ def laundrify_api_fixture(hass_client: ClientSessionGenerator):
     with (
         patch(
             "laundrify_aio.LaundrifyAPI.get_account_id",
-            return_value=VALID_ACCOUNT_ID,
+            return_value=1234,
         ),
         patch(
             "laundrify_aio.LaundrifyAPI.validate_token",

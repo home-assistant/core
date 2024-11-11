@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any, final
+
+from propcache import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE

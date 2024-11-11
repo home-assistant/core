@@ -84,7 +84,9 @@ def _create_entry(
         original_name=f"{DEFAULT_NAME} {tag_id}",
         suggested_object_id=slugify(name) if name else tag_id,
     )
-    return entity_registry.async_update_entity(entry.entity_id, name=name)
+    if name:
+        return entity_registry.async_update_entity(entry.entity_id, name=name)
+    return entry
 
 
 class TagStore(Store[collection.SerializedStorageCollection]):

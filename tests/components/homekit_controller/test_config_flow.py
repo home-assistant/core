@@ -799,7 +799,6 @@ async def test_pair_form_errors_on_finish(
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
-        "pairing": True,
     }
 
 
@@ -850,7 +849,6 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
-        "pairing": True,
     }
 
 

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import cached_property, partial
+from functools import partial
 import logging
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

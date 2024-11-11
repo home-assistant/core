@@ -4,6 +4,7 @@ from contextlib import suppress
 from functools import partial
 from typing import Any
 
+from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import cloud, intent, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
@@ -11,7 +12,7 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -36,6 +37,7 @@ from .const import (
     ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
+    CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
@@ -89,6 +91,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_setup_commands(hass)
+
+    async def _handle_user_removed(event: Event) -> None:
+        """Remove an entry when the user is removed."""
+        user_id = event.data["user_id"]
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_USER_ID] == user_id:
+                await hass.config_entries.async_remove(entry.entry_id)
+
+    hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
 
     return True
 

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nyt_games",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["nyt_games==0.4.2"]
+  "requirements": ["nyt_games==0.4.4"]
 }

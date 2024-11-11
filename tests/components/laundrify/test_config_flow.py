@@ -32,6 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ACCESS_TOKEN: VALID_ACCESS_TOKEN,
     }
+    assert result["result"].unique_id == "1234"
 
 
 async def test_form_invalid_format(hass: HomeAssistant, laundrify_api_mock) -> None:
