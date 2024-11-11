@@ -160,7 +160,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.18
+pydantic==1.10.19
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
