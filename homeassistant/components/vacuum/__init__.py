@@ -76,7 +76,7 @@ SERVICE_STOP = "stop"
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 # These STATE_* constants are deprecated as of Home Assistant 2024.11.
-# Please use the VacuumState enum instead.
+# Please use the VacuumActivity enum instead.
 _DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2025.11")
 _DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2025.11")
 
@@ -227,7 +227,7 @@ STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "battery_icon",
     "fan_speed",
     "fan_speed_list",
-    "vacuum_state",
+    "activity",
 }
 
 
@@ -264,7 +264,7 @@ class StateVacuumEntity(
         unless already reported.
         """
         if __name == "_attr_state":
-            self._report_deprecated_vacuum_state_handling()
+            self._report_deprecated_activity_handling()
         return super().__setattr__(__name, __value)
 
     @callback
@@ -277,10 +277,10 @@ class StateVacuumEntity(
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
         if self.__vacuum_legacy_state:
-            self._report_deprecated_vacuum_state_handling()
+            self._report_deprecated_activity_handling()
 
     @callback
-    def _report_deprecated_vacuum_state_handling(self) -> None:
+    def _report_deprecated_activity_handling(self) -> None:
         """Report on deprecated handling of vacuum state.
 
         Integrations should implement activity instead of using state directly.

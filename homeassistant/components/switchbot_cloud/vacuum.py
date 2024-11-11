@@ -6,8 +6,8 @@ from switchbot_api import Device, Remote, SwitchBotAPI, VacuumCommands
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -38,17 +38,17 @@ async def async_setup_entry(
     )
 
 
-VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, VacuumState] = {
-    "StandBy": VacuumState.IDLE,
-    "Clearing": VacuumState.CLEANING,
-    "Paused": VacuumState.PAUSED,
-    "GotoChargeBase": VacuumState.RETURNING,
-    "Charging": VacuumState.DOCKED,
-    "ChargeDone": VacuumState.DOCKED,
-    "Dormant": VacuumState.IDLE,
-    "InTrouble": VacuumState.ERROR,
-    "InRemoteControl": VacuumState.CLEANING,
-    "InDustCollecting": VacuumState.DOCKED,
+VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, VacuumActivity] = {
+    "StandBy": VacuumActivity.IDLE,
+    "Clearing": VacuumActivity.CLEANING,
+    "Paused": VacuumActivity.PAUSED,
+    "GotoChargeBase": VacuumActivity.RETURNING,
+    "Charging": VacuumActivity.DOCKED,
+    "ChargeDone": VacuumActivity.DOCKED,
+    "Dormant": VacuumActivity.IDLE,
+    "InTrouble": VacuumActivity.ERROR,
+    "InRemoteControl": VacuumActivity.CLEANING,
+    "InDustCollecting": VacuumActivity.DOCKED,
 }
 
 VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED: dict[str, str] = {
@@ -109,9 +109,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
 
         switchbot_state = str(self.coordinator.data.get("workingStatus"))
-        self._attr_vacuum_state = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(
-            switchbot_state
-        )
+        self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
 
         self.async_write_ha_state()
 

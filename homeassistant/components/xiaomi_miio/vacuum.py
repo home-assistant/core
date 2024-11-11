@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
@@ -50,29 +50,29 @@ ATTR_ZONE_REPEATER = "repeats"
 ATTR_TIMERS = "timers"
 
 STATE_CODE_TO_STATE = {
-    1: VacuumState.IDLE,  # "Starting"
-    2: VacuumState.IDLE,  # "Charger disconnected"
-    3: VacuumState.IDLE,  # "Idle"
-    4: VacuumState.CLEANING,  # "Remote control active"
-    5: VacuumState.CLEANING,  # "Cleaning"
-    6: VacuumState.RETURNING,  # "Returning home"
-    7: VacuumState.CLEANING,  # "Manual mode"
-    8: VacuumState.DOCKED,  # "Charging"
-    9: VacuumState.ERROR,  # "Charging problem"
-    10: VacuumState.PAUSED,  # "Paused"
-    11: VacuumState.CLEANING,  # "Spot cleaning"
-    12: VacuumState.ERROR,  # "Error"
-    13: VacuumState.IDLE,  # "Shutting down"
-    14: VacuumState.DOCKED,  # "Updating"
-    15: VacuumState.RETURNING,  # "Docking"
-    16: VacuumState.CLEANING,  # "Going to target"
-    17: VacuumState.CLEANING,  # "Zoned cleaning"
-    18: VacuumState.CLEANING,  # "Segment cleaning"
-    22: VacuumState.DOCKED,  # "Emptying the bin" on s7+
-    23: VacuumState.DOCKED,  # "Washing the mop" on s7maxV
-    26: VacuumState.RETURNING,  # "Going to wash the mop" on s7maxV
-    100: VacuumState.DOCKED,  # "Charging complete"
-    101: VacuumState.ERROR,  # "Device offline"
+    1: VacuumActivity.IDLE,  # "Starting"
+    2: VacuumActivity.IDLE,  # "Charger disconnected"
+    3: VacuumActivity.IDLE,  # "Idle"
+    4: VacuumActivity.CLEANING,  # "Remote control active"
+    5: VacuumActivity.CLEANING,  # "Cleaning"
+    6: VacuumActivity.RETURNING,  # "Returning home"
+    7: VacuumActivity.CLEANING,  # "Manual mode"
+    8: VacuumActivity.DOCKED,  # "Charging"
+    9: VacuumActivity.ERROR,  # "Charging problem"
+    10: VacuumActivity.PAUSED,  # "Paused"
+    11: VacuumActivity.CLEANING,  # "Spot cleaning"
+    12: VacuumActivity.ERROR,  # "Error"
+    13: VacuumActivity.IDLE,  # "Shutting down"
+    14: VacuumActivity.DOCKED,  # "Updating"
+    15: VacuumActivity.RETURNING,  # "Docking"
+    16: VacuumActivity.CLEANING,  # "Going to target"
+    17: VacuumActivity.CLEANING,  # "Zoned cleaning"
+    18: VacuumActivity.CLEANING,  # "Segment cleaning"
+    22: VacuumActivity.DOCKED,  # "Emptying the bin" on s7+
+    23: VacuumActivity.DOCKED,  # "Washing the mop" on s7maxV
+    26: VacuumActivity.RETURNING,  # "Going to wash the mop" on s7maxV
+    100: VacuumActivity.DOCKED,  # "Charging complete"
+    101: VacuumActivity.ERROR,  # "Device offline"
 }
 
 
@@ -206,7 +206,7 @@ class MiroboVacuum(
     ) -> None:
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(device, entry, unique_id, coordinator)
-        self._state: VacuumState | None = None
+        self._state: VacuumActivity | None = None
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
@@ -214,12 +214,12 @@ class MiroboVacuum(
         self._handle_coordinator_update()
 
     @property
-    def vacuum_state(self) -> VacuumState | None:
+    def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         # The vacuum reverts back to an idle state after erroring out.
         # We want to keep returning an error until it has been cleared.
         if self.coordinator.data.status.got_error:
-            return VacuumState.ERROR
+            return VacuumActivity.ERROR
 
         return self._state
 
