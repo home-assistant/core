@@ -74,7 +74,6 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_rest_notify_get(hass: HomeAssistant) -> None:
     """Test sending notification with GET method."""
-    # Mock the REST endpoint
     respx.get("http://example.com/notify")
 
     await setup_notify_component(
@@ -84,7 +83,6 @@ async def test_rest_notify_get(hass: HomeAssistant) -> None:
         "GET",
     )
 
-    # Send a message through the service registry
     await hass.services.async_call(
         notify.DOMAIN,
         "rest_test",
@@ -94,7 +92,6 @@ async def test_rest_notify_get(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    # Verify the request
     assert len(respx.calls) == 1
     request = respx.calls[0].request
     assert request.method == "GET"
@@ -104,7 +101,6 @@ async def test_rest_notify_get(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_rest_notify_post_json(hass: HomeAssistant) -> None:
     """Test sending notification with POST_JSON method."""
-    # Mock the REST endpoint
     respx.post("http://example.com/notify")
 
     await setup_notify_component(
@@ -115,7 +111,6 @@ async def test_rest_notify_post_json(hass: HomeAssistant) -> None:
         title_param_name="title",
     )
 
-    # Send a message through the service registry
     await hass.services.async_call(
         notify.DOMAIN,
         "rest_test",
@@ -126,7 +121,6 @@ async def test_rest_notify_post_json(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    # Verify the request
     assert len(respx.calls) == 1
     request = respx.calls[0].request
     assert request.method == "POST"
@@ -140,7 +134,6 @@ async def test_rest_notify_post_json(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_rest_notify_post(hass: HomeAssistant) -> None:
     """Test sending notification with POST method."""
-    # Mock the REST endpoint
     respx.post("http://example.com/notify")
 
     await setup_notify_component(
@@ -151,7 +144,6 @@ async def test_rest_notify_post(hass: HomeAssistant) -> None:
         title_param_name="title",
     )
 
-    # Send a message through the service registry
     await hass.services.async_call(
         notify.DOMAIN,
         "rest_test",
@@ -162,7 +154,6 @@ async def test_rest_notify_post(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    # Verify the request
     assert len(respx.calls) == 1
     request = respx.calls[0].request
     assert request.method == "POST"
@@ -174,7 +165,6 @@ async def test_rest_notify_post(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_rest_notify_multiple_targets_post_json(hass: HomeAssistant) -> None:
     """Test sending notification with multiple targets."""
-    # Mock the REST endpoint
     respx.post("http://example.com/notify")
 
     await setup_notify_component(
@@ -186,7 +176,6 @@ async def test_rest_notify_multiple_targets_post_json(hass: HomeAssistant) -> No
         allow_multiple_targets=True,
     )
 
-    # Send a message through the service registry
     await hass.services.async_call(
         notify.DOMAIN,
         "rest_test",
@@ -197,7 +186,6 @@ async def test_rest_notify_multiple_targets_post_json(hass: HomeAssistant) -> No
         blocking=True,
     )
 
-    # Verify the request
     assert len(respx.calls) == 1
     request = respx.calls[0].request
     assert request.method == "POST"
@@ -278,7 +266,6 @@ async def test_rest_notify_multiple_targets_get(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_rest_notify_single_target(hass: HomeAssistant) -> None:
     """Test sending notification with single target when multiple targets not allowed."""
-    # Mock the REST endpoint
     respx.post("http://example.com/notify")
 
     await setup_notify_component(
@@ -290,7 +277,6 @@ async def test_rest_notify_single_target(hass: HomeAssistant) -> None:
         allow_multiple_targets=False,
     )
 
-    # Send a message through the service registry
     await hass.services.async_call(
         notify.DOMAIN,
         "rest_test",
@@ -301,7 +287,6 @@ async def test_rest_notify_single_target(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    # Verify the request
     assert len(respx.calls) == 1
     request = respx.calls[0].request
     assert request.method == "POST"
