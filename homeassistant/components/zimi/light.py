@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from zcc import ControlPoint
 from zcc.device import ControlPointDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -16,7 +17,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .controller import ZimiController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,11 +28,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zimi Light platform."""
 
-    controller: ZimiController = config_entry.runtime_data
+    api: ControlPoint = config_entry.runtime_data
 
-    entities = [
-        ZimiLight(device, controller) for device in controller.controller.lights
-    ]
+    entities = [ZimiLight(device, api) for device in api.lights]
 
     async_add_entities(entities)
 
@@ -40,7 +38,7 @@ async def async_setup_entry(
 class ZimiLight(LightEntity):
     """Representation of a Zimi Light."""
 
-    def __init__(self, light: ControlPointDevice, controller: ZimiController) -> None:
+    def __init__(self, light: ControlPointDevice, api: ControlPoint) -> None:
         """Initialize an ZimiLight."""
 
         self._attr_unique_id = light.identifier
@@ -59,7 +57,7 @@ class ZimiLight(LightEntity):
             identifiers={(DOMAIN, light.identifier)},
             name=self._light.name,
             suggested_area=self._light.room,
-            via_device=(DOMAIN, controller.host + ":" + str(controller.port)),
+            via_device=(DOMAIN, api.host + ":" + str(api.port)),
         )
         self.update()
         _LOGGER.debug("Initialising %s in %s", self.name, self._light.room)
