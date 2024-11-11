@@ -20,9 +20,7 @@ from .const import (
     ENTITY_KEY_DST,
     ENTITY_KEY_WINDOW,
     ENTITY_NAME_BATTERY,
-    ENTITY_NAME_BUSY,
     ENTITY_NAME_CONNECTED,
-    ENTITY_NAME_DST,
     ENTITY_NAME_WINDOW,
     VALUE_KEY_BATTERY,
     VALUE_KEY_BUSY,
@@ -48,7 +46,6 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS = [
         key=ENTITY_KEY_BUSY,
         translation_key=ENTITY_KEY_BUSY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=ENTITY_NAME_BUSY,
         entity_registry_enabled_default=False,
     ),
     Eq3BinarySensorEntityDescription(
@@ -78,7 +75,6 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS = [
         key=ENTITY_KEY_DST,
         translation_key=ENTITY_KEY_DST,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=ENTITY_NAME_DST,
     ),
 ]
 
