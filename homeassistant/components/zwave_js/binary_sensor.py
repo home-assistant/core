@@ -68,6 +68,9 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
 
 # Mappings for Notification sensors
 # https://github.com/zwave-js/specs/blob/master/Registries/Notification%20Command%20Class%2C%20list%20of%20assigned%20Notifications.xlsx
+#
+# Mapping rules:
+# The catch all description should not have a device class and be marked as diagnostic.
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
     NotificationZWaveJSEntityDescription(
         # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
