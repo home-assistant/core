@@ -3,7 +3,6 @@
   "name": "Bayesian",
   "codeowners": ["@HarvsG"],
   "config_flow": true,
-  "dependencies": ["template"],
   "documentation": "https://www.home-assistant.io/integrations/bayesian",
   "integration_type": "helper",
   "iot_class": "local_polling",
