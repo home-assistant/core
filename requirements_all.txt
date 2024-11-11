@@ -860,7 +860,7 @@ epion==0.0.3
 epson-projector==0.5.1
 
 # homeassistant.components.eq3btsmart
-eq3btsmart==1.2.0
+eq3btsmart==1.2.1
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
@@ -1066,7 +1066,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.4.post1
+guppy3==3.1.4.post1;python_version<'3.13'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -1148,7 +1148,7 @@ httplib2==0.20.4
 huawei-lte-api==1.10.0
 
 # homeassistant.components.huum
-huum==0.7.11
+huum==0.7.11;python_version<'3.13'
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -1651,7 +1651,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.0.0
+psutil==6.1.0
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -2099,7 +2099,7 @@ pynetio==0.1.9.1
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.1
+pynordpool==0.2.2
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -2152,7 +2152,7 @@ pyoverkiz==1.14.1
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.10
+pypalazzetti==0.1.11
 
 # homeassistant.components.elv
 pypca==0.0.7

@@ -5,7 +5,7 @@ aiodiscover==2.1.0
 aiodns==3.2.0
 aiohasupervisor==0.2.1
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.11.0b4
+aiohttp==3.11.0rc0
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -13,6 +13,7 @@ async-interrupt==1.2.0
 async-upnp-client==0.41.0
 atomicwrites-homeassistant==1.4.1
 attrs==24.2.0
+audioop-lts==0.2.1;python_version>='3.13'
 av==13.1.0
 awesomeversion==24.6.0
 bcrypt==4.2.0
@@ -59,6 +60,8 @@ PyYAML==6.0.2
 requests==2.32.3
 securetar==2024.2.1
 SQLAlchemy==2.0.31
+standard-aifc==3.13.0;python_version>='3.13'
+standard-telnetlib==3.13.0;python_version>='3.13'
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
@@ -81,9 +84,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.66.2
-grpcio-status==1.66.2
-grpcio-reflection==1.66.2
+grpcio==1.67.1
+grpcio-status==1.67.1
+grpcio-reflection==1.67.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
