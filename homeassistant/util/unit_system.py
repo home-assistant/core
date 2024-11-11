@@ -129,6 +129,25 @@ class UnitSystem:
         self.wind_speed_unit = wind_speed
         self._conversions = conversions
 
+    def temperature(self, temperature: float, from_unit: str) -> float:
+        """Convert the given temperature to this unit system."""
+        if not isinstance(temperature, Number):
+            raise TypeError(f"{temperature!s} is not a numeric value.")
+
+        return TemperatureConverter.convert(
+            temperature, from_unit, self.temperature_unit
+        )
+
+    def length(self, length: float | None, from_unit: str) -> float:
+        """Convert the given length to this unit system."""
+        if not isinstance(length, Number):
+            raise TypeError(f"{length!s} is not a numeric value.")
+
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return DistanceConverter.convert(  # type: ignore[unreachable]
+            length, from_unit, self.length_unit
+        )
+
     def accumulated_precipitation(self, precip: float | None, from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(precip, Number):
@@ -149,16 +168,6 @@ class UnitSystem:
             area, from_unit, self.area_unit
         )
 
-    def length(self, length: float | None, from_unit: str) -> float:
-        """Convert the given length to this unit system."""
-        if not isinstance(length, Number):
-            raise TypeError(f"{length!s} is not a numeric value.")
-
-        # type ignore: https://github.com/python/mypy/issues/7207
-        return DistanceConverter.convert(  # type: ignore[unreachable]
-            length, from_unit, self.length_unit
-        )
-
     def pressure(self, pressure: float | None, from_unit: str) -> float:
         """Convert the given pressure to this unit system."""
         if not isinstance(pressure, Number):
@@ -169,13 +178,14 @@ class UnitSystem:
             pressure, from_unit, self.pressure_unit
         )
 
-    def temperature(self, temperature: float, from_unit: str) -> float:
-        """Convert the given temperature to this unit system."""
-        if not isinstance(temperature, Number):
-            raise TypeError(f"{temperature!s} is not a numeric value.")
+    def wind_speed(self, wind_speed: float | None, from_unit: str) -> float:
+        """Convert the given wind_speed to this unit system."""
+        if not isinstance(wind_speed, Number):
+            raise TypeError(f"{wind_speed!s} is not a numeric value.")
 
-        return TemperatureConverter.convert(
-            temperature, from_unit, self.temperature_unit
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return SpeedConverter.convert(  # type: ignore[unreachable]
+            wind_speed, from_unit, self.wind_speed_unit
         )
 
     def volume(self, volume: float | None, from_unit: str) -> float:
@@ -186,16 +196,6 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return VolumeConverter.convert(  # type: ignore[unreachable]
             volume, from_unit, self.volume_unit
-        )
-
-    def wind_speed(self, wind_speed: float | None, from_unit: str) -> float:
-        """Convert the given wind_speed to this unit system."""
-        if not isinstance(wind_speed, Number):
-            raise TypeError(f"{wind_speed!s} is not a numeric value.")
-
-        # type ignore: https://github.com/python/mypy/issues/7207
-        return SpeedConverter.convert(  # type: ignore[unreachable]
-            wind_speed, from_unit, self.wind_speed_unit
         )
 
     def as_dict(self) -> dict[str, str]:
