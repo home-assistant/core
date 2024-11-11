@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
     CONF_STATE,
-    CONF_TYPE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
@@ -71,11 +70,9 @@ from .issues import raise_mirrored_entries, raise_no_prob_given_false
 _LOGGER = logging.getLogger(__name__)
 
 
-def above_greater_than_below(
-    config: dict[str, Any], type_key: str = CONF_PLATFORM
-) -> dict[str, Any]:
+def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
     """If the observation is of type/platform NUMERIC_STATE then ensure that the value give for 'above' is not greater than that for 'below'. Also check that at least one of the two is specified."""
-    if config[type_key] == CONF_NUMERIC_STATE:
+    if config[CONF_PLATFORM] == CONF_NUMERIC_STATE:
         above = config.get(CONF_ABOVE)
         below = config.get(CONF_BELOW)
         if above is None and below is None:
@@ -113,10 +110,10 @@ NUMERIC_STATE_SCHEMA = vol.All(
 )
 
 
-def no_overlapping(configs: list[dict], type_key: str = CONF_PLATFORM) -> list[dict]:
+def no_overlapping(configs: list[dict]) -> list[dict]:
     "For a list of observations ensure that there are no overlapping intervals for NUMERIC_STATE observations for the same entity."
     numeric_configs = [
-        config for config in configs if config[type_key] == CONF_NUMERIC_STATE
+        config for config in configs if config[CONF_PLATFORM] == CONF_NUMERIC_STATE
     ]
     if len(numeric_configs) < 2:
         return configs
@@ -294,10 +291,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._observations = [
             Observation(
                 entity_id=observation.get(CONF_ENTITY_ID),
-                # YAML uses the key CONF_PLATFORM but ConfigFlow uses CONF_TYPE
-                platform=observation[CONF_PLATFORM]
-                if CONF_PLATFORM in observation
-                else observation[CONF_TYPE],
+                platform=observation[CONF_PLATFORM],
                 prob_given_false=observation[CONF_P_GIVEN_F],
                 prob_given_true=observation[CONF_P_GIVEN_T],
                 observed=None,

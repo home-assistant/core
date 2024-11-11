@@ -21,8 +21,8 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_STATE,
-    CONF_TYPE,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.helpers import selector
@@ -287,7 +287,7 @@ async def _get_select_observation_schema(
         {
             vol.Required(CONF_INDEX): vol.In(
                 {
-                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_TYPE]})"
+                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -303,7 +303,7 @@ async def _get_remove_observation_schema(
         {
             vol.Required(CONF_INDEX): cv.multi_select(
                 {
-                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_TYPE]})"
+                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -319,7 +319,7 @@ async def _get_flow_step_for_editing(
     observations: list[dict[str, Any]] = user_input[CONF_OBSERVATIONS]
     selected_idx = int(user_input[CONF_INDEX])
 
-    return str(observations[selected_idx][CONF_TYPE])
+    return str(observations[selected_idx][CONF_PLATFORM])
 
 
 async def _get_state_schema(
@@ -418,10 +418,10 @@ async def _validate_observation_setup(
 
     if idx := handler.options.get(CONF_INDEX):
         # if there is an index, that means we are in observation editing mode and we want to overwrite not append
-        user_input[CONF_TYPE] = observations[int(idx)][CONF_TYPE]
-        if user_input[CONF_TYPE] == ObservationTypes.NUMERIC_STATE:
-            above_greater_than_below(user_input, type_key=CONF_TYPE)
-            no_overlapping([*observations, user_input], type_key=CONF_TYPE)
+        user_input[CONF_PLATFORM] = observations[int(idx)][CONF_PLATFORM]
+        if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
+            above_greater_than_below(user_input)
+            no_overlapping([*observations, user_input])
 
         observations[int(idx)] = user_input
 
@@ -429,10 +429,10 @@ async def _validate_observation_setup(
         handler.options.pop(CONF_INDEX, None)
     elif handler.parent_handler.cur_step is not None:
         # if we are in adding mode we need to record the platform from the step id
-        user_input[CONF_TYPE] = handler.parent_handler.cur_step["step_id"]
-        if user_input[CONF_TYPE] == ObservationTypes.NUMERIC_STATE:
-            above_greater_than_below(user_input, type_key=CONF_TYPE)
-            no_overlapping([*observations, user_input], type_key=CONF_TYPE)
+        user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
+        if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
+            above_greater_than_below(user_input)
+            no_overlapping([*observations, user_input])
 
         observations.append(user_input)
 

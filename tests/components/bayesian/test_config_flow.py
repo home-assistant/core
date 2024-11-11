@@ -29,8 +29,8 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_STATE,
-    CONF_TYPE,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
@@ -157,7 +157,7 @@ False
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -165,7 +165,7 @@ False
                     CONF_NAME: "Office is bright",
                 },
                 {
-                    CONF_TYPE: str(ObservationTypes.STATE),
+                    CONF_PLATFORM: str(ObservationTypes.STATE),
                     CONF_ENTITY_ID: "sensor.work_laptop",
                     CONF_TO_STATE: "on",
                     CONF_P_GIVEN_T: 0.6,
@@ -173,7 +173,7 @@ False
                     CONF_NAME: "Work laptop on network",
                 },
                 {
-                    CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                     CONF_P_GIVEN_T: 0.45,
                     CONF_P_GIVEN_F: 0.05,
@@ -241,7 +241,7 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: CONF_STATE,
+                    CONF_PLATFORM: CONF_STATE,
                     CONF_ENTITY_ID: "sensor.kitchen_occupancy",
                     CONF_TO_STATE: "on",
                     CONF_P_GIVEN_T: 0.4,
@@ -309,7 +309,7 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
             CONF_PRIOR: 0.2,
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.outside_temperature",
                     CONF_ABOVE: 20,
                     CONF_BELOW: 35,
@@ -432,7 +432,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
             CONF_PRIOR: 0.2,
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.outside_temperature",
                     CONF_ABOVE: 20.0,
                     CONF_BELOW: 35.0,
@@ -441,7 +441,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                     CONF_NAME: "20 - 35 outside",
                 },
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.outside_temperature",
                     CONF_ABOVE: 35.0,
                     CONF_BELOW: 40.0,
@@ -509,7 +509,7 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: "{{is_state('device_tracker.paulus','not_home') and ((as_timestamp(now()) - as_timestamp(states.device_tracker.paulus.last_changed)) > 300)}}",
                     CONF_P_GIVEN_T: 0.05,
                     CONF_P_GIVEN_F: 0.99,
@@ -534,7 +534,7 @@ async def test_basic_options(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -587,7 +587,7 @@ async def test_basic_options(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "presence",
         CONF_OBSERVATIONS: [
             {
-                CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -614,7 +614,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -670,7 +670,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -678,7 +678,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_TYPE: str(ObservationTypes.STATE),
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.work_laptop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.6,
@@ -702,7 +702,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -710,7 +710,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Office is bright",
                 },
                 {
-                    CONF_TYPE: str(ObservationTypes.STATE),
+                    CONF_PLATFORM: str(ObservationTypes.STATE),
                     CONF_ENTITY_ID: "sensor.work_laptop",
                     CONF_TO_STATE: "on",
                     CONF_P_GIVEN_T: 0.6,
@@ -718,7 +718,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Work laptop on network",
                 },
                 {
-                    CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                     CONF_P_GIVEN_T: 0.45,
                     CONF_P_GIVEN_F: 0.05,
@@ -785,7 +785,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -793,7 +793,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_TYPE: str(ObservationTypes.STATE),
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.desktop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.7,
@@ -801,7 +801,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Desktop on network",
             },
             {
-                CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.45,
                 CONF_P_GIVEN_F: 0.05,
@@ -847,7 +847,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lumens",
                 CONF_ABOVE: 2000,
                 CONF_P_GIVEN_T: 0.8,
@@ -855,7 +855,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_TYPE: str(ObservationTypes.STATE),
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.desktop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.7,
@@ -863,7 +863,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Desktop on network",
             },
             {
-                CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.45,
                 CONF_P_GIVEN_F: 0.05,
@@ -917,7 +917,7 @@ False
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lumens",
                 CONF_ABOVE: 2000,
                 CONF_P_GIVEN_T: 0.8,
@@ -925,7 +925,7 @@ False
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_TYPE: str(ObservationTypes.STATE),
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.desktop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.7,
@@ -933,7 +933,7 @@ False
                 CONF_NAME: "Desktop on network",
             },
             {
-                CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("17:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.55,
                 CONF_P_GIVEN_F: 0.13,
@@ -956,7 +956,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -964,7 +964,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Office is bright",
                 },
                 {
-                    CONF_TYPE: str(ObservationTypes.STATE),
+                    CONF_PLATFORM: str(ObservationTypes.STATE),
                     CONF_ENTITY_ID: "sensor.work_laptop",
                     CONF_TO_STATE: "on",
                     CONF_P_GIVEN_T: 0.6,
@@ -972,7 +972,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Work laptop on network",
                 },
                 {
-                    CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                     CONF_P_GIVEN_T: 0.45,
                     CONF_P_GIVEN_F: 0.05,
@@ -1022,7 +1022,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_TYPE: str(ObservationTypes.NUMERIC_STATE),
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -1030,7 +1030,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_TYPE: str(ObservationTypes.TEMPLATE),
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.45,
                 CONF_P_GIVEN_F: 0.05,
