@@ -20,7 +20,6 @@ DEVICE_MODEL = "CC-RT-BLE-EQ"
 
 GET_DEVICE_TIMEOUT = 5  # seconds
 
-
 EQ_TO_HA_HVAC: dict[OperationMode, HVACMode] = {
     OperationMode.OFF: HVACMode.OFF,
     OperationMode.ON: HVACMode.HEAT,

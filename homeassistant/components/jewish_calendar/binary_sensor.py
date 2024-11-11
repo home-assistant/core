@@ -14,15 +14,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
-from .entity import JewishCalendarEntity
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 
 @dataclass(frozen=True)
@@ -63,14 +61,12 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: JewishCalendarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish Calendar binary sensors."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-
     async_add_entities(
-        JewishCalendarBinarySensor(config_entry, entry, description)
+        JewishCalendarBinarySensor(config_entry, description)
         for description in BINARY_SENSORS
     )
 
