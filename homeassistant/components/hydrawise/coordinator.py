@@ -67,8 +67,6 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                 data.zones[zone.id] = zone
             for sensor in controller.sensors:
                 data.sensors[sensor.id] = sensor
-        if self.data:
-            data.daily_water_summary = self.data.daily_water_summary
         return data
 
 
@@ -106,7 +104,11 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                 now().replace(hour=0, minute=0, second=0, microsecond=0),
                 now(),
             )
-        data = self._main_coordinator.data
-        data.daily_water_summary = daily_water_summary
-        self._main_coordinator.async_set_updated_data(data)
-        return data
+        main_data = self._main_coordinator.data
+        return HydrawiseData(
+            user=main_data.user,
+            controllers=main_data.controllers,
+            zones=main_data.zones,
+            sensors=main_data.sensors,
+            daily_water_summary=daily_water_summary,
+        )

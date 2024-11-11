@@ -92,7 +92,7 @@ def _get_controller_daily_total_water_use(sensor: HydrawiseSensor) -> float | No
     return daily_water_summary.total_use
 
 
-CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
+WATER_USE_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
         key="daily_active_water_time",
         translation_key="daily_active_water_time",
@@ -102,6 +102,16 @@ CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     ),
 )
 
+
+WATER_USE_ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
+    HydrawiseSensorEntityDescription(
+        key="daily_active_water_time",
+        translation_key="daily_active_water_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=_get_zone_daily_active_water_time,
+    ),
+)
 
 FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
@@ -150,13 +160,6 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=_get_zone_watering_time,
     ),
-    HydrawiseSensorEntityDescription(
-        key="daily_active_water_time",
-        translation_key="daily_active_water_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        value_fn=_get_zone_daily_active_water_time,
-    ),
 )
 
 FLOW_MEASUREMENT_KEYS = [x.key for x in FLOW_CONTROLLER_SENSORS]
@@ -172,8 +175,15 @@ async def async_setup_entry(
     entities: list[HydrawiseSensor] = []
     for controller in coordinators.main.data.controllers.values():
         entities.extend(
-            HydrawiseSensor(coordinators.main, description, controller)
-            for description in CONTROLLER_SENSORS
+            HydrawiseSensor(coordinators.water_use, description, controller)
+            for description in WATER_USE_CONTROLLER_SENSORS
+        )
+        entities.extend(
+            HydrawiseSensor(
+                coordinators.water_use, description, controller, zone_id=zone.id
+            )
+            for zone in controller.zones
+            for description in WATER_USE_ZONE_SENSORS
         )
         entities.extend(
             HydrawiseSensor(coordinators.main, description, controller, zone_id=zone.id)
