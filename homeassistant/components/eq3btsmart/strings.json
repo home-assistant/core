@@ -22,7 +22,7 @@
   "entity": {
     "binary_sensor": {
       "dst": {
-        "name": "dSt"
+        "name": "Daylight saving time"
       }
     }
   }
