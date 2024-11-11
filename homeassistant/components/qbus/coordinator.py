@@ -5,11 +5,10 @@ import logging
 from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 
-from homeassistant.components.mqtt import client as mqtt
-from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -103,7 +102,6 @@ class QbusDataCoordinator:
         _LOGGER.debug("Registering %s", qbus_type)
         self._platform_register[qbus_type.lower()] = (entity_class, add_entities)
 
-    @callback
     async def _config_received(self, msg: ReceiveMessage) -> None:
         _LOGGER.debug("Receiving config in entry %s", self._entry.config_entry.entry_id)
 
@@ -138,7 +136,6 @@ class QbusDataCoordinator:
         self._add_entities(self._device)
         self._request_controller_state(self._device)
 
-    @callback
     async def _controller_state_received(self, msg: ReceiveMessage) -> None:
         _LOGGER.debug("Receiving controller state %s", msg.topic)
 
@@ -194,7 +191,6 @@ class QbusDataCoordinator:
         self._request_entity_states()
 
     def _request_entity_states(self) -> None:
-        @callback
         async def request_state(_) -> None:
             request = self._message_factory.create_state_request(
                 self._registered_entity_ids
@@ -206,14 +202,12 @@ class QbusDataCoordinator:
             async_call_later(self._hass, self._WAIT_TIME, request_state)
 
     def _request_controller_state(self, device: QbusMqttDevice) -> None:
-        @callback
         async def request_controller_state(_) -> None:
             request = self._message_factory.create_device_state_request(device)
             await mqtt.async_publish(self._hass, request.topic, request.payload)
 
         async_call_later(self._hass, self._WAIT_TIME, request_controller_state)
 
-    @callback
     async def _options_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> None:

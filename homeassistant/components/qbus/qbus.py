@@ -9,8 +9,7 @@ from typing import Final
 from qbusmqttapi.discovery import QbusDiscovery
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 
-from homeassistant.components.mqtt import client as mqtt
-from homeassistant.components.mqtt.util import async_wait_for_mqtt_client
+from homeassistant.components.mqtt import async_wait_for_mqtt_client, client as mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.mqtt.util import async_wait_for_mqtt_client
+from homeassistant.components.mqtt import async_wait_for_mqtt_client
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import QbusDataCoordinator
@@ -33,7 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hub.async_setup_entry()
 
-    @callback
     async def _homeassistant_started(event: Event) -> None:
         _LOGGER.debug("Home Assistant started, requesting config")
         await QbusConfigContainer.async_get_or_request_config(hass)

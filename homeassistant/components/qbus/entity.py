@@ -6,8 +6,7 @@ from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 from qbusmqttapi.state import QbusMqttState
 
-from homeassistant.components.mqtt import client as mqtt
-from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
 
