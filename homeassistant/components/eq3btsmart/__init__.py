@@ -21,7 +21,7 @@ from .models import Eq3Config, Eq3ConfigEntryData
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.LOCK,
+    Platform.SWITCH,
 ]
 
 _LOGGER = logging.getLogger(__name__)

@@ -22,6 +22,11 @@ ENTITY_KEY_DST = "dst"
 ENTITY_KEY_BATTERY = "battery"
 ENTITY_KEY_WINDOW = "window"
 ENTITY_KEY_LOCK = "lock"
+ENTITY_KEY_BOOST = "boost"
+ENTITY_KEY_AWAY = "away"
+
+ENTITY_ICON_BOOST = "mdi:speedometer"
+ENTITY_ICON_AWAY = "mdi:lock"
 
 GET_DEVICE_TIMEOUT = 5  # seconds
 
