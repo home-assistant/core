@@ -28,12 +28,12 @@ class VacuumActivity(StrEnum):
 
 # These STATE_* constants are deprecated as of Home Assistant 2024.11.
 # Please use the VacuumActivity enum instead.
-_DEPRECATED_STATE_CLEANING = DeprecatedConstantEnum(VacuumActivity.CLEANING, "2025.11")
-_DEPRECATED_STATE_DOCKED = DeprecatedConstantEnum(VacuumActivity.DOCKED, "2025.11")
+_DEPRECATED_STATE_CLEANING = DeprecatedConstantEnum(VacuumActivity.CLEANING, "2025.12")
+_DEPRECATED_STATE_DOCKED = DeprecatedConstantEnum(VacuumActivity.DOCKED, "2025.12")
 _DEPRECATED_STATE_RETURNING = DeprecatedConstantEnum(
-    VacuumActivity.RETURNING, "2025.11"
+    VacuumActivity.RETURNING, "2025.12"
 )
-_DEPRECATED_STATE_ERROR = DeprecatedConstantEnum(VacuumActivity.ERROR, "2025.11")
+_DEPRECATED_STATE_ERROR = DeprecatedConstantEnum(VacuumActivity.ERROR, "2025.12")
 
 
 STATES = [cls.value for cls in VacuumActivity]

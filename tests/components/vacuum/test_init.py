@@ -26,6 +26,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import frame
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
@@ -319,9 +320,13 @@ async def test_vacuum_not_log_deprecated_state_warning(
     """Test correctly using activity doesn't log issue or raise repair."""
     state = hass.states.get(mock_vacuum_entity.entity_id)
     assert state is not None
-    assert "Entities should implement the 'activity' property and" not in caplog.text
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        not in caplog.text
+    )
 
 
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
     config_flow_fixture: None,
@@ -383,9 +388,13 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
     state = hass.states.get(entity.entity_id)
     assert state is not None
 
-    assert "Entities should implement the 'activity' property and" in caplog.text
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        in caplog.text
+    )
 
 
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
     config_flow_fixture: None,
@@ -446,7 +455,10 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     state = hass.states.get(entity.entity_id)
     assert state is not None
 
-    assert "Entities should implement the 'activity' property and" not in caplog.text
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        not in caplog.text
+    )
 
     with patch.object(
         MockLegacyVacuum,
@@ -455,7 +467,10 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     ):
         await async_start(hass, entity.entity_id)
 
-    assert "Entities should implement the 'activity' property and" in caplog.text
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        in caplog.text
+    )
     caplog.clear()
     with patch.object(
         MockLegacyVacuum,
@@ -464,4 +479,7 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     ):
         await async_start(hass, entity.entity_id)
     # Test we only log once
-    assert "Entities should implement the 'activity' property and" not in caplog.text
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        not in caplog.text
+    )
