@@ -7,11 +7,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.acaia.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_fire_time_changed
 
@@ -25,19 +24,12 @@ BUTTONS = (
 )
 
 
-async def test_button_presses(
+async def test_buttons(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
-    mock_scale: MagicMock,
 ) -> None:
     """Test the acaia buttons."""
-
-    device = device_registry.async_get_device({(DOMAIN, mock_scale.mac)})
-    assert device
-    assert device == snapshot(name="device")
-
     for button in BUTTONS:
         state = hass.states.get(f"button.lunar_ddeeff_{button}")
         assert state
@@ -47,6 +39,14 @@ async def test_button_presses(
         assert entry
         assert entry == snapshot(name=f"entry_button_{button}")
 
+
+async def test_button_presses(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+) -> None:
+    """Test the acaia button presses."""
+
+    for button in BUTTONS:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

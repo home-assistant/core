@@ -11,7 +11,7 @@ from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from . import service_info, setup_integration
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -35,16 +35,6 @@ def mock_verify() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_discovered_service_info() -> Generator[AsyncMock]:
-    """Override getting Bluetooth service info."""
-    with patch(
-        "homeassistant.components.acaia.config_flow.async_discovered_service_info",
-        return_value=[service_info],
-    ) as mock_discovered_service_info:
-        yield mock_discovered_service_info
-
-
-@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
@@ -64,7 +54,7 @@ async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_scale: MagicMock
 ) -> None:
     """Set up the acaia integration for testing."""
-    await setup_integration(hass, mock_config_entry, mock_scale)
+    await setup_integration(hass, mock_config_entry)
 
 
 @pytest.fixture

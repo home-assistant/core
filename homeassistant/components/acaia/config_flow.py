@@ -42,8 +42,8 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            mac = format_mac(user_input[CONF_MAC])
             try:
-                mac = format_mac(user_input[CONF_MAC])
                 is_new_style_scale = await is_new_scale(mac)
             except AcaiaDeviceNotFound:
                 errors["base"] = "device_not_found"

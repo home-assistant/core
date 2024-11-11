@@ -1,37 +1,5 @@
 # serializer version: 1
-# name: test_button_presses[device]
-  DeviceRegistryEntrySnapshot({
-    'area_id': 'kitchen',
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'acaia',
-        'aa:bb:cc:dd:ee:ff',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Acaia',
-    'model': 'Lunar',
-    'model_id': None,
-    'name': 'LUNAR-DDEEFF',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': 'Kitchen',
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_button_presses[entry_button_reset_timer]
+# name: test_buttons[entry_button_reset_timer]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -64,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_presses[entry_button_start_stop_timer]
+# name: test_buttons[entry_button_start_stop_timer]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -97,7 +65,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_presses[entry_button_tare]
+# name: test_buttons[entry_button_tare]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -130,7 +98,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_presses[state_button_reset_timer]
+# name: test_buttons[state_button_reset_timer]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LUNAR-DDEEFF Reset timer',
@@ -143,7 +111,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_presses[state_button_start_stop_timer]
+# name: test_buttons[state_button_start_stop_timer]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LUNAR-DDEEFF Start/stop timer',
@@ -156,7 +124,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_button_presses[state_button_tare]
+# name: test_buttons[state_button_tare]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LUNAR-DDEEFF Tare',

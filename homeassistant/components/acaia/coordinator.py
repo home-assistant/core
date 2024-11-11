@@ -27,11 +27,6 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: AcaiaConfigEntry
 
-    @property
-    def scale(self) -> AcaiaScale:
-        """Return the scale object."""
-        return self._scale
-
     def __init__(self, hass: HomeAssistant, entry: AcaiaConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -48,6 +43,11 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             is_new_style_scale=entry.data[CONF_IS_NEW_STYLE_SCALE],
             notify_callback=self.async_update_listeners,
         )
+
+    @property
+    def scale(self) -> AcaiaScale:
+        """Return the scale object."""
+        return self._scale
 
     async def _async_update_data(self) -> None:
         """Fetch data."""

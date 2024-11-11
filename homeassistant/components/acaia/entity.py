@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,9 +38,3 @@ class AcaiaEntity(CoordinatorEntity[AcaiaCoordinator]):
     def available(self) -> bool:
         """Returns whether entity is available."""
         return super().available and self._scale.connected
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._scale = self.coordinator.scale
-        self.async_write_ha_state()

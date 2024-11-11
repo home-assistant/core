@@ -6,9 +6,12 @@ from unittest.mock import MagicMock
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
+from homeassistant.components.acaia.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -18,7 +21,6 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_scale: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
 
@@ -49,3 +51,15 @@ async def test_update_exception_leads_to_active_disconnect(
     await hass.async_block_till_done()
 
     mock_scale.device_disconnected_handler.assert_called_once()
+
+
+async def test_device(
+    mock_scale: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the device from registry."""
+
+    device = device_registry.async_get_device({(DOMAIN, mock_scale.mac)})
+    assert device
+    assert device == snapshot

@@ -1,6 +1,7 @@
 """Test the acaia config flow."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
 import pytest
@@ -10,10 +11,29 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from . import service_info
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
+
+service_info = BluetoothServiceInfo(
+    name="LUNAR-DDEEFF",
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-63,
+    manufacturer_data={},
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+
+@pytest.fixture
+def mock_discovered_service_info() -> Generator[AsyncMock]:
+    """Override getting Bluetooth service info."""
+    with patch(
+        "homeassistant.components.acaia.config_flow.async_discovered_service_info",
+        return_value=[service_info],
+    ) as mock_discovered_service_info:
+        yield mock_discovered_service_info
 
 
 async def test_form(
