@@ -53,15 +53,7 @@ class AlarmSoundModeAction(EzvizSelectEntityActionBase):
         """Change the selected option."""
         sound_mode_value = ezvizSelect.options.index(option)
 
-        try:
-            ezvizSelect.coordinator.ezviz_client.alarm_sound(
-                serial, sound_mode_value, 1
-            )
-
-        except (HTTPError, PyEzvizError) as err:
-            raise HomeAssistantError(
-                f"Cannot set Warning sound level for {ezvizSelect.entity_id}"
-            ) from err
+        ezvizSelect.coordinator.ezviz_client.alarm_sound(serial, sound_mode_value, 1)
 
 
 class BatteryWorkModeAction(EzvizSelectEntityActionBase):
@@ -84,15 +76,10 @@ class BatteryWorkModeAction(EzvizSelectEntityActionBase):
     def select_option(ezvizSelect: EzvizSelect, serial: str, option: str) -> None:
         """Change the selected option."""
         battery_work_mode = getattr(BatteryCameraWorkMode, option.upper())
-        try:
-            ezvizSelect.coordinator.ezviz_client.set_battery_camera_work_mode(
-                serial, battery_work_mode.value
-            )
 
-        except (HTTPError, PyEzvizError) as err:
-            raise HomeAssistantError(
-                f"Cannot set battery work mode for {ezvizSelect.entity_id}"
-            ) from err
+        ezvizSelect.coordinator.ezviz_client.set_battery_camera_work_mode(
+            serial, battery_work_mode.value
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -179,6 +166,12 @@ class EzvizSelect(EzvizEntity, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        return self.entity_description.action_handler.select_option(
-            self, self._serial, option
-        )
+        try:
+            return self.entity_description.action_handler.select_option(
+                self, self._serial, option
+            )
+
+        except (HTTPError, PyEzvizError) as err:
+            raise HomeAssistantError(
+                f"Cannot select option for {self.entity_description.key}"
+            ) from err
