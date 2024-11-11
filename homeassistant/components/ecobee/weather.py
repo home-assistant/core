@@ -46,11 +46,11 @@ async def async_setup_entry(
     data = hass.data[DOMAIN]
 
     async_add_entities(
-        [
+        (
             EcobeeWeather(data, thermostat["name"], index)
             for index, thermostat in enumerate(data.ecobee.thermostats)
             if "weather" in thermostat
-        ],
+        ),
         True,
     )
 

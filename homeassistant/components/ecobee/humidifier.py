@@ -34,11 +34,11 @@ async def async_setup_entry(
     data = hass.data[DOMAIN]
 
     async_add_entities(
-        [
+        (
             EcobeeHumidifier(data, index)
             for index, thermostat in enumerate(data.ecobee.thermostats)
             if thermostat["settings"]["hasHumidifier"]
-        ],
+        ),
         True,
     )
 
