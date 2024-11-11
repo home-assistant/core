@@ -59,10 +59,7 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         # Don't fetch zones. We'll fetch them for each controller later.
         # This is to prevent 502 errors in some cases.
         # See: https://github.com/home-assistant/core/issues/120128
-        data = HydrawiseData(
-            user=await self.api.get_user(fetch_zones=False),
-            daily_water_summary=self.data.daily_water_summary if self.data else {},
-        )
+        data = HydrawiseData(user=await self.api.get_user(fetch_zones=False))
         for controller in data.user.controllers:
             data.controllers[controller.id] = controller
             controller.zones = await self.api.get_zones(controller)
@@ -70,6 +67,8 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                 data.zones[zone.id] = zone
             for sensor in controller.sensors:
                 data.sensors[sensor.id] = sensor
+        if self.data:
+            data.daily_water_summary = self.data.daily_water_summary
         return data
 
 
@@ -107,6 +106,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                 now().replace(hour=0, minute=0, second=0, microsecond=0),
                 now(),
             )
-        self._main_coordinator.data.daily_water_summary = daily_water_summary
-        self._main_coordinator.async_set_updated_data(self._main_coordinator.data)
-        return self._main_coordinator.data
+        data = self._main_coordinator.data
+        data.daily_water_summary = daily_water_summary
+        self._main_coordinator.async_set_updated_data(data)
+        return data
