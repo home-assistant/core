@@ -421,8 +421,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if hass.config.webrtc.ice_servers:
             return hass.config.webrtc.ice_servers
         return [
-            RTCIceServer(urls="stun:stun.home-assistant.io:80"),
-            RTCIceServer(urls="stun:stun.home-assistant.io:3478"),
+            RTCIceServer(
+                urls=[
+                    "stun:stun.home-assistant.io:80",
+                    "stun:stun.home-assistant.io:3478",
+                ]
+            ),
         ]
 
     async_register_ice_servers(hass, get_ice_servers)
@@ -471,6 +475,8 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_should_poll: bool = False  # No need to poll cameras
     _attr_state: None = None  # State is determined by is_on
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
+
+    __supports_stream: CameraEntityFeature | None = None
 
     def __init__(self) -> None:
         """Initialize a camera."""
@@ -783,6 +789,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
+        self.__supports_stream = (
+            self.supported_features_compat & CameraEntityFeature.STREAM
+        )
         await self.async_refresh_providers(write_state=False)
 
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
@@ -848,7 +857,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ]
             config.configuration.ice_servers.extend(ice_servers)
 
-        config.get_candidates_upfront = self._legacy_webrtc_provider is not None
+        config.get_candidates_upfront = (
+            self._supports_native_sync_webrtc
+            or self._legacy_webrtc_provider is not None
+        )
 
         return config
 
@@ -888,6 +900,21 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
         return CameraCapabilities(frontend_stream_types)
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
+
+        Schedules async_refresh_providers if support of streams have changed.
+        """
+        super().async_write_ha_state()
+        if self.__supports_stream != (
+            supports_stream := self.supported_features_compat
+            & CameraEntityFeature.STREAM
+        ):
+            self.__supports_stream = supports_stream
+            self._invalidate_camera_capabilities_cache()
+            self.hass.async_create_task(self.async_refresh_providers())
 
 
 class CameraView(HomeAssistantView):

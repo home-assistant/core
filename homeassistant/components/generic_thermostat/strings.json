@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add generic thermostat helper",
+        "title": "Add generic thermostat",
         "description": "Create a climate entity that controls the temperature via a switch and sensor.",
         "data": {
           "ac_mode": "Cooling mode",
@@ -17,8 +17,8 @@
         "data_description": {
           "ac_mode": "Set the actuator specified to be treated as a cooling device instead of a heating device.",
           "heater": "Switch entity used to cool or heat depending on A/C mode.",
-          "target_sensor": "Temperature sensor that reflect the current temperature.",
-          "min_cycle_duration": "Set a minimum amount of time that the switch specified must be in its current state prior to being switched either off or on. This option will be ignored if the keep alive option is set.",
+          "target_sensor": "Temperature sensor that reflects the current temperature.",
+          "min_cycle_duration": "Set a minimum amount of time that the switch specified must be in its current state prior to being switched either off or on.",
           "cold_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched on. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will start when the sensor equals or goes below 24.5.",
           "hot_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched off. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5."
         }

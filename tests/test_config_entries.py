@@ -5040,6 +5040,24 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     assert "test" in hass.config.components
 
 
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    ["homeassistant/components/my_integration", "homeassistant.core"],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_options_flow_with_config_entry_core() -> None:
+    """Test that OptionsFlowWithConfigEntry cannot be used in core."""
+    entry = MockConfigEntry(
+        domain="hue",
+        data={"first": True},
+        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
+    )
+
+    with pytest.raises(RuntimeError, match="inherits from OptionsFlowWithConfigEntry"):
+        _ = config_entries.OptionsFlowWithConfigEntry(entry)
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
@@ -5051,40 +5069,17 @@ async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) 
     )
 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
-    assert (
-        "Detected that integration 'hue' inherits from OptionsFlowWithConfigEntry,"
-        " which is deprecated and will stop working in 2025.12" in caplog.text
-    )
+    assert caplog.text == ""  # No deprecation warning for custom components
 
-    options_flow._options["sub_dict"]["2"] = "two"
-    options_flow._options["sub_list"].append("two")
-
-    assert options_flow._options == {
-        "sub_dict": {"1": "one", "2": "two"},
-        "sub_list": ["one", "two"],
-    }
-    assert entry.options == {"sub_dict": {"1": "one"}, "sub_list": ["one"]}
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
-async def test_options_flow_options_not_mutated(hass: HomeAssistant) -> None:
-    """Test that OptionsFlow doesn't mutate entry options."""
-    entry = MockConfigEntry(
-        domain="test",
-        data={"first": True},
-        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
-    )
-    entry.add_to_hass(hass)
-
-    options_flow = config_entries.OptionsFlow()
-    options_flow.handler = entry.entry_id
-    options_flow.hass = hass
+    # Ensure available at startup
+    assert options_flow.config_entry is entry
+    assert options_flow.options == entry.options
 
     options_flow.options["sub_dict"]["2"] = "two"
-    options_flow._options["sub_list"].append("two")
+    options_flow.options["sub_list"].append("two")
 
-    assert options_flow._options == {
+    # Ensure it does not mutate the entry options
+    assert options_flow.options == {
         "sub_dict": {"1": "one", "2": "two"},
         "sub_list": ["one", "two"],
     }
@@ -7220,6 +7215,41 @@ async def test_async_update_entry_unique_id_collision(
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
 
+@pytest.mark.parametrize("domain", ["flipr"])
+async def test_async_update_entry_unique_id_collision_allowed_domain(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+    domain: str,
+) -> None:
+    """Test we warn when async_update_entry creates a unique_id collision.
+
+    This tests we don't warn and don't create issues for domains which have
+    their own migration path.
+    """
+    assert len(issue_registry.issues) == 0
+
+    entry1 = MockConfigEntry(domain=domain, unique_id=None)
+    entry2 = MockConfigEntry(domain=domain, unique_id="not none")
+    entry3 = MockConfigEntry(domain=domain, unique_id="very unique")
+    entry4 = MockConfigEntry(domain=domain, unique_id="also very unique")
+    entry1.add_to_manager(manager)
+    entry2.add_to_manager(manager)
+    entry3.add_to_manager(manager)
+    entry4.add_to_manager(manager)
+
+    manager.async_update_entry(entry2, unique_id=None)
+    assert len(issue_registry.issues) == 0
+    assert len(caplog.record_tuples) == 0
+
+    manager.async_update_entry(entry4, unique_id="very unique")
+    assert len(issue_registry.issues) == 0
+    assert len(caplog.record_tuples) == 0
+
+    assert ("already in use") not in caplog.text
+
+
 async def test_unique_id_collision_issues(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -7249,6 +7279,12 @@ async def test_unique_id_collision_issues(
     for _ in range(6):
         test3.append(MockConfigEntry(domain="test3", unique_id="not_unique"))
         await manager.async_add(test3[-1])
+    # Add an ignored config entry
+    await manager.async_add(
+        MockConfigEntry(
+            domain="test2", unique_id="group_1", source=config_entries.SOURCE_IGNORE
+        )
+    )
 
     # Check we get one issue for domain test2 and one issue for domain test3
     assert len(issue_registry.issues) == 2
@@ -7295,7 +7331,7 @@ async def test_unique_id_collision_issues(
         (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_2"),
     }
 
-    # Remove the last test2 group2 duplicate, a new issue is created
+    # Remove the last test2 group2 duplicate, the issue is cleared
     await manager.async_remove(test2_group_2[1].entry_id)
     assert not issue_registry.issues
 
@@ -7466,6 +7502,7 @@ async def test_options_flow_config_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -7493,10 +7530,7 @@ async def test_options_flow_deprecated_config_entry_setter(
 
                 def __init__(self, entry) -> None:
                     """Test initialisation."""
-                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-                        self.config_entry = entry
-                    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-                        self.options = entry.options
+                    self.config_entry = entry
 
                 async def async_step_init(self, user_input=None):
                     """Test user step."""
@@ -7523,10 +7557,6 @@ async def test_options_flow_deprecated_config_entry_setter(
 
     assert (
         "Detected that integration 'hue' sets option flow config_entry explicitly, "
-        "which is deprecated and will stop working in 2025.12" in caplog.text
-    )
-    assert (
-        "Detected that integration 'hue' sets option flow options explicitly, "
         "which is deprecated and will stop working in 2025.12" in caplog.text
     )
 

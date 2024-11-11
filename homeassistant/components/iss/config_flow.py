@@ -47,8 +47,7 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            self.options.update(user_input)
-            return self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(data=self.config_entry.options | user_input)
 
         return self.async_show_form(
             step_id="init",

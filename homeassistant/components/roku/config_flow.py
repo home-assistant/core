@@ -186,7 +186,7 @@ class RokuOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_PLAY_MEDIA_APP_ID,
-                        default=self.options.get(
+                        default=self.config_entry.options.get(
                             CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID
                         ),
                     ): str,
