@@ -94,6 +94,7 @@ async def test_buttons_unavailable_on_update_exception(
     exception: Exception,
 ) -> None:
     """Test the acaia buttons are unavailable when the scale throws an error on update."""
+
     mock_scale.connect.side_effect = exception
     mock_scale.connected = False
 
