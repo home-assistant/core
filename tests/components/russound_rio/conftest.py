@@ -28,11 +28,9 @@ def mock_setup_entry():
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a Russound RIO config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, unique_id=HARDWARE_MAC, title=MODEL
     )
-    entry.add_to_hass(hass)
-    return entry
 
 
 @pytest.fixture
@@ -70,4 +68,6 @@ def mock_russound_client() -> Generator[AsyncMock]:
             )
         }
         client.connection_handler = RussoundTcpConnectionHandler(HOST, PORT)
+        client.is_connected = Mock(return_value=True)
+        client.unregister_state_update_callbacks.return_value = True
         yield client
