@@ -1,7 +1,10 @@
 """Platform for eq3 binary sensor entities."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING
+
+from eq3btsmart.models import Status
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -9,25 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Eq3ConfigEntry
-from .const import (
-    ENTITY_KEY_BATTERY,
-    ENTITY_KEY_BUSY,
-    ENTITY_KEY_CONNECTED,
-    ENTITY_KEY_DST,
-    ENTITY_KEY_WINDOW,
-    ENTITY_NAME_BATTERY,
-    ENTITY_NAME_CONNECTED,
-    ENTITY_NAME_WINDOW,
-    VALUE_KEY_BATTERY,
-    VALUE_KEY_BUSY,
-    VALUE_KEY_CONNECTED,
-    VALUE_KEY_DST,
-    VALUE_KEY_WINDOW,
-)
+from .const import ENTITY_KEY_BATTERY, ENTITY_KEY_DST, ENTITY_KEY_WINDOW
 from .entity import Eq3Entity
 
 
@@ -35,43 +24,24 @@ from .entity import Eq3Entity
 class Eq3BinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity description for eq3 binary sensors."""
 
-    value_key: str
+    value_func: Callable[[Status], bool]
     always_available: bool = False
 
 
 BINARY_SENSOR_ENTITY_DESCRIPTIONS = [
     Eq3BinarySensorEntityDescription(
-        value_key=VALUE_KEY_BUSY,
-        always_available=True,
-        key=ENTITY_KEY_BUSY,
-        translation_key=ENTITY_KEY_BUSY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    Eq3BinarySensorEntityDescription(
-        value_key=VALUE_KEY_CONNECTED,
-        always_available=True,
-        key=ENTITY_KEY_CONNECTED,
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        name=ENTITY_NAME_CONNECTED,
-        entity_registry_enabled_default=False,
-    ),
-    Eq3BinarySensorEntityDescription(
-        value_key=VALUE_KEY_BATTERY,
+        value_func=lambda status: status.is_low_battery,
         key=ENTITY_KEY_BATTERY,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=ENTITY_NAME_BATTERY,
     ),
     Eq3BinarySensorEntityDescription(
-        value_key=VALUE_KEY_WINDOW,
+        value_func=lambda status: status.is_window_open,
         key=ENTITY_KEY_WINDOW,
         device_class=BinarySensorDeviceClass.WINDOW,
-        name=ENTITY_NAME_WINDOW,
     ),
     Eq3BinarySensorEntityDescription(
-        value_key=VALUE_KEY_DST,
+        value_func=lambda status: status.is_dst,
         key=ENTITY_KEY_DST,
         translation_key=ENTITY_KEY_DST,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -105,42 +75,16 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
     ) -> None:
         """Initialize the entity."""
 
-        super().__init__(entry, entity_description.key)
+        super().__init__(
+            entry, entity_description.key, entity_description.always_available
+        )
         self.entity_description: Eq3BinarySensorEntityDescription = entity_description
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return the state of the binary sensor."""
 
-        state: Any = None
+        if TYPE_CHECKING:
+            assert self._thermostat.status is not None
 
-        if hasattr(self._thermostat, self.entity_description.value_key):
-            state = getattr(self._thermostat, self.entity_description.value_key)
-
-        if self._thermostat.status is not None and hasattr(
-            self._thermostat.status, self.entity_description.value_key
-        ):
-            state = getattr(self._thermostat.status, self.entity_description.value_key)
-
-        if not isinstance(state, bool | None):
-            return None
-
-        return state
-
-    @callback
-    def _async_on_disconnected(self) -> None:
-        """Handle disconnection from the thermostat."""
-
-        if not self.entity_description.always_available:
-            self._attr_available = False
-
-        self.async_write_ha_state()
-
-    @callback
-    def _async_on_connected(self) -> None:
-        """Handle connection to the thermostat."""
-
-        if not self.entity_description.always_available:
-            self._attr_available = True
-
-        self.async_write_ha_state()
+        return self.entity_description.value_func(self._thermostat.status)

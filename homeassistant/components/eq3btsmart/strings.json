@@ -21,9 +21,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "busy": {
-        "name": "Busy"
-      },
       "dst": {
         "name": "dSt"
       }
