@@ -28,6 +28,7 @@ FLOWS = {
         "acmeda",
         "adax",
         "adguard",
+        "ads",
         "advantage_air",
         "aemet",
         "aftership",
