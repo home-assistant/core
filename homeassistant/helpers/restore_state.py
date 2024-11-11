@@ -122,7 +122,7 @@ class RestoreStateData:
         # Nothing should actually be calling this anymore, but we'll keep it
         # around for a while to avoid breaking custom components.
         #
-        # In fact they should not be accessing this at all.
+        # In fact they should not be accessing this at all (see #93924).
         report_usage(
             "restore_state.RestoreStateData.async_get_instance is deprecated, "
             "and not intended to be called by custom components; Please"
