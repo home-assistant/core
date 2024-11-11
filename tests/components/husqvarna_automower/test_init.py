@@ -1,5 +1,6 @@
 """Tests for init module."""
 
+from asyncio import Event
 import http
 import time
 from unittest.mock import AsyncMock, patch
@@ -132,43 +133,72 @@ async def test_websocket_not_available(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test trying to reload the websocket."""
+    mock_called = Event()
+    mock_stall = Event()
+    mock_side_effect: Exception | None = None
+
+    async def mock_function():
+        nonlocal mock_side_effect
+        mock_stall.clear()
+        mock_called.set()
+        await mock_stall.wait()
+        if side_effect := mock_side_effect:
+            mock_side_effect = None
+            raise side_effect
+
+    mock_automower_client.auth.websocket_connect.side_effect = mock_function
+
     # Simulate a WebSocket handshake error
-    mock_automower_client.auth.websocket_connect.side_effect = (
-        HusqvarnaWSServerHandshakeError("Boom")
-    )
+    mock_side_effect = HusqvarnaWSServerHandshakeError("Boom")
 
     # Setup integration and verify initial log error message
     await setup_integration(hass, mock_config_entry)
+    await mock_called.wait()
+    mock_called.clear()
+    assert mock_automower_client.auth.websocket_connect.call_count == 1
+    assert mock_automower_client.start_listening.call_count == 0
+    mock_stall.set()
+    await hass.async_block_till_done()
     assert "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
 
     # Simulate a successful connection
-    mock_automower_client.auth.websocket_connect.side_effect = None
     caplog.clear()
-    mock_automower_client.reset_mock()
-    await hass.async_block_till_done()
-    assert mock_automower_client.auth.websocket_connect.call_count == 1
-    assert mock_automower_client.start_listening.call_count == 1
-    assert "Trying to reconnect: Boom" not in caplog.text
-
-    # Simulate a start_listening TimeoutException
-    mock_automower_client.start_listening.side_effect = TimeoutException("Boom")
+    await mock_called.wait()
+    mock_called.clear()
+    # Prepare for next subtest
+    mock_automower_client.auth.websocket_connect.side_effect = None
+    mock_automower_client.start_listening.side_effect = mock_function
+    # Check outcome
     await hass.async_block_till_done()
     assert mock_automower_client.auth.websocket_connect.call_count == 2
-    assert mock_automower_client.start_listening.call_count == 2
+    assert mock_automower_client.start_listening.call_count == 0
+    assert "Trying to reconnect: Boom" not in caplog.text
+    mock_stall.set()
+
+    # Simulate a start_listening TimeoutException
+    await mock_called.wait()
+    mock_called.clear()
+    mock_side_effect = TimeoutException("Boom")
+    assert mock_automower_client.auth.websocket_connect.call_count == 2
+    assert mock_automower_client.start_listening.call_count == 1
+    mock_stall.set()
+    await hass.async_block_till_done()
+    assert "Failed to listen to websocket. Trying to reconnect: Boom" in caplog.text
 
     # Simulate a successful connection
     caplog.clear()
-    mock_automower_client.start_listening.side_effect = None
-    await hass.async_block_till_done()
+    await mock_called.wait()
+    mock_called.clear()
     assert mock_automower_client.auth.websocket_connect.call_count == 3
-    assert mock_automower_client.start_listening.call_count == 3
+    assert mock_automower_client.start_listening.call_count == 2
+    mock_stall.set()
+    await hass.async_block_till_done()
     assert "Trying to reconnect: Boom" not in caplog.text
 
     # Simulate hass shutting down
-    mock_automower_client.reset_mock()
     await hass.async_stop()
-    assert mock_automower_client.auth.websocket_connect.call_count == 0
-    assert mock_automower_client.start_listening.call_count == 0
+    assert mock_automower_client.auth.websocket_connect.call_count == 3
+    assert mock_automower_client.start_listening.call_count == 2
 
 
 async def test_device_info(
