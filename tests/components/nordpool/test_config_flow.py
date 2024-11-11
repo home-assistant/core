@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 from pynordpool import (
     DeliveryPeriodData,
-    NordPoolAuthenticationError,
     NordPoolConnectionError,
     NordPoolEmptyResponseError,
     NordPoolError,
@@ -71,7 +70,6 @@ async def test_single_config_entry(
     ("error_message", "p_error"),
     [
         (NordPoolConnectionError, "cannot_connect"),
-        (NordPoolAuthenticationError, "invalid_auth"),
         (NordPoolEmptyResponseError, "no_data"),
         (NordPoolError, "cannot_connect"),
         (NordPoolResponseError, "cannot_connect"),
@@ -156,7 +154,6 @@ async def test_reconfigure(
     ("error_message", "p_error"),
     [
         (NordPoolConnectionError, "cannot_connect"),
-        (NordPoolAuthenticationError, "invalid_auth"),
         (NordPoolEmptyResponseError, "no_data"),
         (NordPoolError, "cannot_connect"),
         (NordPoolResponseError, "cannot_connect"),

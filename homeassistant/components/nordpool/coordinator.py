@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 from pynordpool import (
     Currency,
     DeliveryPeriodData,
-    NordPoolAuthenticationError,
     NordPoolClient,
     NordPoolEmptyResponseError,
     NordPoolError,
@@ -76,10 +75,6 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
                 Currency(self.config_entry.data[CONF_CURRENCY]),
                 self.config_entry.data[CONF_AREAS],
             )
-        except NordPoolAuthenticationError as error:
-            LOGGER.error("Authentication error: %s", error)
-            self.async_set_update_error(error)
-            return
         except NordPoolEmptyResponseError as error:
             LOGGER.debug("Empty response error: %s", error)
             self.async_set_update_error(error)

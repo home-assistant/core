@@ -6,7 +6,6 @@ from typing import Any
 
 from pynordpool import (
     Currency,
-    NordPoolAuthenticationError,
     NordPoolClient,
     NordPoolEmptyResponseError,
     NordPoolError,
@@ -64,8 +63,6 @@ async def test_api(hass: HomeAssistant, user_input: dict[str, Any]) -> dict[str,
             Currency(user_input[CONF_CURRENCY]),
             user_input[CONF_AREAS],
         )
-    except NordPoolAuthenticationError:
-        return {"base": "invalid_auth"}
     except NordPoolEmptyResponseError:
         return {"base": "no_data"}
     except NordPoolError:
