@@ -132,80 +132,75 @@ async def test_update_failed(
 @patch(
     "homeassistant.components.husqvarna_automower.coordinator.DEFAULT_RECONNECT_TIME", 0
 )
+@pytest.mark.parametrize(
+    ("method_path", "exception", "error_msg"),
+    [
+        (
+            ["auth", "websocket_connect"],
+            HusqvarnaWSServerHandshakeError,
+            "Failed to connect to websocket.",
+        ),
+        (
+            ["start_listening"],
+            TimeoutException,
+            "Failed to listen to websocket.",
+        ),
+    ],
+)
 async def test_websocket_not_available(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    method_path: list[str],
+    exception: type[Exception],
+    error_msg: str,
 ) -> None:
     """Test trying to reload the websocket."""
+    calls = []
     mock_called = Event()
     mock_stall = Event()
-    mock_side_effect: Exception | None = None
 
     async def mock_function():
-        nonlocal mock_side_effect
-        mock_stall.clear()
         mock_called.set()
         await mock_stall.wait()
-        if side_effect := mock_side_effect:
-            mock_side_effect = None
-            raise side_effect
+        # Raise the first time the method is awaited
+        if not calls:
+            calls.append(None)
+            raise exception("Boom")
+        if mock_side_effect:
+            await mock_side_effect()
 
-    mock_automower_client.auth.websocket_connect.side_effect = mock_function
+    # Find the method to mock
+    mock = mock_automower_client
+    for itm in method_path:
+        mock = getattr(mock, itm)
+    mock_side_effect = mock.side_effect
+    mock.side_effect = mock_function
 
-    # Simulate a WebSocket handshake error
-    mock_side_effect = HusqvarnaWSServerHandshakeError("Boom")
-
-    # Setup integration and verify initial log error message
+    # Setup integration and verify log error message
     await setup_integration(hass, mock_config_entry)
     await mock_called.wait()
     mock_called.clear()
-    assert mock_automower_client.auth.websocket_connect.call_count == 1
-    assert mock_automower_client.start_listening.call_count == 0
+    # Allow the exception to be raised
     mock_stall.set()
+    assert mock.call_count == 1
     await hass.async_block_till_done()
-    assert "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
+    assert f"{error_msg} Trying to reconnect: Boom" in caplog.text
 
     # Simulate a successful connection
     caplog.clear()
     await mock_called.wait()
     mock_called.clear()
-    # Prepare for next subtest
-    mock_automower_client.auth.websocket_connect.side_effect = None
-    mock_automower_client.start_listening.side_effect = mock_function
-    # Check outcome
     await hass.async_block_till_done()
-    assert mock_automower_client.auth.websocket_connect.call_count == 2
-    assert mock_automower_client.start_listening.call_count == 0
+    assert mock.call_count == 2
     assert "Trying to reconnect: Boom" not in caplog.text
     mock_stall.set()
-
-    # Simulate a start_listening TimeoutException
-    await mock_called.wait()
-    mock_called.clear()
-    mock_side_effect = TimeoutException("Boom")
-    assert mock_automower_client.auth.websocket_connect.call_count == 2
-    assert mock_automower_client.start_listening.call_count == 1
-    mock_stall.set()
-    await hass.async_block_till_done()
-    assert "Failed to listen to websocket. Trying to reconnect: Boom" in caplog.text
-
-    # Simulate a successful connection
-    caplog.clear()
-    await mock_called.wait()
-    mock_called.clear()
-    assert mock_automower_client.auth.websocket_connect.call_count == 3
-    assert mock_automower_client.start_listening.call_count == 2
-    mock_stall.set()
-    await hass.async_block_till_done()
-    assert "Trying to reconnect: Boom" not in caplog.text
 
     # Simulate hass shutting down
     await hass.async_stop()
-    assert mock_automower_client.auth.websocket_connect.call_count == 3
-    assert mock_automower_client.start_listening.call_count == 2
+    assert mock.call_count == 2
 
 
 async def test_device_info(
