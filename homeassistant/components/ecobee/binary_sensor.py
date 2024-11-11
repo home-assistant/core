@@ -23,13 +23,13 @@ async def async_setup_entry(
     data = hass.data[DOMAIN]
 
     async_add_entities(
-        [
+        (
             EcobeeBinarySensor(data, sensor["name"], index)
             for index, thermostat in enumerate(data.ecobee.thermostats)
             for sensor in data.ecobee.get_remote_sensors(index)
             for item in sensor["capability"]
             if item["type"] == "occupancy"
-        ],
+        ),
         True,
     )
 
