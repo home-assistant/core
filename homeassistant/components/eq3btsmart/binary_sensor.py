@@ -56,16 +56,15 @@ async def async_setup_entry(
     """Set up the entry."""
 
     async_add_entities(
-        Eq3BinarySensorEntity(
-            entry,
-            entity_description,
-        )
+        Eq3BinarySensorEntity(entry, entity_description)
         for entity_description in BINARY_SENSOR_ENTITY_DESCRIPTIONS
     )
 
 
 class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
     """Base class for eQ-3 binary sensor entities."""
+
+    entity_description: Eq3BinarySensorEntityDescription
 
     def __init__(
         self,
@@ -75,7 +74,7 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
         """Initialize the entity."""
 
         super().__init__(entry, entity_description.key)
-        self.entity_description: Eq3BinarySensorEntityDescription = entity_description
+        self.entity_description = entity_description
 
     @property
     def is_on(self) -> bool:

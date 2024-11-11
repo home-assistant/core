@@ -22,10 +22,6 @@ ENTITY_KEY_DST = "dst"
 ENTITY_KEY_BATTERY = "battery"
 ENTITY_KEY_WINDOW = "window"
 
-VALUE_KEY_DST = "is_dst"
-VALUE_KEY_BATTERY = "is_low_battery"
-VALUE_KEY_WINDOW = "is_window_open"
-
 GET_DEVICE_TIMEOUT = 5  # seconds
 
 EQ_TO_HA_HVAC: dict[OperationMode, HVACMode] = {
