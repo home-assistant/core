@@ -31,11 +31,7 @@ class AcaiaEntity(CoordinatorEntity[AcaiaCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._scale.mac)},
             manufacturer="Acaia",
-            model=(
-                coordinator.config_entry.title.split("-")[0].capitalize()
-                if "-" in coordinator.config_entry.title
-                else None
-            ),
+            model=self._scale.model,
             suggested_area="Kitchen",
         )
 

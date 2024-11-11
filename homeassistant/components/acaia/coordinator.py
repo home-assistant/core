@@ -44,6 +44,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
 
         self._scale = AcaiaScale(
             address_or_ble_device=entry.data[CONF_MAC],
+            name=entry.title,
             is_new_style_scale=entry.data[CONF_IS_NEW_STYLE_SCALE],
             notify_callback=self.async_update_listeners,
         )

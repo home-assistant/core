@@ -79,6 +79,7 @@ def mock_scale() -> Generator[MagicMock]:
         scale = scale_mock.return_value
         scale.connected = True
         scale.mac = "aa:bb:cc:dd:ee:ff"
+        scale.model = "Lunar"
         scale.timer_running = True
         scale.heartbeat_task = None
         scale.process_queue_task = None
