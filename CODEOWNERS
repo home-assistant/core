@@ -1047,6 +1047,8 @@ build.json @home-assistant/supervisor
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
+/homeassistant/components/open_street_map/ @EmmaStalberg
+/tests/components/open_street_map/ @EmmaStalberg
 /homeassistant/components/openai_conversation/ @balloob
 /tests/components/openai_conversation/ @balloob
 /homeassistant/components/openerz/ @misialq

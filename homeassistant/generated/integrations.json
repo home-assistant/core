@@ -4311,6 +4311,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "open_street_map": {
+      "name": "OpenStreetMap",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "openai_conversation": {
       "name": "OpenAI Conversation",
       "integration_type": "service",
