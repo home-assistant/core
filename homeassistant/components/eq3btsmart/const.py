@@ -21,6 +21,7 @@ DEVICE_MODEL = "CC-RT-BLE-EQ"
 ENTITY_KEY_DST = "dst"
 ENTITY_KEY_BATTERY = "battery"
 ENTITY_KEY_WINDOW = "window"
+ENTITY_KEY_LOCK = "lock"
 
 GET_DEVICE_TIMEOUT = 5  # seconds
 
