@@ -18,5 +18,15 @@
     "error": {
       "invalid_mac_address": "Invalid MAC address"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "busy": {
+        "name": "Busy"
+      },
+      "dst": {
+        "name": "dSt"
+      }
+    }
   }
 }
