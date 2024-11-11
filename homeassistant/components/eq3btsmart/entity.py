@@ -31,21 +31,14 @@ class Eq3Entity(Entity, ABC):
 
         self._eq3_config = entry.runtime_data.eq3_config
         self._thermostat = entry.runtime_data.thermostat
-        self._unique_id_key = unique_id_key
         self._attr_device_info = DeviceInfo(
             name=slugify(self._eq3_config.mac_address),
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
             connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
         )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-
-        return format_mac(self._eq3_config.mac_address) + (
-            f"_{self._unique_id_key}" if self._unique_id_key else ""
-        )
+        suffix = f"_{unique_id_key}" if unique_id_key else ""
+        self._attr_unique_id = f"{format_mac(self._eq3_config.mac_address)}{suffix}"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
