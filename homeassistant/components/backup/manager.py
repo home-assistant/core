@@ -133,7 +133,7 @@ class BaseBackupManager(abc.ABC):
         password: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Restpre a backup."""
+        """Restore a backup."""
 
     @abc.abstractmethod
     async def async_create_backup(
