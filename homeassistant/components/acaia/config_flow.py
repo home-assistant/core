@@ -64,11 +64,10 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._discovered.get(CONF_NAME)
                     or self._discovered_devices[user_input[CONF_MAC]],
                     data={
-                        CONF_MAC: self._discovered.get(CONF_MAC) or mac,
+                        CONF_MAC: self._discovered.get(CONF_MAC, mac),
                         CONF_IS_NEW_STYLE_SCALE: self._discovered.get(
-                            CONF_IS_NEW_STYLE_SCALE
-                        )
-                        or is_new_style_scale,
+                            CONF_IS_NEW_STYLE_SCALE, is_new_style_scale
+                        ),
                     },
                 )
 
