@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     StateVacuumEntityDescription,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -26,16 +26,16 @@ from .entity import LitterRobotEntity
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 
 LITTER_BOX_STATUS_STATE_MAP = {
-    LitterBoxStatus.CLEAN_CYCLE: VacuumState.CLEANING,
-    LitterBoxStatus.EMPTY_CYCLE: VacuumState.CLEANING,
-    LitterBoxStatus.CLEAN_CYCLE_COMPLETE: VacuumState.DOCKED,
-    LitterBoxStatus.CAT_DETECTED: VacuumState.DOCKED,
-    LitterBoxStatus.CAT_SENSOR_TIMING: VacuumState.DOCKED,
-    LitterBoxStatus.DRAWER_FULL_1: VacuumState.DOCKED,
-    LitterBoxStatus.DRAWER_FULL_2: VacuumState.DOCKED,
-    LitterBoxStatus.READY: VacuumState.DOCKED,
-    LitterBoxStatus.CAT_SENSOR_INTERRUPTED: VacuumState.PAUSED,
-    LitterBoxStatus.OFF: VacuumState.DOCKED,
+    LitterBoxStatus.CLEAN_CYCLE: VacuumActivity.CLEANING,
+    LitterBoxStatus.EMPTY_CYCLE: VacuumActivity.CLEANING,
+    LitterBoxStatus.CLEAN_CYCLE_COMPLETE: VacuumActivity.DOCKED,
+    LitterBoxStatus.CAT_DETECTED: VacuumActivity.DOCKED,
+    LitterBoxStatus.CAT_SENSOR_TIMING: VacuumActivity.DOCKED,
+    LitterBoxStatus.DRAWER_FULL_1: VacuumActivity.DOCKED,
+    LitterBoxStatus.DRAWER_FULL_2: VacuumActivity.DOCKED,
+    LitterBoxStatus.READY: VacuumActivity.DOCKED,
+    LitterBoxStatus.CAT_SENSOR_INTERRUPTED: VacuumActivity.PAUSED,
+    LitterBoxStatus.OFF: VacuumActivity.DOCKED,
 }
 
 LITTER_BOX_ENTITY = StateVacuumEntityDescription(
@@ -75,9 +75,9 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     )
 
     @property
-    def vacuum_state(self) -> VacuumState:
+    def activity(self) -> VacuumActivity:
         """Return the state of the cleaner."""
-        return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumState.ERROR)
+        return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumActivity.ERROR)
 
     @property
     def status(self) -> str:

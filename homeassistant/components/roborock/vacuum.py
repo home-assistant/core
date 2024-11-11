@@ -9,8 +9,8 @@ from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import entity_platform
@@ -22,29 +22,29 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
 STATE_CODE_TO_STATE = {
-    RoborockStateCode.starting: VacuumState.IDLE,  # "Starting"
-    RoborockStateCode.charger_disconnected: VacuumState.IDLE,  # "Charger disconnected"
-    RoborockStateCode.idle: VacuumState.IDLE,  # "Idle"
-    RoborockStateCode.remote_control_active: VacuumState.CLEANING,  # "Remote control active"
-    RoborockStateCode.cleaning: VacuumState.CLEANING,  # "Cleaning"
-    RoborockStateCode.returning_home: VacuumState.RETURNING,  # "Returning home"
-    RoborockStateCode.manual_mode: VacuumState.CLEANING,  # "Manual mode"
-    RoborockStateCode.charging: VacuumState.DOCKED,  # "Charging"
-    RoborockStateCode.charging_problem: VacuumState.ERROR,  # "Charging problem"
-    RoborockStateCode.paused: VacuumState.PAUSED,  # "Paused"
-    RoborockStateCode.spot_cleaning: VacuumState.CLEANING,  # "Spot cleaning"
-    RoborockStateCode.error: VacuumState.ERROR,  # "Error"
-    RoborockStateCode.shutting_down: VacuumState.IDLE,  # "Shutting down"
-    RoborockStateCode.updating: VacuumState.DOCKED,  # "Updating"
-    RoborockStateCode.docking: VacuumState.RETURNING,  # "Docking"
-    RoborockStateCode.going_to_target: VacuumState.CLEANING,  # "Going to target"
-    RoborockStateCode.zoned_cleaning: VacuumState.CLEANING,  # "Zoned cleaning"
-    RoborockStateCode.segment_cleaning: VacuumState.CLEANING,  # "Segment cleaning"
-    RoborockStateCode.emptying_the_bin: VacuumState.DOCKED,  # "Emptying the bin" on s7+
-    RoborockStateCode.washing_the_mop: VacuumState.DOCKED,  # "Washing the mop" on s7maxV
-    RoborockStateCode.going_to_wash_the_mop: VacuumState.RETURNING,  # "Going to wash the mop" on s7maxV
-    RoborockStateCode.charging_complete: VacuumState.DOCKED,  # "Charging complete"
-    RoborockStateCode.device_offline: VacuumState.ERROR,  # "Device offline"
+    RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
+    RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,  # "Charger disconnected"
+    RoborockStateCode.idle: VacuumActivity.IDLE,  # "Idle"
+    RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,  # "Remote control active"
+    RoborockStateCode.cleaning: VacuumActivity.CLEANING,  # "Cleaning"
+    RoborockStateCode.returning_home: VacuumActivity.RETURNING,  # "Returning home"
+    RoborockStateCode.manual_mode: VacuumActivity.CLEANING,  # "Manual mode"
+    RoborockStateCode.charging: VacuumActivity.DOCKED,  # "Charging"
+    RoborockStateCode.charging_problem: VacuumActivity.ERROR,  # "Charging problem"
+    RoborockStateCode.paused: VacuumActivity.PAUSED,  # "Paused"
+    RoborockStateCode.spot_cleaning: VacuumActivity.CLEANING,  # "Spot cleaning"
+    RoborockStateCode.error: VacuumActivity.ERROR,  # "Error"
+    RoborockStateCode.shutting_down: VacuumActivity.IDLE,  # "Shutting down"
+    RoborockStateCode.updating: VacuumActivity.DOCKED,  # "Updating"
+    RoborockStateCode.docking: VacuumActivity.RETURNING,  # "Docking"
+    RoborockStateCode.going_to_target: VacuumActivity.CLEANING,  # "Going to target"
+    RoborockStateCode.zoned_cleaning: VacuumActivity.CLEANING,  # "Zoned cleaning"
+    RoborockStateCode.segment_cleaning: VacuumActivity.CLEANING,  # "Segment cleaning"
+    RoborockStateCode.emptying_the_bin: VacuumActivity.DOCKED,  # "Emptying the bin" on s7+
+    RoborockStateCode.washing_the_mop: VacuumActivity.DOCKED,  # "Washing the mop" on s7maxV
+    RoborockStateCode.going_to_wash_the_mop: VacuumActivity.RETURNING,  # "Going to wash the mop" on s7maxV
+    RoborockStateCode.charging_complete: VacuumActivity.DOCKED,  # "Charging complete"
+    RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
 
 
@@ -107,7 +107,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         self._attr_fan_speed_list = self._device_status.fan_power_options
 
     @property
-    def vacuum_state(self) -> VacuumState | None:
+    def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         assert self._device_status.state is not None
         return STATE_CODE_TO_STATE.get(self._device_status.state)

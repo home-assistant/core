@@ -8,8 +8,8 @@ from typing import Any
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -87,13 +87,13 @@ class StateDemoVacuum(StateVacuumEntity):
         """Initialize the vacuum."""
         self._attr_name = name
         self._attr_supported_features = supported_features
-        self._state = VacuumState.DOCKED
+        self._state = VacuumActivity.DOCKED
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area: float = 0
         self._battery_level = 100
 
     @property
-    def vacuum_state(self) -> VacuumState:
+    def activity(self) -> VacuumActivity:
         """Return the current state of the vacuum."""
         return self._state
 
@@ -119,33 +119,33 @@ class StateDemoVacuum(StateVacuumEntity):
 
     def start(self) -> None:
         """Start or resume the cleaning task."""
-        if self._state != VacuumState.CLEANING:
-            self._state = VacuumState.CLEANING
+        if self._state != VacuumActivity.CLEANING:
+            self._state = VacuumActivity.CLEANING
             self._cleaned_area += 1.32
             self._battery_level -= 1
             self.schedule_update_ha_state()
 
     def pause(self) -> None:
         """Pause the cleaning task."""
-        if self._state == VacuumState.CLEANING:
-            self._state = VacuumState.PAUSED
+        if self._state == VacuumActivity.CLEANING:
+            self._state = VacuumActivity.PAUSED
             self.schedule_update_ha_state()
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task, do not return to dock."""
-        self._state = VacuumState.IDLE
+        self._state = VacuumActivity.IDLE
         self.schedule_update_ha_state()
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return dock to charging base."""
-        self._state = VacuumState.RETURNING
+        self._state = VacuumActivity.RETURNING
         self.schedule_update_ha_state()
 
         event.call_later(self.hass, 30, self.__set_state_to_dock)
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        self._state = VacuumState.CLEANING
+        self._state = VacuumActivity.CLEANING
         self._cleaned_area += 1.32
         self._battery_level -= 1
         self.schedule_update_ha_state()
@@ -163,12 +163,12 @@ class StateDemoVacuum(StateVacuumEntity):
             "persistent_notification",
             service_data={"message": "I'm here!", "title": "Locate request"},
         )
-        self._state = VacuumState.IDLE
+        self._state = VacuumActivity.IDLE
         self.async_write_ha_state()
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Locate the vacuum's position."""
-        self._state = VacuumState.CLEANING
+        self._state = VacuumActivity.CLEANING
         self.async_write_ha_state()
 
     async def async_send_command(
@@ -178,9 +178,9 @@ class StateDemoVacuum(StateVacuumEntity):
         **kwargs: Any,
     ) -> None:
         """Send a command to the vacuum."""
-        self._state = VacuumState.IDLE
+        self._state = VacuumActivity.IDLE
         self.async_write_ha_state()
 
     def __set_state_to_dock(self, _: datetime) -> None:
-        self._state = VacuumState.DOCKED
+        self._state = VacuumActivity.DOCKED
         self.schedule_update_ha_state()

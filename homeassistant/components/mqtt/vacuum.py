@@ -11,8 +11,8 @@ from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ENTITY_ID_FORMAT,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
@@ -44,13 +44,13 @@ STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
 
-POSSIBLE_STATES: dict[str, VacuumState] = {
-    STATE_IDLE: VacuumState.IDLE,
-    STATE_DOCKED: VacuumState.DOCKED,
-    STATE_ERROR: VacuumState.ERROR,
-    STATE_PAUSED: VacuumState.PAUSED,
-    STATE_RETURNING: VacuumState.RETURNING,
-    STATE_CLEANING: VacuumState.CLEANING,
+POSSIBLE_STATES: dict[str, VacuumActivity] = {
+    STATE_IDLE: VacuumActivity.IDLE,
+    STATE_DOCKED: VacuumActivity.DOCKED,
+    STATE_ERROR: VacuumActivity.ERROR,
+    STATE_PAUSED: VacuumActivity.PAUSED,
+    STATE_RETURNING: VacuumActivity.RETURNING,
+    STATE_CLEANING: VacuumActivity.CLEANING,
 }
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -264,7 +264,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         if STATE in payload and (
             (state := payload[STATE]) in POSSIBLE_STATES or state is None
         ):
-            self._attr_vacuum_state = (
+            self._attr_activity = (
                 POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
             )
             del payload[STATE]
@@ -276,7 +276,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_vacuum_state"},
+            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
         )
 
     async def _subscribe_topics(self) -> None:
