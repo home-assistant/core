@@ -9,7 +9,7 @@ from typing import Any, Concatenate
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
-from linkplay.exceptions import LinkPlayException, LinkPlayRequestException
+from linkplay.exceptions import LinkPlayRequestException
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -48,6 +48,7 @@ STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
 }
 
 SOURCE_MAP: dict[PlayingMode, str] = {
+    PlayingMode.NETWORK: "Wifi",
     PlayingMode.LINE_IN: "Line In",
     PlayingMode.BLUETOOTH: "Bluetooth",
     PlayingMode.OPTICAL: "Optical",
@@ -200,9 +201,8 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         try:
             await self._bridge.player.update_status()
             self._update_properties()
-        except LinkPlayException:
+        except LinkPlayRequestException:
             self._attr_available = False
-            raise
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:
@@ -291,7 +291,10 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     @exception_wrap
     async def async_play_preset(self, preset_number: int) -> None:
         """Play preset number."""
-        await self._bridge.player.play_preset(preset_number)
+        try:
+            await self._bridge.player.play_preset(preset_number)
+        except ValueError as err:
+            raise HomeAssistantError(err) from err
 
     @exception_wrap
     async def async_join_players(self, group_members: list[str]) -> None:

@@ -42,12 +42,12 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
     """Return the contents of the restore backup file."""
     instruction_path = config_dir.joinpath(RESTORE_BACKUP_FILE)
     try:
-        contents = instruction_path.read_text(encoding="utf-8").split(";")
+        instruction_content = json.loads(instruction_path.read_text(encoding="utf-8"))
         return RestoreBackupFileContent(
-            backup_file_path=Path(contents[0]),
-            password=contents[1] or None if len(contents) > 1 else None,
+            backup_file_path=Path(instruction_content["path"]),
+            password=instruction_content.get("password"),
         )
-    except FileNotFoundError:
+    except (FileNotFoundError, json.JSONDecodeError):
         return None
 
 

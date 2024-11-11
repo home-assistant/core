@@ -335,12 +335,7 @@ class BackupManager(BaseBackupManager):
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                ";".join(
-                    [
-                        backup.path.as_posix(),
-                        password or "",
-                    ]
-                ),
+                json.dumps({"path": backup.path.as_posix(), "password": password}),
                 encoding="utf-8",
             )
 

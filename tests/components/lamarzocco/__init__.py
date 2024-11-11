@@ -1,6 +1,6 @@
 """Mock inputs for tests."""
 
-from lmcloud.const import MachineModel
+from pylamarzocco.const import MachineModel
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -19,10 +19,10 @@ PASSWORD_SELECTION = {
 USER_INPUT = PASSWORD_SELECTION | {CONF_USERNAME: "username"}
 
 SERIAL_DICT = {
-    MachineModel.GS3_AV: "GS01234",
-    MachineModel.GS3_MP: "GS01234",
-    MachineModel.LINEA_MICRA: "MR01234",
-    MachineModel.LINEA_MINI: "LM01234",
+    MachineModel.GS3_AV: "GS012345",
+    MachineModel.GS3_MP: "GS012345",
+    MachineModel.LINEA_MICRA: "MR012345",
+    MachineModel.LINEA_MINI: "LM012345",
 }
 
 WAKE_UP_SLEEP_ENTRY_IDS = ["Os2OswX", "aXFz5bJ"]

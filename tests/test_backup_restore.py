@@ -15,36 +15,26 @@ from .common import get_test_config_dir
     ("side_effect", "content", "expected"),
     [
         (FileNotFoundError, "", None),
+        (None, "", None),
         (
             None,
-            "",
+            '{"path": "test"}',
             backup_restore.RestoreBackupFileContent(
-                backup_file_path=Path(""),
-                password=None,
+                backup_file_path=Path("test"), password=None
             ),
         ),
         (
             None,
-            "test;",
+            '{"path": "test", "password": "psw"}',
             backup_restore.RestoreBackupFileContent(
-                backup_file_path=Path("test"),
-                password=None,
+                backup_file_path=Path("test"), password="psw"
             ),
         ),
         (
             None,
-            "test;psw",
+            '{"path": "test", "password": null}',
             backup_restore.RestoreBackupFileContent(
-                backup_file_path=Path("test"),
-                password="psw",
-            ),
-        ),
-        (
-            None,
-            "test;;;;",
-            backup_restore.RestoreBackupFileContent(
-                backup_file_path=Path("test"),
-                password=None,
+                backup_file_path=Path("test"), password=None
             ),
         ),
     ],
