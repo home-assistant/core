@@ -44,6 +44,7 @@ CONF_TITLE_PARAMETER_NAME = "title_param_name"
 CONF_ALLOW_MULTIPLE_TARGETS = "allow_multiple_targets"
 DEFAULT_MESSAGE_PARAM_NAME = "message"
 DEFAULT_METHOD = "GET"
+DEFAULT_ALLOW_MULTIPLE_TARGETS = False
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
@@ -60,7 +61,9 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
         vol.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
-        vol.Optional(CONF_ALLOW_MULTIPLE_TARGETS, default=False): cv.boolean,
+        vol.Optional(
+            CONF_ALLOW_MULTIPLE_TARGETS, default=DEFAULT_ALLOW_MULTIPLE_TARGETS
+        ): cv.boolean,
         vol.Optional(CONF_DATA): vol.All(dict, cv.template_complex),
         vol.Optional(CONF_DATA_TEMPLATE): vol.All(dict, cv.template_complex),
         vol.Optional(CONF_AUTHENTICATION): vol.In(
