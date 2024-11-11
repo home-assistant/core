@@ -105,12 +105,12 @@ class UnitSystem:
             for unit, unit_type in (
                 (accumulated_precipitation, ACCUMULATED_PRECIPITATION),
                 (area, AREA),
+                (temperature, TEMPERATURE),
                 (length, LENGTH),
+                (wind_speed, WIND_SPEED),
+                (volume, VOLUME),
                 (mass, MASS),
                 (pressure, PRESSURE),
-                (temperature, TEMPERATURE),
-                (volume, VOLUME),
-                (wind_speed, WIND_SPEED),
             )
             if not _is_valid_unit(unit, unit_type)
         )
