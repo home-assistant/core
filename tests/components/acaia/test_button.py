@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -76,6 +77,31 @@ async def test_buttons_unavailable_on_disconnected_scale(
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    for button in BUTTONS:
+        state = hass.states.get(f"button.lunar_ddeeff_{button}")
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "exception", [AcaiaError, AcaiaDeviceNotFound("Boom"), TimeoutError]
+)
+async def test_buttons_unavailable_on_update_exception(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test the acaia buttons are unavailable when the scale throws an error on update."""
+    mock_scale.connect.side_effect = exception
+    mock_scale.connected = False
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_scale.device_disconnected_handler.assert_called_once()
 
     for button in BUTTONS:
         state = hass.states.get(f"button.lunar_ddeeff_{button}")
