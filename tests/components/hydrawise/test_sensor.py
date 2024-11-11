@@ -4,7 +4,6 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pydrawise.schema import Controller, ControllerWaterUseSummary, User, Zone
 import pytest
@@ -12,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import (
     MAIN_SCAN_INTERVAL,
-    WATER_USAGE_SCAN_INTERVAL,
+    WATER_USE_SCAN_INTERVAL,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -57,6 +56,7 @@ async def test_suspended_state(
     assert next_cycle.state == "unknown"
 
 
+@pytest.mark.freeze_time("2024-11-01 00:00:00+00:00")
 async def test_usage_refresh(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
@@ -66,6 +66,8 @@ async def test_usage_refresh(
 ) -> None:
     """Test that water usage summaries refresh less frequently than other data."""
     assert hass.states.get("sensor.zone_one_daily_active_water_use") is not None
+    mock_pydrawise.get_water_use_summary.assert_called_once()
+
     # Make the coordinator refresh data.
     mock_pydrawise.get_water_use_summary.reset_mock()
     freezer.tick(MAIN_SCAN_INTERVAL + timedelta(seconds=30))
@@ -76,42 +78,10 @@ async def test_usage_refresh(
 
     # Wait for enough time to pass for a water use summary fetch.
     mock_pydrawise.get_water_use_summary.return_value = controller_water_use_summary
-    freezer.tick(WATER_USAGE_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(WATER_USE_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_pydrawise.get_water_use_summary.assert_called_once()
-
-
-async def test_usage_refresh_ignores_errors(
-    hass: HomeAssistant,
-    mock_added_config_entry: MockConfigEntry,
-    mock_pydrawise: AsyncMock,
-    controller_water_use_summary: ControllerWaterUseSummary,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that water usage summary refreshes ignore errors."""
-    usage = hass.states.get("sensor.zone_one_daily_active_water_use")
-    assert usage
-    assert usage.state == "454.6279552584"
-    # Make the coordinator refresh data.
-    mock_pydrawise.get_water_use_summary.reset_mock()
-    freezer.tick(MAIN_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    # Make sure we didn't fetch water use summary again.
-    mock_pydrawise.get_water_use_summary.assert_not_called()
-
-    # Wait for enough time to pass for a water use summary fetch.
-    mock_pydrawise.get_water_use_summary.side_effect = ClientError
-    freezer.tick(WATER_USAGE_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_pydrawise.get_water_use_summary.assert_called_once()
-
-    # Make sure we fall back to the last known value.
-    usage = hass.states.get("sensor.zone_one_daily_active_water_use")
-    assert usage
-    assert usage.state == "454.6279552584"
 
 
 async def test_no_sensor_and_water_state(

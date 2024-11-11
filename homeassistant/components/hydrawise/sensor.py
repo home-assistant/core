@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import HydrawiseDataUpdateCoordinator
+from .coordinator import HydrawiseUpdateCoordinators
 from .entity import HydrawiseEntity
 
 
@@ -168,29 +168,30 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Hydrawise sensor platform."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: HydrawiseUpdateCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[HydrawiseSensor] = []
-    for controller in coordinator.data.controllers.values():
+    for controller in coordinators.main.data.controllers.values():
         entities.extend(
-            HydrawiseSensor(coordinator, description, controller)
+            HydrawiseSensor(coordinators.main, description, controller)
             for description in CONTROLLER_SENSORS
         )
         entities.extend(
-            HydrawiseSensor(coordinator, description, controller, zone_id=zone.id)
+            HydrawiseSensor(coordinators.main, description, controller, zone_id=zone.id)
             for zone in controller.zones
             for description in ZONE_SENSORS
         )
-        if coordinator.data.daily_water_summary[controller.id].total_use is not None:
+        if (
+            coordinators.water_use.data.daily_water_summary[controller.id].total_use
+            is not None
+        ):
             # we have a flow sensor for this controller
             entities.extend(
-                HydrawiseSensor(coordinator, description, controller)
+                HydrawiseSensor(coordinators.water_use, description, controller)
                 for description in FLOW_CONTROLLER_SENSORS
             )
             entities.extend(
                 HydrawiseSensor(
-                    coordinator,
+                    coordinators.water_use,
                     description,
                     controller,
                     zone_id=zone.id,

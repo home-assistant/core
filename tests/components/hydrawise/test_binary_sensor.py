@@ -42,6 +42,7 @@ async def test_update_data_fails(
     # Make the coordinator refresh data.
     mock_pydrawise.get_user.reset_mock(return_value=True)
     mock_pydrawise.get_user.side_effect = ClientError
+    mock_pydrawise.get_water_use_summary.side_effect = ClientError
     freezer.tick(MAIN_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
