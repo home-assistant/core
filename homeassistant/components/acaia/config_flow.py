@@ -46,7 +46,8 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             # only check if the user has entered the MAC manually
             if self.source == SOURCE_USER:
                 try:
-                    is_new_style_scale = await is_new_scale(user_input[CONF_MAC])
+                    mac = format_mac(user_input[CONF_MAC])
+                    is_new_style_scale = await is_new_scale(mac)
                 except AcaiaDeviceNotFound:
                     errors["base"] = "device_not_found"
                 except AcaiaError:
@@ -55,7 +56,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                 except AcaiaUnknownDevice:
                     return self.async_abort(reason="unsupported_device")
                 else:
-                    await self.async_set_unique_id(format_mac(user_input[CONF_MAC]))
+                    await self.async_set_unique_id(mac)
                     self._abort_if_unique_id_configured()
 
             if not errors:
@@ -63,8 +64,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._discovered.get(CONF_NAME)
                     or self._discovered_devices[user_input[CONF_MAC]],
                     data={
-                        CONF_MAC: self._discovered.get(CONF_MAC)
-                        or user_input[CONF_MAC],
+                        CONF_MAC: self._discovered.get(CONF_MAC) or mac,
                         CONF_IS_NEW_STYLE_SCALE: self._discovered.get(
                             CONF_IS_NEW_STYLE_SCALE
                         )
@@ -106,10 +106,10 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a discovered Bluetooth device."""
 
-        self._discovered[CONF_MAC] = discovery_info.address
+        self._discovered[CONF_MAC] = mac = format_mac(discovery_info.address)
         self._discovered[CONF_NAME] = discovery_info.name
 
-        await self.async_set_unique_id(format_mac(discovery_info.address))
+        await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
 
         try:
