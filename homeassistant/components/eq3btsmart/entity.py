@@ -1,7 +1,5 @@
 """Base class for all eQ-3 entities."""
 
-from abc import ABC
-
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -21,7 +19,7 @@ from .const import (
 )
 
 
-class Eq3Entity(Entity, ABC):
+class Eq3Entity(Entity):
     """Base class for all eQ-3 entities."""
 
     _attr_has_entity_name = True
