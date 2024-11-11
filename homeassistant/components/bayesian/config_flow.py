@@ -505,8 +505,6 @@ OPTIONS_FLOW.update(CONFIG_FLOW)
 class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Bayesian config flow."""
 
-    # The schema version of the entries that it creates
-    # Home Assistant will call your migrate method if the version changes
     VERSION = 1
     MINOR_VERSION = 1
 
