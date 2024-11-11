@@ -137,19 +137,23 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    async_add_entities(
+    entities_to_add: list[EzvizSelect] = []
+
+    entities_to_add.extend(
         EzvizSelect(coordinator, camera, ALARM_SOUND_MODE_SELECT_TYPE)
         for camera in coordinator.data
         for switch in coordinator.data[camera]["switches"]
         if switch == ALARM_SOUND_MODE_SELECT_TYPE.supported_switch
     )
 
-    async_add_entities(
+    entities_to_add.extend(
         EzvizSelect(coordinator, camera, BATTERY_WORK_MODE_SELECT_TYPE)
         for camera in coordinator.data
         if coordinator.data[camera]["device_category"]
         == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
     )
+
+    async_add_entities(entities_to_add)
 
 
 class EzvizSelect(EzvizEntity, SelectEntity):
