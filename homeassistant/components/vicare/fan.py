@@ -104,6 +104,7 @@ async def async_setup_entry(
             ViCareFan(get_device_serial(device.api), device.config, device.api)
             for device in device_list
             if isinstance(device.api, PyViCareVentilationDevice)
+            or device.api.isVentilationDevice()
         ]
     )
 
