@@ -32,6 +32,7 @@ from .const import (
     PREF_CLOUD_USER,
     PREF_CLOUDHOOKS,
     PREF_ENABLE_ALEXA,
+    PREF_ENABLE_BACKUP_SYNC,
     PREF_ENABLE_CLOUD_ICE_SERVERS,
     PREF_ENABLE_GOOGLE,
     PREF_ENABLE_REMOTE,
@@ -166,6 +167,7 @@ class CloudPreferences:
         alexa_enabled: bool | UndefinedType = UNDEFINED,
         alexa_report_state: bool | UndefinedType = UNDEFINED,
         alexa_settings_version: int | UndefinedType = UNDEFINED,
+        backup_sync_enabled: bool | UndefinedType = UNDEFINED,
         cloud_ice_servers_enabled: bool | UndefinedType = UNDEFINED,
         cloud_user: str | UndefinedType = UNDEFINED,
         cloudhooks: dict[str, dict[str, str | bool]] | UndefinedType = UNDEFINED,
@@ -191,6 +193,7 @@ class CloudPreferences:
                     (PREF_CLOUD_USER, cloud_user),
                     (PREF_CLOUDHOOKS, cloudhooks),
                     (PREF_ENABLE_ALEXA, alexa_enabled),
+                    (PREF_ENABLE_BACKUP_SYNC, backup_sync_enabled),
                     (PREF_ENABLE_CLOUD_ICE_SERVERS, cloud_ice_servers_enabled),
                     (PREF_ENABLE_GOOGLE, google_enabled),
                     (PREF_ENABLE_REMOTE, remote_enabled),
@@ -242,6 +245,7 @@ class CloudPreferences:
             PREF_ALEXA_REPORT_STATE: self.alexa_report_state,
             PREF_CLOUDHOOKS: self.cloudhooks,
             PREF_ENABLE_ALEXA: self.alexa_enabled,
+            PREF_ENABLE_BACKUP_SYNC: self.backup_sync_enabled,
             PREF_ENABLE_CLOUD_ICE_SERVERS: self.cloud_ice_servers_enabled,
             PREF_ENABLE_GOOGLE: self.google_enabled,
             PREF_ENABLE_REMOTE: self.remote_enabled,
@@ -374,6 +378,12 @@ class CloudPreferences:
         )
         return cloud_ice_servers_enabled
 
+    @property
+    def backup_sync_enabled(self) -> bool:
+        """Return if backup sync is enabled."""
+        backup_sync_enabled: bool = self._prefs.get(PREF_ENABLE_BACKUP_SYNC, False)
+        return backup_sync_enabled
+
     async def get_cloud_user(self) -> str:
         """Return ID of Home Assistant Cloud system user."""
         user = await self._load_cloud_user()
@@ -419,6 +429,7 @@ class CloudPreferences:
             PREF_CLOUD_USER: None,
             PREF_CLOUDHOOKS: {},
             PREF_ENABLE_ALEXA: True,
+            PREF_ENABLE_BACKUP_SYNC: True,
             PREF_ENABLE_GOOGLE: True,
             PREF_ENABLE_REMOTE: False,
             PREF_ENABLE_CLOUD_ICE_SERVERS: True,

@@ -786,6 +786,7 @@ async def test_websocket_status(
             "remote_enabled": False,
             "cloud_ice_servers_enabled": True,
             "tts_default_voice": ["en-US", "JennyNeural"],
+            "backup_sync_enabled": True,
         },
         "alexa_entities": {
             "include_domains": [],
@@ -905,6 +906,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_secure_devices_pin is None
     assert cloud.client.prefs.remote_allow_remote_enable is True
     assert cloud.client.prefs.cloud_ice_servers_enabled is True
+    assert cloud.client.prefs.backup_sync_enabled is True
 
     client = await hass_ws_client(hass)
 
@@ -917,6 +919,7 @@ async def test_websocket_update_preferences(
             "tts_default_voice": ["en-GB", "RyanNeural"],
             "remote_allow_remote_enable": False,
             "cloud_ice_servers_enabled": False,
+            "backup_sync_enabled": False,
         }
     )
     response = await client.receive_json()
@@ -927,6 +930,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
     assert cloud.client.prefs.remote_allow_remote_enable is False
     assert cloud.client.prefs.cloud_ice_servers_enabled is False
+    assert cloud.client.prefs.backup_sync_enabled is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
 
 
