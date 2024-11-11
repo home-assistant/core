@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "dst": {
+        "default": "mdi:sun-clock",
+        "state": {
+          "on": "mdi:sun-clock",
+          "off": "mdi:sun-clock-outline"
+        }
+      }
+    },
+    "switch": {
+      "away": {
+        "default": "mdi:home-account",
+        "state": {
+          "on": "mdi:home-export",
+          "off": "mdi:home-account"
+        }
+      },
+      "lock": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock",
+          "off": "mdi:lock-off"
+        }
+      },
+      "boost": {
+        "default": "mdi:fire",
+        "state": {
+          "on": "mdi:fire",
+          "off": "mdi:fire-off"
+        }
+      }
+    }
+  }
+}

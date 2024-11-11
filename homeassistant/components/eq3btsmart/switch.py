@@ -1,4 +1,4 @@
-"""Platform for eq3 lock entities."""
+"""Platform for eq3 switch entities."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -12,13 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Eq3ConfigEntry
-from .const import (
-    ENTITY_ICON_AWAY,
-    ENTITY_ICON_BOOST,
-    ENTITY_KEY_AWAY,
-    ENTITY_KEY_BOOST,
-    ENTITY_KEY_LOCK,
-)
+from .const import ENTITY_KEY_AWAY, ENTITY_KEY_BOOST, ENTITY_KEY_LOCK
 from .entity import Eq3Entity
 
 
@@ -26,70 +20,28 @@ from .entity import Eq3Entity
 class Eq3SwitchEntityDescription(SwitchEntityDescription):
     """Entity description for eq3 switch entities."""
 
-    turn_on_func: Callable[[Thermostat], Awaitable[None]]
-    turn_off_func: Callable[[Thermostat], Awaitable[None]]
+    toggle_func: Callable[[Thermostat], Callable[[bool], Awaitable[None]]]
     value_func: Callable[[Status], bool]
-
-
-async def async_lock(thermostat: Thermostat) -> None:
-    """Lock the thermostat."""
-
-    await thermostat.async_set_locked(True)
-
-
-async def async_unlock(thermostat: Thermostat) -> None:
-    """Unlock the thermostat."""
-
-    await thermostat.async_set_locked(False)
-
-
-async def async_boost_enable(thermostat: Thermostat) -> None:
-    """Enable the boost mode."""
-
-    await thermostat.async_set_boost(True)
-
-
-async def async_boost_disable(thermostat: Thermostat) -> None:
-    """Disable the boost mode."""
-
-    await thermostat.async_set_boost(False)
-
-
-async def async_away_enable(thermostat: Thermostat) -> None:
-    """Enable the away mode."""
-
-    await thermostat.async_set_away(True)
-
-
-async def async_away_disable(thermostat: Thermostat) -> None:
-    """Disable the away mode."""
-
-    await thermostat.async_set_away(False)
 
 
 SWITCH_ENTITY_DESCRIPTIONS = [
     Eq3SwitchEntityDescription(
         key=ENTITY_KEY_LOCK,
         translation_key=ENTITY_KEY_LOCK,
-        turn_on_func=async_lock,
-        turn_off_func=async_unlock,
+        toggle_func=lambda thermostat: thermostat.async_set_locked,
         value_func=lambda status: status.is_locked,
     ),
     Eq3SwitchEntityDescription(
         key=ENTITY_KEY_BOOST,
         translation_key=ENTITY_KEY_BOOST,
-        turn_on_func=async_boost_enable,
-        turn_off_func=async_boost_disable,
+        toggle_func=lambda thermostat: thermostat.async_set_boost,
         value_func=lambda status: status.is_boost,
-        icon=ENTITY_ICON_BOOST,
     ),
     Eq3SwitchEntityDescription(
         key=ENTITY_KEY_AWAY,
         translation_key=ENTITY_KEY_AWAY,
-        turn_on_func=async_away_enable,
-        turn_off_func=async_away_disable,
+        toggle_func=lambda thermostat: thermostat.async_set_away,
         value_func=lambda status: status.is_away,
-        icon=ENTITY_ICON_AWAY,
     ),
 ]
 
@@ -108,7 +60,7 @@ async def async_setup_entry(
 
 
 class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
-    """Lock to prevent manual changes to the thermostat."""
+    """Base class for eq3 switch entities."""
 
     entity_description: Eq3SwitchEntityDescription
 
@@ -123,18 +75,18 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
         self.entity_description = entity_description
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Lock the thermostat."""
+        """Turn on the switch."""
 
-        await self.entity_description.turn_on_func(self._thermostat)
+        await self.entity_description.toggle_func(self._thermostat)(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Unlock the thermostat."""
+        """Turn off the switch."""
 
-        await self.entity_description.turn_off_func(self._thermostat)
+        await self.entity_description.toggle_func(self._thermostat)(False)
 
     @property
     def is_on(self) -> bool:
-        """Whether the thermostat is locked."""
+        """Return the state of the switch."""
 
         if TYPE_CHECKING:
             assert self._thermostat.status is not None

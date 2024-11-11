@@ -25,9 +25,6 @@ ENTITY_KEY_LOCK = "lock"
 ENTITY_KEY_BOOST = "boost"
 ENTITY_KEY_AWAY = "away"
 
-ENTITY_ICON_BOOST = "mdi:speedometer"
-ENTITY_ICON_AWAY = "mdi:lock"
-
 GET_DEVICE_TIMEOUT = 5  # seconds
 
 EQ_TO_HA_HVAC: dict[OperationMode, HVACMode] = {
