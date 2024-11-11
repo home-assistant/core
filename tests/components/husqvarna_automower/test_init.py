@@ -8,6 +8,7 @@ from aioautomower.exceptions import (
     ApiException,
     AuthException,
     HusqvarnaWSServerHandshakeError,
+    TimeoutException,
 )
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
@@ -22,7 +23,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -125,21 +130,21 @@ async def test_websocket_not_available(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    listen_block,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test trying to reload the websocket."""
+    # Patch DEFAULT_RECONNECT_TIME to 0 for the test
     with patch(
         "homeassistant.components.husqvarna_automower.coordinator.DEFAULT_RECONNECT_TIME",
         new=0,
     ):
+        # Simulate a WebSocket handshake error
         mock_automower_client.auth.websocket_connect.side_effect = (
             HusqvarnaWSServerHandshakeError("Boom")
         )
+
         # Setup integration and verify initial log error message
-
         await setup_integration(hass, mock_config_entry)
-
         assert (
             "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
         )
@@ -153,16 +158,17 @@ async def test_websocket_not_available(
         assert "Trying to reconnect: Boom" not in caplog.text
 
         # Simulate a start_listening TimeoutException
-        listen_block.set()
-        await hass.async_block_till_done()
-        assert mock_automower_client.auth.websocket_connect.call_count == 1
-        assert mock_automower_client.start_listening.call_count == 1
-
-        # Simulate a successful connection
-        caplog.clear()
+        mock_automower_client.start_listening.side_effect = TimeoutException("Boom")
         await hass.async_block_till_done()
         assert mock_automower_client.auth.websocket_connect.call_count == 2
         assert mock_automower_client.start_listening.call_count == 2
+
+        # Simulate a successful connection
+        caplog.clear()
+        mock_automower_client.start_listening.side_effect = None
+        await hass.async_block_till_done()
+        assert mock_automower_client.auth.websocket_connect.call_count == 3
+        assert mock_automower_client.start_listening.call_count == 3
         assert "Trying to reconnect: Boom" not in caplog.text
 
         # Simulate hass shutting down

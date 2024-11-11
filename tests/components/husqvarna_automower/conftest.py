@@ -1,6 +1,5 @@
 """Test helpers for Husqvarna Automower."""
 
-import asyncio
 from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
@@ -81,14 +80,8 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(name="listen_block")
-def mock_listen_block_fixture():
-    """Mock a listen block."""
-    return asyncio.Event()
-
-
 @pytest.fixture
-def mock_automower_client(listen_block) -> Generator[AsyncMock]:
+def mock_automower_client() -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
     mower_dict = mower_list_to_dictionary_dataclass(
@@ -103,17 +96,5 @@ def mock_automower_client(listen_block) -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
         return_value=mock,
-    ) as client_class:
-        client = client_class.return_value
-
-        async def connect():
-            await asyncio.sleep(0)
-            client.auth.websocket_connect = AsyncMock()
-
-        async def listen() -> None:
-            await listen_block.wait()
-
-        client.auth.websocket_connect = AsyncMock(side_effect=connect)
-        client.start_listening = AsyncMock(side_effect=listen)
-
-        yield client
+    ):
+        yield mock
