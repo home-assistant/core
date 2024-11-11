@@ -28,7 +28,7 @@ dependencies    = [
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
     "aiohasupervisor==0.2.1",
-    "aiohttp==3.11.0b4",
+    "aiohttp==3.11.0rc0",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
     "aiozoneinfo==0.2.1",
@@ -36,6 +36,7 @@ dependencies    = [
     "async-interrupt==1.2.0",
     "attrs==24.2.0",
     "atomicwrites-homeassistant==1.4.1",
+    "audioop-lts==0.2.1;python_version>='3.13'",
     "awesomeversion==24.6.0",
     "bcrypt==4.2.0",
     "certifi>=2021.5.30",
@@ -57,7 +58,7 @@ dependencies    = [
     "Pillow==10.4.0",
     "propcache==0.2.0",
     "pyOpenSSL==24.2.1",
-    "orjson==3.10.10",
+    "orjson==3.10.11",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
@@ -65,13 +66,15 @@ dependencies    = [
     "requests==2.32.3",
     "securetar==2024.2.1",
     "SQLAlchemy==2.0.31",
+    "standard-aifc==3.13.0;python_version>='3.13'",
+    "standard-telnetlib==3.13.0;python_version>='3.13'",
     "typing-extensions>=4.12.2,<5.0",
     "ulid-transform==1.0.2",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.4.28",
+    "uv==0.5.0",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
@@ -616,6 +619,17 @@ filterwarnings = [
     # https://pypi.org/project/pyws66i/ - v1.1 - 2022-04-05
     # https://github.com/ssaenger/pyws66i/blob/v1.1/pyws66i/__init__.py#L2
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:pyws66i",
+
+    # -- New in Python 3.13
+    # https://github.com/kurtmckee/feedparser/pull/389 - >6.0.11
+    # https://github.com/kurtmckee/feedparser/issues/481
+    "ignore:'count' is passed as positional argument:DeprecationWarning:feedparser.html",
+    # https://github.com/youknowone/python-deadlib - Backports for aifc, telnetlib
+    "ignore:aifc was removed in Python 3.13.*'standard-aifc':DeprecationWarning:speech_recognition",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:homeassistant.components.hddtemp.sensor",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:ndms2_client.connection",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:plumlightpad.lightpad",
+    "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:pyws66i",
 
     # -- unmaintained projects, last release about 2+ years
     # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04

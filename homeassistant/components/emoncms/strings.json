@@ -19,6 +19,9 @@
           "include_only_feed_id": "Choose feeds to include"
         }
       }
+    },
+    "abort": {
+      "already_configured": "This server is already configured"
     }
   },
   "options": {
@@ -41,6 +44,10 @@
     "missing_include_only_feed_id": {
       "title": "No feed synchronized with the {domain} sensor",
       "description": "Configuring {domain} using YAML is being removed.\n\nPlease add manually the feeds you want to synchronize with the `configure` button of the integration."
+    },
+    "migrate_database": {
+      "title": "Upgrade your emoncms version",
+      "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\n Please upgrade to at least version 11.5.7 and migrate your emoncms database.\n\n More info on [emoncms documentation]({doc_url})"
     }
   }
 }
