@@ -126,18 +126,32 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the ADS entry."""
     _LOGGER.debug("Unloading ADS entry: %s", entry.entry_id)
 
-    # Check if the ADS data is available
-    if DATA_ADS in hass.data:
-        ads_data = hass.data[DATA_ADS]
-        if ads_data:
-            _LOGGER.debug("Shutting down ADS connection for %s", entry.entry_id)
-            await ads_data.shutdown()
+    # Check if the ADS data exists in hass.data
+    ads_data = hass.data.get(DATA_ADS, None)
+    if ads_data is None:
+        _LOGGER.warning(
+            "No ADS data found in hass.data during unload for entry: %s", entry.entry_id
+        )
+        return False  # Return False if no data is found, indicating failure
+
+    _LOGGER.debug("Found ADS data, proceeding to shutdown")
+
+    try:
+        if hasattr(ads_data, "shutdown"):
+            ads_data.shutdown()  # Shutdown the connection if it exists
+            _LOGGER.debug("ADS connection shut down successfully")
         else:
-            _LOGGER.warning("ADS data is None for %s during unload", entry.entry_id)
+            _LOGGER.error(
+                "No shutdown method available on ADS data for entry: %s", entry.entry_id
+            )
+            return False  # Return False if no shutdown method is available
+    except pyads.ADSError as e:
+        _LOGGER.error("Error during shutdown of ADS connection: %s", e)
+        return False  # Return False if an ADS-specific error occurs during shutdown
+    except Exception as e:  # noqa: BLE001
+        _LOGGER.error("Unexpected error during shutdown: %s", e)
+        return False  # Return False if an unexpected error occurs during shutdown
 
-        # Clean up the data
-        del hass.data[DATA_ADS]
-    else:
-        _LOGGER.warning("No ADS data found in hass.data during unload")
-
-    return True
+    # Clean up the data by deleting it from hass.data
+    del hass.data[DATA_ADS]
+    return True  # Return True if the unload was successful
