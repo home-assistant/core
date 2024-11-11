@@ -10,7 +10,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.bayesian import DOMAIN
 from homeassistant.components.bayesian.config_flow import (
-    ConfigFlowSteps,
+    OBSERVATION_SELECTOR,
+    USER,
     ObservationTypes,
     OptionsFlowSteps,
 )
@@ -48,7 +49,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == str(ConfigFlowSteps.USER)
+        assert result0["step_id"] == USER
         assert result0["type"] is FlowResultType.FORM
 
         # Enter basic settings
@@ -64,7 +65,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Confirm the next page is the observation type selector
-        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result1["step_id"] == OBSERVATION_SELECTOR
         assert result1["type"] is FlowResultType.MENU
 
         # Set up a numeric state observation first
@@ -92,7 +93,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Since "add_another" was True, we should return to the observation selector
-        assert result3["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result3["step_id"] == OBSERVATION_SELECTOR
         assert result3["type"] is FlowResultType.MENU
 
         # Add a state observation
@@ -117,7 +118,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Since "add_another" was True, we should return to the observation selector
-        assert result5["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result5["step_id"] == OBSERVATION_SELECTOR
         assert result5["type"] is FlowResultType.MENU
 
         # Lastly, add a template observation
@@ -198,7 +199,7 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == str(ConfigFlowSteps.USER)
+        assert result0["step_id"] == USER
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -211,7 +212,7 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result1["step_id"] == OBSERVATION_SELECTOR
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -267,7 +268,7 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == str(ConfigFlowSteps.USER)
+        assert result0["step_id"] == USER
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -279,7 +280,7 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result1["step_id"] == OBSERVATION_SELECTOR
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -336,7 +337,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == str(ConfigFlowSteps.USER)
+        assert result0["step_id"] == USER
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -348,7 +349,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result1["step_id"] == OBSERVATION_SELECTOR
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -468,7 +469,7 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == str(ConfigFlowSteps.USER)
+        assert result0["step_id"] == USER
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -481,7 +482,7 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result1["step_id"] == OBSERVATION_SELECTOR
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -1075,7 +1076,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == str(ConfigFlowSteps.USER)
+        assert result0["step_id"] == USER
         assert result0["type"] is FlowResultType.FORM
 
         # priors should never be Zero, because then the sensor can never return 'on'
@@ -1142,7 +1143,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result1.get("errors") is None
 
-        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result1["step_id"] == OBSERVATION_SELECTOR
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -1167,7 +1168,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result3["errors"] == {"base": "equal_probabilities"}
-        assert result3["step_id"] != str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+        assert result3["step_id"] != OBSERVATION_SELECTOR
 
         # Observations with a probability of 0 will create certainties
         with pytest.raises(vol.Invalid) as excinfo:

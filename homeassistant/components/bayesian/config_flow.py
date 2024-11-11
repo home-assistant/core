@@ -51,6 +51,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+USER = "user"
+OBSERVATION_SELECTOR = "observation_selector"
 
 
 class ObservationTypes(StrEnum):
@@ -67,19 +69,12 @@ class ObservationTypes(StrEnum):
         return [c.value for c in ObservationTypes]
 
 
-class ConfigFlowSteps(StrEnum):
-    """StrEnum for all the different config steps apart from those named after ObservationTypes."""
-
-    USER = "user"
-    OBSERVATION_SELECTOR = "observation_selector"
-
-
 class OptionsFlowSteps(StrEnum):
     """StrEnum for all the different options flow steps."""
 
     INIT = "init"
     BASE_OPTIONS = "base_options"
-    ADD_OBSERVATION = str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+    ADD_OBSERVATION = OBSERVATION_SELECTOR
     SELECT_EDIT_OBSERVATION = "select_edit_observation"
     EDIT_OBSERVATION = "edit_observation"
     REMOVE_OBSERVATION = "remove_observation"
@@ -357,10 +352,10 @@ async def _get_template_schema(
 
 async def _add_more_or_end(
     user_input: dict[str, Any],
-) -> ConfigFlowSteps | None:
+) -> str | None:
     """Choose whether to add another observation or end the flow."""
     if user_input.get("add_another", False):
-        return ConfigFlowSteps.OBSERVATION_SELECTOR
+        return OBSERVATION_SELECTOR
     return None
 
 
@@ -458,14 +453,12 @@ async def _validate_remove_observation(
 
 
 CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
-    str(ConfigFlowSteps.USER): SchemaFlowFormStep(
+    str(USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
         validate_user_input=_validate_user,
-        next_step=ConfigFlowSteps.OBSERVATION_SELECTOR,
+        next_step=OBSERVATION_SELECTOR,
     ),
-    str(ConfigFlowSteps.OBSERVATION_SELECTOR): SchemaFlowMenuStep(
-        ObservationTypes.list()
-    ),
+    str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(ObservationTypes.list()),
     str(ObservationTypes.STATE): SchemaFlowFormStep(
         _get_state_schema,
         next_step=_add_more_or_end,
