@@ -5,8 +5,8 @@ from typing import Any
 from homeassistant.components.vacuum import (
     DOMAIN,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -35,20 +35,20 @@ class MockVacuum(MockEntity, StateVacuumEntity):
     def __init__(self, **values: Any) -> None:
         """Initialize a mock vacuum entity."""
         super().__init__(**values)
-        self._attr_vacuum_state = VacuumState.DOCKED
+        self._attr_activity = VacuumActivity.DOCKED
         self._attr_fan_speed = "slow"
 
     def stop(self, **kwargs: Any) -> None:
         """Stop cleaning."""
-        self._attr_vacuum_state = VacuumState.IDLE
+        self._attr_activity = VacuumActivity.IDLE
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return to base."""
-        self._attr_vacuum_state = VacuumState.RETURNING
+        self._attr_activity = VacuumActivity.RETURNING
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Clean a spot."""
-        self._attr_vacuum_state = VacuumState.CLEANING
+        self._attr_activity = VacuumActivity.CLEANING
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set the fan speed."""
@@ -56,11 +56,11 @@ class MockVacuum(MockEntity, StateVacuumEntity):
 
     def start(self) -> None:
         """Start cleaning."""
-        self._attr_vacuum_state = VacuumState.CLEANING
+        self._attr_activity = VacuumActivity.CLEANING
 
     def pause(self) -> None:
         """Pause cleaning."""
-        self._attr_vacuum_state = VacuumState.PAUSED
+        self._attr_activity = VacuumActivity.PAUSED
 
 
 async def help_async_setup_entry_init(
