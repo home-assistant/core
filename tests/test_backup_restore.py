@@ -236,7 +236,6 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
 @pytest.mark.parametrize(
     ("password", "expected"),
     [
-        (None, None),
         ("test", b"\xf0\x9b\xb9\x1f\xdc,\xff\xd5x\xd6\xd6\x8fz\x19.\x0f"),
         ("lorem ipsum...", b"#\xe0\xfc\xe0\xdb?_\x1f,$\rQ\xf4\xf5\xd8\xfb"),
     ],
@@ -244,3 +243,17 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
 def test_pw_to_key(password: str | None, expected: bytes | None) -> None:
     """Test password to key conversion."""
     assert backup_restore.password_to_key(password) == expected
+
+
+@pytest.mark.parametrize(
+    ("password", "expected"),
+    [
+        (None, None),
+        ("test", b"\xf0\x9b\xb9\x1f\xdc,\xff\xd5x\xd6\xd6\x8fz\x19.\x0f"),
+        ("lorem ipsum...", b"#\xe0\xfc\xe0\xdb?_\x1f,$\rQ\xf4\xf5\xd8\xfb"),
+    ],
+)
+def test_pw_to_key_none(password: str | None, expected: bytes | None) -> None:
+    """Test password to key conversion."""
+    with pytest.raises(AttributeError):
+        backup_restore.password_to_key(None)

@@ -129,6 +129,7 @@ class BaseBackupManager(abc.ABC):
     async def async_restore_backup(
         self,
         slug: str,
+        *,
         password: str | None = None,
         **kwargs: Any,
     ) -> None:
@@ -137,6 +138,7 @@ class BaseBackupManager(abc.ABC):
     @abc.abstractmethod
     async def async_create_backup(
         self,
+        *,
         password: str | None = None,
         **kwargs: Any,
     ) -> Backup:
@@ -235,6 +237,7 @@ class BackupManager(BaseBackupManager):
 
     async def async_create_backup(
         self,
+        *,
         password: str | None = None,
         **kwargs: Any,
     ) -> Backup:
@@ -308,7 +311,7 @@ class BackupManager(BaseBackupManager):
             with outer_secure_tarfile.create_inner_tar(
                 "./homeassistant.tar.gz",
                 gzip=True,
-                key=password_to_key(password=password),
+                key=password_to_key(password) if password is not None else None,
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,
@@ -321,6 +324,7 @@ class BackupManager(BaseBackupManager):
     async def async_restore_backup(
         self,
         slug: str,
+        *,
         password: str | None = None,
         **kwargs: Any,
     ) -> None:

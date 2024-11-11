@@ -28,10 +28,8 @@ class RestoreBackupFileContent:
     password: str | None = None
 
 
-def password_to_key(password: str | None) -> bytes | None:
+def password_to_key(password: str) -> bytes:
     """Generate a AES Key from password."""
-    if password is None:
-        return None
     key: bytes = password.encode()
     for _ in range(100):
         key = hashlib.sha256(key).digest()
@@ -105,7 +103,7 @@ def _extract_backup(
                 f"homeassistant.tar{'.gz' if backup_meta["compressed"] else ''}",
             ),
             gzip=backup_meta["compressed"],
-            key=password_to_key(password),
+            key=password_to_key(password) if password is not None else None,
             mode="r",
         ) as istf:
             istf.extractall(
