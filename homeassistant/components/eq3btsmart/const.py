@@ -18,6 +18,10 @@ DOMAIN = "eq3btsmart"
 MANUFACTURER = "eQ-3 AG"
 DEVICE_MODEL = "CC-RT-BLE-EQ"
 
+ENTITY_KEY_DST = "dst"
+ENTITY_KEY_BATTERY = "battery"
+ENTITY_KEY_WINDOW = "window"
+
 GET_DEVICE_TIMEOUT = 5  # seconds
 
 EQ_TO_HA_HVAC: dict[OperationMode, HVACMode] = {
