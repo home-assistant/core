@@ -87,7 +87,7 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
                         "payload_off": "0",
                         "value_template": "{{ value | multiply(0.1) }}",
                         "icon": (
-                            '{% if this.state=="unknown" %} mdi:airplane-takeoff {% else %} mdi:airplane-check {% endif %}'
+                            '{% if this.state!="on" and value=="1.0" %} mdi:airplane-takeoff {% elif value=="1.0" %} mdi:on {% else %} mdi:off {% endif %}'
                         ),
                     }
                 }
