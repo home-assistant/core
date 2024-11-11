@@ -85,6 +85,9 @@ def make_device_data(
             "Meter",
             "MeterPlus",
             "WoIOSensor",
+            "Hub 2",
+            "MeterPro",
+            "MeterPro(CO2)",
         ]:
             devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)

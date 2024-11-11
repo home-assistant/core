@@ -29,7 +29,8 @@
     "preferences": {
       "sleep": false,
       "automaticAllocation": true,
-      "disableClasses": false
+      "disableClasses": false,
+      "language": "en"
     },
     "flags": {
       "classSelected": true

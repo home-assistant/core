@@ -18,5 +18,12 @@
     "error": {
       "invalid_mac_address": "Invalid MAC address"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "dst": {
+        "name": "Daylight saving time"
+      }
+    }
   }
 }

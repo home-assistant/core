@@ -126,7 +126,7 @@ class BaseBackupManager(abc.ABC):
 
     @abc.abstractmethod
     async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
-        """Restpre a backup."""
+        """Restore a backup."""
 
     @abc.abstractmethod
     async def async_create_backup(self, **kwargs: Any) -> Backup:
