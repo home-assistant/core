@@ -139,8 +139,9 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        placeholders = {CONF_NAME: self._discovered[CONF_NAME]}
-        self.context["title_placeholders"] = {CONF_NAME: self._discovered[CONF_NAME]}
+        self.context["title_placeholders"] = placeholders = {
+            CONF_NAME: self._discovered[CONF_NAME]
+        }
 
         self._set_confirm_only()
         return self.async_show_form(
