@@ -185,7 +185,7 @@ async def test_form_error_handling(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "CO2 Signal"
+    assert result["title"] == "Electricity Maps"
     assert result["data"] == {
         "api_key": "api_key",
     }
