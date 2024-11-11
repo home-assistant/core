@@ -1,4 +1,4 @@
-"""Backup plafrom for the cloud integration."""
+"""Backup platform for the cloud integration."""
 
 from __future__ import annotations
 
