@@ -70,7 +70,7 @@
         }
       },
       "battery_camera_work_mode": {
-        "name": "Work Mode",
+        "name": "Battery work mode",
         "state": {
           "plugged_in": "Plugged in",
           "high_performance": "High performance",
