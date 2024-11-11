@@ -3,7 +3,6 @@
 import logging
 from typing import Any
 
-from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
 from eq3btsmart.exceptions import Eq3Exception
 
@@ -15,7 +14,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -25,9 +23,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
+from . import Eq3ConfigEntry
 from .const import (
     DEVICE_MODEL,
-    DOMAIN,
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
     MANUFACTURER,
@@ -38,22 +36,19 @@ from .const import (
     TargetTemperatureSelector,
 )
 from .entity import Eq3Entity
-from .models import Eq3Config, Eq3ConfigEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: Eq3ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Handle config entry setup."""
 
-    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][config_entry.entry_id]
-
     async_add_entities(
-        [Eq3Climate(eq3_config_entry.eq3_config, eq3_config_entry.thermostat)],
+        [Eq3Climate(entry)],
     )
 
 
@@ -80,11 +75,11 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _attr_preset_mode: str | None = None
     _target_temperature: float | None = None
 
-    def __init__(self, eq3_config: Eq3Config, thermostat: Thermostat) -> None:
+    def __init__(self, entry: Eq3ConfigEntry) -> None:
         """Initialize the climate entity."""
 
-        super().__init__(eq3_config, thermostat)
-        self._attr_unique_id = dr.format_mac(eq3_config.mac_address)
+        super().__init__(entry)
+        self._attr_unique_id = dr.format_mac(self._eq3_config.mac_address)
         self._attr_device_info = DeviceInfo(
             name=slugify(self._eq3_config.mac_address),
             manufacturer=MANUFACTURER,
