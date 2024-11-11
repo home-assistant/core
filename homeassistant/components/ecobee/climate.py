@@ -207,6 +207,8 @@ async def async_setup_entry(
     """Set up the ecobee thermostat."""
 
     data = hass.data[DOMAIN]
+    assert data is not None
+
     entities = []
 
     for index in range(len(data.ecobee.thermostats)):

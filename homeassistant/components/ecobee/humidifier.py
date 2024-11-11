@@ -33,6 +33,8 @@ async def async_setup_entry(
     """Set up the ecobee thermostat humidifier entity."""
     data = hass.data[DOMAIN]
 
+    assert data is not None
+
     async_add_entities(
         (
             EcobeeHumidifier(data, index)

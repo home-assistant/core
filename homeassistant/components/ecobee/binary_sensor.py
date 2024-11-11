@@ -22,6 +22,8 @@ async def async_setup_entry(
     """Set up ecobee binary (occupancy) sensors."""
     data = hass.data[DOMAIN]
 
+    assert data is not None
+
     async_add_entities(
         (
             EcobeeBinarySensor(data, sensor["name"], index)
