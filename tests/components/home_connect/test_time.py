@@ -135,7 +135,9 @@ async def test_time_entity_error(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    with pytest.raises(ServiceValidationError, match=r"Error.*set.*setting.*"):
+    with pytest.raises(
+        ServiceValidationError, match=r"Error.*assign.*value.*to.*setting.*"
+    ):
         await hass.services.async_call(
             TIME_DOMAIN,
             SERVICE_SET_VALUE,
