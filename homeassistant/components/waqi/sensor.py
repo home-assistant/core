@@ -16,7 +16,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfTemperature
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    PERCENTAGE,
+    UnitOfPressure,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -79,6 +84,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
     ),
     WAQISensorEntityDescription(
         key="carbon_monoxide",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         translation_key="carbon_monoxide",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.carbon_monoxide,
@@ -86,6 +93,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
     ),
     WAQISensorEntityDescription(
         key="nitrogen_dioxide",
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         translation_key="nitrogen_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.nitrogen_dioxide,
@@ -93,6 +102,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
     ),
     WAQISensorEntityDescription(
         key="ozone",
+        device_class=SensorDeviceClass.OZONE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         translation_key="ozone",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.ozone,
@@ -100,6 +111,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
     ),
     WAQISensorEntityDescription(
         key="sulphur_dioxide",
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         translation_key="sulphur_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.sulfur_dioxide,
@@ -107,6 +120,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
     ),
     WAQISensorEntityDescription(
         key="pm10",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         translation_key="pm10",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.pm10,
@@ -114,6 +129,8 @@ SENSORS: list[WAQISensorEntityDescription] = [
     ),
     WAQISensorEntityDescription(
         key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         translation_key="pm25",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.pm25,
