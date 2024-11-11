@@ -28,7 +28,6 @@ class Eq3Entity(Entity):
         self,
         entry: Eq3ConfigEntry,
         unique_id_key: str | None = None,
-        always_available: bool = False,
     ) -> None:
         """Initialize the eq3 entity."""
 
@@ -42,8 +41,6 @@ class Eq3Entity(Entity):
         )
         suffix = f"_{unique_id_key}" if unique_id_key else ""
         self._attr_unique_id = f"{format_mac(self._eq3_config.mac_address)}{suffix}"
-        self._always_available = always_available
-        self._attr_available = always_available
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -79,18 +76,14 @@ class Eq3Entity(Entity):
     def _async_on_disconnected(self) -> None:
         """Handle disconnection from the thermostat."""
 
-        if not self._always_available:
-            self._attr_available = False
-
+        self._attr_available = False
         self.async_write_ha_state()
 
     @callback
     def _async_on_connected(self) -> None:
         """Handle connection to the thermostat."""
 
-        if not self._always_available:
-            self._attr_available = True
-
+        self._attr_available = True
         self.async_write_ha_state()
 
     @property

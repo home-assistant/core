@@ -25,7 +25,6 @@ class Eq3BinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity description for eq3 binary sensors."""
 
     value_func: Callable[[Status], bool]
-    always_available: bool = False
 
 
 BINARY_SENSOR_ENTITY_DESCRIPTIONS = [
@@ -75,9 +74,7 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
     ) -> None:
         """Initialize the entity."""
 
-        super().__init__(
-            entry, entity_description.key, entity_description.always_available
-        )
+        super().__init__(entry, entity_description.key)
         self.entity_description: Eq3BinarySensorEntityDescription = entity_description
 
     @property
