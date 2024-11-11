@@ -29,7 +29,10 @@ class RestoreBackupFileContent:
 
 
 def password_to_key(password: str) -> bytes:
-    """Generate a AES Key from password."""
+    """Generate a AES Key from password.
+
+    Matches the implementation in supervisor.backups.utils.password_to_key.
+    """
     key: bytes = password.encode()
     for _ in range(100):
         key = hashlib.sha256(key).digest()
