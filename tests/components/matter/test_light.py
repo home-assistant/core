@@ -5,31 +5,46 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.light import ColorMode
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
+async def test_lights(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test lights."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.LIGHT)
+
+
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id", "supported_color_modes"),
     [
         (
             "extended_color_light",
-            "light.mock_extended_color_light_light",
+            "light.mock_extended_color_light",
             ["color_temp", "hs", "xy"],
         ),
         (
             "color_temperature_light",
-            "light.mock_color_temperature_light_light",
+            "light.mock_color_temperature_light",
             ["color_temp"],
         ),
-        ("dimmable_light", "light.mock_dimmable_light_light", ["brightness"]),
-        ("onoff_light", "light.mock_onoff_light_light", ["onoff"]),
-        ("onoff_light_with_levelcontrol_present", "light.d215s_light", ["onoff"]),
+        ("dimmable_light", "light.mock_dimmable_light", ["brightness"]),
+        ("onoff_light", "light.mock_onoff_light", ["onoff"]),
+        ("onoff_light_with_levelcontrol_present", "light.d215s", ["onoff"]),
     ],
 )
 async def test_light_turn_on_off(
@@ -99,15 +114,13 @@ async def test_light_turn_on_off(
     matter_client.send_device_command.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
-        ("extended_color_light", "light.mock_extended_color_light_light"),
-        ("color_temperature_light", "light.mock_color_temperature_light_light"),
-        ("dimmable_light", "light.mock_dimmable_light_light"),
-        ("dimmable_plugin_unit", "light.dimmable_plugin_unit_light"),
+        ("extended_color_light", "light.mock_extended_color_light"),
+        ("color_temperature_light", "light.mock_color_temperature_light"),
+        ("dimmable_light", "light.mock_dimmable_light"),
+        ("dimmable_plugin_unit", "light.dimmable_plugin_unit"),
     ],
 )
 async def test_dimmable_light(
@@ -169,13 +182,11 @@ async def test_dimmable_light(
     matter_client.send_device_command.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
-        ("extended_color_light", "light.mock_extended_color_light_light"),
-        ("color_temperature_light", "light.mock_color_temperature_light_light"),
+        ("extended_color_light", "light.mock_extended_color_light"),
+        ("color_temperature_light", "light.mock_color_temperature_light"),
     ],
 )
 async def test_color_temperature_light(
@@ -260,12 +271,10 @@ async def test_color_temperature_light(
     matter_client.send_device_command.reset_mock()
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
-        ("extended_color_light", "light.mock_extended_color_light_light"),
+        ("extended_color_light", "light.mock_extended_color_light"),
     ],
 )
 async def test_extended_color_light(

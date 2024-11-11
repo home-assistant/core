@@ -6,7 +6,6 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 import datetime
-from functools import partial
 import itertools
 import logging
 import math
@@ -39,6 +38,7 @@ from homeassistant.helpers.entity import entity_sources
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 
@@ -686,7 +686,6 @@ def list_statistic_ids(
 @callback
 def _update_issues(
     report_issue: Callable[[str, str, dict[str, Any]], None],
-    clear_issue: Callable[[str, str], None],
     sensor_states: list[State],
     metadatas: dict[str, tuple[int, StatisticMetaData]],
 ) -> None:
@@ -707,8 +706,6 @@ def _update_issues(
                     entity_id,
                     {"statistic_id": entity_id},
                 )
-            else:
-                clear_issue("state_class_removed", entity_id)
 
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
@@ -725,8 +722,6 @@ def _update_issues(
                             "supported_unit": metadata_unit,
                         },
                     )
-                else:
-                    clear_issue("units_changed", entity_id)
             elif numeric and state_unit not in converter.VALID_UNITS:
                 # The state unit can't be converted to the unit in metadata
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
@@ -741,8 +736,6 @@ def _update_issues(
                         "supported_unit": valid_units_str,
                     },
                 )
-            else:
-                clear_issue("units_changed", entity_id)
 
 
 def update_statistics_issues(
@@ -756,36 +749,50 @@ def update_statistics_issues(
         instance, session, statistic_source=RECORDER_DOMAIN
     )
 
+    @callback
+    def get_sensor_statistics_issues(hass: HomeAssistant) -> set[str]:
+        """Return a list of statistics issues."""
+        issues = set()
+        issue_registry = ir.async_get(hass)
+        for issue in issue_registry.issues.values():
+            if (
+                issue.domain != DOMAIN
+                or not (issue_data := issue.data)
+                or issue_data.get("issue_type")
+                not in ("state_class_removed", "units_changed")
+            ):
+                continue
+            issues.add(issue.issue_id)
+        return issues
+
+    issues = run_callback_threadsafe(
+        hass.loop, get_sensor_statistics_issues, hass
+    ).result()
+
     def create_issue_registry_issue(
         issue_type: str, statistic_id: str, data: dict[str, Any]
     ) -> None:
         """Create an issue registry issue."""
-        hass.loop.call_soon_threadsafe(
-            partial(
-                ir.async_create_issue,
-                hass,
-                DOMAIN,
-                f"{issue_type}_{statistic_id}",
-                data=data | {"issue_type": issue_type},
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=issue_type,
-                translation_placeholders=data,
-            )
-        )
-
-    def delete_issue_registry_issue(issue_type: str, statistic_id: str) -> None:
-        """Delete an issue registry issue."""
-        hass.loop.call_soon_threadsafe(
-            ir.async_delete_issue, hass, DOMAIN, f"{issue_type}_{statistic_id}"
+        issue_id = f"{issue_type}_{statistic_id}"
+        issues.discard(issue_id)
+        ir.create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            data=data | {"issue_type": issue_type},
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=issue_type,
+            translation_placeholders=data,
         )
 
     _update_issues(
         create_issue_registry_issue,
-        delete_issue_registry_issue,
         sensor_states,
         metadatas,
     )
+    for issue_id in issues:
+        hass.loop.call_soon_threadsafe(ir.async_delete_issue, hass, DOMAIN, issue_id)
 
 
 def validate_statistics(
@@ -811,7 +818,6 @@ def validate_statistics(
 
     _update_issues(
         create_statistic_validation_issue,
-        lambda issue_type, statistic_id: None,
         sensor_states,
         metadatas,
     )

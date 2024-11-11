@@ -51,16 +51,6 @@ set_lock_configuration:
           min: 0
           max: 65535
           unit_of_measurement: sec
-    outside_handles_can_open_door_configuration:
-      required: false
-      example: [true, true, true, false]
-      selector:
-        object:
-    inside_handles_can_open_door_configuration:
-      required: false
-      example: [true, true, true, false]
-      selector:
-        object:
     auto_relock_time:
       required: false
       example: 1

@@ -9,17 +9,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER, MODEL
-from .coordinator import IronOSCoordinator
+from .coordinator import IronOSLiveDataCoordinator
 
 
-class IronOSBaseEntity(CoordinatorEntity[IronOSCoordinator]):
+class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
     """Base IronOS entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: IronOSCoordinator,
+        coordinator: IronOSLiveDataCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize the sensor."""

@@ -132,7 +132,16 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         status = self._zone.status
+        mode = self._source.mode
         if status == "ON":
+            if mode == "playing":
+                return MediaPlayerState.PLAYING
+            if mode == "paused":
+                return MediaPlayerState.PAUSED
+            if mode == "transitioning":
+                return MediaPlayerState.BUFFERING
+            if mode == "stopped":
+                return MediaPlayerState.IDLE
             return MediaPlayerState.ON
         if status == "OFF":
             return MediaPlayerState.OFF

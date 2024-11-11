@@ -144,27 +144,32 @@ async def test_reauth(hass: HomeAssistant, user, cloud_devices) -> None:
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CLOUD_CONFIG,
+            user_input={CONF_ACCESS_TOKEN: "bad"},
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-        assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
     with (
         patch(
             "python_awair.AwairClient.query",
             side_effect=[user, cloud_devices],
         ),
-        patch("homeassistant.components.awair.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.awair.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CLOUD_CONFIG,
+            user_input={CONF_ACCESS_TOKEN: "good"},
         )
+        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_setup_entry.assert_called_once()
+    assert dict(mock_config.data) == {CONF_ACCESS_TOKEN: "good"}
 
 
 async def test_reauth_error(hass: HomeAssistant) -> None:
@@ -395,10 +400,6 @@ async def test_zeroconf_discovery_update_configuration(
             return_value=True,
         ) as mock_setup_entry,
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
-        patch(
-            "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
-        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

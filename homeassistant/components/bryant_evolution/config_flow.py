@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_FILENAME
-from homeassistant.helpers.typing import UNDEFINED
 
 from .const import CONF_SYSTEM_ZONE, DOMAIN
 
@@ -64,29 +63,20 @@ class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle integration reconfiguration."""
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle integration reconfiguration."""
         errors: dict[str, str] = {}
         if user_input is not None:
             system_zone = await _enumerate_sz(user_input[CONF_FILENAME])
             if len(system_zone) != 0:
-                our_entry = self._get_reconfigure_entry()
                 return self.async_update_reload_and_abort(
-                    entry=our_entry,
+                    self._get_reconfigure_entry(),
                     data={
                         CONF_FILENAME: user_input[CONF_FILENAME],
                         CONF_SYSTEM_ZONE: system_zone,
                     },
-                    unique_id=UNDEFINED,
-                    reason="reconfigured",
                 )
             errors["base"] = "cannot_connect"
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )

@@ -6,7 +6,7 @@
           "url": "[%key:common::config_flow::data::url%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Update your configuration information for {name}.",
         "data": {
           "url": "[%key:common::config_flow::data::url%]"

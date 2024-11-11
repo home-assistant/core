@@ -27,13 +27,13 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaPlayerEntityFeature,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, network
 from homeassistant.helpers.dispatcher import (

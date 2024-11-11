@@ -2030,7 +2030,6 @@ async def test_homekit_finds_linked_motion_sensors(
 @pytest.mark.parametrize(
     ("domain", "device_class"),
     [
-        ("binary_sensor", BinarySensorDeviceClass.OCCUPANCY),
         ("event", EventDeviceClass.DOORBELL),
     ],
 )

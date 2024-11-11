@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -126,22 +126,18 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None
-
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> TVTrainOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return TVTrainOptionsFlowHandler(config_entry)
+        return TVTrainOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -153,26 +149,21 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
-            assert self.entry is not None
+            reauth_entry = self._get_reauth_entry()
             errors = await validate_input(
                 self.hass,
                 api_key,
-                self.entry.data[CONF_FROM],
-                self.entry.data[CONF_TO],
-                self.entry.data.get(CONF_TIME),
-                self.entry.data[CONF_WEEKDAY],
-                self.entry.options.get(CONF_FILTER_PRODUCT),
+                reauth_entry.data[CONF_FROM],
+                reauth_entry.data[CONF_TO],
+                reauth_entry.data.get(CONF_TIME),
+                reauth_entry.data[CONF_WEEKDAY],
+                reauth_entry.options.get(CONF_FILTER_PRODUCT),
             )
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_API_KEY: api_key,
-                    },
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_KEY: api_key},
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -238,7 +229,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class TVTrainOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class TVTrainOptionsFlowHandler(OptionsFlow):
     """Handle Trafikverket Train options."""
 
     async def async_step_init(
@@ -256,7 +247,7 @@ class TVTrainOptionsFlowHandler(OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(OPTION_SCHEMA),
-                user_input or self.options,
+                user_input or self.config_entry.options,
             ),
             errors=errors,
         )

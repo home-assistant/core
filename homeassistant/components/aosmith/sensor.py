@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from py_aosmith.models import Device as AOSmithDevice, HotWaterStatus
+from py_aosmith.models import Device as AOSmithDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -31,19 +31,10 @@ STATUS_ENTITY_DESCRIPTIONS: tuple[AOSmithStatusSensorEntityDescription, ...] = (
     AOSmithStatusSensorEntityDescription(
         key="hot_water_availability",
         translation_key="hot_water_availability",
-        device_class=SensorDeviceClass.ENUM,
-        options=["low", "medium", "high"],
-        value_fn=lambda device: HOT_WATER_STATUS_MAP.get(
-            device.status.hot_water_status
-        ),
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda device: device.status.hot_water_status,
     ),
 )
-
-HOT_WATER_STATUS_MAP: dict[HotWaterStatus, str] = {
-    HotWaterStatus.LOW: "low",
-    HotWaterStatus.MEDIUM: "medium",
-    HotWaterStatus.HIGH: "high",
-}
 
 
 async def async_setup_entry(

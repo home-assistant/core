@@ -119,7 +119,6 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.RELEASE_NOTES
     )
-    _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     def __init__(
