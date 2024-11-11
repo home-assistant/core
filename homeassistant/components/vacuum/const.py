@@ -15,8 +15,8 @@ from homeassistant.helpers.deprecation import (
 DOMAIN = "vacuum"
 
 
-class VacuumState(StrEnum):
-    """Vacuum entity states."""
+class VacuumActivity(StrEnum):
+    """Vacuum activity states."""
 
     CLEANING = "cleaning"
     DOCKED = "docked"
@@ -28,13 +28,15 @@ class VacuumState(StrEnum):
 
 # These STATE_* constants are deprecated as of Home Assistant 2024.11.
 # Please use the VacuumState enum instead.
-_DEPRECATED_STATE_CLEANING = DeprecatedConstantEnum(VacuumState.CLEANING, "2025.11")
-_DEPRECATED_STATE_DOCKED = DeprecatedConstantEnum(VacuumState.DOCKED, "2025.11")
-_DEPRECATED_STATE_RETURNING = DeprecatedConstantEnum(VacuumState.RETURNING, "2025.11")
-_DEPRECATED_STATE_ERROR = DeprecatedConstantEnum(VacuumState.ERROR, "2025.11")
+_DEPRECATED_STATE_CLEANING = DeprecatedConstantEnum(VacuumActivity.CLEANING, "2025.11")
+_DEPRECATED_STATE_DOCKED = DeprecatedConstantEnum(VacuumActivity.DOCKED, "2025.11")
+_DEPRECATED_STATE_RETURNING = DeprecatedConstantEnum(
+    VacuumActivity.RETURNING, "2025.11"
+)
+_DEPRECATED_STATE_ERROR = DeprecatedConstantEnum(VacuumActivity.ERROR, "2025.11")
 
 
-STATES = [cls.value for cls in VacuumState]
+STATES = [cls.value for cls in VacuumActivity]
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())

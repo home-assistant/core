@@ -32,6 +32,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -44,7 +45,7 @@ from .const import (  # noqa: F401
     _DEPRECATED_STATE_RETURNING,
     DOMAIN,
     STATES,
-    VacuumState,
+    VacuumActivity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,8 +77,8 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 
 # These STATE_* constants are deprecated as of Home Assistant 2024.11.
 # Please use the VacuumState enum instead.
-_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumState.IDLE, "2025.11")
-_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumState.PAUSED, "2025.11")
+_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2025.11")
+_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2025.11")
 
 
 class VacuumEntityFeature(IntFlag):
@@ -243,17 +244,16 @@ class StateVacuumEntity(
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
-    _attr_vacuum_state: VacuumState | None = None
+    _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
     __vacuum_legacy_state: bool = False
-    __vacuum_legacy_state_reported: bool = False
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
         if any(method in cls.__dict__ for method in ("_attr_state", "state")):
-            # Integrations should use the 'vacuum_state' property instead of
+            # Integrations should use the 'activity' property instead of
             # setting the state directly.
             cls.__vacuum_legacy_state = True
 
@@ -264,9 +264,7 @@ class StateVacuumEntity(
         unless already reported.
         """
         if __name == "_attr_state":
-            if self.__vacuum_legacy_state_reported is not True:
-                self._report_deprecated_vacuum_state_handling()
-            self.__vacuum_legacy_state_reported = True
+            self._report_deprecated_vacuum_state_handling()
         return super().__setattr__(__name, __value)
 
     @callback
@@ -278,28 +276,22 @@ class StateVacuumEntity(
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__vacuum_legacy_state and not self.__vacuum_legacy_state_reported:
+        if self.__vacuum_legacy_state:
             self._report_deprecated_vacuum_state_handling()
 
     @callback
     def _report_deprecated_vacuum_state_handling(self) -> None:
         """Report on deprecated handling of vacuum state.
 
-        Integrations should implement vacuum_state instead of using state directly.
+        Integrations should implement activity instead of using state directly.
         """
-        self.__vacuum_legacy_state_reported = True
-        if "custom_components" in type(self).__module__:
-            # Do not report on core integrations as they have been fixed.
-            report_issue = "report it to the custom integration author."
-            _LOGGER.warning(
-                "Entity %s (%s) is setting state directly"
-                " which will stop working in HA Core 2025.11."
-                " Entities should implement the 'vacuum_state' property and"
-                " return its state using the VacuumState enum, please %s",
-                self.entity_id,
-                type(self),
-                report_issue,
-            )
+        report(
+            "is setting state directly which will stop working in HA Core 2025.11."
+            f" Entity {self.entity_id} ({type(self)}) should implement the 'activity' property and"
+            " return its state using the VacuumActivity enum, please ",
+            error_if_core=True,
+            error_if_integration=False,
+        )
 
     @cached_property
     def battery_level(self) -> int | None:
@@ -309,7 +301,7 @@ class StateVacuumEntity(
     @property
     def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner."""
-        charging = bool(self.vacuum_state == VacuumState.DOCKED)
+        charging = bool(self.activity == VacuumActivity.DOCKED)
 
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
@@ -351,18 +343,18 @@ class StateVacuumEntity(
     @property
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
-        if (vacuum_state := self.vacuum_state) is None:
+        if (activity := self.activity) is None:
             return None
-        return vacuum_state
+        return activity
 
     @cached_property
-    def vacuum_state(self) -> VacuumState | None:
-        """Return the current vacuum state.
+    def activity(self) -> VacuumActivity | None:
+        """Return the current vacuum activity.
 
-        Integrations should overwrite this or use the '_attr_vacuum_state'
-        attribute to set the vacuum status using the 'VacuumState' enum.
+        Integrations should overwrite this or use the '_attr_activity'
+        attribute to set the vacuum activity using the 'VacuumActivity' enum.
         """
-        return self._attr_vacuum_state
+        return self._attr_activity
 
     @cached_property
     def supported_features(self) -> VacuumEntityFeature:
