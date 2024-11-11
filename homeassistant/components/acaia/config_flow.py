@@ -11,7 +11,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -42,32 +42,27 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # we already check compatibility in the discovery step
-            # only check if the user has entered the MAC manually
-            if self.source == SOURCE_USER:
-                try:
-                    mac = format_mac(user_input[CONF_MAC])
-                    is_new_style_scale = await is_new_scale(mac)
-                except AcaiaDeviceNotFound:
-                    errors["base"] = "device_not_found"
-                except AcaiaError:
-                    _LOGGER.exception("Error occurred while connecting to the scale")
-                    errors["base"] = "unknown"
-                except AcaiaUnknownDevice:
-                    return self.async_abort(reason="unsupported_device")
-                else:
-                    await self.async_set_unique_id(mac)
-                    self._abort_if_unique_id_configured()
+            try:
+                mac = format_mac(user_input[CONF_MAC])
+                is_new_style_scale = await is_new_scale(mac)
+            except AcaiaDeviceNotFound:
+                errors["base"] = "device_not_found"
+            except AcaiaError:
+                _LOGGER.exception("Error occurred while connecting to the scale")
+                errors["base"] = "unknown"
+            except AcaiaUnknownDevice:
+                return self.async_abort(reason="unsupported_device")
+            else:
+                await self.async_set_unique_id(mac)
+                self._abort_if_unique_id_configured()
 
             if not errors:
                 return self.async_create_entry(
                     title=self._discovered.get(CONF_NAME)
                     or self._discovered_devices[user_input[CONF_MAC]],
                     data={
-                        CONF_MAC: self._discovered.get(CONF_MAC, mac),
-                        CONF_IS_NEW_STYLE_SCALE: self._discovered.get(
-                            CONF_IS_NEW_STYLE_SCALE, is_new_style_scale
-                        ),
+                        CONF_MAC: mac,
+                        CONF_IS_NEW_STYLE_SCALE: is_new_style_scale,
                     },
                 )
 
@@ -128,5 +123,27 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Unsupported device during discovery")
             return self.async_abort(reason="unsupported_device")
 
+        return await self.async_step_bluetooth_confirm()
+
+    async def async_step_bluetooth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle confirmation of Bluetooth discovery."""
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered[CONF_NAME],
+                data={
+                    CONF_MAC: self._discovered[CONF_MAC],
+                    CONF_IS_NEW_STYLE_SCALE: self._discovered[CONF_IS_NEW_STYLE_SCALE],
+                },
+            )
+
+        placeholders = {CONF_NAME: self._discovered[CONF_NAME]}
+        self.context["title_placeholders"] = {CONF_NAME: self._discovered[CONF_NAME]}
+
         self._set_confirm_only()
-        return self.async_show_form(step_id="user")
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            description_placeholders=placeholders,
+        )

@@ -57,7 +57,7 @@ async def test_bluetooth_discovery(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "bluetooth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

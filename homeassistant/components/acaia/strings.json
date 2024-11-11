@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name}",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
@@ -10,8 +11,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
       "user": {
-        "title": "Set up your Acaia scale",
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
           "mac": "MAC address"
         },
