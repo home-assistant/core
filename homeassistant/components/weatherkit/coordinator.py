@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import Any
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -12,7 +13,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, STALE_DATA_THRESHOLD_SEC
 
 REQUESTED_DATA_SETS = [
     DataSetType.CURRENT_WEATHER,
@@ -26,6 +27,8 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
     config_entry: ConfigEntry
     supported_data_sets: list[DataSetType] | None = None
+    cached_data: Any | None = None
+    last_updated_at: datetime | None = None
 
     def __init__(
         self,
@@ -62,10 +65,21 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
-            return await self.client.get_weather_data(
+            self.cached_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
             )
+
+            self.last_updated_at = datetime.now()
         except WeatherKitApiClientError as exception:
-            raise UpdateFailed(exception) from exception
+            if self.cached_data is None or (
+                self.last_updated_at is not None
+                and datetime.now() - self.last_updated_at
+                > timedelta(seconds=STALE_DATA_THRESHOLD_SEC)
+            ):
+                raise UpdateFailed(exception) from exception
+
+            LOGGER.warning("Using stale data because update failed: %s", exception)
+
+        return self.cached_data
