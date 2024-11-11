@@ -224,7 +224,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         ):
             await self._rest_client.streams.add(
                 camera.entity_id,
-                [stream_source, f"ffmpeg:{camera.entity_id}#audio=opus"],
+                [
+                    stream_source,
+                    # As ffmpeg is the second stream and it's refereing to the first
+                    # one, we can lower the log level from warning to debug
+                    f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+                ],
             )
 
         @callback
