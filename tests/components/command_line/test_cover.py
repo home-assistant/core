@@ -422,13 +422,19 @@ async def test_icon_template(hass: HomeAssistant) -> None:
                             "command_close": f"echo 0 > {path}",
                             "command_stop": f"echo 0 > {path}",
                             "name": "Test",
-                            "icon": "{% if this.state=='open' %} mdi:open {% else %} mdi:closed {% endif %}",
+                            "icon": "{% if this.state=='open' and value=='0' %} mdi:closed {% elif this.state=='closed' and value=='100' %} mdi:opened {% else %} mdi:window {% endif %}",
                         }
                     }
                 ]
             },
         )
         await hass.async_block_till_done()
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -448,4 +454,4 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         )
         entity_state = hass.states.get("cover.test")
         assert entity_state
-        assert entity_state.attributes.get("icon") == "mdi:closed"
+        assert entity_state.attributes.get("icon") == "mdi:opened"

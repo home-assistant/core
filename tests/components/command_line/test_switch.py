@@ -552,7 +552,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if this.state=="off" and value=="1" %} mdi:rocket {% elif value=="1" %} mdi:on {% else %} mdi:off {% endif %}'
                             ),
                             "name": "Test",
                         }
@@ -564,7 +564,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if states("switch.test2")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if states("switch.test2")=="off" and value=="1" %} mdi:rocket {% elif value=="1" %} mdi:on {% else %} mdi:off {% endif %}'
                             ),
                             "name": "Test2",
                         },
@@ -595,9 +595,9 @@ async def test_templating(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         entity_state2 = hass.states.get("switch.test2")
         assert entity_state.state == STATE_ON
-        assert entity_state.attributes.get("icon") == "mdi:off"
+        assert entity_state.attributes.get("icon") == "mdi:rocket"
         assert entity_state2.state == STATE_ON
-        assert entity_state2.attributes.get("icon") == "mdi:off"
+        assert entity_state2.attributes.get("icon") == "mdi:rocket"
 
 
 async def test_updating_to_often(

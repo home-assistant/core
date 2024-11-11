@@ -87,7 +87,7 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
                         "payload_off": "0",
                         "value_template": "{{ value | multiply(0.1) }}",
                         "icon": (
-                            '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                            '{% if this.state=="unknown" %} mdi:airplane-takeoff {% else %} mdi:airplane-check {% endif %}'
                         ),
                     }
                 }
@@ -101,7 +101,7 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     entity_state = hass.states.get("binary_sensor.test")
     assert entity_state
     assert entity_state.state == STATE_ON
-    assert entity_state.attributes.get("icon") == "mdi:off"
+    assert entity_state.attributes.get("icon") == "mdi:airplane-takeoff"
 
 
 @pytest.mark.parametrize(
