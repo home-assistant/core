@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 from datetime import datetime
-import json
-from typing import Any
+from http import HTTPStatus
 from unittest.mock import patch
 
-from pynordpool import NordPoolClient
+from pynordpool import API, NordPoolClient
 from pynordpool.const import Currency
 from pynordpool.model import DeliveryPeriodData
 import pytest
 
 from homeassistant.components.nordpool.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -51,23 +51,24 @@ async def load_int(
 
 @pytest.fixture(name="get_data")
 async def get_data_from_library(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, load_json: dict[str, Any]
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, load_data: str
 ) -> DeliveryPeriodData:
     """Retrieve data from Nord Pool library."""
 
+    aioclient_mock.request(
+        "get",
+        API + "/DayAheadPrices",
+        text=load_data,
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+        status=HTTPStatus.OK,
+    )
+
     client = NordPoolClient(aioclient_mock.create_session(hass.loop))
-    with patch("pynordpool.NordPoolClient._get", return_value=load_json):
-        output = await client.async_get_delivery_period(
-            datetime(2024, 11, 5, 13, tzinfo=dt_util.UTC), Currency.SEK, ["SE3", "SE4"]
-        )
+    output = await client.async_get_delivery_period(
+        datetime(2024, 11, 5, 13, tzinfo=dt_util.UTC), Currency.SEK, ["SE3", "SE4"]
+    )
     await client._session.close()
     return output
-
-
-@pytest.fixture(name="load_json")
-def load_json_from_fixture(load_data: str) -> dict[str, Any]:
-    """Load fixture with json data and return."""
-    return json.loads(load_data)
 
 
 @pytest.fixture(name="load_data", scope="package")

@@ -23,11 +23,14 @@ from homeassistant.util import dt as dt_util
 from . import ENTRY_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2024-11-05T12:00:00+00:00")
 async def test_coordinator(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    load_data: str,
     get_data: DeliveryPeriodData,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
