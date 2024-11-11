@@ -69,6 +69,8 @@ SOURCE_MAP: dict[PlayingMode, str] = {
     PlayingMode.FM: "FM Radio",
     PlayingMode.RCA: "RCA",
     PlayingMode.UDISK: "USB",
+    PlayingMode.SPOTIFY: "Spotify",
+    PlayingMode.TIDAL: "Tidal",
     PlayingMode.FOLLOWER: "Follower",
 }
 
