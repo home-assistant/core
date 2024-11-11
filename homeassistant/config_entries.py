@@ -63,7 +63,7 @@ from .helpers.event import (
     RANDOM_MICROSECOND_MIN,
     async_call_later,
 )
-from .helpers.frame import report
+from .helpers.frame import ReportBehavior, report, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
@@ -1507,10 +1507,14 @@ class ConfigEntriesFlowManager(
             version=result["version"],
         )
 
+        if existing_entry is not None:
+            # Unload and remove the existing entry
+            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
-            await self.config_entries.async_remove(existing_entry.entry_id)
+            # Clean up devices and entities belonging to the existing entry
+            self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
         return result
@@ -1900,7 +1904,21 @@ class ConfigEntries:
         self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
-        """Remove an entry."""
+        """Remove, unload and clean up after an entry."""
+        unload_success, entry = await self._async_remove(entry_id)
+        self._async_clean_up(entry)
+
+        for discovery_domain in entry.discovery_keys:
+            async_dispatcher_send_internal(
+                self.hass,
+                signal_discovered_config_entry_removed(discovery_domain),
+                entry,
+            )
+
+        return {"require_restart": not unload_success}
+
+    async def _async_remove(self, entry_id: str) -> tuple[bool, ConfigEntry]:
+        """Remove and unload an entry."""
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
@@ -1915,6 +1933,13 @@ class ConfigEntries:
             del self._entries[entry.entry_id]
             self.async_update_issues()
             self._async_schedule_save()
+
+        return (unload_success, entry)
+
+    @callback
+    def _async_clean_up(self, entry: ConfigEntry) -> None:
+        """Clean up after an entry."""
+        entry_id = entry.entry_id
 
         dev_reg = device_registry.async_get(self.hass)
         ent_reg = entity_registry.async_get(self.hass)
@@ -1934,13 +1959,6 @@ class ConfigEntries:
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
-        for discovery_domain in entry.discovery_keys:
-            async_dispatcher_send_internal(
-                self.hass,
-                signal_discovered_config_entry_removed(discovery_domain),
-                entry,
-            )
-        return {"require_restart": not unload_success}
 
     @callback
     def _async_shutdown(self, event: Event) -> None:
@@ -2158,7 +2176,12 @@ class ConfigEntries:
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
-                unique_id is not None
+                # flipr creates duplicates during migration, and asks users to
+                # remove the duplicate. We don't need warn about it here too.
+                # We should remove the special case for "flipr" in HA Core 2025.4,
+                # when the flipr migration period ends
+                entry.domain != "flipr"
+                and unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
@@ -2436,7 +2459,24 @@ class ConfigEntries:
             issues.add(issue.issue_id)
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+            # flipr creates duplicates during migration, and asks users to
+            # remove the duplicate. We don't need warn about it here too.
+            # We should remove the special case for "flipr" in HA Core 2025.4,
+            # when the flipr migration period ends
+            if domain == "flipr":
+                continue
             for unique_id, entries in unique_ids.items():
+                # We might mutate the list of entries, so we need a copy to not mess up
+                # the index
+                entries = list(entries)
+
+                # There's no need to raise an issue for ignored entries, we can
+                # safely remove them once we no longer allow unique id collisions.
+                # Iterate over a copy of the copy to allow mutating while iterating
+                for entry in list(entries):
+                    if entry.source == SOURCE_IGNORE:
+                        entries.remove(entry)
+
                 if len(entries) < 2:
                     continue
                 issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
@@ -3060,7 +3100,6 @@ class OptionsFlowManager(
 class OptionsFlow(ConfigEntryBaseFlow):
     """Base class for config options flows."""
 
-    _options: dict[str, Any]
     handler: str
 
     _config_entry: ConfigEntry
@@ -3127,42 +3166,29 @@ class OptionsFlow(ConfigEntryBaseFlow):
         )
         self._config_entry = value
 
-    @property
-    def options(self) -> dict[str, Any]:
-        """Return a mutable copy of the config entry options.
-
-        Please note that this is not available inside `__init__` method, and
-        can only be referenced after initialisation.
-        """
-        if not hasattr(self, "_options"):
-            self._options = deepcopy(dict(self.config_entry.options))
-        return self._options
-
-    @options.setter
-    def options(self, value: dict[str, Any]) -> None:
-        """Set the options value."""
-        report(
-            "sets option flow options explicitly, which is deprecated "
-            "and will stop working in 2025.12",
-            error_if_integration=False,
-            error_if_core=True,
-        )
-        self._options = value
-
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
-    """Base class for options flows with config entry and options."""
+    """Base class for options flows with config entry and options.
+
+    This class is being phased out, and should not be referenced in new code.
+    It is kept only for backward compatibility, and only for custom integrations.
+    """
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self._config_entry = config_entry
         self._options = deepcopy(dict(config_entry.options))
-        report(
-            "inherits from OptionsFlowWithConfigEntry, which is deprecated "
-            "and will stop working in 2025.12",
-            error_if_integration=False,
-            error_if_core=True,
+        report_usage(
+            "inherits from OptionsFlowWithConfigEntry",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.IGNORE,
         )
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options."""
+        return self._options
 
 
 class EntityRegistryDisabledHandler:
