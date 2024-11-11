@@ -10,7 +10,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util import slugify
 
 from . import Eq3ConfigEntry
@@ -27,11 +26,12 @@ class Eq3Entity(Entity, ABC):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: Eq3ConfigEntry) -> None:
+    def __init__(self, entry: Eq3ConfigEntry, unique_id_key: str | None = None) -> None:
         """Initialize the eq3 entity."""
 
         self._eq3_config = entry.runtime_data.eq3_config
         self._thermostat = entry.runtime_data.thermostat
+        self._unique_id_key = unique_id_key
         self._attr_device_info = DeviceInfo(
             name=slugify(self._eq3_config.mac_address),
             manufacturer=MANUFACTURER,
@@ -44,9 +44,7 @@ class Eq3Entity(Entity, ABC):
         """Return a unique ID."""
 
         return format_mac(self._eq3_config.mac_address) + (
-            "_" + self.name
-            if not isinstance(self.name, UndefinedType) and self.name
-            else ""
+            f"_{self._unique_id_key}" if self._unique_id_key else ""
         )
 
     async def async_added_to_hass(self) -> None:
