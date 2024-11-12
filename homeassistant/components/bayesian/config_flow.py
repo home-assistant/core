@@ -21,7 +21,6 @@ from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
-from homeassistant.components.schedule import DOMAIN as SCHEDULE_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
@@ -82,7 +81,7 @@ ALLOWED_STATE_DOMAINS = [
     NOTIFY_DOMAIN,
     NUMBER_DOMAIN,
     PERSON_DOMAIN,
-    SCHEDULE_DOMAIN,
+    "schedule",  # Avoids an import that would introduce a dependency.
     SELECT_DOMAIN,
     SENSOR_DOMAIN,
     SUN_DOMAIN,
