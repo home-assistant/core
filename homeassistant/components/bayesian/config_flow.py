@@ -7,6 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -68,6 +69,7 @@ _LOGGER = logging.getLogger(__name__)
 USER = "user"
 OBSERVATION_SELECTOR = "observation_selector"
 ALLOWED_STATE_DOMAINS = [
+    ALARM_DOMAIN,
     CALENDAR_DOMAIN,
     CLIMATE_DOMAIN,
     COVER_DOMAIN,
