@@ -7,14 +7,27 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOLEAN_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
+from homeassistant.components.schedule import DOMAIN as SCHEDULE_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -53,6 +66,34 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 USER = "user"
 OBSERVATION_SELECTOR = "observation_selector"
+ALLOWED_STATE_DOMAINS = [
+    CALENDAR_DOMAIN,
+    CLIMATE_DOMAIN,
+    COVER_DOMAIN,
+    DEVICE_TRACKER_DOMAIN,
+    INPUT_BOLEAN_DOMAIN,
+    INPUT_NUMBER_DOMAIN,
+    INPUT_TEXT_DOMAIN,
+    LIGHT_DOMAIN,
+    MEDIA_PLAYER_DOMAIN,
+    NOTIFY_DOMAIN,
+    NUMBER_DOMAIN,
+    PERSON_DOMAIN,
+    SCHEDULE_DOMAIN,
+    SELECT_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
+    TODO_DOMAIN,
+    UPDATE_DOMAIN,
+    WEATHER_DOMAIN,
+]
+ALLOWED_NUMERIC_DOMAINS = [
+    SENSOR_DOMAIN,
+    INPUT_NUMBER_DOMAIN,
+    NUMBER_DOMAIN,
+    TODO_DOMAIN,
+    ZONE_DOMAIN,
+]
 
 
 class ObservationTypes(StrEnum):
@@ -192,9 +233,7 @@ ADD_ANOTHER_BOX_SCHEMA = vol.Schema({vol.Optional("add_another"): cv.boolean})
 STATE_SUBSCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(
-                domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN, INPUT_BOLEAN_DOMAIN]
-            )
+            selector.EntitySelectorConfig(domain=ALLOWED_STATE_DOMAINS)
         ),
         vol.Required(CONF_TO_STATE): selector.TextSelector(
             selector.TextSelectorConfig(
@@ -207,9 +246,7 @@ STATE_SUBSCHEMA = vol.Schema(
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(
-                domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
-            )
+            selector.EntitySelectorConfig(domain=ALLOWED_NUMERIC_DOMAINS)
         ),
         vol.Optional(CONF_ABOVE): selector.NumberSelector(
             selector.NumberSelectorConfig(
