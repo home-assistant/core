@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -27,7 +26,6 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
     config_entry: ConfigEntry
     supported_data_sets: list[DataSetType] | None = None
-    cached_data: Any | None = None
     last_updated_at: datetime | None = None
 
     def __init__(
@@ -65,7 +63,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
-            self.cached_data = await self.client.get_weather_data(
+            self.data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
@@ -73,7 +71,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
             self.last_updated_at = datetime.now()
         except WeatherKitApiClientError as exception:
-            if self.cached_data is None or (
+            if self.data is None or (
                 self.last_updated_at is not None
                 and datetime.now() - self.last_updated_at
                 > timedelta(seconds=STALE_DATA_THRESHOLD_SEC)
@@ -82,4 +80,4 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
             LOGGER.warning("Using stale data because update failed: %s", exception)
 
-        return self.cached_data
+        return self.data
