@@ -1066,7 +1066,9 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                 # Controls slider steps, and up/down keyboard binding for the box
                 # if step is an integer, a validation of integer will be enforced
                 vol.Optional("step", default=1.0): vol.Any(
-                    "any", int, vol.All(vol.Coerce(float), vol.Range(min=1e-3))
+                    "any",
+                    vol.All(int, vol.Range(min=1)),
+                    vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
                 vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
