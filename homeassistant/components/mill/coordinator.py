@@ -62,7 +62,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
         for dev_id, heater in self.mill_data_connection.devices.items():
             if not isinstance(heater, Heater):
                 continue
-            statistic_id = f"{DOMAIN}:energy_{slugify(dev_id)}_7"
+            statistic_id = f"{DOMAIN}:energy_{slugify(dev_id)}"
 
             last_stats = await get_instance(self.hass).async_add_executor_job(
                 get_last_statistics, self.hass, 1, statistic_id, True, set()
