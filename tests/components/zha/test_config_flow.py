@@ -1878,10 +1878,23 @@ async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
     )
 
 
+async def test_config_flow_ports_no_hassio(hass: HomeAssistant) -> None:
+    """Test config flow serial port name when this is not a hassio install."""
+
+    with (
+        patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
+        patch("serial.tools.list_ports.comports", MagicMock(return_value=[])),
+    ):
+        ports = await config_flow.list_serial_ports(hass)
+
+    assert ports == []
+
+
 async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> None:
     """Test config flow serial port name for multiprotocol add-on."""
 
     with (
+        patch("homeassistant.components.zha.config_flow.is_hassio", return_value=True),
         patch(
             "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
         ) as async_get_addon_info,
@@ -1889,16 +1902,12 @@ async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> 
     ):
         async_get_addon_info.return_value.state = AddonState.RUNNING
         async_get_addon_info.return_value.hostname = "core-silabs-multiprotocol"
+        ports = await config_flow.list_serial_ports(hass)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_USER},
-        )
-
-    assert (
-        result["data_schema"].schema["path"].container[0]
-        == "socket://core-silabs-multiprotocol:9999 - Multiprotocol add-on - Nabu Casa"
-    )
+    assert len(ports) == 1
+    assert ports[0].description == "Multiprotocol add-on"
+    assert ports[0].manufacturer == "Nabu Casa"
+    assert ports[0].device == "socket://core-silabs-multiprotocol:9999"
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
