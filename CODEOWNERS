@@ -49,6 +49,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/adguard/ @frenck
 /tests/components/adguard/ @frenck
 /homeassistant/components/ads/ @mrpasztoradam
+/tests/components/ads/ @mrpasztoradam
 /homeassistant/components/advantage_air/ @Bre77
 /tests/components/advantage_air/ @Bre77
 /homeassistant/components/aemet/ @Noltari
