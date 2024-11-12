@@ -226,8 +226,9 @@ class WebRTCProvider(CameraWebRTCProvider):
                 camera.entity_id,
                 [
                     stream_source,
-                    # As ffmpeg is the second stream and it's refereing to the first
-                    # one, we can lower the log level from warning to debug
+                    # We are setting any ffmpeg rtsp related logs to debug
+                    # Connection problems to the camera will be logged by the first stream
+                    # Therefore setting it to debug will not hide any important logs
                     f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
                 ],
             )
