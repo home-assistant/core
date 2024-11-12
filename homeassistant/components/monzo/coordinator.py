@@ -9,8 +9,8 @@ from typing import Any
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AuthenticatedMonzoAPI
 from .const import DOMAIN
@@ -49,7 +49,13 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
         except InvalidMonzoAPIResponseError as err:
             message = "Invalid Monzo API response."
             if err.missing_key:
-                message += f"\nMissing key: {err.missing_key} Response:\n{pformat(err.response)}"
-            raise HomeAssistantError(message) from err
+                _LOGGER.debug(
+                    "%s\nMissing key: %s\nResponse:\n%s",
+                    message,
+                    err.missing_key,
+                    pformat(err.response),
+                )
+                message += " Enabling debug logging for details."
+            raise UpdateFailed(message) from err
 
         return MonzoData(accounts, pots)
