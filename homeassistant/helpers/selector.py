@@ -1087,7 +1087,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 
         if (step := self.config["step"]) != "any" and isinstance(step, int):
             if not value.is_integer():
-                raise vol.Invalid("Value must be an integer")
+                raise vol.Invalid(f"Value must be an integer when step is {step}")
             value = int(value)
 
         if "min" in self.config and value < self.config["min"]:
