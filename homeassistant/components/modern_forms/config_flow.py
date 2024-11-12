@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -68,7 +68,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=DATA_SCHEMA,
+                    data_schema=USER_SCHEMA,
                 )
 
         if self.source == SOURCE_ZEROCONF:
@@ -85,7 +85,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="cannot_connect")
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=DATA_SCHEMA,
+                    data_schema=USER_SCHEMA,
                     errors={"base": "cannot_connect"},
                 )
             user_input[CONF_MAC] = device.info.mac_address
