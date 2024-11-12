@@ -193,11 +193,6 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
 ):
     """Handle a multi-PAN options flow for Home Assistant Yellow."""
 
-    def __init__(self, hass: HomeAssistant, *args: Any, **kwargs: Any) -> None:
-        """Instantiate options flow."""
-        super().__init__(hass, *args, **kwargs)
-        super(BaseHomeAssistantYellowOptionsFlow, self).__init__(*args, **kwargs)
-
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
         return self.async_show_menu(
@@ -265,7 +260,6 @@ class HomeAssistantYellowOptionsFlowHandler(
     def __init__(self, hass: HomeAssistant, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
         super().__init__(hass, *args, **kwargs)
-        super(BaseHomeAssistantYellowOptionsFlow, self).__init__(*args, **kwargs)
 
         self._hardware_name = BOARD_NAME
         self._device = RADIO_DEVICE
