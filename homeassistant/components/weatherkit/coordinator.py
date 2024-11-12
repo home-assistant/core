@@ -63,7 +63,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
-            self.data = await self.client.get_weather_data(
+            updated_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
@@ -79,5 +79,6 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(exception) from exception
 
             LOGGER.warning("Using stale data because update failed: %s", exception)
+            return self.data
 
-        return self.data
+        return updated_data
