@@ -25,6 +25,29 @@
         "name": "Daylight saving time"
       }
     },
+    "number": {
+      "comfort": {
+        "name": "Comfort temperature"
+      },
+      "eco": {
+        "name": "Eco temperature"
+      },
+      "offset": {
+        "name": "Offset temperature"
+      },
+      "window_open_temperature": {
+        "name": "Window open temperature"
+      },
+      "window_open_timeout": {
+        "name": "Window open timeout"
+      },
+      "away_hours": {
+        "name": "Away hours"
+      },
+      "away_temperature": {
+        "name": "Away temperature"
+      }
+    },
     "switch": {
       "lock": {
         "name": "Lock"
