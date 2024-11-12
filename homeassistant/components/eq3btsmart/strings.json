@@ -48,6 +48,14 @@
         "name": "Away temperature"
       }
     },
+    "sensor": {
+      "away_until": {
+        "name": "Away until"
+      },
+      "valve": {
+        "name": "Valve"
+      }
+    },
     "switch": {
       "lock": {
         "name": "Lock"

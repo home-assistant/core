@@ -31,6 +31,8 @@ ENTITY_KEY_WINDOW_OPEN_TEMPERATURE = "window_open_temperature"
 ENTITY_KEY_WINDOW_OPEN_TIMEOUT = "window_open_timeout"
 ENTITY_KEY_AWAY_HOURS = "away_hours"
 ENTITY_KEY_AWAY_TEMPERATURE = "away_temperature"
+ENTITY_KEY_VALVE = "valve"
+ENTITY_KEY_AWAY_UNTIL = "away_until"
 
 GET_DEVICE_TIMEOUT = 5  # seconds
 
