@@ -21,7 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Eq3ConfigEntry
 from .const import (
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
@@ -29,6 +28,7 @@ from .const import (
     Preset,
     TargetTemperatureSelector,
 )
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,55 +62,35 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
     _attr_preset_modes = list(Preset)
-    _attr_should_poll = False
-    _attr_available = False
     _attr_hvac_mode: HVACMode | None = None
     _attr_hvac_action: HVACAction | None = None
     _attr_preset_mode: str | None = None
     _target_temperature: float | None = None
 
     @callback
-    def _async_on_updated(self) -> None:
-        """Handle updated data from the thermostat."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
         if self._thermostat.status is not None:
-            self._async_on_status_updated()
+            self._target_temperature = self._thermostat.status.target_temperature.value
+            self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
+            self._attr_current_temperature = self._get_current_temperature()
+            self._attr_target_temperature = self._get_target_temperature()
+            self._attr_preset_mode = self._get_current_preset_mode()
+            self._attr_hvac_action = self._get_current_hvac_action()
 
         if self._thermostat.device_data is not None:
-            self._async_on_device_updated()
+            device_registry = dr.async_get(self.hass)
+            if device := device_registry.async_get_device(
+                connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
+            ):
+                device_registry.async_update_device(
+                    device.id,
+                    sw_version=str(self._thermostat.device_data.firmware_version),
+                    serial_number=self._thermostat.device_data.device_serial.value,
+                )
 
-        super()._async_on_updated()
-
-    @callback
-    def _async_on_status_updated(self) -> None:
-        """Handle updated status from the thermostat."""
-
-        if self._thermostat.status is None:
-            return
-
-        self._target_temperature = self._thermostat.status.target_temperature.value
-        self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
-        self._attr_current_temperature = self._get_current_temperature()
-        self._attr_target_temperature = self._get_target_temperature()
-        self._attr_preset_mode = self._get_current_preset_mode()
-        self._attr_hvac_action = self._get_current_hvac_action()
-
-    @callback
-    def _async_on_device_updated(self) -> None:
-        """Handle updated device data from the thermostat."""
-
-        if self._thermostat.device_data is None:
-            return
-
-        device_registry = dr.async_get(self.hass)
-        if device := device_registry.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
-        ):
-            device_registry.async_update_device(
-                device.id,
-                sw_version=str(self._thermostat.device_data.firmware_version),
-                serial_number=self._thermostat.device_data.device_serial.value,
-            )
+        super()._handle_coordinator_update()
 
     def _get_current_temperature(self) -> float | None:
         """Return the current temperature."""
