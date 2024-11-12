@@ -21,5 +21,3 @@ CONF_KEY_PEM = "key_pem"
 ATTR_CURRENT_WEATHER = "currentWeather"
 ATTR_FORECAST_HOURLY = "forecastHourly"
 ATTR_FORECAST_DAILY = "forecastDaily"
-
-STALE_DATA_THRESHOLD_SEC = 3600  # 1 hour

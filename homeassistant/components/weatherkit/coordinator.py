@@ -12,13 +12,15 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, STALE_DATA_THRESHOLD_SEC
+from .const import DOMAIN, LOGGER
 
 REQUESTED_DATA_SETS = [
     DataSetType.CURRENT_WEATHER,
     DataSetType.DAILY_FORECAST,
     DataSetType.HOURLY_FORECAST,
 ]
+
+STALE_DATA_THRESHOLD = timedelta(hours=1)
 
 
 class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
@@ -68,17 +70,15 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
             )
-
-            self.last_updated_at = datetime.now()
         except WeatherKitApiClientError as exception:
             if self.data is None or (
                 self.last_updated_at is not None
-                and datetime.now() - self.last_updated_at
-                > timedelta(seconds=STALE_DATA_THRESHOLD_SEC)
+                and datetime.now() - self.last_updated_at > STALE_DATA_THRESHOLD
             ):
                 raise UpdateFailed(exception) from exception
 
-            LOGGER.warning("Using stale data because update failed: %s", exception)
+            LOGGER.debug("Using stale data because update failed: %s", exception)
             return self.data
-
-        return updated_data
+        else:
+            self.last_updated_at = datetime.now()
+            return updated_data
