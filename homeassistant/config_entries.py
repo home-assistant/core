@@ -63,7 +63,7 @@ from .helpers.event import (
     RANDOM_MICROSECOND_MIN,
     async_call_later,
 )
-from .helpers.frame import ReportBehavior, report, report_usage
+from .helpers.frame import ReportBehavior, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
@@ -1265,10 +1265,8 @@ class ConfigEntriesFlowManager(
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
             # Deprecated in 2024.12, should fail in 2025.12
-            report(
+            report_usage(
                 f"initialises a {source} flow without a link to the config entry",
-                error_if_integration=False,
-                error_if_core=True,
             )
 
         flow_id = ulid_util.ulid_now()
