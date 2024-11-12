@@ -1,6 +1,7 @@
 {
   "domain": "bayesian",
   "name": "Bayesian",
+  "after_dependencies": ["schedule"],
   "codeowners": ["@HarvsG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bayesian",
