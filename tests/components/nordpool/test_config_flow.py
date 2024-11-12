@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from unittest.mock import patch
 
 from pynordpool import (
     DeliveryPeriodData,
-    NordPoolAuthenticationError,
     NordPoolConnectionError,
+    NordPoolEmptyResponseError,
     NordPoolError,
     NordPoolResponseError,
 )
@@ -71,7 +70,7 @@ async def test_single_config_entry(
     ("error_message", "p_error"),
     [
         (NordPoolConnectionError, "cannot_connect"),
-        (NordPoolAuthenticationError, "cannot_connect"),
+        (NordPoolEmptyResponseError, "no_data"),
         (NordPoolError, "cannot_connect"),
         (NordPoolResponseError, "cannot_connect"),
     ],
@@ -101,44 +100,6 @@ async def test_cannot_connect(
         )
 
     assert result["errors"] == {"base": p_error}
-
-    with patch(
-        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-        return_value=get_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=ENTRY_CONFIG,
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Nord Pool"
-    assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
-
-
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
-async def test_empty_data(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
-    """Test empty data error."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == config_entries.SOURCE_USER
-
-    invalid_data = replace(get_data, raw={})
-
-    with patch(
-        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-        return_value=invalid_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=ENTRY_CONFIG,
-        )
-
-    assert result["errors"] == {"base": "no_data"}
 
     with patch(
         "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
@@ -193,7 +154,7 @@ async def test_reconfigure(
     ("error_message", "p_error"),
     [
         (NordPoolConnectionError, "cannot_connect"),
-        (NordPoolAuthenticationError, "cannot_connect"),
+        (NordPoolEmptyResponseError, "no_data"),
         (NordPoolError, "cannot_connect"),
         (NordPoolResponseError, "cannot_connect"),
     ],

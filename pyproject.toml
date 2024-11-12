@@ -28,7 +28,7 @@ dependencies    = [
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
     "aiohasupervisor==0.2.1",
-    "aiohttp==3.11.0rc0",
+    "aiohttp==3.11.0rc1",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
     "aiozoneinfo==0.2.1",
@@ -55,7 +55,7 @@ dependencies    = [
     "PyJWT==2.9.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==43.0.1",
-    "Pillow==10.4.0",
+    "Pillow==11.0.0",
     "propcache==0.2.0",
     "pyOpenSSL==24.2.1",
     "orjson==3.10.11",

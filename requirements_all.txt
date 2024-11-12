@@ -33,7 +33,7 @@ Mastodon.py==1.8.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==10.4.0
+Pillow==11.0.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -357,7 +357,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==4.0.5
+aiorussound==4.1.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -735,7 +735,7 @@ debugpy==1.8.6
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==8.4.0
+deebot-client==8.4.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1268,7 +1268,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.1
+lcn-frontend==0.2.2
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1738,7 +1738,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.30.7
+pyTibber==0.30.8
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2362,7 +2362,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.7
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.18
+python-linkplay==0.0.20
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2713,7 +2713,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==0.8.7
+spotifyaio==0.8.8
 
 # homeassistant.components.sql
 sqlparse==0.5.0
@@ -2873,7 +2873,7 @@ ttls==1.8.3
 ttn_client==1.2.0
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.1.9
+tuya-device-sharing-sdk==0.2.1
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.0.1
@@ -2987,7 +2987,7 @@ webio-api==0.1.8
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2024.09.23
+weheat==2024.11.02
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
