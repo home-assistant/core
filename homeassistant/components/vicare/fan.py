@@ -29,6 +29,7 @@ from homeassistant.util.percentage import (
 
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import ViCareDevice
 from .utils import get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,22 +91,42 @@ ORDERED_NAMED_FAN_SPEEDS = [
 ]
 
 
+def _build_entities(
+    device_list: list[ViCareDevice],
+) -> list[ViCareFan]:
+    """Create ViCare button entities for a device."""
+
+    entities: list[ViCareFan] = []
+
+    for device in device_list:
+        if isinstance(device.api, PyViCareVentilationDevice):
+            entities.append(
+                ViCareFan(get_device_serial(device.api), device.config, device.api)
+            )
+        elif device.api.isVentilationDevice():
+            entities.append(
+                ViCareFan(
+                    get_device_serial(device.api),
+                    device.config,
+                    device.config.asVentilation(),
+                )
+            )
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare fan platform."""
-
     device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
-        [
-            ViCareFan(get_device_serial(device.api), device.config, device.api)
-            for device in device_list
-            if isinstance(device.api, PyViCareVentilationDevice)
-            or device.api.isVentilationDevice()
-        ]
+        await hass.async_add_executor_job(
+            _build_entities,
+            device_list,
+        )
     )
 
 
