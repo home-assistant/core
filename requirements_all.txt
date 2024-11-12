@@ -1373,7 +1373,7 @@ microBeesPy==0.3.2
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.12.0
+millheater==0.12.1
 
 # homeassistant.components.minio
 minio==7.1.12
