@@ -222,7 +222,16 @@ class WebRTCProvider(CameraWebRTCProvider):
         if (stream := streams.get(camera.entity_id)) is None or not any(
             stream_source == producer.url for producer in stream.producers
         ):
-            await self._rest_client.streams.add(camera.entity_id, stream_source)
+            await self._rest_client.streams.add(
+                camera.entity_id,
+                [
+                    stream_source,
+                    # We are setting any ffmpeg rtsp related logs to debug
+                    # Connection problems to the camera will be logged by the first stream
+                    # Therefore setting it to debug will not hide any important logs
+                    f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+                ],
+            )
 
         @callback
         def on_messages(message: ReceiveMessages) -> None:

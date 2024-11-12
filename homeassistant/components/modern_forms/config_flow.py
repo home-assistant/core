@@ -9,10 +9,12 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -55,17 +57,21 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None, prepare: bool = False
     ) -> ConfigFlowResult:
         """Config flow handler for ModernForms."""
-        source = self.context["source"]
-
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
             user_input = {}
             if not prepare:
-                if source == SOURCE_ZEROCONF:
-                    return self._show_confirm_dialog()
-                return self._show_setup_form()
+                if self.source == SOURCE_ZEROCONF:
+                    return self.async_show_form(
+                        step_id="zeroconf_confirm",
+                        description_placeholders={"name": self.name},
+                    )
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=USER_SCHEMA,
+                )
 
-        if source == SOURCE_ZEROCONF:
+        if self.source == SOURCE_ZEROCONF:
             user_input[CONF_HOST] = self.host
             user_input[CONF_MAC] = self.mac
 
@@ -75,18 +81,21 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 device = await device.update()
             except ModernFormsConnectionError:
-                if source == SOURCE_ZEROCONF:
+                if self.source == SOURCE_ZEROCONF:
                     return self.async_abort(reason="cannot_connect")
-                return self._show_setup_form({"base": "cannot_connect"})
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=USER_SCHEMA,
+                    errors={"base": "cannot_connect"},
+                )
             user_input[CONF_MAC] = device.info.mac_address
-            user_input[CONF_NAME] = device.info.device_name
 
         # Check if already configured
         await self.async_set_unique_id(user_input[CONF_MAC])
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         title = device.info.device_name
-        if source == SOURCE_ZEROCONF:
+        if self.source == SOURCE_ZEROCONF:
             title = self.name
 
         if prepare:
@@ -95,20 +104,4 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=title,
             data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: user_input[CONF_MAC]},
-        )
-
-    def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
-        """Show the setup form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
-            errors=errors or {},
-        )
-
-    def _show_confirm_dialog(self, errors: dict | None = None) -> ConfigFlowResult:
-        """Show the confirm dialog to the user."""
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders={"name": self.name},
-            errors=errors or {},
         )

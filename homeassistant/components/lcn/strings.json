@@ -63,18 +63,6 @@
     }
   },
   "issues": {
-    "authentication_error": {
-      "title": "Authentication failed.",
-      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure username and password are correct.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "license_error": {
-      "title": "Maximum number of connections was reached.",
-      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure sufficient PCHK licenses are registered and restart Home Assistant.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "connection_refused": {
-      "title": "Unable to connect to PCHK.",
-      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure the connection (IP and port) to the LCN bus coupler is correct.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
     "deprecated_regulatorlock_sensor": {
       "title": "Deprecated LCN regulator lock binary sensor",
       "description": "Your LCN regulator lock binary sensor entity `{entity}` is beeing used in automations or scripts. A regulator lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."

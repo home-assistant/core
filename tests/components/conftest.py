@@ -5,10 +5,17 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
+import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohasupervisor.models import Discovery, Repository, StoreAddon, StoreInfo
+from aiohasupervisor.models import (
+    Discovery,
+    Repository,
+    ResolutionInfo,
+    StoreAddon,
+    StoreInfo,
+)
 import pytest
 
 from homeassistant.config_entries import (
@@ -473,6 +480,26 @@ def supervisor_is_connected_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.supervisor.ping
 
 
+@pytest.fixture(name="resolution_info")
+def resolution_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock resolution info from supervisor."""
+    supervisor_client.resolution.info.return_value = ResolutionInfo(
+        suggestions=[],
+        unsupported=[],
+        unhealthy=[],
+        issues=[],
+        checks=[],
+    )
+    return supervisor_client.resolution.info
+
+
+@pytest.fixture(name="resolution_suggestions_for_issue")
+def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock suggestions by issue from supervisor resolution."""
+    supervisor_client.resolution.suggestions_for_issue.return_value = []
+    return supervisor_client.resolution.suggestions_for_issue
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -481,6 +508,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.os = AsyncMock()
+    supervisor_client.resolution = AsyncMock()
     supervisor_client.supervisor = AsyncMock()
     with (
         patch(
@@ -504,11 +532,34 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
-            "homeassistant.components.hassio.get_supervisor_client",
+            "homeassistant.components.hassio.issues.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.repairs.get_supervisor_client",
             return_value=supervisor_client,
         ),
     ):
         yield supervisor_client
+
+
+def _validate_translation_placeholders(
+    full_key: str,
+    translation: str,
+    description_placeholders: dict[str, str] | None,
+) -> str | None:
+    """Raise if translation exists with missing placeholders."""
+    tuples = list(string.Formatter().parse(translation))
+    for _, placeholder, _, _ in tuples:
+        if placeholder is None:
+            continue
+        if (
+            description_placeholders is None
+            or placeholder not in description_placeholders
+        ):
+            pytest.fail(
+                f"Description not found for placeholder `{placeholder}` in {full_key}"
+            )
 
 
 async def _ensure_translation_exists(
@@ -517,11 +568,20 @@ async def _ensure_translation_exists(
     category: str,
     component: str,
     key: str,
+    description_placeholders: dict[str, str] | None,
+    *,
+    translation_required: bool = True,
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
     translations = await async_get_translations(hass, "en", category, [component])
-    if full_key in translations:
+    if (translation := translations.get(full_key)) is not None:
+        _validate_translation_placeholders(
+            full_key, translation, description_placeholders
+        )
+        return
+
+    if not translation_required:
         return
 
     if full_key in ignore_translations:
@@ -571,6 +631,20 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
         setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
 
         if result["type"] is FlowResultType.FORM:
+            if step_id := result.get("step_id"):
+                # neither title nor description are required
+                # - title defaults to integration name
+                # - description is optional
+                for header in ("title", "description"):
+                    await _ensure_translation_exists(
+                        flow.hass,
+                        _ignore_translations,
+                        category,
+                        component,
+                        f"step.{step_id}.{header}",
+                        result["description_placeholders"],
+                        translation_required=False,
+                    )
             if errors := result.get("errors"):
                 for error in errors.values():
                     await _ensure_translation_exists(
@@ -579,6 +653,7 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
                         category,
                         component,
                         f"error.{error}",
+                        result["description_placeholders"],
                     )
             return result
 
@@ -593,6 +668,7 @@ def check_config_translations(ignore_translations: str | list[str]) -> Generator
                 category,
                 component,
                 f"abort.{result["reason"]}",
+                result["description_placeholders"],
             )
 
         return result

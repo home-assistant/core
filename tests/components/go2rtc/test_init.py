@@ -237,7 +237,13 @@ async def _test_setup_and_signaling(
 
     await test()
 
-    rest_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
+    rest_client.streams.add.assert_called_once_with(
+        entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
 
     # Stream exists but the source is different
     rest_client.streams.add.reset_mock()
@@ -249,7 +255,13 @@ async def _test_setup_and_signaling(
     ws_client.reset_mock()
     await test()
 
-    rest_client.streams.add.assert_called_once_with(entity_id, "rtsp://stream")
+    rest_client.streams.add.assert_called_once_with(
+        entity_id,
+        [
+            "rtsp://stream",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
 
     # If the stream is already added, the stream should not be added again.
     rest_client.streams.add.reset_mock()
