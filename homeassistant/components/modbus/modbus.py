@@ -55,7 +55,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_MSG_WAIT,
     CONF_PARITY,
-    CONF_RESTART_DELAY,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -257,7 +256,6 @@ class ModbusHub:
         self.name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
-        self._config_restart_delay = client_config[CONF_RESTART_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
         self._pb_class = {
             SERIAL: AsyncModbusSerialClient,
@@ -375,7 +373,7 @@ class ModbusHub:
                 self._client = None
                 message = f"modbus {self.name} communication closed"
                 _LOGGER.info(message)
-                await asyncio.sleep(self._config_restart_delay)
+                await asyncio.sleep(1)
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
