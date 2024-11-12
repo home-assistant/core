@@ -38,7 +38,6 @@ from .deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
@@ -827,18 +826,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             via_device_id = UNDEFINED
 
-        if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
-            report_usage(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry entry_type. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryType instead"
-                ),
-                core_integration_behavior=ReportBehavior.ERROR,
-                custom_integration_behavior=ReportBehavior.ERROR,
-            )
-            entry_type = DeviceEntryType(entry_type)
-
         device = self.async_update_device(
             device.id,
             allow_collisions=True,
@@ -924,20 +911,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
             )
-
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, DeviceEntryDisabler
-        ):
-            report_usage(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry disabled_by. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryDisabler instead"
-                ),
-                core_integration_behavior=ReportBehavior.ERROR,
-                custom_integration_behavior=ReportBehavior.ERROR,
-            )
-            disabled_by = DeviceEntryDisabler(disabled_by)
 
         if (
             suggested_area is not None
