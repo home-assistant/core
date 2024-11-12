@@ -21,7 +21,7 @@ import zigpy.types
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp, usb, zeroconf
-from homeassistant.components.hassio import AddonState
+from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.const import (
@@ -1908,6 +1908,22 @@ async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> 
     assert ports[0].description == "Multiprotocol add-on"
     assert ports[0].manufacturer == "Nabu Casa"
     assert ports[0].device == "socket://core-silabs-multiprotocol:9999"
+
+
+async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
+    """Test config flow serial port listing when addon info fails to load."""
+
+    with (
+        patch("homeassistant.components.zha.config_flow.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info",
+            side_effect=AddonError,
+        ),
+        patch("serial.tools.list_ports.comports", MagicMock(return_value=[])),
+    ):
+        ports = await config_flow.list_serial_ports(hass)
+
+    assert ports == []
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
