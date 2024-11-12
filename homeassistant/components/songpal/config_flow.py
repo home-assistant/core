@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class SongpalConfig:
     """Device Configuration."""
 
-    def __init__(self, name: str, host: str | None, endpoint: str) -> None:
+    def __init__(self, name: str, host: str, endpoint: str) -> None:
         """Initialize Configuration."""
         self.name = name
         self.host = host
@@ -69,6 +69,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "cannot_connect"},
             )
 
+        assert parsed_url.hostname
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init(user_input)
@@ -149,6 +150,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Import from yaml configuration failed: %s", ex)
             return self.async_abort(reason="cannot_connect")
 
+        assert parsed_url.hostname
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init(import_data)
