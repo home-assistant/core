@@ -107,12 +107,6 @@ class ObservationTypes(StrEnum):
     NUMERIC_STATE = "numeric_state"
     TEMPLATE = CONF_TEMPLATE
 
-    @staticmethod
-    def list() -> list[str]:
-        """Return a list of the values."""
-
-        return [c.value for c in ObservationTypes]
-
 
 class OptionsFlowSteps(StrEnum):
     """StrEnum for all the different options flow steps."""
@@ -501,7 +495,9 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         validate_user_input=_validate_user,
         next_step=OBSERVATION_SELECTOR,
     ),
-    str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(ObservationTypes.list()),
+    str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(
+        [typ.value for typ in ObservationTypes]
+    ),
     str(ObservationTypes.STATE): SchemaFlowFormStep(
         _get_state_schema,
         next_step=_add_more_or_end,
