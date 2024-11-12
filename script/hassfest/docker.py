@@ -20,7 +20,8 @@ FROM ${{BUILD_FROM}}
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME={timeout} \
-    UV_SYSTEM_PYTHON=true
+    UV_SYSTEM_PYTHON=true \
+    UV_NO_CACHE=true
 
 ARG QEMU_CPU
 
@@ -111,7 +112,7 @@ LABEL "com.github.actions.icon"="terminal"
 LABEL "com.github.actions.color"="gray-dark"
 """
 
-_GO2RTC_VERSION = "1.9.6"
+_GO2RTC_VERSION = "1.9.7"
 
 
 def _get_package_versions(file: Path, packages: set[str]) -> dict[str, str]:

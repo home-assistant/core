@@ -130,7 +130,7 @@ class BaseBackupManager(abc.ABC):
 
     @abc.abstractmethod
     async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
-        """Restpre a backup."""
+        """Restore a backup."""
 
     @abc.abstractmethod
     async def async_create_backup(self, **kwargs: Any) -> Backup:
@@ -378,7 +378,7 @@ class BackupManager(BaseBackupManager):
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                f"{backup.path.as_posix()};",
+                json.dumps({"path": backup.path.as_posix()}),
                 encoding="utf-8",
             )
 

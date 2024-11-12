@@ -104,7 +104,7 @@
   "services": {
     "fetch": {
       "name": "Fetch message",
-      "description": "Fetch the email message from the server.",
+      "description": "Fetch an email message from the server.",
       "fields": {
         "entry": {
           "name": "Entry",
