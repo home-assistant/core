@@ -1,0 +1,14 @@
+{
+  "domain": "open_street_map",
+  "name": "OpenStreetMap",
+  "codeowners": ["@EmmaStalberg"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/open_street_map",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "version": 0
+}

@@ -4,9 +4,6 @@ config2/*
 tests/testing_config/deps
 tests/testing_config/home-assistant.log*
 
-# add custom components
-!config/custom_components
-
 # hass-release
 data/
 .token
