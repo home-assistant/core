@@ -85,12 +85,6 @@ SENSORS: dict[str | None, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "%": SensorEntityDescription(
-        key="percent",
-        translation_key="percent",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     "V": SensorEntityDescription(
         key="voltage",
         translation_key="voltage",
@@ -192,6 +186,12 @@ SENSORS: dict[str | None, SensorEntityDescription] = {
         key="concentration|microgram_parts_per_million",
         translation_key="concentration",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "%": SensorEntityDescription(
+        key="percent",
+        translation_key="percent",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
