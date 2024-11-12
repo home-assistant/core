@@ -7,6 +7,11 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
+# Define configuration keys
+CONF_DEVICE = "device"
+CONF_PORT = "port"
+CONF_IP_ADDRESS = "ip_address"
+
 
 class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ADS."""
@@ -16,7 +21,7 @@ class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             # Check if AMS NetID is in correct format
@@ -30,9 +35,9 @@ class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
         # Define the input schema with required fields for config flow form
         data_schema = vol.Schema(
             {
-                vol.Required("device", default=""): str,
-                vol.Required("port", default=851): cv.port,
-                vol.Optional("ip_address", default=""): str,
+                vol.Required(CONF_DEVICE, default=""): str,
+                vol.Required(CONF_PORT, default=851): cv.port,
+                vol.Optional(CONF_IP_ADDRESS, default=""): str,
             }
         )
 
