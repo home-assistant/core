@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
@@ -1003,8 +1005,12 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
         "18:00:00",  # 6 pm local time
     )
     hass.states.async_set(
-        "time.invalid_timestamp",
-        "This is not a timestamp",
+        "time.unknown_state",
+        STATE_UNKNOWN,
+    )
+    hass.states.async_set(
+        "time.unavailable_state",
+        STATE_UNAVAILABLE,
     )
 
     with patch(
@@ -1055,8 +1061,8 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
         assert condition.time(hass, after="time.am")
         assert not condition.time(hass, before="time.am")
 
-    assert not condition.time(hass, after="time.invalid_timestamp")
-    assert not condition.time(hass, before="time.invalid_timestamp")
+    assert not condition.time(hass, after="time.unknown_state")
+    assert not condition.time(hass, before="time.unavailable_state")
 
     with pytest.raises(ConditionError):
         condition.time(hass, after="time.not_existing")
