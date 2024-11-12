@@ -1,6 +1,5 @@
 """Support for EQ3 devices."""
 
-import logging
 from typing import TYPE_CHECKING
 
 from eq3btsmart import Thermostat
@@ -21,8 +20,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
