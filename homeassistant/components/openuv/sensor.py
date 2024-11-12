@@ -49,27 +49,28 @@ EXPOSURE_TYPE_MAP = {
 
 @dataclass
 class UvLabel:
-    """Define a friendly UV level label and its minimum UV index."""
+    """Define a friendly UV level label, its minimum UV index and color."""
 
     value: str
     minimum_index: int
+    color: str
 
 
 UV_LABEL_DEFINITIONS = (
-    UvLabel(value="extreme", minimum_index=11),
-    UvLabel(value="very_high", minimum_index=8),
-    UvLabel(value="high", minimum_index=6),
-    UvLabel(value="moderate", minimum_index=3),
-    UvLabel(value="low", minimum_index=0),
+    UvLabel(value="extreme", minimum_index=11, color="red"),
+    UvLabel(value="very_high", minimum_index=8, color="orange"),
+    UvLabel(value="high", minimum_index=6, color="yellow"),
+    UvLabel(value="moderate", minimum_index=3, color="lightgreen"),
+    UvLabel(value="low", minimum_index=0, color="green"),
 )
 
 
-def get_uv_label(uv_index: int) -> str:
-    """Return the UV label for the UV index."""
+def get_uv_label(uv_index: int) -> tuple[str, str]:
+    """Return the UV label and color for the UV index."""
     label = next(
         label for label in UV_LABEL_DEFINITIONS if uv_index >= label.minimum_index
     )
-    return label.value
+    return label.value, label.color
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -99,7 +100,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="current_uv_level",
         device_class=SensorDeviceClass.ENUM,
         options=[label.value for label in UV_LABEL_DEFINITIONS],
-        value_fn=lambda data: get_uv_label(data["uv"]),
+        value_fn=lambda data: get_uv_label(data["uv"])[0],
     ),
     OpenUvSensorEntityDescription(
         key=TYPE_MAX_UV_INDEX,
@@ -188,9 +189,13 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
         attrs = {}
-        if self.entity_description.key == TYPE_MAX_UV_INDEX:
+        if self.entity_description.key == TYPE_CURRENT_UV_LEVEL:
+            uv_label, uv_color = get_uv_label(self.coordinator.data["uv"])
+            attrs["uv_label"] = uv_label
+            attrs["uv_color"] = uv_color
+        elif self.entity_description.key == TYPE_MAX_UV_INDEX:
             if uv_max_time := parse_datetime(self.coordinator.data["uv_max_time"]):
-                attrs[ATTR_MAX_UV_TIME] = as_local(uv_max_time)
+                attrs[ATTR_MAX_UV_TIME] = as_local(uv_max_time).isoformat()
         return attrs
 
     @property
