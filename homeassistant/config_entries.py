@@ -1191,14 +1191,13 @@ class FlowCancelledError(Exception):
 
 def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
     """Report non awaited platform forwards."""
-    report(
+    report_usage(
         f"calls {what} for integration {entry.domain} with "
         f"title: {entry.title} and entry_id: {entry.entry_id}, "
         f"during setup without awaiting {what}, which can cause "
         "the setup lock to be released before the setup is done. "
         "This will stop working in Home Assistant 2025.1",
-        error_if_integration=False,
-        error_if_core=False,
+        core_behavior=ReportBehavior.LOG,
     )
 
 
@@ -2321,14 +2320,13 @@ class ConfigEntries:
         multiple platforms at once and is more efficient since it
         does not require a separate import executor job for each platform.
         """
-        report(
+        report_usage(
             "calls async_forward_entry_setup for "
             f"integration, {entry.domain} with title: {entry.title} "
             f"and entry_id: {entry.entry_id}, which is deprecated and "
             "will stop working in Home Assistant 2025.6, "
             "await async_forward_entry_setups instead",
-            error_if_core=False,
-            error_if_integration=False,
+            core_behavior=ReportBehavior.LOG,
         )
         if not entry.setup_lock.locked():
             async with entry.setup_lock:
