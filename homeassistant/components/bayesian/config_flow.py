@@ -457,7 +457,9 @@ async def _validate_observation_setup(
         user_input[CONF_PLATFORM] = observations[int(idx)][CONF_PLATFORM]
         if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
             above_greater_than_below(user_input)
-            no_overlapping([*observations, user_input])
+            draft_observations = [*observations, user_input]
+            draft_observations.remove(observations[int(idx)])
+            no_overlapping(draft_observations)
 
         observations[int(idx)] = user_input
 
