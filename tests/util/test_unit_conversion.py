@@ -33,7 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
-    BloodGlugoseConcentrationConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -61,7 +61,7 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
-        BloodGlugoseConcentrationConverter,
+        BloodGlucoseConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -83,7 +83,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
-    BloodGlugoseConcentrationConverter: (
+    BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         18,
@@ -138,7 +138,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
-    BloodGlugoseConcentrationConverter: [
+    BloodGlucoseConcentrationConverter: [
         (
             90,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
