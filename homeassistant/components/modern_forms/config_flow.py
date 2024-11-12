@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -89,7 +89,6 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors={"base": "cannot_connect"},
                 )
             user_input[CONF_MAC] = device.info.mac_address
-            user_input[CONF_NAME] = device.info.device_name
 
         # Check if already configured
         await self.async_set_unique_id(user_input[CONF_MAC])
