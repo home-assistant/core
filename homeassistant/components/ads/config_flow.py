@@ -24,9 +24,17 @@ class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Check if AMS NetID is in correct format
-            if not self._is_valid_ams_net_id(user_input["device"]):
-                errors["device"] = "invalid_ams_net_id"
+            # Check if device (AMS Net ID) is provided and valid
+            if not user_input.get(CONF_DEVICE) or not self._is_valid_ams_net_id(
+                user_input[CONF_DEVICE]
+            ):
+                errors[CONF_DEVICE] = (
+                    "invalid_ams_net_id" if user_input.get(CONF_DEVICE) else "required"
+                )
+
+            # Check if port is in valid range
+            if not (1 <= user_input.get(CONF_PORT, 0) <= 65535):
+                errors[CONF_PORT] = "invalid_port"
 
             if not errors:
                 # If validation passes, create entry
