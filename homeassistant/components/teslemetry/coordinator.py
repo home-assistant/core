@@ -131,6 +131,10 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
+        # Some energy sites do not return live status
+        if not isinstance(data, dict):
+            return {}
+
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
             wc["din"]: wc for wc in (data.get("wall_connectors") or [])

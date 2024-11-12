@@ -469,7 +469,7 @@ async def async_setup_entry(
             (  # Add wall connectors
                 TeslemetryWallConnectorSensorEntity(energysite, din, description)
                 for energysite in entry.runtime_data.energysites
-                for din in energysite.live_coordinator.data.get("wall_connectors", {})
+                for din in energysite.live_coordinator.data.get("wall_connectors", [])
                 for description in WALL_CONNECTOR_DESCRIPTIONS
             ),
             (  # Add energy site info
