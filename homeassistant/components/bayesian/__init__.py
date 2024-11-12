@@ -4,23 +4,10 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-from homeassistant.helpers.typing import ConfigType
 
-from .binary_sensor import PLATFORM_SCHEMA  # noqa: F401
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Bayesian integration from YAML."""
-
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
-        )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

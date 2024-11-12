@@ -8,7 +8,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.bayesian import DOMAIN
 from homeassistant.components.bayesian.config_flow import (
     OBSERVATION_SELECTOR,
     USER,
@@ -23,6 +22,7 @@ from homeassistant.components.bayesian.const import (
     CONF_PRIOR,
     CONF_PROBABILITY_THRESHOLD,
     CONF_TO_STATE,
+    DOMAIN,
 )
 from homeassistant.const import (
     CONF_ABOVE,

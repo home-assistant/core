@@ -197,9 +197,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Bayesian Binary sensor from a yaml config."""
-    # In some cases async_setup_platform is called with an empty config
-    if config == {}:
-        return
     _LOGGER.debug(
         "Setting up config entry for Bayesian sensor: '%s' with %s observations",
         config[CONF_NAME],
