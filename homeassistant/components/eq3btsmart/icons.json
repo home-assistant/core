@@ -33,6 +33,14 @@
         "default": "mdi:pipe-valve"
       }
     },
+    "sensor": {
+      "away_until": {
+        "default": "mdi:home-export-outline"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
+      }
+    },
     "switch": {
       "away": {
         "default": "mdi:home-account",
