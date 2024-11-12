@@ -74,6 +74,8 @@ async def test_floodlight_mode_select(
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
+    reolink_connect.set_whiteled.reset_mock(side_effect=True)
+
 
 async def test_play_quick_reply_message(
     hass: HomeAssistant,
@@ -99,6 +101,8 @@ async def test_play_quick_reply_message(
     )
     reolink_connect.play_quick_reply.assert_called_once()
 
+    reolink_connect.quick_reply_dict = MagicMock()
+
 
 async def test_chime_select(
     hass: HomeAssistant,
@@ -118,6 +122,7 @@ async def test_chime_select(
     entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
     assert hass.states.get(entity_id).state == "pianokey"
 
+    # Test selecting chime ringtone option
     test_chime.set_tone = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -145,9 +150,12 @@ async def test_chime_select(
             blocking=True,
         )
 
+    # Test unavailable
     test_chime.event_info = {}
     freezer.tick(DEVICE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    test_chime.set_tone.reset_mock(side_effect=True)

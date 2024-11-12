@@ -98,6 +98,10 @@ async def test_climate_temperature(
     await init_integration(hass)
     assert mock_bridge
 
+    monkeypatch.setattr(DEVICE, "mode", ThermostatMode.HEAT)
+    mock_bridge.mock_callbacks([DEVICE])
+    await hass.async_block_till_done()
+
     # Test initial target temperature
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["temperature"] == 23
@@ -126,7 +130,7 @@ async def test_climate_temperature(
     with patch(
         "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
     ) as mock_control_device:
-        with pytest.raises(ValueError):
+        with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
                 SERVICE_SET_TEMPERATURE,

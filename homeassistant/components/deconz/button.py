@@ -9,7 +9,7 @@ from pydeconz.models.scene import Scene as PydeconzScene
 from pydeconz.models.sensor.presence import Presence
 
 from homeassistant.components.button import (
-    DOMAIN,
+    DOMAIN as BUTTON_DOMAIN,
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
@@ -19,7 +19,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice, DeconzSceneMixin
+from .entity import DeconzDevice, DeconzSceneMixin
 from .hub import DeconzHub
 
 
@@ -51,7 +51,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ button entity."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[BUTTON_DOMAIN] = set()
 
     @callback
     def async_add_scene(_: EventType, scene_id: str) -> None:
@@ -83,7 +83,7 @@ async def async_setup_entry(
 class DeconzSceneButton(DeconzSceneMixin, ButtonEntity):
     """Representation of a deCONZ button entity."""
 
-    TYPE = DOMAIN
+    TYPE = BUTTON_DOMAIN
 
     def __init__(
         self,
@@ -119,7 +119,7 @@ class DeconzPresenceResetButton(DeconzDevice[Presence], ButtonEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = ButtonDeviceClass.RESTART
 
-    TYPE = DOMAIN
+    TYPE = BUTTON_DOMAIN
 
     async def async_press(self) -> None:
         """Store reset presence state."""

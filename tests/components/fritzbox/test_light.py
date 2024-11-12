@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
 from homeassistant.const import (
@@ -38,7 +38,7 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
+ENTITY_ID = f"{LIGHT_DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
@@ -147,7 +147,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 3000},
         True,
@@ -170,7 +170,7 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
         True,
@@ -204,7 +204,7 @@ async def test_turn_on_color_unsupported_api_method(
     device.set_unmapped_color.side_effect = error
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
         True,
@@ -219,7 +219,7 @@ async def test_turn_on_color_unsupported_api_method(
     error.response.status_code = 500
     with pytest.raises(HTTPError, match="Bad Request"):
         await hass.services.async_call(
-            DOMAIN,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
             True,
@@ -237,7 +237,7 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_state_off.call_count == 1
 
@@ -316,5 +316,5 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(f"{DOMAIN}.new_light")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.new_light")
     assert state

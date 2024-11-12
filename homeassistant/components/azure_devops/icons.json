@@ -3,6 +3,9 @@
     "sensor": {
       "latest_build": {
         "default": "mdi:pipe"
+      },
+      "work_item_count": {
+        "default": "mdi:ticket"
       }
     }
   }

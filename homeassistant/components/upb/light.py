@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpbAttachedEntity
 from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
+from .entity import UpbAttachedEntity
 
 SERVICE_LIGHT_FADE_START = "light_fade_start"
 SERVICE_LIGHT_FADE_STOP = "light_fade_stop"

@@ -1,4 +1,5 @@
 {
+  "title": "Random",
   "config": {
     "step": {
       "binary_sensor": {

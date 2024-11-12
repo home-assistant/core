@@ -9,7 +9,6 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # noqa: F401
 from .coordinator import CO2SignalCoordinator
 
 PLATFORMS = [Platform.SENSOR]

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -16,11 +14,6 @@ from . import PingConfigEntry
 from .const import CONF_IMPORTED_BY
 from .coordinator import PingUpdateCoordinator
 from .entity import PingEntity
-
-ATTR_ROUND_TRIP_TIME_AVG = "round_trip_time_avg"
-ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
-ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
-ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
 
 async def async_setup_entry(
@@ -53,13 +46,3 @@ class PingBinarySensor(PingEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.data.is_alive
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the ICMP checo request."""
-        return {
-            ATTR_ROUND_TRIP_TIME_AVG: self.coordinator.data.data.get("avg"),
-            ATTR_ROUND_TRIP_TIME_MAX: self.coordinator.data.data.get("max"),
-            ATTR_ROUND_TRIP_TIME_MDEV: self.coordinator.data.data.get("mdev"),
-            ATTR_ROUND_TRIP_TIME_MIN: self.coordinator.data.data.get("min"),
-        }

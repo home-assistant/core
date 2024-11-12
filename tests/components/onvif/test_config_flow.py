@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.onvif import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP
-from homeassistant.const import CONF_HOST, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -769,11 +769,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test reauthenticate."""
     entry, _, _ = await setup_onvif_integration(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert (
@@ -807,7 +803,8 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {config_flow.CONF_PASSWORD: "auth_failed"}
     assert result2["description_placeholders"] == {
-        "error": "not authorized (subcodes:NotAuthorized)"
+        CONF_NAME: "Mock Title",
+        "error": "not authorized (subcodes:NotAuthorized)",
     }
 
     with (

@@ -5,6 +5,8 @@
       'data': dict({
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'utility_meter',
       'minor_version': 1,
       'options': dict({
@@ -39,7 +41,17 @@
           'status': 'collecting',
           'tariff': 'tariff0',
         }),
-        'last_sensor_data': None,
+        'last_sensor_data': dict({
+          'last_period': '0',
+          'last_reset': '2024-04-05T00:00:00+00:00',
+          'last_valid_state': 3,
+          'native_unit_of_measurement': 'kWh',
+          'native_value': dict({
+            '__type': "<class 'decimal.Decimal'>",
+            'decimal_str': '3',
+          }),
+          'status': 'collecting',
+        }),
         'name': 'Energy Bill tariff0',
         'period': 'monthly',
         'source': 'sensor.input1',
@@ -55,7 +67,17 @@
           'status': 'paused',
           'tariff': 'tariff1',
         }),
-        'last_sensor_data': None,
+        'last_sensor_data': dict({
+          'last_period': '0',
+          'last_reset': '2024-04-05T00:00:00+00:00',
+          'last_valid_state': 7,
+          'native_unit_of_measurement': 'kWh',
+          'native_value': dict({
+            '__type': "<class 'decimal.Decimal'>",
+            'decimal_str': '7',
+          }),
+          'status': 'paused',
+        }),
         'name': 'Energy Bill tariff1',
         'period': 'monthly',
         'source': 'sensor.input1',

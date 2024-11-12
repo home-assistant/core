@@ -142,7 +142,7 @@ async def async_setup_platform(
     project_id_lookup = {}
 
     api = TodoistAPIAsync(token)
-    coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api, token)
+    coordinator = TodoistCoordinator(hass, _LOGGER, None, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
 
     async def _shutdown_coordinator(_: Event) -> None:
@@ -331,7 +331,11 @@ def async_register_services(  # noqa: C901
                         "type": "reminder_add",
                         "temp_id": str(uuid.uuid1()),
                         "uuid": str(uuid.uuid1()),
-                        "args": {"item_id": api_task.id, "due": reminder_due},
+                        "args": {
+                            "item_id": api_task.id,
+                            "type": "absolute",
+                            "due": reminder_due,
+                        },
                     }
                 ]
             }

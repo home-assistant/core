@@ -14,6 +14,27 @@
       "init": {
         "title": "Configure new eQ-3 device"
       }
+    },
+    "error": {
+      "invalid_mac_address": "Invalid MAC address"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "dst": {
+        "name": "Daylight saving time"
+      }
+    },
+    "switch": {
+      "lock": {
+        "name": "Lock"
+      },
+      "boost": {
+        "name": "Boost"
+      },
+      "away": {
+        "name": "Away"
+      }
     }
   }
 }

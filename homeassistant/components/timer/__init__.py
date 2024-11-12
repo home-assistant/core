@@ -338,7 +338,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
-        if self._remaining and (self._remaining + duration) > self._running_duration:
+        # Check against new remaining time before checking boundaries
+        new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
+        if self._remaining and new_remaining > self._running_duration:
             raise HomeAssistantError(
                 f"Not possible to change timer {self.entity_id} beyond duration"
             )
@@ -349,7 +351,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self._listener()
         self._end += duration
-        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self._remaining = new_remaining
         self.async_write_ha_state()
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(

@@ -24,7 +24,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy"),
+    ["envoy_metered_batt_relay", "envoy_eu_batt"],
+    indirect=["mock_envoy"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch(
@@ -109,7 +111,26 @@ async def test_switch_grid_operation(
     mock_envoy.go_off_grid.assert_awaited_once_with()
     mock_envoy.go_off_grid.reset_mock()
 
-    test_entity = f"{Platform.SWITCH}.enpower_{sn}_charge_from_grid"
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "use_serial"),
+    [
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_switch_charge_from_grid_operation(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    use_serial: str,
+) -> None:
+    """Test switch platform operation for charge from grid switches."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    test_entity = f"{Platform.SWITCH}.{use_serial}_charge_from_grid"
 
     # validate envoy value is reflected in entity
     assert (entity_state := hass.states.get(test_entity))

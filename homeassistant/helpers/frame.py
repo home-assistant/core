@@ -5,13 +5,15 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
+import enum
 import functools
-from functools import cached_property
 import linecache
 import logging
 import sys
 from types import FrameType
 from typing import Any, cast
+
+from propcache import cached_property
 
 from homeassistant.core import async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
@@ -129,15 +131,65 @@ class MissingIntegrationFrame(HomeAssistantError):
 
 def report(
     what: str,
-    exclude_integrations: set | None = None,
+    *,
+    exclude_integrations: set[str] | None = None,
     error_if_core: bool = True,
+    error_if_integration: bool = False,
     level: int = logging.WARNING,
     log_custom_component_only: bool = False,
-    error_if_integration: bool = False,
 ) -> None:
     """Report incorrect usage.
 
-    Async friendly.
+    If error_if_core is True, raise instead of log if an integration is not found
+    when unwinding the stack frame.
+    If error_if_integration is True, raise instead of log if an integration is found
+    when unwinding the stack frame.
+    """
+    core_behavior = ReportBehavior.ERROR if error_if_core else ReportBehavior.LOG
+    core_integration_behavior = (
+        ReportBehavior.ERROR if error_if_integration else ReportBehavior.LOG
+    )
+    custom_integration_behavior = core_integration_behavior
+
+    if log_custom_component_only:
+        if core_behavior is ReportBehavior.LOG:
+            core_behavior = ReportBehavior.IGNORE
+        if core_integration_behavior is ReportBehavior.LOG:
+            core_integration_behavior = ReportBehavior.IGNORE
+
+    report_usage(
+        what,
+        core_behavior=core_behavior,
+        core_integration_behavior=core_integration_behavior,
+        custom_integration_behavior=custom_integration_behavior,
+        exclude_integrations=exclude_integrations,
+        level=level,
+    )
+
+
+class ReportBehavior(enum.Enum):
+    """Enum for behavior on code usage."""
+
+    IGNORE = enum.auto()
+    """Ignore the code usage."""
+    LOG = enum.auto()
+    """Log the code usage."""
+    ERROR = enum.auto()
+    """Raise an error on code usage."""
+
+
+def report_usage(
+    what: str,
+    *,
+    core_behavior: ReportBehavior = ReportBehavior.ERROR,
+    core_integration_behavior: ReportBehavior = ReportBehavior.LOG,
+    custom_integration_behavior: ReportBehavior = ReportBehavior.LOG,
+    exclude_integrations: set[str] | None = None,
+    level: int = logging.WARNING,
+) -> None:
+    """Report incorrect code usage.
+
+    Similar to `report` but allows more fine-grained reporting.
     """
     try:
         integration_frame = get_integration_frame(
@@ -145,18 +197,20 @@ def report(
         )
     except MissingIntegrationFrame as err:
         msg = f"Detected code that {what}. Please report this issue."
-        if error_if_core:
+        if core_behavior is ReportBehavior.ERROR:
             raise RuntimeError(msg) from err
-        if not log_custom_component_only:
+        if core_behavior is ReportBehavior.LOG:
             _LOGGER.warning(msg, stack_info=True)
         return
 
-    if (
-        error_if_integration
-        or not log_custom_component_only
-        or integration_frame.custom_integration
-    ):
-        _report_integration(what, integration_frame, level, error_if_integration)
+    integration_behavior = core_integration_behavior
+    if integration_frame.custom_integration:
+        integration_behavior = custom_integration_behavior
+
+    if integration_behavior is not ReportBehavior.IGNORE:
+        _report_integration(
+            what, integration_frame, level, integration_behavior is ReportBehavior.ERROR
+        )
 
 
 def _report_integration(

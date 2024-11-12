@@ -21,6 +21,7 @@ from .const import (
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
@@ -66,6 +67,16 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
         min_value_fn=lambda _: -5,
         set_value_fn=lambda coordinator: coordinator.async_set_energy_cost,
         native_step=0.01,
+    ),
+    CHARGER_MAX_ICP_CURRENT_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_MAX_ICP_CURRENT_KEY,
+        translation_key="maximum_icp_current",
+        max_value_fn=lambda coordinator: cast(
+            float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
+        ),
+        min_value_fn=lambda _: 6,
+        set_value_fn=lambda coordinator: coordinator.async_set_icp_current,
+        native_step=1,
     ),
 }
 

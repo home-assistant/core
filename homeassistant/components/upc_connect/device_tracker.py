@@ -9,7 +9,7 @@ from connect_box.exceptions import ConnectBoxError, ConnectBoxLoginError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -35,7 +35,7 @@ async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> UPCDeviceScanner | None:
     """Return the UPC device scanner."""
-    conf = config[DOMAIN]
+    conf = config[DEVICE_TRACKER_DOMAIN]
     session = async_get_clientsession(hass)
     connect_box = ConnectBox(session, conf[CONF_PASSWORD], host=conf[CONF_HOST])
 

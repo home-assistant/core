@@ -1,5 +1,7 @@
 """Support for MotionMount sensors."""
 
+import logging
+import socket
 from typing import TYPE_CHECKING
 
 import motionmount
@@ -11,6 +13,8 @@ from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, EMPTY_MAC
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MotionMountEntity(Entity):
@@ -34,7 +38,8 @@ class MotionMountEntity(Entity):
         self._attr_device_info = DeviceInfo(
             name=mm.name,
             manufacturer="Vogel's",
-            model="TVM 7675",
+            model="MotionMount SIGNATURE Pro",
+            model_id="TVM 7675 Pro",
         )
 
         if mac == EMPTY_MAC:
@@ -69,3 +74,23 @@ class MotionMountEntity(Entity):
         self.mm.remove_listener(self.async_write_ha_state)
         self.mm.remove_listener(self.update_name)
         await super().async_will_remove_from_hass()
+
+    async def _ensure_connected(self) -> bool:
+        """Make sure there is a connection with the MotionMount.
+
+        Returns false if the connection failed to be ensured.
+        """
+
+        if self.mm.is_connected:
+            return True
+        try:
+            await self.mm.connect()
+        except (ConnectionError, TimeoutError, socket.gaierror):
+            # We're not interested in exceptions here. In case of a failed connection
+            # the try/except from the caller will report it.
+            # The purpose of `_ensure_connected()` is only to make sure we try to
+            # reconnect, where failures should not be logged each time
+            return False
+        else:
+            _LOGGER.warning("Successfully reconnected to MotionMount")
+            return True

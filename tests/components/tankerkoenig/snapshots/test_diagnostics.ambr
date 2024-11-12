@@ -26,6 +26,8 @@
         ]),
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'tankerkoenig',
       'entry_id': '8036b4412f2fae6bb9dbab7fe8e37f87',
       'minor_version': 1,

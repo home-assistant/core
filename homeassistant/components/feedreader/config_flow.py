@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 import urllib.error
 
 import feedparser
@@ -15,7 +15,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -42,14 +41,15 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    _config_entry: ConfigEntry
     _max_entries: int | None = None
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return FeedReaderOptionsFlowHandler(config_entry)
+        return FeedReaderOptionsFlowHandler()
 
     def show_user_form(
         self,
@@ -115,32 +115,21 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             options={CONF_MAX_ENTRIES: self._max_entries or DEFAULT_MAX_ENTRIES},
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle an import flow."""
-        self._max_entries = user_input[CONF_MAX_ENTRIES]
-        return await self.async_step_user({CONF_URL: user_input[CONF_URL]})
+        self._max_entries = import_data[CONF_MAX_ENTRIES]
+        return await self.async_step_user({CONF_URL: import_data[CONF_URL]})
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        if TYPE_CHECKING:
-            assert config_entry is not None
-        self._config_entry = config_entry
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
+        reconfigure_entry = self._get_reconfigure_entry()
         if not user_input:
             return self.show_user_form(
-                user_input={**self._config_entry.data},
-                description_placeholders={"name": self._config_entry.title},
-                step_id="reconfigure_confirm",
+                user_input={**reconfigure_entry.data},
+                description_placeholders={"name": reconfigure_entry.title},
+                step_id="reconfigure",
             )
 
         feed = await async_fetch_feed(self.hass, user_input[CONF_URL])
@@ -150,16 +139,16 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             if isinstance(feed.bozo_exception, urllib.error.URLError):
                 return self.show_user_form(
                     user_input=user_input,
-                    description_placeholders={"name": self._config_entry.title},
-                    step_id="reconfigure_confirm",
+                    description_placeholders={"name": reconfigure_entry.title},
+                    step_id="reconfigure",
                     errors={"base": "url_error"},
                 )
 
-        self.hass.config_entries.async_update_entry(self._config_entry, data=user_input)
+        self.hass.config_entries.async_update_entry(reconfigure_entry, data=user_input)
         return self.async_abort(reason="reconfigure_successful")
 
 
-class FeedReaderOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class FeedReaderOptionsFlowHandler(OptionsFlow):
     """Handle an options flow."""
 
     async def async_step_init(
@@ -174,7 +163,9 @@ class FeedReaderOptionsFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_MAX_ENTRIES,
-                    default=self.options.get(CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES),
+                    default=self.config_entry.options.get(
+                        CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES
+                    ),
                 ): cv.positive_int,
             }
         )

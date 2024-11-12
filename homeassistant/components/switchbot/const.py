@@ -20,6 +20,7 @@ class SupportedModels(StrEnum):
     CEILING_LIGHT = "ceiling_light"
     CURTAIN = "curtain"
     HYGROMETER = "hygrometer"
+    HYGROMETER_CO2 = "hygrometer_co2"
     LIGHT_STRIP = "light_strip"
     CONTACT = "contact"
     PLUG = "plug"
@@ -48,6 +49,8 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
+    SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
+    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
 }
@@ -64,11 +67,13 @@ HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
+DEFAULT_LOCK_NIGHTLATCH = False
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
+CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
 
 # Deprecated config Entry Options to be removed in 2023.4
 CONF_TIME_BETWEEN_UPDATE_COMMAND = "update_time"

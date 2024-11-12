@@ -77,11 +77,6 @@ class _DebugInfo(TypedDict):
     config: _DebugDeviceInfo
 
 
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage: dict[str, Any]) -> None:
-    """Autouse hass_storage for the TestCase tests."""
-
-
 async def test_command_template_value(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT command template."""
 
@@ -235,7 +230,7 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     )
     with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value(
-            '{"some_var": null }', default=100
+            '{"some_var": null }', default="100"
         )
     assert str(exc.value) == (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
@@ -840,7 +835,7 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     msg.payload = b"Payload"
     msg.qos = 2
     msg.retain = True
-    msg.timestamp = time.monotonic()
+    msg.timestamp = time.monotonic()  # type:ignore[assignment]
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
@@ -1202,7 +1197,6 @@ async def test_mqtt_ws_get_device_debug_info(
     }
     data_sensor = json.dumps(config_sensor)
     data_trigger = json.dumps(config_trigger)
-    config_sensor["platform"] = config_trigger["platform"] = mqtt.DOMAIN
 
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data_sensor)
     async_fire_mqtt_message(
@@ -1259,7 +1253,6 @@ async def test_mqtt_ws_get_device_debug_info_binary(
         "unique_id": "unique",
     }
     data = json.dumps(config)
-    config["platform"] = mqtt.DOMAIN
 
     async_fire_mqtt_message(hass, "homeassistant/camera/bla/config", data)
     await hass.async_block_till_done()
@@ -1494,7 +1487,7 @@ async def test_debug_info_non_mqtt(
     """Test we get empty debug_info for a device with non MQTT entities."""
     await mqtt_mock_entry()
     domain = "sensor"
-    setup_test_component_platform(hass, domain, mock_sensor_entities)
+    setup_test_component_platform(hass, domain, mock_sensor_entities.values())
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -1899,7 +1892,7 @@ async def test_disabling_and_enabling_entry(
     config_light = '{"name": "test_new", "command_topic": "test-topic_new"}'
 
     with patch(
-        "homeassistant.components.mqtt.mixins.mqtt_config_entry_enabled",
+        "homeassistant.components.mqtt.entity.mqtt_config_entry_enabled",
         return_value=False,
     ):
         # Discovery of mqtt tag

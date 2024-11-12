@@ -49,9 +49,9 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
             await self._tibber_connection.fetch_consumption_data_active_homes()
             await self._tibber_connection.fetch_production_data_active_homes()
             await self._insert_statistics()
-        except tibber.RetryableHttpException as err:
+        except tibber.RetryableHttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
-        except tibber.FatalHttpException:
+        except tibber.FatalHttpExceptionError:
             # Fatal error. Reload config entry to show correct error.
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)

@@ -5,9 +5,9 @@ import json
 from unittest.mock import MagicMock, patch
 
 from bleak.backends.device import BLEDevice
-from lmcloud.const import FirmwareType, MachineModel, SteamLevel
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
+from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -24,7 +24,7 @@ def mock_config_entry(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
         version=2,
@@ -37,8 +37,25 @@ def mock_config_entry(
         },
         unique_id=mock_lamarzocco.serial_number,
     )
-    entry.add_to_hass(hass)
-    return entry
+
+
+@pytest.fixture
+def mock_config_entry_no_local_connection(
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
+) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=2,
+        data=USER_INPUT
+        | {
+            CONF_MODEL: mock_lamarzocco.model,
+            CONF_TOKEN: "token",
+            CONF_NAME: "GS3",
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
 
 
 @pytest.fixture
@@ -58,11 +75,11 @@ def device_fixture() -> MachineModel:
 
 
 @pytest.fixture
-def mock_device_info() -> LaMarzoccoDeviceInfo:
+def mock_device_info(device_fixture: MachineModel) -> LaMarzoccoDeviceInfo:
     """Return a mocked La Marzocco device info."""
     return LaMarzoccoDeviceInfo(
-        model=MachineModel.GS3_AV,
-        serial_number="GS01234",
+        model=device_fixture,
+        serial_number=SERIAL_DICT[device_fixture],
         name="GS3",
         communication_key="token",
     )
@@ -131,17 +148,6 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
         yield lamarzocco
 
 
-@pytest.fixture
-def remove_local_connection(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Remove the local connection."""
-    data = mock_config_entry.data.copy()
-    del data[CONF_HOST]
-    hass.config_entries.async_update_entry(mock_config_entry, data=data)
-    return mock_config_entry
-
-
 @pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
@@ -151,5 +157,5 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_ble_device() -> BLEDevice:
     """Return a mock BLE device."""
     return BLEDevice(
-        "00:00:00:00:00:00", "GS_GS01234", details={"path": "path"}, rssi=50
+        "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
     )

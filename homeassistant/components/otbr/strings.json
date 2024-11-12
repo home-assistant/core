@@ -9,10 +9,13 @@
       }
     },
     "error": {
+      "already_configured": "The Thread border router is already configured",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "The Thread border router is already configured",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "issues": {

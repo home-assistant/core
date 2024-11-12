@@ -50,6 +50,10 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=XiaomiBinarySensorDeviceClass.MOTION,
         device_class=BinarySensorDeviceClass.MOTION,
     ),
+    XiaomiBinarySensorDeviceClass.OCCUPANCY: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.OCCUPANCY,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+    ),
     XiaomiBinarySensorDeviceClass.OPENING: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.OPENING,
         device_class=BinarySensorDeviceClass.OPENING,

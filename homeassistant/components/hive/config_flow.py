@@ -163,11 +163,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user(data)
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import user."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     @staticmethod
     @callback
@@ -184,7 +182,6 @@ class HiveOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
-        self.config_entry = config_entry
         self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
 
     async def async_step_init(

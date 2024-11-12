@@ -164,21 +164,17 @@ async def test_zeroconf_wrong_device(hass: HomeAssistant) -> None:
 
 async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test that the reauth confirmation form is served."""
-    mock_config = MockConfigEntry(domain=DOMAIN, unique_id="123456", data={})
-    mock_config.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config.entry_id,
-        },
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
         data={
             "username": "test-username",
             "password": "test-password",
             "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
-
+    mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
 
@@ -205,20 +201,17 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("credentials_valid", [False])
 async def test_form_invalid_credentials_reauth(hass: HomeAssistant) -> None:
     """Test if we get the error message on invalid credentials."""
-    mock_config = MockConfigEntry(domain=DOMAIN, unique_id="123456", data={})
-    mock_config.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config.entry_id,
-        },
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
         data={
             "username": "test-username",
             "password": "test-password",
             "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
+    mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -230,20 +223,17 @@ async def test_form_invalid_credentials_reauth(hass: HomeAssistant) -> None:
 
 async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
     """Test that the reauth confirmation form is served."""
-    mock_config = MockConfigEntry(domain=DOMAIN, unique_id="123456", data={})
-    mock_config.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config.entry_id,
-        },
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
         data={
             "username": "test-username",
             "password": "test-password",
             "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
+    mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
