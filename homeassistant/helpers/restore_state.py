@@ -17,7 +17,7 @@ from homeassistant.util.json import json_loads
 from . import start
 from .entity import Entity
 from .event import async_track_time_interval
-from .frame import report_usage
+from .frame import report
 from .json import JSONEncoder
 from .singleton import singleton
 from .storage import Store
@@ -122,8 +122,8 @@ class RestoreStateData:
         # Nothing should actually be calling this anymore, but we'll keep it
         # around for a while to avoid breaking custom components.
         #
-        # In fact they should not be accessing this at all (see #93924).
-        report_usage(
+        # In fact they should not be accessing this at all.
+        report(
             "restore_state.RestoreStateData.async_get_instance is deprecated, "
             "and not intended to be called by custom components; Please"
             "refactor your code to use RestoreEntity instead;"
