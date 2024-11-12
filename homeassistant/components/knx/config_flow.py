@@ -95,7 +95,7 @@ _IA_SELECTOR = selector.TextSelector()
 _IP_SELECTOR = selector.TextSelector()
 _PORT_SELECTOR = selector.NumberSelector(
     selector.NumberSelectorConfig(
-        min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+        min=1, max=65535, mode=selector.NumberSelectorMode.BOX, step=1
     ),
 )
 
@@ -513,7 +513,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 default=self.initial_data.get(CONF_KNX_SECURE_USER_ID, 2),
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=1, max=127, mode=selector.NumberSelectorMode.BOX
+                    min=1, max=127, mode=selector.NumberSelectorMode.BOX, step=1
                 ),
             ),
             vol.Required(
@@ -576,6 +576,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                     max=4000,
                     unit_of_measurement="ms",
                     mode=selector.NumberSelectorMode.BOX,
+                    step=1,
                 )
             ),
         }
@@ -923,6 +924,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
                     min=0,
                     max=CONF_MAX_RATE_LIMIT,
                     mode=selector.NumberSelectorMode.BOX,
+                    step=1,
                 )
             ),
             vol.Required(
@@ -935,6 +937,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
                     min=0,
                     max=TELEGRAM_LOG_MAX,
                     mode=selector.NumberSelectorMode.BOX,
+                    step=1,
                 )
             ),
         }

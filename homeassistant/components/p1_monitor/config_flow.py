@@ -60,7 +60,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PORT, default=80): vol.All(
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=1, max=65535, mode=NumberSelectorMode.BOX
+                                min=1, max=65535, mode=NumberSelectorMode.BOX, step=1
                             ),
                         )
                     ),

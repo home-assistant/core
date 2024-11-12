@@ -65,7 +65,10 @@ CONTROLLER_EDIT = {
     vol.Required(CONF_HOST): selector.TextSelector(),
     vol.Required(CONF_PORT): selector.NumberSelector(
         selector.NumberSelectorConfig(
-            min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+            min=1,
+            max=65535,
+            mode=selector.NumberSelectorMode.BOX,
+            step=1,
         )
     ),
     vol.Optional(CONF_USERNAME): selector.TextSelector(),
@@ -462,6 +465,7 @@ DATA_SCHEMA_ADD_BUTTON = vol.Schema(
             selector.NumberSelectorConfig(
                 min=1,
                 max=24,
+                step=1,
                 mode=selector.NumberSelectorMode.BOX,
             ),
         ),

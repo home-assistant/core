@@ -47,7 +47,7 @@ DEFAULT_VERSION = "1.4"
 
 _PORT_SELECTOR = selector.NumberSelector(
     selector.NumberSelectorConfig(
-        min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+        min=1, max=65535, mode=selector.NumberSelectorMode.BOX, step=1
     )
 )
 

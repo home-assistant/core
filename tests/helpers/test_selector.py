@@ -403,10 +403,17 @@ def test_assist_pipeline_selector_schema(
         ({"mode": "box"}, (10,), ()),
         ({"mode": "box", "step": "any"}, (), ()),
         ({"mode": "slider", "min": 0, "max": 1, "step": "any"}, (), ()),
-        (
+        pytest.param(
             {"mode": "box", "min": 1, "max": 65535, "step": 2},
             (1, 2, 65534, 65535),
             (-15, 0, 0.9999, 2.45, 65536),
+            id="int_step disallows float values",
+        ),
+        pytest.param(
+            {"mode": "box", "min": 1, "max": 65535, "step": 2.0},
+            (1, 2, 2.45, 65534, 65535),
+            (-15, 0, 0.9999, 65536),
+            id="float_step allows float values",
         ),
     ],
 )
@@ -1270,10 +1277,10 @@ def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> 
 @pytest.mark.parametrize(
     ("schema", "input_value", "expected_output", "expected_type"),
     [
-        ({"min": 10, "max": 50}, 15, 15, int),
+        ({"min": 10, "max": 50}, 15, 15, float),
         ({"min": 10, "max": 50, "step": "any"}, 15.7, 15.7, float),
         ({"min": -100, "max": 100, "step": 1}, 6, 6, int),
-        ({"min": -20, "max": -10, "mode": "box"}, "-15", -15, int),
+        ({"min": -20, "max": -10, "mode": "box"}, "-15", -15, float),
         ({"min": 10, "max": 50, "step": 2}, 15, 15, int),
         ({"min": 10, "max": 50, "step": 0.001}, 15.7, 15.7, float),
         ({"min": -100, "max": 100, "step": 2}, 6, 6, int),

@@ -115,17 +115,15 @@ BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PUBLISH_TOPIC_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PORT_SELECTOR = NumberSelector(
-    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535, step=1)
 )
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 QOS_SELECTOR = NumberSelector(
-    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2, step=1)
 )
 KEEPALIVE_SELECTOR = NumberSelector(
     NumberSelectorConfig(
-        mode=NumberSelectorMode.BOX,
-        min=15,
-        unit_of_measurement="sec",
+        mode=NumberSelectorMode.BOX, min=15, step=1, unit_of_measurement="sec"
     )
 )
 PROTOCOL_SELECTOR = SelectSelector(

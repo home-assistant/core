@@ -39,7 +39,7 @@ from .const import (
 
 PORT_SELECTOR = selector.NumberSelector(
     selector.NumberSelectorConfig(
-        min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+        min=1, max=65535, mode=selector.NumberSelectorMode.BOX, step=1
     )
 )
 
@@ -59,7 +59,9 @@ STEP_MODBUS_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
         vol.Required(CONF_MODBUS_URL): selector.TextSelector(),
         vol.Required(CONF_MODBUS_UNIT, default=0): selector.NumberSelector(
-            selector.NumberSelectorConfig(min=0, mode=selector.NumberSelectorMode.BOX)
+            selector.NumberSelectorConfig(
+                min=0, step=1, mode=selector.NumberSelectorMode.BOX
+            )
         ),
     }
 )
