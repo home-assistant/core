@@ -23,6 +23,7 @@ from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.schedule import DOMAIN as SCHEDULE_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
@@ -82,6 +83,7 @@ ALLOWED_STATE_DOMAINS = [
     SCHEDULE_DOMAIN,
     SELECT_DOMAIN,
     SENSOR_DOMAIN,
+    SUN_DOMAIN,
     SWITCH_DOMAIN,
     TODO_DOMAIN,
     UPDATE_DOMAIN,
