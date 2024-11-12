@@ -92,7 +92,7 @@ def test_deprecated_constants_for_state(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(
-        caplog, module, enum, constant_prefix, "2025.11"
+        caplog, module, enum, constant_prefix, "2025.12"
     )
 
 
