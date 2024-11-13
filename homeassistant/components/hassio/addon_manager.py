@@ -21,12 +21,7 @@ from aiohasupervisor.models import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .handler import (
-    HassioAPIError,
-    async_create_backup,
-    async_get_addon_discovery_info,
-    get_supervisor_client,
-)
+from .handler import HassioAPIError, async_create_backup, get_supervisor_client
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
 type _ReturnFuncType[_T, **_P, _R] = Callable[
@@ -128,18 +123,25 @@ class AddonManager:
             )
         )
 
-    @api_error("Failed to get the {addon_name} add-on discovery info")
+    @api_error(
+        "Failed to get the {addon_name} add-on discovery info",
+        expected_error_type=SupervisorError,
+    )
     async def async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
-        discovery_info = await async_get_addon_discovery_info(
-            self._hass, self.addon_slug
+        discovery_info = next(
+            (
+                msg
+                for msg in await self._supervisor_client.discovery.list()
+                if msg.addon == self.addon_slug
+            ),
+            None,
         )
 
         if not discovery_info:
             raise AddonError(f"Failed to get {self.addon_name} add-on discovery info")
 
-        discovery_info_config: dict = discovery_info["config"]
-        return discovery_info_config
+        return discovery_info.config
 
     @api_error(
         "Failed to get the {addon_name} add-on info",
@@ -192,7 +194,7 @@ class AddonManager:
     )
     async def async_set_addon_options(self, config: dict) -> None:
         """Set manager add-on options."""
-        await self._supervisor_client.addons.addon_options(
+        await self._supervisor_client.addons.set_addon_options(
             self.addon_slug, AddonsOptions(config=config)
         )
 

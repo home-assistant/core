@@ -453,7 +453,7 @@ class UpdateEntity(
         # Otherwise, we use the internal progress value.
         if UpdateEntityFeature.PROGRESS in self.supported_features_compat:
             in_progress = self.in_progress
-            update_percentage = self.update_percentage
+            update_percentage = self.update_percentage if in_progress else None
             if type(in_progress) is not bool and isinstance(in_progress, int):
                 update_percentage = in_progress
                 in_progress = True

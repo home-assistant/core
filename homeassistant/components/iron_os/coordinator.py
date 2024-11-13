@@ -37,15 +37,14 @@ class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
         )
         self.device = device
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-
-        self.device_info = await self.device.get_device_info()
-
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
 
         try:
+            # device info is cached and won't be refetched on every
+            # coordinator refresh, only after the device has disconnected
+            # the device info is refetched
+            self.device_info = await self.device.get_device_info()
             return await self.device.get_live_data()
 
         except CommunicationError as e:
@@ -60,6 +59,7 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel])
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=None,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL_GITHUB,
         )

@@ -5,9 +5,9 @@ import json
 from unittest.mock import MagicMock, patch
 
 from bleak.backends.device import BLEDevice
-from lmcloud.const import FirmwareType, MachineModel, SteamLevel
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
+from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -75,11 +75,11 @@ def device_fixture() -> MachineModel:
 
 
 @pytest.fixture
-def mock_device_info() -> LaMarzoccoDeviceInfo:
+def mock_device_info(device_fixture: MachineModel) -> LaMarzoccoDeviceInfo:
     """Return a mocked La Marzocco device info."""
     return LaMarzoccoDeviceInfo(
-        model=MachineModel.GS3_AV,
-        serial_number="GS01234",
+        model=device_fixture,
+        serial_number=SERIAL_DICT[device_fixture],
         name="GS3",
         communication_key="token",
     )
@@ -157,5 +157,5 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_ble_device() -> BLEDevice:
     """Return a mock BLE device."""
     return BLEDevice(
-        "00:00:00:00:00:00", "GS_GS01234", details={"path": "path"}, rssi=50
+        "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
     )
