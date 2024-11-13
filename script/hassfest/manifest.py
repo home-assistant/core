@@ -271,7 +271,6 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
             )
         ],
         vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
-        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -308,6 +307,7 @@ CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Required("documentation"): vol.All(vol.Url(), custom_documentation_url),
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("import_executor"): bool,
     }
 )
