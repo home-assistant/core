@@ -281,6 +281,213 @@
           "per": 0
         }
       }
+    },
+    "eggs": {
+      "Wolf": {
+        "text": "Wolf"
+      },
+      "TigerCub": {
+        "text": "Tiger Cub"
+      },
+      "PandaCub": {
+        "text": "Panda Cub"
+      },
+      "LionCub": {
+        "text": "Lion Cub"
+      },
+      "Fox": {
+        "text": "Fox"
+      },
+      "FlyingPig": {
+        "text": "Flying Pig"
+      },
+      "Dragon": {
+        "text": "Dragon"
+      },
+      "Cactus": {
+        "text": "Cactus"
+      },
+      "BearCub": {
+        "text": "Bear Cub"
+      },
+      "Gryphon": {
+        "text": "Gryphon"
+      },
+      "Seahorse": {
+        "text": "Seahorse"
+      },
+      "Parrot": {
+        "text": "Parrot"
+      }
+    },
+    "hatchingPotions": {
+      "Base": {
+        "text": "Base"
+      },
+      "White": {
+        "text": "White"
+      },
+      "Desert": {
+        "text": "Desert"
+      },
+      "Red": {
+        "text": "Red"
+      },
+      "Shade": {
+        "text": "Shade"
+      },
+      "Skeleton": {
+        "text": "Skeleton"
+      },
+      "Zombie": {
+        "text": "Zombie"
+      },
+      "CottonCandyPink": {
+        "text": "Cotton Candy Pink"
+      },
+      "CottonCandyBlue": {
+        "text": "Cotton Candy Blue"
+      },
+      "Golden": {
+        "text": "Golden"
+      },
+      "RoyalPurple": {
+        "text": "Royal Purple"
+      },
+      "Sunshine": {
+        "text": "Sunshine"
+      },
+      "Rainbow": {
+        "text": "Rainbow"
+      },
+      "Shadow": {
+        "text": "Shadow"
+      }
+    },
+    "food": {
+      "Meat": {
+        "text": "Meat"
+      },
+      "Milk": {
+        "text": "Milk"
+      },
+      "Potatoe": {
+        "text": "Potato"
+      },
+      "Strawberry": {
+        "text": "Strawberry"
+      },
+      "Chocolate": {
+        "text": "Chocolate"
+      },
+      "Fish": {
+        "text": "Fish"
+      },
+      "RottenMeat": {
+        "text": "Rotten Meat"
+      },
+      "CottonCandyPink": {
+        "text": "Pink Cotton Candy"
+      },
+      "CottonCandyBlue": {
+        "text": "Blue Cotton Candy"
+      },
+      "Honey": {
+        "text": "Honey"
+      },
+      "Saddle": {
+        "text": "Saddle"
+      },
+      "Cake_Skeleton": {
+        "text": "Bare Bones Cake"
+      },
+      "Cake_Base": {
+        "text": "Basic Cake"
+      },
+      "Cake_CottonCandyBlue": {
+        "text": "Candy Blue Cake"
+      },
+      "Cake_CottonCandyPink": {
+        "text": "Candy Pink Cake"
+      },
+      "Cake_Shade": {
+        "text": "Chocolate Cake"
+      },
+      "Cake_White": {
+        "text": "Cream Cake"
+      },
+      "Cake_Golden": {
+        "text": "Honey Cake"
+      },
+      "Cake_Zombie": {
+        "text": "Rotten Cake"
+      },
+      "Cake_Desert": {
+        "text": "Sand Cake"
+      },
+      "Cake_Red": {
+        "text": "Strawberry Cake"
+      },
+      "Candy_Skeleton": {
+        "text": "Bare Bones Candy"
+      },
+      "Candy_Base": {
+        "text": "Basic Candy"
+      },
+      "Candy_CottonCandyBlue": {
+        "text": "Sour Blue Candy"
+      },
+      "Candy_CottonCandyPink": {
+        "text": "Sour Pink Candy"
+      },
+      "Candy_Shade": {
+        "text": "Chocolate Candy"
+      },
+      "Candy_White": {
+        "text": "Vanilla Candy"
+      },
+      "Candy_Golden": {
+        "text": "Honey Candy"
+      },
+      "Candy_Zombie": {
+        "text": "Rotten Candy"
+      },
+      "Candy_Desert": {
+        "text": "Sand Candy"
+      },
+      "Candy_Red": {
+        "text": "Cinnamon Candy"
+      },
+      "Pie_Skeleton": {
+        "text": "Bone Marrow Pot Pie"
+      },
+      "Pie_Base": {
+        "text": "Basic Apple Pie"
+      },
+      "Pie_CottonCandyBlue": {
+        "text": "Blueberry Pie"
+      },
+      "Pie_CottonCandyPink": {
+        "text": "Pink Rhubarb Pie"
+      },
+      "Pie_Shade": {
+        "text": "Dark Chocolate Pie"
+      },
+      "Pie_White": {
+        "text": "Vanilla Pudding Pie"
+      },
+      "Pie_Golden": {
+        "text": "Golden Banana Cream Pie"
+      },
+      "Pie_Zombie": {
+        "text": "Rotten Pie"
+      },
+      "Pie_Desert": {
+        "text": "Desert Dessert Pie"
+      },
+      "Pie_Red": {
+        "text": "Red Cherry Pie"
+      }
     }
   },
   "appVersion": "5.29.2"

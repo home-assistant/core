@@ -42,3 +42,4 @@ HEALER = "healer"
 MAGE = "wizard"
 
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
+GIF = {"Fungi", "Windup", "Veggie", "VirtualPet", "Dessert"}

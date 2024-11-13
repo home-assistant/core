@@ -138,6 +138,75 @@
       },
       "constitution": {
         "default": "mdi:run-fast"
+      },
+      "egg": {
+        "default": "mdi:egg",
+        "state": {
+          "0": "mdi:egg-off"
+        }
+      },
+      "hatching_potion": {
+        "default": "mdi:flask-round-bottom"
+      },
+      "cake": {
+        "default": "mdi:cake"
+      },
+      "pie": {
+        "default": "mdi:cake-variant"
+      },
+      "candy": {
+        "default": "mdi:candy-outline"
+      },
+      "chocolate": {
+        "default": "mdi:table-large"
+      },
+      "cottoncandyblue": {
+        "default": "mdi:tree-outline"
+      },
+      "cottoncandypink": {
+        "default": "mdi:tree-outline"
+      },
+      "fish": {
+        "default": "mdi:fish"
+      },
+      "honey": {
+        "default": "mdi:beehive-outline"
+      },
+      "meat": {
+        "default": "mdi:food-steak"
+      },
+      "rottenmeat": {
+        "default": "mdi:food-steak"
+      },
+      "milk": {
+        "default": "mdi:beer-outline"
+      },
+      "potatoe": {
+        "default": "mdi:football-australian"
+      },
+      "strawberry": {
+        "default": "mdi:fruit-cherries"
+      },
+      "saddle": {
+        "default": "mdi:horse-human"
+      },
+      "hatching_potions_total": {
+        "default": "mdi:flask-round-bottom-outline",
+        "state": {
+          "0": "mdi:flask-round-bottom-empty"
+        }
+      },
+      "eggs_total": {
+        "default": "mdi:egg-outline",
+        "state": {
+          "0": "mdi:egg-off"
+        }
+      },
+      "food_total": {
+        "default": "mdi:food",
+        "state": {
+          "0": "mdi:food-off"
+        }
       }
     },
     "switch": {

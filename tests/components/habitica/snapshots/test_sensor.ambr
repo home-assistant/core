@@ -1,4 +1,788 @@
 # serializer version: 1
+# name: test_sensors[sensor.test_user_bare_bones_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_bare_bones_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bare Bones Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_Skeleton',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_bare_bones_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Skeleton.png',
+      'friendly_name': 'test-user Bare Bones Cake',
+      'key': 'Cake_Skeleton',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_bare_bones_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_sensors[sensor.test_user_bare_bones_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_bare_bones_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bare Bones Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_Skeleton',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_bare_bones_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Skeleton.png',
+      'friendly_name': 'test-user Bare Bones Candy',
+      'key': 'Candy_Skeleton',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_bare_bones_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_base_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_base_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Base hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Base',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_base_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Base.png',
+      'friendly_name': 'test-user Base hatching potion',
+      'key': 'Base',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_base_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
+# name: test_sensors[sensor.test_user_basic_apple_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_basic_apple_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Basic Apple Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_Base',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_basic_apple_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Base.png',
+      'friendly_name': 'test-user Basic Apple Pie',
+      'key': 'Pie_Base',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_basic_apple_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_basic_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_basic_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Basic Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_Base',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_basic_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Base.png',
+      'friendly_name': 'test-user Basic Cake',
+      'key': 'Cake_Base',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_basic_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---
+# name: test_sensors[sensor.test_user_basic_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_basic_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Basic Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_Base',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_basic_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Base.png',
+      'friendly_name': 'test-user Basic Candy',
+      'key': 'Candy_Base',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_basic_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_bear_cub_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_bear_cub_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bear Cub egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_BearCub',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_bear_cub_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_BearCub.png',
+      'friendly_name': 'test-user Bear Cub egg',
+      'key': 'BearCub',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_bear_cub_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
+# name: test_sensors[sensor.test_user_blueberry_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_blueberry_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blueberry Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_CottonCandyBlue',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_blueberry_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_CottonCandyBlue.png',
+      'friendly_name': 'test-user Blueberry Pie',
+      'key': 'Pie_CottonCandyBlue',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_blueberry_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_bone_marrow_pot_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_bone_marrow_pot_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bone Marrow Pot Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_Skeleton',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_bone_marrow_pot_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Skeleton.png',
+      'friendly_name': 'test-user Bone Marrow Pot Pie',
+      'key': 'Pie_Skeleton',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_bone_marrow_pot_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cactus_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_cactus_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cactus egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_Cactus',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cactus_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Cactus.png',
+      'friendly_name': 'test-user Cactus egg',
+      'key': 'Cactus',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_cactus_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22',
+  })
+# ---
+# name: test_sensors[sensor.test_user_candy_blue_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_candy_blue_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Candy Blue Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_CottonCandyBlue',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_candy_blue_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_CottonCandyBlue.png',
+      'friendly_name': 'test-user Candy Blue Cake',
+      'key': 'Cake_CottonCandyBlue',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_candy_blue_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.test_user_candy_pink_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_candy_pink_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Candy Pink Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_CottonCandyPink',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_candy_pink_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_CottonCandyPink.png',
+      'friendly_name': 'test-user Candy Pink Cake',
+      'key': 'Cake_CottonCandyPink',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_candy_pink_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.test_user_chocolate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_chocolate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chocolate',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'chocolate',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Chocolate',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_chocolate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Chocolate.png',
+      'friendly_name': 'test-user Chocolate',
+      'key': 'Chocolate',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_chocolate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_chocolate_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_chocolate_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chocolate Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_Shade',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_chocolate_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Shade.png',
+      'friendly_name': 'test-user Chocolate Cake',
+      'key': 'Cake_Shade',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_chocolate_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '122',
+  })
+# ---
+# name: test_sensors[sensor.test_user_chocolate_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_chocolate_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chocolate Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_Shade',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_chocolate_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Shade.png',
+      'friendly_name': 'test-user Chocolate Candy',
+      'key': 'Candy_Shade',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_chocolate_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cinnamon_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_cinnamon_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cinnamon Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_Red',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cinnamon_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Red.png',
+      'friendly_name': 'test-user Cinnamon Candy',
+      'key': 'Candy_Red',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_cinnamon_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensors[sensor.test_user_class-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -112,6 +896,153 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cotton_candy_blue_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_cotton_candy_blue_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cotton Candy Blue hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_CottonCandyBlue',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cotton_candy_blue_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_CottonCandyBlue.png',
+      'friendly_name': 'test-user Cotton Candy Blue hatching potion',
+      'key': 'CottonCandyBlue',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_cotton_candy_blue_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cotton_candy_pink_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_cotton_candy_pink_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cotton Candy Pink hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_CottonCandyPink',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cotton_candy_pink_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_CottonCandyPink.png',
+      'friendly_name': 'test-user Cotton Candy Pink hatching potion',
+      'key': 'CottonCandyPink',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_cotton_candy_pink_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cream_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_cream_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cream Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_White',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_cream_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_White.png',
+      'friendly_name': 'test-user Cream Cake',
+      'key': 'Cake_White',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_cream_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.test_user_dailies-entry]
@@ -273,6 +1204,153 @@
     'state': '3',
   })
 # ---
+# name: test_sensors[sensor.test_user_dark_chocolate_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_dark_chocolate_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dark Chocolate Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_Shade',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_dark_chocolate_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Shade.png',
+      'friendly_name': 'test-user Dark Chocolate Pie',
+      'key': 'Pie_Shade',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_dark_chocolate_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_sensors[sensor.test_user_desert_dessert_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_desert_dessert_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Desert Dessert Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_Desert',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_desert_dessert_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Desert.png',
+      'friendly_name': 'test-user Desert Dessert Pie',
+      'key': 'Pie_Desert',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_desert_dessert_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.test_user_desert_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_desert_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Desert hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Desert',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_desert_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Desert.png',
+      'friendly_name': 'test-user Desert hatching potion',
+      'key': 'Desert',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_desert_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
 # name: test_sensors[sensor.test_user_display_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -317,6 +1395,103 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'test-user',
+  })
+# ---
+# name: test_sensors[sensor.test_user_dragon_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_dragon_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dragon egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_Dragon',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_dragon_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Dragon.png',
+      'friendly_name': 'test-user Dragon egg',
+      'key': 'Dragon',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_dragon_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_sensors[sensor.test_user_eggs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_eggs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Eggs',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGGS_TOTAL: 'eggs_total'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_eggs_total',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_eggs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Egg.png',
+      'friendly_name': 'test-user Eggs',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_eggs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '205',
   })
 # ---
 # name: test_sensors[sensor.test_user_experience-entry]
@@ -364,6 +1539,153 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '737',
+  })
+# ---
+# name: test_sensors[sensor.test_user_fish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_fish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fish',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fish',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Fish',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_fish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Fish.png',
+      'friendly_name': 'test-user Fish',
+      'key': 'Fish',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_fish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.test_user_flying_pig_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_flying_pig_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flying Pig egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_FlyingPig',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_flying_pig_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_FlyingPig.png',
+      'friendly_name': 'test-user Flying Pig egg',
+      'key': 'FlyingPig',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_flying_pig_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26',
+  })
+# ---
+# name: test_sensors[sensor.test_user_fox_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_fox_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fox egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_Fox',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_fox_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Fox.png',
+      'friendly_name': 'test-user Fox egg',
+      'key': 'Fox',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_fox_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23',
   })
 # ---
 # name: test_sensors[sensor.test_user_gems-entry]
@@ -464,6 +1786,153 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '137.625872146098',
+  })
+# ---
+# name: test_sensors[sensor.test_user_golden_banana_cream_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_golden_banana_cream_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Golden Banana Cream Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_Golden',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_golden_banana_cream_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Golden.png',
+      'friendly_name': 'test-user Golden Banana Cream Pie',
+      'key': 'Pie_Golden',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_golden_banana_cream_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_golden_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_golden_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Golden hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Golden',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_golden_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Golden.png',
+      'friendly_name': 'test-user Golden hatching potion',
+      'key': 'Golden',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_golden_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gryphon_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_gryphon_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gryphon egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_Gryphon',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gryphon_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Gryphon.png',
+      'friendly_name': 'test-user Gryphon egg',
+      'key': 'Gryphon',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_gryphon_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.test_user_habits-entry]
@@ -572,6 +2041,54 @@
     'state': '4',
   })
 # ---
+# name: test_sensors[sensor.test_user_hatching_potions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hatching potions',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTIONS_TOTAL: 'hatching_potions_total'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_hatching_potions_total',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_hatching_potions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_RoyalPurple.png',
+      'friendly_name': 'test-user Hatching potions',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '194',
+  })
+# ---
 # name: test_sensors[sensor.test_user_health-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -616,6 +2133,153 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_user_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_honey-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_honey',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Honey',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'honey',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Honey',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_honey-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Honey.png',
+      'friendly_name': 'test-user Honey',
+      'key': 'Honey',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_honey',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_honey_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_honey_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Honey Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_Golden',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_honey_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Golden.png',
+      'friendly_name': 'test-user Honey Cake',
+      'key': 'Cake_Golden',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_honey_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_sensors[sensor.test_user_honey_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_honey_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Honey Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_Golden',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_honey_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Golden.png',
+      'friendly_name': 'test-user Honey Candy',
+      'key': 'Candy_Golden',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_honey_candy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -721,6 +2385,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '38',
+  })
+# ---
+# name: test_sensors[sensor.test_user_lion_cub_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_lion_cub_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lion Cub egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_LionCub',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_lion_cub_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_LionCub.png',
+      'friendly_name': 'test-user Lion Cub egg',
+      'key': 'LionCub',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_lion_cub_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
   })
 # ---
 # name: test_sensors[sensor.test_user_mana-entry]
@@ -867,6 +2580,104 @@
     'state': '166',
   })
 # ---
+# name: test_sensors[sensor.test_user_meat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_meat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Meat',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meat',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Meat',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_meat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Meat.png',
+      'friendly_name': 'test-user Meat',
+      'key': 'Meat',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_meat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_milk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_milk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Milk',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_milk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Milk.png',
+      'friendly_name': 'test-user Milk',
+      'key': 'Milk',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_milk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensors[sensor.test_user_mystic_hourglasses-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -964,6 +2775,104 @@
     'state': '880',
   })
 # ---
+# name: test_sensors[sensor.test_user_panda_cub_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_panda_cub_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Panda Cub egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_PandaCub',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_panda_cub_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_PandaCub.png',
+      'friendly_name': 'test-user Panda Cub egg',
+      'key': 'PandaCub',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_panda_cub_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21',
+  })
+# ---
+# name: test_sensors[sensor.test_user_parrot_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_parrot_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Parrot egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_Parrot',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_parrot_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Parrot.png',
+      'friendly_name': 'test-user Parrot egg',
+      'key': 'Parrot',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_parrot_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.test_user_perception-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1017,6 +2926,299 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '68',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pet_food_and_saddles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pet_food_and_saddles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pet food and saddles',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.FOOD_TOTAL: 'food_total'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_food_total',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pet_food_and_saddles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_RoyalPurple.png',
+      'friendly_name': 'test-user Pet food and saddles',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pet_food_and_saddles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '230',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pink_rhubarb_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pink_rhubarb_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pink Rhubarb Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_CottonCandyPink',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pink_rhubarb_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_CottonCandyPink.png',
+      'friendly_name': 'test-user Pink Rhubarb Pie',
+      'key': 'Pie_CottonCandyPink',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pink_rhubarb_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_potato-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_potato',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Potato',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'potatoe',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Potatoe',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_potato-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Potatoe.png',
+      'friendly_name': 'test-user Potato',
+      'key': 'Potatoe',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_potato',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rainbow_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_rainbow_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rainbow hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Rainbow',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rainbow_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Rainbow.png',
+      'friendly_name': 'test-user Rainbow hatching potion',
+      'key': 'Rainbow',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_rainbow_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_red_cherry_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_red_cherry_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Red Cherry Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_Red',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_red_cherry_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Red.png',
+      'friendly_name': 'test-user Red Cherry Pie',
+      'key': 'Pie_Red',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_red_cherry_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_red_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_red_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Red hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Red',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_red_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Red.png',
+      'friendly_name': 'test-user Red hatching potion',
+      'key': 'Red',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_red_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14',
   })
 # ---
 # name: test_sensors[sensor.test_user_rewards-entry]
@@ -1080,6 +3282,790 @@
     'state': '1',
   })
 # ---
+# name: test_sensors[sensor.test_user_rotten_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_rotten_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rotten Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_Zombie',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rotten_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Zombie.png',
+      'friendly_name': 'test-user Rotten Cake',
+      'key': 'Cake_Zombie',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_rotten_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rotten_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_rotten_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rotten Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_Zombie',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rotten_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Zombie.png',
+      'friendly_name': 'test-user Rotten Candy',
+      'key': 'Candy_Zombie',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_rotten_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rotten_meat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_rotten_meat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rotten Meat',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rottenmeat',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_RottenMeat',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rotten_meat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_RottenMeat.png',
+      'friendly_name': 'test-user Rotten Meat',
+      'key': 'RottenMeat',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_rotten_meat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rotten_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_rotten_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rotten Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_Zombie',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rotten_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Zombie.png',
+      'friendly_name': 'test-user Rotten Pie',
+      'key': 'Pie_Zombie',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_rotten_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_sensors[sensor.test_user_royal_purple_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_royal_purple_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Royal Purple hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_RoyalPurple',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_royal_purple_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_RoyalPurple.png',
+      'friendly_name': 'test-user Royal Purple hatching potion',
+      'key': 'RoyalPurple',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_royal_purple_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_sensors[sensor.test_user_saddle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_saddle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Saddle',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'saddle',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Saddle',
+    'unit_of_measurement': 'saddles',
+  })
+# ---
+# name: test_sensors[sensor.test_user_saddle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Saddle.png',
+      'friendly_name': 'test-user Saddle',
+      'key': 'Saddle',
+      'unit_of_measurement': 'saddles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_saddle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sand_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_sand_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sand Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_Desert',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sand_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Desert.png',
+      'friendly_name': 'test-user Sand Cake',
+      'key': 'Cake_Desert',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_sand_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sand_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_sand_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sand Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_Desert',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sand_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Desert.png',
+      'friendly_name': 'test-user Sand Candy',
+      'key': 'Candy_Desert',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_sand_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_seahorse_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_seahorse_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seahorse egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_Seahorse',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_seahorse_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Seahorse.png',
+      'friendly_name': 'test-user Seahorse egg',
+      'key': 'Seahorse',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_seahorse_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_shade_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_shade_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Shade hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Shade',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_shade_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Shade.png',
+      'friendly_name': 'test-user Shade hatching potion',
+      'key': 'Shade',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_shade_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18',
+  })
+# ---
+# name: test_sensors[sensor.test_user_shadow_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_shadow_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Shadow hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Shadow',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_shadow_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Shadow.png',
+      'friendly_name': 'test-user Shadow hatching potion',
+      'key': 'Shadow',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_shadow_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_skeleton_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_skeleton_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Skeleton hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Skeleton',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_skeleton_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Skeleton.png',
+      'friendly_name': 'test-user Skeleton hatching potion',
+      'key': 'Skeleton',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_skeleton_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sour_blue_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_sour_blue_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sour Blue Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_CottonCandyBlue',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sour_blue_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_CottonCandyBlue.png',
+      'friendly_name': 'test-user Sour Blue Candy',
+      'key': 'Candy_CottonCandyBlue',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_sour_blue_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sour_pink_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_sour_pink_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sour Pink Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_CottonCandyPink',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sour_pink_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_CottonCandyPink.png',
+      'friendly_name': 'test-user Sour Pink Candy',
+      'key': 'Candy_CottonCandyPink',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_sour_pink_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strawberry-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_strawberry',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Strawberry',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'strawberry',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Strawberry',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strawberry-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Strawberry.png',
+      'friendly_name': 'test-user Strawberry',
+      'key': 'Strawberry',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_strawberry',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strawberry_cake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_strawberry_cake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Strawberry Cake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cake',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Cake_Red',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strawberry_cake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Red.png',
+      'friendly_name': 'test-user Strawberry Cake',
+      'key': 'Cake_Red',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_strawberry_cake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
 # name: test_sensors[sensor.test_user_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1133,6 +4119,104 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '87',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sunshine_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_sunshine_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sunshine hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Sunshine',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_sunshine_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Sunshine.png',
+      'friendly_name': 'test-user Sunshine hatching potion',
+      'key': 'Sunshine',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_sunshine_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_tiger_cub_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_tiger_cub_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tiger Cub egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_TigerCub',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_tiger_cub_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_TigerCub.png',
+      'friendly_name': 'test-user Tiger Cub egg',
+      'key': 'TigerCub',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_tiger_cub_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
   })
 # ---
 # name: test_sensors[sensor.test_user_to_do_s-entry]
@@ -1235,5 +4319,250 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.test_user_vanilla_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_vanilla_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vanilla Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'candy',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Candy_White',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_vanilla_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_White.png',
+      'friendly_name': 'test-user Vanilla Candy',
+      'key': 'Candy_White',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_vanilla_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_vanilla_pudding_pie-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_vanilla_pudding_pie',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vanilla Pudding Pie',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pie',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_Pie_White',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_vanilla_pudding_pie-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_White.png',
+      'friendly_name': 'test-user Vanilla Pudding Pie',
+      'key': 'Pie_White',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_vanilla_pudding_pie',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_sensors[sensor.test_user_white_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_white_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'White hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_White',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_white_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_White.png',
+      'friendly_name': 'test-user White hatching potion',
+      'key': 'White',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_white_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28',
+  })
+# ---
+# name: test_sensors[sensor.test_user_wolf_egg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_wolf_egg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wolf egg',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.EGG: 'egg'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Egg_Wolf',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_wolf_egg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Wolf.png',
+      'friendly_name': 'test-user Wolf egg',
+      'key': 'Wolf',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_wolf_egg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
+# name: test_sensors[sensor.test_user_zombie_hatching_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_zombie_hatching_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zombie hatching potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabitipySensorEntity.HATCHING_POTION: 'hatching_potion'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_HatchingPotion_Zombie',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_zombie_hatching_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_Zombie.png',
+      'friendly_name': 'test-user Zombie hatching potion',
+      'key': 'Zombie',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_zombie_hatching_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17',
   })
 # ---

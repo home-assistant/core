@@ -245,6 +245,21 @@
             "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
           }
         }
+      },
+      "egg": {
+        "name": "{egg_type} egg"
+      },
+      "eggs_total": {
+        "name": "Eggs"
+      },
+      "hatching_potion": {
+        "name": "{hatch_type} hatching potion"
+      },
+      "hatching_potions_total": {
+        "name": "Hatching potions"
+      },
+      "food_total": {
+        "name": "Pet food and saddles"
       }
     },
     "switch": {
