@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/touchline",
   "iot_class": "local_polling",
   "loggers": ["pytouchline"],
+  "quality_scale": "legacy",
   "requirements": ["pytouchline==0.7"]
 }

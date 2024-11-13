@@ -3,5 +3,6 @@
   "name": "Synology Chat",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/synology_chat",
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "quality_scale": "legacy"
 }
