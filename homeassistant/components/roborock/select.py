@@ -135,6 +135,9 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                     RoborockCommand.LOAD_MULTI_MAP,
                     [map_id],
                 )
+                # Update the current map id manually so that nothing gets broken
+                # if another service hits the api.
+                self.coordinator.current_map = map_id
                 # We need to wait after updating the map
                 # so that other commands will be executed correctly.
                 await asyncio.sleep(MAP_SLEEP)
