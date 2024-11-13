@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any
 
 from reolink_aio.exceptions import ReolinkError
-from reolink_aio.software_version import NewSoftwareVersion
+from reolink_aio.software_version import NewSoftwareVersion, SoftwareVersion
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -151,6 +151,9 @@ class ReolinkUpdateEntity(
             return True
         return super().available
 
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        return SoftwareVersion(latest_version) > SoftwareVersion(installed_version)
+
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
@@ -277,6 +280,9 @@ class ReolinkHostUpdateEntity(
         if self._installing or self._cancel_update is not None:
             return True
         return super().available
+
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        return SoftwareVersion(latest_version) > SoftwareVersion(installed_version)
 
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
