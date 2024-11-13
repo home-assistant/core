@@ -172,7 +172,10 @@ class MonzoWebhookManager:
                     _LOGGER.debug("Removing Monzo cloudhook (%s)", webhook_id)
                     await cloud.async_delete_cloudhook(self.hass, webhook_id)
                 except cloud.CloudNotAvailable:
-                    pass
+                    _LOGGER.error(
+                        "Failed to remove Monzo cloudhook (%s) - cloud unavailable",
+                        webhook_id,
+                    )
         await self.unregister_old_webhooks(coordinator)
 
 
@@ -199,14 +202,14 @@ async def async_handle_webhook(
 def async_send_event(hass: HomeAssistant, event_type: str, data: dict) -> None:
     """Send events."""
     _LOGGER.debug("%s: %s", event_type, data)
-    if "account_id" in data:
+    if data and "account_id" in data:
         async_dispatcher_send(
             hass,
             monzo_event_signal(event_type, data["account_id"]),
             {"data": data},
         )
     else:
-        _LOGGER.error("Webhook data does not contain account_id")
+        _LOGGER.error("Webhook data malformed: %s", data)
 
 
 def monzo_event_signal(event_type: str, account_id: str) -> str:

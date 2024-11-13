@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
-from monzopy import AuthorisationExpiredError
+from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import pytest
 
 from homeassistant.components import cloud
@@ -18,7 +18,7 @@ from homeassistant.components.webhook import (
     DOMAIN as WEBHOOK_DOMAIN,
     async_generate_url,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -131,6 +131,54 @@ async def test_webhook_with_unexpected_type(
     assert "unexpected event type" in caplog.text
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_webhook_failure_with_missing_data(
+    webhook_setup: WebhookSetupData,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test calling a webhook with missing data."""
+    resp = await webhook_setup.client.post(
+        urlparse(webhook_setup.webhook_url).path,
+        json={"type": EVENT_TRANSACTION_CREATED},
+    )
+    # Wait for remaining tasks to complete.
+    await webhook_setup.hass.async_block_till_done()
+
+    assert "Webhook data malformed" in caplog.text
+
+    resp.close()
+
+
+async def test_webhook_failure_with_invalid_json(
+    webhook_setup: WebhookSetupData,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test calling a webhook with invalid JSON."""
+    resp = await webhook_setup.client.post(
+        urlparse(webhook_setup.webhook_url).path,
+        data="invalid",
+    )
+    # Wait for remaining tasks to complete.
+    await webhook_setup.hass.async_block_till_done()
+
+    assert "Error in data" in caplog.text
+
+    resp.close()
+
+
+async def test_webhook_fails_with_invalid_monzo_api_response(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MonzoConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test calling a webhook with an invalid Monzo API response."""
+    monzo.user_account.register_webhooks.side_effect = InvalidMonzoAPIResponseError()
+    await setup_integration(hass, polling_config_entry)
+    await hass.async_block_till_done()
+    assert "Error during webhook registration" in caplog.text
+
+
 async def test_cloudhook(
     hass: HomeAssistant,
     monzo: AsyncMock,
@@ -175,7 +223,10 @@ async def test_cloudhook(
 
 
 async def test_removing_entry_with_cloud_unavailable(
-    hass: HomeAssistant, polling_config_entry: MockConfigEntry, monzo: AsyncMock
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    monzo: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling cloud unavailable when deleting entry."""
 
@@ -191,7 +242,7 @@ async def test_removing_entry_with_cloud_unavailable(
             return_value="https://hooks.nabu.casa/ABCD",
         ),
         patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            "homeassistant.components.monzo.async_get_config_entry_implementation",
         ),
         patch(
             "homeassistant.components.cloud.async_delete_cloudhook",
@@ -207,12 +258,17 @@ async def test_removing_entry_with_cloud_unavailable(
 
         await hass.async_block_till_done()
         assert hass.config_entries.async_entries(DOMAIN)
+        assert (
+            hass.config_entries.async_entries(DOMAIN)[0].state
+            == ConfigEntryState.LOADED
+        )
 
         for config_entry in hass.config_entries.async_entries(DOMAIN):
             await hass.config_entries.async_remove(config_entry.entry_id)
 
         await hass.async_block_till_done()
         assert not hass.config_entries.async_entries(DOMAIN)
+        assert "Failed to remove Monzo cloudhook" in caplog.text
 
 
 async def test_webhook_fails_without_https(
