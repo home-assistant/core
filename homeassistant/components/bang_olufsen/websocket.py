@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from mozart_api.models import (
     ButtonEvent,
@@ -107,7 +108,10 @@ class BangOlufsenWebsocket(BangOlufsenBase):
 
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""
-        assert notification.state
+        # State is expected to always be available.
+        if TYPE_CHECKING:
+            assert notification.state
+
         # Send to event entity
         async_dispatcher_send(
             self.hass,
