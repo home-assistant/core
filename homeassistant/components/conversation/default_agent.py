@@ -529,10 +529,6 @@ class DefaultAgent(ConversationEntity):
                 else:
                     num_unmatched_entities += 1
 
-            _LOGGER.warning(
-                "%s %s", result.text_chunks_matched, result.unmatched_entities
-            )
-
             if (
                 (maybe_result is None)  # first result
                 or (num_matched_entities > best_num_matched_entities)
