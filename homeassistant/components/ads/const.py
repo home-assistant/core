@@ -13,10 +13,14 @@ if TYPE_CHECKING:
 DOMAIN = "ads"
 
 DATA_ADS: HassKey[AdsHub] = HassKey(DOMAIN)
+STATE_KEY_STATE = "state"
+
+SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
 CONF_ADS_VAR = "adsvar"
-
-STATE_KEY_STATE = "state"
+CONF_ADS_FACTOR = "factor"
+CONF_ADS_TYPE = "adstype"
+CONF_ADS_VALUE = "value"
 
 
 class AdsType(StrEnum):
