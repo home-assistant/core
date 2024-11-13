@@ -1,16 +1,18 @@
 """Coordinator for La Marzocco API."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from time import time
 from typing import Any
 
-from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.client_cloud import LaMarzoccoCloudClient
+from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.lm_machine import LaMarzoccoMachine
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -26,21 +28,30 @@ STATISTICS_UPDATE_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
 
+type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
+
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    config_entry: ConfigEntry
+    config_entry: LaMarzoccoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: LaMarzoccoConfigEntry,
         cloud_client: LaMarzoccoCloudClient,
         local_client: LaMarzoccoLocalClient | None,
         bluetooth_client: LaMarzoccoBluetoothClient | None,
     ) -> None:
         """Initialize coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
         self.local_connection_configured = local_client is not None
 
         assert self.config_entry.unique_id

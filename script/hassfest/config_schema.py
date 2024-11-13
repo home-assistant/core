@@ -10,7 +10,7 @@ from .model import Config, Integration
 
 CONFIG_SCHEMA_IGNORE = {
     # Configuration under the homeassistant key is a special case, it's handled by
-    # conf_util.async_process_ha_core_config already during bootstrapping, not by
+    # core_config.async_process_ha_core_config already during bootstrapping, not by
     # a schema in the homeassistant integration.
     HOMEASSISTANT_DOMAIN,
 }

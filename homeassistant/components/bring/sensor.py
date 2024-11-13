@@ -40,6 +40,7 @@ class BringSensor(StrEnum):
     CONVENIENT = "convenient"
     DISCOUNTED = "discounted"
     LIST_LANGUAGE = "list_language"
+    LIST_ACCESS = "list_access"
 
 
 SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
@@ -71,6 +72,14 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[x.lower() for x in BRING_SUPPORTED_LOCALES],
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    BringSensorEntityDescription(
+        key=BringSensor.LIST_ACCESS,
+        translation_key=BringSensor.LIST_ACCESS,
+        value_fn=lambda lst, _: lst["status"].lower(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["registered", "shared", "invitation"],
         device_class=SensorDeviceClass.ENUM,
     ),
 )

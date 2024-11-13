@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 from enum import Enum, EnumType, _EnumDict
 import functools
 import inspect
@@ -156,6 +157,30 @@ def _print_deprecation_warning(
 
 
 def _print_deprecation_warning_internal(
+    obj_name: str,
+    module_name: str,
+    replacement: str,
+    description: str,
+    verb: str,
+    breaks_in_ha_version: str | None,
+    *,
+    log_when_no_integration_is_found: bool,
+) -> None:
+    # Suppress ImportError due to use of deprecated enum in core.py
+    # Can be removed in HA Core 2025.1
+    with suppress(ImportError):
+        _print_deprecation_warning_internal_impl(
+            obj_name,
+            module_name,
+            replacement,
+            description,
+            verb,
+            breaks_in_ha_version,
+            log_when_no_integration_is_found=log_when_no_integration_is_found,
+        )
+
+
+def _print_deprecation_warning_internal_impl(
     obj_name: str,
     module_name: str,
     replacement: str,
@@ -363,7 +388,7 @@ class EnumWithDeprecatedMembers(EnumType):
             _print_deprecation_warning_internal(
                 f"{cls.__name__}.{name}",
                 cls.__module__,
-                f"{cls.__name__}.{deprecated[name][0]}",
+                f"{deprecated[name][0]}",
                 "enum member",
                 "used",
                 deprecated[name][1],

@@ -7,20 +7,19 @@ from typing import Final
 
 from mozart_api.models import Source, SourceArray, SourceTypeEnum
 
-from homeassistant.components.media_player import MediaPlayerState, MediaType
+from homeassistant.components.media_player import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+)
 
 
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
-    BLUETOOTH: Final[Source] = Source(name="Bluetooth", id="bluetooth")
-    CHROMECAST: Final[Source] = Source(name="Chromecast built-in", id="chromeCast")
     LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
-    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
-    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
-    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -34,6 +33,17 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "error": MediaPlayerState.IDLE,
     # A device's initial state is "unknown" and should be treated as "idle"
     "unknown": MediaPlayerState.IDLE,
+}
+
+# Dict used for translating Home Assistant settings to device repeat settings.
+BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
+    RepeatMode.ALL: "all",
+    RepeatMode.ONE: "track",
+    RepeatMode.OFF: "none",
+}
+# Dict used for translating device repeat settings to Home Assistant settings.
+BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
+    value: key for key, value in BANG_OLUFSEN_REPEAT_FROM_HA.items()
 }
 
 
@@ -123,20 +133,6 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     MediaType.CHANNEL,
 )
 
-# Sources on the device that should not be selectable by the user
-HIDDEN_SOURCE_IDS: Final[tuple] = (
-    "airPlay",
-    "bluetooth",
-    "chromeCast",
-    "generator",
-    "local",
-    "dlna",
-    "qplay",
-    "wpl",
-    "pl",
-    "beolink",
-    "usbIn",
-)
 
 # Fallback sources to use in case of API failure.
 FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
@@ -144,23 +140,26 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="uriStreamer",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
+            is_seekable=False,
         ),
         Source(
             id="bluetooth",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
+            is_seekable=False,
         ),
         Source(
             id="spotify",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
+            is_seekable=True,
         ),
         Source(
             id="lineIn",
@@ -168,6 +167,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Line-In",
             type=SourceTypeEnum(value="lineIn"),
+            is_seekable=False,
         ),
         Source(
             id="spdif",
@@ -175,6 +175,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Optical",
             type=SourceTypeEnum(value="spdif"),
+            is_seekable=False,
         ),
         Source(
             id="netRadio",
@@ -182,6 +183,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="B&O Radio",
             type=SourceTypeEnum(value="netRadio"),
+            is_seekable=False,
         ),
         Source(
             id="deezer",
@@ -189,6 +191,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Deezer",
             type=SourceTypeEnum(value="deezer"),
+            is_seekable=True,
         ),
         Source(
             id="tidalConnect",
@@ -196,6 +199,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_playable=True,
             name="Tidal Connect",
             type=SourceTypeEnum(value="tidalConnect"),
+            is_seekable=True,
         ),
     ]
 )

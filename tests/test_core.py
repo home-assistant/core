@@ -9,13 +9,11 @@ import functools
 import gc
 import logging
 import os
-from pathlib import Path
 import re
-from tempfile import TemporaryDirectory
 import threading
 import time
 from typing import Any
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -24,7 +22,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
-    CONF_UNIT_SYSTEM,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -37,7 +34,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
-    __version__,
 )
 import homeassistant.core as ha
 from homeassistant.core import (
@@ -52,6 +48,7 @@ from homeassistant.core import (
     callback,
     get_release_channel,
 )
+from homeassistant.core_config import Config
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -65,12 +62,12 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .common import (
     async_capture_events,
     async_mock_service,
     help_test_all,
+    import_and_test_deprecated_alias,
     import_and_test_deprecated_constant_enum,
 )
 
@@ -1918,173 +1915,6 @@ async def test_serviceregistry_return_response_optional(
     assert response_data == expected_response_data
 
 
-async def test_config_defaults() -> None:
-    """Test config defaults."""
-    hass = Mock()
-    hass.data = {}
-    config = ha.Config(hass, "/test/ha-config")
-    assert config.hass is hass
-    assert config.latitude == 0
-    assert config.longitude == 0
-    assert config.elevation == 0
-    assert config.location_name == "Home"
-    assert config.time_zone == "UTC"
-    assert config.internal_url is None
-    assert config.external_url is None
-    assert config.config_source is ha.ConfigSource.DEFAULT
-    assert config.skip_pip is False
-    assert config.skip_pip_packages == []
-    assert config.components == set()
-    assert config.api is None
-    assert config.config_dir == "/test/ha-config"
-    assert config.allowlist_external_dirs == set()
-    assert config.allowlist_external_urls == set()
-    assert config.media_dirs == {}
-    assert config.recovery_mode is False
-    assert config.legacy_templates is False
-    assert config.currency == "EUR"
-    assert config.country is None
-    assert config.language == "en"
-    assert config.radius == 100
-
-
-async def test_config_path_with_file() -> None:
-    """Test get_config_path method."""
-    hass = Mock()
-    hass.data = {}
-    config = ha.Config(hass, "/test/ha-config")
-    assert config.path("test.conf") == "/test/ha-config/test.conf"
-
-
-async def test_config_path_with_dir_and_file() -> None:
-    """Test get_config_path method."""
-    hass = Mock()
-    hass.data = {}
-    config = ha.Config(hass, "/test/ha-config")
-    assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
-
-
-async def test_config_as_dict() -> None:
-    """Test as dict."""
-    hass = Mock()
-    hass.data = {}
-    config = ha.Config(hass, "/test/ha-config")
-    type(config.hass.state).value = PropertyMock(return_value="RUNNING")
-    expected = {
-        "latitude": 0,
-        "longitude": 0,
-        "elevation": 0,
-        CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
-        "location_name": "Home",
-        "time_zone": "UTC",
-        "components": [],
-        "config_dir": "/test/ha-config",
-        "whitelist_external_dirs": [],
-        "allowlist_external_dirs": [],
-        "allowlist_external_urls": [],
-        "version": __version__,
-        "config_source": ha.ConfigSource.DEFAULT,
-        "recovery_mode": False,
-        "state": "RUNNING",
-        "external_url": None,
-        "internal_url": None,
-        "currency": "EUR",
-        "country": None,
-        "language": "en",
-        "safe_mode": False,
-        "debug": False,
-        "radius": 100,
-    }
-
-    assert expected == config.as_dict()
-
-
-async def test_config_is_allowed_path() -> None:
-    """Test is_allowed_path method."""
-    hass = Mock()
-    hass.data = {}
-    config = ha.Config(hass, "/test/ha-config")
-    with TemporaryDirectory() as tmp_dir:
-        # The created dir is in /tmp. This is a symlink on OS X
-        # causing this test to fail unless we resolve path first.
-        config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
-
-        test_file = os.path.join(tmp_dir, "test.jpg")
-        await asyncio.get_running_loop().run_in_executor(
-            None, Path(test_file).write_text, "test"
-        )
-
-        valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
-        for path in valid:
-            assert config.is_allowed_path(path)
-
-        config.allowlist_external_dirs = {"/home", "/var"}
-
-        invalid = [
-            "/hass/config/secure",
-            "/etc/passwd",
-            "/root/secure_file",
-            "/var/../etc/passwd",
-            test_file,
-        ]
-        for path in invalid:
-            assert not config.is_allowed_path(path)
-
-        with pytest.raises(AssertionError):
-            config.is_allowed_path(None)
-
-
-async def test_config_is_allowed_external_url() -> None:
-    """Test is_allowed_external_url method."""
-    hass = Mock()
-    hass.data = {}
-    config = ha.Config(hass, "/test/ha-config")
-    config.allowlist_external_urls = [
-        "http://x.com/",
-        "https://y.com/bla/",
-        "https://z.com/images/1.jpg/",
-    ]
-
-    valid = [
-        "http://x.com/1.jpg",
-        "http://x.com",
-        "https://y.com/bla/",
-        "https://y.com/bla/2.png",
-        "https://z.com/images/1.jpg",
-    ]
-    for url in valid:
-        assert config.is_allowed_external_url(url)
-
-    invalid = [
-        "https://a.co",
-        "https://y.com/bla_wrong",
-        "https://y.com/bla/../image.jpg",
-        "https://z.com/images",
-    ]
-    for url in invalid:
-        assert not config.is_allowed_external_url(url)
-
-
-async def test_event_on_update(hass: HomeAssistant) -> None:
-    """Test that event is fired on update."""
-    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
-
-    assert hass.config.latitude != 12
-
-    await hass.config.async_update(latitude=12)
-    await hass.async_block_till_done()
-
-    assert hass.config.latitude == 12
-    assert len(events) == 1
-    assert events[0].data == {"latitude": 12}
-
-
-async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
-    """Test bad timezone raises ValueError."""
-    with pytest.raises(ValueError):
-        await hass.config.async_update(time_zone="not_a_timezone")
-
-
 async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant("/test/ha-config")
@@ -2297,53 +2127,6 @@ def test_valid_domain() -> None:
         "light",
     ):
         assert ha.valid_domain(valid), valid
-
-
-async def test_additional_data_in_core_config(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test that we can handle additional data in core configuration."""
-    config = ha.Config(hass, "/test/ha-config")
-    config.async_initialize()
-    hass_storage[ha.CORE_STORAGE_KEY] = {
-        "version": 1,
-        "data": {"location_name": "Test Name", "additional_valid_key": "value"},
-    }
-    await config.async_load()
-    assert config.location_name == "Test Name"
-
-
-async def test_incorrect_internal_external_url(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that we warn when detecting invalid internal/external url."""
-    config = ha.Config(hass, "/test/ha-config")
-    config.async_initialize()
-
-    hass_storage[ha.CORE_STORAGE_KEY] = {
-        "version": 1,
-        "data": {
-            "internal_url": None,
-            "external_url": None,
-        },
-    }
-    await config.async_load()
-    assert "Invalid external_url set" not in caplog.text
-    assert "Invalid internal_url set" not in caplog.text
-
-    config = ha.Config(hass, "/test/ha-config")
-    config.async_initialize()
-
-    hass_storage[ha.CORE_STORAGE_KEY] = {
-        "version": 1,
-        "data": {
-            "internal_url": "https://community.home-assistant.io/profile",
-            "external_url": "https://www.home-assistant.io/blue",
-        },
-    }
-    await config.async_load()
-    assert "Invalid external_url set" in caplog.text
-    assert "Invalid internal_url set" in caplog.text
 
 
 async def test_start_events(hass: HomeAssistant) -> None:
@@ -3213,6 +2996,11 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
 
 
+def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated Config class."""
+    import_and_test_deprecated_alias(caplog, ha, "Config", Config, "2025.11")
+
+
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:
     """Test one time listener repr."""
 
@@ -3462,28 +3250,6 @@ async def test_async_listen_with_run_immediately_deprecated(
     ) in caplog.text
 
 
-async def test_top_level_components(hass: HomeAssistant) -> None:
-    """Test top level components are updated when components change."""
-    hass.config.components.add("homeassistant")
-    assert hass.config.components == {"homeassistant"}
-    assert hass.config.top_level_components == {"homeassistant"}
-    hass.config.components.add("homeassistant.scene")
-    assert hass.config.components == {"homeassistant", "homeassistant.scene"}
-    assert hass.config.top_level_components == {"homeassistant"}
-    hass.config.components.remove("homeassistant")
-    assert hass.config.components == {"homeassistant.scene"}
-    assert hass.config.top_level_components == set()
-    with pytest.raises(ValueError):
-        hass.config.components.remove("homeassistant.scene")
-    with pytest.raises(NotImplementedError):
-        hass.config.components.discard("homeassistant")
-
-
-async def test_debug_mode_defaults_to_off(hass: HomeAssistant) -> None:
-    """Test debug mode defaults to off."""
-    assert not hass.config.debug
-
-
 async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
     """Test async_fire thread safety."""
     events = async_capture_events(hass, "test_event")
@@ -3548,19 +3314,6 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
         ),
     ):
         await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
-
-
-async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
-    """Test set_time_zone is deprecated."""
-    with pytest.raises(
-        RuntimeError,
-        match=re.escape(
-            "Detected code that set the time zone using set_time_zone instead of "
-            "async_set_time_zone which will stop working in Home Assistant 2025.6. "
-            "Please report this issue.",
-        ),
-    ):
-        await hass.config.set_time_zone("America/New_York")
 
 
 async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:

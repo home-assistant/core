@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from spotifyaio import (
     ContextType,
@@ -15,13 +16,20 @@ from spotifyaio import (
 )
 from spotifyaio.models import AudioFeatures
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .models import SpotifyData
+
 _LOGGER = logging.getLogger(__name__)
+
+
+type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 @dataclass
@@ -45,6 +53,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
     """Class to manage fetching Spotify data."""
 
     current_user: UserProfile
+    config_entry: SpotifyConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: SpotifyClient) -> None:
         """Initialize."""
@@ -66,7 +75,10 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             raise UpdateFailed("Error communicating with Spotify API") from err
 
     async def _async_update_data(self) -> SpotifyCoordinatorData:
-        current = await self.client.get_playback()
+        try:
+            current = await self.client.get_playback()
+        except SpotifyConnectionError as err:
+            raise UpdateFailed("Error communicating with Spotify API") from err
         if not current:
             return SpotifyCoordinatorData(
                 current_playback=None,
@@ -81,8 +93,17 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         audio_features: AudioFeatures | None = None
         if (item := current.item) is not None and item.type == ItemType.TRACK:
             if item.uri != self._currently_loaded_track:
-                self._currently_loaded_track = item.uri
-                audio_features = await self.client.get_audio_features(item.uri)
+                try:
+                    audio_features = await self.client.get_audio_features(item.uri)
+                except SpotifyConnectionError:
+                    _LOGGER.debug(
+                        "Unable to load audio features for track '%s'. "
+                        "Continuing without audio features",
+                        item.uri,
+                    )
+                    audio_features = None
+                else:
+                    self._currently_loaded_track = item.uri
             else:
                 audio_features = self.data.audio_features
         dj_playlist = False

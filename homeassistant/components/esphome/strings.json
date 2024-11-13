@@ -8,7 +8,8 @@
       "service_received": "Action received",
       "mqtt_missing_mac": "Missing MAC address in MQTT properties.",
       "mqtt_missing_api": "Missing API port in MQTT properties.",
-      "mqtt_missing_ip": "Missing IP address in MQTT properties."
+      "mqtt_missing_ip": "Missing IP address in MQTT properties.",
+      "mqtt_missing_payload": "Missing MQTT Payload."
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",

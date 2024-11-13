@@ -79,6 +79,7 @@ components: &components
   - homeassistant/components/group/**
   - homeassistant/components/hassio/**
   - homeassistant/components/homeassistant/**
+  - homeassistant/components/homeassistant_hardware/**
   - homeassistant/components/http/**
   - homeassistant/components/image/**
   - homeassistant/components/input_boolean/**

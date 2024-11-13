@@ -1,6 +1,5 @@
 """The AEMET OpenData component."""
 
-from dataclasses import dataclass
 import logging
 
 from aemet_opendata.exceptions import AemetError, TownNotFound
@@ -13,19 +12,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_STATION_UPDATES, PLATFORMS
-from .coordinator import WeatherUpdateCoordinator
+from .coordinator import AemetConfigEntry, AemetData, WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-type AemetConfigEntry = ConfigEntry[AemetData]
-
-
-@dataclass
-class AemetData:
-    """Aemet runtime data."""
-
-    name: str
-    coordinator: WeatherUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> bool:
@@ -46,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> boo
     except AemetError as err:
         raise ConfigEntryNotReady(err) from err
 
-    weather_coordinator = WeatherUpdateCoordinator(hass, aemet)
+    weather_coordinator = WeatherUpdateCoordinator(hass, entry, aemet)
     await weather_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = AemetData(name=name, coordinator=weather_coordinator)

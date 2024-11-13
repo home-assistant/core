@@ -44,6 +44,15 @@ class ImportCollector(ast.NodeVisitor):
         assert self._cur_fil_dir
         self.referenced[self._cur_fil_dir].add(reference_domain)
 
+    def visit_If(self, node: ast.If) -> None:
+        """Visit If node."""
+        if isinstance(node.test, ast.Name) and node.test.id == "TYPE_CHECKING":
+            # Ignore TYPE_CHECKING block
+            return
+
+        # Have it visit other kids
+        self.generic_visit(node)
+
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Visit ImportFrom node."""
         if node.module is None:
@@ -112,10 +121,10 @@ ALLOWED_USED_COMPONENTS = {
     "alert",
     "automation",
     "conversation",
+    "default_config",
     "device_automation",
     "frontend",
     "group",
-    "hassio",
     "homeassistant",
     "input_boolean",
     "input_button",

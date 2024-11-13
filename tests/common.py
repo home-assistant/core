@@ -1064,6 +1064,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
         data: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Start a reauthentication flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError("Config entry must be added to hass to start reauth flow")
         return await start_reauth_flow(hass, self, context, data)
 
     async def start_reconfigure_flow(
@@ -1073,6 +1075,10 @@ class MockConfigEntry(config_entries.ConfigEntry):
         show_advanced_options: bool = False,
     ) -> ConfigFlowResult:
         """Start a reconfiguration flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError(
+                "Config entry must be added to hass to start reconfiguration flow"
+            )
         return await hass.config_entries.flow.async_init(
             self.domain,
             context={

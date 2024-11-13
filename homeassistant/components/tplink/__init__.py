@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -141,6 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     entry_credentials_hash = entry.data.get(CONF_CREDENTIALS_HASH)
     entry_use_http = entry.data.get(CONF_USES_HTTP, False)
     entry_aes_keys = entry.data.get(CONF_AES_KEYS)
+    port_override = entry.data.get(CONF_PORT)
 
     conn_params: Device.ConnectionParameters | None = None
     if conn_params_dict := entry.data.get(CONF_CONNECTION_PARAMETERS):
@@ -157,6 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         timeout=CONNECT_TIMEOUT,
         http_client=client,
         aes_keys=entry_aes_keys,
+        port_override=port_override,
     )
     if conn_params:
         config.connection_type = conn_params

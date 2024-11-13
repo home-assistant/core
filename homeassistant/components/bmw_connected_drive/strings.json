@@ -11,7 +11,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_captcha": "Captcha validation missing"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -200,6 +201,9 @@
   "exceptions": {
     "invalid_poi": {
       "message": "Invalid data for point of interest: {poi_exception}"
+    },
+    "missing_captcha": {
+      "message": "Login requires captcha validation"
     }
   }
 }

@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from lmcloud.const import FirmwareType
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE

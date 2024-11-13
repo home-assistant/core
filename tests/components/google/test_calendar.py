@@ -572,6 +572,62 @@ async def test_opaque_event(
     assert state.state == (STATE_ON if expect_visible_event else STATE_OFF)
 
 
+async def test_declined_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_calendars_yaml,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test querying the API and fetching events from the server."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "attendees": [
+            {
+                "self": "True",
+                "responseStatus": "declined",
+            }
+        ],
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url(TEST_YAML_ENTITY))
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 0
+
+
+async def test_attending_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_calendars_yaml,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test querying the API and fetching events from the server."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "attendees": [
+            {
+                "self": "True",
+                "responseStatus": "accepted",
+            }
+        ],
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url(TEST_YAML_ENTITY))
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+
+
 @pytest.mark.parametrize("mock_test_setup", [None])
 async def test_scan_calendar_error(
     hass: HomeAssistant,

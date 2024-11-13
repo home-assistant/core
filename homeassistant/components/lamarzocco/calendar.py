@@ -3,15 +3,14 @@
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 
-from lmcloud.models import LaMarzoccoWakeUpSleepEntry
+from pylamarzocco.models import LaMarzoccoWakeUpSleepEntry
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import LaMarzoccoConfigEntry
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity
 
 CALENDAR_KEY = "auto_on_off_schedule"

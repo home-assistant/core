@@ -497,13 +497,12 @@ async def test_set_config_parameter(
 
     caplog.clear()
 
-    config_value = aeotec_zw164_siren.values["2-112-0-32"]
     cmd_result = SetConfigParameterResult("accepted", {"status": 255})
 
     # Test accepted return
     with patch(
         "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
-        return_value=(config_value, cmd_result),
+        return_value=cmd_result,
     ) as mock_set_raw_config_parameter_value:
         await hass.services.async_call(
             DOMAIN,
@@ -534,7 +533,7 @@ async def test_set_config_parameter(
     cmd_result.status = "queued"
     with patch(
         "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
-        return_value=(config_value, cmd_result),
+        return_value=cmd_result,
     ) as mock_set_raw_config_parameter_value:
         await hass.services.async_call(
             DOMAIN,

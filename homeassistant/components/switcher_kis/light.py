@@ -6,11 +6,7 @@ import logging
 from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.device import (
-    DeviceCategory,
-    DeviceState,
-    SwitcherSingleShutterDualLight,
-)
+from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -38,42 +34,35 @@ async def async_setup_entry(
     @callback
     def async_add_light(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add light from Switcher device."""
-        if (
-            coordinator.data.device_type.category
-            == DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT
+        entities: list[LightEntity] = []
+
+        if coordinator.data.device_type.category in (
+            DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
+            DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT,
+            DeviceCategory.LIGHT,
         ):
-            async_add_entities(
-                [
-                    SwitcherLightEntity(coordinator, 0),
-                    SwitcherLightEntity(coordinator, 1),
-                ]
-            )
+            number_of_lights = len(cast(SwitcherLight, coordinator.data).light)
+            if number_of_lights == 1:
+                entities.append(SwitcherSingleLightEntity(coordinator, 0))
+            else:
+                entities.extend(
+                    SwitcherMultiLightEntity(coordinator, i)
+                    for i in range(number_of_lights)
+                )
+        async_add_entities(entities)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_light)
     )
 
 
-class SwitcherLightEntity(SwitcherEntity, LightEntity):
+class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
     """Representation of a Switcher light entity."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_translation_key = "light"
-
-    def __init__(
-        self, coordinator: SwitcherDataUpdateCoordinator, light_id: int
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator)
-        self._light_id = light_id
-        self.control_result: bool | None = None
-
-        # Entity class attributes
-        self._attr_translation_placeholders = {"light_id": str(light_id + 1)}
-        self._attr_unique_id = (
-            f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
-        )
+    control_result: bool | None = None
+    _light_id: int
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -87,8 +76,8 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
         if self.control_result is not None:
             return self.control_result
 
-        data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
-        return bool(data.lights[self._light_id] == DeviceState.ON)
+        data = cast(SwitcherLight, self.coordinator.data)
+        return bool(data.light[self._light_id] == DeviceState.ON)
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
@@ -127,3 +116,44 @@ class SwitcherLightEntity(SwitcherEntity, LightEntity):
         await self._async_call_api(API_SET_LIGHT, DeviceState.OFF, self._light_id)
         self.control_result = False
         self.async_write_ha_state()
+
+
+class SwitcherSingleLightEntity(SwitcherBaseLightEntity):
+    """Representation of a Switcher single light entity."""
+
+    _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        light_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._light_id = light_id
+        self.control_result: bool | None = None
+
+        # Entity class attributes
+        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+
+
+class SwitcherMultiLightEntity(SwitcherBaseLightEntity):
+    """Representation of a Switcher multiple light entity."""
+
+    _attr_translation_key = "light"
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        light_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._light_id = light_id
+        self.control_result: bool | None = None
+
+        # Entity class attributes
+        self._attr_translation_placeholders = {"light_id": str(light_id + 1)}
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
+        )

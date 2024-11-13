@@ -23,7 +23,11 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
@@ -362,6 +366,7 @@ async def test_hmip_windspeed_sensor(
     assert (
         ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfSpeed.KILOMETERS_PER_HOUR
     )
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     await async_manipulate_test_data(hass, hmip_device, "windSpeed", 9.4)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "9.4"
@@ -411,6 +416,7 @@ async def test_hmip_today_rain_sensor(
 
     assert ha_state.state == "3.9"
     assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     await async_manipulate_test_data(hass, hmip_device, "todayRainCounter", 14.2)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "14.2"

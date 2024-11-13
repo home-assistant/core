@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from lmcloud.const import FirmwareType
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
 

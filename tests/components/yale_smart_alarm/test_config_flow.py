@@ -239,6 +239,211 @@ async def test_reauth_flow_error(
     }
 
 
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfigure config flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "name": "Yale Smart Alarm",
+            "area_id": "1",
+        },
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+            return_value="",
+        ),
+        patch(
+            "homeassistant.components.yale_smart_alarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "new-test-password",
+                "area_id": "2",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "username": "test-username",
+        "password": "new-test-password",
+        "name": "Yale Smart Alarm",
+        "area_id": "2",
+    }
+
+
+async def test_reconfigure_username_exist(hass: HomeAssistant) -> None:
+    """Test reconfigure config flow abort other username already exist."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "name": "Yale Smart Alarm",
+            "area_id": "1",
+        },
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="other-username",
+        data={
+            "username": "other-username",
+            "password": "test-password",
+            "name": "Yale Smart Alarm 2",
+            "area_id": "1",
+        },
+        version=2,
+    )
+    entry2.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+            return_value="",
+        ),
+        patch(
+            "homeassistant.components.yale_smart_alarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "other-username",
+                "password": "test-password",
+                "area_id": "1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unique_id_exists"}
+
+    with (
+        patch(
+            "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+            return_value="",
+        ),
+        patch(
+            "homeassistant.components.yale_smart_alarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "other-new-username",
+                "password": "test-password",
+                "area_id": "1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "username": "other-new-username",
+        "name": "Yale Smart Alarm",
+        "password": "test-password",
+        "area_id": "1",
+    }
+
+
+@pytest.mark.parametrize(
+    ("sideeffect", "p_error"),
+    [
+        (AuthenticationError, "invalid_auth"),
+        (ConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (UnknownError, "cannot_connect"),
+    ],
+)
+async def test_reconfigure_flow_error(
+    hass: HomeAssistant, sideeffect: Exception, p_error: str
+) -> None:
+    """Test a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "name": "Yale Smart Alarm",
+            "area_id": "1",
+        },
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        side_effect=sideeffect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "update-password",
+                "area_id": "1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": p_error}
+
+    with (
+        patch(
+            "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+            return_value="",
+        ),
+        patch(
+            "homeassistant.components.yale_smart_alarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "new-test-password",
+                "area_id": "1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "username": "test-username",
+        "name": "Yale Smart Alarm",
+        "password": "new-test-password",
+        "area_id": "1",
+    }
+
+
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(

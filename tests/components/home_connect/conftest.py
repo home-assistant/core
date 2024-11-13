@@ -178,6 +178,7 @@ def mock_problematic_appliance(request: pytest.FixtureRequest) -> Mock:
     )
     mock.name = app
     type(mock).status = PropertyMock(return_value={})
+    mock.get.side_effect = HomeConnectError
     mock.get_programs_active.side_effect = HomeConnectError
     mock.get_programs_available.side_effect = HomeConnectError
     mock.start_program.side_effect = HomeConnectError

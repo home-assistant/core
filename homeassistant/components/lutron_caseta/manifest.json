@@ -14,6 +14,12 @@
     {
       "type": "_lutron._tcp.local.",
       "properties": {
+        "SYSTYPE": "hwqs*"
+      }
+    },
+    {
+      "type": "_lutron._tcp.local.",
+      "properties": {
         "SYSTYPE": "radiora3*"
       }
     },

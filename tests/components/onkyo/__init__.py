@@ -19,9 +19,9 @@ def create_receiver_info(id: int) -> ReceiverInfo:
     )
 
 
-def create_empty_config_entry() -> MockConfigEntry:
-    """Create an empty config entry for use in unit tests."""
-    config = {CONF_HOST: ""}
+def create_config_entry_from_info(info: ReceiverInfo) -> MockConfigEntry:
+    """Create a config entry from receiver info."""
+    data = {CONF_HOST: info.host}
     options = {
         "volume_resolution": 80,
         "input_sources": {"12": "tv"},
@@ -29,7 +29,25 @@ def create_empty_config_entry() -> MockConfigEntry:
     }
 
     return MockConfigEntry(
-        data=config,
+        data=data,
+        options=options,
+        title=info.model_name,
+        domain="onkyo",
+        unique_id=info.identifier,
+    )
+
+
+def create_empty_config_entry() -> MockConfigEntry:
+    """Create an empty config entry for use in unit tests."""
+    data = {CONF_HOST: ""}
+    options = {
+        "volume_resolution": 80,
+        "input_sources": {"12": "tv"},
+        "max_volume": 100,
+    }
+
+    return MockConfigEntry(
+        data=data,
         options=options,
         title="Unit test Onkyo",
         domain="onkyo",

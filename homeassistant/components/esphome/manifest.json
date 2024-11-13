@@ -17,7 +17,7 @@
   "mqtt": ["esphome/discover/#"],
   "quality_scale": "platinum",
   "requirements": [
-    "aioesphomeapi==27.0.0",
+    "aioesphomeapi==27.0.1",
     "esphome-dashboard-api==1.2.3",
     "bleak-esphome==1.1.0"
   ],

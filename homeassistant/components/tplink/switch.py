@@ -48,6 +48,12 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="fan_sleep_mode",
     ),
+    TPLinkSwitchEntityDescription(
+        key="child_lock",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="pir_enabled",
+    ),
 )
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}

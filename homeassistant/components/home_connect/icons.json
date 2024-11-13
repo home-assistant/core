@@ -61,6 +61,14 @@
           "aborting": "mdi:close-circle"
         }
       },
+      "door": {
+        "default": "mdi:door",
+        "state": {
+          "closed": "mdi:door-closed",
+          "locked": "mdi:door-closed-lock",
+          "open": "mdi:door-open"
+        }
+      },
       "program_progress": {
         "default": "mdi:progress-clock"
       },

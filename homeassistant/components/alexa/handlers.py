@@ -1083,7 +1083,13 @@ async def async_api_arm(
     arm_state = directive.payload["armState"]
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.state != alarm_control_panel.AlarmControlPanelState.DISARMED:
+    # Per Alexa Documentation: users are not allowed to switch from armed_away
+    # directly to another armed state without first disarming the system.
+    # https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-securitypanelcontroller.html#arming
+    if (
+        entity.state == alarm_control_panel.AlarmControlPanelState.ARMED_AWAY
+        and arm_state != "ARMED_AWAY"
+    ):
         msg = "You must disarm the system before you can set the requested arm state."
         raise AlexaSecurityPanelAuthorizationRequired(msg)
 

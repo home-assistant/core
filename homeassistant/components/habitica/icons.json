@@ -20,6 +20,50 @@
       },
       "revive": {
         "default": "mdi:grave-stone"
+      },
+      "mpheal": {
+        "default": "mdi:broadcast"
+      },
+      "earth": {
+        "default": "mdi:landslide"
+      },
+      "frost": {
+        "default": "mdi:snowflake"
+      },
+      "defensive_stance": {
+        "default": "mdi:shield-sword"
+      },
+      "valorous_presence": {
+        "default": "mdi:shield-sun"
+      },
+      "intimidate": {
+        "default": "mdi:emoticon-angry"
+      },
+      "tools_of_trade": {
+        "default": "mdi:domino-mask"
+      },
+      "stealth": {
+        "default": "mdi:ninja"
+      },
+      "heal": {
+        "default": "mdi:aurora"
+      },
+      "brightness": {
+        "default": "mdi:flare"
+      },
+      "protect_aura": {
+        "default": "mdi:shimmer"
+      },
+      "heal_all": {
+        "default": "mdi:hand-heart-outline"
+      }
+    },
+    "calendar": {
+      "todos": {
+        "default": "mdi:calendar-check"
+      },
+      "dailys": {
+        "default": "mdi:calendar-multiple"
       }
     },
     "sensor": {
@@ -82,6 +126,18 @@
       },
       "rewards": {
         "default": "mdi:treasure-chest"
+      },
+      "strength": {
+        "default": "mdi:arm-flex-outline"
+      },
+      "intelligence": {
+        "default": "mdi:head-snowflake-outline"
+      },
+      "perception": {
+        "default": "mdi:eye-outline"
+      },
+      "constitution": {
+        "default": "mdi:run-fast"
       }
     },
     "switch": {
@@ -89,6 +145,14 @@
         "default": "mdi:sleep-off",
         "state": {
           "on": "mdi:sleep"
+        }
+      }
+    },
+    "binary_sensor": {
+      "pending_quest": {
+        "default": "mdi:script-outline",
+        "state": {
+          "on": "mdi:script-text-outline"
         }
       }
     }
@@ -99,6 +163,30 @@
     },
     "cast_skill": {
       "service": "mdi:creation-outline"
+    },
+    "accept_quest": {
+      "service": "mdi:script-text"
+    },
+    "reject_quest": {
+      "service": "mdi:script-text"
+    },
+    "leave_quest": {
+      "service": "mdi:script-text"
+    },
+    "abort_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "cancel_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "start_quest": {
+      "service": "mdi:script-text-key"
+    },
+    "score_habit": {
+      "service": "mdi:counter"
+    },
+    "score_reward": {
+      "service": "mdi:sack"
     }
   }
 }

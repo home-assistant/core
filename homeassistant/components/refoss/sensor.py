@@ -31,6 +31,7 @@ from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
+    SENSOR_EM,
 )
 from .entity import RefossEntity
 
@@ -43,8 +44,13 @@ class RefossSensorEntityDescription(SensorEntityDescription):
     fn: Callable[[float], float] = lambda x: x
 
 
+DEVICETYPE_SENSOR: dict[str, str] = {
+    "em06": SENSOR_EM,
+    "em16": SENSOR_EM,
+}
+
 SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
-    "em06": (
+    SENSOR_EM: (
         RefossSensorEntityDescription(
             key="power",
             translation_key="power",
@@ -121,8 +127,11 @@ async def async_setup_entry(
 
         if not isinstance(device, ElectricityXMix):
             return
+
+        sensor_type = DEVICETYPE_SENSOR.get(device.device_type, "")
+
         descriptions: tuple[RefossSensorEntityDescription, ...] = SENSORS.get(
-            device.device_type, ()
+            sensor_type, ()
         )
 
         async_add_entities(

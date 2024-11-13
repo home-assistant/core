@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/matrix",
   "iot_class": "cloud_push",
   "loggers": ["matrix_client"],
-  "requirements": ["matrix-nio==0.25.2", "Pillow==10.4.0"]
+  "requirements": ["matrix-nio==0.25.2", "Pillow==11.0.0"]
 }

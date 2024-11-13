@@ -48,6 +48,9 @@ CAMERA_TRAITS = {
         "customName": DEVICE_NAME,
     },
     "sdm.devices.traits.CameraImage": {},
+    "sdm.devices.traits.CameraLiveStream": {
+        "supportedProtocols": ["RTSP"],
+    },
     "sdm.devices.traits.CameraEventImage": {},
     "sdm.devices.traits.CameraPerson": {},
     "sdm.devices.traits.CameraMotion": {},
@@ -57,7 +60,9 @@ BATTERY_CAMERA_TRAITS = {
         "customName": DEVICE_NAME,
     },
     "sdm.devices.traits.CameraClipPreview": {},
-    "sdm.devices.traits.CameraLiveStream": {},
+    "sdm.devices.traits.CameraLiveStream": {
+        "supportedProtocols": ["WEB_RTC"],
+    },
     "sdm.devices.traits.CameraPerson": {},
     "sdm.devices.traits.CameraMotion": {},
 }

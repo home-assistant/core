@@ -6,8 +6,8 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pytedee_async.bridge import TedeeBridge
-from pytedee_async.lock import TedeeLock
+from aiotedee.bridge import TedeeBridge
+from aiotedee.lock import TedeeLock
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN

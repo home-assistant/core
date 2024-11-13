@@ -523,10 +523,6 @@
           "description": "Duration in seconds the latch stays retracted.",
           "name": "Hold and release time"
         },
-        "inside_handles_can_open_door_configuration": {
-          "description": "A list of four booleans which indicate which inside handles can open the door.",
-          "name": "Inside handles can open door configuration"
-        },
         "lock_timeout": {
           "description": "Seconds until lock mode times out. Should only be used if operation type is `timed`.",
           "name": "Lock timeout"
@@ -534,10 +530,6 @@
         "operation_type": {
           "description": "The operation type of the lock.",
           "name": "Operation Type"
-        },
-        "outside_handles_can_open_door_configuration": {
-          "description": "A list of four booleans which indicate which outside handles can open the door.",
-          "name": "Outside handles can open door configuration"
         },
         "twist_assist": {
           "description": "Enable Twist Assist.",

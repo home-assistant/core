@@ -1,8 +1,9 @@
 """Tests for La Marzocco switches."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -25,15 +26,15 @@ from tests.common import MockConfigEntry
     (
         "entity_name",
         "method_name",
+        "kwargs",
     ),
     [
+        ("", "set_power", {}),
+        ("_steam_boiler", "set_steam", {}),
         (
-            "",
-            "set_power",
-        ),
-        (
-            "_steam_boiler",
-            "set_steam",
+            "_smart_standby_enabled",
+            "set_smart_standby",
+            {"mode": "LastBrewing", "minutes": 10},
         ),
     ],
 )
@@ -45,6 +46,7 @@ async def test_switches(
     snapshot: SnapshotAssertion,
     entity_name: str,
     method_name: str,
+    kwargs: dict[str, Any],
 ) -> None:
     """Test the La Marzocco switches."""
     await async_init_integration(hass, mock_config_entry)
@@ -71,7 +73,7 @@ async def test_switches(
     )
 
     assert len(control_fn.mock_calls) == 1
-    control_fn.assert_called_once_with(False)
+    control_fn.assert_called_once_with(enabled=False, **kwargs)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -83,7 +85,7 @@ async def test_switches(
     )
 
     assert len(control_fn.mock_calls) == 2
-    control_fn.assert_called_with(True)
+    control_fn.assert_called_with(enabled=True, **kwargs)
 
 
 async def test_device(

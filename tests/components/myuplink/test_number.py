@@ -14,9 +14,9 @@ from homeassistant.helpers import entity_registry as er
 TEST_PLATFORM = Platform.NUMBER
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
-ENTITY_ID = "number.gotham_city_degree_minutes"
-ENTITY_FRIENDLY_NAME = "Gotham City Degree minutes"
-ENTITY_UID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940"
+ENTITY_ID = "number.gotham_city_heating_offset_climate_system_1"
+ENTITY_FRIENDLY_NAME = "Gotham City Heating offset climate system 1"
+ENTITY_UID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-47011"
 
 
 async def test_entity_registry(
@@ -36,17 +36,16 @@ async def test_attributes(
     mock_myuplink_client: MagicMock,
     setup_platform: None,
 ) -> None:
-    """Test the switch attributes are correct."""
+    """Test the entity attributes are correct."""
 
     state = hass.states.get(ENTITY_ID)
-    assert state.state == "-875.0"
+    assert state.state == "1.0"
     assert state.attributes == {
         "friendly_name": ENTITY_FRIENDLY_NAME,
-        "min": -3000,
-        "max": 3000,
+        "min": -10.0,
+        "max": 10.0,
         "mode": "auto",
         "step": 1.0,
-        "unit_of_measurement": "DM",
     }
 
 
@@ -60,7 +59,7 @@ async def test_set_value(
     await hass.services.async_call(
         TEST_PLATFORM,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_ID, "value": -125},
+        {ATTR_ENTITY_ID: ENTITY_ID, "value": 1},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -79,7 +78,7 @@ async def test_api_failure(
         await hass.services.async_call(
             TEST_PLATFORM,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_ID, "value": -125},
+            {ATTR_ENTITY_ID: ENTITY_ID, "value": 1},
             blocking=True,
         )
     mock_myuplink_client.async_set_device_points.assert_called_once()

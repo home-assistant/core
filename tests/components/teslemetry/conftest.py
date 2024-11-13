@@ -1,4 +1,4 @@
-"""Fixtures for Tessie."""
+"""Fixtures for Teslemetry."""
 
 from __future__ import annotations
 
@@ -106,3 +106,12 @@ def mock_energy_history():
         return_value=ENERGY_HISTORY,
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_listen():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream.listen",
+    ) as mock_listen:
+        yield mock_listen

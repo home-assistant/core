@@ -65,7 +65,7 @@ def mock_solarlog_connector():
     mock_solarlog_api.update_device_list.return_value = DEVICE_LIST
     mock_solarlog_api.update_inverter_data.return_value = INVERTER_DATA
     mock_solarlog_api.device_name = {0: "Inverter 1", 1: "Inverter 2"}.get
-    mock_solarlog_api.device_enabled = {0: True, 1: False}.get
+    mock_solarlog_api.device_enabled = {0: True, 1: True}.get
     mock_solarlog_api.password.return_value = "pwd"
 
     with (

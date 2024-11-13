@@ -52,7 +52,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return CanaryOptionsFlowHandler(config_entry)
+        return CanaryOptionsFlowHandler()
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
@@ -103,10 +103,6 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CanaryOptionsFlowHandler(OptionsFlow):
     """Handle Canary client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

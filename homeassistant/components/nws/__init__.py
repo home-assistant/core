@@ -110,6 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     coordinator_forecast = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"NWS forecast station {station}",
         update_method=async_setup_update_forecast(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
@@ -121,6 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     coordinator_forecast_hourly = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"NWS forecast hourly station {station}",
         update_method=async_setup_update_forecast_hourly(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,

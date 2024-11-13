@@ -1,0 +1,12 @@
+{
+  "domain": "nordpool",
+  "name": "Nord Pool",
+  "codeowners": ["@gjohansson-ST"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nordpool",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pynordpool"],
+  "requirements": ["pynordpool==0.2.2"],
+  "single_config_entry": true
+}

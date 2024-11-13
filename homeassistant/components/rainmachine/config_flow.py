@@ -63,7 +63,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> RainMachineOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return RainMachineOptionsFlowHandler(config_entry)
+        return RainMachineOptionsFlowHandler()
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -167,10 +167,6 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class RainMachineOptionsFlowHandler(OptionsFlow):
     """Handle a RainMachine options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

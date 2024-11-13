@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Add generic hygrostat",
-        "description": "Create a entity that control the humidity via a switch and sensor.",
+        "description": "Create a humidifier entity that control the humidity via a switch and sensor.",
         "data": {
           "device_class": "Device class",
           "dry_tolerance": "Dry tolerance",

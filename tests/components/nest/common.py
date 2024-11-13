@@ -30,6 +30,7 @@ CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
 CLOUD_PROJECT_ID = "cloud-id-9876"
 SUBSCRIBER_ID = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
+SUBSCRIPTION_NAME = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
 
 
 @dataclass
@@ -86,6 +87,17 @@ TEST_CONFIG_ENTRY_LEGACY = NestTestConfig(
     },
 )
 
+TEST_CONFIG_NEW_SUBSCRIPTION = NestTestConfig(
+    config_entry_data={
+        "sdm": {},
+        "project_id": PROJECT_ID,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "subscription_name": SUBSCRIPTION_NAME,
+        "auth_implementation": "imported-cred",
+    },
+    credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
+)
+
 
 class FakeSubscriber(GoogleNestSubscriber):
     """Fake subscriber that supplies a FakeDeviceManager."""
@@ -95,6 +107,7 @@ class FakeSubscriber(GoogleNestSubscriber):
     def __init__(self) -> None:  # pylint: disable=super-init-not-called
         """Initialize Fake Subscriber."""
         self._device_manager = DeviceManager()
+        self._subscriber_name = "fake-name"
 
     def set_update_callback(self, target: Callable[[EventMessage], Awaitable[None]]):
         """Capture the callback set by Home Assistant."""

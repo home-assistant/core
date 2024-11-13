@@ -109,6 +109,7 @@ async def async_setup_platform(
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
+                None,
                 calendar=calendar,
                 days=days,
                 include_all_day=True,
@@ -126,6 +127,7 @@ async def async_setup_platform(
             entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             coordinator = CalDavUpdateCoordinator(
                 hass,
+                None,
                 calendar=calendar,
                 days=days,
                 include_all_day=False,
@@ -152,6 +154,7 @@ async def async_setup_entry(
                 async_generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
                 CalDavUpdateCoordinator(
                     hass,
+                    entry,
                     calendar=calendar,
                     days=CONFIG_ENTRY_DEFAULT_DAYS,
                     include_all_day=True,
@@ -204,7 +207,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if self._supports_offset:
             self._attr_extra_state_attributes = {
                 "offset_reached": is_offset_reached(
-                    self._event.start_datetime_local, self.coordinator.offset
+                    self._event.start_datetime_local,
+                    self.coordinator.offset,  # type: ignore[arg-type]
                 )
                 if self._event
                 else False

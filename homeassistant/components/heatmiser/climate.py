@@ -1,11 +1,11 @@
-"""Support for the PRT Heatmiser themostats using the V3 protocol."""
+"""Support for the PRT Heatmiser thermostats using the V3 protocol."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from heatmiserV3 import connection, heatmiser
+from heatmiserv3 import connection, heatmiser
 import voluptuous as vol
 
 from homeassistant.components.climate import (

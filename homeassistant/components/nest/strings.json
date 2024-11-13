@@ -26,10 +26,24 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "pubsub": {
-        "title": "Configure Google Cloud",
-        "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
+        "title": "Configure Google Cloud Pub/Sub",
+        "description": "Home Assistant uses Cloud Pub/Sub receive realtime Nest device updates. Nest servers publish updates to a Pub/Sub topic and Home Assistant receives the updates through a Pub/Sub subscription.\n\n1. Visit the [Device Access Console]({device_access_console_url}) and ensure a Pub/Sub topic is configured.\n2. Visit the [Cloud Console]({url}) to find your Google Cloud Project ID and confirm it is correct below.\n3. The next step will attempt to auto-discover Pub/Sub topics and subscriptions.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "data": {
           "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
+        }
+      },
+      "pubsub_topic": {
+        "title": "Configure Cloud Pub/Sub topic",
+        "description": "Nest devices publish updates on a Cloud Pub/Sub topic. Select the Pub/Sub topic below that is the same as the [Device Access Console]({device_access_console_url}). See the integration documentation for [more info]({more_info_url}).",
+        "data": {
+          "topic_name": "Pub/Sub topic Name"
+        }
+      },
+      "pubsub_subscription": {
+        "title": "Configure Cloud Pub/Sub subscription",
+        "description": "Home Assistant receives realtime Nest device updates with a Cloud Pub/Sub subscription for topic `{topic}`.\n\nSelect an existing subscription below if one already exists, or the next step will create a new one for you. See the integration documentation for [more info]({more_info_url}).",
+        "data": {
+          "subscription_name": "Pub/Sub subscription Name"
         }
       },
       "reauth_confirm": {
@@ -40,7 +54,9 @@
     "error": {
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
       "wrong_project_id": "Please enter a valid Cloud Project ID (was same as Device Access Project ID)",
-      "subscriber_error": "Unknown subscriber error, see logs"
+      "subscriber_error": "Unknown subscriber error, see logs",
+      "no_pubsub_topics": "No eligible Pub/Sub topics found, please ensure Device Access Console has a Pub/Sub topic.",
+      "pubsub_api_error": "Unknown error talking to Cloud Pub/Sub, see logs"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",

@@ -14,12 +14,14 @@ from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
 from homeassistant.components.reolink.host import (
     FIRST_ONVIF_LONG_POLL_TIMEOUT,
     FIRST_ONVIF_TIMEOUT,
+    FIRST_TCP_PUSH_TIMEOUT,
     LONG_POLL_COOLDOWN,
     LONG_POLL_ERROR_COOLDOWN,
     POLL_INTERVAL_NO_PUSH,
 )
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,6 +31,56 @@ from homeassistant.util.aiohttp import MockRequest
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
+
+
+async def test_setup_with_tcp_push(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test successful setup of the integration with TCP push callbacks."""
+    reolink_connect.baichuan.events_active = True
+    reolink_connect.baichuan.subscribe_events.reset_mock(side_effect=True)
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    freezer.tick(timedelta(seconds=FIRST_TCP_PUSH_TIMEOUT))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # ONVIF push subscription not called
+    assert not reolink_connect.subscribe.called
+
+    reolink_connect.baichuan.events_active = False
+    reolink_connect.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
+
+
+async def test_unloading_with_tcp_push(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test successful unloading of the integration with TCP push callbacks."""
+    reolink_connect.baichuan.events_active = True
+    reolink_connect.baichuan.subscribe_events.reset_mock(side_effect=True)
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    reolink_connect.baichuan.unsubscribe_events.side_effect = ReolinkError("Test error")
+
+    # Unload the config entry
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    reolink_connect.baichuan.events_active = False
+    reolink_connect.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
+    reolink_connect.baichuan.unsubscribe_events.reset_mock(side_effect=True)
 
 
 async def test_webhook_callback(
@@ -402,3 +454,8 @@ async def test_diagnostics_event_connection(
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag["event connection"] == "ONVIF push"
+
+    # set TCP push as active
+    reolink_connect.baichuan.events_active = True
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+    assert diag["event connection"] == "TCP push"

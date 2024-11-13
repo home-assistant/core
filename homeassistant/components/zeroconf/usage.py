@@ -4,7 +4,7 @@ from typing import Any
 
 import zeroconf
 
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 
 from .models import HaZeroconf
 
@@ -16,14 +16,14 @@ def install_multiple_zeroconf_catcher(hass_zc: HaZeroconf) -> None:
     """
 
     def new_zeroconf_new(self: zeroconf.Zeroconf, *k: Any, **kw: Any) -> HaZeroconf:
-        report(
+        report_usage(
             (
                 "attempted to create another Zeroconf instance. Please use the shared"
                 " Zeroconf via await"
                 " homeassistant.components.zeroconf.async_get_instance(hass)"
             ),
             exclude_integrations={"zeroconf"},
-            error_if_core=False,
+            core_behavior=ReportBehavior.LOG,
         )
         return hass_zc
 

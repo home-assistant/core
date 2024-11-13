@@ -41,6 +41,7 @@ from .exceptions import (
 )
 
 DEFAULT_TIMEOUT = 30
+FIRST_TCP_PUSH_TIMEOUT = 10
 FIRST_ONVIF_TIMEOUT = 10
 FIRST_ONVIF_LONG_POLL_TIMEOUT = 90
 SUBSCRIPTION_RENEW_THRESHOLD = 300
@@ -105,6 +106,7 @@ class ReolinkHost:
         self._long_poll_received: bool = False
         self._long_poll_error: bool = False
         self._cancel_poll: CALLBACK_TYPE | None = None
+        self._cancel_tcp_push_check: CALLBACK_TYPE | None = None
         self._cancel_onvif_check: CALLBACK_TYPE | None = None
         self._cancel_long_poll_check: CALLBACK_TYPE | None = None
         self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
@@ -220,49 +222,14 @@ class ReolinkHost:
         else:
             self._unique_id = format_mac(self._api.mac_address)
 
-        if self._onvif_push_supported:
-            try:
-                await self.subscribe()
-            except ReolinkError:
-                self._onvif_push_supported = False
-                self.unregister_webhook()
-                await self._api.unsubscribe()
-            else:
-                if self._api.supported(None, "initial_ONVIF_state"):
-                    _LOGGER.debug(
-                        "Waiting for initial ONVIF state on webhook '%s'",
-                        self._webhook_url,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "Camera model %s most likely does not push its initial state"
-                        " upon ONVIF subscription, do not check",
-                        self._api.model,
-                    )
-                self._cancel_onvif_check = async_call_later(
-                    self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
-                )
-        if not self._onvif_push_supported:
-            _LOGGER.debug(
-                "Camera model %s does not support ONVIF push, using ONVIF long polling instead",
-                self._api.model,
+        try:
+            await self._api.baichuan.subscribe_events()
+        except ReolinkError:
+            await self._async_check_tcp_push()
+        else:
+            self._cancel_tcp_push_check = async_call_later(
+                self._hass, FIRST_TCP_PUSH_TIMEOUT, self._async_check_tcp_push
             )
-            try:
-                await self._async_start_long_polling(initial=True)
-            except NotSupportedError:
-                _LOGGER.debug(
-                    "Camera model %s does not support ONVIF long polling, using fast polling instead",
-                    self._api.model,
-                )
-                self._onvif_long_poll_supported = False
-                await self._api.unsubscribe()
-                await self._async_poll_all_motion()
-            else:
-                self._cancel_long_poll_check = async_call_later(
-                    self._hass,
-                    FIRST_ONVIF_LONG_POLL_TIMEOUT,
-                    self._async_check_onvif_long_poll,
-                )
 
         ch_list: list[int | None] = [None]
         if self._api.is_nvr:
@@ -293,6 +260,67 @@ class ReolinkHost:
                 )
             else:
                 ir.async_delete_issue(self._hass, DOMAIN, f"firmware_update_{key}")
+
+    async def _async_check_tcp_push(self, *_) -> None:
+        """Check the TCP push subscription."""
+        if self._api.baichuan.events_active:
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            self._cancel_tcp_push_check = None
+            return
+
+        _LOGGER.debug(
+            "Reolink %s, did not receive initial TCP push event after %i seconds",
+            self._api.nvr_name,
+            FIRST_TCP_PUSH_TIMEOUT,
+        )
+
+        if self._onvif_push_supported:
+            try:
+                await self.subscribe()
+            except ReolinkError:
+                self._onvif_push_supported = False
+                self.unregister_webhook()
+                await self._api.unsubscribe()
+            else:
+                if self._api.supported(None, "initial_ONVIF_state"):
+                    _LOGGER.debug(
+                        "Waiting for initial ONVIF state on webhook '%s'",
+                        self._webhook_url,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Camera model %s most likely does not push its initial state"
+                        " upon ONVIF subscription, do not check",
+                        self._api.model,
+                    )
+                self._cancel_onvif_check = async_call_later(
+                    self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
+                )
+
+        # start long polling if ONVIF push failed immediately
+        if not self._onvif_push_supported:
+            _LOGGER.debug(
+                "Camera model %s does not support ONVIF push, using ONVIF long polling instead",
+                self._api.model,
+            )
+            try:
+                await self._async_start_long_polling(initial=True)
+            except NotSupportedError:
+                _LOGGER.debug(
+                    "Camera model %s does not support ONVIF long polling, using fast polling instead",
+                    self._api.model,
+                )
+                self._onvif_long_poll_supported = False
+                await self._api.unsubscribe()
+                await self._async_poll_all_motion()
+            else:
+                self._cancel_long_poll_check = async_call_later(
+                    self._hass,
+                    FIRST_ONVIF_LONG_POLL_TIMEOUT,
+                    self._async_check_onvif_long_poll,
+                )
+
+        self._cancel_tcp_push_check = None
 
     async def _async_check_onvif(self, *_) -> None:
         """Check the ONVIF subscription."""
@@ -392,6 +420,16 @@ class ReolinkHost:
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
         try:
+            await self._api.baichuan.unsubscribe_events()
+        except ReolinkError as err:
+            _LOGGER.error(
+                "Reolink error while unsubscribing Baichuan from host %s:%s: %s",
+                self._api.host,
+                self._api.port,
+                err,
+            )
+
+        try:
             await self._api.unsubscribe()
         except ReolinkError as err:
             _LOGGER.error(
@@ -461,6 +499,9 @@ class ReolinkHost:
         if self._cancel_poll is not None:
             self._cancel_poll()
             self._cancel_poll = None
+        if self._cancel_tcp_push_check is not None:
+            self._cancel_tcp_push_check()
+            self._cancel_tcp_push_check = None
         if self._cancel_onvif_check is not None:
             self._cancel_onvif_check()
             self._cancel_onvif_check = None
@@ -494,8 +535,13 @@ class ReolinkHost:
 
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
+        if self._api.baichuan.events_active and self._api.subscribed(SubType.push):
+            # TCP push active, unsubscribe from ONVIF push because not needed
+            self.unregister_webhook()
+            await self._api.unsubscribe()
+
         try:
-            if self._onvif_push_supported:
+            if self._onvif_push_supported and not self._api.baichuan.events_active:
                 await self._renew(SubType.push)
 
             if self._onvif_long_poll_supported and self._long_poll_task is not None:
@@ -608,7 +654,8 @@ class ReolinkHost:
         """Use ONVIF long polling to immediately receive events."""
         # This task will be cancelled once _async_stop_long_polling is called
         while True:
-            if self._webhook_reachable:
+            if self._api.baichuan.events_active or self._webhook_reachable:
+                # TCP push or ONVIF push working, stop long polling
                 self._long_poll_task = None
                 await self._async_stop_long_polling()
                 return
@@ -642,8 +689,12 @@ class ReolinkHost:
 
     async def _async_poll_all_motion(self, *_) -> None:
         """Poll motion and AI states until the first ONVIF push is received."""
-        if self._webhook_reachable or self._long_poll_received:
-            # ONVIF push or long polling is working, stop fast polling
+        if (
+            self._api.baichuan.events_active
+            or self._webhook_reachable
+            or self._long_poll_received
+        ):
+            # TCP push, ONVIF push or long polling is working, stop fast polling
             self._cancel_poll = None
             return
 
@@ -747,6 +798,8 @@ class ReolinkHost:
     @property
     def event_connection(self) -> str:
         """Type of connection to receive events."""
+        if self._api.baichuan.events_active:
+            return "TCP push"
         if self._webhook_reachable:
             return "ONVIF push"
         if self._long_poll_received:

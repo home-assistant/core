@@ -10,6 +10,19 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN, LOGGER, TeslemetryState
 
 
+def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+    """Flatten the data structure."""
+    result = {}
+    for key, value in data.items():
+        if parent:
+            key = f"{parent}_{key}"
+        if isinstance(value, dict):
+            result.update(flatten(value, key))
+        else:
+            result[key] = value
+    return result
+
+
 async def wake_up_vehicle(vehicle) -> None:
     """Wake up a vehicle."""
     async with vehicle.wakelock:

@@ -83,6 +83,18 @@ def mock_hub_status_prod_awning() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_hub_status_prod_dimmer() -> Generator[AsyncMock]:
+    """Override WebControlPro._getStatus."""
+    with patch(
+        "wmspro.webcontrol.WebControlPro._getStatus",
+        return_value=load_json_object_fixture(
+            "example_status_prod_dimmer.json", DOMAIN
+        ),
+    ) as mock_dest_refresh:
+        yield mock_dest_refresh
+
+
+@pytest.fixture
 def mock_dest_refresh() -> Generator[AsyncMock]:
     """Override Destination.refresh."""
     with patch(

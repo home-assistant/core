@@ -54,10 +54,6 @@ DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 class ReolinkOptionsFlowHandler(OptionsFlow):
     """Handle Reolink options."""
 
-    def __init__(self, config_entry: ReolinkConfigEntry) -> None:
-        """Initialize ReolinkOptionsFlowHandler."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -112,7 +108,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ReolinkConfigEntry,
     ) -> ReolinkOptionsFlowHandler:
         """Options callback for Reolink."""
-        return ReolinkOptionsFlowHandler(config_entry)
+        return ReolinkOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

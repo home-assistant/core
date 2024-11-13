@@ -12,6 +12,7 @@ from homeassistant.components import sensor, template
 from homeassistant.components.template.sensor import TriggerSensorEntity
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
@@ -983,6 +984,7 @@ async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(
                     "test": {
                         "value_template": "{{ 1 }}",
                         "entity_picture_template": "{{ ((states.sensor.test.attributes['entity_picture'] or 0) | int) + 1 }}",
+                        "friendly_name_template": "{{ ((states.sensor.test.attributes['friendly_name'] or 0) | int) + 1 }}",
                     },
                 },
             }
@@ -1007,7 +1009,8 @@ async def test_self_referencing_entity_picture_loop(
 
     state = hass.states.get("sensor.test")
     assert int(state.state) == 1
-    assert state.attributes[ATTR_ENTITY_PICTURE] == 2
+    assert state.attributes[ATTR_ENTITY_PICTURE] == "3"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "3"
 
     await hass.async_block_till_done()
     assert int(state.state) == 1

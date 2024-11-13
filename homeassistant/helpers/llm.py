@@ -177,11 +177,6 @@ class APIInstance:
         else:
             raise HomeAssistantError(f'Tool "{tool_input.tool_name}" not found')
 
-        tool_input = ToolInput(
-            tool_name=tool_input.tool_name,
-            tool_args=tool.parameters(tool_input.tool_args),
-        )
-
         return await tool.async_call(self.api.hass, tool_input, self.llm_context)
 
 
@@ -284,6 +279,7 @@ class AssistAPI(API):
         intent.INTENT_TOGGLE,
         intent.INTENT_GET_CURRENT_DATE,
         intent.INTENT_GET_CURRENT_TIME,
+        intent.INTENT_RESPOND,
     }
 
     def __init__(self, hass: HomeAssistant) -> None:

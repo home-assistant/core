@@ -58,7 +58,16 @@ SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda api, ch: api.ptz_pan_position(ch),
-        supported=lambda api, ch: api.supported(ch, "ptz_position"),
+        supported=lambda api, ch: api.supported(ch, "ptz_pan_position"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="ptz_tilt_position",
+        cmd_key="GetPtzCurPos",
+        translation_key="ptz_tilt_position",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, ch: api.ptz_tilt_position(ch),
+        supported=lambda api, ch: api.supported(ch, "ptz_tilt_position"),
     ),
     ReolinkSensorEntityDescription(
         key="battery_percent",

@@ -23,7 +23,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -58,15 +57,18 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _host: str
+
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> FritzBoxToolsOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return FritzBoxToolsOptionsFlowHandler(config_entry)
+        return FritzBoxToolsOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize FRITZ!Box Tools flow."""
-        self._host: str | None = None
         self._name: str = ""
         self._password: str = ""
         self._use_tls: bool = False
@@ -111,7 +113,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_check_configured_entry(self) -> ConfigEntry | None:
         """Check if entry is configured."""
-        assert self._host
         current_host = await self.hass.async_add_executor_job(
             socket.gethostbyname, self._host
         )
@@ -153,15 +154,17 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
-        self._host = ssdp_location.hostname
+        host = ssdp_location.hostname
+        if not host or ipaddress.ip_address(host).is_link_local:
+            return self.async_abort(reason="ignore_ip6_link_local")
+
+        self._host = host
         self._name = (
             discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
             or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
         )
 
-        if not self._host or ipaddress.ip_address(self._host).is_link_local:
-            return self.async_abort(reason="ignore_ip6_link_local")
-
+        uuid: str | None
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
@@ -393,7 +396,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
     """Handle an options flow."""
 
     async def async_step_init(
@@ -404,19 +407,18 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        options = self.config_entry.options
         data_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_CONSIDER_HOME,
-                    default=self.options.get(
+                    default=options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
                 vol.Optional(
                     CONF_OLD_DISCOVERY,
-                    default=self.options.get(
-                        CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
-                    ),
+                    default=options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY),
                 ): bool,
             }
         )

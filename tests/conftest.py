@@ -36,6 +36,7 @@ import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
+from syrupy.session import SnapshotSession
 
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
@@ -92,7 +93,7 @@ from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_han
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension
+from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -148,6 +149,11 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    # Override default finish to detect unused snapshots despite xdist
+    # Temporary workaround until it is finalised inside syrupy
+    # See https://github.com/syrupy-project/syrupy/pull/901
+    SnapshotSession.finish = override_syrupy_finish
 
 
 def pytest_runtest_setup() -> None:
@@ -1766,10 +1772,30 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock]:
-    """Mock as if we're calling code from inside an integration."""
+def integration_frame_path() -> str:
+    """Return the path to the integration frame.
+
+    Can be parametrized with
+    `@pytest.mark.parametrize("integration_frame_path", ["path_to_frame"])`
+
+    - "custom_components/XYZ" for a custom integration
+    - "homeassistant/components/XYZ" for a core integration
+    - "homeassistant/XYZ" for core (no integration)
+
+    Defaults to core component `hue`
+    """
+    return "homeassistant/components/hue"
+
+
+@pytest.fixture
+def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
+    """Mock where we are calling code from.
+
+    Defaults to calling from `hue` core integration, and can be parametrized
+    with `integration_frame_path`.
+    """
     correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
+        filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )

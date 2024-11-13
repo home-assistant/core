@@ -33,5 +33,13 @@
       "title": "[%key:component::russound_rio::issues::deprecated_yaml_import_issue_cannot_connect::title%]",
       "description": "[%key:component::russound_rio::issues::deprecated_yaml_import_issue_cannot_connect::description%]"
     }
+  },
+  "exceptions": {
+    "entry_cannot_connect": {
+      "message": "Error while connecting to {host}:{port}"
+    },
+    "command_error": {
+      "message": "Error executing {function_name} on entity {entity_id}"
+    }
   }
 }

@@ -42,29 +42,34 @@ class ReolinkBinarySensorEntityDescription(
 BINARY_PUSH_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="motion",
+        cmd_id=33,
         device_class=BinarySensorDeviceClass.MOTION,
         value=lambda api, ch: api.motion_detected(ch),
     ),
     ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="face",
         value=lambda api, ch: api.ai_detected(ch, FACE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, FACE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PERSON_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="person",
         value=lambda api, ch: api.ai_detected(ch, PERSON_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PERSON_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=VEHICLE_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="vehicle",
         value=lambda api, ch: api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="pet",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: (
@@ -74,18 +79,21 @@ BINARY_PUSH_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="animal",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PACKAGE_DETECTION_TYPE,
+        cmd_id=33,
         translation_key="package",
         value=lambda api, ch: api.ai_detected(ch, PACKAGE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PACKAGE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key="visitor",
+        cmd_id=33,
         translation_key="visitor",
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),

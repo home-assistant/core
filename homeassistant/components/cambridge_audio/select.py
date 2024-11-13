@@ -1,7 +1,7 @@
 """Support for Cambridge Audio select entities."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from aiostreammagic import StreamMagicClient
 from aiostreammagic.models import DisplayBrightness
@@ -19,8 +19,32 @@ from .entity import CambridgeAudioEntity
 class CambridgeAudioSelectEntityDescription(SelectEntityDescription):
     """Describes Cambridge Audio select entity."""
 
+    options_fn: Callable[[StreamMagicClient], list[str]] = field(default=lambda _: [])
+    load_fn: Callable[[StreamMagicClient], bool] = field(default=lambda _: True)
     value_fn: Callable[[StreamMagicClient], str | None]
     set_value_fn: Callable[[StreamMagicClient, str], Awaitable[None]]
+
+
+async def _audio_output_set_value_fn(client: StreamMagicClient, value: str) -> None:
+    """Set the audio output using the display name."""
+    audio_output_id = next(
+        (output.id for output in client.audio_output.outputs if value == output.name),
+        None,
+    )
+    assert audio_output_id is not None
+    await client.set_audio_output(audio_output_id)
+
+
+def _audio_output_value_fn(client: StreamMagicClient) -> str | None:
+    """Convert the current audio output id to name."""
+    return next(
+        (
+            output.name
+            for output in client.audio_output.outputs
+            if client.state.audio_output == output.id
+        ),
+        None,
+    )
 
 
 CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
@@ -34,6 +58,17 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
             DisplayBrightness(value)
         ),
     ),
+    CambridgeAudioSelectEntityDescription(
+        key="audio_output",
+        translation_key="audio_output",
+        entity_category=EntityCategory.CONFIG,
+        options_fn=lambda client: [
+            output.name for output in client.audio_output.outputs
+        ],
+        load_fn=lambda client: len(client.audio_output.outputs) > 0,
+        value_fn=_audio_output_value_fn,
+        set_value_fn=_audio_output_set_value_fn,
+    ),
 )
 
 
@@ -46,7 +81,9 @@ async def async_setup_entry(
 
     client: StreamMagicClient = entry.runtime_data
     entities: list[CambridgeAudioSelect] = [
-        CambridgeAudioSelect(client, description) for description in CONTROL_ENTITIES
+        CambridgeAudioSelect(client, description)
+        for description in CONTROL_ENTITIES
+        if description.load_fn(client)
     ]
     async_add_entities(entities)
 
@@ -65,6 +102,9 @@ class CambridgeAudioSelect(CambridgeAudioEntity, SelectEntity):
         super().__init__(client)
         self.entity_description = description
         self._attr_unique_id = f"{client.info.unit_id}-{description.key}"
+        options_fn = description.options_fn(client)
+        if options_fn:
+            self._attr_options = options_fn
 
     @property
     def current_option(self) -> str | None:

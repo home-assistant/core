@@ -56,6 +56,7 @@ INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
 INTENT_TIMER_STATUS = "HassTimerStatus"
 INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
+INTENT_RESPOND = "HassRespond"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 

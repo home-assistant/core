@@ -489,3 +489,96 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         )
     # Test we only log once
     assert "Entities should implement the 'alarm_state' property and" not in caplog.text
+
+
+async def test_alarm_control_panel_deprecated_state_does_not_break_state(
+    hass: HomeAssistant,
+    code_format: CodeFormat | None,
+    supported_features: AlarmControlPanelEntityFeature,
+    code_arm_required: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test using _attr_state attribute does not break state."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
+        )
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
+        """Mocked alarm control entity."""
+
+        def __init__(
+            self,
+            supported_features: AlarmControlPanelEntityFeature = AlarmControlPanelEntityFeature(
+                0
+            ),
+            code_format: CodeFormat | None = None,
+            code_arm_required: bool = True,
+        ) -> None:
+            """Initialize the alarm control."""
+            self._attr_state = "armed_away"
+            super().__init__(supported_features, code_format, code_arm_required)
+
+        def alarm_disarm(self, code: str | None = None) -> None:
+            """Mock alarm disarm calls."""
+            self._attr_state = "disarmed"
+
+    entity = MockLegacyAlarmControlPanel(
+        supported_features=supported_features,
+        code_format=code_format,
+        code_arm_required=code_arm_required,
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test alarm control panel platform via config entry."""
+        async_add_entities([entity])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{ALARM_CONTROL_PANEL_DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    with patch.object(
+        MockLegacyAlarmControlPanel,
+        "__module__",
+        "tests.custom_components.test.alarm_control_panel",
+    ):
+        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "armed_away"
+
+    with patch.object(
+        MockLegacyAlarmControlPanel,
+        "__module__",
+        "tests.custom_components.test.alarm_control_panel",
+    ):
+        await help_test_async_alarm_control_panel_service(
+            hass, entity.entity_id, SERVICE_ALARM_DISARM
+        )
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "disarmed"

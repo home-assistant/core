@@ -171,8 +171,9 @@ class Light(HomeAccessory):
         events = []
         service = SERVICE_TURN_ON
         params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        has_on = CHAR_ON in char_values
 
-        if CHAR_ON in char_values:
+        if has_on:
             if not char_values[CHAR_ON]:
                 service = SERVICE_TURN_OFF
             events.append(f"Set state to {char_values[CHAR_ON]}")
@@ -180,7 +181,10 @@ class Light(HomeAccessory):
         brightness_pct = None
         if CHAR_BRIGHTNESS in char_values:
             if char_values[CHAR_BRIGHTNESS] == 0:
-                events[-1] = "Set state to 0"
+                if has_on:
+                    events[-1] = "Set state to 0"
+                else:
+                    events.append("Set state to 0")
                 service = SERVICE_TURN_OFF
             else:
                 brightness_pct = char_values[CHAR_BRIGHTNESS]

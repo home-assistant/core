@@ -198,6 +198,16 @@ CHIME_SELECT_ENTITIES = (
         method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
+        key="vehicle_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="vehicle_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "vehicle" in chime.chime_event_types,
+        value=lambda chime: ChimeToneEnum(chime.tone("vehicle")).name,
+        method=lambda chime, name: chime.set_tone("vehicle", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
         key="visitor_tone",
         cmd_key="GetDingDongCfg",
         translation_key="visitor_tone",
@@ -272,7 +282,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
         try:
             option = self.entity_description.value(self._host.api, self._channel)
-        except ValueError:
+        except (ValueError, KeyError):
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False
@@ -314,7 +324,7 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         """Return the current option."""
         try:
             option = self.entity_description.value(self._chime)
-        except ValueError:
+        except (ValueError, KeyError):
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False

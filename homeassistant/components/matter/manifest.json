@@ -1,6 +1,7 @@
 {
   "domain": "matter",
   "name": "Matter (BETA)",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
   "dependencies": ["websocket_api"],

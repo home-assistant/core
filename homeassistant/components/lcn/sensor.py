@@ -126,7 +126,11 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         ):
             return
 
-        self._attr_native_value = input_obj.get_value().to_var_unit(self.unit)
+        is_regulator = self.variable.name in SETPOINTS
+        self._attr_native_value = input_obj.get_value().to_var_unit(
+            self.unit, is_regulator
+        )
+
         self.async_write_ha_state()
 
 

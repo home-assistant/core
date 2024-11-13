@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
@@ -30,9 +30,11 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> WLEDOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> WLEDOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return WLEDOptionsFlowHandler(config_entry)
+        return WLEDOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -117,7 +119,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await wled.update()
 
 
-class WLEDOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class WLEDOptionsFlowHandler(OptionsFlow):
     """Handle WLED options."""
 
     async def async_step_init(
@@ -133,7 +135,7 @@ class WLEDOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_KEEP_MAIN_LIGHT,
-                        default=self.options.get(
+                        default=self.config_entry.options.get(
                             CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
                         ),
                     ): bool,

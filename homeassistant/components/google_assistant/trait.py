@@ -2706,6 +2706,21 @@ class SensorStateTrait(_Trait):
         ),
     }
 
+    binary_sensor_types = {
+        binary_sensor.BinarySensorDeviceClass.CO: (
+            "CarbonMonoxideLevel",
+            ["carbon monoxide detected", "no carbon monoxide detected", "unknown"],
+        ),
+        binary_sensor.BinarySensorDeviceClass.SMOKE: (
+            "SmokeLevel",
+            ["smoke detected", "no smoke detected", "unknown"],
+        ),
+        binary_sensor.BinarySensorDeviceClass.MOISTURE: (
+            "WaterLeak",
+            ["leak", "no leak", "unknown"],
+        ),
+    }
+
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
@@ -2728,24 +2743,37 @@ class SensorStateTrait(_Trait):
     @classmethod
     def supported(cls, domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == sensor.DOMAIN and device_class in cls.sensor_types
+        return (domain == sensor.DOMAIN and device_class in cls.sensor_types) or (
+            domain == binary_sensor.DOMAIN and device_class in cls.binary_sensor_types
+        )
 
     def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
 
-        if device_class is None or data is None:
-            return {}
+        def create_sensor_state(
+            name: str,
+            raw_value_unit: str | None = None,
+            available_states: list[str] | None = None,
+        ) -> dict[str, Any]:
+            sensor_state: dict[str, Any] = {
+                "name": name,
+            }
+            if raw_value_unit:
+                sensor_state["numericCapabilities"] = {"rawValueUnit": raw_value_unit}
+            if available_states:
+                sensor_state["descriptiveCapabilities"] = {
+                    "availableStates": available_states
+                }
+            return {"sensorStatesSupported": [sensor_state]}
 
-        sensor_state = {
-            "name": data[0],
-            "numericCapabilities": {"rawValueUnit": data[1]},
-        }
-
-        if device_class == sensor.SensorDeviceClass.AQI:
-            sensor_state["descriptiveCapabilities"] = {
-                "availableStates": [
+        if self.state.domain == sensor.DOMAIN:
+            sensor_data = self.sensor_types.get(device_class)
+            if device_class is None or sensor_data is None:
+                return {}
+            available_states: list[str] | None = None
+            if device_class == sensor.SensorDeviceClass.AQI:
+                available_states = [
                     "healthy",
                     "moderate",
                     "unhealthy for sensitive groups",
@@ -2753,30 +2781,53 @@ class SensorStateTrait(_Trait):
                     "very unhealthy",
                     "hazardous",
                     "unknown",
-                ],
-            }
-
-        return {"sensorStatesSupported": [sensor_state]}
+                ]
+            return create_sensor_state(sensor_data[0], sensor_data[1], available_states)
+        binary_sensor_data = self.binary_sensor_types.get(device_class)
+        if device_class is None or binary_sensor_data is None:
+            return {}
+        return create_sensor_state(
+            binary_sensor_data[0], available_states=binary_sensor_data[1]
+        )
 
     def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
 
-        if device_class is None or data is None:
+        def create_sensor_state(
+            name: str, raw_value: float | None = None, current_state: str | None = None
+        ) -> dict[str, Any]:
+            sensor_state: dict[str, Any] = {
+                "name": name,
+                "rawValue": raw_value,
+            }
+            if current_state:
+                sensor_state["currentSensorState"] = current_state
+            return {"currentSensorStateData": [sensor_state]}
+
+        if self.state.domain == sensor.DOMAIN:
+            sensor_data = self.sensor_types.get(device_class)
+            if device_class is None or sensor_data is None:
+                return {}
+            try:
+                value = float(self.state.state)
+            except ValueError:
+                value = None
+            if self.state.state == STATE_UNKNOWN:
+                value = None
+            current_state: str | None = None
+            if device_class == sensor.SensorDeviceClass.AQI:
+                current_state = self._air_quality_description_for_aqi(value)
+            return create_sensor_state(sensor_data[0], value, current_state)
+
+        binary_sensor_data = self.binary_sensor_types.get(device_class)
+        if device_class is None or binary_sensor_data is None:
             return {}
-
-        try:
-            value = float(self.state.state)
-        except ValueError:
-            value = None
-        if self.state.state == STATE_UNKNOWN:
-            value = None
-        sensor_data = {"name": data[0], "rawValue": value}
-
-        if device_class == sensor.SensorDeviceClass.AQI:
-            sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
-                value
-            )
-
-        return {"currentSensorStateData": [sensor_data]}
+        value = {
+            STATE_ON: 0,
+            STATE_OFF: 1,
+            STATE_UNKNOWN: 2,
+        }[self.state.state]
+        return create_sensor_state(
+            binary_sensor_data[0], current_state=binary_sensor_data[1][value]
+        )

@@ -603,7 +603,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if self.update_sleep_period():
+        if self.update_sleep_period() or self.hass.is_stopping:
             return
 
         if self.sleep_period:

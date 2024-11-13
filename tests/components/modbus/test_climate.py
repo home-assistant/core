@@ -20,6 +20,10 @@ from homeassistant.components.climate import (
     FAN_OFF,
     FAN_ON,
     FAN_TOP,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -27,6 +31,7 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
@@ -66,15 +71,17 @@ from homeassistant.components.modbus.const import (
     DataType,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
@@ -152,13 +159,13 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_HVAC_MODE_REGISTER: {
                         CONF_ADDRESS: 11,
                         CONF_HVAC_MODE_VALUES: {
-                            "state_off": 0,
-                            "state_heat": 1,
-                            "state_cool": 2,
-                            "state_heat_cool": 3,
-                            "state_dry": 4,
-                            "state_fan_only": 5,
-                            "state_auto": 6,
+                            CONF_HVAC_MODE_OFF: 0,
+                            CONF_HVAC_MODE_HEAT: 1,
+                            CONF_HVAC_MODE_COOL: 2,
+                            CONF_HVAC_MODE_HEAT_COOL: 3,
+                            CONF_HVAC_MODE_DRY: 4,
+                            CONF_HVAC_MODE_FAN_ONLY: 5,
+                            CONF_HVAC_MODE_AUTO: 6,
                         },
                     },
                 }
@@ -176,13 +183,13 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                         CONF_ADDRESS: 11,
                         CONF_WRITE_REGISTERS: True,
                         CONF_HVAC_MODE_VALUES: {
-                            "state_off": 0,
-                            "state_heat": 1,
-                            "state_cool": 2,
-                            "state_heat_cool": 3,
-                            "state_dry": 4,
-                            "state_fan_only": 5,
-                            "state_auto": 6,
+                            CONF_HVAC_MODE_OFF: 0,
+                            CONF_HVAC_MODE_HEAT: 1,
+                            CONF_HVAC_MODE_COOL: 2,
+                            CONF_HVAC_MODE_HEAT_COOL: 3,
+                            CONF_HVAC_MODE_DRY: 4,
+                            CONF_HVAC_MODE_FAN_ONLY: 5,
+                            CONF_HVAC_MODE_AUTO: 6,
                         },
                     },
                 }
@@ -501,7 +508,10 @@ async def test_service_climate_update(
     """Run test for service homeassistant.update_entity."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == result
@@ -616,7 +626,10 @@ async def test_service_climate_fan_update(
     """Run test for service homeassistant.update_entity."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] == result
@@ -756,7 +769,10 @@ async def test_service_climate_swing_update(
     """Run test for service homeassistant.update_entity."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == result
@@ -850,9 +866,9 @@ async def test_service_climate_set_temperature(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        "set_temperature",
+        SERVICE_SET_TEMPERATURE,
         {
-            "entity_id": ENTITY_ID,
+            ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_TEMPERATURE: temperature,
         },
         blocking=True,
@@ -961,9 +977,9 @@ async def test_service_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        "set_hvac_mode",
+        SERVICE_SET_HVAC_MODE,
         {
-            "entity_id": ENTITY_ID,
+            ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_HVAC_MODE: hvac_mode,
         },
         blocking=True,
@@ -1024,9 +1040,9 @@ async def test_service_set_fan_mode(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        "set_fan_mode",
+        SERVICE_SET_FAN_MODE,
         {
-            "entity_id": ENTITY_ID,
+            ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_FAN_MODE: fan_mode,
         },
         blocking=True,
@@ -1087,9 +1103,9 @@ async def test_service_set_swing_mode(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        "set_swing_mode",
+        SERVICE_SET_SWING_MODE,
         {
-            "entity_id": ENTITY_ID,
+            ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_SWING_MODE: swing_mode,
         },
         blocking=True,
@@ -1174,7 +1190,7 @@ async def test_no_discovery_info_climate(
     assert await async_setup_component(
         hass,
         CLIMATE_DOMAIN,
-        {CLIMATE_DOMAIN: {"platform": MODBUS_DOMAIN}},
+        {CLIMATE_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
     )
     await hass.async_block_till_done()
     assert CLIMATE_DOMAIN in hass.config.components

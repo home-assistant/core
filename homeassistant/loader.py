@@ -1556,16 +1556,18 @@ class Components:
             raise ImportError(f"Unable to load {comp_name}")
 
         # Local import to avoid circular dependencies
-        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.frame import ReportBehavior, report_usage
 
-        report(
+        report_usage(
             (
                 f"accesses hass.components.{comp_name}."
                 " This is deprecated and will stop working in Home Assistant 2025.3, it"
                 f" should be updated to import functions used from {comp_name} directly"
             ),
-            error_if_core=False,
-            log_custom_component_only=True,
+            core_behavior=ReportBehavior.IGNORE,
+            core_integration_behavior=ReportBehavior.IGNORE,
+            custom_integration_behavior=ReportBehavior.LOG,
         )
 
         wrapped = ModuleWrapper(self._hass, component)
@@ -1585,16 +1587,18 @@ class Helpers:
         helper = importlib.import_module(f"homeassistant.helpers.{helper_name}")
 
         # Local import to avoid circular dependencies
-        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.frame import ReportBehavior, report_usage
 
-        report(
+        report_usage(
             (
                 f"accesses hass.helpers.{helper_name}."
                 " This is deprecated and will stop working in Home Assistant 2025.5, it"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
-            error_if_core=False,
-            log_custom_component_only=True,
+            core_behavior=ReportBehavior.IGNORE,
+            core_integration_behavior=ReportBehavior.IGNORE,
+            custom_integration_behavior=ReportBehavior.LOG,
         )
 
         wrapped = ModuleWrapper(self._hass, helper)

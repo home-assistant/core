@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add NASweb device",
+        "description": "{nasweb_schema_img}NASweb combines the functions of a control panel and the ability to manage building automation. The device monitors the flow of information from sensors and programmable switches and stores settings, definitions and configured actions.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_internal_url": "Make sure Home Assistant has valid internal url",
+      "missing_nasweb_data": "Something isn't right with device internal configuration. Try restarting the device and HomeAssistant.",
+      "missing_status": "Did not received any status updates within the expected time window. Make sure the Home Assistant Internal URL is reachable from the NASweb device.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "config_entry_error_invalid_authentication": {
+      "message": "Invalid username/password. Most likely user changed password or was removed. Delete this entry and create new one with correct username/password."
+    },
+    "config_entry_error_internal_error": {
+      "message": "Something isn't right with device internal configuration. Try restarting the device and HomeAssistant. If the issue persists contact support at {support_email}"
+    },
+    "config_entry_error_no_status_update": {
+      "message": "Did not received any status updates within the expected time window. Make sure the Home Assistant Internal URL is reachable from the NASweb device. If the issue persists contact support at {support_email}"
+    },
+    "config_entry_error_missing_internal_url": {
+      "message": "[%key:component::nasweb::config::error::missing_internal_url%]"
+    },
+    "serial_mismatch": {
+      "message": "Connected to different NASweb device (serial number mismatch)."
+    }
+  },
+  "entity": {
+    "switch": {
+      "switch_output": {
+        "name": "Relay Switch {index}"
+      }
+    }
+  }
+}

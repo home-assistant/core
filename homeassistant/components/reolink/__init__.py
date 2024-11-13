@@ -152,6 +152,7 @@ async def async_setup_entry(
     device_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}",
         update_method=async_device_config_update,
         update_interval=DEVICE_UPDATE_INTERVAL,
@@ -159,6 +160,7 @@ async def async_setup_entry(
     firmware_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}.firmware",
         update_method=async_check_firmware_update,
         update_interval=FIRMWARE_UPDATE_INTERVAL,

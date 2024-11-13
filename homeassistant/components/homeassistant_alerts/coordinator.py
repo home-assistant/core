@@ -5,10 +5,11 @@ import logging
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
-from homeassistant.components.hassio import get_supervisor_info, is_hassio
+from homeassistant.components.hassio import get_supervisor_info
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, REQUEST_TIMEOUT, UPDATE_INTERVAL

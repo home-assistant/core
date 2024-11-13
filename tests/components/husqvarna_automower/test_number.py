@@ -4,15 +4,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
-from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.husqvarna_automower.const import (
-    DOMAIN,
-    EXECUTION_TIME_DELAY,
-)
+from homeassistant.components.husqvarna_automower.const import EXECUTION_TIME_DELAY
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -21,12 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -68,13 +60,11 @@ async def test_number_workarea_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test number commands."""
     entity_id = "number.test_mower_1_front_lawn_cutting_height"
     await setup_integration(hass, mock_config_entry)
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
     mock_automower_client.get_status.return_value = values
     mocked_method = AsyncMock()

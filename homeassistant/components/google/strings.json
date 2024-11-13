@@ -87,8 +87,8 @@
       }
     },
     "create_event": {
-      "name": "Creates event",
-      "description": "Add a new calendar event.",
+      "name": "Create event",
+      "description": "Adds a new calendar event.",
       "fields": {
         "summary": {
           "name": "Summary",

@@ -6,5 +6,13 @@
   // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
   "python.testing.pytestEnabled": false,
   // https://code.visualstudio.com/docs/python/linting#_general-settings
-  "pylint.importStrategy": "fromEnvironment"
+  "pylint.importStrategy": "fromEnvironment",
+  "json.schemas": [
+        {
+            "fileMatch": [
+                "homeassistant/components/*/manifest.json"
+            ],
+            "url": "./script/json_schemas/manifest_schema.json"
+        }
+    ]
 }

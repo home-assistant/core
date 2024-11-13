@@ -15,10 +15,10 @@ from homeassistant.components.reolink import (
     NUM_CRED_ERRORS,
 )
 from homeassistant.components.reolink.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,

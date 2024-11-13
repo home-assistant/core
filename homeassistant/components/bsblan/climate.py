@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -23,7 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import BSBLanData
+from . import BSBLanConfigEntry, BSBLanData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
 from .entity import BSBLanEntity
 
@@ -43,18 +42,12 @@ PRESET_MODES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BSBLanConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
-    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            BSBLANClimate(
-                data,
-            )
-        ]
-    )
+    data = entry.runtime_data
+    async_add_entities([BSBLANClimate(data)])
 
 
 class BSBLANClimate(BSBLanEntity, ClimateEntity):

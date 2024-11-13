@@ -123,14 +123,6 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
         """Wake up the vehicle if its asleep."""
         await wake_up_vehicle(self.vehicle)
 
-    def raise_for_read_only(self, scope: Scope) -> None:
-        """Raise an error if no command signing or a scope is not available."""
-        if self.vehicle.signing:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="command_signing"
-            )
-        super().raise_for_read_only(scope)
-
 
 class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
     """Parent class for TeslaFleet Energy Site Live entities."""

@@ -89,24 +89,6 @@
           "description": "Returns active events from start_date_time until the specified duration."
         }
       }
-    },
-    "list_events": {
-      "name": "List event",
-      "description": "Lists events on a calendar within a time range.",
-      "fields": {
-        "start_date_time": {
-          "name": "[%key:component::calendar::services::get_events::fields::start_date_time::name%]",
-          "description": "[%key:component::calendar::services::get_events::fields::start_date_time::description%]"
-        },
-        "end_date_time": {
-          "name": "[%key:component::calendar::services::get_events::fields::end_date_time::name%]",
-          "description": "[%key:component::calendar::services::get_events::fields::end_date_time::description%]"
-        },
-        "duration": {
-          "name": "[%key:component::calendar::services::get_events::fields::duration::name%]",
-          "description": "[%key:component::calendar::services::get_events::fields::duration::description%]"
-        }
-      }
     }
   },
   "issues": {

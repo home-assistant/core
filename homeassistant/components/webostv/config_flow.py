@@ -170,8 +170,6 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = config_entry.options
         self.host = config_entry.data[CONF_HOST]
         self.key = config_entry.data[CONF_CLIENT_SECRET]
 
@@ -188,7 +186,8 @@ class OptionsFlowHandler(OptionsFlow):
         if not sources_list:
             errors["base"] = "cannot_retrieve"
 
-        sources = [s for s in self.options.get(CONF_SOURCES, []) if s in sources_list]
+        option_sources = self.config_entry.options.get(CONF_SOURCES, [])
+        sources = [s for s in option_sources if s in sources_list]
         if not sources:
             sources = sources_list
 

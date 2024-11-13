@@ -66,7 +66,14 @@ def test_all() -> None:
         "DEVICE_CLASS_",
     )
     + _create_tuples(const.UnitOfApparentPower, "POWER_")
-    + _create_tuples(const.UnitOfPower, "POWER_")
+    + _create_tuples(
+        [
+            const.UnitOfPower.WATT,
+            const.UnitOfPower.KILO_WATT,
+            const.UnitOfPower.BTU_PER_HOUR,
+        ],
+        "POWER_",
+    )
     + _create_tuples(
         [
             const.UnitOfEnergy.KILO_WATT_HOUR,
