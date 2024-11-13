@@ -130,14 +130,7 @@ def own_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
     if value in DOCUMENTATION_URL_EXCEPTIONS:
         return value
-
-    parsed_url = urlparse(value)
-    documentation_url(value)
-    if parsed_url.netloc != DOCUMENTATION_URL_HOST:
-        raise vol.Invalid("Documentation url is not www.home-assistant.io")
-    if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
-        DOCUMENTATION_URL_PATH_PREFIX
-    ):
+    if not value.startswith("https://www.home-assistant.io/integrations"):
         raise vol.Invalid(
             "Documentation url does not begin with www.home-assistant.io/integrations"
         )
