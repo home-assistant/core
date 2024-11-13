@@ -88,24 +88,18 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkUpdateEntity(
-    ReolinkChannelCoordinatorEntity,
-    UpdateEntity,
-):
-    """Base update entity class for Reolink IP cameras."""
+class ReolinkUpdateBaseEntity(UpdateEntity):
+    """Base update entity class for Reolink."""
 
-    entity_description: ReolinkUpdateEntityDescription
     _attr_release_url = "https://reolink.com/download-center/"
 
     def __init__(
         self,
         reolink_data: ReolinkData,
-        channel: int,
-        entity_description: ReolinkUpdateEntityDescription,
+        channel: int | None,
     ) -> None:
         """Initialize Reolink update entity."""
-        self.entity_description = entity_description
-        super().__init__(reolink_data, channel, reolink_data.firmware_coordinator)
+        self._channel = channel
         self._cancel_update: CALLBACK_TYPE | None = None
         self._cancel_progress: CALLBACK_TYPE | None = None
         self._installing: bool = False
@@ -237,14 +231,33 @@ class ReolinkUpdateEntity(
             self._cancel_progress()
 
 
+class ReolinkUpdateEntity(
+    ReolinkChannelCoordinatorEntity,
+    ReolinkUpdateBaseEntity,
+):
+    """Base update entity class for Reolink IP cameras."""
+
+    entity_description: ReolinkUpdateEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        entity_description: ReolinkUpdateEntityDescription,
+    ) -> None:
+        """Initialize Reolink update entity."""
+        self.entity_description = entity_description
+        ReolinkChannelCoordinatorEntity.__init__(self, reolink_data, channel, reolink_data.firmware_coordinator)
+        ReolinkUpdateBaseEntity.__init__(self, reolink_data, channel)
+
+
 class ReolinkHostUpdateEntity(
     ReolinkHostCoordinatorEntity,
-    UpdateEntity,
+    ReolinkUpdateBaseEntity,
 ):
     """Update entity class for Reolink Host."""
 
     entity_description: ReolinkHostUpdateEntityDescription
-    _attr_release_url = "https://reolink.com/download-center/"
 
     def __init__(
         self,
@@ -253,133 +266,5 @@ class ReolinkHostUpdateEntity(
     ) -> None:
         """Initialize Reolink update entity."""
         self.entity_description = entity_description
-        super().__init__(reolink_data, reolink_data.firmware_coordinator)
-        self._cancel_update: CALLBACK_TYPE | None = None
-        self._cancel_progress: CALLBACK_TYPE | None = None
-        self._installing: bool = False
-        self._reolink_data = reolink_data
-
-    @property
-    def installed_version(self) -> str | None:
-        """Version currently in use."""
-        return self._host.api.sw_version
-
-    @property
-    def latest_version(self) -> str | None:
-        """Latest version available for install."""
-        new_firmware = self._host.api.firmware_update_available()
-        if not new_firmware:
-            return self.installed_version
-
-        if isinstance(new_firmware, str):
-            return new_firmware
-
-        return new_firmware.version_string
-
-    @property
-    def in_progress(self) -> bool:
-        """Update installation progress."""
-        return self._host.api.sw_upload_progress() < 100
-
-    @property
-    def update_percentage(self) ->  int | None:
-        """Update installation progress."""
-        progress = self._host.api.sw_upload_progress()
-        if progress < 100:
-            return progress
-        return None
-
-    @property
-    def supported_features(self) -> UpdateEntityFeature:
-        """Flag supported features."""
-        supported_features = UpdateEntityFeature.INSTALL
-        new_firmware = self._host.api.firmware_update_available()
-        if isinstance(new_firmware, NewSoftwareVersion):
-            supported_features |= UpdateEntityFeature.RELEASE_NOTES
-            supported_features |= UpdateEntityFeature.PROGRESS
-        return supported_features
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if self._installing or self._cancel_update is not None:
-            return True
-        return super().available
-
-    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
-        return SoftwareVersion(latest_version) > SoftwareVersion(installed_version)
-
-    async def async_release_notes(self) -> str | None:
-        """Return the release notes."""
-        new_firmware = self._host.api.firmware_update_available()
-        assert isinstance(new_firmware, NewSoftwareVersion)
-
-        return (
-            "If the install button fails, download this"
-            f" [firmware zip file]({new_firmware.download_url})."
-            " Then, follow the installation guide (PDF in the zip file).\n\n"
-            f"## Release notes\n\n{new_firmware.release_notes}"
-        )
-
-    async def async_install(
-        self, version: str | None, backup: bool, **kwargs: Any
-    ) -> None:
-        """Install the latest firmware version."""
-        self._installing = True
-        await self._pause_update_coordinator()
-        self._cancel_progress = async_call_later(
-            self.hass, POLL_PROGRESS, self._async_update_progress
-        )
-        try:
-            await self._host.api.update_firmware()
-        except ReolinkError as err:
-            raise HomeAssistantError(
-                f"Error trying to update Reolink firmware: {err}"
-            ) from err
-        finally:
-            self.async_write_ha_state()
-            self._cancel_update = async_call_later(
-                self.hass, POLL_AFTER_INSTALL, self._async_update_future
-            )
-            await self._resume_update_coordinator()
-            self._installing = False
-
-    async def _pause_update_coordinator(self) -> None:
-        """Pause updating the states using the data update coordinator (during reboots)."""
-        self._reolink_data.device_coordinator.update_interval = None
-        self._reolink_data.device_coordinator.async_set_updated_data(None)
-
-    async def _resume_update_coordinator(self) -> None:
-        """Resume updating the states using the data update coordinator (after reboots)."""
-        self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
-        await self._reolink_data.device_coordinator.async_refresh()
-
-    async def _async_update_progress(self, now: datetime | None = None) -> None:
-        """Request update."""
-        self.async_write_ha_state()
-        if self._installing:
-            self._cancel_progress = async_call_later(
-                self.hass, POLL_PROGRESS, self._async_update_progress
-            )
-
-    async def _async_update_future(self, now: datetime | None = None) -> None:
-        """Request update."""
-        try:
-            await self.async_update()
-        finally:
-            self._cancel_update = None
-
-    async def async_added_to_hass(self) -> None:
-        """Entity created."""
-        await super().async_added_to_hass()
-        self._host.firmware_ch_list.append(None)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Entity removed."""
-        await super().async_will_remove_from_hass()
-        if None in self._host.firmware_ch_list:
-            self._host.firmware_ch_list.remove(None)
-        if self._cancel_update is not None:
-            self._cancel_update()
-        if self._cancel_progress is not None:
-            self._cancel_progress()
+        ReolinkHostCoordinatorEntity.__init__(self, reolink_data, reolink_data.firmware_coordinator)
+        ReolinkUpdateBaseEntity.__init__(self, reolink_data, None)
