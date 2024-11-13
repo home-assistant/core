@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-import math
 from typing import Any, cast
 
 from swidget.swidgetdimmer import SwidgetDimmer
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
@@ -45,7 +44,7 @@ class SwidgetSmartDimmer(CoordinatedSwidgetEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-            brightness = math.ceil(
+            brightness = round(
                 brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
             )
         await self._async_turn_on_with_brightness(brightness)
@@ -66,12 +65,16 @@ class SwidgetSmartDimmer(CoordinatedSwidgetEntity, LightEntity):
         """Return the brightness of this light between 0..255."""
         return value_to_brightness(BRIGHTNESS_SCALE, self.device.brightness)
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = bool(self.device.is_on)
+        self._attr_brightness = value_to_brightness(
+            BRIGHTNESS_SCALE, self.device.brightness
+        )
+        self.async_write_ha_state()
+
     async def set_default_brightness(self, **kwargs: Any) -> None:
         """Set the default brightness of the light."""
         if BRIGHTNESS in kwargs:
             await self.device.set_default_brightness(kwargs[BRIGHTNESS])
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return bool(self.device.is_on)

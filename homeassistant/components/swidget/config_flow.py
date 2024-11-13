@@ -116,8 +116,8 @@ class SwidgetConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle any discovery."""
         await self.async_set_unique_id(format_mac(mac))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        self._async_abort_entries_match({CONF_HOST: host})
+        self._abort_if_unique_id_configured()
+
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
