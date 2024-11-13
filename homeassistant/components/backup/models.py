@@ -1,7 +1,6 @@
 """Models for the backup integration."""
 
 from dataclasses import asdict, dataclass
-from typing import TypedDict
 
 
 @dataclass()
@@ -18,8 +17,9 @@ class BaseBackup:
         return asdict(self)
 
 
-class BackupSyncMetadata(TypedDict):
-    """Dictionary type for backup sync metadata."""
+@dataclass()
+class BackupSyncMetadata:
+    """Backup sync metadata."""
 
     date: str  # The date the backup was created
     slug: str  # The slug of the backup

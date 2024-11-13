@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
-from .models import BaseBackup
+from .models import BackupSyncMetadata, BaseBackup
 from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
@@ -238,13 +238,13 @@ class BackupManager(BaseBackupManager[Backup]):
             *(
                 agent.async_upload_backup(
                     path=backup.path,
-                    metadata={
-                        "homeassistant": HAVERSION,
-                        "size": backup.size,
-                        "date": backup.date,
-                        "slug": backup.slug,
-                        "name": backup.name,
-                    },
+                    metadata=BackupSyncMetadata(
+                        homeassistant=HAVERSION,
+                        size=backup.size,
+                        date=backup.date,
+                        slug=backup.slug,
+                        name=backup.name,
+                    ),
                 )
                 for agent in self.sync_agents.values()
             ),
