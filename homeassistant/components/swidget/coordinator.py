@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from swidget import SwidgetDevice, SwidgetException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,12 +21,17 @@ class SwidgetDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific Swidget device."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        device: SwidgetDevice,
+        self, hass: HomeAssistant, device: SwidgetDevice, config_entry: ConfigEntry
     ) -> None:
-        """Initialize DataUpdateCoordinator to gather data for specific device."""
+        """Initialize DataUpdateCoordinator to gather data for a specific device.
+
+        The coordinator uses both a WebSocket connection (local push) and polling.
+        The WebSocket connection allows the coordinator to receive real-time updates
+        from the device when events occur, which ensures that data remains up-to-date
+        without waiting for the next polling interval (300 seconds).
+        """
         self.device = device
+        self.config_entry = config_entry
         super().__init__(
             hass,
             _LOGGER,
@@ -37,9 +43,9 @@ class SwidgetDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
-    async def async_initialize(self) -> Any:
+    async def async_initialize(self) -> bool:
         """Initialize a callback for any websocket events received from the device."""
-        return self.device.add_event_callback(self.websocket_event_callback)
+        return cast(bool, self.device.add_event_callback(self.websocket_event_callback))
 
     @callback
     async def websocket_event_callback(self, message: dict[Any, Any]) -> None:
