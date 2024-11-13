@@ -12,7 +12,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     SERVICE_ALARM_ARM_AWAY,
@@ -26,19 +25,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, frame
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .conftest import TEST_DOMAIN, MockAlarmControlPanel
+from . import help_async_setup_entry_init, help_async_unload_entry
+from .conftest import MockAlarmControlPanel
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    MockPlatform,
     help_test_all,
     import_and_test_deprecated_constant_enum,
     mock_integration,
-    mock_platform,
+    setup_test_component_platform,
 )
 
 
@@ -323,24 +321,6 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
 ) -> None:
     """Test incorrectly using state property does log issue and raise repair."""
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
-        )
-        return True
-
-    mock_integration(
-        hass,
-        MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-
     class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
         """Mocked alarm control entity."""
 
@@ -365,25 +345,21 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
         code_format=code_format,
         code_arm_required=code_arm_required,
     )
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test alarm control panel platform via config entry."""
-        async_add_entities([entity])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{ALARM_CONTROL_PANEL_DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=False,
+    )
+    setup_test_component_platform(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
+    )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -409,23 +385,6 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
 ) -> None:
     """Test incorrectly using _attr_state attribute does log issue and raise repair."""
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
-        )
-        return True
-
-    mock_integration(
-        hass,
-        MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-        ),
-    )
-
     class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
         """Mocked alarm control entity."""
 
@@ -449,25 +408,20 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         code_format=code_format,
         code_arm_required=code_arm_required,
     )
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test alarm control panel platform via config entry."""
-        async_add_entities([entity])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{ALARM_CONTROL_PANEL_DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
+    )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -512,23 +466,6 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
 ) -> None:
     """Test using _attr_state attribute does not break state."""
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, [ALARM_CONTROL_PANEL_DOMAIN]
-        )
-        return True
-
-    mock_integration(
-        hass,
-        MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-        ),
-    )
-
     class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
         """Mocked alarm control entity."""
 
@@ -553,25 +490,20 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
         code_format=code_format,
         code_arm_required=code_arm_required,
     )
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test alarm control panel platform via config entry."""
-        async_add_entities([entity])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{ALARM_CONTROL_PANEL_DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
+    )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
