@@ -196,7 +196,7 @@ async def test_loading_platforms(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
-            async_get_backup_sync_agents=AsyncMock(),
+            async_get_backup_agents=AsyncMock(),
         ),
     )
     await manager.load_platforms()
@@ -208,11 +208,11 @@ async def test_loading_platforms(
     assert "Loaded 1 platforms" in caplog.text
 
 
-async def test_loading_sync_agents(
+async def test_loading_agents(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test loading backup sync agents."""
+    """Test loading backup agents."""
     manager = BackupManager(hass)
 
     assert not manager.loaded_platforms
@@ -221,9 +221,7 @@ async def test_loading_sync_agents(
     await _setup_mock_domain(
         hass,
         Mock(
-            async_get_backup_sync_agents=AsyncMock(
-                return_value=[BackupAgentTest("test")]
-            ),
+            async_get_backup_agents=AsyncMock(return_value=[BackupAgentTest("test")]),
         ),
     )
     await manager.load_platforms()
@@ -271,7 +269,7 @@ async def test_syncing_backup(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
-            async_get_backup_sync_agents=AsyncMock(
+            async_get_backup_agents=AsyncMock(
                 return_value=[
                     BackupAgentTest("agent1"),
                     BackupAgentTest("agent2"),
@@ -329,7 +327,7 @@ async def test_syncing_backup_with_exception(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
-            async_get_backup_sync_agents=AsyncMock(
+            async_get_backup_agents=AsyncMock(
                 return_value=[
                     ModifiedBackupSyncAgentTest("agent1"),
                     ModifiedBackupSyncAgentTest("agent2"),
@@ -387,7 +385,7 @@ async def test_syncing_backup_no_agents(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
-            async_get_backup_sync_agents=AsyncMock(return_value=[]),
+            async_get_backup_agents=AsyncMock(return_value=[]),
         ),
     )
     await manager.load_platforms()
@@ -416,7 +414,7 @@ async def test_exception_plaform_pre(
         Mock(
             async_pre_backup=_mock_step,
             async_post_backup=AsyncMock(),
-            async_get_backup_sync_agents=AsyncMock(),
+            async_get_backup_agents=AsyncMock(),
         ),
     )
 
@@ -439,7 +437,7 @@ async def test_exception_plaform_post(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=_mock_step,
-            async_get_backup_sync_agents=AsyncMock(),
+            async_get_backup_agents=AsyncMock(),
         ),
     )
 
@@ -462,7 +460,7 @@ async def test_loading_platforms_when_running_async_pre_backup_actions(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
-            async_get_backup_sync_agents=AsyncMock(),
+            async_get_backup_agents=AsyncMock(),
         ),
     )
     await manager.async_pre_backup_actions()
@@ -488,7 +486,7 @@ async def test_loading_platforms_when_running_async_post_backup_actions(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
-            async_get_backup_sync_agents=AsyncMock(),
+            async_get_backup_agents=AsyncMock(),
         ),
     )
     await manager.async_post_backup_actions()

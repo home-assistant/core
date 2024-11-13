@@ -1,4 +1,4 @@
-"""Backup sync agents for the Backup integration."""
+"""Backup agents for the Backup integration."""
 
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ class BackupAgent(abc.ABC):
 class BackupPlatformAgentProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
-    async def async_get_backup_sync_agents(
+    async def async_get_backup_agents(
         self,
         *,
         hass: HomeAssistant,

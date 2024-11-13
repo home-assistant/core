@@ -112,10 +112,10 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         platform: BackupPlatformAgentProtocol,
     ) -> None:
         """Add a platform to the backup manager."""
-        if not hasattr(platform, "async_get_backup_sync_agents"):
+        if not hasattr(platform, "async_get_backup_agents"):
             return
 
-        agents = await platform.async_get_backup_sync_agents(hass=hass)
+        agents = await platform.async_get_backup_agents(hass=hass)
         self.backup_agents.update(
             {f"{integration_domain}.{agent.name}": agent for agent in agents}
         )
