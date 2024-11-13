@@ -24,23 +24,19 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
 from .common import async_start
-from .conftest import TEST_DOMAIN
 
 from tests.common import (
     MockConfigEntry,
+    MockEntity,
     MockModule,
-    MockPlatform,
     help_test_all,
     import_and_test_deprecated_constant_enum,
     mock_integration,
-    mock_platform,
     setup_test_component_platform,
 )
 
@@ -334,23 +330,6 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
 ) -> None:
     """Test incorrectly using state property does log issue and raise repair."""
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, [VACUUM_DOMAIN]
-        )
-        return True
-
-    mock_integration(
-        hass,
-        MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-        ),
-    )
-
     class MockLegacyVacuum(MockVacuum):
         """Mocked vacuum entity."""
 
@@ -359,31 +338,23 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
             """Return the state of the entity."""
             return VacuumActivity.CLEANING
 
-    entity = MockLegacyVacuum()
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test vacuum platform via config entry."""
-        async_add_entities([entity])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{VACUUM_DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
     )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
 
-    with patch.object(
-        MockLegacyVacuum,
-        "__module__",
-        "tests.custom_components.test.vacuum",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -402,23 +373,6 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
 ) -> None:
     """Test incorrectly using _attr_state attribute does log issue and raise repair."""
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, [VACUUM_DOMAIN]
-        )
-        return True
-
-    mock_integration(
-        hass,
-        MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-        ),
-    )
-
     class MockLegacyVacuum(MockVacuum):
         """Mocked vacuum entity."""
 
@@ -426,31 +380,23 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
             """Start cleaning."""
             self._attr_state = VacuumActivity.CLEANING
 
-    entity = MockLegacyVacuum()
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test vacuum platform via config entry."""
-        async_add_entities([entity])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{VACUUM_DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
     )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
 
-    with patch.object(
-        MockLegacyVacuum,
-        "__module__",
-        "tests.custom_components.test.vacuum",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -483,3 +429,66 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
         "should implement the 'activity' property and return its state using the VacuumActivity enum"
         not in caplog.text
     )
+
+
+async def test_alarm_control_panel_deprecated_state_does_not_break_state(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test using _attr_state attribute does not break state."""
+
+    class MockLegacyVacuum(MockEntity, StateVacuumEntity):
+        """Mocked vacuum entity."""
+
+        _attr_supported_features = VacuumEntityFeature.STATE | VacuumEntityFeature.START
+
+        def __init__(self, **values: Any) -> None:
+            """Initialize a mock vacuum entity."""
+            super().__init__(**values)
+            self._attr_state = VacuumActivity.DOCKED
+
+        def start(self) -> None:
+            """Start cleaning."""
+            self._attr_state = VacuumActivity.CLEANING
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "docked"
+
+    with patch.object(
+        MockLegacyVacuum,
+        "__module__",
+        "tests.custom_components.test.alarm_control_panel",
+    ):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_START,
+            {
+                "entity_id": entity.entity_id,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "cleaning"

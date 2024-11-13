@@ -7,7 +7,7 @@ from datetime import timedelta
 from enum import IntFlag
 from functools import partial
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 from propcache import cached_property
 import voluptuous as vol
@@ -343,9 +343,15 @@ class StateVacuumEntity(
     @property
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
-        if (activity := self.activity) is None:
-            return None
-        return activity
+        if (activity := self.activity) is not None:
+            return activity
+        if self._attr_state is not None:
+            # Backwards compatibility for integrations that set state directly
+            # Should be removed in 2025.12
+            if TYPE_CHECKING:
+                assert isinstance(self._attr_state, str)
+            return self._attr_state
+        return None
 
     @cached_property
     def activity(self) -> VacuumActivity | None:
