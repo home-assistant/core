@@ -14,7 +14,6 @@ from .const import (
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data = {}
-    for hc_api in hass.data[DOMAIN].values():
-        for device in hc_api.devices:
-            data[device.device_id] = device.appliance.status
+    for device in hass.data[DOMAIN][entry.entry_id].devices:
+        data[device.device_id] = device.appliance.status
     return data
