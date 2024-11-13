@@ -76,6 +76,7 @@ async def test_update_firm(
 ) -> None:
     """Test update state when update available with firmware info from reolink.com."""
     reolink_connect.camera_name.return_value = TEST_CAM_NAME
+    reolink_connect.sw_upload_progress.return_value = 100
     reolink_connect.camera_sw_version.return_value = "v1.1.0.0.0.0000"
     new_firmware = NewSoftwareVersion(
         version_string="v3.3.0.226_23031644",
@@ -91,6 +92,8 @@ async def test_update_firm(
 
     entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
     assert hass.states.get(entity_id).state == STATE_ON
+    assert not hass.states.get(entity_id).attributes["in_progress"]
+    assert hass.states.get(entity_id).attributes["update_percentage"] is None
 
     # release notes
     client = await hass_ws_client(hass)
@@ -121,9 +124,16 @@ async def test_update_firm(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).attributes["in_progress"] == 50
+    assert hass.states.get(entity_id).attributes["in_progress"]
+    assert hass.states.get(entity_id).attributes["update_percentage"] == 50
 
     reolink_connect.sw_upload_progress.return_value = 100
+    freezer.tick(POLL_AFTER_INSTALL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get(entity_id).attributes["in_progress"]
+    assert hass.states.get(entity_id).attributes["update_percentage"] is None
 
     reolink_connect.update_firmware.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
