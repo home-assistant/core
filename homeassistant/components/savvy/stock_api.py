@@ -16,7 +16,9 @@ class StockApi:
 
         async with (
             aiohttp.ClientSession() as session,
-            session.get(f"{self.base_url}/api/stock-mgmt/stock/overview") as response,
+            session.get(
+                f"{self.base_url}/api/stock-mgmt/stock/home-assistant/overview"
+            ) as response,
         ):
             return await response.json()
 
