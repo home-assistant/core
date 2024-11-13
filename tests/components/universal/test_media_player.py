@@ -921,6 +921,40 @@ async def test_overrides(hass: HomeAssistant, config_children_and_attr) -> None:
     assert len(service) == 19
 
 
+async def test_process_media_id(hass: HomeAssistant, config_children_and_attr) -> None:
+    """Test play_media override with process_media_id."""
+    config = {
+        "name": "test",
+        "platform": "universal",
+        "process_media_id": "true",
+        "commands": {
+            "play_media": {
+                "service": "test.override",
+                "data": {
+                    "media_content_id": "{{ media_content_id }}",
+                },
+            },
+        },
+    }
+    await async_setup_component(hass, "media_player", {"media_player": config})
+    await async_setup_component(hass, "media_source", {})
+    await hass.async_block_till_done()
+
+    service = async_mock_service(hass, "test", "override")
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        service_data={
+            "entity_id": "media_player.test",
+            "media_content_id": "media-source://media_source/local/test.ogg",
+            "media_content_type": "url",
+        },
+        blocking=True,
+    )
+    assert len(service) == 1
+    assert "/media/local/test.ogg?authSig=" in service[0].data["media_content_id"]
+
+
 async def test_supported_features_play_pause(
     hass: HomeAssistant, config_children_and_attr, mock_states
 ) -> None:
@@ -1150,6 +1184,33 @@ async def test_browse_media_override(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
+            return_value=MOCK_BROWSE_MEDIA,
+        ),
+    ):
+        result = await ump.async_browse_media()
+        assert result == MOCK_BROWSE_MEDIA
+
+
+async def test_browse_media_fallback(hass: HomeAssistant) -> None:
+    """Test browse media fallback with process_media_id."""
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "media_player", {})
+    await async_setup_component(hass, "media_source", {})
+    await hass.async_block_till_done()
+
+    config = {
+        "name": "test",
+        "platform": "universal",
+        "process_media_id": "true",
+    }
+    config = validate_config(config)
+    ump = universal.UniversalMediaPlayer(hass, config)
+    ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
+    await ump.async_update()
+
+    with (
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
             return_value=MOCK_BROWSE_MEDIA,
         ),
     ):
