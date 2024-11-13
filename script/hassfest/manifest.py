@@ -126,7 +126,7 @@ NO_DIAGNOSTICS = [
 ]
 
 
-def own_documentation_url(value: str) -> str:
+def core_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
     if value in DOCUMENTATION_URL_EXCEPTIONS:
         return value
@@ -270,7 +270,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(vol.Url(), own_documentation_url),
+        vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
