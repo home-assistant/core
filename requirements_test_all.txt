@@ -399,7 +399,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.1.2
+aiowithings==3.1.3
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -843,7 +843,7 @@ gios==5.0.0
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.1.0
+go2rtc-client==0.1.1
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -971,7 +971,7 @@ httplib2==0.20.4
 huawei-lte-api==1.10.0
 
 # homeassistant.components.huum
-huum==0.7.11;python_version<'3.13'
+huum==0.7.12
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
@@ -1142,7 +1142,7 @@ microBeesPy==0.3.2
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.11.8
+millheater==0.12.2
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -2050,7 +2050,7 @@ reolink-aio==0.11.0
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.9
+ring-doorbell==0.9.12
 
 # homeassistant.components.roku
 rokuecp==0.19.3
@@ -2130,6 +2130,9 @@ simplepush==2.2.3
 
 # homeassistant.components.simplisafe
 simplisafe-python==2024.01.0
+
+# homeassistant.components.sky_remote
+skyboxremote==0.0.6
 
 # homeassistant.components.slack
 slackclient==2.5.0
