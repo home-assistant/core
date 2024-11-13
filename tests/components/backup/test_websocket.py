@@ -322,7 +322,7 @@ async def test_backup_end_excepion(
         Exception("Boom"),
     ],
 )
-async def test_backup_sync_excepion(
+async def test_backup_sync_exception(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,

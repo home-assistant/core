@@ -290,7 +290,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync_excepion[exception0]
+# name: test_backup_sync_exception[exception0]
   dict({
     'error': dict({
       'code': 'backup_sync_failed',
@@ -301,7 +301,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync_excepion[exception1]
+# name: test_backup_sync_exception[exception1]
   dict({
     'error': dict({
       'code': 'backup_sync_failed',
@@ -312,7 +312,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync_excepion[exception2]
+# name: test_backup_sync_exception[exception2]
   dict({
     'error': dict({
       'code': 'backup_sync_failed',
