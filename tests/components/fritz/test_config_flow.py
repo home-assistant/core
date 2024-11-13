@@ -740,7 +740,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
 
 async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
-    """Test starting a flow from discovery with an already configured device."""
+    """Test ignoring ipv6-link-local while ssdp discovery."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
