@@ -48,6 +48,7 @@ from homeassistant.core import (
     callback,
     get_release_channel,
 )
+from homeassistant.core_config import Config
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -66,6 +67,7 @@ from .common import (
     async_capture_events,
     async_mock_service,
     help_test_all,
+    import_and_test_deprecated_alias,
     import_and_test_deprecated_constant_enum,
 )
 
@@ -2992,6 +2994,11 @@ def test_deprecated_constants(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
+
+
+def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated Config class."""
+    import_and_test_deprecated_alias(caplog, ha, "Config", Config, "2025.11")
 
 
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:
