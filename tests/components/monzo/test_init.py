@@ -25,7 +25,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_cloud_connection_status,
+)
 from tests.components.cloud import mock_cloud
 from tests.typing import ClientSessionGenerator
 
@@ -298,3 +302,55 @@ async def test_webhook_fails_without_https(
         mock_async_generate_url.call_count = len(TEST_ACCOUNTS)
 
     assert "https and port 443 is required to register the webhook" in caplog.text
+
+
+async def test_cloud_disconnect_retry(
+    hass: HomeAssistant,
+    monzo: AsyncMock,
+    polling_config_entry: MonzoConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test we retry to create webhook connection again after cloud disconnects."""
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(
+            cloud, "async_active_subscription", return_value=True
+        ) as mock_async_active_subscription,
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value="https://hooks.nabu.casa/ABCD",
+        ),
+        patch(
+            "homeassistant.components.monzo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook",
+        ),
+        patch(
+            "homeassistant.components.monzo.webhook_generate_url",
+        ),
+    ):
+        await setup_integration(hass, polling_config_entry)
+        # await prepare_webhook_setup(hass, freezer)
+
+        assert cloud.async_active_subscription(hass) is True
+        assert cloud.async_is_connected(hass) is True
+        assert mock_async_active_subscription.call_count == 4
+
+        await hass.async_block_till_done()
+
+        async_mock_cloud_connection_status(hass, False)
+        await hass.async_block_till_done()
+
+        assert mock_async_active_subscription.call_count == 6
+
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert mock_async_active_subscription.call_count == 8
