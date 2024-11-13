@@ -41,7 +41,9 @@ async def _async_migrate_unique_ids(
     """Migrate entities when the mac address gets discovered."""
 
     @callback
-    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+    def _async_migrator_mac_detected(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
         updates = None
 
         unique_id = entry.unique_id
@@ -50,6 +52,26 @@ async def _async_migrate_unique_ids(
 
         if entity_unique_id.startswith(entry_id):
             new_unique_id = f"{unique_id}{entity_unique_id.removeprefix(entry_id)}"
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                entity_unique_id,
+                new_unique_id,
+            )
+            updates = {"new_unique_id": new_unique_id}
+
+        return updates
+
+    @callback
+    def _async_migrator_mac_empty(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        updates = None
+
+        entry_id = entry.entry_id
+        entity_unique_id = entity_entry.unique_id
+
+        if entity_unique_id.startswith(entry_id):
+            new_unique_id = f"{entry_id}{entity_unique_id}"
             _LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
                 entity_unique_id,
@@ -70,7 +92,16 @@ async def _async_migrate_unique_ids(
         }
         hass.config_entries.async_update_entry(entry, **updates)
 
-        await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+        await er.async_migrate_entries(
+            hass, entry.entry_id, _async_migrator_mac_detected
+        )
+    elif entry.unique_id == "":
+        mac_empty_updates: dict[str, Any] = {
+            "unique_id": None,
+        }
+        hass.config_entries.async_update_entry(entry, **mac_empty_updates)
+
+        await er.async_migrate_entries(hass, entry.entry_id, _async_migrator_mac_empty)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:

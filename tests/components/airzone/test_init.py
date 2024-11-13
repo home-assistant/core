@@ -1,7 +1,9 @@
 """Define tests for the Airzone init."""
 
+import copy
 from unittest.mock import patch
 
+from aioairzone.const import API_MAC
 from aioairzone.exceptions import HotWaterNotAvailable, InvalidMethod, SystemOutOfRange
 
 from homeassistant.components.airzone.const import DOMAIN
@@ -14,7 +16,7 @@ from .util import CONFIG, HVAC_MOCK, HVAC_VERSION_MOCK, HVAC_WEBSERVER_MOCK
 from tests.common import MockConfigEntry
 
 
-async def test_unique_id_migrate(
+async def test_unique_id_migrate_mac_detected(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique id migration."""
@@ -82,6 +84,49 @@ async def test_unique_id_migrate(
     assert (
         entity_registry.async_get("sensor.salon_temperature").unique_id
         == f"{config_entry.unique_id}_1:1_temp"
+    )
+
+
+async def test_unique_id_migrate_mac_empty(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test unique id migration."""
+
+    HVAC_WS_MAC_EMPTY_MOCK = copy.deepcopy(HVAC_WEBSERVER_MOCK)
+    HVAC_WS_MAC_EMPTY_MOCK[API_MAC] = ""
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG, unique_id="")
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            side_effect=HotWaterNotAvailable,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            return_value=HVAC_WS_MAC_EMPTY_MOCK,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not config_entry.unique_id
+    assert (
+        entity_registry.async_get("sensor.salon_temperature").unique_id
+        == f"{config_entry.entry_id}_1:1_temp"
     )
 
 
