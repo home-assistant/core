@@ -18,7 +18,7 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityDescription,
     CameraEntityFeature,
-    RTCIceCandidate,
+    RTCIceCandidateInit,
     StreamType,
     WebRTCAnswer,
     WebRTCCandidate,
@@ -199,7 +199,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             elif ring_message.candidate:
                 send_message(
                     WebRTCCandidate(
-                        RTCIceCandidate(
+                        RTCIceCandidateInit(
                             ring_message.candidate,
                             sdp_m_line_index=ring_message.sdp_m_line_index or 0,
                         )
@@ -211,7 +211,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         )
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle a WebRTC candidate."""
         if candidate.sdp_m_line_index is None:
