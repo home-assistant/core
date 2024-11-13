@@ -1148,7 +1148,7 @@ httplib2==0.20.4
 huawei-lte-api==1.10.0
 
 # homeassistant.components.huum
-huum==0.7.11;python_version<'3.13'
+huum==0.7.12
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
