@@ -8,10 +8,11 @@ from typing import TYPE_CHECKING
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from .manager import BackupManager
+    from .manager import BaseBackupManager
+    from .models import BaseBackup
 
 DOMAIN = "backup"
-DATA_MANAGER: HassKey[BackupManager] = HassKey(DOMAIN)
+DATA_MANAGER: HassKey[BaseBackupManager[BaseBackup]] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
 
 EXCLUDE_FROM_BACKUP = [

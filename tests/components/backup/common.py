@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.backup import DOMAIN
 from homeassistant.components.backup.manager import Backup
+from homeassistant.components.backup.models import BackupSyncMetadata
+from homeassistant.components.backup.sync_agent import BackupSyncAgent, SyncedBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -18,6 +21,40 @@ TEST_BACKUP = Backup(
     path=Path("abc123.tar"),
     size=0.0,
 )
+
+
+class BackupSyncAgentTest(BackupSyncAgent):
+    """Test backup sync agent."""
+
+    async def async_download_backup(
+        self,
+        *,
+        id: str,
+        path: Path,
+        **kwargs: Any,
+    ) -> None:
+        """Download a backup file."""
+
+    async def async_upload_backup(
+        self,
+        *,
+        path: Path,
+        metadata: BackupSyncMetadata,
+        **kwargs: Any,
+    ) -> None:
+        """Upload a backup."""
+
+    async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:
+        """List synced backups."""
+        return [
+            SyncedBackup(
+                id="abc123",
+                name="Test",
+                slug="abc123",
+                size=13.37,
+                date="1970-01-01T00:00:00Z",
+            )
+        ]
 
 
 async def setup_backup_integration(
