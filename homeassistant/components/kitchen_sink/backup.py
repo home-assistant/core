@@ -62,10 +62,10 @@ class KitchenSinkBackupSyncAgent(BackupSyncAgent):
         self._uploads.append(
             SyncedBackup(
                 id=uuid4().hex,
-                name=metadata["name"],
-                slug=metadata["slug"],
-                size=metadata["size"],
-                date=metadata["date"],
+                name=metadata.name,
+                slug=metadata.slug,
+                size=metadata.size,
+                date=metadata.date,
             )
         )
 
