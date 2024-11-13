@@ -7,7 +7,7 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.backup import DOMAIN
-from homeassistant.components.backup.agent import BackupSyncAgent, SyncedBackup
+from homeassistant.components.backup.agent import BackupAgent, SyncedBackup
 from homeassistant.components.backup.manager import Backup
 from homeassistant.components.backup.models import BackupSyncMetadata
 from homeassistant.core import HomeAssistant
@@ -23,8 +23,8 @@ TEST_BACKUP = Backup(
 )
 
 
-class BackupSyncAgentTest(BackupSyncAgent):
-    """Test backup sync agent."""
+class BackupAgentTest(BackupAgent):
+    """Test backup agent."""
 
     async def async_download_backup(
         self,
@@ -45,7 +45,7 @@ class BackupSyncAgentTest(BackupSyncAgent):
         """Upload a backup."""
 
     async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:
-        """List synced backups."""
+        """List backups."""
         return [
             SyncedBackup(
                 id="abc123",

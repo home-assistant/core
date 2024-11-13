@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .common import TEST_BACKUP, BackupSyncAgentTest
+from .common import TEST_BACKUP, BackupAgentTest
 
 from tests.common import MockPlatform, mock_platform
 
@@ -222,7 +222,7 @@ async def test_loading_sync_agents(
         hass,
         Mock(
             async_get_backup_sync_agents=AsyncMock(
-                return_value=[BackupSyncAgentTest("test")]
+                return_value=[BackupAgentTest("test")]
             ),
         ),
     )
@@ -230,10 +230,10 @@ async def test_loading_sync_agents(
     await hass.async_block_till_done()
 
     assert manager.loaded_platforms
-    assert len(manager.sync_agents) == 1
+    assert len(manager.backup_agents) == 1
 
     assert "Loaded 1 agents" in caplog.text
-    assert "some_domain.test" in manager.sync_agents
+    assert "some_domain.test" in manager.backup_agents
 
 
 async def test_not_loading_bad_platforms(
@@ -273,8 +273,8 @@ async def test_syncing_backup(
             async_post_backup=AsyncMock(),
             async_get_backup_sync_agents=AsyncMock(
                 return_value=[
-                    BackupSyncAgentTest("agent1"),
-                    BackupSyncAgentTest("agent2"),
+                    BackupAgentTest("agent1"),
+                    BackupAgentTest("agent2"),
                 ]
             ),
         ),
@@ -289,7 +289,7 @@ async def test_syncing_backup(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
             return_value=backup,
         ),
-        patch.object(BackupSyncAgentTest, "async_upload_backup") as mocked_upload,
+        patch.object(BackupAgentTest, "async_upload_backup") as mocked_upload,
         patch(
             "homeassistant.components.backup.manager.HAVERSION",
             "2025.1.0",
@@ -320,7 +320,7 @@ async def test_syncing_backup_with_exception(
     """Test syncing a backup with exception."""
     manager = BackupManager(hass)
 
-    class ModifiedBackupSyncAgentTest(BackupSyncAgentTest):
+    class ModifiedBackupSyncAgentTest(BackupAgentTest):
         async def async_upload_backup(self, **kwargs: Any) -> None:
             raise HomeAssistantError("Test exception")
 
@@ -395,7 +395,7 @@ async def test_syncing_backup_no_agents(
 
     backup = await _mock_backup_generation(manager, mocked_json_bytes, mocked_tarfile)
     with patch(
-        "homeassistant.components.backup.agent.BackupSyncAgent.async_upload_backup"
+        "homeassistant.components.backup.agent.BackupAgent.async_upload_backup"
     ) as mocked_async_upload_backup:
         await manager.async_sync_backup(slug=backup.slug)
         assert mocked_async_upload_backup.call_count == 0

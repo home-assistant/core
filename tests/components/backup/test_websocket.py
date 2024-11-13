@@ -12,7 +12,7 @@ from homeassistant.components.backup.models import BaseBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .common import TEST_BACKUP, BackupSyncAgentTest, setup_backup_integration
+from .common import TEST_BACKUP, BackupAgentTest, setup_backup_integration
 
 from tests.typing import WebSocketGenerator
 
@@ -394,7 +394,7 @@ async def test_agents_info(
 ) -> None:
     """Test getting backup agents info."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -418,7 +418,7 @@ async def test_agents_synced(
 ) -> None:
     """Test getting backup agents synced details."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -442,7 +442,7 @@ async def test_agents_download(
 ) -> None:
     """Test WS command to start downloading a synced backup."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -455,7 +455,7 @@ async def test_agents_download(
             "sync_id": "abc123",
         }
     )
-    with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
+    with patch.object(BackupAgentTest, "async_download_backup") as download_mock:
         assert await client.receive_json() == snapshot
         assert download_mock.call_args[1] == {
             "id": "abc123",
@@ -470,7 +470,7 @@ async def test_agents_download_exception(
 ) -> None:
     """Test WS command to start downloading a synced backup throwing an exception."""
     await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -483,7 +483,7 @@ async def test_agents_download_exception(
             "sync_id": "abc123",
         }
     )
-    with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
+    with patch.object(BackupAgentTest, "async_download_backup") as download_mock:
         download_mock.side_effect = Exception("Boom")
         assert await client.receive_json() == snapshot
 

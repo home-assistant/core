@@ -212,7 +212,7 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"id": agent_id} for agent_id in manager.sync_agents],
+            "agents": [{"id": agent_id} for agent_id in manager.backup_agents],
             "syncing": manager.syncing,
         },
     )
@@ -230,7 +230,7 @@ async def backup_agents_list_synced_backups(
     manager = hass.data[DATA_MANAGER]
     backups: list[dict[str, Any]] = []
     await manager.load_platforms()
-    for agent_id, agent in manager.sync_agents.items():
+    for agent_id, agent in manager.backup_agents.items():
         _listed_backups = await agent.async_list_backups()
         backups.extend({**b.as_dict(), "agent_id": agent_id} for b in _listed_backups)
     connection.send_result(msg["id"], backups)
@@ -255,7 +255,7 @@ async def backup_agents_download(
     manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
 
-    if not (agent := manager.sync_agents.get(msg["agent"])):
+    if not (agent := manager.backup_agents.get(msg["agent"])):
         connection.send_error(
             msg["id"], "unknown_agent", f"Agent {msg['agent']} not found"
         )

@@ -31,7 +31,7 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
-from .agent import BackupPlatformAgentProtocol, BackupSyncAgent
+from .agent import BackupAgent, BackupPlatformAgentProtocol
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 from .models import BackupSyncMetadata, BaseBackup
 
@@ -87,7 +87,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self.backups: dict[str, _BackupT] = {}
         self.loaded_platforms = False
         self.platforms: dict[str, BackupPlatformProtocol] = {}
-        self.sync_agents: dict[str, BackupSyncAgent] = {}
+        self.backup_agents: dict[str, BackupAgent] = {}
         self.syncing = False
 
     @callback
@@ -116,7 +116,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
             return
 
         agents = await platform.async_get_backup_sync_agents(hass=hass)
-        self.sync_agents.update(
+        self.backup_agents.update(
             {f"{integration_domain}.{agent.name}": agent for agent in agents}
         )
 
@@ -169,7 +169,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
             wait_for_platforms=True,
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
-        LOGGER.debug("Loaded %s agents", len(self.sync_agents))
+        LOGGER.debug("Loaded %s agents", len(self.backup_agents))
         self.loaded_platforms = True
 
     @abc.abstractmethod
@@ -227,7 +227,7 @@ class BackupManager(BaseBackupManager[Backup]):
         """Sync a backup."""
         await self.load_platforms()
 
-        if not self.sync_agents:
+        if not self.backup_agents:
             return
 
         if not (backup := await self.async_get_backup(slug=slug)):
@@ -246,7 +246,7 @@ class BackupManager(BaseBackupManager[Backup]):
                         name=backup.name,
                     ),
                 )
-                for agent in self.sync_agents.values()
+                for agent in self.backup_agents.values()
             ),
             return_exceptions=True,
         )
