@@ -2673,6 +2673,9 @@ simplisafe-python==2024.01.0
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.4
 
+# homeassistant.components.sky_remote
+skyboxremote==0.0.6
+
 # homeassistant.components.slack
 slackclient==2.5.0
 
