@@ -119,17 +119,21 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
         super().__init__(data, thermostat_index)
         self._attr_unique_id = f"{self.base_unique_id}_aux_heat_only"
 
-        self._last_hvac_mode_before_aux_heat = HASS_TO_ECOBEE_HVAC.get(
-            HVACMode.HEAT_COOL
-        )
+        """Set the last mode to the current mode. If it's AUX, set to HEAT"""
+        self._last_hvac_mode_before_aux_heat = self.thermostat["settings"]["hvacMode"]
+        if self._last_hvac_mode_before_aux_heat == ECOBEE_AUX_HEAT_ONLY:
+            self._last_hvac_mode_before_aux_heat = HASS_TO_ECOBEE_HVAC.get(HVACMode.HEAT)
+        _LOGGER.debug("Found Heat Pump, initialized Aux Switch. Last mode: %s", self._last_hvac_mode_before_aux_heat)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Set the hvacMode to auxHeatOnly."""
         self._last_hvac_mode_before_aux_heat = self.thermostat["settings"]["hvacMode"]
+        _LOGGER.debug("Turn on AUX_HEAT, last HVAC mode is %s", self._last_hvac_mode_before_aux_heat)
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Set the hvacMode back to the prior setting."""
+        _LOGGER.debug("Turn off AUX_HEAT, restoring HVAC mode to %s", self._last_hvac_mode_before_aux_heat)
         self.data.ecobee.set_hvac_mode(
             self.thermostat_index, self._last_hvac_mode_before_aux_heat
         )
