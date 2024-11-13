@@ -127,4 +127,7 @@ class AxisSpeaker(AxisEntity, MediaPlayerEntity):
 
         ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
         data = await axis.ffmpeg.to_axis_mulaw(media_id, ffmpeg_manager.binary)
+        if not data:
+            raise HomeAssistantError(f"Failed to convert media: {media_id}")
+
         await self.hub.api.vapix.audio.transmit(data)
