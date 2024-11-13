@@ -49,6 +49,7 @@ class TeslaSystemImplementation(config_entry_oauth2_flow.LocalOAuth2Implementati
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
+            "prompt": "login",
             "scope": " ".join(SCOPES),
             "code_challenge": self.code_challenge,  # PKCE
         }
