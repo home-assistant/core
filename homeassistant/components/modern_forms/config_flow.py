@@ -30,6 +30,11 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle setup by user for Modern Forms integration."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_SCHEMA,
+            )
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
@@ -66,10 +71,6 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
                         step_id="zeroconf_confirm",
                         description_placeholders={"name": self.name},
                     )
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=USER_SCHEMA,
-                )
 
         if self.source == SOURCE_ZEROCONF:
             user_input[CONF_HOST] = self.host
