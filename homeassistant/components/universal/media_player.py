@@ -517,7 +517,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_PLAY_MEDIA in self._cmds:
             flags |= MediaPlayerEntityFeature.PLAY_MEDIA
 
-        if self._browse_media_entity:
+        if self._browse_media_entity or self._process_media_id:
             flags |= MediaPlayerEntityFeature.BROWSE_MEDIA
 
         if SERVICE_CLEAR_PLAYLIST in self._cmds:
@@ -679,6 +679,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         ]
         if entity_id and (entity := component.get_entity(entity_id)):
             return await entity.async_browse_media(media_content_type, media_content_id)
+        if self._process_media_id:
+            return await media_source.async_browse_media(
+                self.hass,
+                media_content_id,
+            )
         raise NotImplementedError
 
     @callback
