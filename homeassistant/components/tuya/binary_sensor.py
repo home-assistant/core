@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
+import json
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -34,7 +34,7 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     # Fault key, and keys, used to determine if a specific fault is active
     fault_key: str | None = None
-    fault_keys: set[str] | None = None
+    fault_keys: list[str] | None = None
 
 
 # Commonly used sensors
@@ -450,8 +450,14 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     def _is_fault_active(self) -> bool:
         """Return true if fault sensor is active."""
         dpcode = self.entity_description.dpcode or self.entity_description.key
+
         fault_key = self.entity_description.fault_key
+        if fault_key is None:
+            return False
+
         fault_keys = self.entity_description.fault_keys
+        if fault_keys is None:
+            return False
 
         # Tuya documentation on bitmaps:
         # https://support.tuya.com/en/help/_detail/K9mc4euc6tq9i
