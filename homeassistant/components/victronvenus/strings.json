@@ -1,0 +1,103 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_victronvenus": "Not a Victron Venus device"
+    }
+  },
+
+  "entity": {
+    "sensor": {
+      "grid_phases": {
+        "name": "Grid phases"
+      },
+      "grid_voltage_lx": {
+        "name": "Grid voltage on {phase}"
+      },
+      "grid_current_lx": {
+        "name": "Grid current on {phase}"
+      },
+      "grid_power_lx": {
+        "name": "Grid power on {phase}"
+      },
+      "grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "grid_current": {
+        "name": "Grid current"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "grid_energy_forward": {
+        "name": "Grid consumption"
+      },
+      "grid_energy_reverse": {
+        "name": "Grid feed-in"
+      },
+      "solar_voltage": {
+        "name": "PV voltage"
+      },
+      "solar_current": {
+        "name": "PV current"
+      },
+      "solar_yield": {
+        "name": "PV yield"
+      },
+      "solar_power": {
+        "name": "PV power"
+      },
+      "solar_max_power": {
+        "name": "PV max power today"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_soc": {
+        "name": "Battery level"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
+      "battery_installed_capacity": {
+        "name": "Battery installed capacity"
+      },
+      "battery_discharged_energy": {
+        "name": "Battery discharged energy"
+      },
+      "battery_charged_energy": {
+        "name": "Battery charged energy"
+      },
+      "ac_loads_lx": {
+        "name": "AC loads on {phase}"
+      },
+      "critical_loads_lx": {
+        "name": "Critical loads on {phase}"
+      }
+    }
+  }
+}
