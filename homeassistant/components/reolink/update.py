@@ -255,10 +255,10 @@ class ReolinkUpdateEntity(
     ) -> None:
         """Initialize Reolink update entity."""
         self.entity_description = entity_description
+        ReolinkUpdateBaseEntity.__init__(self, reolink_data, channel)
         ReolinkChannelCoordinatorEntity.__init__(
             self, reolink_data, channel, reolink_data.firmware_coordinator
         )
-        ReolinkUpdateBaseEntity.__init__(self, reolink_data, channel)
 
 
 class ReolinkHostUpdateEntity(
@@ -276,7 +276,7 @@ class ReolinkHostUpdateEntity(
     ) -> None:
         """Initialize Reolink update entity."""
         self.entity_description = entity_description
+        ReolinkUpdateBaseEntity.__init__(self, reolink_data, None)
         ReolinkHostCoordinatorEntity.__init__(
             self, reolink_data, reolink_data.firmware_coordinator
         )
-        ReolinkUpdateBaseEntity.__init__(self, reolink_data, None)
