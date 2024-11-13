@@ -697,7 +697,7 @@
         'speech': dict({
           'plain': dict({
             'extra_data': None,
-            'speech': 'Sorry, I am not aware of any area called are',
+            'speech': 'Sorry, I am not aware of any area called Are',
           }),
         }),
       }),
@@ -741,7 +741,7 @@
         'speech': dict({
           'plain': dict({
             'extra_data': None,
-            'speech': 'Sorry, I am not aware of any area called are',
+            'speech': 'Sorry, I am not aware of any area called Are',
           }),
         }),
       }),
