@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.niko_home_control.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -26,7 +26,7 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    # assert result["title"] == "0.0.0.0"
-    assert result["data"] == {CONF_HOST: "0.0.0.0"}
+    assert result["title"] == DOMAIN
+    assert result["data"] == {CONF_HOST: "0.0.0.0", CONF_PORT: 8000}
 
     assert len(mock_setup_entry.mock_calls) == 1

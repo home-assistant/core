@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.niko_home_control.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 from tests.components.smhi.common import AsyncMock
@@ -43,4 +43,4 @@ def mock_nhc() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "0.0.0.0"})
+    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "0.0.0.0", CONF_PORT: 8000})

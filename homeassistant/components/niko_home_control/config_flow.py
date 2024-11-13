@@ -10,16 +10,15 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_IP, DEFAULT_PORT, DOMAIN
 from .errors import CannotConnect, InvalidHost, InvalidPort
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int]:
     """Validate the user input allows us to connect."""
-    name = data[CONF_NAME]
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
@@ -36,7 +35,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int
     if not controller:
         raise CannotConnect
 
-    return {"name": name, "host": host, "port": port}
+    return {"host": host, "port": port}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -47,8 +46,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self, import_info=None) -> None:
         """Initialize the config flow."""
-        self._config: Any = {}
-        self._entities: Any = {}
         self._import_info: Any = import_info
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
@@ -61,7 +58,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         DATA_SCHEMA = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(CONF_HOST, default=HOST): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
             }
@@ -72,11 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
                 return self.async_create_entry(
                     title=DOMAIN,
-                    data={
-                        "config": self._config,
-                        "options": user_input,
-                        "entities": self._entities,
-                    },
+                    data=user_input,
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
