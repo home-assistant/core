@@ -399,7 +399,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.1.2
+aiowithings==3.1.3
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -843,7 +843,7 @@ gios==5.0.0
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.1.0
+go2rtc-client==0.1.1
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
