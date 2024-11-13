@@ -35,7 +35,13 @@ async def _mock_backup_generation(
         progress.append(_progress)
 
     assert manager.backup_task is None
-    await manager.async_create_backup(on_progress=on_progress)
+    await manager.async_create_backup(
+        addons_included=[],
+        database_included=True,
+        folders_included=[],
+        name=None,
+        on_progress=on_progress,
+    )
     assert manager.backup_task is not None
     assert progress == []
 
@@ -45,7 +51,10 @@ async def _mock_backup_generation(
     assert mocked_json_bytes.call_count == 1
     backup_json_dict = mocked_json_bytes.call_args[0][0]
     assert isinstance(backup_json_dict, dict)
-    assert backup_json_dict["homeassistant"] == {"version": "2025.1.0"}
+    assert backup_json_dict["homeassistant"] == {
+        "exclude_database": False,
+        "version": "2025.1.0",
+    }
     assert manager.backup_dir.as_posix() in str(mocked_tarfile.call_args_list[0][0][0])
 
 
@@ -154,7 +163,13 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     manager = BackupManager(hass)
     manager.backup_task = hass.async_create_task(event.wait())
     with pytest.raises(HomeAssistantError, match="Backup already in progress"):
-        await manager.async_create_backup(on_progress=None)
+        await manager.async_create_backup(
+            addons_included=[],
+            database_included=True,
+            folders_included=[],
+            name=None,
+            on_progress=None,
+        )
     event.set()
 
 
