@@ -16,10 +16,11 @@ import tarfile
 from tarfile import TarError
 from tempfile import TemporaryDirectory
 import time
-from typing import Any, Protocol, cast
+from typing import Any, Generic, Protocol, cast
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
+from typing_extensions import TypeVar
 
 from homeassistant.backup_restore import RESTORE_BACKUP_FILE
 from homeassistant.const import __version__ as HAVERSION
@@ -31,8 +32,12 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
+from .models import BaseBackup
+from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
+
+_BackupT = TypeVar("_BackupT", bound=BaseBackup, default=BaseBackup)
 
 
 @dataclass(slots=True)
@@ -43,14 +48,10 @@ class NewBackup:
 
 
 @dataclass(slots=True)
-class Backup:
+class Backup(BaseBackup):
     """Backup class."""
 
-    slug: str
-    name: str
-    date: str
     path: Path
-    size: float
 
     def as_dict(self) -> dict:
         """Return a dict representation of this backup."""
@@ -76,19 +77,21 @@ class BackupPlatformProtocol(Protocol):
         """Perform operations after a backup finishes."""
 
 
-class BaseBackupManager(abc.ABC):
+class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     """Define the format that backup managers can have."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
         self.backup_task: asyncio.Task | None = None
-        self.backups: dict[str, Backup] = {}
+        self.backups: dict[str, _BackupT] = {}
         self.loaded_platforms = False
         self.platforms: dict[str, BackupPlatformProtocol] = {}
+        self.sync_agents: dict[str, BackupSyncAgent] = {}
+        self.syncing = False
 
     @callback
-    def _add_platform(
+    def _add_platform_pre_post_handlers(
         self,
         hass: HomeAssistant,
         integration_domain: str,
@@ -98,12 +101,24 @@ class BaseBackupManager(abc.ABC):
         if not hasattr(platform, "async_pre_backup") or not hasattr(
             platform, "async_post_backup"
         ):
-            LOGGER.warning(
-                "%s does not implement required functions for the backup platform",
-                integration_domain,
-            )
             return
+
         self.platforms[integration_domain] = platform
+
+    async def _async_add_platform_agents(
+        self,
+        hass: HomeAssistant,
+        integration_domain: str,
+        platform: BackupPlatformAgentProtocol,
+    ) -> None:
+        """Add a platform to the backup manager."""
+        if not hasattr(platform, "async_get_backup_sync_agents"):
+            return
+
+        agents = await platform.async_get_backup_sync_agents(hass=hass)
+        self.sync_agents.update(
+            {f"{integration_domain}.{agent.name}": agent for agent in agents}
+        )
 
     async def async_pre_backup_actions(self, **kwargs: Any) -> None:
         """Perform pre backup actions."""
@@ -139,10 +154,22 @@ class BaseBackupManager(abc.ABC):
 
     async def load_platforms(self) -> None:
         """Load backup platforms."""
+        if self.loaded_platforms:
+            return
         await integration_platform.async_process_integration_platforms(
-            self.hass, DOMAIN, self._add_platform, wait_for_platforms=True
+            self.hass,
+            DOMAIN,
+            self._add_platform_pre_post_handlers,
+            wait_for_platforms=True,
+        )
+        await integration_platform.async_process_integration_platforms(
+            self.hass,
+            DOMAIN,
+            self._async_add_platform_agents,
+            wait_for_platforms=True,
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
+        LOGGER.debug("Loaded %s agents", len(self.sync_agents))
         self.loaded_platforms = True
 
     @abc.abstractmethod
@@ -159,14 +186,14 @@ class BaseBackupManager(abc.ABC):
         """Generate a backup."""
 
     @abc.abstractmethod
-    async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, _BackupT]:
         """Get backups.
 
         Return a dictionary of Backup instances keyed by their slug.
         """
 
     @abc.abstractmethod
-    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> _BackupT | None:
         """Get a backup."""
 
     @abc.abstractmethod
@@ -182,8 +209,12 @@ class BaseBackupManager(abc.ABC):
     ) -> None:
         """Receive and store a backup file from upload."""
 
+    @abc.abstractmethod
+    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Sync a backup."""
 
-class BackupManager(BaseBackupManager):
+
+class BackupManager(BaseBackupManager[Backup]):
     """Backup manager for the Backup integration."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -192,10 +223,42 @@ class BackupManager(BaseBackupManager):
         self.backup_dir = Path(hass.config.path("backups"))
         self.loaded_backups = False
 
+    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Sync a backup."""
+        await self.load_platforms()
+
+        if not self.sync_agents:
+            return
+
+        if not (backup := await self.async_get_backup(slug=slug)):
+            return
+
+        self.syncing = True
+        sync_backup_results = await asyncio.gather(
+            *(
+                agent.async_upload_backup(
+                    path=backup.path,
+                    metadata={
+                        "homeassistant": HAVERSION,
+                        "size": backup.size,
+                        "date": backup.date,
+                        "slug": backup.slug,
+                        "name": backup.name,
+                    },
+                )
+                for agent in self.sync_agents.values()
+            ),
+            return_exceptions=True,
+        )
+        for result in sync_backup_results:
+            if isinstance(result, Exception):
+                LOGGER.error("Error during backup sync - %s", result)
+        self.syncing = False
+
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self.hass.async_add_executor_job(self._read_backups)
-        LOGGER.debug("Loaded %s backups", len(backups))
+        LOGGER.debug("Loaded %s local backups", len(backups))
         self.backups = backups
         self.loaded_backups = True
 

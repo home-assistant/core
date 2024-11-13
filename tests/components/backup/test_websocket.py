@@ -1,16 +1,18 @@
 """Tests for the Backup integration."""
 
-from unittest.mock import patch
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup.manager import Backup
+from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.models import BaseBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .common import TEST_BACKUP, setup_backup_integration
+from .common import TEST_BACKUP, BackupSyncAgentTest, setup_backup_integration
 
 from tests.typing import WebSocketGenerator
 
@@ -43,15 +45,23 @@ async def test_info(
     """Test getting backup info."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
 
+    hass.data[DATA_MANAGER].backups = {TEST_BACKUP.slug: TEST_BACKUP}
+
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.backup.manager.BackupManager.async_get_backups",
-        return_value={TEST_BACKUP.slug: TEST_BACKUP},
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.load_backups",
+            AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backups",
+            return_value={TEST_BACKUP.slug: TEST_BACKUP},
+        ),
     ):
         await client.send_json_auto_id({"type": "backup/info"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -73,7 +83,7 @@ async def test_details(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
     with_hassio: bool,
-    backup_content: Backup | None,
+    backup_content: BaseBackup | None,
 ) -> None:
     """Test getting backup info."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
@@ -112,7 +122,7 @@ async def test_remove(
         "homeassistant.components.backup.manager.BackupManager.async_remove_backup",
     ):
         await client.send_json_auto_id({"type": "backup/remove", "slug": "abc123"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -140,7 +150,7 @@ async def test_generate(
 
     await client.send_json_auto_id({"type": "backup/generate"})
     for _ in range(number_of_messages):
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -199,7 +209,7 @@ async def test_backup_end(
         "homeassistant.components.backup.manager.BackupManager.async_post_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/end"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -232,7 +242,47 @@ async def test_backup_start(
         "homeassistant.components.backup.manager.BackupManager.async_pre_backup_actions",
     ):
         await client.send_json_auto_id({"type": "backup/start"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "access_token_fixture_name",
+    ["hass_access_token", "hass_supervisor_access_token"],
+)
+@pytest.mark.parametrize(
+    ("with_hassio"),
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_backup_sync(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    sync_access_token_proxy: str,
+    *,
+    access_token_fixture_name: str,
+    with_hassio: bool,
+) -> None:
+    """Test handling of pre backup actions from a WS command."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    client = await hass_ws_client(hass, sync_access_token_proxy)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_sync_backup",
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/sync",
+                "data": {
+                    "slug": "abc123",
+                },
+            }
+        )
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -261,7 +311,43 @@ async def test_backup_end_excepion(
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/end"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutError(),
+        HomeAssistantError("Boom"),
+        Exception("Boom"),
+    ],
+)
+async def test_backup_sync_excepion(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    hass_supervisor_access_token: str,
+    exception: Exception,
+) -> None:
+    """Test exception handling while running sync backup action from a WS command."""
+    await setup_backup_integration(hass, with_hassio=True)
+
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_sync_backup",
+        side_effect=exception,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/sync",
+                "data": {
+                    "slug": "abc123",
+                },
+            }
+        )
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -290,4 +376,135 @@ async def test_backup_start_excepion(
         side_effect=exception,
     ):
         await client.send_json_auto_id({"type": "backup/start"})
-        assert snapshot == await client.receive_json()
+        assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "with_hassio",
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_agents_info(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    with_hassio: bool,
+) -> None:
+    """Test getting backup agents info."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "with_hassio",
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_agents_synced(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    with_hassio: bool,
+) -> None:
+    """Test getting backup agents synced details."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/synced"})
+    assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "with_hassio",
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+async def test_agents_download(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    with_hassio: bool,
+) -> None:
+    """Test WS command to start downloading a synced backup."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "slug": "abc123",
+            "agent": "domain.test",
+            "sync_id": "abc123",
+        }
+    )
+    with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
+        assert await client.receive_json() == snapshot
+        assert download_mock.call_args[1] == {
+            "id": "abc123",
+            "path": Path(hass.config.path("backup"), "abc123.tar"),
+        }
+
+
+async def test_agents_download_exception(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test WS command to start downloading a synced backup throwing an exception."""
+    await setup_backup_integration(hass)
+    hass.data[DATA_MANAGER].sync_agents = {"domain.test": BackupSyncAgentTest("test")}
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "slug": "abc123",
+            "agent": "domain.test",
+            "sync_id": "abc123",
+        }
+    )
+    with patch.object(BackupSyncAgentTest, "async_download_backup") as download_mock:
+        download_mock.side_effect = Exception("Boom")
+        assert await client.receive_json() == snapshot
+
+
+async def test_agents_download_unknown_agent(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test downloading a synced backup with an unknown agent."""
+    await setup_backup_integration(hass)
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "slug": "abc123",
+            "agent": "domain.test",
+            "sync_id": "abc123",
+        }
+    )
+    assert await client.receive_json() == snapshot
