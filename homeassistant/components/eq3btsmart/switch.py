@@ -2,13 +2,13 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from eq3btsmart import Thermostat
 from eq3btsmart.models import Status
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ENTITY_KEY_AWAY, ENTITY_KEY_BOOST, ENTITY_KEY_LOCK
@@ -74,6 +74,13 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        self._attr_is_on = self.entity_description.value_func(self._status)
+        super()._handle_coordinator_update()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
 
@@ -83,12 +90,3 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
         """Turn off the switch."""
 
         await self.entity_description.toggle_func(self._thermostat)(False)
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the switch."""
-
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
-
-        return self.entity_description.value_func(self._thermostat.status)

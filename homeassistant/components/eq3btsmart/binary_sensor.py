@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from eq3btsmart.models import Status
 
@@ -12,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Eq3ConfigEntry
@@ -76,11 +75,9 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the binary sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
-
-        return self.entity_description.value_func(self._thermostat.status)
+        self._attr_is_on = self.entity_description.value_func(self._status)
+        super()._handle_coordinator_update()

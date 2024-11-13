@@ -69,34 +69,30 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        if self._thermostat.status is not None:
-            self._target_temperature = self._thermostat.status.target_temperature.value
-            self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
-            self._attr_current_temperature = self._get_current_temperature()
-            self._attr_target_temperature = self._get_target_temperature()
-            self._attr_preset_mode = self._get_current_preset_mode()
-            self._attr_hvac_action = self._get_current_hvac_action()
+        self._target_temperature = self._status.target_temperature.value
+        self._attr_hvac_mode = EQ_TO_HA_HVAC[self._status.operation_mode]
+        self._attr_current_temperature = self._get_current_temperature()
+        self._attr_target_temperature = self._get_target_temperature()
+        self._attr_preset_mode = self._get_current_preset_mode()
+        self._attr_hvac_action = self._get_current_hvac_action()
 
         super()._handle_coordinator_update()
 
     def _get_current_temperature(self) -> float | None:
         """Return the current temperature."""
 
+        if TYPE_CHECKING:
+            assert self._status is not None
+
         match self._current_temp_selector:
             case CurrentTemperatureSelector.NOTHING:
                 return None
             case CurrentTemperatureSelector.VALVE:
-                if self._thermostat.status is None:
-                    return None
-
-                return float(self._thermostat.status.valve_temperature)
+                return float(self._status.valve_temperature)
             case CurrentTemperatureSelector.UI:
                 return self._target_temperature
             case CurrentTemperatureSelector.DEVICE:
-                if self._thermostat.status is None:
-                    return None
-
-                return float(self._thermostat.status.target_temperature.value)
+                return float(self._status.target_temperature.value)
             case CurrentTemperatureSelector.ENTITY:
                 if TYPE_CHECKING:
                     assert self._external_temp_sensor is not None
@@ -117,31 +113,26 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             case TargetTemperatureSelector.TARGET:
                 return self._target_temperature
             case TargetTemperatureSelector.LAST_REPORTED:
-                if self._thermostat.status is None:
-                    return None
-
-                return float(self._thermostat.status.target_temperature.value)
+                return float(self._status.target_temperature.value)
 
     def _get_current_preset_mode(self) -> str:
         """Return the current preset mode."""
 
-        if (status := self._thermostat.status) is None:
-            return PRESET_NONE
-        if status.is_window_open:
+        if self._status.is_window_open:
             return Preset.WINDOW_OPEN
-        if status.is_boost:
+        if self._status.is_boost:
             return Preset.BOOST
-        if status.is_low_battery:
+        if self._status.is_low_battery:
             return Preset.LOW_BATTERY
-        if status.is_away:
+        if self._status.is_away:
             return Preset.AWAY
-        if status.operation_mode is OperationMode.ON:
+        if self._status.operation_mode is OperationMode.ON:
             return Preset.OPEN
-        if status.presets is None:
+        if self._status.presets is None:
             return PRESET_NONE
-        if status.target_temperature == status.presets.eco_temperature:
+        if self._status.target_temperature == self._status.presets.eco_temperature:
             return Preset.ECO
-        if status.target_temperature == status.presets.comfort_temperature:
+        if self._status.target_temperature == self._status.presets.comfort_temperature:
             return Preset.COMFORT
 
         return PRESET_NONE
@@ -149,12 +140,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _get_current_hvac_action(self) -> HVACAction:
         """Return the current hvac action."""
 
-        if (
-            self._thermostat.status is None
-            or self._thermostat.status.operation_mode is OperationMode.OFF
-        ):
+        if self._status.operation_mode is OperationMode.OFF:
             return HVACAction.OFF
-        if self._thermostat.status.valve == 0:
+        if self._status.valve == 0:
             return HVACAction.IDLE
         return HVACAction.HEATING
 

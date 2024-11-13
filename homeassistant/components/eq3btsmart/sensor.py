@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from eq3btsmart.models import Status
 
@@ -16,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ENTITY_KEY_AWAY_UNTIL, ENTITY_KEY_VALVE
@@ -76,11 +75,9 @@ class Eq3SensorEntity(Eq3Entity, SensorEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        """Return the value reported by the sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
-
-        return self.entity_description.value_func(self._thermostat.status)
+        self._attr_native_value = self.entity_description.value_func(self._status)
+        super()._handle_coordinator_update()

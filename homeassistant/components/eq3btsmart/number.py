@@ -12,7 +12,6 @@ from eq3btsmart.const import (
     EQ3BT_MIN_TEMP,
 )
 from eq3btsmart.models import Presets
-from eq3btsmart.thermostat_config import ThermostatConfig
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
@@ -23,7 +22,7 @@ from homeassistant.components.number import (
     RestoreNumber,
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -48,7 +47,6 @@ from .entity import Eq3Entity
 class Eq3NumberEntityDescription(NumberEntityDescription):
     """Entity description for eq3 number entities."""
 
-    value_func: Callable[[Presets], float]
     value_set_func: Callable[
         [Thermostat],
         Callable[[float], Awaitable[None]],
@@ -63,32 +61,50 @@ class Eq3NumberEntityDescription(NumberEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Eq3RestoreNumberEntityDescription(Eq3NumberEntityDescription):
-    """Entity description for eq3 number entities that should be restored."""
+class Eq3PresetNumberEntityDescription(Eq3NumberEntityDescription):
+    """Entity description for eq3 preset number entities."""
 
-    value_func: Callable[[ThermostatConfig], float | int]
+    value_func: Callable[[Presets], float]
 
 
 NUMBER_ENTITY_DESCRIPTIONS = [
     Eq3NumberEntityDescription(
+        key=ENTITY_KEY_AWAY_TEMPERATURE,
+        value_set_func=lambda thermostat: thermostat.async_configure_away_temperature,
+        translation_key=ENTITY_KEY_AWAY_TEMPERATURE,
+    ),
+    Eq3NumberEntityDescription(
+        key=ENTITY_KEY_AWAY_HOURS,
+        value_set_func=lambda thermostat: thermostat.async_configure_away_hours,
+        translation_key=ENTITY_KEY_AWAY_HOURS,
+        device_class=None,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_min_value=0.5,
+        native_max_value=1000000,
+    ),
+]
+
+
+PRESET_NUMBER_ENTITY_DESCRIPTIONS = [
+    Eq3PresetNumberEntityDescription(
         key=ENTITY_KEY_COMFORT,
         value_func=lambda presets: presets.comfort_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_comfort_temperature,
         translation_key=ENTITY_KEY_COMFORT,
     ),
-    Eq3NumberEntityDescription(
+    Eq3PresetNumberEntityDescription(
         key=ENTITY_KEY_ECO,
         value_func=lambda presets: presets.eco_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_eco_temperature,
         translation_key=ENTITY_KEY_ECO,
     ),
-    Eq3NumberEntityDescription(
+    Eq3PresetNumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
         value_func=lambda presets: presets.window_open_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_window_open_temperature,
         translation_key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
     ),
-    Eq3NumberEntityDescription(
+    Eq3PresetNumberEntityDescription(
         key=ENTITY_KEY_OFFSET,
         value_func=lambda presets: presets.offset_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_temperature_offset,
@@ -96,7 +112,7 @@ NUMBER_ENTITY_DESCRIPTIONS = [
         native_min_value=EQ3BT_MIN_OFFSET,
         native_max_value=EQ3BT_MAX_OFFSET,
     ),
-    Eq3NumberEntityDescription(
+    Eq3PresetNumberEntityDescription(
         key=ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
         value_set_func=lambda thermostat: thermostat.async_configure_window_open_duration,
         value_func=lambda presets: presets.window_open_time.value.total_seconds() / 60,
@@ -106,26 +122,6 @@ NUMBER_ENTITY_DESCRIPTIONS = [
         native_min_value=0,
         native_max_value=60,
         native_step=5,
-    ),
-]
-
-
-RESTORE_NUMBER_ENTITY_DESCRIPTIONS = [
-    Eq3RestoreNumberEntityDescription(
-        key=ENTITY_KEY_AWAY_TEMPERATURE,
-        value_func=lambda thermostat_config: thermostat_config.away_temperature,
-        value_set_func=lambda thermostat: thermostat.async_configure_away_temperature,
-        translation_key=ENTITY_KEY_AWAY_TEMPERATURE,
-    ),
-    Eq3RestoreNumberEntityDescription(
-        key=ENTITY_KEY_AWAY_HOURS,
-        value_func=lambda thermostat_config: thermostat_config.away_hours,
-        value_set_func=lambda thermostat: thermostat.async_configure_away_hours,
-        translation_key=ENTITY_KEY_AWAY_HOURS,
-        device_class=None,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        native_min_value=0.5,
-        native_max_value=1000000,
     ),
 ]
 
@@ -143,6 +139,11 @@ async def async_setup_entry(
         connections={(dr.CONNECTION_BLUETOOTH, mac_address)},
     )
 
+    entities_to_add: list[NumberEntity] = [
+        Eq3NumberEntity(entry, entity_description)
+        for entity_description in NUMBER_ENTITY_DESCRIPTIONS
+    ]
+
     if (
         device := device_registry.async_get_device(
             connections={(dr.CONNECTION_BLUETOOTH, mac_address)},
@@ -150,76 +151,30 @@ async def async_setup_entry(
     ) and (not device.sw_version or int(device.sw_version) < MIN_FIRMWARE_FOR_PRESETS):
         entity_registry = er.async_get(hass)
 
-        for entity_description in (
-            NUMBER_ENTITY_DESCRIPTIONS + RESTORE_NUMBER_ENTITY_DESCRIPTIONS
-        ):
+        for entity_description in PRESET_NUMBER_ENTITY_DESCRIPTIONS:
             unique_id = f"{mac_address}_{entity_description.key}"
             if entity_id := entity_registry.async_get_entity_id(
                 NUMBER_DOMAIN, DOMAIN, unique_id
             ):
                 entity_registry.async_remove(entity_id)
-
-        return
-
-    entities_to_add = [
-        Eq3NumberEntity(entry, entity_description)
-        for entity_description in NUMBER_ENTITY_DESCRIPTIONS
-    ] + [
-        Eq3RestoreNumberEntity(entry, entity_description)
-        for entity_description in RESTORE_NUMBER_ENTITY_DESCRIPTIONS
-    ]
+    else:
+        entities_to_add += [
+            Eq3PresetNumberEntity(entry, entity_description)
+            for entity_description in PRESET_NUMBER_ENTITY_DESCRIPTIONS
+        ]
 
     async_add_entities(entities_to_add)
 
 
-class Eq3NumberEntity(Eq3Entity, NumberEntity):
-    """Base class for all eq3 number entities."""
+class Eq3NumberEntity(Eq3Entity, RestoreNumber):
+    """Base class for all eq3 number entities that should be restored."""
 
     entity_description: Eq3NumberEntityDescription
 
     def __init__(
-        self, entry: Eq3ConfigEntry, entity_description: Eq3NumberEntityDescription
-    ) -> None:
-        """Initialize the entity."""
-
-        super().__init__(entry, entity_description.key)
-        self.entity_description = entity_description
-
-    @property
-    def native_value(self) -> float:
-        """Return the state of the entity."""
-
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
-            assert self._thermostat.status.presets is not None
-
-        return self.entity_description.value_func(self._thermostat.status.presets)
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Set the state of the entity."""
-
-        await self.entity_description.value_set_func(self._thermostat)(value)
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-
-        return (
-            self._thermostat.status is not None
-            and self._thermostat.status.presets is not None
-            and self._attr_available
-        )
-
-
-class Eq3RestoreNumberEntity(Eq3Entity, RestoreNumber):
-    """Base class for all eq3 number entities that should be restored."""
-
-    entity_description: Eq3RestoreNumberEntityDescription
-
-    def __init__(
         self,
         entry: Eq3ConfigEntry,
-        entity_description: Eq3RestoreNumberEntityDescription,
+        entity_description: Eq3NumberEntityDescription,
     ) -> None:
         """Initialize the entity."""
 
@@ -242,12 +197,35 @@ class Eq3RestoreNumberEntity(Eq3Entity, RestoreNumber):
         self._attr_native_value = value
         await self.entity_description.value_set_func(self._thermostat)(value)
 
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
 
-        return (
-            self._thermostat.status is not None
-            and self._thermostat.status.presets is not None
-            and self._attr_available
+class Eq3PresetNumberEntity(Eq3Entity, NumberEntity):
+    """Base class for all eq3 number entities."""
+
+    entity_description: Eq3PresetNumberEntityDescription
+
+    def __init__(
+        self,
+        entry: Eq3ConfigEntry,
+        entity_description: Eq3PresetNumberEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+
+        super().__init__(entry, entity_description.key)
+        self.entity_description = entity_description
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        if TYPE_CHECKING:
+            assert self._status.presets is not None
+
+        self._attr_native_value = self.entity_description.value_func(
+            self._status.presets
         )
+        super()._handle_coordinator_update()
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the state of the entity."""
+
+        await self.entity_description.value_set_func(self._thermostat)(value)

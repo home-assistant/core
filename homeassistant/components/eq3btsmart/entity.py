@@ -1,5 +1,7 @@
 """Base class for all eQ-3 entities."""
 
+from eq3btsmart.models import Status
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -17,15 +19,14 @@ from .const import (
     CONF_TARGET_TEMP_SELECTOR,
     DEVICE_MODEL,
     MANUFACTURER,
-    SIGNAL_THERMOSTAT_CONNECTED,
     SIGNAL_THERMOSTAT_DISCONNECTED,
     CurrentTemperatureSelector,
     TargetTemperatureSelector,
 )
-from .coordinator import Eq3ConfigEntry
+from .coordinator import Eq3ConfigEntry, Eq3Coordinator
 
 
-class Eq3Entity(CoordinatorEntity):
+class Eq3Entity(CoordinatorEntity[Eq3Coordinator]):
     """Base class for all eQ-3 entities."""
 
     _attr_has_entity_name = True
@@ -56,6 +57,12 @@ class Eq3Entity(CoordinatorEntity):
         suffix = f"_{unique_id_key}" if unique_id_key else ""
         self._attr_unique_id = f"{format_mac(self._mac_address)}{suffix}"
 
+    @property
+    def _status(self) -> Status:
+        """Return the status of the thermostat."""
+
+        return self.coordinator.data
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
@@ -68,13 +75,13 @@ class Eq3Entity(CoordinatorEntity):
                 self._async_on_disconnected,
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SIGNAL_THERMOSTAT_CONNECTED}_{self._mac_address}",
-                self._async_on_connected,
-            )
-        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+
+        self._attr_available = self.coordinator.last_update_success
+        super()._handle_coordinator_update()
 
     @callback
     def _async_on_disconnected(self) -> None:
@@ -83,15 +90,8 @@ class Eq3Entity(CoordinatorEntity):
         self._attr_available = False
         self.async_write_ha_state()
 
-    @callback
-    def _async_on_connected(self) -> None:
-        """Handle connection to the thermostat."""
-
-        self._attr_available = True
-        self.async_write_ha_state()
-
     @property
     def available(self) -> bool:
-        """Whether the entity is available."""
+        """Return True if entity is available."""
 
-        return self._thermostat.status is not None and self._attr_available
+        return self._attr_available
