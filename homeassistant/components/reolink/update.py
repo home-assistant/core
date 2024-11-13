@@ -27,6 +27,7 @@ from .entity import (
     ReolinkHostEntityDescription,
 )
 from .util import ReolinkConfigEntry, ReolinkData
+from . import DEVICE_UPDATE_INTERVAL
 
 POLL_AFTER_INSTALL = 120
 POLL_PROGRESS = 2
@@ -108,6 +109,7 @@ class ReolinkUpdateEntity(
         self._cancel_update: CALLBACK_TYPE | None = None
         self._cancel_progress: CALLBACK_TYPE | None = None
         self._installing: bool = False
+        self._reolink_data = reolink_data
 
     @property
     def installed_version(self) -> str | None:
@@ -176,6 +178,7 @@ class ReolinkUpdateEntity(
     ) -> None:
         """Install the latest firmware version."""
         self._installing = True
+        await self._pause_update_coordinator()
         self._cancel_progress = async_call_later(
             self.hass, POLL_PROGRESS, self._async_update_progress
         )
@@ -190,7 +193,18 @@ class ReolinkUpdateEntity(
             self._cancel_update = async_call_later(
                 self.hass, POLL_AFTER_INSTALL, self._async_update_future
             )
+            await self._resume_update_coordinator()
             self._installing = False
+
+    async def _pause_update_coordinator(self) -> None:
+        """Pause updating the states using the data update coordinator (during reboots)."""
+        self._reolink_data.device_coordinator.update_interval = None
+        self._reolink_data.device_coordinator.async_set_updated_data(None)
+
+    async def _resume_update_coordinator(self) -> None:
+        """Resume updating the states using the data update coordinator (after reboots)."""
+        self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
+        await self._reolink_data.device_coordinator.async_refresh()
 
     async def _async_update_progress(self, now: datetime | None = None) -> None:
         """Request update."""
@@ -243,6 +257,7 @@ class ReolinkHostUpdateEntity(
         self._cancel_update: CALLBACK_TYPE | None = None
         self._cancel_progress: CALLBACK_TYPE | None = None
         self._installing: bool = False
+        self._reolink_data = reolink_data
 
     @property
     def installed_version(self) -> str | None:
@@ -311,6 +326,7 @@ class ReolinkHostUpdateEntity(
     ) -> None:
         """Install the latest firmware version."""
         self._installing = True
+        await self._pause_update_coordinator()
         self._cancel_progress = async_call_later(
             self.hass, POLL_PROGRESS, self._async_update_progress
         )
@@ -325,7 +341,18 @@ class ReolinkHostUpdateEntity(
             self._cancel_update = async_call_later(
                 self.hass, POLL_AFTER_INSTALL, self._async_update_future
             )
+            await self._resume_update_coordinator()
             self._installing = False
+
+    async def _pause_update_coordinator(self) -> None:
+        """Pause updating the states using the data update coordinator (during reboots)."""
+        self._reolink_data.device_coordinator.update_interval = None
+        self._reolink_data.device_coordinator.async_set_updated_data(None)
+
+    async def _resume_update_coordinator(self) -> None:
+        """Resume updating the states using the data update coordinator (after reboots)."""
+        self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
+        await self._reolink_data.device_coordinator.async_refresh()
 
     async def _async_update_progress(self, now: datetime | None = None) -> None:
         """Request update."""
