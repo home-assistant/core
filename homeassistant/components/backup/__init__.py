@@ -5,11 +5,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
+from .agent import BackupSyncAgent, SyncedBackup
 from .const import DOMAIN, LOGGER
 from .http import async_register_http_views
 from .manager import BackupManager
 from .models import BackupSyncMetadata
-from .sync_agent import BackupSyncAgent, SyncedBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [

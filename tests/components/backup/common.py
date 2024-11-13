@@ -7,9 +7,9 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.backup import DOMAIN
+from homeassistant.components.backup.agent import BackupSyncAgent, SyncedBackup
 from homeassistant.components.backup.manager import Backup
 from homeassistant.components.backup.models import BackupSyncMetadata
-from homeassistant.components.backup.sync_agent import BackupSyncAgent, SyncedBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component

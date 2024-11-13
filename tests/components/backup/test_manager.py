@@ -11,11 +11,11 @@ from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
 from homeassistant.components.backup import BackupManager, BackupSyncMetadata
+from homeassistant.components.backup.agent import BackupPlatformAgentProtocol
 from homeassistant.components.backup.manager import (
     BackupPlatformProtocol,
     BackupProgress,
 )
-from homeassistant.components.backup.sync_agent import BackupPlatformAgentProtocol
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -395,7 +395,7 @@ async def test_syncing_backup_no_agents(
 
     backup = await _mock_backup_generation(manager, mocked_json_bytes, mocked_tarfile)
     with patch(
-        "homeassistant.components.backup.sync_agent.BackupSyncAgent.async_upload_backup"
+        "homeassistant.components.backup.agent.BackupSyncAgent.async_upload_backup"
     ) as mocked_async_upload_backup:
         await manager.async_sync_backup(slug=backup.slug)
         assert mocked_async_upload_backup.call_count == 0

@@ -31,9 +31,9 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
+from .agent import BackupPlatformAgentProtocol, BackupSyncAgent
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 from .models import BackupSyncMetadata, BaseBackup
-from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
 
