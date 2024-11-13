@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from webrtc_models import RTCIceCandidate, RTCIceServer
+from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
     DATA_ICE_SERVERS,
@@ -483,14 +483,14 @@ async def test_websocket_webrtc_offer(
     ("message", "expected_frontend_message"),
     [
         (
-            WebRTCCandidate(RTCIceCandidate("candidate", sdp_m_line_index=0)),
+            WebRTCCandidate(RTCIceCandidateInit("candidate", sdp_m_line_index=0)),
             {
                 "type": "candidate",
                 "candidate": {"candidate": "candidate", "sdpMLineIndex": 0},
             },
         ),
         (
-            WebRTCCandidate(RTCIceCandidate("candidate", sdp_mid="0")),
+            WebRTCCandidate(RTCIceCandidateInit("candidate", sdp_mid="0")),
             {
                 "type": "candidate",
                 "candidate": {"candidate": "candidate", "sdpMid": "0"},
@@ -982,7 +982,7 @@ async def test_ws_webrtc_candidate(
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidate(candidate, sdp_m_line_index=1)
+            session_id, RTCIceCandidateInit(candidate, sdp_m_line_index=1)
         )
 
 
@@ -1034,7 +1034,7 @@ async def test_ws_webrtc_candidate_webrtc_provider(
         assert response["type"] == TYPE_RESULT
         assert response["success"]
         mock_on_webrtc_candidate.assert_called_once_with(
-            session_id, RTCIceCandidate(candidate, sdp_m_line_index=1)
+            session_id, RTCIceCandidateInit(candidate, sdp_m_line_index=1)
         )
 
 
@@ -1136,7 +1136,7 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
             send_message(WebRTCAnswer(answer="answer"))
 
         async def async_on_webrtc_candidate(
-            self, session_id: str, candidate: RTCIceCandidate
+            self, session_id: str, candidate: RTCIceCandidateInit
         ) -> None:
             """Handle the WebRTC candidate."""
 
@@ -1147,7 +1147,7 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
         Mock(), "offer_sdp", "session_id", Mock()
     )
     await provider.async_on_webrtc_candidate(
-        "session_id", RTCIceCandidate("candidate", sdp_m_line_index=0)
+        "session_id", RTCIceCandidateInit("candidate", sdp_m_line_index=0)
     )
     provider.async_close_session("session_id")
 
