@@ -7,6 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
@@ -47,6 +48,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    browse_media,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -101,6 +103,7 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 CONF_BROWSE_MEDIA_ENTITY = "browse_media_entity"
+CONF_PROCESS_MEDIA_ID = "process_media_id"
 
 STATES_ORDER = [
     STATE_UNKNOWN,
@@ -132,6 +135,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_ACTIVE_CHILD_TEMPLATE): cv.template,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PROCESS_MEDIA_ID): cv.boolean,
     },
     extra=vol.REMOVE_EXTRA,
 )
@@ -179,6 +183,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._browse_media_entity = config.get(CONF_BROWSE_MEDIA_ENTITY)
+        self._process_media_id = config.get(CONF_PROCESS_MEDIA_ID)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to children and template state changes."""
@@ -597,6 +602,20 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
+        if self._process_media_id:
+            if media_source.is_media_source_id(media_id):
+                play_item = await media_source.async_resolve_media(
+                    self.hass, media_id, self.entity_id
+                )
+                media_type = play_item.mime_type
+                media_id = play_item.url
+                media_id = browse_media.async_process_play_media_url(
+                    self.hass, media_id
+                )
+            if media_type in (MediaType.URL, MediaType.MUSIC):
+                media_id = browse_media.async_process_play_media_url(
+                    self.hass, media_id
+                )
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
         await self._async_call_service(SERVICE_PLAY_MEDIA, data, allow_override=True)
 
