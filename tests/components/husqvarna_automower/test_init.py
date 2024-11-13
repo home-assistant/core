@@ -196,7 +196,6 @@ async def test_websocket_not_available(
     await hass.async_block_till_done()
     assert mock.call_count == 2
     assert "Trying to reconnect: Boom" not in caplog.text
-    mock_stall.set()
 
     # Simulate hass shutting down
     await hass.async_stop()
