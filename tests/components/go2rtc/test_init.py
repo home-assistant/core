@@ -6,6 +6,7 @@ from typing import NamedTuple
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
+from awesomeversion import AwesomeVersion
 from go2rtc_client import Stream
 from go2rtc_client.exceptions import Go2RtcClientError, Go2RtcVersionError
 from go2rtc_client.models import Producer
@@ -36,10 +37,12 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    RECOMMENDED_VERSION,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -340,7 +343,7 @@ async def test_setup_go_binary(
     ],
 )
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
-async def test_setup_go(
+async def test_setup(
     hass: HomeAssistant,
     rest_client: AsyncMock,
     ws_client: Mock,
@@ -711,3 +714,30 @@ async def test_config_entry_remove(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+@pytest.mark.parametrize("config", [{DOMAIN: {CONF_URL: "http://localhost:1984"}}])
+@pytest.mark.usefixtures("server")
+async def test_setup_with_recommended_version_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    rest_client: AsyncMock,
+    config: ConfigType,
+) -> None:
+    """Test setup integration entry fails."""
+    rest_client.validate_server_version.return_value = AwesomeVersion("1.9.5")
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify the issue is created
+    issue = issue_registry.async_get_issue(DOMAIN, "recommended_version")
+    assert issue
+    assert issue.is_fixable is False
+    assert issue.is_persistent is False
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.issue_id == "recommended_version"
+    assert issue.translation_key == "recommended_version"
+    assert issue.translation_placeholders == {
+        "recommended_version": RECOMMENDED_VERSION,
+        "current_version": "1.9.5",
+    }
