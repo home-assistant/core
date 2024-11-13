@@ -9,5 +9,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aiowithings"],
   "quality_scale": "platinum",
-  "requirements": ["aiowithings==3.1.1"]
+  "requirements": ["aiowithings==3.1.3"]
 }

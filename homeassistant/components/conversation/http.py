@@ -6,12 +6,8 @@ from collections.abc import Iterable
 from typing import Any
 
 from aiohttp import web
-from hassil.recognize import (
-    MISSING_ENTITY,
-    RecognizeResult,
-    UnmatchedRangeEntity,
-    UnmatchedTextEntity,
-)
+from hassil.recognize import MISSING_ENTITY, RecognizeResult
+from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
