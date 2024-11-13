@@ -1495,6 +1495,7 @@ class ConfigEntriesFlowManager(
                 "exists, causing the old entry to be removed and replaced when it "
                 "should most likely update the previous entry and abort the flow",
                 core_behavior=ReportBehavior.LOG,
+                exclude_integrations={"mobile_app"},
             )
 
         # Unload the entry before setting up the new one.
