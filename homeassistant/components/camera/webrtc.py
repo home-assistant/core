@@ -258,9 +258,7 @@ def require_webrtc_support(
 @websocket_api.async_response
 @require_webrtc_support("webrtc_offer_failed")
 async def ws_webrtc_offer(
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-    camera: Camera,
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle the signal path for a WebRTC stream.
 
@@ -313,9 +311,7 @@ async def ws_webrtc_offer(
 @websocket_api.async_response
 @require_webrtc_support("webrtc_get_client_config_failed")
 async def ws_get_client_config(
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-    camera: Camera,
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle get WebRTC client config websocket command."""
     config = camera.async_get_webrtc_client_configuration().to_frontend_dict()
@@ -336,9 +332,7 @@ async def ws_get_client_config(
 @websocket_api.async_response
 @require_webrtc_support("webrtc_candidate_failed")
 async def ws_candidate(
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-    camera: Camera,
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle WebRTC candidate websocket command."""
     await camera.async_on_webrtc_candidate(
