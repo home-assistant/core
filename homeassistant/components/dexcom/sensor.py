@@ -71,6 +71,9 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
     _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
+    _attr_native_unit_of_measurement = (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    )
     _attr_translation_key = "glucose_value"
 
     def __init__(
@@ -81,16 +84,12 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, username, entry_id, "value")
-        self._key = "mg_dl"
-        self._attr_native_unit_of_measurement = (
-            UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
-        )
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return getattr(self.coordinator.data, self._key)
+            return self.coordinator.data.mg_dl
         return None
 
 
