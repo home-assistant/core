@@ -31,9 +31,6 @@ class PGLabEntity(Entity):
         self._entity = entity
         self._discovery = discovery
 
-        # Set the state update.
-        self._entity.add_state_update(self.state_updated)
-
         # Information about the device that is partially visible in the UI.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
@@ -49,7 +46,9 @@ class PGLabEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
 
+        self._entity.set_on_state_callback(self.state_updated)
         await self._entity.subscribe_topics()
+
         await super().async_added_to_hass()
 
         # Inform PGLab discovery instance that a new entity is available.
@@ -61,7 +60,9 @@ class PGLabEntity(Entity):
         """Unsubscribe when removed."""
 
         await super().async_will_remove_from_hass()
+
         await self._entity.unsubscribe_topics()
+        self._entity.set_on_state_callback(None)
 
     @callback
     def state_updated(self, payload: str) -> None:
