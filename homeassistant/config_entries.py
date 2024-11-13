@@ -3158,11 +3158,12 @@ class OptionsFlow(ConfigEntryBaseFlow):
     @config_entry.setter
     def config_entry(self, value: ConfigEntry) -> None:
         """Set the config entry value."""
-        report(
+        report_usage(
             "sets option flow config_entry explicitly, which is deprecated "
             "and will stop working in 2025.12",
-            error_if_integration=False,
-            error_if_core=True,
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.LOG,
         )
         self._config_entry = value
 

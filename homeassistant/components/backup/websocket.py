@@ -9,6 +9,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_MANAGER, LOGGER
+from .manager import BackupProgress
 
 
 @callback
@@ -46,7 +47,7 @@ async def handle_info(
         msg["id"],
         {
             "backups": [b.as_dict() for b in backups.values()],
-            "backing_up": manager.backing_up,
+            "backing_up": manager.backup_task is not None,
         },
     )
 
@@ -119,7 +120,11 @@ async def handle_create(
     msg: dict[str, Any],
 ) -> None:
     """Generate a backup."""
-    backup = await hass.data[DATA_MANAGER].async_create_backup()
+
+    def on_progress(progress: BackupProgress) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], progress))
+
+    backup = await hass.data[DATA_MANAGER].async_create_backup(on_progress=on_progress)
     connection.send_result(msg["id"], backup)
 
 
@@ -133,7 +138,6 @@ async def handle_backup_start(
 ) -> None:
     """Backup start notification."""
     manager = hass.data[DATA_MANAGER]
-    manager.backing_up = True
     LOGGER.debug("Backup start notification")
 
     try:
@@ -155,7 +159,6 @@ async def handle_backup_end(
 ) -> None:
     """Backup end notification."""
     manager = hass.data[DATA_MANAGER]
-    manager.backing_up = False
     LOGGER.debug("Backup end notification")
 
     try:
