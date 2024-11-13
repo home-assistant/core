@@ -47,7 +47,7 @@ def mock_backup_generation_fixture(
 
     with (
         patch("pathlib.Path.iterdir", _mock_iterdir),
-        patch("pathlib.Path.stat", MagicMock(st_size=123)),
+        patch("pathlib.Path.stat", return_value=MagicMock(st_size=123)),
         patch("pathlib.Path.is_file", lambda x: x.name != ".storage"),
         patch(
             "pathlib.Path.is_dir",
