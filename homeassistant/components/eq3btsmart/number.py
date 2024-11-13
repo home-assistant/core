@@ -15,6 +15,7 @@ from eq3btsmart.models import Presets
 from eq3btsmart.thermostat_config import ThermostatConfig
 
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -23,9 +24,12 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CONF_MAC_ADDRESS,
+    DOMAIN,
     ENTITY_KEY_AWAY_HOURS,
     ENTITY_KEY_AWAY_TEMPERATURE,
     ENTITY_KEY_COMFORT,
@@ -34,6 +38,7 @@ from .const import (
     ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
     ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
     EQ3BT_STEP,
+    MIN_FIRMWARE_FOR_PRESETS,
 )
 from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
@@ -131,6 +136,30 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the entry."""
+
+    mac_address: str = entry.data[CONF_MAC_ADDRESS]
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_BLUETOOTH, mac_address)},
+    )
+
+    if (
+        device := device_registry.async_get_device(
+            connections={(dr.CONNECTION_BLUETOOTH, mac_address)},
+        )
+    ) and (not device.sw_version or int(device.sw_version) < MIN_FIRMWARE_FOR_PRESETS):
+        entity_registry = er.async_get(hass)
+
+        for entity_description in (
+            NUMBER_ENTITY_DESCRIPTIONS + RESTORE_NUMBER_ENTITY_DESCRIPTIONS
+        ):
+            unique_id = f"{mac_address}_{entity_description.key}"
+            if entity_id := entity_registry.async_get_entity_id(
+                NUMBER_DOMAIN, DOMAIN, unique_id
+            ):
+                entity_registry.async_remove(entity_id)
+
+        return
 
     entities_to_add = [
         Eq3NumberEntity(entry, entity_description)

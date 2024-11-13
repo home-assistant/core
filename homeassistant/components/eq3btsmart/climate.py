@@ -17,8 +17,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -78,17 +76,6 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             self._attr_target_temperature = self._get_target_temperature()
             self._attr_preset_mode = self._get_current_preset_mode()
             self._attr_hvac_action = self._get_current_hvac_action()
-
-        if self._thermostat.device_data is not None:
-            device_registry = dr.async_get(self.hass)
-            if device := device_registry.async_get_device(
-                connections={(CONNECTION_BLUETOOTH, self._mac_address)},
-            ):
-                device_registry.async_update_device(
-                    device.id,
-                    sw_version=str(self._thermostat.device_data.firmware_version),
-                    serial_number=self._thermostat.device_data.device_serial.value,
-                )
 
         super()._handle_coordinator_update()
 

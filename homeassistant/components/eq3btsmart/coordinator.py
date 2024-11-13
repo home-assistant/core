@@ -13,7 +13,8 @@ from eq3btsmart.exceptions import Eq3Exception
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -122,5 +123,18 @@ class Eq3Coordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _async_on_update_received(self) -> None:
         """Handle updated data from the thermostat."""
+
+        if self.config_entry.runtime_data.thermostat.device_data is not None:
+            device_registry = dr.async_get(self.hass)
+            if device := device_registry.async_get_device(
+                connections={(CONNECTION_BLUETOOTH, self._mac_address)},
+            ):
+                device_registry.async_update_device(
+                    device.id,
+                    sw_version=str(
+                        self.config_entry.runtime_data.thermostat.device_data.firmware_version
+                    ),
+                    serial_number=self.config_entry.runtime_data.thermostat.device_data.device_serial.value,
+                )
 
         self.async_set_updated_data({})
