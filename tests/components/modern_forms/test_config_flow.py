@@ -204,7 +204,7 @@ async def test_user_device_exists_abort(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"host": "192.168.1.123"},
+        user_input={CONF_HOST: "192.168.1.123"},
     )
 
     assert result.get("type") is FlowResultType.ABORT
