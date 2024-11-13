@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import IntEnum, StrEnum, auto
 import json
 from pathlib import Path
 import subprocess
@@ -28,16 +28,29 @@ DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
 
-class QualityScale(IntEnum):
+class ScaledQualityScaleTiers(IntEnum):
     """Supported manifest quality scales."""
 
-    INTERNAL = -1
-    SILVER = 1
-    GOLD = 2
-    PLATINUM = 3
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4
 
 
-SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
+class NonScaledQualityScaleTiers(StrEnum):
+    """Supported manifest quality scales."""
+
+    CUSTOM = auto()
+    NO_SCORE = auto()
+    INTERNAL = auto()
+    LEGACY = auto()
+
+
+SUPPORTED_QUALITY_SCALES = [
+    value.name.lower()
+    for enum in [ScaledQualityScaleTiers, NonScaledQualityScaleTiers]
+    for value in enum
+]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -110,19 +123,6 @@ NO_IOT_CLASS = [
     "webhook",
     "websocket_api",
     "zone",
-]
-# Grandfather rule for older integrations
-# https://github.com/home-assistant/developers.home-assistant/pull/1512
-NO_DIAGNOSTICS = [
-    "dlna_dms",
-    "hyperion",
-    "nightscout",
-    "pvpc_hourly_pricing",
-    "risco",
-    "smarttub",
-    "songpal",
-    "vizio",
-    "yeelight",
 ]
 
 
@@ -359,36 +359,47 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if (quality_scale := integration.manifest.get("quality_scale")) and QualityScale[
-        quality_scale.upper()
-    ] > QualityScale.SILVER:
-        if not integration.manifest.get("codeowners"):
-            integration.add_error(
-                "manifest",
-                f"{quality_scale} integration does not have a code owner",
-            )
-        if (
-            domain not in NO_DIAGNOSTICS
-            and not (integration.path / "diagnostics.py").exists()
-        ):
-            integration.add_error(
-                "manifest",
-                f"{quality_scale} integration does not implement diagnostics",
-            )
-
-    if domain in NO_DIAGNOSTICS:
-        if quality_scale and QualityScale[quality_scale.upper()] < QualityScale.GOLD:
-            integration.add_error(
-                "manifest",
-                "{quality_scale} integration should be "
-                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
-            )
-        elif (integration.path / "diagnostics.py").exists():
-            integration.add_error(
-                "manifest",
-                "Implements diagnostics and can be "
-                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
-            )
+    if quality_scale := integration.manifest.get("quality_scale"):
+        if quality_scale not in NonScaledQualityScaleTiers:
+            scaled_tier = ScaledQualityScaleTiers[quality_scale.upper()]
+            if (
+                scaled_tier >= ScaledQualityScaleTiers.SILVER
+                and not integration.manifest.get("codeowners")
+            ):
+                integration.add_error(
+                    "manifest",
+                    f"{quality_scale} integration does not have a code owner",
+                )
+            if (
+                scaled_tier >= ScaledQualityScaleTiers.GOLD
+                and not (integration.path / "diagnostics.py").exists()
+            ):
+                integration.add_error(
+                    "manifest",
+                    f"{quality_scale} integration does not implement diagnostics",
+                )
+        elif integration.core:
+            if quality_scale == NonScaledQualityScaleTiers.CUSTOM:
+                integration.add_error(
+                    "manifest",
+                    "Core integration should not have a custom quality scale",
+                )
+            if (
+                quality_scale == NonScaledQualityScaleTiers.LEGACY
+                and integration.manifest.get("config_flow")
+            ):
+                integration.add_error(
+                    "manifest",
+                    "Integration with a config flow should not have a legacy quality scale",
+                )
+            if quality_scale not in (
+                NonScaledQualityScaleTiers.LEGACY,
+                NonScaledQualityScaleTiers.INTERNAL,
+            ) and not integration.manifest.get("config_flow"):
+                integration.add_error(
+                    "manifest",
+                    "Integration without a config flow should have a legacy quality scale",
+                )
 
     if not integration.core:
         validate_version(integration)
