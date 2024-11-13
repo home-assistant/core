@@ -684,7 +684,7 @@
           'name': 'HassLightSet',
         }),
         'match': False,
-        'sentence_template': '[<numeric_value_set>] <name> brightness to [the] {brightness_level:brightness}',
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
         'slots': dict({
           'name': 'test light',
         }),
@@ -692,7 +692,7 @@
         'targets': dict({
         }),
         'unmatched_slots': dict({
-          'brightness': '1001%',
+          'brightness': 1001,
         }),
       }),
     ]),
@@ -701,7 +701,11 @@
 # name: test_ws_hass_agent_debug_sentence_trigger
   dict({
     'results': list([
-      None,
+      dict({
+        'match': True,
+        'sentence_template': 'hello[ world]',
+        'source': 'trigger',
+      }),
     ]),
   })
 # ---
