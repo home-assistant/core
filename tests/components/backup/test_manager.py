@@ -10,7 +10,7 @@ import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
-from homeassistant.components.backup import BackupManager, BackupSyncMetadata
+from homeassistant.components.backup import BackupManager, BackupUploadMetadata
 from homeassistant.components.backup.agent import BackupPlatformAgentProtocol
 from homeassistant.components.backup.manager import (
     BackupPlatformProtocol,
@@ -293,11 +293,11 @@ async def test_syncing_backup(
             "2025.1.0",
         ),
     ):
-        await manager.async_sync_backup(slug=backup.slug)
+        await manager.async_upload_backup(slug=backup.slug)
         assert mocked_upload.call_count == 2
         first_call = mocked_upload.call_args_list[0]
         assert first_call[1]["path"] == backup.path
-        assert first_call[1]["metadata"] == BackupSyncMetadata(
+        assert first_call[1]["metadata"] == BackupUploadMetadata(
             date=backup.date,
             homeassistant="2025.1.0",
             name=backup.name,
@@ -305,7 +305,7 @@ async def test_syncing_backup(
             slug=backup.slug,
         )
 
-    assert "Error during backup sync" not in caplog.text
+    assert "Error during backup upload" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -355,11 +355,11 @@ async def test_syncing_backup_with_exception(
         ),
     ):
         mocked_upload.side_effect = HomeAssistantError("Test exception")
-        await manager.async_sync_backup(slug=backup.slug)
+        await manager.async_upload_backup(slug=backup.slug)
         assert mocked_upload.call_count == 2
         first_call = mocked_upload.call_args_list[0]
         assert first_call[1]["path"] == backup.path
-        assert first_call[1]["metadata"] == BackupSyncMetadata(
+        assert first_call[1]["metadata"] == BackupUploadMetadata(
             date=backup.date,
             homeassistant="2025.1.0",
             name=backup.name,
@@ -367,7 +367,7 @@ async def test_syncing_backup_with_exception(
             slug=backup.slug,
         )
 
-    assert "Error during backup sync - Test exception" in caplog.text
+    assert "Error during backup upload - Test exception" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -395,7 +395,7 @@ async def test_syncing_backup_no_agents(
     with patch(
         "homeassistant.components.backup.agent.BackupAgent.async_upload_backup"
     ) as mocked_async_upload_backup:
-        await manager.async_sync_backup(slug=backup.slug)
+        await manager.async_upload_backup(slug=backup.slug)
         assert mocked_async_upload_backup.call_count == 0
 
 

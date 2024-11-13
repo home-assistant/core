@@ -9,12 +9,12 @@ from typing import Any, Protocol
 
 from homeassistant.core import HomeAssistant
 
-from .models import BackupSyncMetadata, BaseBackup
+from .models import BackupUploadMetadata, BaseBackup
 
 
 @dataclass(slots=True)
-class SyncedBackup(BaseBackup):
-    """Synced backup class."""
+class UploadedBackup(BaseBackup):
+    """Uploaded backup class."""
 
     id: str
 
@@ -46,7 +46,7 @@ class BackupAgent(abc.ABC):
         self,
         *,
         path: Path,
-        metadata: BackupSyncMetadata,
+        metadata: BackupUploadMetadata,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -57,7 +57,7 @@ class BackupAgent(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
         """List backups."""
 
 

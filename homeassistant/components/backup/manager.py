@@ -33,7 +33,7 @@ from homeassistant.util.json import json_loads_object
 
 from .agent import BackupAgent, BackupPlatformAgentProtocol
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
-from .models import BackupSyncMetadata, BaseBackup
+from .models import BackupUploadMetadata, BaseBackup
 
 BUF_SIZE = 2**20 * 4  # 4MB
 
@@ -210,8 +210,8 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         """Receive and store a backup file from upload."""
 
     @abc.abstractmethod
-    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Sync a backup."""
+    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Upload a backup."""
 
 
 class BackupManager(BaseBackupManager[Backup]):
@@ -223,8 +223,8 @@ class BackupManager(BaseBackupManager[Backup]):
         self.backup_dir = Path(hass.config.path("backups"))
         self.loaded_backups = False
 
-    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Sync a backup."""
+    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Upload a backup."""
         await self.load_platforms()
 
         if not self.backup_agents:
@@ -238,7 +238,7 @@ class BackupManager(BaseBackupManager[Backup]):
             *(
                 agent.async_upload_backup(
                     path=backup.path,
-                    metadata=BackupSyncMetadata(
+                    metadata=BackupUploadMetadata(
                         homeassistant=HAVERSION,
                         size=backup.size,
                         date=backup.date,
@@ -252,7 +252,7 @@ class BackupManager(BaseBackupManager[Backup]):
         )
         for result in sync_backup_results:
             if isinstance(result, Exception):
-                LOGGER.error("Error during backup sync - %s", result)
+                LOGGER.error("Error during backup upload - %s", result)
         self.syncing = False
 
     async def load_backups(self) -> None:
