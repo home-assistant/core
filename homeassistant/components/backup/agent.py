@@ -61,7 +61,7 @@ class BackupAgent(abc.ABC):
         """List backups."""
 
 
-class BackupPlatformAgentProtocol(Protocol):
+class BackupAgentPlatformProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
     async def async_get_backup_agents(

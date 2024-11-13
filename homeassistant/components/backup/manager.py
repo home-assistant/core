@@ -31,7 +31,7 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
-from .agent import BackupAgent, BackupPlatformAgentProtocol
+from .agent import BackupAgent, BackupAgentPlatformProtocol
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 from .models import BackupUploadMetadata, BaseBackup
 
@@ -109,7 +109,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self,
         hass: HomeAssistant,
         integration_domain: str,
-        platform: BackupPlatformAgentProtocol,
+        platform: BackupAgentPlatformProtocol,
     ) -> None:
         """Add a platform to the backup manager."""
         if not hasattr(platform, "async_get_backup_agents"):

@@ -20,12 +20,12 @@ LOGGER = logging.getLogger(__name__)
 async def async_get_backup_sync_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
-    """Register the backup sync agents."""
-    return [KitchenSinkBackupSyncAgent("syncer")]
+    """Register the backup agents."""
+    return [KitchenSinkBackupAgent("syncer")]
 
 
-class KitchenSinkBackupSyncAgent(BackupAgent):
-    """Kitchen sink backup sync agent."""
+class KitchenSinkBackupAgent(BackupAgent):
+    """Kitchen sink backup agent."""
 
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
