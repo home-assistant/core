@@ -126,20 +126,30 @@ NO_DIAGNOSTICS = [
 ]
 
 
-def documentation_url(value: str) -> str:
+def own_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
     if value in DOCUMENTATION_URL_EXCEPTIONS:
         return value
 
     parsed_url = urlparse(value)
-    if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
-        raise vol.Invalid("Documentation url is not prefixed with https")
+    documentation_url(value)
+    if parsed_url.netloc != DOCUMENTATION_URL_HOST:
+        raise vol.Invalid("Documentation url is not www.home-assistant.io")
     if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
         DOCUMENTATION_URL_PATH_PREFIX
     ):
         raise vol.Invalid(
             "Documentation url does not begin with www.home-assistant.io/integrations"
         )
+
+    return value
+
+
+def documentation_url(value: str) -> str:
+    """Validate that a documentation url has the correct path and domain."""
+    parsed_url = urlparse(value)
+    if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
+        raise vol.Invalid("Documentation url is not prefixed with https")
 
     return value
 
@@ -267,7 +277,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Required("documentation"): vol.All(vol.Url(), own_documentation_url),
         vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
@@ -303,6 +313,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
+        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
         vol.Optional("version"): vol.All(str, verify_version),
         vol.Optional("import_executor"): bool,
     }
