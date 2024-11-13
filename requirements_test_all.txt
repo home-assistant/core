@@ -2044,7 +2044,7 @@ reolink-aio==0.10.4
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.9
+ring-doorbell==0.9.12
 
 # homeassistant.components.roku
 rokuecp==0.19.3
