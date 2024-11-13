@@ -58,7 +58,6 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = DEVICE_BUTTON_EVENTS
-    _attr_icon = "mdi:gesture-tap-button"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry, button_type: str) -> None:
         """Initialize Button."""
