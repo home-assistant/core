@@ -332,10 +332,16 @@ async def ws_candidate(
             ),
         )
         return
-
-    await camera.async_on_webrtc_candidate(
-        msg["session_id"], RTCIceCandidateInit.from_dict(msg["candidate"])
-    )
+    try:
+        candidate_init = RTCIceCandidateInit.from_dict(msg["candidate"])
+    except Exception as ex:  # noqa: BLE001
+        connection.send_error(
+            msg["id"],
+            "webrtc_candidate_failed",
+            ("Unable to parse RTCIceCandidateInit," f" error={ex}"),
+        )
+        return
+    await camera.async_on_webrtc_candidate(msg["session_id"], candidate_init)
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
