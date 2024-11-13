@@ -1,16 +1,10 @@
 """The sensor tests for the griddy platform."""
 
-from typing import Any
 from unittest.mock import patch
 
 from pydexcom import SessionError
-import pytest
 
-from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -59,23 +53,3 @@ async def test_sensors_update_failed(hass: HomeAssistant) -> None:
     assert test_username_glucose_value.state == STATE_UNAVAILABLE
     test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(
-    ("options", "state"),
-    [
-        (None, "110"),
-        ({CONF_UNIT_OF_MEASUREMENT: "mg/dL"}, "110"),
-        ({CONF_UNIT_OF_MEASUREMENT: "mmol/L"}, "6.1"),
-    ],
-)
-async def test_config_entry_options(
-    hass: HomeAssistant, options: dict[str, Any], state: str
-) -> None:
-    """Test we handle deprecated config_entry options."""
-    await init_integration(hass, options)
-
-    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
-    assert test_username_glucose_value.state == state
-    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
-    assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description

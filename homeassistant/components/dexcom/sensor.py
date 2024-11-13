@@ -6,11 +6,7 @@ from pydexcom import GlucoseReading
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
-    UnitOfBloodGlucoseConcentration,
-)
+from homeassistant.const import CONF_USERNAME, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,13 +36,10 @@ async def async_setup_entry(
     """Set up the Dexcom sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     username = config_entry.data[CONF_USERNAME]
-    unit_of_measurement = config_entry.options.get(CONF_UNIT_OF_MEASUREMENT)
     async_add_entities(
         [
             DexcomGlucoseTrendSensor(coordinator, username, config_entry.entry_id),
-            DexcomGlucoseValueSensor(
-                coordinator, username, config_entry.entry_id, unit_of_measurement
-            ),
+            DexcomGlucoseValueSensor(coordinator, username, config_entry.entry_id),
         ],
     )
 
@@ -85,7 +78,6 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
         coordinator: DataUpdateCoordinator,
         username: str,
         entry_id: str,
-        unit_of_measurement: str | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, username, entry_id, "value")
@@ -93,11 +85,6 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
         self._attr_native_unit_of_measurement = (
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
         )
-        if unit_of_measurement == "mmol/L":
-            # Deprecated - for compatibility
-            self._attr_suggested_unit_of_measurement = (
-                UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER
-            )
 
     @property
     def native_value(self):
