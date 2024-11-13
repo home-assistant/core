@@ -10,7 +10,7 @@ import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
-from homeassistant.components.backup import BackupManager
+from homeassistant.components.backup import BackupManager, BackupSyncMetadata
 from homeassistant.components.backup.manager import (
     BackupPlatformProtocol,
     BackupProgress,
@@ -299,13 +299,13 @@ async def test_syncing_backup(
         assert mocked_upload.call_count == 2
         first_call = mocked_upload.call_args_list[0]
         assert first_call[1]["path"] == backup.path
-        assert first_call[1]["metadata"] == {
-            "date": backup.date,
-            "homeassistant": "2025.1.0",
-            "name": backup.name,
-            "size": backup.size,
-            "slug": backup.slug,
-        }
+        assert first_call[1]["metadata"] == BackupSyncMetadata(
+            date=backup.date,
+            homeassistant="2025.1.0",
+            name=backup.name,
+            size=backup.size,
+            slug=backup.slug,
+        )
 
     assert "Error during backup sync" not in caplog.text
 
@@ -361,13 +361,13 @@ async def test_syncing_backup_with_exception(
         assert mocked_upload.call_count == 2
         first_call = mocked_upload.call_args_list[0]
         assert first_call[1]["path"] == backup.path
-        assert first_call[1]["metadata"] == {
-            "date": backup.date,
-            "homeassistant": "2025.1.0",
-            "name": backup.name,
-            "size": backup.size,
-            "slug": backup.slug,
-        }
+        assert first_call[1]["metadata"] == BackupSyncMetadata(
+            date=backup.date,
+            homeassistant="2025.1.0",
+            name=backup.name,
+            size=backup.size,
+            slug=backup.slug,
+        )
 
     assert "Error during backup sync - Test exception" in caplog.text
 
