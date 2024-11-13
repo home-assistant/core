@@ -138,8 +138,8 @@ def own_documentation_url(value: str) -> str:
     return value
 
 
-def documentation_url(value: str) -> str:
-    """Validate that a documentation url has the correct path and domain."""
+def custom_documentation_url(value: str) -> str:
+    """Validate that a custom integration documentation url is correct."""
     parsed_url = urlparse(value)
     if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
@@ -306,7 +306,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
-        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Required("documentation"): vol.All(vol.Url(), custom_documentation_url),
         vol.Optional("version"): vol.All(str, verify_version),
         vol.Optional("import_executor"): bool,
     }
