@@ -202,6 +202,7 @@ async def init_test_integration(
 
 async def _test_setup_and_signaling(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     config: ConfigType,
@@ -214,6 +215,7 @@ async def _test_setup_and_signaling(
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert issue_registry.async_get_issue(DOMAIN, "recommended_version") is None
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].state == ConfigEntryState.LOADED
@@ -309,6 +311,7 @@ async def _test_setup_and_signaling(
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
 async def test_setup_go_binary(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     server: AsyncMock,
@@ -327,7 +330,13 @@ async def test_setup_go_binary(
         server_start.assert_called_once()
 
     await _test_setup_and_signaling(
-        hass, rest_client, ws_client, config, after_setup, init_test_integration
+        hass,
+        issue_registry,
+        rest_client,
+        ws_client,
+        config,
+        after_setup,
+        init_test_integration,
     )
 
     await hass.async_stop()
@@ -345,6 +354,7 @@ async def test_setup_go_binary(
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
 async def test_setup(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     rest_client: AsyncMock,
     ws_client: Mock,
     server: Mock,
@@ -362,7 +372,13 @@ async def test_setup(
         server.assert_not_called()
 
     await _test_setup_and_signaling(
-        hass, rest_client, ws_client, config, after_setup, init_test_integration
+        hass,
+        issue_registry,
+        rest_client,
+        ws_client,
+        config,
+        after_setup,
+        init_test_integration,
     )
 
     mock_get_binary.assert_not_called()
