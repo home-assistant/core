@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -20,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
+from . import DEVICE_UPDATE_INTERVAL
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
@@ -27,7 +29,6 @@ from .entity import (
     ReolinkHostEntityDescription,
 )
 from .util import ReolinkConfigEntry, ReolinkData
-from . import DEVICE_UPDATE_INTERVAL
 
 POLL_AFTER_INSTALL = 120
 POLL_PROGRESS = 2
@@ -100,6 +101,7 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
     ) -> None:
         """Initialize Reolink update entity."""
         self._channel = channel
+        self._host = reolink_data.host
         self._cancel_update: CALLBACK_TYPE | None = None
         self._cancel_progress: CALLBACK_TYPE | None = None
         self._installing: bool = False
@@ -128,7 +130,7 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
         return self._host.api.sw_upload_progress(self._channel) < 100
 
     @property
-    def update_percentage(self) ->  int | None:
+    def update_percentage(self) -> int | None:
         """Update installation progress."""
         progress = self._host.api.sw_upload_progress(self._channel)
         if progress < 100:
@@ -153,6 +155,7 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
         return super().available
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if latest_version is newer than installed_version."""
         return SoftwareVersion(latest_version) > SoftwareVersion(installed_version)
 
     async def async_release_notes(self) -> str | None:
@@ -230,6 +233,10 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
         if self._cancel_progress is not None:
             self._cancel_progress()
 
+    @abstractmethod
+    async def async_update(self) -> None:
+        """Update the entity."""
+
 
 class ReolinkUpdateEntity(
     ReolinkChannelCoordinatorEntity,
@@ -238,6 +245,7 @@ class ReolinkUpdateEntity(
     """Base update entity class for Reolink IP cameras."""
 
     entity_description: ReolinkUpdateEntityDescription
+    _channel: int
 
     def __init__(
         self,
@@ -247,7 +255,9 @@ class ReolinkUpdateEntity(
     ) -> None:
         """Initialize Reolink update entity."""
         self.entity_description = entity_description
-        ReolinkChannelCoordinatorEntity.__init__(self, reolink_data, channel, reolink_data.firmware_coordinator)
+        ReolinkChannelCoordinatorEntity.__init__(
+            self, reolink_data, channel, reolink_data.firmware_coordinator
+        )
         ReolinkUpdateBaseEntity.__init__(self, reolink_data, channel)
 
 
@@ -266,5 +276,7 @@ class ReolinkHostUpdateEntity(
     ) -> None:
         """Initialize Reolink update entity."""
         self.entity_description = entity_description
-        ReolinkHostCoordinatorEntity.__init__(self, reolink_data, reolink_data.firmware_coordinator)
+        ReolinkHostCoordinatorEntity.__init__(
+            self, reolink_data, reolink_data.firmware_coordinator
+        )
         ReolinkUpdateBaseEntity.__init__(self, reolink_data, None)
