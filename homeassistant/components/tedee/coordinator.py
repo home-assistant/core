@@ -8,7 +8,7 @@ import logging
 import time
 from typing import Any
 
-from pytedee_async import (
+from aiotedee import (
     TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
@@ -16,7 +16,7 @@ from pytedee_async import (
     TedeeLock,
     TedeeWebhookException,
 )
-from pytedee_async.bridge import TedeeBridge
+from aiotedee.bridge import TedeeBridge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST

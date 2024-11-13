@@ -2,12 +2,12 @@
 
 import logging
 
-from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.const import BT_MODEL_PREFIXES, FirmwareType
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from packaging import version
+from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.client_cloud import LaMarzoccoCloudClient
+from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.const import BT_MODEL_PREFIXES, FirmwareType
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.config_entries import ConfigEntry

@@ -4016,6 +4016,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "nasweb": {
+      "name": "NASweb",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "neato": {
       "name": "Neato Botvac",
       "integration_type": "hub",
@@ -4180,6 +4186,13 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "nordpool": {
+      "name": "Nord Pool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "norway_air": {
       "name": "Om Luftkvalitet i Norge (Norway Air)",
@@ -5595,11 +5608,22 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "sky_hub": {
-      "name": "Sky Hub",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+    "sky": {
+      "name": "Sky",
+      "integrations": {
+        "sky_hub": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Sky Hub"
+        },
+        "sky_remote": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Sky Remote Control"
+        }
+      }
     },
     "skybeacon": {
       "name": "Skybeacon",
