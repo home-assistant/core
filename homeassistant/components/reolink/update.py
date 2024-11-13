@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -20,6 +19,10 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import DEVICE_UPDATE_INTERVAL
 from .entity import (
@@ -89,7 +92,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkUpdateBaseEntity(UpdateEntity):
+class ReolinkUpdateBaseEntity(
+    CoordinatorEntity[DataUpdateCoordinator[None]], UpdateEntity
+):
     """Base update entity class for Reolink."""
 
     _attr_release_url = "https://reolink.com/download-center/"
@@ -98,8 +103,10 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
         self,
         reolink_data: ReolinkData,
         channel: int | None,
+        coordinator: DataUpdateCoordinator[None],
     ) -> None:
         """Initialize Reolink update entity."""
+        CoordinatorEntity.__init__(self, coordinator)
         self._channel = channel
         self._host = reolink_data.host
         self._cancel_update: CALLBACK_TYPE | None = None
@@ -130,12 +137,9 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
         return self._host.api.sw_upload_progress(self._channel) < 100
 
     @property
-    def update_percentage(self) -> int | None:
+    def update_percentage(self) -> int:
         """Update installation progress."""
-        progress = self._host.api.sw_upload_progress(self._channel)
-        if progress < 100:
-            return progress
-        return None
+        return self._host.api.sw_upload_progress(self._channel)
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
@@ -156,7 +160,14 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if latest_version is newer than installed_version."""
-        return SoftwareVersion(latest_version) > SoftwareVersion(installed_version)
+        try:
+            installed = SoftwareVersion(installed_version)
+            latest = SoftwareVersion(latest_version)
+        except ReolinkError:
+            # when the online update API returns a unexpected string
+            return True
+
+        return latest > installed
 
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
@@ -233,14 +244,10 @@ class ReolinkUpdateBaseEntity(UpdateEntity):
         if self._cancel_progress is not None:
             self._cancel_progress()
 
-    @abstractmethod
-    async def async_update(self) -> None:
-        """Update the entity."""
-
 
 class ReolinkUpdateEntity(
-    ReolinkChannelCoordinatorEntity,
     ReolinkUpdateBaseEntity,
+    ReolinkChannelCoordinatorEntity,
 ):
     """Base update entity class for Reolink IP cameras."""
 
@@ -255,15 +262,17 @@ class ReolinkUpdateEntity(
     ) -> None:
         """Initialize Reolink update entity."""
         self.entity_description = entity_description
-        ReolinkUpdateBaseEntity.__init__(self, reolink_data, channel)
+        ReolinkUpdateBaseEntity.__init__(
+            self, reolink_data, channel, reolink_data.firmware_coordinator
+        )
         ReolinkChannelCoordinatorEntity.__init__(
             self, reolink_data, channel, reolink_data.firmware_coordinator
         )
 
 
 class ReolinkHostUpdateEntity(
-    ReolinkHostCoordinatorEntity,
     ReolinkUpdateBaseEntity,
+    ReolinkHostCoordinatorEntity,
 ):
     """Update entity class for Reolink Host."""
 
@@ -276,7 +285,9 @@ class ReolinkHostUpdateEntity(
     ) -> None:
         """Initialize Reolink update entity."""
         self.entity_description = entity_description
-        ReolinkUpdateBaseEntity.__init__(self, reolink_data, None)
+        ReolinkUpdateBaseEntity.__init__(
+            self, reolink_data, None, reolink_data.firmware_coordinator
+        )
         ReolinkHostCoordinatorEntity.__init__(
             self, reolink_data, reolink_data.firmware_coordinator
         )
