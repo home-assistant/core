@@ -24,6 +24,17 @@
       "dst": {
         "name": "Daylight saving time"
       }
+    },
+    "switch": {
+      "lock": {
+        "name": "Lock"
+      },
+      "boost": {
+        "name": "Boost"
+      },
+      "away": {
+        "name": "Away"
+      }
     }
   }
 }
