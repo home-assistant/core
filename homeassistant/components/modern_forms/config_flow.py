@@ -56,22 +56,18 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"name": self.name},
+            )
         return await self._handle_config_flow(user_input)
 
     async def _handle_config_flow(
-        self, user_input: dict[str, Any] | None = None, prepare: bool = False
+        self, user_input: dict[str, Any], prepare: bool = False
     ) -> ConfigFlowResult:
         """Config flow handler for ModernForms."""
         # Request user input, unless we are preparing discovery flow
-        if user_input is None:
-            user_input = {}
-            if not prepare:
-                if self.source == SOURCE_ZEROCONF:
-                    return self.async_show_form(
-                        step_id="zeroconf_confirm",
-                        description_placeholders={"name": self.name},
-                    )
-
         if self.source == SOURCE_ZEROCONF:
             user_input[CONF_HOST] = self.host
             user_input[CONF_MAC] = self.mac
