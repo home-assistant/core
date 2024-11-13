@@ -35,6 +35,7 @@ from .const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    PATCH_VERSION,
     Platform,
 )
 from .core import (
@@ -1484,6 +1485,16 @@ class ConfigEntriesFlowManager(
             # Find existing entry.
             existing_entry = self.config_entries.async_entry_for_domain_unique_id(
                 result["handler"], flow.unique_id
+            )
+
+        if existing_entry is not None and PATCH_VERSION == "0.dev0":
+            # We temporarily restrict this to `dev` to get a feel for how many
+            # integrations this concerns
+            report_usage(
+                "creates a config entry when another entry with the same unique ID "
+                "exists, causing the old entry to be removed and replaced when it "
+                "should most likely update the previous entry and abort the flow",
+                core_behavior=ReportBehavior.LOG,
             )
 
         # Unload the entry before setting up the new one.
