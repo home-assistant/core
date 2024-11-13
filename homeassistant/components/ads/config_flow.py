@@ -34,7 +34,9 @@ class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Check if port is in valid range
             if not (1 <= user_input.get(CONF_PORT, 0) <= 65535):
-                errors[CONF_PORT] = "invalid_port"
+                errors[CONF_PORT] = (
+                    "invalid_port" if user_input.get(CONF_PORT) else "required"
+                )
 
             if not errors:
                 # If validation passes, create entry
@@ -49,9 +51,7 @@ class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        # Show the form with schema and errors (if any)
         return self.async_show_form(
-            step_id="user",
             data_schema=data_schema,
             errors=errors,
         )
