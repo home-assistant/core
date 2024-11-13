@@ -8,7 +8,7 @@ from aiotainer.utils import portainer_list_to_dictionary
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 from tests.common import MockConfigEntry, load_json_value_fixture
 
@@ -55,8 +55,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_ACCESS_TOKEN: "prt_xxx",
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 9443,
+            CONF_URL: "https://127.0.0.1:9443",
             CONF_VERIFY_SSL: True,
         },
         unique_id="MY_SERIAL_NUMBER",

@@ -7,18 +7,16 @@ from aiotainer.client import PortainerClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 
-DEFAULT_PORT = "9443"
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_URL): cv.string,
         vol.Required(CONF_ACCESS_TOKEN): cv.string,
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -43,12 +41,10 @@ class PortainerFlow(ConfigFlow, domain=DOMAIN):
             except (TimeoutError, ClientConnectionError):
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                )
+                await self.async_set_unique_id(user_input[CONF_URL])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST],
+                    title=user_input[CONF_URL],
                     data=user_input,
                 )
 

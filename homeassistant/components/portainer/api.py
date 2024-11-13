@@ -7,7 +7,7 @@ from typing import Any
 from aiohttp import ClientSession
 from aiotainer.auth import AbstractAuth
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
     ) -> None:
         """Initialize Portainer auth."""
         self.data = data
-        super().__init__(websession, data[CONF_HOST], data[CONF_PORT])
+        super().__init__(websession, data[CONF_URL])
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
