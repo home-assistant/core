@@ -127,12 +127,17 @@ class ReolinkUpdateEntity(
         return new_firmware.version_string
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
+        """Update installation progress."""
+        return self._host.api.sw_upload_progress(self._channel) < 100
+
+    @property
+    def update_percentage(self) ->  int | None:
         """Update installation progress."""
         progress = self._host.api.sw_upload_progress(self._channel)
         if progress < 100:
             return progress
-        return False
+        return None
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
@@ -257,12 +262,17 @@ class ReolinkHostUpdateEntity(
         return new_firmware.version_string
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
+        """Update installation progress."""
+        return self._host.api.sw_upload_progress() < 100
+
+    @property
+    def update_percentage(self) ->  int | None:
         """Update installation progress."""
         progress = self._host.api.sw_upload_progress()
         if progress < 100:
             return progress
-        return False
+        return None
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
