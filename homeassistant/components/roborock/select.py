@@ -148,6 +148,9 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        if (current_map := self.coordinator.current_map) is not None:
+        if (
+            (current_map := self.coordinator.current_map) is not None
+            and current_map in self.coordinator.maps
+        ):  # 63 means it is searching for a map.
             return self.coordinator.maps[current_map].name
         return None
