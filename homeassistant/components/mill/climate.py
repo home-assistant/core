@@ -24,7 +24,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -51,12 +54,6 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
         vol.Optional(ATTR_AWAY_TEMP): cv.positive_int,
         vol.Optional(ATTR_COMFORT_TEMP): cv.positive_int,
         vol.Optional(ATTR_SLEEP_TEMP): cv.positive_int,
-    }
-)
-LIMIT_HEATING_POWER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_MAX_HEATING_POWER): vol.Range(min=0, max=2000),
     }
 )
 
@@ -93,23 +90,19 @@ async def async_setup_entry(
         DOMAIN, SERVICE_SET_ROOM_TEMP, set_room_temp, schema=SET_ROOM_TEMP_SCHEMA
     )
 
-    async def max_heating_power(service: ServiceCall) -> None:
+    async def max_heating_power(entity: MillHeater, service: ServiceCall) -> None:
         """Limit heating power."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        heating_power = service.data.get(ATTR_MAX_HEATING_POWER)
-        for entity in entities:
-            if entity.entity_id == entity_id:
-                await mill_data_coordinator.mill_data_connection.max_heating_power(
-                    entity.heater_id, heating_power
-                )
-                return
-        raise ValueError(f"Entity id {entity_id} not found")
+        await mill_data_coordinator.mill_data_connection.max_heating_power(
+            entity.heater_id, service.data[ATTR_MAX_HEATING_POWER]
+        )
 
-    hass.services.async_register(
-        DOMAIN,
+    async_get_current_platform().async_register_entity_service(
         SERVICE_MAX_HEATING_POWER,
-        max_heating_power,
-        schema=LIMIT_HEATING_POWER_SCHEMA,
+        schema={
+            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Required(ATTR_MAX_HEATING_POWER): vol.Range(min=0, max=2000),
+        },
+        func=max_heating_power,
     )
 
 

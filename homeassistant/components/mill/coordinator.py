@@ -72,6 +72,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
                 hourly_data = (
                     await self.mill_data_connection.fetch_historic_energy_usage(dev_id)
                 )
+                hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
                 _sum = 0.0
                 last_stats_time = None
             else:
@@ -84,15 +85,18 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
                                 last_stats[statistic_id][0]["start"]
                             )
                         ).days
-                        + 1,
+                        + 2,
                     )
                 )
                 if not hourly_data:
                     return
+                hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
+                start_time = next(iter(hourly_data))
+
                 stats = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
                     self.hass,
-                    next(iter(hourly_data)),
+                    start_time,
                     None,
                     {statistic_id},
                     "hour",
