@@ -23,7 +23,6 @@ from .const import (
     SIGNAL_THERMOSTAT_CONNECTED,
     SIGNAL_THERMOSTAT_DISCONNECTED,
 )
-from .models import Eq3Config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +33,6 @@ type Eq3ConfigEntry = ConfigEntry[Eq3ConfigEntryData]
 class Eq3ConfigEntryData:
     """Config entry for a single eQ-3 device."""
 
-    eq3_config: Eq3Config
     thermostat: Thermostat
     coordinator: Eq3Coordinator
 

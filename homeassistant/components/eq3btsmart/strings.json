@@ -19,6 +19,19 @@
       "invalid_mac_address": "Invalid MAC address"
     }
   },
+  "options": {
+    "flow_title": "eQ-3 Device [{mac}]",
+    "step": {
+      "init": {
+        "title": "Configure eQ-3 device",
+        "data": {
+          "current_temp_selector": "Current Temperature Selector",
+          "target_temp_selector": "Target Temperature Selector",
+          "external_temp_sensor": "External Temperature Sensor"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "dst": {
@@ -65,6 +78,23 @@
       },
       "away": {
         "name": "Away"
+      }
+    }
+  },
+  "selector": {
+    "current_temp_selector": {
+      "options": {
+        "nothing": "Nothing",
+        "ui": "Target temperature to be set (fast)",
+        "device": "Target temperature in device (recommended)",
+        "valve": "Valve based calculation",
+        "entity": "External entity"
+      }
+    },
+    "target_temp_selector": {
+      "options": {
+        "target": "Target temperature to be set (fast, recommended)",
+        "last_reported": "Target temperature in device"
       }
     }
   }

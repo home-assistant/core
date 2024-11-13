@@ -1,7 +1,7 @@
 """Platform for eQ-3 climate entities."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
 from eq3btsmart.exceptions import Eq3Exception
@@ -82,7 +82,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         if self._thermostat.device_data is not None:
             device_registry = dr.async_get(self.hass)
             if device := device_registry.async_get_device(
-                connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
+                connections={(CONNECTION_BLUETOOTH, self._mac_address)},
             ):
                 device_registry.async_update_device(
                     device.id,
@@ -95,7 +95,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _get_current_temperature(self) -> float | None:
         """Return the current temperature."""
 
-        match self._eq3_config.current_temp_selector:
+        match self._current_temp_selector:
             case CurrentTemperatureSelector.NOTHING:
                 return None
             case CurrentTemperatureSelector.VALVE:
@@ -111,7 +111,10 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
                 return float(self._thermostat.status.target_temperature.value)
             case CurrentTemperatureSelector.ENTITY:
-                state = self.hass.states.get(self._eq3_config.external_temp_sensor)
+                if TYPE_CHECKING:
+                    assert self._external_temp_sensor is not None
+
+                state = self.hass.states.get(self._external_temp_sensor)
                 if state is not None:
                     try:
                         return float(state.state)
@@ -123,7 +126,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _get_target_temperature(self) -> float | None:
         """Return the target temperature."""
 
-        match self._eq3_config.target_temp_selector:
+        match self._target_temp_selector:
             case TargetTemperatureSelector.TARGET:
                 return self._target_temperature
             case TargetTemperatureSelector.LAST_REPORTED:
@@ -180,7 +183,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 await self.async_set_hvac_mode(mode)
             else:
                 raise ServiceValidationError(
-                    f"[{self._eq3_config.mac_address}] Can't change HVAC mode to off while changing temperature",
+                    f"[{self._mac_address}] Can't change HVAC mode to off while changing temperature",
                 )
 
         temperature: float | None
@@ -195,9 +198,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         try:
             await self._thermostat.async_set_temperature(temperature)
         except Eq3Exception:
-            _LOGGER.error(
-                "[%s] Failed setting temperature", self._eq3_config.mac_address
-            )
+            _LOGGER.error("[%s] Failed setting temperature", self._mac_address)
             self._target_temperature = previous_temperature
             self.async_write_ha_state()
         except ValueError as ex:
@@ -212,7 +213,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
         except Eq3Exception:
-            _LOGGER.error("[%s] Failed setting HVAC mode", self._eq3_config.mac_address)
+            _LOGGER.error("[%s] Failed setting HVAC mode", self._mac_address)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

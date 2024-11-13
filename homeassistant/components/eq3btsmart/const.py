@@ -66,22 +66,28 @@ class Preset(str, Enum):
 class CurrentTemperatureSelector(str, Enum):
     """Selector for current temperature."""
 
-    NOTHING = "NOTHING"
-    UI = "UI"
-    DEVICE = "DEVICE"
-    VALVE = "VALVE"
-    ENTITY = "ENTITY"
+    NOTHING = "nothing"
+    UI = "ui"
+    DEVICE = "device"
+    VALVE = "valve"
+    ENTITY = "entity"
 
 
 class TargetTemperatureSelector(str, Enum):
     """Selector for target temperature."""
 
-    TARGET = "TARGET"
-    LAST_REPORTED = "LAST_REPORTED"
+    TARGET = "target"
+    LAST_REPORTED = "last_reported"
 
 
 DEFAULT_CURRENT_TEMP_SELECTOR = CurrentTemperatureSelector.DEVICE
 DEFAULT_TARGET_TEMP_SELECTOR = TargetTemperatureSelector.TARGET
+
+CONF_MAC_ADDRESS = "mac_address"
+CONF_CURRENT_TEMP_SELECTOR = "current_temp_selector"
+CONF_TARGET_TEMP_SELECTOR = "target_temp_selector"
+CONF_EXTERNAL_TEMP_SENSOR = "external_temp_sensor"
+
 SCAN_INTERVAL = 10  # seconds
 RECONNECT_INTERVAL = 10  # seconds
 

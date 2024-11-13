@@ -11,10 +11,16 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import (
+    CONF_CURRENT_TEMP_SELECTOR,
+    CONF_EXTERNAL_TEMP_SENSOR,
+    CONF_MAC_ADDRESS,
+    CONF_TARGET_TEMP_SELECTOR,
     DEVICE_MODEL,
     MANUFACTURER,
     SIGNAL_THERMOSTAT_CONNECTED,
     SIGNAL_THERMOSTAT_DISCONNECTED,
+    CurrentTemperatureSelector,
+    TargetTemperatureSelector,
 )
 from .coordinator import Eq3ConfigEntry
 
@@ -23,6 +29,9 @@ class Eq3Entity(CoordinatorEntity):
     """Base class for all eQ-3 entities."""
 
     _attr_has_entity_name = True
+    _current_temp_selector: CurrentTemperatureSelector
+    _target_temp_selector: TargetTemperatureSelector
+    _external_temp_sensor: str | None
 
     def __init__(
         self,
@@ -33,16 +42,19 @@ class Eq3Entity(CoordinatorEntity):
 
         super().__init__(entry.runtime_data.coordinator)
 
-        self._eq3_config = entry.runtime_data.eq3_config
+        self._mac_address = entry.data.get(CONF_MAC_ADDRESS, entry.unique_id)
+        self._current_temp_selector = entry.options[CONF_CURRENT_TEMP_SELECTOR]
+        self._target_temp_selector = entry.options[CONF_TARGET_TEMP_SELECTOR]
+        self._external_temp_sensor = entry.options.get(CONF_EXTERNAL_TEMP_SENSOR)
         self._thermostat = entry.runtime_data.thermostat
         self._attr_device_info = DeviceInfo(
-            name=slugify(self._eq3_config.mac_address),
+            name=slugify(self._mac_address),
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
-            connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
+            connections={(CONNECTION_BLUETOOTH, self._mac_address)},
         )
         suffix = f"_{unique_id_key}" if unique_id_key else ""
-        self._attr_unique_id = f"{format_mac(self._eq3_config.mac_address)}{suffix}"
+        self._attr_unique_id = f"{format_mac(self._mac_address)}{suffix}"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -52,14 +64,14 @@ class Eq3Entity(CoordinatorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_THERMOSTAT_DISCONNECTED}_{self._eq3_config.mac_address}",
+                f"{SIGNAL_THERMOSTAT_DISCONNECTED}_{self._mac_address}",
                 self._async_on_disconnected,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_THERMOSTAT_CONNECTED}_{self._eq3_config.mac_address}",
+                f"{SIGNAL_THERMOSTAT_CONNECTED}_{self._mac_address}",
                 self._async_on_connected,
             )
         )
