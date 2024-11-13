@@ -87,7 +87,7 @@ class PalazzettiClimateEntity(
 
     @property
     def hvac_action(self) -> HVACAction:
-        """Return hvac action ie. heat or off mode."""
+        """Return hvac action ie. heating or idle."""
         return (
             HVACAction.HEATING
             if self.coordinator.client.is_heating
