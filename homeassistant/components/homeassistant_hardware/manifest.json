@@ -4,6 +4,5 @@
   "after_dependencies": ["hassio", "zha"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_hardware",
-  "integration_type": "system",
-  "quality_scale": "legacy"
+  "integration_type": "system"
 }

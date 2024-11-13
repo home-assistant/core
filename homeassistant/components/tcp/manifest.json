@@ -3,6 +3,5 @@
   "name": "TCP",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/tcp",
-  "iot_class": "local_polling",
-  "quality_scale": "legacy"
+  "iot_class": "local_polling"
 }
