@@ -1099,7 +1099,7 @@ hass-splunk==0.1.1
 hassil==2.0.1
 
 # homeassistant.components.jewish_calendar
-hdate==0.11.0
+hdate==0.11.1
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.3

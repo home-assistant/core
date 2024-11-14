@@ -287,10 +287,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
                 _type = ", ".join([_htype.name for _htype in _holiday_type])
                 _type_id = ", ".join([str(_htype.value) for _htype in _holiday_type])
             self._attrs = {"id": _id, "type": _type, "type_id": _type_id}
-            self._attr_options = [
-                h.description.hebrew.long if self._hebrew else h.description.english
-                for h in htables.HOLIDAYS
-            ] + ["Chanukah, Rosh Chodesh"]
+            self._attr_options = htables.get_all_holidays(self._language)
 
             return after_shkia_date.holiday_description
         if self.entity_description.key == "omer_count":

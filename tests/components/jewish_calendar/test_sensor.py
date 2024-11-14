@@ -93,8 +93,7 @@ TEST_PARAMS = [
             "id": "rosh_hashana_i",
             "type": "YOM_TOV",
             "type_id": 1,
-            "options": [h.description.english for h in htables.HOLIDAYS]
-            + ["Chanukah, Rosh Chodesh"],
+            "options": htables.get_all_holidays("english"),
         },
     ),
     (
@@ -113,8 +112,7 @@ TEST_PARAMS = [
             "id": "chanukah, rosh_chodesh",
             "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
             "type_id": "4, 10",
-            "options": [h.description.english for h in htables.HOLIDAYS]
-            + ["Chanukah, Rosh Chodesh"],
+            "options": htables.get_all_holidays("english"),
         },
     ),
     (
