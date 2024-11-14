@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import AcaiaConfigEntry, AcaiaCoordinator
+from .coordinator import AcaiaConfigEntry
 from .entity import AcaiaEntity
 
 
