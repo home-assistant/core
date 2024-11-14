@@ -46,10 +46,10 @@ async def async_setup_platform(
     """Set up the light platform."""
 
     if hass_config.get("platform") == DOMAIN:
-        hass.async_create_task(_async_import(hass, hass_config))
+        await _async_import(hass, hass_config)
 
 
-# delete after 2025.5.0
+# delete after 2025.6.0
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up the nhc environment."""
     if not hass.config_entries.async_entries(DOMAIN):

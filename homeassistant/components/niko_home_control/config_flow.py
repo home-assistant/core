@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.exceptions import ConfigEntryNotReady
 from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
@@ -24,20 +25,20 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int
     controller = NikoHomeControlConnection(host, port)
 
     if not controller:
-        raise CannotConnect
+        raise ConfigEntryNotReady
 
     return {"host": host, "port": port}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self, import_info=None) -> None:
         """Initialize the config flow."""
-        self._import_info: Any = import_info
+        if import_info is not None:
+          self._import_info: dict[str, str] = import_info
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
@@ -57,12 +58,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-                return self.async_create_entry(
-                    title=DOMAIN,
-                    data=user_input,
-                )
-            except CannotConnect:
+            except ConfigEntryNotReady :
                 errors["base"] = "cannot_connect"
+
+
+            return self.async_create_entry(
+                title=DOMAIN,
+                data=user_input,
+            )
 
         # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
