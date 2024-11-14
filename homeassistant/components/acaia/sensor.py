@@ -26,12 +26,18 @@ from .entity import AcaiaEntity
 class AcaiaSensorEntityDescription(SensorEntityDescription):
     """Description for Acaia sensor entities."""
 
-    unit_fn: Callable[[AcaiaDeviceState], str] | None = None
     value_fn: Callable[[AcaiaScale], int | float | None]
 
 
+@dataclass(kw_only=True, frozen=True)
+class AcaiaDynamicUnitSensorEntityDescription(AcaiaSensorEntityDescription):
+    """Description for Acaia sensor entities with dynamic units."""
+
+    unit_fn: Callable[[AcaiaDeviceState], str] | None = None
+
+
 SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
-    AcaiaSensorEntityDescription(
+    AcaiaDynamicUnitSensorEntityDescription(
         key="weight",
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
@@ -78,7 +84,7 @@ async def async_setup_entry(
 class AcaiaSensor(AcaiaEntity, SensorEntity):
     """Representation of an Acaia sensor."""
 
-    entity_description: AcaiaSensorEntityDescription
+    entity_description: AcaiaDynamicUnitSensorEntityDescription
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -115,20 +121,12 @@ class AcaiaRestoreSensor(AcaiaEntity, RestoreSensor):
 
         if self._scale.device_state is not None:
             self._attr_native_value = self.entity_description.value_fn(self._scale)
-            if self.entity_description.unit_fn is not None:
-                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-                    self._scale.device_state
-                )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._scale.device_state is not None:
             self._attr_native_value = self.entity_description.value_fn(self._scale)
-            if self.entity_description.unit_fn is not None:
-                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-                    self._scale.device_state
-                )
         self._async_write_ha_state()
 
     @property
