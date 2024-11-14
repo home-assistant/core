@@ -29,7 +29,8 @@ class KitchenSinkBackupAgent(BackupAgent):
 
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
-        super().__init__(name)
+        super().__init__()
+        self.name = name
         self._uploads = [
             UploadedBackup(
                 id="def456",

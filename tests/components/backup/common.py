@@ -30,6 +30,10 @@ TEST_BACKUP = Backup(
 class BackupAgentTest(BackupAgent):
     """Test backup agent."""
 
+    def __init__(self, name: str) -> None:
+        """Initialize the backup agent."""
+        self.name = name
+
     async def async_download_backup(
         self,
         *,
