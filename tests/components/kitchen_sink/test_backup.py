@@ -7,7 +7,7 @@ from uuid import UUID
 
 import pytest
 
-from homeassistant.components.backup import Backup
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, Backup
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -32,7 +32,7 @@ async def backup_only() -> AsyncGenerator[None]:
 async def setup_integration(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Set up Kitchen Sink integration."""
     with patch("homeassistant.components.backup.is_hassio", return_value=True):
-        assert await async_setup_component(hass, "backup", {"backup": {}})
+        assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
         yield
