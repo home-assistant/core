@@ -7,6 +7,7 @@ from igloohome_api import Api
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyConfigEntry
@@ -20,21 +21,24 @@ async def async_setup_entry(
 ) -> None:
     """Do setup the lock entities."""
 
-    api: Api = entry.runtime_data
-    devicesResponse = await api.get_devices()
+    try:
+        api: Api = entry.runtime_data
+        devicesResponse = await api.get_devices()
 
-    entities = [
-        BatteryBasedDevice(
-            device_id=device.deviceId,
-            device_name=device.deviceName,
-            type=device.type,
-            api=api,
-        )
-        for device in devicesResponse.payload
-        if device.type in ("Lock", "Keypad")
-    ]
+        entities = [
+            BatteryBasedDevice(
+                device_id=device.deviceId,
+                device_name=device.deviceName,
+                type=device.type,
+                api=api,
+            )
+            for device in devicesResponse.payload
+            if device.type in ("Lock", "Keypad")
+        ]
 
-    async_add_entities(entities, update_before_add=True)
+        async_add_entities(entities, update_before_add=True)
+    except ClientError as e:
+        raise PlatformNotReady from e
 
 
 class BatteryBasedDevice(BaseEntity, SensorEntity):
