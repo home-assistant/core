@@ -161,6 +161,8 @@ def _generate_hassfest_dockerimage(
         packages.update(
             gather_recursive_requirements(platform.value, already_checked_domains)
         )
+    # Add go2rtc requirements as this file needs the go2rtc integration
+    packages.update(gather_recursive_requirements("go2rtc", already_checked_domains))
 
     return File(
         _HASSFEST_TEMPLATE.format(
