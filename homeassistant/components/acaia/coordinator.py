@@ -9,7 +9,7 @@ from aioacaia.acaiascale import AcaiaScale
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -38,7 +38,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         )
 
         self._scale = AcaiaScale(
-            address_or_ble_device=entry.data[CONF_MAC],
+            address_or_ble_device=entry.data[CONF_ADDRESS],
             name=entry.title,
             is_new_style_scale=entry.data[CONF_IS_NEW_STYLE_SCALE],
             notify_callback=self.async_update_listeners,
@@ -62,25 +62,25 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         except (AcaiaDeviceNotFound, AcaiaError, TimeoutError) as ex:
             _LOGGER.debug(
                 "Could not connect to scale: %s, Error: %s",
-                self.config_entry.data[CONF_MAC],
+                self.config_entry.data[CONF_ADDRESS],
                 ex,
             )
             self._scale.device_disconnected_handler(notify=False)
             return
 
         # connected, set up background tasks
-        if not self.scale.heartbeat_task or self.scale.heartbeat_task.done():
-            self.scale.heartbeat_task = self.config_entry.async_create_background_task(
+        if not self._scale.heartbeat_task or self._scale.heartbeat_task.done():
+            self._scale.heartbeat_task = self.config_entry.async_create_background_task(
                 hass=self.hass,
-                target=self.scale.send_heartbeats(),
+                target=self._scale.send_heartbeats(),
                 name="acaia_heartbeat_task",
             )
 
-        if not self.scale.process_queue_task or self.scale.process_queue_task.done():
-            self.scale.process_queue_task = (
+        if not self._scale.process_queue_task or self._scale.process_queue_task.done():
+            self._scale.process_queue_task = (
                 self.config_entry.async_create_background_task(
                     hass=self.hass,
-                    target=self.scale.process_queue(),
+                    target=self._scale.process_queue(),
                     name="acaia_process_queue_task",
                 )
             )

@@ -12,7 +12,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -42,7 +42,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            mac = format_mac(user_input[CONF_MAC])
+            mac = format_mac(user_input[CONF_ADDRESS])
             try:
                 is_new_style_scale = await is_new_scale(mac)
             except AcaiaDeviceNotFound:
@@ -59,9 +59,9 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     title=self._discovered.get(CONF_NAME)
-                    or self._discovered_devices[user_input[CONF_MAC]],
+                    or self._discovered_devices[user_input[CONF_ADDRESS]],
                     data={
-                        CONF_MAC: mac,
+                        CONF_ADDRESS: mac,
                         CONF_IS_NEW_STYLE_SCALE: is_new_style_scale,
                     },
                 )
@@ -84,7 +84,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_MAC): SelectSelector(
+                    vol.Required(CONF_ADDRESS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -100,7 +100,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a discovered Bluetooth device."""
 
-        self._discovered[CONF_MAC] = mac = format_mac(discovery_info.address)
+        self._discovered[CONF_ADDRESS] = mac = format_mac(discovery_info.address)
         self._discovered[CONF_NAME] = discovery_info.name
 
         await self.async_set_unique_id(mac)
@@ -134,7 +134,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=self._discovered[CONF_NAME],
                 data={
-                    CONF_MAC: self._discovered[CONF_MAC],
+                    CONF_ADDRESS: self._discovered[CONF_ADDRESS],
                     CONF_IS_NEW_STYLE_SCALE: self._discovered[CONF_IS_NEW_STYLE_SCALE],
                 },
             )

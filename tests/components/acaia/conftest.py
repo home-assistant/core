@@ -8,7 +8,7 @@ from aioacaia.const import UnitMass as AcaiaUnitOfMass
 import pytest
 
 from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -42,7 +42,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         version=1,
         data={
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
             CONF_IS_NEW_STYLE_SCALE: True,
         },
         unique_id="aa:bb:cc:dd:ee:ff",

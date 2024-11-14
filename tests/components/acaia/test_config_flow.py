@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -50,7 +50,7 @@ async def test_form(
     assert result["step_id"] == "user"
 
     user_input = {
-        CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
     }
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -87,7 +87,7 @@ async def test_bluetooth_discovery(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == service_info.name
     assert result2["data"] == {
-        CONF_MAC: service_info.address,
+        CONF_ADDRESS: service_info.address,
         CONF_IS_NEW_STYLE_SCALE: True,
     }
 
@@ -135,13 +135,29 @@ async def test_already_configured(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         },
     )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_already_configured_bluetooth_discovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ensure configure device is not discovered again."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -169,7 +185,7 @@ async def test_recoverable_config_flow_errors(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         },
     )
 
@@ -181,7 +197,7 @@ async def test_recoverable_config_flow_errors(
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         },
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
@@ -203,7 +219,7 @@ async def test_unsupported_device(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         },
     )
 

@@ -17,10 +17,7 @@
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "mac": "MAC address"
-        },
-        "data_description": {
-          "mac": "The MAC address of your scale"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       }
     }
