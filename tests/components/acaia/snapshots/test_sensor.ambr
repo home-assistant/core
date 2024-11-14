@@ -66,7 +66,7 @@
     'supported_features': 0,
     'translation_key': 'weight',
     'unique_id': 'aa:bb:cc:dd:ee:ff_weight',
-    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+    'unit_of_measurement': <UnitOfMass.OUNCES: 'oz'>,
   })
 # ---
 # name: test_sensors[state_sensor_battery]
@@ -91,7 +91,7 @@
       'device_class': 'weight',
       'friendly_name': 'LUNAR-DDEEFF Weight',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+      'unit_of_measurement': <UnitOfMass.OUNCES: 'oz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lunar_ddeeff_weight',

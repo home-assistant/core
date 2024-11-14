@@ -96,6 +96,16 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._scale)
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of this entity."""
+        if (
+            self._scale.device_state is not None
+            and self.entity_description.unit_fn is not None
+        ):
+            return self.entity_description.unit_fn(self._scale.device_state)
+        return self.entity_description.native_unit_of_measurement
+
 
 class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
     """Representation of an Acaia sensor with restore capabilities."""
@@ -123,12 +133,7 @@ class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
         """Return the unit of measurement of this entity."""
         if self._restored_data is not None:
             return self._restored_data.native_unit_of_measurement
-        if (
-            self.entity_description.unit_fn is not None
-            and (device_state := self._scale.device_state) is not None
-        ):
-            return self.entity_description.unit_fn(device_state)
-        return self.entity_description.native_unit_of_measurement
+        return super().native_unit_of_measurement
 
     @property
     def available(self) -> bool:
