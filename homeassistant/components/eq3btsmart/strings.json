@@ -40,12 +40,6 @@
       },
       "window_open_timeout": {
         "name": "Window open timeout"
-      },
-      "away_hours": {
-        "name": "Away hours"
-      },
-      "away_temperature": {
-        "name": "Away temperature"
       }
     },
     "switch": {
