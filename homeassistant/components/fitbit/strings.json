@@ -44,7 +44,7 @@
         "native_unit_of_measurement": "steps"
       },
       "tracker_steps": {
-        "name": "Tracker Steps",
+        "name": "Tracker steps",
         "native_unit_of_measurement": "steps"
       }
     }

@@ -371,7 +371,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/steps",
-        translation_key="steps",
+        translation_key="tracker_steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
         scope=FitbitScope.ACTIVITY,
