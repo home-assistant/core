@@ -9,12 +9,10 @@ from homeassistant.components.lcn import DOMAIN
 from homeassistant.components.lcn.const import (
     CONF_KEYS,
     CONF_LED,
-    CONF_MODULE,
     CONF_OUTPUT,
     CONF_PCK,
     CONF_RELVARREF,
     CONF_ROW,
-    CONF_SEGMENT_ID,
     CONF_SETPOINT,
     CONF_TABLE,
     CONF_TEXT,
@@ -29,10 +27,7 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BRIGHTNESS,
     CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_ID,
     CONF_STATE,
-    CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
@@ -563,24 +558,6 @@ async def test_service_pck(
 
     if config_type == CONF_ADDRESS:
         assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
-
-async def test_service_address_to_device_id(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> None:
-    """Test address_to_device_id service."""
-    await async_setup_component(hass, "persistent_notification", {})
-    await init_integration(hass, entry)
-
-    response = await hass.services.async_call(
-        DOMAIN,
-        LcnService.ADDRESS_TO_DEVICE_ID,
-        {CONF_ID: 7, CONF_SEGMENT_ID: 0, CONF_TYPE: CONF_MODULE, CONF_HOST: "pchk"},
-        return_response=True,
-        blocking=True,
-    )
-
-    assert response == {CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id}
 
 
 async def test_service_called_with_invalid_host_id(

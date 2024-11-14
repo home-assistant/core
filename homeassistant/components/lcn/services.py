@@ -10,10 +10,7 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BRIGHTNESS,
     CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_ID,
     CONF_STATE,
-    CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import (
@@ -28,15 +25,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
-    CONF_GROUP,
     CONF_KEYS,
     CONF_LED,
-    CONF_MODULE,
     CONF_OUTPUT,
     CONF_PCK,
     CONF_RELVARREF,
     CONF_ROW,
-    CONF_SEGMENT_ID,
     CONF_SETPOINT,
     CONF_TABLE,
     CONF_TEXT,
@@ -59,7 +53,6 @@ from .const import (
     VARIABLES,
 )
 from .helpers import (
-    AddressType,
     DeviceConnectionType,
     address_to_device_id,
     is_address,
@@ -450,32 +443,6 @@ class Pck(LcnServiceCall):
         await device_connection.pck(pck)
 
 
-class AddressToDeviceId(LcnServiceCall):
-    """Get device_id from LCN address."""
-
-    schema = vol.Schema(
-        {
-            vol.Required(CONF_ID): cv.positive_int,
-            vol.Optional(CONF_SEGMENT_ID, default=0): cv.positive_int,
-            vol.Optional(CONF_TYPE, default=CONF_MODULE): vol.Any(
-                CONF_MODULE, CONF_GROUP
-            ),
-            vol.Optional(CONF_HOST, default=None): vol.Any(cv.string, None),
-        }
-    )
-    supports_response = SupportsResponse.ONLY
-
-    async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
-        """Execute service call."""
-        address: AddressType = (
-            service.data[CONF_SEGMENT_ID],
-            service.data[CONF_ID],
-            service.data[CONF_TYPE] == CONF_GROUP,
-        )
-        device_id = address_to_device_id(self.hass, address, service.data[CONF_HOST])
-        return {CONF_DEVICE_ID: device_id}
-
-
 class LcnService(StrEnum):
     """LCN service names."""
 
@@ -492,7 +459,6 @@ class LcnService(StrEnum):
     LOCK_KEYS = auto()
     DYN_TEXT = auto()
     PCK = auto()
-    ADDRESS_TO_DEVICE_ID = auto()
 
 
 SERVICES = (
@@ -509,7 +475,6 @@ SERVICES = (
     (LcnService.LOCK_KEYS, LockKeys),
     (LcnService.DYN_TEXT, DynText),
     (LcnService.PCK, Pck),
-    (LcnService.ADDRESS_TO_DEVICE_ID, AddressToDeviceId),
 )
 
 
