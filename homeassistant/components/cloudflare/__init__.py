@@ -93,8 +93,8 @@ async def _async_update_cloudflare(
 ) -> None:
     _LOGGER.debug("Starting update for zone %s", dns_zone["name"])
 
-    records = await client.list_dns_records(zone_id=dns_zone["id"])
-    _LOGGER.debug("Records: %s", records)
+    old_records = await client.list_dns_records(zone_id=dns_zone["id"])
+    _LOGGER.debug("Records: %s", old_records)
 
     session = async_get_clientsession(hass, family=socket.AF_INET)
     session_ipv6 = async_get_clientsession(hass, family=socket.AF_INET6)
@@ -102,43 +102,43 @@ async def _async_update_cloudflare(
     location_info = await async_detect_location_info(session)
     location_info_v6 = await async_detect_location_info(session_ipv6)
 
-    filtered_records = []
+    records_to_be_updated = []
 
     if location_info and is_ipv4_address(location_info.ip):
-        _LOGGER.info("IPv4 address detected: %s", location_info.ip)
-        for record in records:
+        _LOGGER.debug("IPv4 address detected: %s", location_info.ip)
+        for record in old_records:
             if (
                 record["name"] in target_records
                 and record["content"] != location_info.ip
                 and record["type"] == "A"
             ):
                 _LOGGER.info(
-                    "Will update record %s from %s to %s",
+                    "IPv4 address change detected for record: %s,will DNS entry from %s to %s",
                     record["name"],
                     record["content"],
                     location_info.ip,
                 )
                 record["content"] = location_info.ip
-                filtered_records.append(record)
+                records_to_be_updated.append(record)
 
     if location_info_v6 and is_ipv6_address(location_info_v6.ip):
-        _LOGGER.info("IPv6 address detected: %s", location_info_v6.ip)
-        for record in records:
+        _LOGGER.debug("IPv6 address detected: %s", location_info_v6.ip)
+        for record in old_records:
             if (
                 record["name"] in target_records
                 and record["content"] != location_info_v6.ip
                 and record["type"] == "AAAA"
             ):
                 _LOGGER.info(
-                    "Will update record %s from %s to %s",
+                    "IPv6 address change detected for record: %s,will DNS entry from %s to %s",
                     record["name"],
                     record["content"],
                     location_info_v6.ip,
                 )
                 record["content"] = location_info_v6.ip
-                filtered_records.append(record)
+                records_to_be_updated.append(record)
 
-    if len(filtered_records) == 0:
+    if len(records_to_be_updated) == 0:
         _LOGGER.debug("All target records are up to date")
         return
 
@@ -152,7 +152,7 @@ async def _async_update_cloudflare(
                 record_type=record["type"],
                 record_proxied=record["proxied"],
             )
-            for record in filtered_records
+            for record in records_to_be_updated
         ]
     )
 
