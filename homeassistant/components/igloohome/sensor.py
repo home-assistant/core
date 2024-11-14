@@ -2,12 +2,11 @@
 
 import logging
 
-from aiohttp import ClientError
 from igloohome_api import Api
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyConfigEntry
@@ -37,7 +36,7 @@ async def async_setup_entry(
         ]
 
         async_add_entities(entities, update_before_add=True)
-    except ClientError as e:
+    except Exception as e:
         raise PlatformNotReady from e
 
 
@@ -60,10 +59,5 @@ class BatteryBasedDevice(BaseEntity, SensorEntity):
         try:
             response = await self.api.get_device_info(deviceId=self.device_id)
             self._attr_native_value = response.batteryLevel
-        except ClientError as e:
-            _LOGGER.log(
-                logging.ERROR,
-                "Failed to update battery level for deviceId %s. cause=%s",
-                self.device_id,
-                e.__str__,
-            )
+        except Exception as e:
+            raise HomeAssistantError from e
