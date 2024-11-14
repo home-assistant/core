@@ -26,3 +26,8 @@ EXCLUDE_FROM_BACKUP = [
     "OZW_Log.txt",
     "tts/*",
 ]
+
+EXCLUDE_DATABASE_FROM_BACKUP = [
+    "home-assistant_v2.db",
+    "home-assistant_v2.db-wal",
+]

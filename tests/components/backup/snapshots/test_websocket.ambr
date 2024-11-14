@@ -403,6 +403,26 @@
     'type': 'event',
   })
 # ---
+# name: test_generate_without_hassio[params0-expected_extra_call_params0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'slug': 'abc123',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate_without_hassio[params1-expected_extra_call_params1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'slug': 'abc123',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_info[with_hassio]
   dict({
     'error': dict({
