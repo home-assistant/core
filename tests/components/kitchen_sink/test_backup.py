@@ -33,6 +33,24 @@ async def setup_integration(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_agents_info(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test backup agents info."""
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [{"id": "kitchen_sink.syncer"}],
+        "syncing": False,
+    }
+
+
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
