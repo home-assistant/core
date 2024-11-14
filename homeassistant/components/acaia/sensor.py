@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
 
 from aioacaia.acaiascale import AcaiaDeviceState, AcaiaScale
 from aioacaia.const import UnitMass as AcaiaUnitOfMass
@@ -18,9 +17,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from .coordinator import AcaiaConfigEntry
+from .coordinator import AcaiaConfigEntry, AcaiaCoordinator
 from .entity import AcaiaEntity
 
 
@@ -84,20 +82,28 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
 
     entity_description: AcaiaSensorEntityDescription
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._scale)
+    def __init__(
+        self,
+        coordinator: AcaiaCoordinator,
+        description: AcaiaSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, description)
+        self._attr_native_value = description.value_fn(self._scale)
+        if description.unit_fn is not None and self._scale.device_state is not None:
+            self._attr_native_unit_of_measurement = description.unit_fn(
+                self._scale.device_state
+            )
 
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity."""
-        if (
-            self._scale.device_state is not None
-            and self.entity_description.unit_fn is not None
-        ):
-            return self.entity_description.unit_fn(self._scale.device_state)
-        return self.entity_description.native_unit_of_measurement
+    @callback
+    def _async_handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if (state := self._scale.device_state) is not None:
+            self._attr_native_value = self.entity_description.value_fn(self._scale)
+            if self.entity_description.unit_fn is not None:
+                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
+                    state
+                )
 
 
 class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
@@ -114,17 +120,6 @@ class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
             self._attr_native_unit_of_measurement = (
                 self._restored_data.native_unit_of_measurement
             )
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return cast(StateType, self._attr_native_value)
-
-    @callback
-    def _async_handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self._scale.device_state is not None:
-            self._attr_native_value = self.entity_description.value_fn(self._scale)
 
     @property
     def available(self) -> bool:

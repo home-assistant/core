@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '42',
   })
 # ---
 # name: test_sensors[sensor.lunar_ddeeff_weight-entry]
