@@ -251,6 +251,7 @@ class BackupManager(BaseBackupManager[Backup]):
                         date=backup.date,
                         slug=backup.slug,
                         name=backup.name,
+                        protected=backup.protected,
                     ),
                 )
                 for agent in self.sync_agents.values()

@@ -327,6 +327,7 @@ async def test_syncing_backup(
             date=backup.date,
             homeassistant="2025.1.0",
             name=backup.name,
+            protected=backup.protected,
             size=backup.size,
             slug=backup.slug,
         )
@@ -389,6 +390,7 @@ async def test_syncing_backup_with_exception(
             date=backup.date,
             homeassistant="2025.1.0",
             name=backup.name,
+            protected=backup.protected,
             size=backup.size,
             slug=backup.slug,
         )
