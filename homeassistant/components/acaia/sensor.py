@@ -91,10 +91,6 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description)
-        self._attr_native_unit_of_measurement = (
-            entity_description.native_unit_of_measurement
-        )
-        self._scale = coordinator.scale
 
     @property
     def native_value(self) -> StateType:
