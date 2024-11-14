@@ -692,15 +692,24 @@ async def _check_create_issue_translations(
 ) -> None:
     if result.translation_key is None:
         return
-    for header in ("title", "description"):
-        await _validate_translation(
-            issue_registry.hass,
-            ignore_translations,
-            "issues",
-            result.domain,
-            f"{result.translation_key}.{header}",
-            result.translation_placeholders,
-        )
+    await _validate_translation(
+        issue_registry.hass,
+        ignore_translations,
+        "issues",
+        result.domain,
+        f"{result.translation_key}.title",
+        result.translation_placeholders,
+    )
+    if result.is_fixable:
+        return
+    await _validate_translation(
+        issue_registry.hass,
+        ignore_translations,
+        "issues",
+        result.domain,
+        f"{result.translation_key}.description",
+        result.translation_placeholders,
+    )
 
 
 @pytest.fixture(autouse=True)
