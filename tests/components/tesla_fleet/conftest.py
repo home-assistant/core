@@ -179,6 +179,7 @@ def mock_energy_history():
     ) as mock_live_status:
         yield mock_live_status
 
+
 @pytest.fixture(autouse=True)
 def mock_signed_command() -> Generator[AsyncMock]:
     """Mock Tesla Fleet Api signed_command method."""
@@ -187,4 +188,3 @@ def mock_signed_command() -> Generator[AsyncMock]:
         return_value=COMMAND_OK,
     ) as mock_signed_command:
         yield mock_signed_command
-
