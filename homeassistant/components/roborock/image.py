@@ -146,7 +146,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 self.coordinator.config_entry.async_create_task(
                     self.hass,
                     self._roborock_storage.async_save_map(
-                        self._attr_name, self.cached_map
+                        self.coordinator.duid_slug, self._attr_name, self.cached_map
                     ),
                 )
         return self.cached_map
@@ -185,6 +185,7 @@ async def create_coordinator_maps(
     maps = await hass.async_add_executor_job(
         roborock_storage.exec_load_maps,
         [roborock_map.name for roborock_map in coord.maps.values()],
+        coord.duid_slug,
     )
     storage_updates: list[tuple[str, bytes]] = []
     for (map_flag, map_info), storage_map in zip(maps_info, maps, strict=False):
@@ -228,7 +229,7 @@ async def create_coordinator_maps(
         if create_map and roborock_map.cached_map != b"":
             storage_updates.append((map_info.name, roborock_map.cached_map))
     hass.async_create_background_task(
-        roborock_storage.async_save_maps(storage_updates),
+        roborock_storage.async_save_maps(coord.duid_slug, storage_updates),
         f"{DOMAIN}_init_map_save_{coord.roborock_device_info.device.duid}",
     )
     if len(coord.maps) != 1:

@@ -43,10 +43,13 @@ class RoborockStorage:
             or dt_util.utcnow().timestamp() - map_entry.time > MAP_UPDATE_FREQUENCY
         )
 
-    def exec_load_maps(self, map_names: list[str]) -> list[bytes | None]:
+    def exec_load_maps(
+        self, map_names: list[str], coordinator_duid: str
+    ) -> list[bytes | None]:
         """Load map content. Should be called in executor thread."""
         filenames: list[tuple[str, Path]] = [
-            (map_name, self._path_prefix / map_name) for map_name in map_names
+            (map_name, self._path_prefix / coordinator_duid / map_name)
+            for map_name in map_names
         ]
 
         results: list[bytes | None] = []
@@ -77,17 +80,21 @@ class RoborockStorage:
         _LOGGER.debug("Saving event map to disk store: %s", filename)
         filename.write_bytes(content)
 
-    async def async_save_map(self, map_name: str, content: bytes) -> None:
+    async def async_save_map(
+        self, coord_duid: str, map_name: str, content: bytes
+    ) -> None:
         """Write map if it should be updated."""
-        await self.async_save_maps([(map_name, content)])
+        await self.async_save_maps(coord_duid, [(map_name, content)])
 
-    async def async_save_maps(self, maps: list[tuple[str, bytes]]) -> None:
+    async def async_save_maps(
+        self, coord_duid: str, maps: list[tuple[str, bytes]]
+    ) -> None:
         """Write maps - update regardless. Should be called as background task."""
 
         def save_maps(maps: list[tuple[str, bytes]]) -> None:
             for map_name, content in maps:
                 map_entry = self._data.get(map_name)
-                filename = self._path_prefix / map_name
+                filename = self._path_prefix / coord_duid / map_name
                 self._data[map_name] = RoborockMapEntry(
                     map_name, dt_util.utcnow().timestamp()
                 )
