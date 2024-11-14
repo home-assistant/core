@@ -11,7 +11,7 @@ from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
 from homeassistant.components.backup import BackupManager, BackupUploadMetadata
-from homeassistant.components.backup.agent import BackupPlatformAgentProtocol
+from homeassistant.components.backup.agent import BackupAgentPlatformProtocol
 from homeassistant.components.backup.manager import (
     BackupPlatformProtocol,
     BackupProgress,
@@ -55,7 +55,7 @@ async def _mock_backup_generation(
 
 async def _setup_mock_domain(
     hass: HomeAssistant,
-    platform: BackupPlatformProtocol | BackupPlatformAgentProtocol | None = None,
+    platform: BackupPlatformProtocol | BackupAgentPlatformProtocol | None = None,
 ) -> None:
     """Set up a mock domain."""
     mock_platform(hass, "some_domain.backup", platform or MockPlatform())
