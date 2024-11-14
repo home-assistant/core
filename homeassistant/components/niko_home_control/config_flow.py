@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ipaddress
 from typing import Any
 
 from nikohomecontrol import NikoHomeControlConnection
@@ -14,21 +13,13 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_IP, DEFAULT_PORT, DOMAIN
-from .errors import CannotConnect, InvalidHost, InvalidPort
+from .errors import CannotConnect
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int]:
     """Validate the user input allows us to connect."""
     host = data[CONF_HOST]
     port = data[CONF_PORT]
-
-    try:
-        ipaddress.ip_address(host)
-    except ValueError:
-        raise InvalidHost from None
-
-    if port < 0 or port > 65535:
-        raise InvalidPort
 
     controller = NikoHomeControlConnection(host, port)
 
@@ -72,10 +63,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidHost:
-                errors["host"] = "invalid_host"
-            except InvalidPort:
-                errors["port"] = "invalid_port"
 
         # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
