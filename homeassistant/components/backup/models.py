@@ -27,3 +27,4 @@ class BackupSyncMetadata:
     size: float  # The size of the backup (in bytes)
     name: str  # The name of the backup
     homeassistant: str  # The version of Home Assistant that created the backup
+    protected: bool  # If the backup is protected
