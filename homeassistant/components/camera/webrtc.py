@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
-from functools import cache, partial
+from functools import cache, partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -205,6 +205,49 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
     )
 
 
+type WsCommandWithCamera = Callable[
+    [websocket_api.ActiveConnection, dict[str, Any], Camera],
+    Awaitable[None],
+]
+
+
+def require_webrtc_support(
+    error_code: str,
+) -> Callable[[WsCommandWithCamera], websocket_api.AsyncWebSocketCommandHandler]:
+    """Validate that the camera supports WebRTC."""
+
+    def decorate(
+        func: WsCommandWithCamera,
+    ) -> websocket_api.AsyncWebSocketCommandHandler:
+        """Decorate func."""
+
+        @wraps(func)
+        async def validate(
+            hass: HomeAssistant,
+            connection: websocket_api.ActiveConnection,
+            msg: dict[str, Any],
+        ) -> None:
+            """Validate that the camera supports WebRTC."""
+            entity_id = msg["entity_id"]
+            camera = get_camera_from_entity_id(hass, entity_id)
+            if camera.frontend_stream_type != StreamType.WEB_RTC:
+                connection.send_error(
+                    msg["id"],
+                    error_code,
+                    (
+                        "Camera does not support WebRTC,"
+                        f" frontend_stream_type={camera.frontend_stream_type}"
+                    ),
+                )
+                return
+
+            await func(connection, msg, camera)
+
+        return validate
+
+    return decorate
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "camera/webrtc/offer",
@@ -213,8 +256,9 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
     }
 )
 @websocket_api.async_response
+@require_webrtc_support("webrtc_offer_failed")
 async def ws_webrtc_offer(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle the signal path for a WebRTC stream.
 
@@ -226,20 +270,7 @@ async def ws_webrtc_offer(
 
     Async friendly.
     """
-    entity_id = msg["entity_id"]
     offer = msg["offer"]
-    camera = get_camera_from_entity_id(hass, entity_id)
-    if camera.frontend_stream_type != StreamType.WEB_RTC:
-        connection.send_error(
-            msg["id"],
-            "webrtc_offer_failed",
-            (
-                "Camera does not support WebRTC,"
-                f" frontend_stream_type={camera.frontend_stream_type}"
-            ),
-        )
-        return
-
     session_id = ulid()
     connection.subscriptions[msg["id"]] = partial(
         camera.close_webrtc_session, session_id
@@ -278,23 +309,11 @@ async def ws_webrtc_offer(
     }
 )
 @websocket_api.async_response
+@require_webrtc_support("webrtc_get_client_config_failed")
 async def ws_get_client_config(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle get WebRTC client config websocket command."""
-    entity_id = msg["entity_id"]
-    camera = get_camera_from_entity_id(hass, entity_id)
-    if camera.frontend_stream_type != StreamType.WEB_RTC:
-        connection.send_error(
-            msg["id"],
-            "webrtc_get_client_config_failed",
-            (
-                "Camera does not support WebRTC,"
-                f" frontend_stream_type={camera.frontend_stream_type}"
-            ),
-        )
-        return
-
     config = camera.async_get_webrtc_client_configuration().to_frontend_dict()
     connection.send_result(
         msg["id"],
@@ -311,23 +330,11 @@ async def ws_get_client_config(
     }
 )
 @websocket_api.async_response
+@require_webrtc_support("webrtc_candidate_failed")
 async def ws_candidate(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+    connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle WebRTC candidate websocket command."""
-    entity_id = msg["entity_id"]
-    camera = get_camera_from_entity_id(hass, entity_id)
-    if camera.frontend_stream_type != StreamType.WEB_RTC:
-        connection.send_error(
-            msg["id"],
-            "webrtc_candidate_failed",
-            (
-                "Camera does not support WebRTC,"
-                f" frontend_stream_type={camera.frontend_stream_type}"
-            ),
-        )
-        return
-
     await camera.async_on_webrtc_candidate(
         msg["session_id"], RTCIceCandidate(msg["candidate"])
     )
