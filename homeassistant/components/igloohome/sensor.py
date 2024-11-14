@@ -1,5 +1,6 @@
 """Implementation of the sensor platform."""
 
+from datetime import timedelta
 import logging
 
 from igloohome_api import Api
@@ -13,6 +14,9 @@ from . import MyConfigEntry
 from .entity import BaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SCAN_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(
