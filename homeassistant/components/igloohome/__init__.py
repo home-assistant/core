@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from igloohome_api import Api, Auth
 
 from homeassistant.components.hassio import async_get_clientsession
@@ -13,6 +15,8 @@ from homeassistant.core import HomeAssistant
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type MyConfigEntry = ConfigEntry[Api]
+
+SCAN_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
