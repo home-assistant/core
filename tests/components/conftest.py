@@ -18,6 +18,7 @@ from aiohasupervisor.models import (
 )
 import pytest
 
+from homeassistant.components import repairs
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
@@ -32,6 +33,7 @@ from homeassistant.data_entry_flow import (
     FlowManager,
     FlowResultType,
 )
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 
 if TYPE_CHECKING:
@@ -615,12 +617,23 @@ async def _check_config_flow_result_translations(
     result: FlowResult[FlowContext, str],
     ignore_translations: dict[str, str],
 ) -> None:
+    if result["type"] is FlowResultType.CREATE_ENTRY:
+        # No need to check translations for a completed flow
+        return
+
+    key_prefix = ""
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
     elif isinstance(manager, OptionsFlowManager):
         category = "options"
         integration = flow.hass.config_entries.async_get_entry(flow.handler).domain
+    elif isinstance(manager, repairs.RepairsFlowManager):
+        category = "issues"
+        integration = flow.handler
+        issue_id = flow.issue_id
+        issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        key_prefix = f"{issue.translation_key}.fix_flow."
     else:
         return
 
@@ -639,7 +652,7 @@ async def _check_config_flow_result_translations(
                     ignore_translations,
                     category,
                     integration,
-                    f"step.{step_id}.{header}",
+                    f"{key_prefix}step.{step_id}.{header}",
                     result["description_placeholders"],
                     translation_required=False,
                 )
@@ -650,7 +663,7 @@ async def _check_config_flow_result_translations(
                     ignore_translations,
                     category,
                     integration,
-                    f"error.{error}",
+                    f"{key_prefix}error.{error}",
                     result["description_placeholders"],
                 )
         return
@@ -665,7 +678,7 @@ async def _check_config_flow_result_translations(
             ignore_translations,
             category,
             integration,
-            f"abort.{result["reason"]}",
+            f"{key_prefix}abort.{result["reason"]}",
             result["description_placeholders"],
         )
 
