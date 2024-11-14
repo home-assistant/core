@@ -770,8 +770,8 @@ async def test_error_no_device_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on test light on the ground floor", None, Context(), None
@@ -838,8 +838,8 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -873,8 +873,8 @@ async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -1047,8 +1047,8 @@ async def test_error_no_device_class(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open the windows", None, Context(), None
@@ -1096,8 +1096,8 @@ async def test_error_no_device_class_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open all the windows", None, Context(), None
@@ -1207,8 +1207,8 @@ async def test_error_no_device_class_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open ground floor windows", None, Context(), None
@@ -1229,8 +1229,8 @@ async def test_error_no_device_class_on_floor_exposed(
 async def test_error_no_intent(hass: HomeAssistant) -> None:
     """Test response with an intent match failure."""
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=None,
     ):
         result = await conversation.async_converse(
             hass, "do something", None, Context(), None

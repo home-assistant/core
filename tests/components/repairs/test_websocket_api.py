@@ -533,6 +533,10 @@ async def test_list_issues(
     }
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.issues.abc_123.fix_flow.abort.not_given"],
+)
 async def test_fix_issue_aborted(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

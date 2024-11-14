@@ -35,7 +35,7 @@ from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
-    BloodGlugoseConcentrationConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -64,7 +64,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
         AreaConverter,
-        BloodGlugoseConcentrationConverter,
+        BloodGlucoseConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -87,7 +87,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
     AreaConverter: (UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_METERS, 0.000001),
-    BloodGlugoseConcentrationConverter: (
+    BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         18,
@@ -198,7 +198,7 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfArea.SQUARE_YARDS, 1.6141528925619832e-06, UnitOfArea.SQUARE_MILES),
         (5, UnitOfArea.SQUARE_YARDS, 0.0010330578512396695, UnitOfArea.ACRES),
     ],
-    BloodGlugoseConcentrationConverter: [
+    BloodGlucoseConcentrationConverter: [
         (
             90,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
