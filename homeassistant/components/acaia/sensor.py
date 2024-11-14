@@ -89,6 +89,7 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, description)
+        self._attr_native_unit_of_measurement_calculated = False
         self._determine_state()
 
     def _determine_state(self):
@@ -101,6 +102,7 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
             self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
                 self._scale.device_state
             )
+            self._attr_native_unit_of_measurement_calculated = True
 
     @callback
     def _async_handle_coordinator_update(self) -> None:
@@ -119,10 +121,12 @@ class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
         await super().async_added_to_hass()
         self._restored_data = await self.async_get_last_sensor_data()
         if self._restored_data is not None:
-            self._attr_native_value = self._restored_data.native_value
-            self._attr_native_unit_of_measurement = (
-                self._restored_data.native_unit_of_measurement
-            )
+            if self._attr_native_value is None:
+                self._attr_native_value = self._restored_data.native_value
+            if not self._attr_native_unit_of_measurement_calculated:
+                self._attr_native_unit_of_measurement = (
+                    self._restored_data.native_unit_of_measurement
+                )
 
     @property
     def available(self) -> bool:
