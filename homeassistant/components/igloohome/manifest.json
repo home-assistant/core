@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/igloohome",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": [],
+  "requirements": ["igloohome-api==0.0.4"],
   "ssdp": [],
   "zeroconf": []
 }

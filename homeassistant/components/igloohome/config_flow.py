@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from igloohome_api import Auth, AuthException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -13,7 +14,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, OAUTH2_TOKEN_URL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,18 +39,23 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         session = aiohttp.ClientSession()
-        form = aiohttp.FormData()
-        form.add_field("grant_type", "client_credentials")
-        form.add_field("scope", "igloohomeapi/algopin-hourly")
-        response = await session.post(
-            url=OAUTH2_TOKEN_URL,
-            auth=aiohttp.BasicAuth(
-                login=data[CONF_CLIENT_ID], password=data[CONF_CLIENT_SECRET]
-            ),
-            data=form,
+        # response = await session.post(
+        #     url=OAUTH2_TOKEN_URL,
+        #     auth=aiohttp.BasicAuth(
+        #         login=data[CONF_CLIENT_ID], password=data[CONF_CLIENT_SECRET]
+        #     ),
+        #     data=form,
+        # )
+        auth = Auth(
+            session=session,
+            client_id=data[CONF_CLIENT_ID],
+            client_secret=data[CONF_CLIENT_SECRET],
         )
-        if response.status != 200:
-            raise InvalidAuth
+        _ = await auth.async_get_access_token()
+    except AuthException as e:
+        raise InvalidAuth from e
+    except Exception as e:
+        raise CannotConnect from e
     finally:
         await session.close()
 
