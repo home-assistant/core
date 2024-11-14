@@ -119,6 +119,10 @@ async def handle_restore(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/generate",
+        vol.Optional("addons_included"): [str],
+        vol.Optional("database_included", default=True): bool,
+        vol.Optional("folders_included"): [str],
+        vol.Optional("name"): str,
         vol.Optional("password"): str,
     }
 )
@@ -134,6 +138,10 @@ async def handle_create(
         connection.send_message(websocket_api.event_message(msg["id"], progress))
 
     backup = await hass.data[DATA_MANAGER].async_create_backup(
+        addons_included=msg.get("addons_included"),
+        database_included=msg["database_included"],
+        folders_included=msg.get("folders_included"),
+        name=msg.get("name"),
         on_progress=on_progress,
         password=msg.get("password"),
     )

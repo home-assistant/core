@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
 import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
@@ -24,12 +24,20 @@ from .common import TEST_BACKUP, BackupAgentTest
 
 from tests.common import MockPlatform, mock_platform
 
+_EXPECTED_FILES_WITH_DATABASE = {
+    True: ["test.txt", ".storage", "home-assistant_v2.db"],
+    False: ["test.txt", ".storage"],
+}
+
 
 async def _mock_backup_generation(
+    hass: HomeAssistant,
     manager: BackupManager,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     *,
+    database_included: bool = True,
+    name: str | None = "Core 2025.1.0",
     password: str | None = None,
 ) -> None:
     """Mock backup generator."""
@@ -42,6 +50,10 @@ async def _mock_backup_generation(
 
     assert manager.backup_task is None
     await manager.async_create_backup(
+        addons_included=[],
+        database_included=database_included,
+        folders_included=[],
+        name=name,
         on_progress=on_progress,
         password=password,
     )
@@ -54,9 +66,27 @@ async def _mock_backup_generation(
     assert mocked_json_bytes.call_count == 1
     backup_json_dict = mocked_json_bytes.call_args[0][0]
     assert isinstance(backup_json_dict, dict)
-    assert backup_json_dict["homeassistant"] == {"version": "2025.1.0"}
-    assert backup_json_dict.get("protected", False) is bool(password)
+    assert backup_json_dict == {
+        "compressed": True,
+        "date": ANY,
+        "folders": ["homeassistant"],
+        "homeassistant": {
+            "exclude_database": not database_included,
+            "version": "2025.1.0",
+        },
+        "name": name,
+        "protected": bool(password),
+        "slug": ANY,
+        "type": "partial",
+    }
     assert manager.backup_dir.as_posix() in str(mocked_tarfile.call_args_list[0][0][0])
+    outer_tar = mocked_tarfile.return_value
+    core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
+    expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
+        call(file, arcname=f"data/{file}", recursive=False)
+        for file in _EXPECTED_FILES_WITH_DATABASE[database_included]
+    ]
+    assert core_tar.add.call_args_list == expected_files
 
     return backup
 
@@ -166,33 +196,40 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     manager = BackupManager(hass)
     manager.backup_task = hass.async_create_task(event.wait())
     with pytest.raises(HomeAssistantError, match="Backup already in progress"):
-        await manager.async_create_backup(on_progress=None, password=None)
+        await manager.async_create_backup(
+            addons_included=[],
+            database_included=True,
+            folders_included=[],
+            name=None,
+            on_progress=None,
+            password=None,
+        )
     event.set()
 
 
+@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    "password",
+    "params",
     [
-        None,
-        "abc123",
+        {},
+        {"database_included": True, "name": "abc123"},
+        {"database_included": False},
+        {"password": "abc123"},
     ],
 )
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_async_create_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
-    password: str | None,
+    params: dict,
 ) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
     manager.loaded_backups = True
 
-    assert len(manager.backups) == 0
-
     await _mock_backup_generation(
-        manager, mocked_json_bytes, mocked_tarfile, password=password
+        hass, manager, mocked_json_bytes, mocked_tarfile, **params
     )
 
     assert "Generated new backup with slug " in caplog.text
@@ -202,7 +239,7 @@ async def test_async_create_backup(
 
     assert len(manager.backups) == 1
     backup = list(manager.backups.values())[0]
-    assert backup.protected is bool(password)
+    assert backup.protected is bool(params.get("password"))
 
 
 async def test_loading_platforms(
@@ -304,7 +341,9 @@ async def test_syncing_backup(
     await manager.load_platforms()
     await hass.async_block_till_done()
 
-    backup = await _mock_backup_generation(manager, mocked_json_bytes, mocked_tarfile)
+    backup = await _mock_backup_generation(
+        hass, manager, mocked_json_bytes, mocked_tarfile
+    )
 
     with (
         patch(
@@ -363,7 +402,9 @@ async def test_syncing_backup_with_exception(
     await manager.load_platforms()
     await hass.async_block_till_done()
 
-    backup = await _mock_backup_generation(manager, mocked_json_bytes, mocked_tarfile)
+    backup = await _mock_backup_generation(
+        hass, manager, mocked_json_bytes, mocked_tarfile
+    )
 
     with (
         patch(
@@ -417,7 +458,9 @@ async def test_syncing_backup_no_agents(
     await manager.load_platforms()
     await hass.async_block_till_done()
 
-    backup = await _mock_backup_generation(manager, mocked_json_bytes, mocked_tarfile)
+    backup = await _mock_backup_generation(
+        hass, manager, mocked_json_bytes, mocked_tarfile
+    )
     with patch(
         "homeassistant.components.backup.agent.BackupAgent.async_upload_backup"
     ) as mocked_async_upload_backup:
@@ -445,7 +488,7 @@ async def test_exception_plaform_pre(
     )
 
     with pytest.raises(HomeAssistantError):
-        await _mock_backup_generation(manager, mocked_json_bytes, mocked_tarfile)
+        await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
 
 
 async def test_exception_plaform_post(
@@ -468,7 +511,7 @@ async def test_exception_plaform_post(
     )
 
     with pytest.raises(HomeAssistantError):
-        await _mock_backup_generation(manager, mocked_json_bytes, mocked_tarfile)
+        await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
 
 
 async def test_loading_platforms_when_running_async_pre_backup_actions(

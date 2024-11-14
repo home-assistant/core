@@ -45,6 +45,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_handle_create_service(call: ServiceCall) -> None:
         """Service handler for creating backups."""
         await backup_manager.async_create_backup(
+            addons_included=None,
+            database_included=True,
+            folders_included=None,
+            name=None,
             on_progress=None,
             password=call.data.get(CONF_PASSWORD),
         )
