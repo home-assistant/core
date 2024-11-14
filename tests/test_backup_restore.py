@@ -19,7 +19,23 @@ from .common import get_test_config_dir
         (
             None,
             '{"path": "test"}',
-            backup_restore.RestoreBackupFileContent(backup_file_path=Path("test")),
+            backup_restore.RestoreBackupFileContent(
+                backup_file_path=Path("test"), password=None
+            ),
+        ),
+        (
+            None,
+            '{"path": "test", "password": "psw"}',
+            backup_restore.RestoreBackupFileContent(
+                backup_file_path=Path("test"), password="psw"
+            ),
+        ),
+        (
+            None,
+            '{"path": "test", "password": null}',
+            backup_restore.RestoreBackupFileContent(
+                backup_file_path=Path("test"), password=None
+            ),
         ),
     ],
 )
@@ -155,15 +171,17 @@ def test_removal_of_current_configuration_when_restoring() -> None:
             return_value=[x["path"] for x in mock_config_dir],
         ),
         mock.patch("pathlib.Path.unlink") as unlink_mock,
-        mock.patch("shutil.rmtree") as rmtreemock,
+        mock.patch("shutil.copytree") as copytree_mock,
+        mock.patch("shutil.rmtree") as rmtree_mock,
     ):
         assert backup_restore.restore_backup(config_dir) is True
         assert unlink_mock.call_count == 2
+        assert copytree_mock.call_count == 1
         assert (
-            rmtreemock.call_count == 1
+            rmtree_mock.call_count == 1
         )  # We have 2 directories in the config directory, but backups is kept
 
-        removed_directories = {Path(call.args[0]) for call in rmtreemock.mock_calls}
+        removed_directories = {Path(call.args[0]) for call in rmtree_mock.mock_calls}
         assert removed_directories == {Path(config_dir, "www")}
 
 
@@ -177,8 +195,8 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
 
     getmembers_mock = mock.MagicMock(
         return_value=[
+            tarfile.TarInfo(name="../data/test"),
             tarfile.TarInfo(name="data"),
-            tarfile.TarInfo(name="data/../test"),
             tarfile.TarInfo(name="data/.HA_VERSION"),
             tarfile.TarInfo(name="data/.storage"),
             tarfile.TarInfo(name="data/www"),
@@ -190,7 +208,7 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         mock.patch(
             "homeassistant.backup_restore.restore_backup_file_content",
             return_value=backup_restore.RestoreBackupFileContent(
-                backup_file_path=backup_file_path
+                backup_file_path=backup_file_path,
             ),
         ),
         mock.patch(
@@ -205,11 +223,37 @@ def test_extracting_the_contents_of_a_backup_file() -> None:
         mock.patch("pathlib.Path.read_text", _patched_path_read_text),
         mock.patch("pathlib.Path.is_file", return_value=False),
         mock.patch("pathlib.Path.iterdir", return_value=[]),
+        mock.patch("shutil.copytree"),
     ):
         assert backup_restore.restore_backup(config_dir) is True
-        assert getmembers_mock.call_count == 1
         assert extractall_mock.call_count == 2
 
         assert {
             member.name for member in extractall_mock.mock_calls[-1].kwargs["members"]
-        } == {".HA_VERSION", ".storage", "www"}
+        } == {"data", "data/.HA_VERSION", "data/.storage", "data/www"}
+
+
+@pytest.mark.parametrize(
+    ("password", "expected"),
+    [
+        ("test", b"\xf0\x9b\xb9\x1f\xdc,\xff\xd5x\xd6\xd6\x8fz\x19.\x0f"),
+        ("lorem ipsum...", b"#\xe0\xfc\xe0\xdb?_\x1f,$\rQ\xf4\xf5\xd8\xfb"),
+    ],
+)
+def test_pw_to_key(password: str | None, expected: bytes | None) -> None:
+    """Test password to key conversion."""
+    assert backup_restore.password_to_key(password) == expected
+
+
+@pytest.mark.parametrize(
+    ("password", "expected"),
+    [
+        (None, None),
+        ("test", b"\xf0\x9b\xb9\x1f\xdc,\xff\xd5x\xd6\xd6\x8fz\x19.\x0f"),
+        ("lorem ipsum...", b"#\xe0\xfc\xe0\xdb?_\x1f,$\rQ\xf4\xf5\xd8\xfb"),
+    ],
+)
+def test_pw_to_key_none(password: str | None, expected: bytes | None) -> None:
+    """Test password to key conversion."""
+    with pytest.raises(AttributeError):
+        backup_restore.password_to_key(None)

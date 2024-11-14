@@ -1,1 +1,7 @@
 create:
+  fields:
+    password:
+      required: false
+      selector:
+        text:
+          type: password

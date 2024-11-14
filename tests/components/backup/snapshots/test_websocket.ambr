@@ -76,6 +76,7 @@
         'date': '1970-01-01T00:00:00Z',
         'id': 'abc123',
         'name': 'Test',
+        'protected': False,
         'size': 13.37,
         'slug': 'abc123',
       }),
@@ -93,6 +94,7 @@
         'date': '1970-01-01T00:00:00Z',
         'id': 'abc123',
         'name': 'Test',
+        'protected': False,
         'size': 13.37,
         'slug': 'abc123',
       }),
@@ -353,6 +355,7 @@
         'date': '1970-01-01T00:00:00.000Z',
         'name': 'Test',
         'path': 'abc123.tar',
+        'protected': False,
         'size': 0.0,
         'slug': 'abc123',
       }),
@@ -371,7 +374,7 @@
     'type': 'result',
   })
 # ---
-# name: test_generate[with_hassio]
+# name: test_generate[with_hassio-None]
   dict({
     'error': dict({
       'code': 'unknown_command',
@@ -382,7 +385,29 @@
     'type': 'result',
   })
 # ---
-# name: test_generate[without_hassio]
+# name: test_generate[with_hassio-data1]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[with_hassio-data2]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[without_hassio-None]
   dict({
     'id': 1,
     'result': dict({
@@ -392,7 +417,49 @@
     'type': 'result',
   })
 # ---
-# name: test_generate[without_hassio].1
+# name: test_generate[without_hassio-None].1
+  dict({
+    'event': dict({
+      'done': True,
+      'stage': None,
+      'success': True,
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[without_hassio-data1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'slug': '27f5c632',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[without_hassio-data1].1
+  dict({
+    'event': dict({
+      'done': True,
+      'stage': None,
+      'success': True,
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---
+# name: test_generate[without_hassio-data2]
+  dict({
+    'id': 1,
+    'result': dict({
+      'slug': '27f5c632',
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_generate[without_hassio-data2].1
   dict({
     'event': dict({
       'done': True,
@@ -444,6 +511,7 @@
           'date': '1970-01-01T00:00:00.000Z',
           'name': 'Test',
           'path': 'abc123.tar',
+          'protected': False,
           'size': 0.0,
           'slug': 'abc123',
         }),

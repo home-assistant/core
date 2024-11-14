@@ -38,6 +38,7 @@ async def _mock_backup_generation(
     *,
     database_included: bool = True,
     name: str | None = "Core 2025.1.0",
+    password: str | None = None,
 ) -> None:
     """Mock backup generator."""
 
@@ -54,6 +55,7 @@ async def _mock_backup_generation(
         folders_included=[],
         name=name,
         on_progress=on_progress,
+        password=password,
     )
     assert manager.backup_task is not None
     assert progress == []
@@ -73,6 +75,7 @@ async def _mock_backup_generation(
             "version": "2025.1.0",
         },
         "name": name,
+        "protected": bool(password),
         "slug": ANY,
         "type": "partial",
     }
@@ -199,6 +202,7 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
             folders_included=[],
             name=None,
             on_progress=None,
+            password=None,
         )
     event.set()
 
@@ -206,7 +210,12 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     "params",
-    [{}, {"database_included": True, "name": "abc123"}, {"database_included": False}],
+    [
+        {},
+        {"database_included": True, "name": "abc123"},
+        {"database_included": False},
+        {"password": "abc123"},
+    ],
 )
 async def test_async_create_backup(
     hass: HomeAssistant,
@@ -227,6 +236,10 @@ async def test_async_create_backup(
     assert "Creating backup directory" in caplog.text
     assert "Loaded 0 platforms" in caplog.text
     assert "Loaded 0 agents" in caplog.text
+
+    assert len(manager.backups) == 1
+    backup = list(manager.backups.values())[0]
+    assert backup.protected is bool(params.get("password"))
 
 
 async def test_loading_platforms(
@@ -351,6 +364,7 @@ async def test_syncing_backup(
             date=backup.date,
             homeassistant="2025.1.0",
             name=backup.name,
+            protected=backup.protected,
             size=backup.size,
             slug=backup.slug,
         )
@@ -415,6 +429,7 @@ async def test_syncing_backup_with_exception(
             date=backup.date,
             homeassistant="2025.1.0",
             name=backup.name,
+            protected=backup.protected,
             size=backup.size,
             slug=backup.slug,
         )
@@ -600,7 +615,32 @@ async def test_async_trigger_restore(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
     ):
         await manager.async_restore_backup(TEST_BACKUP.slug)
-        assert mocked_write_text.call_args[0][0] == '{"path": "abc123.tar"}'
+        assert (
+            mocked_write_text.call_args[0][0]
+            == '{"path": "abc123.tar", "password": null}'
+        )
+        assert mocked_service_call.called
+
+
+async def test_async_trigger_restore_with_password(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger restore."""
+    manager = BackupManager(hass)
+    manager.loaded_backups = True
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text") as mocked_write_text,
+        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
+    ):
+        await manager.async_restore_backup(slug=TEST_BACKUP.slug, password="abc123")
+        assert (
+            mocked_write_text.call_args[0][0]
+            == '{"path": "abc123.tar", "password": "abc123"}'
+        )
         assert mocked_service_call.called
 
 
