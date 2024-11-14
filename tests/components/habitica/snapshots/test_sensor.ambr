@@ -342,6 +342,55 @@
     'state': '15',
   })
 # ---
+# name: test_sensors[sensor.test_user_blue_cotton_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_blue_cotton_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blue Cotton Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cottoncandyblue',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_CottonCandyBlue',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_blue_cotton_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_CottonCandyBlue.png',
+      'friendly_name': 'test-user Blue Cotton Candy',
+      'key': 'CottonCandyBlue',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_blue_cotton_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.test_user_blueberry_pie-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2974,6 +3023,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '230',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pink_cotton_candy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pink_cotton_candy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pink Cotton Candy',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cottoncandypink',
+    'unique_id': '00000000-0000-0000-0000-000000000000_Pet_Food_CottonCandyPink',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pink_cotton_candy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_CottonCandyPink.png',
+      'friendly_name': 'test-user Pink Cotton Candy',
+      'key': 'CottonCandyPink',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pink_cotton_candy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
   })
 # ---
 # name: test_sensors[sensor.test_user_pink_rhubarb_pie-entry]
