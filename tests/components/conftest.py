@@ -26,7 +26,12 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.data_entry_flow import (
+    FlowContext,
+    FlowHandler,
+    FlowManager,
+    FlowResultType,
+)
 from homeassistant.helpers.translation import async_get_translations
 
 if TYPE_CHECKING:
@@ -562,7 +567,7 @@ def _validate_translation_placeholders(
             )
 
 
-async def _ensure_translation_exists(
+async def _validate_translation(
     hass: HomeAssistant,
     ignore_translations: dict[str, StoreInfo],
     category: str,
@@ -604,81 +609,101 @@ def ignore_translations() -> str | list[str]:
     return []
 
 
+async def _check_config_flow_result_translations(
+    self: FlowManager,
+    flow: FlowHandler,
+    result: FlowResult[FlowContext, str],
+    ignore_translations: dict[str, str],
+) -> FlowResult:
+    if isinstance(self, ConfigEntriesFlowManager):
+        category = "config"
+        component = flow.handler
+    elif isinstance(self, OptionsFlowManager):
+        category = "options"
+        component = flow.hass.config_entries.async_get_entry(flow.handler).domain
+    else:
+        return result
+
+    # Check if this flow has been seen before
+    # Gets set to False on first run, and to True on subsequent runs
+    setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
+
+    if result["type"] is FlowResultType.FORM:
+        if step_id := result.get("step_id"):
+            # neither title nor description are required
+            # - title defaults to integration name
+            # - description is optional
+            for header in ("title", "description"):
+                await _validate_translation(
+                    flow.hass,
+                    ignore_translations,
+                    category,
+                    component,
+                    f"step.{step_id}.{header}",
+                    result["description_placeholders"],
+                    translation_required=False,
+                )
+        if errors := result.get("errors"):
+            for error in errors.values():
+                await _validate_translation(
+                    flow.hass,
+                    ignore_translations,
+                    category,
+                    component,
+                    f"error.{error}",
+                    result["description_placeholders"],
+                )
+        return result
+
+    if result["type"] is FlowResultType.ABORT:
+        # We don't need translations for a discovery flow which immediately
+        # aborts, since such flows won't be seen by users
+        if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
+            return result
+        await _validate_translation(
+            flow.hass,
+            ignore_translations,
+            category,
+            component,
+            f"abort.{result["reason"]}",
+            result["description_placeholders"],
+        )
+
+    return result
+
+
 @pytest.fixture(autouse=True)
-def check_config_translations(ignore_translations: str | list[str]) -> Generator[None]:
-    """Ensure config_flow translations are available."""
+def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
+    """Check that translation requirements are met.
+
+    Current checks:
+    - data entry flow results (ConfigFlow/OptionsFlow)
+    """
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
 
     _ignore_translations = {k: "unused" for k in ignore_translations}
-    _original = FlowManager._async_handle_step
 
-    async def _async_handle_step(
+    # Keep reference to original functions
+    _original_flow_manager_async_handle_step = FlowManager._async_handle_step
+
+    # Prepare override functions
+    async def _flow_manager_async_handle_step(
         self: FlowManager, flow: FlowHandler, *args
     ) -> FlowResult:
-        result = await _original(self, flow, *args)
-        if isinstance(self, ConfigEntriesFlowManager):
-            category = "config"
-            component = flow.handler
-        elif isinstance(self, OptionsFlowManager):
-            category = "options"
-            component = flow.hass.config_entries.async_get_entry(flow.handler).domain
-        else:
-            return result
+        result = await _original_flow_manager_async_handle_step(self, flow, *args)
+        return _check_config_flow_result_translations(
+            self, flow, result, _ignore_translations
+        )
 
-        # Check if this flow has been seen before
-        # Gets set to False on first run, and to True on subsequent runs
-        setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
-
-        if result["type"] is FlowResultType.FORM:
-            if step_id := result.get("step_id"):
-                # neither title nor description are required
-                # - title defaults to integration name
-                # - description is optional
-                for header in ("title", "description"):
-                    await _ensure_translation_exists(
-                        flow.hass,
-                        _ignore_translations,
-                        category,
-                        component,
-                        f"step.{step_id}.{header}",
-                        result["description_placeholders"],
-                        translation_required=False,
-                    )
-            if errors := result.get("errors"):
-                for error in errors.values():
-                    await _ensure_translation_exists(
-                        flow.hass,
-                        _ignore_translations,
-                        category,
-                        component,
-                        f"error.{error}",
-                        result["description_placeholders"],
-                    )
-            return result
-
-        if result["type"] is FlowResultType.ABORT:
-            # We don't need translations for a discovery flow which immediately
-            # aborts, since such flows won't be seen by users
-            if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
-                return result
-            await _ensure_translation_exists(
-                flow.hass,
-                _ignore_translations,
-                category,
-                component,
-                f"abort.{result["reason"]}",
-                result["description_placeholders"],
-            )
-
-        return result
-
+    # Use override functions
     with patch(
         "homeassistant.data_entry_flow.FlowManager._async_handle_step",
-        _async_handle_step,
+        _flow_manager_async_handle_step,
     ):
         yield
 
+    # Run final checks
     unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
     if unused_ignore:
         pytest.fail(
