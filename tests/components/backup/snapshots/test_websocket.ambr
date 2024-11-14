@@ -43,7 +43,7 @@
     'result': dict({
       'agents': list([
         dict({
-          'id': 'domain.test',
+          'agent_id': 'domain.test',
         }),
       ]),
       'syncing': False,
@@ -58,7 +58,7 @@
     'result': dict({
       'agents': list([
         dict({
-          'id': 'domain.test',
+          'agent_id': 'domain.test',
         }),
       ]),
       'syncing': False,

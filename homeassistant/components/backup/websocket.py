@@ -212,7 +212,7 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"id": agent_id} for agent_id in manager.backup_agents],
+            "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
             "syncing": manager.syncing,
         },
     )
@@ -240,7 +240,7 @@ async def backup_agents_list_backups(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/agents/download",
-        vol.Required("agent"): str,
+        vol.Required("agent_id"): str,
         vol.Required("backup_id"): str,
         vol.Required("slug"): str,
     }
@@ -255,9 +255,9 @@ async def backup_agents_download(
     manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
 
-    if not (agent := manager.backup_agents.get(msg["agent"])):
+    if not (agent := manager.backup_agents.get(msg["agent_id"])):
         connection.send_error(
-            msg["id"], "unknown_agent", f"Agent {msg['agent']} not found"
+            msg["id"], "unknown_agent", f"Agent {msg['agent_id']} not found"
         )
         return
     try:

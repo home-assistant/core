@@ -451,7 +451,7 @@ async def test_agents_download(
         {
             "type": "backup/agents/download",
             "slug": "abc123",
-            "agent": "domain.test",
+            "agent_id": "domain.test",
             "backup_id": "abc123",
         }
     )
@@ -479,7 +479,7 @@ async def test_agents_download_exception(
         {
             "type": "backup/agents/download",
             "slug": "abc123",
-            "agent": "domain.test",
+            "agent_id": "domain.test",
             "backup_id": "abc123",
         }
     )
@@ -503,7 +503,7 @@ async def test_agents_download_unknown_agent(
         {
             "type": "backup/agents/download",
             "slug": "abc123",
-            "agent": "domain.test",
+            "agent_id": "domain.test",
             "backup_id": "abc123",
         }
     )
