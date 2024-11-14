@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_buttons[entry_button_reset_timer]
+# name: test_buttons[button.lunar_ddeeff_reset_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -28,11 +28,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'reset_timer',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_reset_timer',
+    'unique_id': 'AA:BB:CC:DD:EE:FF_reset_timer',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[entry_button_start_stop_timer]
+# name: test_buttons[button.lunar_ddeeff_reset_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LUNAR-DDEEFF Reset timer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lunar_ddeeff_reset_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_buttons[button.lunar_ddeeff_start_stop_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,11 +74,24 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_stop',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_start_stop',
+    'unique_id': 'AA:BB:CC:DD:EE:FF_start_stop',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[entry_button_tare]
+# name: test_buttons[button.lunar_ddeeff_start_stop_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LUNAR-DDEEFF Start/stop timer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lunar_ddeeff_start_stop_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_buttons[button.lunar_ddeeff_tare-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -94,37 +120,11 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'tare',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_tare',
+    'unique_id': 'AA:BB:CC:DD:EE:FF_tare',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[state_button_reset_timer]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR-DDEEFF Reset timer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lunar_ddeeff_reset_timer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[state_button_start_stop_timer]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR-DDEEFF Start/stop timer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lunar_ddeeff_start_stop_timer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_buttons[state_button_tare]
+# name: test_buttons[button.lunar_ddeeff_tare-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LUNAR-DDEEFF Tare',
@@ -134,6 +134,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
