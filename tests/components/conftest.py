@@ -728,7 +728,7 @@ async def check_translations(
 
     translation_errors = {k: "unused" for k in ignore_translations}
 
-    translation_tasks = set[asyncio.Task[None]]()
+    translation_coros = set()
 
     # Keep reference to original functions
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
@@ -750,12 +750,8 @@ async def check_translations(
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
-        translation_tasks.add(
-            self.hass.async_create_task_internal(
-                _check_create_issue_translations(self, result, translation_errors),
-                "Check create_issue translations",
-                eager_start=True,
-            )
+        translation_coros.add(
+            _check_create_issue_translations(self, result, translation_errors)
         )
         return result
 
@@ -772,7 +768,7 @@ async def check_translations(
     ):
         yield
 
-    await asyncio.gather(*translation_tasks)
+    await asyncio.gather(*translation_coros)
 
     # Run final checks
     unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
