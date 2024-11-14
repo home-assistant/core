@@ -3,6 +3,7 @@
 import dataclasses
 import logging
 from pathlib import Path
+import shutil
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
@@ -113,9 +114,9 @@ class RoborockStorage:
 
         def remove_maps() -> None:
             try:
-                for filename in self._path_prefix.iterdir():
-                    _LOGGER.debug("Removing map from disk store: %s", filename)
-                    filename.unlink()
+                for coordinator in self._path_prefix.iterdir():
+                    _LOGGER.debug("Removing maps from disk store: %s", coordinator)
+                    shutil.rmtree(coordinator)
             except OSError as err:
                 _LOGGER.error(
                     "Unable to remove map files for: %s %s", self._entry_id, err

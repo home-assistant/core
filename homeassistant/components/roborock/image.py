@@ -1,13 +1,13 @@
 """Support for Roborock image."""
 
 import asyncio
+import contextlib
 from datetime import datetime
 import io
 from itertools import chain
 
 from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
-from vacuum_map_parser_base.config.drawable import Drawable
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
@@ -39,11 +39,14 @@ async def async_setup_entry(
         for drawable, default_value in DEFAULT_DRAWABLES.items()
         if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
     ]
+    parser = RoborockMapDataParser(
+        ColorsPalette(), Sizes(), drawables, ImageConfig(), []
+    )
     entities = list(
         chain.from_iterable(
             await asyncio.gather(
                 *(
-                    create_coordinator_maps(coord, hass, drawables)
+                    create_coordinator_maps(coord, hass, parser)
                     for coord in config_entry.runtime_data.v1
                 )
             )
@@ -67,30 +70,16 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         starting_map: bytes,
         map_name: str,
         roborock_storage: RoborockStorage,
-        create_map: bool,
-        drawables: list[Drawable],
+        parser: RoborockMapDataParser,
     ) -> None:
         """Initialize a Roborock map."""
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_name = map_name
-        self.parser = RoborockMapDataParser(
-            ColorsPalette(), Sizes(), drawables, ImageConfig(), []
-        )
+        self.parser = parser
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
-        if create_map and starting_map != b"":
-            try:
-                self.cached_map = self._create_image(starting_map)
-            except HomeAssistantError:
-                # If we failed to update the image on init,
-                # we set cached_map to empty bytes
-                # so that we are unavailable and can try again later.
-                self.cached_map = b""
-        else:
-            # Map was cached - so we can load it directly.
-            # Or map failed - and we are setting to b"""
-            self.cached_map = starting_map
+        self.cached_map = starting_map
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._roborock_storage = roborock_storage
 
@@ -141,7 +130,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 )
             map_data = response[0]
             old_data = self.cached_map
-            self.cached_map = self._create_image(map_data)
+            self.cached_map = self.create_image(map_data, self.parser)
             if old_data != self.cached_map:
                 self.coordinator.config_entry.async_create_task(
                     self.hass,
@@ -151,9 +140,10 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 )
         return self.cached_map
 
-    def _create_image(self, map_bytes: bytes) -> bytes:
+    @staticmethod
+    def create_image(map_bytes: bytes, parser: RoborockMapDataParser) -> bytes:
         """Create an image using the map parser."""
-        parsed_map = self.parser.parse(map_bytes)
+        parsed_map = parser.parse(map_bytes)
         if parsed_map.image is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -165,7 +155,9 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
 
 async def create_coordinator_maps(
-    coord: RoborockDataUpdateCoordinator, hass: HomeAssistant, drawables: list[Drawable]
+    coord: RoborockDataUpdateCoordinator,
+    hass: HomeAssistant,
+    parser: RoborockMapDataParser,
 ) -> list[RoborockMap]:
     """Get the starting map information for all maps for this device.
 
@@ -193,7 +185,6 @@ async def create_coordinator_maps(
             f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_info.name}"
         )
         # Load the map - so we can access it with get_map_v1
-        create_map = False
         if storage_map is None:
             # Only get the map data on startup if a) we haven't added the entity before
             # b) The entity does not have the needed restore data.
@@ -211,8 +202,12 @@ async def create_coordinator_maps(
             )
             # If we fail to get the map, we should set it to empty byte,
             # still create it, and set it as unavailable.
-            api_data = map_update[0] if isinstance(map_update[0], bytes) else b""
-            create_map = True
+            api_data = b""
+            if isinstance(map_update[0], bytes):
+                with contextlib.suppress(HomeAssistantError):
+                    # If we fail, we just keep api_data = b"" and we do not update the storage.
+                    api_data = RoborockMap.create_image(map_update[0], parser)
+                    storage_updates.append((map_info.name, api_data))
         else:
             api_data = storage_map
         roborock_map = RoborockMap(
@@ -222,12 +217,9 @@ async def create_coordinator_maps(
             api_data,
             map_info.name,
             roborock_storage,
-            create_map,
-            drawables,
+            parser,
         )
         entities.append(roborock_map)
-        if create_map and roborock_map.cached_map != b"":
-            storage_updates.append((map_info.name, roborock_map.cached_map))
     hass.async_create_background_task(
         roborock_storage.async_save_maps(coord.duid_slug, storage_updates),
         f"{DOMAIN}_init_map_save_{coord.roborock_device_info.device.duid}",

@@ -168,17 +168,18 @@ async def test_remove_from_hass(
     cleanup_map_storage: str,
 ) -> None:
     """Test that removing from hass removes any existing images."""
-
     assert (
         len(
             os.listdir(
-                hass.config.path(f"{cleanup_map_storage}/{setup_entry.entry_id}")
+                hass.config.path(
+                    f"{cleanup_map_storage}/{setup_entry.entry_id}/{setup_entry.runtime_data.v1[0].duid_slug}"
+                )
             )
         )
         != 0
     )
     await hass.config_entries.async_remove(setup_entry.entry_id)
-    # After removal, directory should be empty.
+    # After removal, directories should be empty.
     assert (
         len(
             os.listdir(
@@ -206,7 +207,7 @@ async def test_oserror_remove_image(
         != 0
     )
     with patch(
-        "homeassistant.components.roborock.roborock_storage.Path.unlink",
+        "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
         side_effect=OSError,
     ):
         await hass.config_entries.async_remove(setup_entry.entry_id)
