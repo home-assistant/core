@@ -144,7 +144,7 @@ class NikoHomeControlLight(LightEntity):
         await self._data.async_update()
         state = self._data.get_state(self._light.id)
         self._attr_is_on = state != 0
-        if brightness_supported(self._attr_supported_color_modes):
+        if brightness_supported(self.supported_color_modes):
             self._attr_brightness = state * 2.55
 
 
