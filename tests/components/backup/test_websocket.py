@@ -8,9 +8,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.backup import BaseBackup
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import NewBackup
-from homeassistant.components.backup.models import BaseBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
