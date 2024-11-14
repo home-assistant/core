@@ -423,7 +423,7 @@ class DefaultAgent(ConversationEntity):
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
         strict_result = self._recognize_strict(
-            user_input.text, lang_intents, slot_lists, intent_context, language
+            user_input, lang_intents, slot_lists, intent_context, language
         )
 
         if strict_result is not None:
@@ -470,7 +470,7 @@ class DefaultAgent(ConversationEntity):
         }
 
         strict_result = self._recognize_strict(
-            user_input.text,
+            user_input,
             lang_intents,
             slot_lists,
             intent_context,
@@ -557,7 +557,7 @@ class DefaultAgent(ConversationEntity):
 
     def _recognize_strict(
         self,
-        sentence: str,
+        user_input: ConversationInput,
         lang_intents: LanguageIntents,
         slot_lists: dict[str, SlotList],
         intent_context: dict[str, Any] | None,
@@ -1122,7 +1122,9 @@ class DefaultAgent(ConversationEntity):
             translations = await translation.async_get_translations(
                 self.hass, language, DOMAIN, [DOMAIN]
             )
-            response_text = translations.get(f"component.{DOMAIN}.agent.done", "Done")
+            response_text = translations.get(
+                f"component.{DOMAIN}.conversation.agent.done", "Done"
+            )
 
         return response_text
 
