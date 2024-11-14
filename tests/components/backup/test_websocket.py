@@ -14,7 +14,7 @@ from homeassistant.components.backup.manager import NewBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .common import TEST_BACKUP, BackupAgentTest, setup_backup_integration
+from .common import TEST_LOCAL_BACKUP, BackupAgentTest, setup_backup_integration
 
 from tests.typing import WebSocketGenerator
 
@@ -45,7 +45,9 @@ async def test_info(
     with_hassio: bool,
 ) -> None:
     """Test getting backup info."""
-    await setup_backup_integration(hass, with_hassio=with_hassio, backups=[TEST_BACKUP])
+    await setup_backup_integration(
+        hass, with_hassio=with_hassio, backups=[TEST_LOCAL_BACKUP]
+    )
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -57,7 +59,7 @@ async def test_info(
 @pytest.mark.parametrize(
     "backup_content",
     [
-        pytest.param([TEST_BACKUP], id="with_backup_content"),
+        pytest.param([TEST_LOCAL_BACKUP], id="with_backup_content"),
         pytest.param(None, id="without_backup_content"),
     ],
 )

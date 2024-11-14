@@ -37,7 +37,7 @@ class LocalBackup(UploadedBackup):
 
 
 class LocalBackupAgent(BackupAgent):
-    """Define the format that backup agents can have."""
+    """Local backup agent for Core and Container installations."""
 
     name = "local"
 
@@ -135,6 +135,10 @@ class LocalBackupAgent(BackupAgent):
             return None
 
         return backup
+
+    def get_backup_path(self, slug: str) -> Path:
+        """Return the local path to a backup."""
+        return self.backup_dir / f"{slug}.tar"
 
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""

@@ -42,12 +42,13 @@ class DownloadBackupView(HomeAssistantView):
 
         manager = cast(BackupManager, request.app[KEY_HASS].data[DATA_MANAGER])
         backup = await manager.async_get_backup(slug=slug)
+        path = await manager.async_get_backup_path(slug=slug)
 
-        if backup is None or not backup.path.exists():
+        if backup is None or path is None or not path.exists():
             return Response(status=HTTPStatus.NOT_FOUND)
 
         return FileResponse(
-            path=backup.path.as_posix(),
+            path=path.as_posix(),
             headers={
                 CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
             },

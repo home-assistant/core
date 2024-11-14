@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import hashlib
 import io
 import json
@@ -15,7 +15,7 @@ import shutil
 import tarfile
 from tempfile import TemporaryDirectory
 import time
-from typing import Any, Generic, Protocol
+from typing import Any, Generic, Protocol, cast
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
@@ -30,6 +30,7 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 
 from .agent import BackupAgent, BackupAgentPlatformProtocol
+from .backup import LocalBackupAgent
 from .const import (
     BUF_SIZE,
     DOMAIN,
@@ -60,11 +61,6 @@ class Backup(BaseBackup):
     """Backup class."""
 
     agent_ids: list[str]
-    path: Path
-
-    def as_dict(self) -> dict:
-        """Return a dict representation of this backup."""
-        return {**asdict(self), "path": self.path.as_posix()}
 
 
 @dataclass(slots=True)
@@ -251,25 +247,27 @@ class BackupManager(BaseBackupManager[Backup]):
         if not (backup := await self.async_get_backup(slug=slug)):
             return
 
+        local_agent = cast(LocalBackupAgent, self.backup_agents[LOCAL_AGENT_ID])
         await self._async_upload_backup(
-            slug=slug,
             backup=backup,
             agent_ids=list(self.backup_agents.keys()),
+            # TODO: This should be the path to the backup file
+            path=local_agent.get_backup_path(slug),
         )
 
     async def _async_upload_backup(
         self,
         *,
-        slug: str,
         backup: Backup,
         agent_ids: list[str],
+        path: Path,
     ) -> None:
         """Upload a backup to selected agents."""
         self.syncing = True
         sync_backup_results = await asyncio.gather(
             *(
                 self.backup_agents[agent_id].async_upload_backup(
-                    path=backup.path,
+                    path=path,
                     metadata=BackupUploadMetadata(
                         homeassistant=HAVERSION,
                         size=backup.size,
@@ -301,8 +299,6 @@ class BackupManager(BaseBackupManager[Backup]):
                         name=agent_backup.name,
                         date=agent_backup.date,
                         agent_ids=[],
-                        # TODO: Do we need to expose the path?
-                        path=agent_backup.path,  # type: ignore[attr-defined]
                         size=agent_backup.size,
                         protected=agent_backup.protected,
                     )
@@ -315,6 +311,13 @@ class BackupManager(BaseBackupManager[Backup]):
         # TODO: This is not efficient, but it's fine for draft
         backups = await self.async_get_backups()
         return backups.get(slug)
+
+    async def async_get_backup_path(self, *, slug: str, **kwargs: Any) -> Path | None:
+        """Return path to a backup which is available locally."""
+        local_agent = cast(LocalBackupAgent, self.backup_agents[LOCAL_AGENT_ID])
+        if not await local_agent.async_get_backup(slug=slug):
+            return None
+        return local_agent.get_backup_path(slug)
 
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
@@ -433,10 +436,12 @@ class BackupManager(BaseBackupManager[Backup]):
     ) -> Backup:
         """Generate a backup."""
         success = False
+
         if LOCAL_AGENT_ID in agent_ids:
-            backup_dir = self.backup_dir
+            local_agent = cast(LocalBackupAgent, self.backup_agents[LOCAL_AGENT_ID])
+            tar_file_path = local_agent.get_backup_path(slug)
         else:
-            backup_dir = self.temp_backup_dir
+            tar_file_path = self.temp_backup_dir / f"{slug}.tar"
 
         try:
             await self.async_pre_backup_actions()
@@ -455,10 +460,8 @@ class BackupManager(BaseBackupManager[Backup]):
                 "protected": password is not None,
             }
 
-            tar_file_path = Path(backup_dir, f"{backup_data['slug']}.tar")
             size_in_bytes = await self.hass.async_add_executor_job(
                 self._mkdir_and_generate_backup_contents,
-                backup_dir,
                 tar_file_path,
                 backup_data,
                 database_included,
@@ -468,7 +471,6 @@ class BackupManager(BaseBackupManager[Backup]):
                 slug=slug,
                 name=backup_name,
                 date=date_str,
-                path=tar_file_path,
                 size=round(size_in_bytes / 1_048_576, 2),
                 protected=password is not None,
                 agent_ids=agent_ids,  # TODO: This should maybe be set after upload
@@ -480,10 +482,10 @@ class BackupManager(BaseBackupManager[Backup]):
                 agent_ids,
             )
             await self._async_upload_backup(
-                slug=slug, backup=backup, agent_ids=agent_ids
+                backup=backup, agent_ids=agent_ids, path=tar_file_path
             )
-            # TODO: Upload to other agents
-            # TODO: Remove from local store if not uploaded to local agent
+            if LOCAL_AGENT_ID not in agent_ids:
+                tar_file_path.unlink(True)
             success = True
             return backup
         finally:
@@ -494,14 +496,13 @@ class BackupManager(BaseBackupManager[Backup]):
 
     def _mkdir_and_generate_backup_contents(
         self,
-        backup_dir: Path,
         tar_file_path: Path,
         backup_data: dict[str, Any],
         database_included: bool,
-        password: str | None = None,
+        password: str | None,
     ) -> int:
         """Generate backup contents and return the size."""
-        if not backup_dir.exists():
+        if not (backup_dir := tar_file_path.parent).exists():
             LOGGER.debug("Creating backup directory %s", backup_dir)
             backup_dir.mkdir()
 
@@ -550,7 +551,7 @@ class BackupManager(BaseBackupManager[Backup]):
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                json.dumps({"path": backup.path.as_posix(), "password": password}),
+                json.dumps({"path": backup.path.as_posix(), "password": password}),  # type: ignore[attr-defined]
                 encoding="utf-8",
             )
 

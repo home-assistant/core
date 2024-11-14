@@ -12,6 +12,7 @@ from homeassistant.components.backup import (
     BackupUploadMetadata,
     UploadedBackup,
 )
+from homeassistant.components.backup.backup import LocalBackup
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import LOCAL_AGENT_ID, Backup
 from homeassistant.core import HomeAssistant
@@ -20,6 +21,15 @@ from homeassistant.setup import async_setup_component
 
 TEST_BACKUP = Backup(
     agent_ids=["backup.local"],
+    slug="abc123",
+    name="Test",
+    date="1970-01-01T00:00:00.000Z",
+    size=0.0,
+    protected=False,
+)
+TEST_BACKUP_PATH = Path("abc123.tar")
+TEST_LOCAL_BACKUP = LocalBackup(
+    id="abc123",
     slug="abc123",
     name="Test",
     date="1970-01-01T00:00:00.000Z",
