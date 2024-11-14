@@ -35,7 +35,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -203,12 +203,12 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
         Integrations should implement alarm_state instead of using state directly.
         """
-        report(
+        report_usage(
             "is setting state directly which will stop working in HA Core 2025.11."
             f" Entity {self.entity_id} ({type(self)}) should implement the 'alarm_state'"
             " property and return its state using the AlarmControlPanelState enum.",
-            error_if_core=True,
-            error_if_integration=False,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.ERROR,
         )
 
     @final
