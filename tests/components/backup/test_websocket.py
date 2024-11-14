@@ -1,6 +1,7 @@
 """Tests for the Backup integration."""
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -127,6 +128,14 @@ async def test_remove(
 
 
 @pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        {},
+        {"password": "abc123"},
+    ],
+)
+@pytest.mark.parametrize(
     ("with_hassio", "number_of_messages"),
     [
         pytest.param(True, 1, id="with_hassio"),
@@ -137,6 +146,7 @@ async def test_remove(
 async def test_generate(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    data: dict[str, Any] | None,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     with_hassio: bool,
@@ -149,7 +159,7 @@ async def test_generate(
     freezer.move_to("2024-11-13 12:01:00+01:00")
     await hass.async_block_till_done()
 
-    await client.send_json_auto_id({"type": "backup/generate"})
+    await client.send_json_auto_id({"type": "backup/generate", **(data or {})})
     for _ in range(number_of_messages):
         assert await client.receive_json() == snapshot
 
@@ -203,6 +213,7 @@ async def test_generate_without_hassio(
                 "folders_included": None,
                 "name": None,
                 "on_progress": ANY,
+                "password": None,
             }
             | expected_extra_call_params
         )

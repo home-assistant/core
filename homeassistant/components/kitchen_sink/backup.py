@@ -34,6 +34,7 @@ class KitchenSinkBackupAgent(BackupAgent):
             UploadedBackup(
                 id="def456",
                 name="Kitchen sink syncer",
+                protected=False,
                 slug="abc123",
                 size=1234,
                 date="1970-01-01T00:00:00Z",
@@ -63,6 +64,7 @@ class KitchenSinkBackupAgent(BackupAgent):
             UploadedBackup(
                 id=uuid4().hex,
                 name=metadata.name,
+                protected=metadata.protected,
                 slug=metadata.slug,
                 size=metadata.size,
                 date=metadata.date,

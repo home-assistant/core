@@ -98,6 +98,7 @@ async def handle_remove(
     {
         vol.Required("type"): "backup/restore",
         vol.Required("slug"): str,
+        vol.Optional("password"): str,
     }
 )
 @websocket_api.async_response
@@ -107,7 +108,10 @@ async def handle_restore(
     msg: dict[str, Any],
 ) -> None:
     """Restore a backup."""
-    await hass.data[DATA_MANAGER].async_restore_backup(msg["slug"])
+    await hass.data[DATA_MANAGER].async_restore_backup(
+        slug=msg["slug"],
+        password=msg.get("password"),
+    )
     connection.send_result(msg["id"])
 
 
@@ -119,6 +123,7 @@ async def handle_restore(
         vol.Optional("database_included", default=True): bool,
         vol.Optional("folders_included"): [str],
         vol.Optional("name"): str,
+        vol.Optional("password"): str,
     }
 )
 @websocket_api.async_response
@@ -138,6 +143,7 @@ async def handle_create(
         folders_included=msg.get("folders_included"),
         name=msg.get("name"),
         on_progress=on_progress,
+        password=msg.get("password"),
     )
     connection.send_result(msg["id"], backup)
 

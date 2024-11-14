@@ -20,6 +20,7 @@ TEST_BACKUP = Backup(
     date="1970-01-01T00:00:00.000Z",
     path=Path("abc123.tar"),
     size=0.0,
+    protected=False,
 )
 
 
@@ -49,10 +50,11 @@ class BackupAgentTest(BackupAgent):
         return [
             UploadedBackup(
                 id="abc123",
-                name="Test",
-                slug="abc123",
-                size=13.37,
                 date="1970-01-01T00:00:00Z",
+                name="Test",
+                protected=False,
+                size=13.37,
+                slug="abc123",
             )
         ]
 
