@@ -84,14 +84,6 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
 
     entity_description: AcaiaSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: AcaiaCoordinator,
-        entity_description: AcaiaSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description)
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
