@@ -20,11 +20,9 @@ class UploadedBackup(BaseBackup):
 
 
 class BackupAgent(abc.ABC):
-    """Define the format that backup agents can have."""
+    """Backup agent interface."""
 
-    def __init__(self, name: str) -> None:
-        """Initialize the backup agent."""
-        self.name = name
+    name: str
 
     @abc.abstractmethod
     async def async_download_backup(
@@ -36,9 +34,8 @@ class BackupAgent(abc.ABC):
     ) -> None:
         """Download a backup file.
 
-        The `id` parameter is the ID of the backup that was returned in async_list_backups.
-
-        The `path` parameter is the full file path to download the backup to.
+        :param id: The ID of the backup that was returned in async_list_backups.
+        :param path: The full file path to download the backup to.
         """
 
     @abc.abstractmethod
@@ -51,9 +48,8 @@ class BackupAgent(abc.ABC):
     ) -> None:
         """Upload a backup.
 
-        The `path` parameter is the full file path to the backup that should be uploaded.
-
-        The `metadata` parameter contains metadata about the backup that should be uploaded.
+        :param path: The full file path to the backup that should be uploaded.
+        :param metadata: Metadata about the backup that should be uploaded.
         """
 
     @abc.abstractmethod
@@ -62,12 +58,11 @@ class BackupAgent(abc.ABC):
 
 
 class BackupAgentPlatformProtocol(Protocol):
-    """Define the format that backup platforms can have."""
+    """Define the format of backup platforms which implement backup agents."""
 
     async def async_get_backup_agents(
         self,
-        *,
         hass: HomeAssistant,
         **kwargs: Any,
     ) -> list[BackupAgent]:
-        """Register the backup agent."""
+        """Return a list of backup agents."""
