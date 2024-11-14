@@ -160,6 +160,9 @@ aio-geojson-usgs-earthquakes==0.3
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.10
 
+# homeassistant.components.acaia
+aioacaia==0.1.6
+
 # homeassistant.components.airq
 aioairq==0.3.2
 
@@ -167,7 +170,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.10
 
 # homeassistant.components.airzone
-aioairzone==0.9.5
+aioairzone==0.9.6
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -336,7 +339,7 @@ aiorecollect==2023.09.0
 aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.41
+aioruckus==0.42
 
 # homeassistant.components.russound_rio
 aiorussound==4.1.0
@@ -363,7 +366,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.8.4
+aiostreammagic==2.8.5
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.4.0
@@ -729,7 +732,7 @@ epion==0.0.3
 epson-projector==0.5.1
 
 # homeassistant.components.eq3btsmart
-eq3btsmart==1.2.1
+eq3btsmart==1.4.1
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
@@ -2044,7 +2047,7 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.11.0
+reolink-aio==0.11.1
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2096,7 +2099,7 @@ securetar==2024.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.13.3
+sense-energy==0.13.4
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
