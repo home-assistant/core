@@ -276,7 +276,7 @@ async def test_backup_upload(
     ):
         await client.send_json_auto_id(
             {
-                "type": "backup/upload",
+                "type": "backup/agents/upload",
                 "data": {
                     "slug": "abc123",
                 },
@@ -341,7 +341,7 @@ async def test_backup_upload_exception(
     ):
         await client.send_json_auto_id(
             {
-                "type": "backup/upload",
+                "type": "backup/agents/upload",
                 "data": {
                     "slug": "abc123",
                 },

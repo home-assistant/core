@@ -173,7 +173,7 @@ async def handle_backup_end(
 @websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/upload",
+        vol.Required("type"): "backup/agents/upload",
         vol.Required("data"): {
             vol.Required("slug"): str,
         },
