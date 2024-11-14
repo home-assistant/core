@@ -107,13 +107,7 @@ class AcaiaRestoreSensor(AcaiaEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if self._scale.device_state is not None:
-            self._attr_native_value = self.entity_description.value_fn(self._scale)
-            if self.entity_description.unit_fn is not None:
-                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-                    self._scale.device_state
-                )
-            return
+
         self._restored_data = await self.async_get_last_sensor_data()
         if self._restored_data is not None:
             if self._attr_native_value is None:
@@ -121,6 +115,13 @@ class AcaiaRestoreSensor(AcaiaEntity, RestoreSensor):
             self._attr_native_unit_of_measurement = (
                 self._restored_data.native_unit_of_measurement
             )
+
+        if self._scale.device_state is not None:
+            self._attr_native_value = self.entity_description.value_fn(self._scale)
+            if self.entity_description.unit_fn is not None:
+                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
+                    self._scale.device_state
+                )
 
     @callback
     def _handle_coordinator_update(self) -> None:
