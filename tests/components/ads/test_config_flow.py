@@ -1,6 +1,6 @@
 """Test the ADS config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,36 +16,53 @@ from homeassistant.components.ads.config_flow import (
 class TestADSConfigFlow:
     """Test the ADSConfigFlow class."""
 
+    @patch("homeassistant.components.ads.hub.AdsHub.test_connection")
     @patch("homeassistant.config_entries.ConfigFlow.async_create_entry")
-    async def test_valid_ams_net_id(self, mock_create_entry):
+    async def test_valid_ams_net_id(self, mock_create_entry, mock_test_connection):
         """Test if the flow correctly handles a valid AMS Net ID."""
+        mock_test_connection.return_value = True
 
+        hass = MagicMock()
+        hass.async_add_executor_job = AsyncMock()
         flow = ADSConfigFlow()
+        flow.hass = hass
 
         # Simulate user input with valid AMS Net ID and other fields
         user_input = {
             CONF_DEVICE: "192.168.10.120.1.1",  # valid AMS Net ID
             CONF_PORT: 851,
-            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_IP_ADDRESS: "10.0.10.20",
         }
+        # Mock the behavior of async_create_entry to return a dictionary with 'type' == 'create_entry'
+        mock_create_entry.return_value = {"type": "create_entry"}
 
-        await flow.async_step_user(user_input)
+        result = await flow.async_step_user(user_input)
 
         # Check that async_create_entry was called with correct arguments
         mock_create_entry.assert_called_once_with(title="ADS", data=user_input)
+        assert result["type"] == "create_entry"
 
+    @patch("homeassistant.components.ads.hub.AdsHub.test_connection")
     @patch("homeassistant.config_entries.ConfigFlow.async_create_entry")
-    async def test_invalid_ams_net_id(self, mock_create_entry):
+    async def test_invalid_ams_net_id(self, mock_create_entry, mock_test_connection):
         """Test if the flow handles invalid AMS Net ID input."""
 
+        mock_test_connection.return_value = False  # Simulate failed connection
+
+        hass = MagicMock()
+        hass.async_add_executor_job = AsyncMock()
         flow = ADSConfigFlow()
+        flow.hass = hass
 
         # Simulate user input with an invalid AMS Net ID
         user_input = {
             CONF_DEVICE: "192.168.10.120.1",  # Invalid AMS Net ID (missing last part)
             CONF_PORT: 851,
-            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_IP_ADDRESS: "10.0.10.20",
         }
+
+        # Mock the behavior of async_create_entry to return None, meaning no entry is created
+        mock_create_entry.return_value = None
 
         result = await flow.async_step_user(user_input)
 
@@ -55,24 +72,35 @@ class TestADSConfigFlow:
         assert result["type"] == "form"
         assert result["errors"] == {CONF_DEVICE: "invalid_ams_net_id"}
 
+    @patch("homeassistant.components.ads.hub.AdsHub.test_connection")
     @patch("homeassistant.config_entries.ConfigFlow.async_create_entry")
-    async def test_valid_input_creates_entry(self, mock_create_entry):
+    async def test_valid_input_creates_entry(
+        self, mock_create_entry, mock_test_connection
+    ):
         """Test if valid user input creates an entry."""
 
+        mock_test_connection.return_value = False  # Simulate failed connection
+        hass = MagicMock()
+        hass.async_add_executor_job = AsyncMock()
         flow = ADSConfigFlow()
+        flow.hass = hass
+
+        # Mock the behavior of async_create_entry to return a dictionary with 'type' == 'create_entry'
+        mock_create_entry.return_value = {"type": "create_entry"}
 
         # Valid user input
         user_input = {
             CONF_DEVICE: "192.168.10.120.1.1",  # valid AMS Net ID
             CONF_PORT: 851,
-            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_IP_ADDRESS: "10.0.10.20",
         }
 
         # # Call the user step with valid input
-        await flow.async_step_user(user_input)
+        result = await flow.async_step_user(user_input)
 
         # Check if an entry was created
         mock_create_entry.assert_called_once_with(title="ADS", data=user_input)
+        assert result["type"] == "create_entry"
 
     @patch("homeassistant.config_entries.ConfigFlow.async_create_entry")
     async def test_invalid_port(self, mock_create_entry):
@@ -84,7 +112,7 @@ class TestADSConfigFlow:
         user_input = {
             CONF_DEVICE: "192.168.10.120.1.1",
             CONF_PORT: 99999,  # Invalid port number (too large)
-            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_IP_ADDRESS: "10.0.10.20",
         }
 
         result = await flow.async_step_user(user_input)
@@ -121,10 +149,8 @@ class TestADSConfigFlow:
         """Test if empty device name raises the appropriate error."""
 
         flow = ADSConfigFlow()
-
-        # Empty device name
         user_input = {
-            CONF_DEVICE: "",  # Empty device name
+            CONF_DEVICE: "",
             CONF_PORT: 851,
             CONF_IP_ADDRESS: "192.168.1.100",
         }

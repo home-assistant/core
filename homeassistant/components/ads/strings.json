@@ -14,7 +14,8 @@
     },
     "error": {
       "invalid_ams_net_id": "Invalid AMS Net ID. Valid format: 192.168.1.10.1.1",
-      "invalid_port": "Must be between 1-65535. Usually 801 for TwinCAT 2 / 851 for TwinCAT 3"
+      "invalid_port": "Must be between 1-65535. Usually 801 for TwinCAT 2 / 851 for TwinCAT 3",
+      "cannot_connect": "Couldn't connect to the provided AMS Net ID."
     }
   },
   "services": {

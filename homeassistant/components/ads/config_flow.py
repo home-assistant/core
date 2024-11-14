@@ -1,11 +1,13 @@
 """Config flow for Automation Device Specification (ADS)."""
 
+import pyads
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
+from .hub import AdsHub
 
 # Define configuration keys
 CONF_DEVICE = "device"
@@ -37,6 +39,19 @@ class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_PORT] = (
                     "invalid_port" if user_input.get(CONF_PORT) else "required"
                 )
+
+            # Test the connection if no validation errors exist
+            if not errors:
+                # Create a temporary pyads connection client
+                ads_client = pyads.Connection(
+                    user_input[CONF_DEVICE],
+                    user_input[CONF_PORT],
+                    user_input.get(CONF_IP_ADDRESS),
+                )
+                hub = AdsHub(ads_client)
+
+                # Test the connection
+                await self.hass.async_add_executor_job(hub.test_connection)
 
             if not errors:
                 # If validation passes, create entry
