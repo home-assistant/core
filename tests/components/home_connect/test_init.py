@@ -26,7 +26,9 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.helpers.issue_registry as ir
 
 from .conftest import (
     CLIENT_ID,
@@ -40,7 +42,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-SERVICE_KV_CALL_PARAMS = [
+DEPRECATED_KEYS_SERVICE_KV_CALL_PARAMS = [
     {
         "domain": DOMAIN,
         "service": "set_option_active",
@@ -62,6 +64,38 @@ SERVICE_KV_CALL_PARAMS = [
         },
         "blocking": True,
     },
+]
+
+SERVICE_KV_CALL_PARAMS = [
+    {
+        "domain": DOMAIN,
+        "service": "set_option_active",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "custom_options": [
+                {
+                    "key": "",
+                    "value": "",
+                    "unit": "",
+                },
+            ],
+        },
+        "blocking": True,
+    },
+    {
+        "domain": DOMAIN,
+        "service": "set_option_selected",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "custom_options": [
+                {
+                    "key": "",
+                    "value": "",
+                },
+            ],
+        },
+        "blocking": True,
+    },
     {
         "domain": DOMAIN,
         "service": "change_setting",
@@ -72,6 +106,7 @@ SERVICE_KV_CALL_PARAMS = [
         },
         "blocking": True,
     },
+    *DEPRECATED_KEYS_SERVICE_KV_CALL_PARAMS,
 ]
 
 SERVICE_COMMAND_CALL_PARAMS = [
@@ -94,7 +129,7 @@ SERVICE_COMMAND_CALL_PARAMS = [
 ]
 
 
-SERVICE_PROGRAM_CALL_PARAMS = [
+DEPRECATED_KEYS_SERVICE_PROGRAM_CALL_PARAMS = [
     {
         "domain": DOMAIN,
         "service": "select_program",
@@ -120,14 +155,59 @@ SERVICE_PROGRAM_CALL_PARAMS = [
     },
 ]
 
+SERVICE_PROGRAM_CALL_PARAMS = [
+    {
+        "domain": DOMAIN,
+        "service": "select_program",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "program": "",
+            "custom_options": [
+                {
+                    "key": "",
+                    "value": "",
+                },
+            ],
+        },
+        "blocking": True,
+    },
+    {
+        "domain": DOMAIN,
+        "service": "start_program",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "program": "",
+            "custom_options": [
+                {
+                    "key": "",
+                    "value": "",
+                    "unit": "C",
+                }
+            ],
+        },
+        "blocking": True,
+    },
+    *DEPRECATED_KEYS_SERVICE_PROGRAM_CALL_PARAMS,
+]
+
 SERVICE_APPLIANCE_METHOD_MAPPING = {
-    "set_option_active": "set_options_active_program",
-    "set_option_selected": "set_options_selected_program",
+    "set_option_active": "put",
+    "set_option_selected": "put",
     "change_setting": "set_setting",
     "pause_program": "execute_command",
     "resume_program": "execute_command",
     "select_program": "select_program",
     "start_program": "start_program",
+}
+
+SERVICE_VALIDATION_ERROR_MAPPING = {
+    "set_option_active": r"Error.*set.*program.*options.*",
+    "set_option_selected": r"Error.*set.*program.*options.*",
+    "change_setting": r"Error.*assign.*value.*setting.*",
+    "pause_program": r"Error.*execute.*command.*",
+    "resume_program": r"Error.*execute.*command.*",
+    "select_program": r"Error.*select.*program.*",
+    "start_program": r"Error.*start.*program.*",
 }
 
 
@@ -286,8 +366,166 @@ async def test_services(
     )
 
 
+@pytest.mark.parametrize(
+    "service_call",
+    DEPRECATED_KEYS_SERVICE_KV_CALL_PARAMS
+    + DEPRECATED_KEYS_SERVICE_PROGRAM_CALL_PARAMS,
+)
 @pytest.mark.usefixtures("bypass_throttle")
-async def test_services_exception(
+async def test_service_keys_deprecation(
+    service_call: list[dict[str, Any]],
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    appliance: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test deprecated service keys."""
+    get_appliances.return_value = [appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.haId)},
+    )
+
+    service_call["service_data"]["device_id"] = device_entry.id
+    await hass.services.async_call(**service_call)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    assert issue_registry.async_get_issue(DOMAIN, "moved_program_options_keys")
+
+
+@pytest.mark.parametrize(
+    ("service_call", "method_called", "expected_args"),
+    [
+        (
+            {
+                "domain": DOMAIN,
+                "service": "select_program",
+                "service_data": {
+                    "device_id": "DEVICE_ID",
+                    "program": "dishcare_dishwasher_program_eco50",
+                    "b_s_h_common_option_start_in_relative": "00:30:00",
+                },
+            },
+            "select_program",
+            (
+                "Dishcare.Dishwasher.Program.Eco50",
+                [{"key": "BSH.Common.Option.StartInRelative", "value": 1800}],
+            ),
+        ),
+        (
+            {
+                "domain": DOMAIN,
+                "service": "start_program",
+                "service_data": {
+                    "device_id": "DEVICE_ID",
+                    "program": "ConsumerProducts.Coffee.Maker.Program.Beverage.Coffee",
+                    "consumer_products_coffee_maker_option_bean_amount": "consumer_products_coffee_maker_enum_type_bean_amount_normal",
+                },
+            },
+            "start_program",
+            (
+                "ConsumerProducts.Coffee.Maker.Program.Beverage.Coffee",
+                [
+                    {
+                        "key": "ConsumerProducts.CoffeeMaker.Option.BeanAmount",
+                        "value": "ConsumerProducts.CoffeeMaker.EnumType.BeanAmount.Normal",
+                    }
+                ],
+            ),
+        ),
+        (
+            {
+                "domain": DOMAIN,
+                "service": "set_option_active",
+                "service_data": {
+                    "device_id": "DEVICE_ID",
+                    "consumer_products_coffee_maker_option_bean_amount": "consumer_products_coffee_maker_enum_type_bean_amount_normal",
+                },
+            },
+            "put",
+            (
+                "/programs/active/options",
+                {
+                    "data": {
+                        "options": [
+                            {
+                                "key": "ConsumerProducts.CoffeeMaker.Option.BeanAmount",
+                                "value": "ConsumerProducts.CoffeeMaker.EnumType.BeanAmount.Normal",
+                            },
+                        ]
+                    },
+                },
+            ),
+        ),
+        (
+            {
+                "domain": DOMAIN,
+                "service": "set_option_selected",
+                "service_data": {
+                    "device_id": "DEVICE_ID",
+                    "consumer_products_coffee_maker_option_bean_amount": "consumer_products_coffee_maker_enum_type_bean_amount_normal",
+                },
+            },
+            "put",
+            (
+                "/programs/selected/options",
+                {
+                    "data": {
+                        "options": [
+                            {
+                                "key": "ConsumerProducts.CoffeeMaker.Option.BeanAmount",
+                                "value": "ConsumerProducts.CoffeeMaker.EnumType.BeanAmount.Normal",
+                            }
+                        ],
+                    },
+                },
+            ),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_recognized_options(
+    hass: HomeAssistant,
+    service_call: list[dict[str, Any]],
+    method_called: str,
+    expected_args: str,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    appliance: Mock,
+) -> None:
+    """Test recognized options."""
+    get_appliances.return_value = [appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.haId)},
+    )
+
+    service_call["service_data"]["device_id"] = device_entry.id
+    await hass.services.async_call(**service_call)
+    await hass.async_block_till_done()
+    method_mock: MagicMock = getattr(appliance, method_called)
+    assert method_mock.call_count == 1
+    assert method_mock.call_args[0] == expected_args
+
+
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_services_exception_device_id(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -306,6 +544,42 @@ async def test_services_exception(
     service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
 
     with pytest.raises(ValueError):
+        await hass.services.async_call(**service_call)
+
+
+@pytest.mark.parametrize(
+    "service_call",
+    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+)
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_services_exception(
+    service_call: list[dict[str, Any]],
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    problematic_appliance: Mock,
+) -> None:
+    """Raise a ValueError when device id does not match."""
+    get_appliances.return_value = [problematic_appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, problematic_appliance.haId)},
+    )
+
+    service_call["service_data"]["device_id"] = device_entry.id
+
+    service_name = service_call["service"]
+    with pytest.raises(
+        ServiceValidationError,
+        match=SERVICE_VALIDATION_ERROR_MAPPING[service_name],
+    ):
         await hass.services.async_call(**service_call)
 
 
