@@ -583,26 +583,26 @@ async def test_supervisor_issues(
 @pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_initial_failure(
     hass: HomeAssistant,
+    supervisor_client: AsyncMock,
     resolution_info: AsyncMock,
-    resolution_suggestions_for_issue: AsyncMock,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test issues manager retries after initial update failure."""
-    resolution_info.side_effect = [
-        SupervisorBadRequestError("System is not ready with state: setup"),
-        ResolutionInfo(
-            unsupported=[],
-            unhealthy=[],
-            issues=[
-                Issue(
-                    type=IssueType.REBOOT_REQUIRED,
-                    context=ContextType.SYSTEM,
-                    reference=None,
-                    uuid=uuid4(),
-                )
-            ],
-            suggestions=[
+    mock_resolution_info(
+        supervisor_client,
+        unsupported=[],
+        unhealthy=[],
+        issues=[
+            Issue(
+                type=IssueType.REBOOT_REQUIRED,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=(uuid := uuid4()),
+            )
+        ],
+        suggestions_by_issue={
+            uuid: [
                 Suggestion(
                     SuggestionType.EXECUTE_REBOOT,
                     context=ContextType.SYSTEM,
@@ -610,12 +610,12 @@ async def test_supervisor_issues_initial_failure(
                     uuid=uuid4(),
                     auto=False,
                 )
-            ],
-            checks=[
-                Check(enabled=True, slug=CheckType.SUPERVISOR_TRUST),
-                Check(enabled=True, slug=CheckType.FREE_SPACE),
-            ],
-        ),
+            ]
+        },
+    )
+    resolution_info.side_effect = [
+        SupervisorBadRequestError("System is not ready with state: setup"),
+        resolution_info.return_value,
     ]
 
     with patch("homeassistant.components.hassio.issues.REQUEST_REFRESH_DELAY", new=0.1):
