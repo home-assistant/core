@@ -1,7 +1,10 @@
 {
   "common": {
-    "srvc_config_entry_name": "Config Entry",
-    "srvc_config_entry_desc": "The config entry to use for this action."
+    "service_config_entry_name": "Config Entry",
+    "service_config_entry_description": "The config entry to use for this action.",
+    "climate_preset_solar": "Solar",
+    "climate_preset_solar_prefered": "Solar Prefered",
+    "climate_preset_heater": "Heater"
   },
   "config": {
     "flow_title": "{name}",
@@ -46,8 +49,8 @@
       "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
       "fields": {
         "config_entry": {
-          "name": "[%key:component::screenlogic::common::srvc_config_entry_name%]",
-          "description": "[%key:component::screenlogic::common::srvc_config_entry_desc%]"
+          "name": "[%key:component::screenlogic::common::service_config_entry_name%]",
+          "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
         },
         "color_mode": {
           "name": "Color Mode",
@@ -60,8 +63,8 @@
       "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
       "fields": {
         "config_entry": {
-          "name": "[%key:component::screenlogic::common::srvc_config_entry_name%]",
-          "description": "[%key:component::screenlogic::common::srvc_config_entry_desc%]"
+          "name": "[%key:component::screenlogic::common::service_config_entry_name%]",
+          "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
         },
         "runtime": {
           "name": "Run Time",
@@ -74,8 +77,8 @@
       "description": "Stops super chlorination.",
       "fields": {
         "config_entry": {
-          "name": "[%key:component::screenlogic::common::srvc_config_entry_name%]",
-          "description": "[%key:component::screenlogic::common::srvc_config_entry_desc%]"
+          "name": "[%key:component::screenlogic::common::service_config_entry_name%]",
+          "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
         }
       }
     }
@@ -123,13 +126,26 @@
       }
     },
     "climate": {
-      "heater": {
+      "body_0": {
+        "name": "Pool Heat",
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "solar": "Solar",
-              "solar_prefered": "Solar Prefered",
-              "heater": "Heater"
+              "solar": "[%key:component::screenlogic::common::climate_preset_solar%]",
+              "solar_prefered": "[%key:component::screenlogic::common::climate_preset_solar_prefered%]",
+              "heater": "[%key:component::screenlogic::common::climate_preset_heater%]"
+            }
+          }
+        }
+      },
+      "body_1": {
+        "name": "Spa Heat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "solar": "[%key:component::screenlogic::common::climate_preset_solar%]",
+              "solar_prefered": "[%key:component::screenlogic::common::climate_preset_solar_prefered%]",
+              "heater": "[%key:component::screenlogic::common::climate_preset_heater%]"
             }
           }
         }
