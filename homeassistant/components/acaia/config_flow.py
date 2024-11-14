@@ -58,8 +58,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=self._discovered.get(CONF_NAME)
-                    or self._discovered_devices[user_input[CONF_ADDRESS]],
+                    title=self._discovered_devices[user_input[CONF_ADDRESS]],
                     data={
                         CONF_ADDRESS: mac,
                         CONF_IS_NEW_STYLE_SCALE: is_new_style_scale,
