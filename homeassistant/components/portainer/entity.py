@@ -1,9 +1,11 @@
 """Platform for Portainer base entity."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiotainer.model import Container, NodeData, Snapshot
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -11,6 +13,8 @@ from . import PortainerDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+type PortainerConfigEntry = ConfigEntry[PortainerDataUpdateCoordinator]
 
 
 class ContainerBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
@@ -28,9 +32,13 @@ class ContainerBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.node_id = node_id
         self.container_id = container_id
+        if TYPE_CHECKING:
+            assert coordinator.config_entry is not None
+        entry: PortainerConfigEntry = coordinator.config_entry
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(node_id))},
             name=self.node_attributes.name,
+            configuration_url=entry.data["url"],
         )
 
     @property
