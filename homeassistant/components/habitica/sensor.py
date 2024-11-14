@@ -302,95 +302,94 @@ async def async_setup_entry(
         HabitipyTaskSensor(coordinator, description)
         for description in TASK_SENSOR_DESCRIPTION
     )
-    inventory_items_added: set[str] = set()
+    eggs_added: set[str] = set()
+    hatch_potion_added: set[str] = set()
+    food_added: set[str] = set()
 
     @callback
     def add_entities() -> None:
         """Add sensors for inventory items."""
 
-        nonlocal inventory_items_added
+        nonlocal eggs_added, hatch_potion_added, food_added
 
-        inventory = []
-        for key in coordinator.data.user["items"]["eggs"]:
-            if key in inventory_items_added:
-                continue
-            inventory.append(
-                HabitipySensorEntityDescription(
-                    key=f"Pet_Egg_{key}",
-                    translation_key=HabitipySensorEntity.EGG,
-                    translation_placeholders={
-                        "egg_type": coordinator.content["eggs"][key]["text"]
-                    },
-                    value_fn=(
-                        partial(
-                            lambda user, _, key: user["items"]["eggs"][key],
-                            key=key,
-                        )
-                    ),
-                    entity_picture=f"Pet_Egg_{key}.png",
-                    entity_registry_enabled_default=False,
-                    native_unit_of_measurement="eggs",
-                    attributes_fn=partial(lambda x, _, key: {"key": key}, key=key),
-                )
-            )
-            inventory_items_added.add(key)
+        inventory: list[HabitipySensorEntityDescription] = []
 
-        for key in coordinator.data.user["items"]["hatchingPotions"]:
-            if key in inventory_items_added:
-                continue
-            inventory.append(
-                HabitipySensorEntityDescription(
-                    key=f"Pet_HatchingPotion_{key}",
-                    translation_key=HabitipySensorEntity.HATCHING_POTION,
-                    translation_placeholders={
-                        "hatch_type": coordinator.content["hatchingPotions"][key][
-                            "text"
-                        ]
-                    },
-                    value_fn=(
-                        partial(
-                            lambda user, _, key: user["items"]["hatchingPotions"][key],
-                            key=key,
-                        )
-                    ),
-                    entity_picture=f"Pet_HatchingPotion_{key}.{"gif" if key in GIF else "png"}",
-                    entity_registry_enabled_default=False,
-                    native_unit_of_measurement="potions",
-                    attributes_fn=partial(lambda x, _, key: {"key": key}, key=key),
-                )
+        new_eggs = set(coordinator.data.user["items"]["eggs"].keys()) - eggs_added
+        new_potions = (
+            set(coordinator.data.user["items"]["hatchingPotions"].keys())
+            - hatch_potion_added
+        )
+        new_food = set(coordinator.data.user["items"]["food"]) - food_added
+
+        inventory.extend(
+            HabitipySensorEntityDescription(
+                key=f"Pet_Egg_{key}",
+                translation_key=HabitipySensorEntity.EGG,
+                translation_placeholders={
+                    "egg_type": coordinator.content["eggs"][key]["text"]
+                },
+                value_fn=(
+                    partial(
+                        lambda user, _, key: user["items"]["eggs"][key],
+                        key=key,
+                    )
+                ),
+                entity_picture=f"Pet_Egg_{key}.png",
+                entity_registry_enabled_default=False,
+                native_unit_of_measurement="eggs",
+                attributes_fn=partial(lambda x, _, key: {"key": key}, key=key),
             )
-            inventory_items_added.add(key)
-        for key in coordinator.data.user["items"]["food"]:
-            if key in inventory_items_added:
-                continue
-            inventory.append(
-                HabitipySensorEntityDescription(
-                    key=f"Pet_Food_{key}",
-                    translation_key=key.split("_")[0].lower(),
-                    name=coordinator.content["food"][key]["text"],
-                    value_fn=(
-                        partial(
-                            lambda user, _, key: user["items"]["food"][key],
-                            key=key,
-                        )
-                    ),
-                    entity_picture=f"Pet_Food_{key}.png",
-                    entity_registry_enabled_default=False,
-                    native_unit_of_measurement=(
-                        "saddles" if key == "Saddle" else "foods"
-                    ),
-                    attributes_fn=partial(lambda x, _, key: {"key": key}, key=key),
-                )
+            for key in new_eggs
+        )
+        inventory.extend(
+            HabitipySensorEntityDescription(
+                key=f"Pet_HatchingPotion_{key}",
+                translation_key=HabitipySensorEntity.HATCHING_POTION,
+                translation_placeholders={
+                    "hatch_type": coordinator.content["hatchingPotions"][key]["text"]
+                },
+                value_fn=(
+                    partial(
+                        lambda user, _, key: user["items"]["hatchingPotions"][key],
+                        key=key,
+                    )
+                ),
+                entity_picture=f"Pet_HatchingPotion_{key}.{"gif" if key in GIF else "png"}",
+                entity_registry_enabled_default=False,
+                native_unit_of_measurement="potions",
+                attributes_fn=partial(lambda x, _, key: {"key": key}, key=key),
             )
-            inventory_items_added.add(key)
+            for key in new_potions
+        )
+        inventory.extend(
+            HabitipySensorEntityDescription(
+                key=f"Pet_Food_{key}",
+                translation_key=key.split("_")[0].lower(),
+                name=coordinator.content["food"][key]["text"],
+                value_fn=(
+                    partial(
+                        lambda user, _, key: user["items"]["food"][key],
+                        key=key,
+                    )
+                ),
+                entity_picture=f"Pet_Food_{key}.png",
+                entity_registry_enabled_default=False,
+                native_unit_of_measurement="saddles" if key == "Saddle" else "foods",
+                attributes_fn=partial(lambda x, _, key: {"key": key}, key=key),
+            )
+            for key in new_food
+        )
 
         async_add_entities(
             HabitipySensor(coordinator, description) for description in inventory
         )
+        eggs_added |= new_eggs
+        hatch_potion_added |= new_potions
+        food_added |= new_food
 
     coordinator.async_add_listener(add_entities)
     add_entities()
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HabitipySensor(HabiticaBase, SensorEntity):
