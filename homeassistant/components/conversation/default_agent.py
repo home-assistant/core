@@ -213,18 +213,10 @@ class DefaultAgent(ConversationEntity):
             async_listen_entity_updates(self.hass, DOMAIN, self._async_clear_slot_list),
         ]
 
-    async def async_recognize(
-        self,
-        user_input: ConversationInput,
-        strict_intents_only: bool = False,
-        match_sentence_triggers: bool = True,
-    ) -> RecognizeResult | SentenceTriggerResult | None:
+    async def async_recognize_intent(
+        self, user_input: ConversationInput, strict_intents_only: bool = False
+    ) -> RecognizeResult | None:
         """Recognize intent from user input."""
-        if (match_sentence_triggers) and (
-            trigger_result := await self._match_triggers(user_input.text)
-        ):
-            return trigger_result
-
         language = user_input.language or self.hass.config.language
         lang_intents = await self.async_get_or_load_intents(language)
 
@@ -257,12 +249,13 @@ class DefaultAgent(ConversationEntity):
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        result = await self.async_recognize(user_input)
 
         # Check if a trigger matched
-        if isinstance(result, SentenceTriggerResult):
+        if trigger_result := await self.async_recognize_sentence_trigger(user_input):
             # Process callbacks and get response
-            response_text = await self._handle_trigger_result(result, user_input)
+            response_text = await self._handle_trigger_result(
+                trigger_result, user_input
+            )
 
             # Convert to conversation result
             response = intent.IntentResponse(
@@ -273,7 +266,9 @@ class DefaultAgent(ConversationEntity):
 
             return ConversationResult(response=response)
 
-        return await self._async_process_intent_result(result, user_input)
+        # Match intents
+        intent_result = await self.async_recognize_intent(user_input)
+        return await self._async_process_intent_result(intent_result, user_input)
 
     async def _async_process_intent_result(
         self,
@@ -1043,7 +1038,9 @@ class DefaultAgent(ConversationEntity):
         # Force rebuild on next use
         self._trigger_intents = None
 
-    async def _match_triggers(self, sentence: str) -> SentenceTriggerResult | None:
+    async def async_recognize_sentence_trigger(
+        self, user_input: ConversationInput
+    ) -> SentenceTriggerResult | None:
         """Try to match sentence against registered trigger sentences.
 
         Calls the registered callbacks if there's a match and returns a sentence
@@ -1061,7 +1058,7 @@ class DefaultAgent(ConversationEntity):
 
         matched_triggers: dict[int, RecognizeResult] = {}
         matched_template: str | None = None
-        for result in recognize_all(sentence, self._trigger_intents):
+        for result in recognize_all(user_input.text, self._trigger_intents):
             if result.intent_sentence is not None:
                 matched_template = result.intent_sentence.text
 
@@ -1078,12 +1075,14 @@ class DefaultAgent(ConversationEntity):
 
         _LOGGER.debug(
             "'%s' matched %s trigger(s): %s",
-            sentence,
+            user_input.text,
             len(matched_triggers),
             list(matched_triggers),
         )
 
-        return SentenceTriggerResult(sentence, matched_template, matched_triggers)
+        return SentenceTriggerResult(
+            user_input.text, matched_template, matched_triggers
+        )
 
     async def _handle_trigger_result(
         self, result: SentenceTriggerResult, user_input: ConversationInput
@@ -1135,7 +1134,7 @@ class DefaultAgent(ConversationEntity):
 
         Returns None if no match occurred.
         """
-        if trigger_result := await self._match_triggers(user_input.text):
+        if trigger_result := await self.async_recognize_sentence_trigger(user_input):
             return await self._handle_trigger_result(trigger_result, user_input)
 
         return None
@@ -1149,9 +1148,7 @@ class DefaultAgent(ConversationEntity):
         Only performs strict matching with exposed entities and exact wording.
         Returns None if no match occurred.
         """
-        result = await self.async_recognize(
-            user_input, strict_intents_only=True, match_sentence_triggers=False
-        )
+        result = await self.async_recognize_intent(user_input, strict_intents_only=True)
         if not isinstance(result, RecognizeResult):
             # No error message on failed match
             return None
