@@ -60,10 +60,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self._entry_from_data(auth)
 
             except AuthError as err:
-                if err.code == "invalid_security_code":
-                    errors[KEY_SECURITY_CODE] = err.code
-                else:
-                    errors["base"] = err.code
+                errors["base"] = err.code
         else:
             user_input = {}
 
@@ -143,7 +140,7 @@ async def authenticate(
         async with asyncio.timeout(5):
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
-        raise AuthError("invalid_security_code") from err
+        raise AuthError("invalid_key") from err
     except TimeoutError as err:
         raise AuthError("timeout") from err
     finally:
