@@ -61,26 +61,6 @@ async def _async_migrate_unique_ids(
 
         return updates
 
-    @callback
-    def _async_migrator_mac_empty(
-        entity_entry: er.RegistryEntry,
-    ) -> dict[str, Any] | None:
-        updates = None
-
-        entry_id = entry.entry_id
-        entity_unique_id = entity_entry.unique_id
-
-        if entity_unique_id.startswith(entry_id):
-            new_unique_id = f"{entry_id}{entity_unique_id}"
-            _LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                entity_unique_id,
-                new_unique_id,
-            )
-            updates = {"new_unique_id": new_unique_id}
-
-        return updates
-
     if (
         entry.unique_id is None
         and AZD_WEBSERVER in coordinator.data
@@ -100,8 +80,6 @@ async def _async_migrate_unique_ids(
             "unique_id": None,
         }
         hass.config_entries.async_update_entry(entry, **mac_empty_updates)
-
-        await er.async_migrate_entries(hass, entry.entry_id, _async_migrator_mac_empty)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:

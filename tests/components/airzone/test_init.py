@@ -95,7 +95,7 @@ async def test_unique_id_migrate_mac_empty(
     HVAC_WS_MAC_EMPTY_MOCK = copy.deepcopy(HVAC_WEBSERVER_MOCK)
     HVAC_WS_MAC_EMPTY_MOCK[API_MAC] = ""
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG, unique_id="")
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
     config_entry.add_to_hass(hass)
 
     with (
@@ -119,15 +119,42 @@ async def test_unique_id_migrate_mac_empty(
             "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
             return_value=HVAC_WS_MAC_EMPTY_MOCK,
         ),
+        patch(
+            "aioairzone.localapi.validate_mac_address",
+            return_value=True,
+        ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert not config_entry.unique_id
-    assert (
-        entity_registry.async_get("sensor.salon_temperature").unique_id
-        == f"{config_entry.entry_id}_1:1_temp"
-    )
+    assert config_entry.unique_id == ""
+
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            side_effect=HotWaterNotAvailable,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            return_value=HVAC_WS_MAC_EMPTY_MOCK,
+        ),
+    ):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.unique_id is None
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
