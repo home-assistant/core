@@ -43,6 +43,7 @@ def mock_backup_generation_fixture(
             Path("test.txt"),
             Path(".DS_Store"),
             Path(".storage"),
+            Path("home-assistant_v2.db"),
         ]
 
     with (
