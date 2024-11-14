@@ -39,7 +39,6 @@ async def test_agents_info(
 ) -> None:
     """Test backup agents info."""
     client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
@@ -57,7 +56,6 @@ async def test_agents_list_backups(
 ) -> None:
     """Test backup agents list backups."""
     client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/list_backups"})
     response = await client.receive_json()
@@ -73,3 +71,28 @@ async def test_agents_list_backups(
             "name": "Kitchen sink syncer",
         }
     ]
+
+
+async def test_agents_download(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test backup agents download."""
+    client = await hass_ws_client(hass)
+    backup_id = "def456"
+    slug = "abc123"
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/agents/download",
+            "slug": slug,
+            "agent": "kitchen_sink.syncer",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    path = hass.config.path(f"backup/{slug}.tar")
+    assert f"Downloading backup {backup_id} to {path}" in caplog.text
