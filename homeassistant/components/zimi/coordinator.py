@@ -42,7 +42,7 @@ class ZimiCoordinator(DataUpdateCoordinator):
         """Set up the coordinator."""
 
         try:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Connecting to %s:%d with verbosity=%s, timeout=%d and watchdog=%d",
                 self.config_entry.data[CONF_HOST],
                 self.config_entry.data[CONF_PORT],
@@ -61,8 +61,8 @@ class ZimiCoordinator(DataUpdateCoordinator):
             )
 
             await self.api.connect()
-            _LOGGER.info("Connected")
-            _LOGGER.info("\n%s", self.api.describe())
+            _LOGGER.debug("Connected")
+            _LOGGER.debug("\n%s", self.api.describe())
 
             if self.config_entry.data[CONF_WATCHDOG] > 0:
                 self.api.start_watchdog(self.config_entry.data[CONF_WATCHDOG])
