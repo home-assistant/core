@@ -11,6 +11,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, SERVICE_SEND_PIN
+from .coordinator import BlinkConfigEntry
 
 SERVICE_UPDATE_SCHEMA = vol.Schema(
     {
@@ -30,6 +31,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def send_pin(call: ServiceCall):
         """Call blink to send new pin."""
+        config_entry: BlinkConfigEntry | None
         for entry_id in call.data[ATTR_CONFIG_ENTRY_ID]:
             if not (config_entry := hass.config_entries.async_get_entry(entry_id)):
                 raise ServiceValidationError(
@@ -43,7 +45,7 @@ def setup_services(hass: HomeAssistant) -> None:
                     translation_key="not_loaded",
                     translation_placeholders={"target": config_entry.title},
                 )
-            coordinator = hass.data[DOMAIN][entry_id]
+            coordinator = config_entry.runtime_data
             await coordinator.api.auth.send_auth_key(
                 coordinator.api,
                 call.data[CONF_PIN],

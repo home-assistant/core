@@ -19,7 +19,8 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "connection_error": "Could not fetch account information. Is the user registered in the Spotify Developer Dashboard?"
+      "connection_error": "Could not fetch account information. Is the user registered in the Spotify Developer Dashboard?",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]"
     },
     "create_entry": {
       "default": "Successfully authenticated with Spotify."
@@ -28,6 +29,47 @@
   "system_health": {
     "info": {
       "api_endpoint_reachable": "Spotify API endpoint reachable"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "song_tempo": {
+        "name": "Song tempo"
+      },
+      "danceability": {
+        "name": "Song danceability"
+      },
+      "energy": {
+        "name": "Song energy"
+      },
+      "mode": {
+        "name": "Song mode",
+        "state": {
+          "minor": "Minor",
+          "major": "Major"
+        }
+      },
+      "speechiness": {
+        "name": "Song speechiness"
+      },
+      "acousticness": {
+        "name": "Song acousticness"
+      },
+      "instrumentalness": {
+        "name": "Song instrumentalness"
+      },
+      "valence": {
+        "name": "Song valence"
+      },
+      "liveness": {
+        "name": "Song liveness"
+      },
+      "time_signature": {
+        "name": "Song time signature"
+      },
+      "key": {
+        "name": "Song key"
+      }
     }
   }
 }

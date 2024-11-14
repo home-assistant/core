@@ -16,7 +16,7 @@
           "province": "Province"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "province": "[%key:component::holiday::config::step::province::data::province%]"
         }

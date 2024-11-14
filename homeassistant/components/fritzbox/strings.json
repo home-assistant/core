@@ -27,7 +27,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Update your configuration information for {name}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

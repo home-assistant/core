@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Account is already configured"
+      "already_configured": "Account is already configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
@@ -15,6 +17,13 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "description": "Enter an access token from {url}."
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The {name} integration needs to re-authenticate your account, please enter an access token from {url}",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
       }
     }
   },

@@ -1053,7 +1053,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
     await common.async_turn_on(
-        hass, "light.test", brightness=10, rgb_color=[80, 40, 20]
+        hass, "light.test", brightness=10, rgb_color=(80, 40, 20)
     )
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1073,7 +1073,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
     await common.async_turn_on(
-        hass, "light.test", brightness=20, rgbw_color=[80, 40, 20, 10]
+        hass, "light.test", brightness=20, rgbw_color=(80, 40, 20, 10)
     )
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1093,7 +1093,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
     await common.async_turn_on(
-        hass, "light.test", brightness=40, rgbww_color=[80, 40, 20, 10, 8]
+        hass, "light.test", brightness=40, rgbww_color=(80, 40, 20, 10, 8)
     )
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1112,7 +1112,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "rgbww"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
-    await common.async_turn_on(hass, "light.test", brightness=50, hs_color=[359, 78])
+    await common.async_turn_on(hass, "light.test", brightness=50, hs_color=(359, 78))
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light_rgb/set", "on", 2, False),
@@ -1130,7 +1130,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "hs"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
-    await common.async_turn_on(hass, "light.test", brightness=60, xy_color=[0.2, 0.3])
+    await common.async_turn_on(hass, "light.test", brightness=60, xy_color=(0.2, 0.3))
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light_rgb/set", "on", 2, False),
@@ -1193,7 +1193,7 @@ async def test_sending_mqtt_rgb_command_with_template(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
 
-    await common.async_turn_on(hass, "light.test", rgb_color=[255, 128, 64])
+    await common.async_turn_on(hass, "light.test", rgb_color=(255, 128, 64))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1236,7 +1236,7 @@ async def test_sending_mqtt_rgbw_command_with_template(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
 
-    await common.async_turn_on(hass, "light.test", rgbw_color=[255, 128, 64, 32])
+    await common.async_turn_on(hass, "light.test", rgbw_color=(255, 128, 64, 32))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1279,7 +1279,7 @@ async def test_sending_mqtt_rgbww_command_with_template(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
 
-    await common.async_turn_on(hass, "light.test", rgbww_color=[255, 128, 64, 32, 16])
+    await common.async_turn_on(hass, "light.test", rgbww_color=(255, 128, 64, 32, 16))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1469,7 +1469,7 @@ async def test_on_command_brightness(
 
     # Turn on w/ just a color to ensure brightness gets
     # added and sent.
-    await common.async_turn_on(hass, "light.test", rgb_color=[255, 128, 0])
+    await common.async_turn_on(hass, "light.test", rgb_color=(255, 128, 0))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1545,7 +1545,7 @@ async def test_on_command_brightness_scaled(
 
     # Turn on w/ just a color to ensure brightness gets
     # added and sent.
-    await common.async_turn_on(hass, "light.test", rgb_color=[255, 128, 0])
+    await common.async_turn_on(hass, "light.test", rgb_color=(255, 128, 0))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1626,7 +1626,7 @@ async def test_on_command_rgb(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
     # Ensure color gets scaled with brightness.
-    await common.async_turn_on(hass, "light.test", rgb_color=[255, 128, 0])
+    await common.async_turn_on(hass, "light.test", rgb_color=(255, 128, 0))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1722,7 +1722,7 @@ async def test_on_command_rgbw(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
     # Ensure color gets scaled with brightness.
-    await common.async_turn_on(hass, "light.test", rgbw_color=[255, 128, 0, 16])
+    await common.async_turn_on(hass, "light.test", rgbw_color=(255, 128, 0, 16))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -1818,7 +1818,7 @@ async def test_on_command_rgbww(
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
     # Ensure color gets scaled with brightness.
-    await common.async_turn_on(hass, "light.test", rgbww_color=[255, 128, 0, 16, 32])
+    await common.async_turn_on(hass, "light.test", rgbww_color=(255, 128, 0, 16, 32))
 
     mqtt_mock.async_publish.assert_has_calls(
         [
@@ -3262,7 +3262,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = light.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG)
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "effect_command_topic":
         config[mqtt.DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
     elif topic == "white_command_topic":
@@ -3333,7 +3333,7 @@ async def test_encoding_subscribable_topics(
     init_payload: tuple[str, str] | None,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
     config[CONF_EFFECT_COMMAND_TOPIC] = "light/CONF_EFFECT_COMMAND_TOPIC"
     config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
     config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"

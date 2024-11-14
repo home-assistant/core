@@ -719,14 +719,14 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value should be a string")
     if not (hass := _async_get_hass_or_none()):
         # pylint: disable-next=import-outside-toplevel
-        from .frame import report
+        from .frame import ReportBehavior, report_usage
 
-        report(
+        report_usage(
             (
                 "validates schema outside the event loop, "
                 "which will stop working in HA Core 2025.10"
             ),
-            error_if_core=False,
+            core_behavior=ReportBehavior.LOG,
         )
 
     template_value = template_helper.Template(str(value), hass)
@@ -748,14 +748,14 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value does not contain a dynamic template")
     if not (hass := _async_get_hass_or_none()):
         # pylint: disable-next=import-outside-toplevel
-        from .frame import report
+        from .frame import ReportBehavior, report_usage
 
-        report(
+        report_usage(
             (
                 "validates schema outside the event loop, "
                 "which will stop working in HA Core 2025.10"
             ),
-            error_if_core=False,
+            core_behavior=ReportBehavior.LOG,
         )
 
     template_value = template_helper.Template(str(value), hass)
@@ -874,7 +874,7 @@ def url_no_path(value: Any) -> str:
     url_in = url(value)
 
     if urlparse(url_in).path not in ("", "/"):
-        raise vol.Invalid("url it not allowed to have a path component")
+        raise vol.Invalid("url is not allowed to have a path component")
 
     return url_in
 

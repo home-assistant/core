@@ -1,6 +1,7 @@
 """Teslemetry integration."""
 
 import asyncio
+from collections.abc import Callable
 from typing import Final
 
 from tesla_fleet_api import EnergySpecific, Teslemetry, VehicleSpecific
@@ -10,6 +11,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from teslemetry_stream import TeslemetryStream
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -28,6 +30,7 @@ from .coordinator import (
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
+from .helpers import flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_register_services
 
@@ -69,8 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         access_token=access_token,
     )
     try:
-        scopes = (await teslemetry.metadata())["scopes"]
-        products = (await teslemetry.products())["response"]
+        calls = await asyncio.gather(
+            teslemetry.metadata(),
+            teslemetry.products(),
+        )
     except InvalidToken as e:
         raise ConfigEntryAuthFailed from e
     except SubscriptionRequired as e:
@@ -78,11 +83,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
+    scopes = calls[0]["scopes"]
+    region = calls[0]["region"]
+    products = calls[1]["response"]
+
     device_registry = dr.async_get(hass)
 
     # Create array of classes
     vehicles: list[TeslemetryVehicleData] = []
     energysites: list[TeslemetryEnergyData] = []
+
+    # Create the stream
+    stream = TeslemetryStream(
+        session,
+        access_token,
+        server=f"{region.lower()}.teslemetry.com",
+        parse_timestamp=True,
+    )
+
     for product in products:
         if "vin" in product and Scope.VEHICLE_DEVICE_DATA in scopes:
             # Remove the protobuff 'cached_data' that we do not use to save memory
@@ -99,22 +117,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 serial_number=vin,
             )
 
+            remove_listener = stream.async_add_listener(
+                create_handle_vehicle_stream(vin, coordinator),
+                {"vin": vin},
+            )
+
             vehicles.append(
                 TeslemetryVehicleData(
                     api=api,
                     coordinator=coordinator,
+                    stream=stream,
                     vin=vin,
                     device=device,
+                    remove_listener=remove_listener,
                 )
             )
 
         elif "energy_site_id" in product and Scope.ENERGY_DEVICE_DATA in scopes:
             site_id = product["energy_site_id"]
-            if not (
-                product["components"]["battery"]
-                or product["components"]["solar"]
-                or "wall_connectors" in product["components"]
-            ):
+            powerwall = (
+                product["components"]["battery"] or product["components"]["solar"]
+            )
+            wall_connector = "wall_connectors" in product["components"]
+            if not powerwall and not wall_connector:
                 LOGGER.debug(
                     "Skipping Energy Site %s as it has no components",
                     site_id,
@@ -137,7 +162,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     info_coordinator=TeslemetryEnergySiteInfoCoordinator(
                         hass, api, product
                     ),
-                    history_coordinator=TeslemetryEnergyHistoryCoordinator(hass, api),
+                    history_coordinator=(
+                        TeslemetryEnergyHistoryCoordinator(hass, api)
+                        if powerwall
+                        else None
+                    ),
                     id=site_id,
                     device=device,
                 )
@@ -160,6 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         *(
             energysite.history_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
+            if energysite.history_coordinator
         ),
     )
 
@@ -214,3 +244,20 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry, unique_id=metadata["uid"], version=1, minor_version=2
         )
     return True
+
+
+def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None]:
+    """Create a handle vehicle stream function."""
+
+    def handle_vehicle_stream(data: dict) -> None:
+        """Handle vehicle data from the stream."""
+        if "vehicle_data" in data:
+            LOGGER.debug("Streaming received vehicle data from %s", vin)
+            coordinator.updated_once = True
+            coordinator.async_set_updated_data(flatten(data["vehicle_data"]))
+        elif "state" in data:
+            LOGGER.debug("Streaming received state from %s", vin)
+            coordinator.data["state"] = data["state"]
+            coordinator.async_set_updated_data(coordinator.data)
+
+    return handle_vehicle_stream

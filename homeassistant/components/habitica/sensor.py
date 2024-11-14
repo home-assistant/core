@@ -24,10 +24,10 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import StateType
 
-from . import HabiticaConfigEntry
 from .const import DOMAIN, UNIT_TASKS
 from .entity import HabiticaBase
-from .util import entity_used_in
+from .types import HabiticaConfigEntry
+from .util import entity_used_in, get_attribute_points, get_attributes_total
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,10 @@ _LOGGER = logging.getLogger(__name__)
 class HabitipySensorEntityDescription(SensorEntityDescription):
     """Habitipy Sensor Description."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any], dict[str, Any]], StateType]
+    attributes_fn: (
+        Callable[[dict[str, Any], dict[str, Any]], dict[str, Any] | None] | None
+    ) = None
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -65,76 +68,80 @@ class HabitipySensorEntity(StrEnum):
     REWARDS = "rewards"
     GEMS = "gems"
     TRINKETS = "trinkets"
+    STRENGTH = "strength"
+    INTELLIGENCE = "intelligence"
+    CONSTITUTION = "constitution"
+    PERCEPTION = "perception"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.DISPLAY_NAME,
         translation_key=HabitipySensorEntity.DISPLAY_NAME,
-        value_fn=lambda user: user.get("profile", {}).get("name"),
+        value_fn=lambda user, _: user.get("profile", {}).get("name"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH,
         translation_key=HabitipySensorEntity.HEALTH,
         native_unit_of_measurement="HP",
         suggested_display_precision=0,
-        value_fn=lambda user: user.get("stats", {}).get("hp"),
+        value_fn=lambda user, _: user.get("stats", {}).get("hp"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH_MAX,
         translation_key=HabitipySensorEntity.HEALTH_MAX,
         native_unit_of_measurement="HP",
         entity_registry_enabled_default=False,
-        value_fn=lambda user: user.get("stats", {}).get("maxHealth"),
+        value_fn=lambda user, _: user.get("stats", {}).get("maxHealth"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA,
         translation_key=HabitipySensorEntity.MANA,
         native_unit_of_measurement="MP",
         suggested_display_precision=0,
-        value_fn=lambda user: user.get("stats", {}).get("mp"),
+        value_fn=lambda user, _: user.get("stats", {}).get("mp"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA_MAX,
         translation_key=HabitipySensorEntity.MANA_MAX,
         native_unit_of_measurement="MP",
-        value_fn=lambda user: user.get("stats", {}).get("maxMP"),
+        value_fn=lambda user, _: user.get("stats", {}).get("maxMP"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE,
         translation_key=HabitipySensorEntity.EXPERIENCE,
         native_unit_of_measurement="XP",
-        value_fn=lambda user: user.get("stats", {}).get("exp"),
+        value_fn=lambda user, _: user.get("stats", {}).get("exp"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE_MAX,
         translation_key=HabitipySensorEntity.EXPERIENCE_MAX,
         native_unit_of_measurement="XP",
-        value_fn=lambda user: user.get("stats", {}).get("toNextLevel"),
+        value_fn=lambda user, _: user.get("stats", {}).get("toNextLevel"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.LEVEL,
         translation_key=HabitipySensorEntity.LEVEL,
-        value_fn=lambda user: user.get("stats", {}).get("lvl"),
+        value_fn=lambda user, _: user.get("stats", {}).get("lvl"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.GOLD,
         translation_key=HabitipySensorEntity.GOLD,
         native_unit_of_measurement="GP",
         suggested_display_precision=2,
-        value_fn=lambda user: user.get("stats", {}).get("gp"),
+        value_fn=lambda user, _: user.get("stats", {}).get("gp"),
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.CLASS,
         translation_key=HabitipySensorEntity.CLASS,
-        value_fn=lambda user: user.get("stats", {}).get("class"),
+        value_fn=lambda user, _: user.get("stats", {}).get("class"),
         device_class=SensorDeviceClass.ENUM,
         options=["warrior", "healer", "wizard", "rogue"],
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.GEMS,
         translation_key=HabitipySensorEntity.GEMS,
-        value_fn=lambda user: user.get("balance", 0) * 4,
+        value_fn=lambda user, _: user.get("balance", 0) * 4,
         suggested_display_precision=0,
         native_unit_of_measurement="gems",
     ),
@@ -142,13 +149,45 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         key=HabitipySensorEntity.TRINKETS,
         translation_key=HabitipySensorEntity.TRINKETS,
         value_fn=(
-            lambda user: user.get("purchased", {})
+            lambda user, _: user.get("purchased", {})
             .get("plan", {})
             .get("consecutive", {})
             .get("trinkets", 0)
         ),
         suggested_display_precision=0,
         native_unit_of_measurement="⧖",
+    ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.STRENGTH,
+        translation_key=HabitipySensorEntity.STRENGTH,
+        value_fn=lambda user, content: get_attributes_total(user, content, "str"),
+        attributes_fn=lambda user, content: get_attribute_points(user, content, "str"),
+        suggested_display_precision=0,
+        native_unit_of_measurement="STR",
+    ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.INTELLIGENCE,
+        translation_key=HabitipySensorEntity.INTELLIGENCE,
+        value_fn=lambda user, content: get_attributes_total(user, content, "int"),
+        attributes_fn=lambda user, content: get_attribute_points(user, content, "int"),
+        suggested_display_precision=0,
+        native_unit_of_measurement="INT",
+    ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.PERCEPTION,
+        translation_key=HabitipySensorEntity.PERCEPTION,
+        value_fn=lambda user, content: get_attributes_total(user, content, "per"),
+        attributes_fn=lambda user, content: get_attribute_points(user, content, "per"),
+        suggested_display_precision=0,
+        native_unit_of_measurement="PER",
+    ),
+    HabitipySensorEntityDescription(
+        key=HabitipySensorEntity.CONSTITUTION,
+        translation_key=HabitipySensorEntity.CONSTITUTION,
+        value_fn=lambda user, content: get_attributes_total(user, content, "con"),
+        attributes_fn=lambda user, content: get_attribute_points(user, content, "con"),
+        suggested_display_precision=0,
+        native_unit_of_measurement="CON",
     ),
 )
 
@@ -243,7 +282,16 @@ class HabitipySensor(HabiticaBase, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the device."""
 
-        return self.entity_description.value_fn(self.coordinator.data.user)
+        return self.entity_description.value_fn(
+            self.coordinator.data.user, self.coordinator.content
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, float | None] | None:
+        """Return entity specific state attributes."""
+        if func := self.entity_description.attributes_fn:
+            return func(self.coordinator.data.user, self.coordinator.content)
+        return None
 
 
 class HabitipyTaskSensor(HabiticaBase, SensorEntity):

@@ -17,7 +17,7 @@ api_call:
         object:
 cast_skill:
   fields:
-    config_entry:
+    config_entry: &config_entry
       required: true
       selector:
         config_entry:
@@ -33,7 +33,42 @@ cast_skill:
             - "fireball"
           mode: dropdown
           translation_key: "skill_select"
-    task:
+    task: &task
       required: true
       selector:
         text:
+accept_quest:
+  fields:
+    config_entry: *config_entry
+reject_quest:
+  fields:
+    config_entry: *config_entry
+start_quest:
+  fields:
+    config_entry: *config_entry
+cancel_quest:
+  fields:
+    config_entry: *config_entry
+abort_quest:
+  fields:
+    config_entry: *config_entry
+leave_quest:
+  fields:
+    config_entry: *config_entry
+score_habit:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    direction:
+      required: true
+      selector:
+        select:
+          options:
+            - value: up
+              label: "➕"
+            - value: down
+              label: "➖"
+score_reward:
+  fields:
+    config_entry: *config_entry
+    task: *task

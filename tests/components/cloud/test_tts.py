@@ -25,9 +25,9 @@ from homeassistant.components.tts import (
     DOMAIN as TTS_DOMAIN,
     get_engine_instance,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component

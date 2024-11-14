@@ -27,10 +27,10 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from . import VALID_NOISE_PSK
@@ -1398,6 +1398,14 @@ async def test_discovery_mqtt_no_mac(
 ) -> None:
     """Test discovery aborted if mac is missing in MQTT payload."""
     await mqtt_discovery_test_abort(hass, "{}", "mqtt_missing_mac")
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_discovery_mqtt_empty_payload(
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if MQTT payload is empty."""
+    await mqtt_discovery_test_abort(hass, "", "mqtt_missing_payload")
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
