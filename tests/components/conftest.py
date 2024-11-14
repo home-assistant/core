@@ -610,17 +610,17 @@ def ignore_translations() -> str | list[str]:
 
 
 async def _check_config_flow_result_translations(
-    self: FlowManager,
+    manager: FlowManager,
     flow: FlowHandler,
     result: FlowResult[FlowContext, str],
     ignore_translations: dict[str, str],
 ) -> None:
-    if isinstance(self, ConfigEntriesFlowManager):
+    if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
-        component = flow.handler
-    elif isinstance(self, OptionsFlowManager):
+        integration = flow.handler
+    elif isinstance(manager, OptionsFlowManager):
         category = "options"
-        component = flow.hass.config_entries.async_get_entry(flow.handler).domain
+        integration = flow.hass.config_entries.async_get_entry(flow.handler).domain
     else:
         return
 
@@ -638,7 +638,7 @@ async def _check_config_flow_result_translations(
                     flow.hass,
                     ignore_translations,
                     category,
-                    component,
+                    integration,
                     f"step.{step_id}.{header}",
                     result["description_placeholders"],
                     translation_required=False,
@@ -649,7 +649,7 @@ async def _check_config_flow_result_translations(
                     flow.hass,
                     ignore_translations,
                     category,
-                    component,
+                    integration,
                     f"error.{error}",
                     result["description_placeholders"],
                 )
@@ -664,7 +664,7 @@ async def _check_config_flow_result_translations(
             flow.hass,
             ignore_translations,
             category,
-            component,
+            integration,
             f"abort.{result["reason"]}",
             result["description_placeholders"],
         )
