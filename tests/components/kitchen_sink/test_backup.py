@@ -50,7 +50,7 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"id": "kitchen_sink.syncer"}],
+        "agents": [{"agent_id": "kitchen_sink.syncer"}],
         "syncing": False,
     }
 
@@ -74,6 +74,7 @@ async def test_agents_list_backups(
             "slug": "abc123",
             "size": 1234,
             "name": "Kitchen sink syncer",
+            "protected": False,
         }
     ]
 
@@ -92,7 +93,7 @@ async def test_agents_download(
         {
             "type": "backup/agents/download",
             "slug": slug,
-            "agent": "kitchen_sink.syncer",
+            "agent_id": "kitchen_sink.syncer",
             "backup_id": backup_id,
         }
     )
@@ -118,6 +119,7 @@ async def test_agents_upload(
         date="1970-01-01T00:00:00.000Z",
         path=Path(hass.config.path(f"backups/{slug}.tar")),
         size=0.0,
+        protected=False,
     )
     uuid = UUID(int=123456)
 
@@ -156,4 +158,5 @@ async def test_agents_upload(
         "slug": slug,
         "size": 0.0,
         "name": test_backup.name,
+        "protected": test_backup.protected,
     }
