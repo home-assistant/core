@@ -23,12 +23,6 @@
       },
       "window_open_timeout": {
         "default": "mdi:timer-refresh"
-      },
-      "away_hours": {
-        "default": "mdi:home-clock-outline"
-      },
-      "away_temperature": {
-        "default": "mdi:home-thermometer-outline"
       }
     },
     "switch": {
