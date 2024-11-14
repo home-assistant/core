@@ -18,7 +18,7 @@ from homeassistant.const import PERCENTAGE, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import AcaiaConfigEntry, AcaiaCoordinator
+from .coordinator import AcaiaConfigEntry
 from .entity import AcaiaEntity
 
 
@@ -65,7 +65,7 @@ async def async_setup_entry(
     """Set up sensors."""
 
     coordinator = entry.runtime_data
-    entities = [
+    entities: list[SensorEntity] = [
         AcaiaSensor(coordinator, entity_description) for entity_description in SENSORS
     ]
     entities.extend(
@@ -82,51 +82,55 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
 
     entity_description: AcaiaSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: AcaiaCoordinator,
-        description: AcaiaSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description)
-        self._attr_native_unit_of_measurement_calculated = False
-        self._determine_state()
-
-    def _determine_state(self):
-        """Set the state from the scale."""
-        self._attr_native_value = self.entity_description.value_fn(self._scale)
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of this entity."""
         if (
-            self.entity_description.unit_fn is not None
-            and self._scale.device_state is not None
+            self._scale.device_state is not None
+            and self.entity_description.unit_fn is not None
         ):
-            self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-                self._scale.device_state
-            )
-            self._attr_native_unit_of_measurement_calculated = True
+            return self.entity_description.unit_fn(self._scale.device_state)
+        return self.entity_description.native_unit_of_measurement
 
-    @callback
-    def _async_handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._determine_state()
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the state of the entity."""
+        return self.entity_description.value_fn(self._scale)
 
 
-class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
+class AcaiaRestoreSensor(AcaiaEntity, RestoreSensor):
     """Representation of an Acaia sensor with restore capabilities."""
 
+    entity_description: AcaiaSensorEntityDescription
     _restored_data: SensorExtraStoredData | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+        if self._scale.device_state is not None:
+            self._attr_native_value = self.entity_description.value_fn(self._scale)
+            if self.entity_description.unit_fn is not None:
+                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
+                    self._scale.device_state
+                )
         self._restored_data = await self.async_get_last_sensor_data()
         if self._restored_data is not None:
             if self._attr_native_value is None:
                 self._attr_native_value = self._restored_data.native_value
-            if not self._attr_native_unit_of_measurement_calculated:
-                self._attr_native_unit_of_measurement = (
-                    self._restored_data.native_unit_of_measurement
+            self._attr_native_unit_of_measurement = (
+                self._restored_data.native_unit_of_measurement
+            )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self._scale.device_state is not None:
+            self._attr_native_value = self.entity_description.value_fn(self._scale)
+            if self.entity_description.unit_fn is not None:
+                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
+                    self._scale.device_state
                 )
+        self._async_write_ha_state()
 
     @property
     def available(self) -> bool:
