@@ -11,15 +11,10 @@ from .const import DOMAIN
 class BaseEntity(Entity):
     """A base entity that is a part of all igloohome devices."""
 
-    _attr_has_entity_name = True
-    _attr_should_poll = True
-
     def __init__(self, device_id: str, device_name: str, type: str, api: Api) -> None:
         """Initialize the base device class."""
         self.device_id = device_id
         self.device_name = device_name
-        # Set the unique ID of the device.
-        self._attr_unique_id = device_id
         self.type = type
         self.api = api
 

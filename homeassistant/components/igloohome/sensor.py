@@ -48,6 +48,8 @@ class BatteryBasedDevice(BaseEntity, SensorEntity):
             device_id=device_id, device_name=device_name, type=type, api=api
         )
         self._attr_device_class = SensorDeviceClass.BATTERY
+        # Set the unique ID of the battery entity.
+        self._attr_unique_id = f"battery_{device_id}"
 
     async def async_update(self) -> None:
         """Update the battery level."""
