@@ -148,7 +148,7 @@ SERVICE_OPTIONS_SCHEMA = (
 )
 
 SERVICE_SET_OPTION_SCHEMA = vol.Any(
-    { # DEPRECATED: Remove in 2025.6.0
+    {  # DEPRECATED: Remove in 2025.6.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
@@ -156,11 +156,11 @@ SERVICE_SET_OPTION_SCHEMA = vol.Any(
     },
     {
         **SERVICE_OPTIONS_SCHEMA.schema,
-    }
+    },
 )
 
 SERVICE_PROGRAM_SCHEMA = vol.Any(
-    { # DEPRECATED: Remove in 2025.6.0
+    {  # DEPRECATED: Remove in 2025.6.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM): str,
         vol.Required(ATTR_KEY): str,
