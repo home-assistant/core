@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
 
 from reolink_aio.exceptions import ReolinkError
@@ -33,6 +32,7 @@ from .entity import (
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
+RESUME_AFTER_INSTALL = 15
 POLL_AFTER_INSTALL = 120
 POLL_PROGRESS = 2
 
@@ -110,6 +110,7 @@ class ReolinkUpdateBaseEntity(
         self._channel = channel
         self._host = reolink_data.host
         self._cancel_update: CALLBACK_TYPE | None = None
+        self._cancel_resume: CALLBACK_TYPE | None = None
         self._cancel_progress: CALLBACK_TYPE | None = None
         self._installing: bool = False
         self._reolink_data = reolink_data
@@ -201,7 +202,9 @@ class ReolinkUpdateBaseEntity(
             self._cancel_update = async_call_later(
                 self.hass, POLL_AFTER_INSTALL, self._async_update_future
             )
-            await self._resume_update_coordinator()
+            self._cancel_resume = async_call_later(
+                self.hass, RESUME_AFTER_INSTALL, self._resume_update_coordinator
+            )
             self._installing = False
 
     async def _pause_update_coordinator(self) -> None:
@@ -209,12 +212,15 @@ class ReolinkUpdateBaseEntity(
         self._reolink_data.device_coordinator.update_interval = None
         self._reolink_data.device_coordinator.async_set_updated_data(None)
 
-    async def _resume_update_coordinator(self) -> None:
+    async def _resume_update_coordinator(self, *args) -> None:
         """Resume updating the states using the data update coordinator (after reboots)."""
         self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
-        await self._reolink_data.device_coordinator.async_refresh()
+        try:
+            await self._reolink_data.device_coordinator.async_refresh()
+        finally:
+            self._cancel_resume = None
 
-    async def _async_update_progress(self, now: datetime | None = None) -> None:
+    async def _async_update_progress(self, *args) -> None:
         """Request update."""
         self.async_write_ha_state()
         if self._installing:
@@ -222,7 +228,7 @@ class ReolinkUpdateBaseEntity(
                 self.hass, POLL_PROGRESS, self._async_update_progress
             )
 
-    async def _async_update_future(self, now: datetime | None = None) -> None:
+    async def _async_update_future(self, *args) -> None:
         """Request update."""
         try:
             await self.async_update()
@@ -243,6 +249,8 @@ class ReolinkUpdateBaseEntity(
             self._cancel_update()
         if self._cancel_progress is not None:
             self._cancel_progress()
+        if self._cancel_resume is not None:
+            self._cancel_resume()
 
 
 class ReolinkUpdateEntity(
