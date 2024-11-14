@@ -89,21 +89,24 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, description)
-        self._attr_native_value = description.value_fn(self._scale)
-        if description.unit_fn is not None and self._scale.device_state is not None:
-            self._attr_native_unit_of_measurement = description.unit_fn(
+        self._determine_state()
+
+    def _determine_state(self):
+        """Set the state from the scale."""
+        self._attr_native_value = self.entity_description.value_fn(self._scale)
+        if (
+            self.entity_description.unit_fn is not None
+            and self._scale.device_state is not None
+        ):
+            self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
                 self._scale.device_state
             )
 
     @callback
     def _async_handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (state := self._scale.device_state) is not None:
-            self._attr_native_value = self.entity_description.value_fn(self._scale)
-            if self.entity_description.unit_fn is not None:
-                self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-                    state
-                )
+        self._determine_state()
+        self.async_write_ha_state()
 
 
 class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
