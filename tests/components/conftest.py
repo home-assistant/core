@@ -614,7 +614,7 @@ async def _check_config_flow_result_translations(
     flow: FlowHandler,
     result: FlowResult[FlowContext, str],
     ignore_translations: dict[str, str],
-) -> FlowResult:
+) -> None:
     if isinstance(self, ConfigEntriesFlowManager):
         category = "config"
         component = flow.handler
@@ -622,7 +622,7 @@ async def _check_config_flow_result_translations(
         category = "options"
         component = flow.hass.config_entries.async_get_entry(flow.handler).domain
     else:
-        return result
+        return
 
     # Check if this flow has been seen before
     # Gets set to False on first run, and to True on subsequent runs
@@ -653,13 +653,13 @@ async def _check_config_flow_result_translations(
                     f"error.{error}",
                     result["description_placeholders"],
                 )
-        return result
+        return
 
     if result["type"] is FlowResultType.ABORT:
         # We don't need translations for a discovery flow which immediately
         # aborts, since such flows won't be seen by users
         if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
-            return result
+            return
         await _validate_translation(
             flow.hass,
             ignore_translations,
@@ -668,8 +668,6 @@ async def _check_config_flow_result_translations(
             f"abort.{result["reason"]}",
             result["description_placeholders"],
         )
-
-    return result
 
 
 @pytest.fixture(autouse=True)
@@ -692,9 +690,8 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
         self: FlowManager, flow: FlowHandler, *args
     ) -> FlowResult:
         result = await _original_flow_manager_async_handle_step(self, flow, *args)
-        return _check_config_flow_result_translations(
-            self, flow, result, _ignore_translations
-        )
+        _check_config_flow_result_translations(self, flow, result, _ignore_translations)
+        return result
 
     # Use override functions
     with patch(
