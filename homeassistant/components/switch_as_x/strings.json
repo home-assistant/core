@@ -26,5 +26,17 @@
         }
       }
     }
+  },
+  "selector": {
+    "target_domain": {
+      "options": {
+        "cover": "[%key:component::cover::title%]",
+        "fan": "[%key:component::fan::title%]",
+        "light": "[%key:component::light::title%]",
+        "lock": "[%key:component::lock::title%]",
+        "siren": "[%key:component::siren::title%]",
+        "valve": "[%key:component::valve::title%]"
+      }
+    }
   }
 }
