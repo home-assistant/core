@@ -236,7 +236,6 @@ class BackupManager(BaseBackupManager[Backup]):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         super().__init__(hass=hass)
-        self.backup_dir = Path(hass.config.path("backups"))
         self.temp_backup_dir = Path(hass.config.path("tmp_backups"))
 
     async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
@@ -335,6 +334,8 @@ class BackupManager(BaseBackupManager[Backup]):
         queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
             SimpleQueue()
         )
+        # TODO: I think we can't safely use TemporaryDirectory here, it might be a RAM
+        # disk, and we might exhaust the memory
         temp_dir_handler = await self.hass.async_add_executor_job(TemporaryDirectory)
         target_temp_file = Path(
             temp_dir_handler.name, contents.filename or "backup.tar"
@@ -376,7 +377,7 @@ class BackupManager(BaseBackupManager[Backup]):
                 await fut
 
         def _move_and_cleanup() -> None:
-            shutil.move(target_temp_file, self.backup_dir / target_temp_file.name)
+            shutil.move(target_temp_file, self.temp_backup_dir / target_temp_file.name)
             temp_dir_handler.cleanup()
 
         await self.hass.async_add_executor_job(_move_and_cleanup)
