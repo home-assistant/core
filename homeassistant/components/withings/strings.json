@@ -203,7 +203,8 @@
         "name": "Wakeup time"
       },
       "step_goal": {
-        "name": "Step goal"
+        "name": "Step goal",
+        "native_unit_of_measurement": "steps"
       },
       "sleep_goal": {
         "name": "Sleep goal"
@@ -212,7 +213,8 @@
         "name": "Weight goal"
       },
       "activity_steps_today": {
-        "name": "Steps today"
+        "name": "Steps today",
+        "native_unit_of_measurement": "steps"
       },
       "activity_distance_today": {
         "name": "Distance travelled today"
