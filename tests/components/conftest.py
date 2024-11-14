@@ -748,10 +748,12 @@ async def check_translations(
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
-        self.hass.async_create_task_internal(
-            _check_create_issue_translations(self, result, _ignore_translations),
-            "Check create_issue translations",
-            eager_start=True,
+        translation_tasks.add(
+            self.hass.async_create_task_internal(
+                _check_create_issue_translations(self, result, _ignore_translations),
+                "Check create_issue translations",
+                eager_start=True,
+            )
         )
         return result
 
