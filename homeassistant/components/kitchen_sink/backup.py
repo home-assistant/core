@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_backup_sync_agents(
+async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Register the backup agents."""
