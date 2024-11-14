@@ -690,7 +690,9 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
         self: FlowManager, flow: FlowHandler, *args
     ) -> FlowResult:
         result = await _original_flow_manager_async_handle_step(self, flow, *args)
-        _check_config_flow_result_translations(self, flow, result, _ignore_translations)
+        await _check_config_flow_result_translations(
+            self, flow, result, _ignore_translations
+        )
         return result
 
     # Use override functions
