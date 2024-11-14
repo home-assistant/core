@@ -47,6 +47,17 @@
           }
         }
       }
+    },
+    "sensor": {
+      "pellet_quantity": {
+        "name": "Pellet quantity"
+      },
+      "air_outlet_temperature": {
+        "name": "Air outlet temperature"
+      },
+      "wood_combustion_temperature": {
+        "name": "Wood combustion temperature"
+      }
     }
   }
 }
