@@ -7,6 +7,7 @@ from .coordinator import AcaiaConfigEntry, AcaiaCoordinator
 
 PLATFORMS = [
     Platform.BUTTON,
+    Platform.SENSOR,
 ]
 
 
