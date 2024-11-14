@@ -101,8 +101,6 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
 class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
     """Representation of an Acaia sensor with restore capabilities."""
 
-    entity_description: AcaiaSensorEntityDescription
-
     def __init__(
         self,
         coordinator: AcaiaCoordinator,
