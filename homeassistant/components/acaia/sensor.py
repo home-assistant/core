@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfMass
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -29,7 +29,7 @@ class AcaiaSensorEntityDescription(SensorEntityDescription):
     """Description for Acaia sensor entities."""
 
     unit_fn: Callable[[AcaiaDeviceState], str] | None = None
-    value_fn: Callable[[AcaiaScale], StateType]
+    value_fn: Callable[[AcaiaScale], int | float | None]
 
 
 SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
@@ -117,24 +117,22 @@ class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._restored_data = await self.async_get_last_sensor_data()
+        if self._restored_data is not None:
+            self._attr_native_value = self._restored_data.native_value
+            self._attr_native_unit_of_measurement = (
+                self._restored_data.native_unit_of_measurement
+            )
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if (value := self.entity_description.value_fn(self._scale)) is not None:
-            return value
+        return cast(StateType, self._attr_native_value)
 
-        if self._restored_data is None:
-            return None
-
-        return cast(StateType, self._restored_data.native_value)
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity."""
-        if self._restored_data is not None:
-            return self._restored_data.native_unit_of_measurement
-        return super().native_unit_of_measurement
+    @callback
+    def _async_handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self._scale.device_state is not None:
+            self._attr_native_value = self.entity_description.value_fn(self._scale)
 
     @property
     def available(self) -> bool:

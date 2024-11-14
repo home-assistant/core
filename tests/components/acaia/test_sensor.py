@@ -4,9 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant import core as ha
 from homeassistant.const import PERCENTAGE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -41,19 +40,26 @@ async def test_restore_state(
 ) -> None:
     """Test battery sensor restore state."""
     mock_scale.device_state = None
-
     entity_id = "sensor.lunar_ddeeff_battery"
-    fake_state = ha.State(
-        entity_id,
-        "",
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    entity_id,
+                    "1",
+                ),
+                {
+                    "native_value": 65,
+                    "native_unit_of_measurement": PERCENTAGE,
+                },
+            ),
+        ),
     )
-    fake_extra_data = {
-        "native_value": 65,
-        "native_unit_of_measurement": PERCENTAGE,
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
 
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity_id)
+    assert state
     assert state.state == str(65)
