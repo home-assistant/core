@@ -170,6 +170,14 @@ async def test_create_issue_invalid_version(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    [
+        [
+            "component.test.issues.abc_123.title",
+        ]
+    ],
+)
 @pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_ignore_issue(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -497,6 +505,10 @@ async def test_non_compliant_platform(
     assert list(hass.data[DOMAIN]["platforms"].keys()) == ["fake_integration"]
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.fake_integration.issues.abc_123.title"],
+)
 @pytest.mark.freeze_time("2022-07-21 08:22:00")
 async def test_sync_methods(
     hass: HomeAssistant,
