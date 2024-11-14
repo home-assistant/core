@@ -100,14 +100,7 @@ class AcaiaSensor(AcaiaEntity, SensorEntity):
 class AcaiaRestoreSensor(AcaiaSensor, RestoreSensor):
     """Representation of an Acaia sensor with restore capabilities."""
 
-    def __init__(
-        self,
-        coordinator: AcaiaCoordinator,
-        entity_description: AcaiaSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description)
-        self._restored_data: SensorExtraStoredData | None = None
+    _restored_data: SensorExtraStoredData | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

@@ -33,14 +33,6 @@
       "start_stop": {
         "name": "Start/stop timer"
       }
-    },
-    "sensor": {
-      "weight": {
-        "name": "Weight"
-      },
-      "battery": {
-        "name": "Battery"
-      }
     }
   }
 }
