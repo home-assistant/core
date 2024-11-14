@@ -16,11 +16,11 @@ from hassil.expression import Expression, ListReference, Sequence
 from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
 from hassil.recognize import (
     MISSING_ENTITY,
-    MatchEntity,
     RecognizeResult,
-    UnmatchedTextEntity,
     recognize_all,
+    recognize_best,
 )
+from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.util import merge_dict
 from home_assistant_intents import ErrorKey, get_intents, get_languages
 import yaml
@@ -294,7 +294,7 @@ class DefaultAgent(ConversationEntity):
                     self.hass, language, DOMAIN, [DOMAIN]
                 )
                 response_text = translations.get(
-                    f"component.{DOMAIN}.agent.done", "Done"
+                    f"component.{DOMAIN}.conversation.agent.done", "Done"
                 )
 
             response.async_set_speech(response_text)
@@ -499,6 +499,7 @@ class DefaultAgent(ConversationEntity):
         maybe_result: RecognizeResult | None = None
         best_num_matched_entities = 0
         best_num_unmatched_entities = 0
+        best_num_unmatched_ranges = 0
         for result in recognize_all(
             user_input.text,
             lang_intents.intents,
@@ -517,10 +518,14 @@ class DefaultAgent(ConversationEntity):
                     num_matched_entities += 1
 
             num_unmatched_entities = 0
+            num_unmatched_ranges = 0
             for unmatched_entity in result.unmatched_entities_list:
                 if isinstance(unmatched_entity, UnmatchedTextEntity):
                     if unmatched_entity.text != MISSING_ENTITY:
                         num_unmatched_entities += 1
+                elif isinstance(unmatched_entity, UnmatchedRangeEntity):
+                    num_unmatched_ranges += 1
+                    num_unmatched_entities += 1
                 else:
                     num_unmatched_entities += 1
 
@@ -533,14 +538,23 @@ class DefaultAgent(ConversationEntity):
                     and (num_unmatched_entities < best_num_unmatched_entities)
                 )
                 or (
+                    # Prefer unmatched ranges
+                    (num_matched_entities == best_num_matched_entities)
+                    and (num_unmatched_entities == best_num_unmatched_entities)
+                    and (num_unmatched_ranges > best_num_unmatched_ranges)
+                )
+                or (
                     # More literal text matched
                     (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities == best_num_unmatched_entities)
+                    and (num_unmatched_ranges == best_num_unmatched_ranges)
                     and (result.text_chunks_matched > maybe_result.text_chunks_matched)
                 )
                 or (
                     # Prefer match failures with entities
                     (result.text_chunks_matched == maybe_result.text_chunks_matched)
+                    and (num_unmatched_entities == best_num_unmatched_entities)
+                    and (num_unmatched_ranges == best_num_unmatched_ranges)
                     and (
                         ("name" in result.entities)
                         or ("name" in result.unmatched_entities)
@@ -550,6 +564,7 @@ class DefaultAgent(ConversationEntity):
                 maybe_result = result
                 best_num_matched_entities = num_matched_entities
                 best_num_unmatched_entities = num_unmatched_entities
+                best_num_unmatched_ranges = num_unmatched_ranges
 
         return maybe_result
 
@@ -562,76 +577,15 @@ class DefaultAgent(ConversationEntity):
         language: str,
     ) -> RecognizeResult | None:
         """Search intents for a strict match to user input."""
-        custom_found = False
-        name_found = False
-        best_results: list[RecognizeResult] = []
-        best_name_quality: int | None = None
-        best_text_chunks_matched: int | None = None
-        for result in recognize_all(
+        return recognize_best(
             user_input.text,
             lang_intents.intents,
             slot_lists=slot_lists,
             intent_context=intent_context,
             language=language,
-        ):
-            # Prioritize user intents
-            is_custom = (
-                result.intent_metadata is not None
-                and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
-            )
-
-            if custom_found and not is_custom:
-                continue
-
-            if not custom_found and is_custom:
-                custom_found = True
-                # Clear builtin results
-                name_found = False
-                best_results = []
-                best_name_quality = None
-                best_text_chunks_matched = None
-
-            # Prioritize results with a "name" slot
-            name = result.entities.get("name")
-            is_name = name and not name.is_wildcard
-
-            if name_found and not is_name:
-                continue
-
-            if not name_found and is_name:
-                name_found = True
-                # Clear non-name results
-                best_results = []
-                best_text_chunks_matched = None
-
-            if is_name:
-                # Prioritize results with a better "name" slot
-                name_quality = len(cast(MatchEntity, name).value.split())
-                if (best_name_quality is None) or (name_quality > best_name_quality):
-                    best_name_quality = name_quality
-                    # Clear worse name results
-                    best_results = []
-                    best_text_chunks_matched = None
-                elif name_quality < best_name_quality:
-                    continue
-
-            # Prioritize results with more literal text
-            # This causes wildcards to match last.
-            if (best_text_chunks_matched is None) or (
-                result.text_chunks_matched > best_text_chunks_matched
-            ):
-                best_results = [result]
-                best_text_chunks_matched = result.text_chunks_matched
-            elif result.text_chunks_matched == best_text_chunks_matched:
-                # Accumulate results with the same number of literal text matched.
-                # We will resolve the ambiguity below.
-                best_results.append(result)
-
-        if best_results:
-            # Successful strict match
-            return best_results[0]
-
-        return None
+            best_metadata_key=METADATA_CUSTOM_SENTENCE,
+            best_slot_name="name",
+        )
 
     async def _build_speech(
         self,

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from homeassistant import core
+from homeassistant.components.go2rtc.const import RECOMMENDED_VERSION as GO2RTC_VERSION
 from homeassistant.const import Platform
 from homeassistant.util import executor, thread
 from script.gen_requirements_all import gather_recursive_requirements
@@ -20,7 +21,8 @@ FROM ${{BUILD_FROM}}
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME={timeout} \
-    UV_SYSTEM_PYTHON=true
+    UV_SYSTEM_PYTHON=true \
+    UV_NO_CACHE=true
 
 ARG QEMU_CPU
 
@@ -111,8 +113,6 @@ LABEL "com.github.actions.icon"="terminal"
 LABEL "com.github.actions.color"="gray-dark"
 """
 
-_GO2RTC_VERSION = "1.9.6"
-
 
 def _get_package_versions(file: Path, packages: set[str]) -> dict[str, str]:
     package_versions: dict[str, str] = {}
@@ -196,7 +196,7 @@ def _generate_files(config: Config) -> list[File]:
             DOCKERFILE_TEMPLATE.format(
                 timeout=timeout,
                 **package_versions,
-                go2rtc=_GO2RTC_VERSION,
+                go2rtc=GO2RTC_VERSION,
             ),
             config.root / "Dockerfile",
         ),

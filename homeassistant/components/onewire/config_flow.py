@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 import voluptuous as vol
@@ -104,7 +105,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OnewireOptionsFlowHandler()
+        return OnewireOptionsFlowHandler(config_entry)
 
 
 class OnewireOptionsFlowHandler(OptionsFlow):
@@ -124,6 +125,10 @@ class OnewireOptionsFlowHandler(OptionsFlow):
     """
     current_device: str
     """Friendly name of the currently selected device."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.options = deepcopy(dict(config_entry.options))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

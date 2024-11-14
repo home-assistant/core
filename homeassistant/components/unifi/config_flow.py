@@ -21,7 +21,6 @@ import voluptuous as vol
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -38,6 +37,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
+from . import UnifiConfigEntry
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -78,10 +78,10 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: UnifiConfigEntry,
     ) -> UnifiOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return UnifiOptionsFlowHandler()
+        return UnifiOptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
@@ -246,6 +246,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
     """Handle Unifi Network options."""
 
     hub: UnifiHub
+
+    def __init__(self, config_entry: UnifiConfigEntry) -> None:
+        """Initialize UniFi Network options flow."""
+        self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

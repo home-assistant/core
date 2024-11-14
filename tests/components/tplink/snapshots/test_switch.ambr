@@ -173,6 +173,52 @@
     'state': 'on',
   })
 # ---
+# name: test_states[switch.my_device_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.my_device_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '123456789ABCDEFGH_child_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[switch.my_device_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_device_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_states[switch.my_device_fan_sleep_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -259,6 +305,52 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_led',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_states[switch.my_device_motion_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.my_device_motion_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion sensor',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pir_enabled',
+    'unique_id': '123456789ABCDEFGH_pir_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[switch.my_device_motion_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Motion sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_device_motion_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

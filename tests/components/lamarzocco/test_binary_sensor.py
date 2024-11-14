@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import RequestNotSuccessful
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
