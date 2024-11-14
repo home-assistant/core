@@ -22,7 +22,7 @@ import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
 from typing_extensions import TypeVar
 
-from homeassistant.backup_restore import RESTORE_BACKUP_FILE
+from homeassistant.backup_restore import RESTORE_BACKUP_FILE, password_to_key
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -173,7 +173,13 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self.loaded_platforms = True
 
     @abc.abstractmethod
-    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+    async def async_restore_backup(
+        self,
+        slug: str,
+        *,
+        password: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Restore a backup."""
 
     @abc.abstractmethod
@@ -185,6 +191,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         folders_included: list[str] | None,
         name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
+        password: str | None,
         **kwargs: Any,
     ) -> NewBackup:
         """Initiate generating a backup.
@@ -252,6 +259,7 @@ class BackupManager(BaseBackupManager[Backup]):
                         date=backup.date,
                         slug=backup.slug,
                         name=backup.name,
+                        protected=backup.protected,
                     ),
                 )
                 for agent in self.backup_agents.values()
@@ -284,6 +292,7 @@ class BackupManager(BaseBackupManager[Backup]):
                             date=cast(str, data["date"]),
                             path=backup_path,
                             size=round(backup_path.stat().st_size / 1_048_576, 2),
+                            protected=cast(bool, data.get("protected", False)),
                         )
                         backups[backup.slug] = backup
             except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
@@ -393,6 +402,7 @@ class BackupManager(BaseBackupManager[Backup]):
         folders_included: list[str] | None,
         name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
+        password: str | None,
         **kwargs: Any,
     ) -> NewBackup:
         """Initiate generating a backup."""
@@ -409,6 +419,7 @@ class BackupManager(BaseBackupManager[Backup]):
                 date_str=date_str,
                 folders_included=folders_included,
                 on_progress=on_progress,
+                password=password,
                 slug=slug,
             ),
             name="backup_manager_create_backup",
@@ -425,6 +436,7 @@ class BackupManager(BaseBackupManager[Backup]):
         date_str: str,
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
+        password: str | None,
         slug: str,
     ) -> Backup:
         """Generate a backup."""
@@ -443,13 +455,16 @@ class BackupManager(BaseBackupManager[Backup]):
                     "version": HAVERSION,
                 },
                 "compressed": True,
+                "protected": password is not None,
             }
+
             tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
             size_in_bytes = await self.hass.async_add_executor_job(
                 self._mkdir_and_generate_backup_contents,
                 tar_file_path,
                 backup_data,
                 database_included,
+                password,
             )
             backup = Backup(
                 slug=slug,
@@ -457,6 +472,7 @@ class BackupManager(BaseBackupManager[Backup]):
                 date=date_str,
                 path=tar_file_path,
                 size=round(size_in_bytes / 1_048_576, 2),
+                protected=password is not None,
             )
             if self.loaded_backups:
                 self.backups[slug] = backup
@@ -474,6 +490,7 @@ class BackupManager(BaseBackupManager[Backup]):
         tar_file_path: Path,
         backup_data: dict[str, Any],
         database_included: bool,
+        password: str | None = None,
     ) -> int:
         """Generate backup contents and return the size."""
         if not self.backup_dir.exists():
@@ -495,7 +512,9 @@ class BackupManager(BaseBackupManager[Backup]):
             tar_info.mtime = int(time.time())
             outer_secure_tarfile_tarfile.addfile(tar_info, fileobj=fileobj)
             with outer_secure_tarfile.create_inner_tar(
-                "./homeassistant.tar.gz", gzip=True
+                "./homeassistant.tar.gz",
+                gzip=True,
+                key=password_to_key(password) if password is not None else None,
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,
@@ -503,10 +522,15 @@ class BackupManager(BaseBackupManager[Backup]):
                     excludes=excludes,
                     arcname="data",
                 )
-
         return tar_file_path.stat().st_size
 
-    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+    async def async_restore_backup(
+        self,
+        slug: str,
+        *,
+        password: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Restore a backup.
 
         This will write the restore information to .HA_RESTORE which
@@ -518,7 +542,7 @@ class BackupManager(BaseBackupManager[Backup]):
         def _write_restore_file() -> None:
             """Write the restore file."""
             Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
-                json.dumps({"path": backup.path.as_posix()}),
+                json.dumps({"path": backup.path.as_posix(), "password": password}),
                 encoding="utf-8",
             )
 
