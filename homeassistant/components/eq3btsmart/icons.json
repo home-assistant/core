@@ -8,6 +8,23 @@
         }
       }
     },
+    "number": {
+      "comfort": {
+        "default": "mdi:sun-thermometer"
+      },
+      "eco": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "offset": {
+        "default": "mdi:thermometer-plus"
+      },
+      "window_open_temperature": {
+        "default": "mdi:window-open-variant"
+      },
+      "window_open_timeout": {
+        "default": "mdi:timer-refresh"
+      }
+    },
     "switch": {
       "away": {
         "default": "mdi:home-account",
