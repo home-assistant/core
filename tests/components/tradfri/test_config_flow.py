@@ -90,7 +90,7 @@ async def test_user_connection_bad_key(
     hass: HomeAssistant, mock_auth, mock_entry_setup
 ) -> None:
     """Test a connection with bad key."""
-    mock_auth.side_effect = config_flow.AuthError("invalid_key")
+    mock_auth.side_effect = config_flow.AuthError("invalid_security_code")
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri", context={"source": config_entries.SOURCE_USER}
@@ -103,7 +103,7 @@ async def test_user_connection_bad_key(
     assert len(mock_entry_setup.mock_calls) == 0
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_key"}
+    assert result["errors"] == {"base": "invalid_security_code"}
 
 
 async def test_discovery_connection(
