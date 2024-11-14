@@ -17,6 +17,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, backup_agents_download)
     websocket_api.async_register_command(hass, backup_agents_info)
     websocket_api.async_register_command(hass, backup_agents_list_backups)
+    websocket_api.async_register_command(hass, backup_agents_delete)
 
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
@@ -268,6 +269,37 @@ async def backup_agents_download(
         )
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "backup_agents_download", str(err))
+        return
+
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/agents/delete",
+        vol.Required("agent_id"): str,
+        vol.Required("backup_id"): str,
+    }
+)
+@websocket_api.async_response
+async def backup_agents_delete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Delete an uploaded backup."""
+    manager = hass.data[DATA_MANAGER]
+    await manager.load_platforms()
+
+    if not (agent := manager.backup_agents.get(msg["agent_id"])):
+        connection.send_error(
+            msg["id"], "unknown_agent", f"Agent {msg['agent_id']} not found"
+        )
+        return
+    try:
+        await agent.async_delete_backup(msg["backup_id"])
+    except Exception as err:  # noqa: BLE001
+        connection.send_error(msg["id"], "backup_agents_delete", str(err))
         return
 
     connection.send_result(msg["id"])

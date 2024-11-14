@@ -1,4 +1,20 @@
 # serializer version: 1
+# name: test_agents_delete[with_hassio]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_agents_delete[without_hassio]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_agents_download[with_hassio]
   dict({
     'id': 1,
