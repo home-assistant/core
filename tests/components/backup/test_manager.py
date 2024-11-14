@@ -10,12 +10,13 @@ import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
-from homeassistant.components.backup import BackupManager, BackupUploadMetadata
-from homeassistant.components.backup.agent import BackupAgentPlatformProtocol
-from homeassistant.components.backup.manager import (
+from homeassistant.components.backup import (
+    BackupAgentPlatformProtocol,
+    BackupManager,
     BackupPlatformProtocol,
-    BackupProgress,
+    BackupUploadMetadata,
 )
+from homeassistant.components.backup.manager import BackupProgress
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
