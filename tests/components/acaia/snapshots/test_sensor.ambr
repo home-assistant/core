@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[entry_sensor_battery]
+# name: test_sensors[sensor.lunar_ddeeff_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[entry_sensor_weight]
+# name: test_sensors[sensor.lunar_ddeeff_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'LUNAR-DDEEFF Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lunar_ddeeff_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42',
+  })
+# ---
+# name: test_sensors[sensor.lunar_ddeeff_weight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -69,23 +85,7 @@
     'unit_of_measurement': <UnitOfMass.OUNCES: 'oz'>,
   })
 # ---
-# name: test_sensors[state_sensor_battery]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'LUNAR-DDEEFF Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.lunar_ddeeff_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '42',
-  })
-# ---
-# name: test_sensors[state_sensor_weight]
+# name: test_sensors[sensor.lunar_ddeeff_weight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'weight',

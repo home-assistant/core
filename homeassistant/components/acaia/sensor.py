@@ -67,13 +67,16 @@ async def async_setup_entry(
     """Set up sensors."""
 
     coordinator = entry.runtime_data
-    async_add_entities(
-        [AcaiaSensor(coordinator, entity_description) for entity_description in SENSORS]
-        + [
+    entities = [
+        AcaiaSensor(coordinator, entity_description) for entity_description in SENSORS
+    ]
+    entities.extend(
+        [
             AcaiaRestoreSensor(coordinator, entity_description)
             for entity_description in RESTORE_SENSORS
         ]
     )
+    async_add_entities(entities)
 
 
 class AcaiaSensor(AcaiaEntity, SensorEntity):
