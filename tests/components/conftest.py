@@ -720,6 +720,7 @@ async def check_translations(
 
     Current checks:
     - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
+    - issue registry entries
     """
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
@@ -750,7 +751,7 @@ async def check_translations(
         )
         translation_tasks.add(
             self.hass.async_create_task_internal(
-                _check_create_issue_translations(self, result, _ignore_translations),
+                _check_create_issue_translations(self, result, translation_errors),
                 "Check create_issue translations",
                 eager_start=True,
             )
