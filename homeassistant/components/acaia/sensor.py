@@ -35,7 +35,6 @@ class AcaiaSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
     AcaiaSensorEntityDescription(
         key="weight",
-        translation_key="weight",
         device_class=SensorDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -50,7 +49,6 @@ SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
 RESTORE_SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
     AcaiaSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
