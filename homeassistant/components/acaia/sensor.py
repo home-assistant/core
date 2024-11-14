@@ -113,6 +113,7 @@ class AcaiaRestoreSensor(AcaiaEntity, RestoreSensor):
                 self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
                     self._scale.device_state
                 )
+            return
         self._restored_data = await self.async_get_last_sensor_data()
         if self._restored_data is not None:
             if self._attr_native_value is None:
