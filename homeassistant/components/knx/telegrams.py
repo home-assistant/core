@@ -90,7 +90,7 @@ class Telegrams:
                 telegram["payload"] = tuple(telegram["payload"])  # type: ignore[unreachable]
         self.recent_telegrams.extend(telegrams)
         self.last_ga_telegrams = {
-            t["source"]: t for t in telegrams if t["payload"] is not None
+            t["destination"]: t for t in telegrams if t["payload"] is not None
         }
 
     async def save_history(self) -> None:
