@@ -8,16 +8,19 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
-from .agent import BackupAgent, UploadedBackup
+from .agent import BackupAgent, BackupAgentPlatformProtocol, UploadedBackup
 from .const import DOMAIN, LOGGER
 from .http import async_register_http_views
-from .manager import BackupManager
-from .models import BackupUploadMetadata
+from .manager import BackupManager, BackupPlatformProtocol
+from .models import BackupUploadMetadata, BaseBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
     "BackupAgent",
+    "BackupAgentPlatformProtocol",
+    "BackupPlatformProtocol",
     "BackupUploadMetadata",
+    "BaseBackup",
     "UploadedBackup",
 ]
 
