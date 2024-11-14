@@ -31,6 +31,7 @@ async def test_buttons(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_scale: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the acaia buttons."""

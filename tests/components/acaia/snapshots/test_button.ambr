@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'reset_timer',
-    'unique_id': 'AA:BB:CC:DD:EE:FF_reset_timer',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_reset_timer',
     'unit_of_measurement': None,
   })
 # ---
@@ -42,7 +42,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_buttons[button.lunar_ddeeff_start_stop_timer-entry]
@@ -74,7 +74,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'start_stop',
-    'unique_id': 'AA:BB:CC:DD:EE:FF_start_stop',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_start_stop',
     'unit_of_measurement': None,
   })
 # ---
@@ -88,7 +88,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_buttons[button.lunar_ddeeff_tare-entry]
@@ -120,7 +120,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'tare',
-    'unique_id': 'AA:BB:CC:DD:EE:FF_tare',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_tare',
     'unit_of_measurement': None,
   })
 # ---
@@ -134,6 +134,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
