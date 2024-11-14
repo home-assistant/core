@@ -38,14 +38,6 @@
       },
       "battery_level": {
         "name": "Battery level"
-      },
-      "steps": {
-        "name": "Steps",
-        "native_unit_of_measurement": "steps"
-      },
-      "tracker_steps": {
-        "name": "Tracker steps",
-        "native_unit_of_measurement": "steps"
       }
     }
   },

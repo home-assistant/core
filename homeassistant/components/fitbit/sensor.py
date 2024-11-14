@@ -265,12 +265,11 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     ),
     FitbitSensorEntityDescription(
         key="activities/steps",
-        translation_key="steps",
+        name="Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
         scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_entity_name=True,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/activityCalories",
@@ -371,14 +370,13 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/steps",
-        translation_key="tracker_steps",
+        name="Tracker Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
         scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
     ),
     FitbitSensorEntityDescription(
         key="body/bmi",
