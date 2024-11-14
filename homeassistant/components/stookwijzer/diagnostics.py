@@ -20,11 +20,9 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "advice": coordinator.client.advice,
-        "alert": coordinator.client.alert,
         "air_quality_index": coordinator.client.lki,
         "windspeed_bft": coordinator.client.windspeed_bft,
         "windspeed_ms": coordinator.client.windspeed_ms,
         "forecast_advice": coordinator.client.forecast_advice,
-        "forecast_alert": coordinator.client.forecast_alert,
         "last_updated": last_updated,
     }
