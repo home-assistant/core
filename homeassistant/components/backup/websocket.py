@@ -112,7 +112,15 @@ async def handle_restore(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/generate"})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/generate",
+        vol.Optional("addons_included"): [str],
+        vol.Optional("database_included", default=True): bool,
+        vol.Optional("folders_included"): [str],
+        vol.Optional("name"): str,
+    }
+)
 @websocket_api.async_response
 async def handle_create(
     hass: HomeAssistant,
@@ -124,7 +132,13 @@ async def handle_create(
     def on_progress(progress: BackupProgress) -> None:
         connection.send_message(websocket_api.event_message(msg["id"], progress))
 
-    backup = await hass.data[DATA_MANAGER].async_create_backup(on_progress=on_progress)
+    backup = await hass.data[DATA_MANAGER].async_create_backup(
+        addons_included=msg.get("addons_included"),
+        database_included=msg["database_included"],
+        folders_included=msg.get("folders_included"),
+        name=msg.get("name"),
+        on_progress=on_progress,
+    )
     connection.send_result(msg["id"], backup)
 
 

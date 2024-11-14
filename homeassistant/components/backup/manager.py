@@ -32,7 +32,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from .agent import BackupAgent, BackupAgentPlatformProtocol
-from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
+from .const import DOMAIN, EXCLUDE_DATABASE_FROM_BACKUP, EXCLUDE_FROM_BACKUP, LOGGER
 from .models import BackupUploadMetadata, BaseBackup
 
 BUF_SIZE = 2**20 * 4  # 4MB
@@ -180,10 +180,18 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     async def async_create_backup(
         self,
         *,
+        addons_included: list[str] | None,
+        database_included: bool,
+        folders_included: list[str] | None,
+        name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
         **kwargs: Any,
     ) -> NewBackup:
-        """Generate a backup."""
+        """Initiate generating a backup.
+
+        :param on_progress: A callback that will be called with the progress of the
+            backup.
+        """
 
     @abc.abstractmethod
     async def async_get_backups(self, **kwargs: Any) -> dict[str, _BackupT]:
@@ -380,17 +388,29 @@ class BackupManager(BaseBackupManager[Backup]):
     async def async_create_backup(
         self,
         *,
+        addons_included: list[str] | None,
+        database_included: bool,
+        folders_included: list[str] | None,
+        name: str | None,
         on_progress: Callable[[BackupProgress], None] | None,
         **kwargs: Any,
     ) -> NewBackup:
-        """Generate a backup."""
+        """Initiate generating a backup."""
         if self.backup_task:
             raise HomeAssistantError("Backup already in progress")
-        backup_name = f"Core {HAVERSION}"
+        backup_name = name or f"Core {HAVERSION}"
         date_str = dt_util.now().isoformat()
         slug = _generate_slug(date_str, backup_name)
         self.backup_task = self.hass.async_create_task(
-            self._async_create_backup(backup_name, date_str, slug, on_progress),
+            self._async_create_backup(
+                addons_included=addons_included,
+                backup_name=backup_name,
+                database_included=database_included,
+                date_str=date_str,
+                folders_included=folders_included,
+                on_progress=on_progress,
+                slug=slug,
+            ),
             name="backup_manager_create_backup",
             eager_start=False,  # To ensure the task is not started before we return
         )
@@ -398,10 +418,14 @@ class BackupManager(BaseBackupManager[Backup]):
 
     async def _async_create_backup(
         self,
+        *,
+        addons_included: list[str] | None,
+        database_included: bool,
         backup_name: str,
         date_str: str,
-        slug: str,
+        folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
+        slug: str,
     ) -> Backup:
         """Generate a backup."""
         success = False
@@ -414,7 +438,10 @@ class BackupManager(BaseBackupManager[Backup]):
                 "date": date_str,
                 "type": "partial",
                 "folders": ["homeassistant"],
-                "homeassistant": {"version": HAVERSION},
+                "homeassistant": {
+                    "exclude_database": not database_included,
+                    "version": HAVERSION,
+                },
                 "compressed": True,
             }
             tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
@@ -422,6 +449,7 @@ class BackupManager(BaseBackupManager[Backup]):
                 self._mkdir_and_generate_backup_contents,
                 tar_file_path,
                 backup_data,
+                database_included,
             )
             backup = Backup(
                 slug=slug,
@@ -445,11 +473,16 @@ class BackupManager(BaseBackupManager[Backup]):
         self,
         tar_file_path: Path,
         backup_data: dict[str, Any],
+        database_included: bool,
     ) -> int:
         """Generate backup contents and return the size."""
         if not self.backup_dir.exists():
             LOGGER.debug("Creating backup directory")
             self.backup_dir.mkdir()
+
+        excludes = EXCLUDE_FROM_BACKUP
+        if not database_included:
+            excludes = excludes + EXCLUDE_DATABASE_FROM_BACKUP
 
         outer_secure_tarfile = SecureTarFile(
             tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
@@ -467,7 +500,7 @@ class BackupManager(BaseBackupManager[Backup]):
                 atomic_contents_add(
                     tar_file=core_tar,
                     origin_path=Path(self.hass.config.path()),
-                    excludes=EXCLUDE_FROM_BACKUP,
+                    excludes=excludes,
                     arcname="data",
                 )
 
