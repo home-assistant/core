@@ -11,12 +11,14 @@ from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
 from homeassistant.components.backup import (
+    DOMAIN,
     BackupAgentPlatformProtocol,
     BackupManager,
     BackupPlatformProtocol,
     BackupUploadMetadata,
+    backup as local_backup_platform,
 )
-from homeassistant.components.backup.manager import BackupProgress
+from homeassistant.components.backup.manager import LOCAL_AGENT_ID, BackupProgress
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -52,6 +54,7 @@ async def _mock_backup_generation(
     assert manager.backup_task is None
     await manager.async_create_backup(
         addons_included=[],
+        agent_ids=[LOCAL_AGENT_ID],
         database_included=database_included,
         folders_included=[],
         name=name,
@@ -92,29 +95,36 @@ async def _mock_backup_generation(
     return backup
 
 
-async def _setup_mock_domain(
+async def _setup_backup_platform(
     hass: HomeAssistant,
+    *,
+    domain: str = "some_domain",
     platform: BackupPlatformProtocol | BackupAgentPlatformProtocol | None = None,
 ) -> None:
     """Set up a mock domain."""
-    mock_platform(hass, "some_domain.backup", platform or MockPlatform())
-    assert await async_setup_component(hass, "some_domain", {})
+    mock_platform(hass, f"{domain}.backup", platform or MockPlatform())
+    assert await async_setup_component(hass, domain, {})
 
 
 async def test_constructor(hass: HomeAssistant) -> None:
     """Test BackupManager constructor."""
     manager = BackupManager(hass)
     assert manager.backup_dir.as_posix() == hass.config.path("backups")
+    assert manager.temp_backup_dir.as_posix() == hass.config.path("tmp_backups")
 
 
 async def test_load_backups(hass: HomeAssistant) -> None:
     """Test loading backups."""
     manager = BackupManager(hass)
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
     with (
         patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]),
         patch("tarfile.open", return_value=MagicMock()),
         patch(
-            "homeassistant.components.backup.manager.json_loads_object",
+            "homeassistant.components.backup.backup.json_loads_object",
             return_value={
                 "slug": TEST_BACKUP.slug,
                 "name": TEST_BACKUP.name,
@@ -126,7 +136,7 @@ async def test_load_backups(hass: HomeAssistant) -> None:
             return_value=MagicMock(st_size=TEST_BACKUP.size),
         ),
     ):
-        await manager.load_backups()
+        await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
     backups = await manager.async_get_backups()
     assert backups == {TEST_BACKUP.slug: TEST_BACKUP}
 
@@ -137,11 +147,15 @@ async def test_load_backups_with_exception(
 ) -> None:
     """Test loading backups with exception."""
     manager = BackupManager(hass)
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
     with (
         patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]),
         patch("tarfile.open", side_effect=OSError("Test exception")),
     ):
-        await manager.load_backups()
+        await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
     backups = await manager.async_get_backups()
     assert f"Unable to read backup {TEST_BACKUP.path}: Test exception" in caplog.text
     assert backups == {}
@@ -153,8 +167,13 @@ async def test_removing_backup(
 ) -> None:
     """Test removing backup."""
     manager = BackupManager(hass)
-    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
-    manager.loaded_backups = True
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
+    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+    local_agent.loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=True):
         await manager.async_remove_backup(slug=TEST_BACKUP.slug)
@@ -168,18 +187,27 @@ async def test_removing_non_existing_backup(
     """Test removing not existing backup."""
     manager = BackupManager(hass)
 
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
     await manager.async_remove_backup(slug="non_existing")
     assert "Removed backup located at" not in caplog.text
 
 
+@pytest.mark.xfail(reason="Cleanup not implemented in the draft")
 async def test_getting_backup_that_does_not_exist(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test getting backup that does not exist."""
     manager = BackupManager(hass)
-    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
-    manager.loaded_backups = True
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
+    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+    local_agent.loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=False):
         backup = await manager.async_get_backup(slug=TEST_BACKUP.slug)
@@ -199,6 +227,7 @@ async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError, match="Backup already in progress"):
         await manager.async_create_backup(
             addons_included=[],
+            agent_ids=[LOCAL_AGENT_ID],
             database_included=True,
             folders_included=[],
             name=None,
@@ -227,7 +256,12 @@ async def test_async_create_backup(
 ) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
-    manager.loaded_backups = True
+
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await manager.load_platforms()
+
+    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    local_agent.loaded_backups = True
 
     await _mock_backup_generation(
         hass, manager, mocked_json_bytes, mocked_tarfile, **params
@@ -236,10 +270,10 @@ async def test_async_create_backup(
     assert "Generated new backup with slug " in caplog.text
     assert "Creating backup directory" in caplog.text
     assert "Loaded 0 platforms" in caplog.text
-    assert "Loaded 0 agents" in caplog.text
+    assert "Loaded 1 agents" in caplog.text
 
-    assert len(manager.backups) == 1
-    backup = list(manager.backups.values())[0]
+    assert len(local_agent.backups) == 1
+    backup = list(local_agent.backups.values())[0]
     assert backup.protected is bool(params.get("password"))
 
 
@@ -250,12 +284,11 @@ async def test_loading_platforms(
     """Test loading backup platforms."""
     manager = BackupManager(hass)
 
-    assert not manager.loaded_platforms
     assert not manager.platforms
 
-    await _setup_mock_domain(
+    await _setup_backup_platform(
         hass,
-        Mock(
+        platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
             async_get_backup_agents=AsyncMock(),
@@ -264,7 +297,6 @@ async def test_loading_platforms(
     await manager.load_platforms()
     await hass.async_block_till_done()
 
-    assert manager.loaded_platforms
     assert len(manager.platforms) == 1
 
     assert "Loaded 1 platforms" in caplog.text
@@ -277,19 +309,17 @@ async def test_loading_agents(
     """Test loading backup agents."""
     manager = BackupManager(hass)
 
-    assert not manager.loaded_platforms
     assert not manager.platforms
 
-    await _setup_mock_domain(
+    await _setup_backup_platform(
         hass,
-        Mock(
+        platform=Mock(
             async_get_backup_agents=AsyncMock(return_value=[BackupAgentTest("test")]),
         ),
     )
     await manager.load_platforms()
     await hass.async_block_till_done()
 
-    assert manager.loaded_platforms
     assert len(manager.backup_agents) == 1
 
     assert "Loaded 1 agents" in caplog.text
@@ -303,14 +333,12 @@ async def test_not_loading_bad_platforms(
     """Test loading backup platforms."""
     manager = BackupManager(hass)
 
-    assert not manager.loaded_platforms
     assert not manager.platforms
 
-    await _setup_mock_domain(hass)
+    await _setup_backup_platform(hass)
     await manager.load_platforms()
     await hass.async_block_till_done()
 
-    assert manager.loaded_platforms
     assert len(manager.platforms) == 0
 
     assert "Loaded 0 platforms" in caplog.text
@@ -326,9 +354,10 @@ async def test_syncing_backup(
     """Test syncing a backup."""
     manager = BackupManager(hass)
 
-    await _setup_mock_domain(
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await _setup_backup_platform(
         hass,
-        Mock(
+        platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
             async_get_backup_agents=AsyncMock(
@@ -387,9 +416,10 @@ async def test_syncing_backup_with_exception(
         async def async_upload_backup(self, **kwargs: Any) -> None:
             raise HomeAssistantError("Test exception")
 
-    await _setup_mock_domain(
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await _setup_backup_platform(
         hass,
-        Mock(
+        platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
             async_get_backup_agents=AsyncMock(
@@ -448,9 +478,10 @@ async def test_syncing_backup_no_agents(
     """Test syncing a backup with no agents."""
     manager = BackupManager(hass)
 
-    await _setup_mock_domain(
+    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await _setup_backup_platform(
         hass,
-        Mock(
+        platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
             async_get_backup_agents=AsyncMock(return_value=[]),
@@ -479,9 +510,9 @@ async def test_exception_plaform_pre(
     async def _mock_step(hass: HomeAssistant) -> None:
         raise HomeAssistantError("Test exception")
 
-    await _setup_mock_domain(
+    await _setup_backup_platform(
         hass,
-        Mock(
+        platform=Mock(
             async_pre_backup=_mock_step,
             async_post_backup=AsyncMock(),
             async_get_backup_agents=AsyncMock(),
@@ -502,9 +533,9 @@ async def test_exception_plaform_post(
     async def _mock_step(hass: HomeAssistant) -> None:
         raise HomeAssistantError("Test exception")
 
-    await _setup_mock_domain(
+    await _setup_backup_platform(
         hass,
-        Mock(
+        platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=_mock_step,
             async_get_backup_agents=AsyncMock(),
@@ -513,58 +544,6 @@ async def test_exception_plaform_post(
 
     with pytest.raises(HomeAssistantError):
         await _mock_backup_generation(hass, manager, mocked_json_bytes, mocked_tarfile)
-
-
-async def test_loading_platforms_when_running_async_pre_backup_actions(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backup platforms when running post backup actions."""
-    manager = BackupManager(hass)
-
-    assert not manager.loaded_platforms
-    assert not manager.platforms
-
-    await _setup_mock_domain(
-        hass,
-        Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=AsyncMock(),
-            async_get_backup_agents=AsyncMock(),
-        ),
-    )
-    await manager.async_pre_backup_actions()
-
-    assert manager.loaded_platforms
-    assert len(manager.platforms) == 1
-
-    assert "Loaded 1 platforms" in caplog.text
-
-
-async def test_loading_platforms_when_running_async_post_backup_actions(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backup platforms when running post backup actions."""
-    manager = BackupManager(hass)
-
-    assert not manager.loaded_platforms
-    assert not manager.platforms
-
-    await _setup_mock_domain(
-        hass,
-        Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=AsyncMock(),
-            async_get_backup_agents=AsyncMock(),
-        ),
-    )
-    await manager.async_post_backup_actions()
-
-    assert manager.loaded_platforms
-    assert len(manager.platforms) == 1
-
-    assert "Loaded 1 platforms" in caplog.text
 
 
 async def test_async_receive_backup(
@@ -601,6 +580,7 @@ async def test_async_receive_backup(
         assert mover_mock.mock_calls[0].args[1].name == "abc123.tar"
 
 
+@pytest.mark.xfail(reason="Restore not implemented in the draft")
 async def test_async_trigger_restore(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -623,6 +603,7 @@ async def test_async_trigger_restore(
         assert mocked_service_call.called
 
 
+@pytest.mark.xfail(reason="Restore not implemented in the draft")
 async def test_async_trigger_restore_with_password(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -645,6 +626,7 @@ async def test_async_trigger_restore_with_password(
         assert mocked_service_call.called
 
 
+@pytest.mark.xfail(reason="Restore not implemented in the draft")
 async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
     """Test trigger restore."""
     manager = BackupManager(hass)

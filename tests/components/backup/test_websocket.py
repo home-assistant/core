@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -45,31 +45,19 @@ async def test_info(
     with_hassio: bool,
 ) -> None:
     """Test getting backup info."""
-    await setup_backup_integration(hass, with_hassio=with_hassio)
-
-    hass.data[DATA_MANAGER].backups = {TEST_BACKUP.slug: TEST_BACKUP}
+    await setup_backup_integration(hass, with_hassio=with_hassio, backups=[TEST_BACKUP])
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.load_backups",
-            AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backups",
-            return_value={TEST_BACKUP.slug: TEST_BACKUP},
-        ),
-    ):
-        await client.send_json_auto_id({"type": "backup/info"})
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id({"type": "backup/info"})
+    assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
     "backup_content",
     [
-        pytest.param(TEST_BACKUP, id="with_backup_content"),
+        pytest.param([TEST_BACKUP], id="with_backup_content"),
         pytest.param(None, id="without_backup_content"),
     ],
 )
@@ -88,17 +76,15 @@ async def test_details(
     backup_content: BaseBackup | None,
 ) -> None:
     """Test getting backup info."""
-    await setup_backup_integration(hass, with_hassio=with_hassio)
+    await setup_backup_integration(
+        hass, with_hassio=with_hassio, backups=backup_content
+    )
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-        return_value=backup_content,
-    ):
-        await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
+    assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
@@ -159,7 +145,9 @@ async def test_generate(
     freezer.move_to("2024-11-13 12:01:00+01:00")
     await hass.async_block_till_done()
 
-    await client.send_json_auto_id({"type": "backup/generate", **(data or {})})
+    await client.send_json_auto_id(
+        {"type": "backup/generate", **{"agent_ids": ["backup.local"]} | (data or {})}
+    )
     for _ in range(number_of_messages):
         assert await client.receive_json() == snapshot
 
@@ -168,16 +156,18 @@ async def test_generate(
 @pytest.mark.parametrize(
     ("params", "expected_extra_call_params"),
     [
-        ({}, {}),
+        ({"agent_ids": ["backup.local"]}, {"agent_ids": ["backup.local"]}),
         (
             {
                 "addons_included": ["ssl"],
+                "agent_ids": ["backup.local"],
                 "database_included": False,
                 "folders_included": ["media"],
                 "name": "abc123",
             },
             {
                 "addons_included": ["ssl"],
+                "agent_ids": ["backup.local"],
                 "database_included": False,
                 "folders_included": ["media"],
                 "name": "abc123",
@@ -525,7 +515,7 @@ async def test_agents_download(
         assert await client.receive_json() == snapshot
         assert download_mock.call_args[1] == {
             "id": "abc123",
-            "path": Path(hass.config.path("backup"), "abc123.tar"),
+            "path": Path(hass.config.path("backups"), "abc123.tar"),
         }
 
 

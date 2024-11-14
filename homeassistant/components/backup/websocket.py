@@ -120,6 +120,7 @@ async def handle_restore(
     {
         vol.Required("type"): "backup/generate",
         vol.Optional("addons_included"): [str],
+        vol.Required("agent_ids"): [str],
         vol.Optional("database_included", default=True): bool,
         vol.Optional("folders_included"): [str],
         vol.Optional("name"): str,
@@ -139,6 +140,7 @@ async def handle_create(
 
     backup = await hass.data[DATA_MANAGER].async_create_backup(
         addons_included=msg.get("addons_included"),
+        agent_ids=msg["agent_ids"],
         database_included=msg["database_included"],
         folders_included=msg.get("folders_included"),
         name=msg.get("name"),
@@ -283,7 +285,7 @@ async def backup_agents_download(
     try:
         await agent.async_download_backup(
             id=msg["backup_id"],
-            path=Path(hass.config.path("backup"), f"{msg['slug']}.tar"),
+            path=Path(manager.backup_dir, f"{msg['slug']}.tar"),  # type: ignore[attr-defined]
         )
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "backup_agents_download", str(err))

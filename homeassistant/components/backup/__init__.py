@@ -32,6 +32,7 @@ SERVICE_CREATE_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Backup integration."""
     hass.data[DOMAIN] = backup_manager = BackupManager(hass)
+    await backup_manager.async_setup()
 
     with_hassio = is_hassio(hass)
 
@@ -49,6 +50,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Service handler for creating backups."""
         await backup_manager.async_create_backup(
             addons_included=None,
+            # pylint: disable=fixme
+            # TODO: Don't forget to remove this when the implementation is complete
+            agent_ids=[],  # TODO: Should we default to local?
             database_included=True,
             folders_included=None,
             name=None,

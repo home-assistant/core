@@ -45,6 +45,9 @@
         dict({
           'agent_id': 'domain.test',
         }),
+        dict({
+          'agent_id': 'backup.local',
+        }),
       ]),
       'syncing': False,
     }),
@@ -59,6 +62,9 @@
       'agents': list([
         dict({
           'agent_id': 'domain.test',
+        }),
+        dict({
+          'agent_id': 'backup.local',
         }),
       ]),
       'syncing': False,
@@ -352,6 +358,9 @@
     'id': 1,
     'result': dict({
       'backup': dict({
+        'agent_ids': list([
+          'backup.local',
+        ]),
         'date': '1970-01-01T00:00:00.000Z',
         'name': 'Test',
         'path': 'abc123.tar',
@@ -508,6 +517,9 @@
       'backing_up': False,
       'backups': list([
         dict({
+          'agent_ids': list([
+            'backup.local',
+          ]),
           'date': '1970-01-01T00:00:00.000Z',
           'name': 'Test',
           'path': 'abc123.tar',

@@ -12,12 +12,14 @@ from homeassistant.components.backup import (
     BackupUploadMetadata,
     UploadedBackup,
 )
-from homeassistant.components.backup.manager import Backup
+from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.manager import LOCAL_AGENT_ID, Backup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 TEST_BACKUP = Backup(
+    agent_ids=["backup.local"],
     slug="abc123",
     name="Test",
     date="1970-01-01T00:00:00.000Z",
@@ -70,7 +72,16 @@ async def setup_backup_integration(
     hass: HomeAssistant,
     with_hassio: bool = False,
     configuration: ConfigType | None = None,
+    backups: list[Backup] | None = None,
 ) -> bool:
     """Set up the Backup integration."""
     with patch("homeassistant.components.backup.is_hassio", return_value=with_hassio):
-        return await async_setup_component(hass, DOMAIN, configuration or {})
+        result = await async_setup_component(hass, DOMAIN, configuration or {})
+        if with_hassio or not backups:
+            return result
+
+        local_agent = hass.data[DATA_MANAGER].backup_agents[LOCAL_AGENT_ID]
+        local_agent.backups = {backups.slug: backups for backups in backups}
+        local_agent.loaded_backups = True
+
+        return result
