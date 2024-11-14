@@ -17,12 +17,12 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     """Register websocket commands."""
     websocket_api.async_register_command(hass, backup_agents_download)
     websocket_api.async_register_command(hass, backup_agents_info)
-    websocket_api.async_register_command(hass, backup_agents_list_synced_backups)
+    websocket_api.async_register_command(hass, backup_agents_list_backups)
 
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
         websocket_api.async_register_command(hass, handle_backup_start)
-        websocket_api.async_register_command(hass, handle_backup_sync)
+        websocket_api.async_register_command(hass, handle_backup_upload)
         return
 
     websocket_api.async_register_command(hass, handle_details)
@@ -173,26 +173,26 @@ async def handle_backup_end(
 @websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/sync",
+        vol.Required("type"): "backup/upload",
         vol.Required("data"): {
             vol.Required("slug"): str,
         },
     }
 )
 @websocket_api.async_response
-async def handle_backup_sync(
+async def handle_backup_upload(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Backup sync notification."""
-    LOGGER.debug("Backup sync notification")
+    """Backup upload."""
+    LOGGER.debug("Backup upload notification")
     data = msg["data"]
 
     try:
-        await hass.data[DATA_MANAGER].async_sync_backup(slug=data["slug"])
+        await hass.data[DATA_MANAGER].async_upload_backup(slug=data["slug"])
     except Exception as err:  # noqa: BLE001
-        connection.send_error(msg["id"], "backup_sync_failed", str(err))
+        connection.send_error(msg["id"], "backup_upload_failed", str(err))
         return
 
     connection.send_result(msg["id"])
@@ -212,25 +212,25 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"id": agent_id} for agent_id in manager.sync_agents],
+            "agents": [{"id": agent_id} for agent_id in manager.backup_agents],
             "syncing": manager.syncing,
         },
     )
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/agents/synced"})
+@websocket_api.websocket_command({vol.Required("type"): "backup/agents/list_backups"})
 @websocket_api.async_response
-async def backup_agents_list_synced_backups(
+async def backup_agents_list_backups(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Return a list of synced backups."""
+    """Return a list of uploaded backups."""
     manager = hass.data[DATA_MANAGER]
     backups: list[dict[str, Any]] = []
     await manager.load_platforms()
-    for agent_id, agent in manager.sync_agents.items():
+    for agent_id, agent in manager.backup_agents.items():
         _listed_backups = await agent.async_list_backups()
         backups.extend({**b.as_dict(), "agent_id": agent_id} for b in _listed_backups)
     connection.send_result(msg["id"], backups)
@@ -241,7 +241,7 @@ async def backup_agents_list_synced_backups(
     {
         vol.Required("type"): "backup/agents/download",
         vol.Required("agent"): str,
-        vol.Required("sync_id"): str,
+        vol.Required("backup_id"): str,
         vol.Required("slug"): str,
     }
 )
@@ -251,18 +251,18 @@ async def backup_agents_download(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Download a synced backup."""
+    """Download an uploaded backup."""
     manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
 
-    if not (agent := manager.sync_agents.get(msg["agent"])):
+    if not (agent := manager.backup_agents.get(msg["agent"])):
         connection.send_error(
             msg["id"], "unknown_agent", f"Agent {msg['agent']} not found"
         )
         return
     try:
         await agent.async_download_backup(
-            id=msg["sync_id"],
+            id=msg["backup_id"],
             path=Path(hass.config.path("backup"), f"{msg['slug']}.tar"),
         )
     except Exception as err:  # noqa: BLE001
