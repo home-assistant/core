@@ -31,9 +31,9 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
+from .agent import BackupAgent, BackupAgentPlatformProtocol
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
-from .models import BackupSyncMetadata, BaseBackup
-from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
+from .models import BackupUploadMetadata, BaseBackup
 
 BUF_SIZE = 2**20 * 4  # 4MB
 
@@ -87,7 +87,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self.backups: dict[str, _BackupT] = {}
         self.loaded_platforms = False
         self.platforms: dict[str, BackupPlatformProtocol] = {}
-        self.sync_agents: dict[str, BackupSyncAgent] = {}
+        self.backup_agents: dict[str, BackupAgent] = {}
         self.syncing = False
 
     @callback
@@ -109,14 +109,14 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self,
         hass: HomeAssistant,
         integration_domain: str,
-        platform: BackupPlatformAgentProtocol,
+        platform: BackupAgentPlatformProtocol,
     ) -> None:
         """Add a platform to the backup manager."""
-        if not hasattr(platform, "async_get_backup_sync_agents"):
+        if not hasattr(platform, "async_get_backup_agents"):
             return
 
-        agents = await platform.async_get_backup_sync_agents(hass=hass)
-        self.sync_agents.update(
+        agents = await platform.async_get_backup_agents(hass=hass)
+        self.backup_agents.update(
             {f"{integration_domain}.{agent.name}": agent for agent in agents}
         )
 
@@ -169,7 +169,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
             wait_for_platforms=True,
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
-        LOGGER.debug("Loaded %s agents", len(self.sync_agents))
+        LOGGER.debug("Loaded %s agents", len(self.backup_agents))
         self.loaded_platforms = True
 
     @abc.abstractmethod
@@ -210,8 +210,8 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         """Receive and store a backup file from upload."""
 
     @abc.abstractmethod
-    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Sync a backup."""
+    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Upload a backup."""
 
 
 class BackupManager(BaseBackupManager[Backup]):
@@ -223,11 +223,11 @@ class BackupManager(BaseBackupManager[Backup]):
         self.backup_dir = Path(hass.config.path("backups"))
         self.loaded_backups = False
 
-    async def async_sync_backup(self, *, slug: str, **kwargs: Any) -> None:
-        """Sync a backup."""
+    async def async_upload_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Upload a backup."""
         await self.load_platforms()
 
-        if not self.sync_agents:
+        if not self.backup_agents:
             return
 
         if not (backup := await self.async_get_backup(slug=slug)):
@@ -238,7 +238,7 @@ class BackupManager(BaseBackupManager[Backup]):
             *(
                 agent.async_upload_backup(
                     path=backup.path,
-                    metadata=BackupSyncMetadata(
+                    metadata=BackupUploadMetadata(
                         homeassistant=HAVERSION,
                         size=backup.size,
                         date=backup.date,
@@ -246,13 +246,13 @@ class BackupManager(BaseBackupManager[Backup]):
                         name=backup.name,
                     ),
                 )
-                for agent in self.sync_agents.values()
+                for agent in self.backup_agents.values()
             ),
             return_exceptions=True,
         )
         for result in sync_backup_results:
             if isinstance(result, Exception):
-                LOGGER.error("Error during backup sync - %s", result)
+                LOGGER.error("Error during backup upload - %s", result)
         self.syncing = False
 
     async def load_backups(self) -> None:

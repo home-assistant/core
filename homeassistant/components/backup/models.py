@@ -18,8 +18,8 @@ class BaseBackup:
 
 
 @dataclass()
-class BackupSyncMetadata:
-    """Backup sync metadata."""
+class BackupUploadMetadata:
+    """Backup upload metadata."""
 
     date: str  # The date the backup was created
     slug: str  # The slug of the backup

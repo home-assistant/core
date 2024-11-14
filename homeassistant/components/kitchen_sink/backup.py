@@ -8,9 +8,9 @@ from typing import Any
 from uuid import uuid4
 
 from homeassistant.components.backup import (
-    BackupSyncAgent,
-    BackupSyncMetadata,
-    SyncedBackup,
+    BackupAgent,
+    BackupUploadMetadata,
+    UploadedBackup,
 )
 from homeassistant.core import HomeAssistant
 
@@ -19,19 +19,19 @@ LOGGER = logging.getLogger(__name__)
 
 async def async_get_backup_sync_agents(
     hass: HomeAssistant,
-) -> list[BackupSyncAgent]:
-    """Register the backup sync agents."""
-    return [KitchenSinkBackupSyncAgent("syncer")]
+) -> list[BackupAgent]:
+    """Register the backup agents."""
+    return [KitchenSinkBackupAgent("syncer")]
 
 
-class KitchenSinkBackupSyncAgent(BackupSyncAgent):
-    """Kitchen sink backup sync agent."""
+class KitchenSinkBackupAgent(BackupAgent):
+    """Kitchen sink backup agent."""
 
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
         super().__init__(name)
         self._uploads = [
-            SyncedBackup(
+            UploadedBackup(
                 id="def456",
                 name="Kitchen sink syncer",
                 slug="abc123",
@@ -54,13 +54,13 @@ class KitchenSinkBackupSyncAgent(BackupSyncAgent):
         self,
         *,
         path: Path,
-        metadata: BackupSyncMetadata,
+        metadata: BackupUploadMetadata,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
         LOGGER.info("Uploading backup %s %s", path.name, metadata)
         self._uploads.append(
-            SyncedBackup(
+            UploadedBackup(
                 id=uuid4().hex,
                 name=metadata.name,
                 slug=metadata.slug,
@@ -69,6 +69,6 @@ class KitchenSinkBackupSyncAgent(BackupSyncAgent):
             )
         )
 
-    async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
         """List synced backups."""
         return self._uploads

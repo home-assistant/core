@@ -67,7 +67,7 @@
     'type': 'result',
   })
 # ---
-# name: test_agents_synced[with_hassio]
+# name: test_agents_list_backups[with_hassio]
   dict({
     'id': 1,
     'result': list([
@@ -84,7 +84,7 @@
     'type': 'result',
   })
 # ---
-# name: test_agents_synced[without_hassio]
+# name: test_agents_list_backups[without_hassio]
   dict({
     'id': 1,
     'result': list([
@@ -142,7 +142,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_end_excepion[exception0]
+# name: test_backup_end_exception[exception0]
   dict({
     'error': dict({
       'code': 'post_backup_actions_failed',
@@ -153,7 +153,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_end_excepion[exception1]
+# name: test_backup_end_exception[exception1]
   dict({
     'error': dict({
       'code': 'post_backup_actions_failed',
@@ -164,7 +164,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_end_excepion[exception2]
+# name: test_backup_end_exception[exception2]
   dict({
     'error': dict({
       'code': 'post_backup_actions_failed',
@@ -216,7 +216,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_start_excepion[exception0]
+# name: test_backup_start_exception[exception0]
   dict({
     'error': dict({
       'code': 'pre_backup_actions_failed',
@@ -227,7 +227,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_start_excepion[exception1]
+# name: test_backup_start_exception[exception1]
   dict({
     'error': dict({
       'code': 'pre_backup_actions_failed',
@@ -238,7 +238,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_start_excepion[exception2]
+# name: test_backup_start_exception[exception2]
   dict({
     'error': dict({
       'code': 'pre_backup_actions_failed',
@@ -249,7 +249,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync[with_hassio-hass_access_token]
+# name: test_backup_upload[with_hassio-hass_access_token]
   dict({
     'error': dict({
       'code': 'only_supervisor',
@@ -260,7 +260,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync[with_hassio-hass_supervisor_access_token]
+# name: test_backup_upload[with_hassio-hass_supervisor_access_token]
   dict({
     'id': 1,
     'result': None,
@@ -268,7 +268,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync[without_hassio-hass_access_token]
+# name: test_backup_upload[without_hassio-hass_access_token]
   dict({
     'error': dict({
       'code': 'unknown_command',
@@ -279,7 +279,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync[without_hassio-hass_supervisor_access_token]
+# name: test_backup_upload[without_hassio-hass_supervisor_access_token]
   dict({
     'error': dict({
       'code': 'unknown_command',
@@ -290,10 +290,10 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync_excepion[exception0]
+# name: test_backup_upload_exception[exception0]
   dict({
     'error': dict({
-      'code': 'backup_sync_failed',
+      'code': 'backup_upload_failed',
       'message': '',
     }),
     'id': 1,
@@ -301,10 +301,10 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync_excepion[exception1]
+# name: test_backup_upload_exception[exception1]
   dict({
     'error': dict({
-      'code': 'backup_sync_failed',
+      'code': 'backup_upload_failed',
       'message': 'Boom',
     }),
     'id': 1,
@@ -312,10 +312,10 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_sync_excepion[exception2]
+# name: test_backup_upload_exception[exception2]
   dict({
     'error': dict({
-      'code': 'backup_sync_failed',
+      'code': 'backup_upload_failed',
       'message': 'Boom',
     }),
     'id': 1,
