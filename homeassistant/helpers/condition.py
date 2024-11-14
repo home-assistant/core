@@ -1009,19 +1009,21 @@ def datetime(
     now = dt_util.now()
 
     if after is None:
-        after = dt_datetime(0)
+        after = dt_util.as_local(dt_datetime(1, 1, 1))
     elif isinstance(after, str):
         if not (after_entity := hass.states.get(after)):
             raise ConditionErrorMessage("datetime", f"unknown 'after' entity {after}")
         if after_entity.domain == "input_datetime":
-            after = dt_datetime(
-                after_entity.attributes.get("year", 9999),
-                after_entity.attributes.get("month", 12),
-                after_entity.attributes.get("day", 31),
-                after_entity.attributes.get("hour", 23),
-                after_entity.attributes.get("minute", 59),
-                after_entity.attributes.get("second", 59),
-                after_entity.attributes.get("tzinfo"),
+            after = dt_util.as_local(
+                dt_datetime(
+                    after_entity.attributes.get("year", 9999),
+                    after_entity.attributes.get("month", 12),
+                    after_entity.attributes.get("day", 31),
+                    after_entity.attributes.get("hour", 23),
+                    after_entity.attributes.get("minute", 59),
+                    after_entity.attributes.get("second", 59),
+                    after_entity.attributes.get("tzinfo", 0),
+                )
             )
         elif after_entity.attributes.get(
             ATTR_DEVICE_CLASS
@@ -1037,19 +1039,21 @@ def datetime(
             return False
 
     if before is None:
-        before = dt_datetime(9999, 12, 31, 23, 59, 59, 999999)
+        before = dt_util.as_local(dt_datetime(9999, 12, 31, 23, 59, 59, 999999))
     elif isinstance(before, str):
         if not (before_entity := hass.states.get(before)):
             raise ConditionErrorMessage("datetime", f"unknown 'before' entity {before}")
         if before_entity.domain == "input_datetime":
-            before = dt_datetime(
-                before_entity.attributes.get("year", 9999),
-                before_entity.attributes.get("month", 12),
-                before_entity.attributes.get("day", 31),
-                before_entity.attributes.get("hour", 23),
-                before_entity.attributes.get("minute", 59),
-                before_entity.attributes.get("second", 59),
-                after_entity.attributes.get("tzinfo"),
+            before = dt_util.as_local(
+                dt_datetime(
+                    before_entity.attributes.get("year", 9999),
+                    before_entity.attributes.get("month", 12),
+                    before_entity.attributes.get("day", 31),
+                    before_entity.attributes.get("hour", 23),
+                    before_entity.attributes.get("minute", 59),
+                    before_entity.attributes.get("second", 59),
+                    before_entity.attributes.get("tzinfo", 0),
+                )
             )
         elif before_entity.attributes.get(
             ATTR_DEVICE_CLASS
