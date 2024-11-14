@@ -13,6 +13,9 @@
   // Port 5683 udp is used by Shelly integration
   "appPort": ["8123:8123", "5683:5683/udp"],
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "mounts": [
+    "source=C:/Users/ASUS/Documents/Chalmers/Year5/lp1/DAT266/HomeAssistant/frontend,target=/workspaces/frontend,type=bind,consistency=cached"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
