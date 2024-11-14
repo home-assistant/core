@@ -562,7 +562,7 @@ def _validate_translation_placeholders(
             description_placeholders is None
             or placeholder not in description_placeholders
         ):
-            pytest.fail(
+            ignore_translations[full_key] = (
                 f"Description not found for placeholder `{placeholder}` in {full_key}"
             )
 
@@ -593,7 +593,7 @@ async def _validate_translation(
         ignore_translations[full_key] = "used"
         return
 
-    pytest.fail(
+    ignore_translations[full_key] = (
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
     )
@@ -709,3 +709,6 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
             "Please remove them from the ignore_translations fixture."
         )
+    for description in _ignore_translations.values():
+        if description not in {"used", "unused"}:
+            pytest.fail(description)
