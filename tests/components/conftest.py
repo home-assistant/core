@@ -838,5 +838,3 @@ async def check_translations(
     for description in translation_errors.values():
         if description not in {"used", "unused"}:
             pytest.fail(description)
-
-    pytest.fail("forced error")
