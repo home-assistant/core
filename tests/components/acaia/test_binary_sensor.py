@@ -28,14 +28,14 @@ async def test_binary_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_connected_available(
+async def test_only_connectivity_available(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_scale: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the acaia binary sensors."""
+    """Test only connectivity is available if scale unavailable."""
     mock_scale.connected = False
     await setup_integration(hass, mock_config_entry)
 
