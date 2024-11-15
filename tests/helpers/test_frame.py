@@ -473,7 +473,7 @@ async def test_report(
 )
 async def test_report_integration_domain(
     caplog: pytest.LogCaptureFixture,
-    integration: Integration,
+    integration: Integration | None,
     integration_domain: str | None,
     source: str,
     expected_log: int,
