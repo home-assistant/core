@@ -13,7 +13,15 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_TIMEOUT, CONF_VERBOSITY, CONF_WATCHDOG, DOMAIN
+from .const import (
+    CONF_TIMEOUT,
+    CONF_VERBOSITY,
+    CONF_WATCHDOG,
+    DOMAIN,
+    ZIMI_TIMEOUT,
+    ZIMI_VERBOSITY,
+    ZIMI_WATCHDOG,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,9 +45,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data: dict[str, Any] = {
                 "title": "ZIMI Controller",
-                CONF_TIMEOUT: 3,
-                CONF_VERBOSITY: 1,
-                CONF_WATCHDOG: 1800,
+                CONF_TIMEOUT: ZIMI_TIMEOUT,
+                CONF_VERBOSITY: ZIMI_VERBOSITY,
+                CONF_WATCHDOG: ZIMI_WATCHDOG,
             }
             errors: dict[str, str] = {}
 
