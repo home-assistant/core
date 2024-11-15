@@ -134,6 +134,7 @@ def _create_device(serial_number: str) -> AsyncMock:
     dev.temperature_range = [18.0, 26.0]
     dev.sensed_temp = 22.0
     dev.set_temp = 21.0
+    dev.outdoor_temperature = 5.0
 
     return dev
 
