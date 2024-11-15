@@ -1,7 +1,6 @@
 """Config flow for the VegeHub integration."""
 
 import logging
-import socket
 from typing import Any
 
 from vegehub import VegeHub
@@ -9,7 +8,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.components.webhook import (
+    async_generate_id as webhook_generate_id,
+    async_generate_url as webhook_generate_url,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 
 from .const import DOMAIN, OPTION_DATA_TYPE_CHOICES
@@ -73,11 +77,18 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self._hub is not None:
                 try:
-                    hostname = socket.gethostname()  # Get the local hostname
-                    # Use the ".local" domain for local mDNS resolution
+                    webhook_id = webhook_generate_id()
+                    webhook_url = webhook_generate_url(
+                        self.hass,
+                        webhook_id,
+                        allow_external=False,
+                        allow_ip=True,
+                    )
+
+                    # Send the webhook address to the hub as its server target
                     await self._hub.setup(
-                        self._hub.mac_address,
-                        f"http://{hostname}.local:8123/api/vegehub/update",
+                        "",
+                        webhook_url,
                     )
 
                     info_data = self._hub.info
@@ -87,6 +98,8 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     info_data["hostname"] = self._hostname
                     info_data["sw_ver"] = self._properties.get("version")
                     info_data["config_url"] = self._config_url
+                    info_data["webhook_url"] = webhook_url
+                    info_data[CONF_WEBHOOK_ID] = webhook_id
 
                     # Create a task to ask the hub for an update when it can,
                     # so that we have initial data

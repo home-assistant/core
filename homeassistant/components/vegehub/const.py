@@ -1,6 +1,7 @@
 """Constants for the Vegetronix VegeHub integration."""
 
 DOMAIN = "vegehub"
+NAME = "VegeHub"
 CONF_API_KEY = "api_key"
 METHODS = ["POST"]
 PLATFORMS = ["sensor", "switch"]
