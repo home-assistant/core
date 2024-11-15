@@ -6,12 +6,12 @@ from nikohomecontrol import NikoHomeControlConnection
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
 
 from .const import DOMAIN
 from .errors import CannotConnect
 
-PLATFORMS: list[str] = ["light"]
-
+PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set Niko Home Control from a config entry."""
