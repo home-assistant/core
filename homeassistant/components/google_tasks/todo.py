@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 
@@ -61,6 +62,7 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
         ),
         due=due,
         description=item.get("notes"),
+        parent=item.get("parent"),
     )
 
 
@@ -150,14 +152,42 @@ class GoogleTaskTodoListEntity(
         await self.coordinator.async_refresh()
 
 
+@dataclasses.dataclass
+class _TaskTreeRoot:
+    """A root node for a task tree."""
+
+    task: dict[str, Any]
+
+    subtasks: list[dict[str, Any]]
+
+
 def _order_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Order the task items response.
 
     All tasks have an order amongst their siblings based on position.
-
-    Home Assistant To-do items do not support the Google Task parent/sibling
-    relationships and the desired behavior is for them to be filtered.
     """
-    parents = [task for task in tasks if task.get("parent") is None]
-    parents.sort(key=lambda task: task["position"])
-    return parents
+    # print(["({}, {})".format(task.get("id"), task.get("parent")) for task in tasks])
+    # Group tasks by parent
+    root_tasks = []
+    child_tasks = []
+    # Separate root tasks from child tasks
+    for task in tasks:
+        if "parent" not in task:
+            root_tasks.append(task)
+        else:
+            child_tasks.append(task)
+    # Create tree roots for each root task
+    roots: list[_TaskTreeRoot] = []
+    for root_task in root_tasks:
+        subtasks = [
+            task for task in child_tasks if task.get("parent") == root_task["id"]
+        ]
+        roots.append(_TaskTreeRoot(task=root_task, subtasks=subtasks))
+    roots.sort(key=lambda task: task.task["position"])
+    # Flatten roots into ordered list with subtasks after their parent
+    result = []
+    for root in roots:
+        result.append(root.task)
+        root.subtasks.sort(key=lambda task: task["position"])
+        result.extend(root.subtasks)
+    return result

@@ -232,6 +232,9 @@ class TodoItem:
     the entity.
     """
 
+    parent: str | None = None
+    """The parent To-do item ID."""
+
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
