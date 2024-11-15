@@ -1,7 +1,6 @@
 """Websocket commands for the Backup integration."""
 
-from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -9,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_MANAGER, LOGGER
-from .manager import BackupProgress
+from .manager import BackupManager, BackupProgress
 
 
 @callback
@@ -230,7 +229,6 @@ async def backup_agents_info(
 ) -> None:
     """Return backup agents info."""
     manager = hass.data[DATA_MANAGER]
-    await manager.load_platforms()
     connection.send_result(
         msg["id"],
         {
@@ -251,7 +249,6 @@ async def backup_agents_list_backups(
     """Return a list of uploaded backups."""
     manager = hass.data[DATA_MANAGER]
     backups: list[dict[str, Any]] = []
-    await manager.load_platforms()
     for agent_id, agent in manager.backup_agents.items():
         _listed_backups = await agent.async_list_backups()
         backups.extend({**b.as_dict(), "agent_id": agent_id} for b in _listed_backups)
@@ -274,18 +271,17 @@ async def backup_agents_download(
     msg: dict[str, Any],
 ) -> None:
     """Download an uploaded backup."""
-    manager = hass.data[DATA_MANAGER]
-    await manager.load_platforms()
-
+    manager = cast(BackupManager, hass.data[DATA_MANAGER])
     if not (agent := manager.backup_agents.get(msg["agent_id"])):
         connection.send_error(
             msg["id"], "unknown_agent", f"Agent {msg['agent_id']} not found"
         )
         return
     try:
+        path = await manager.async_get_backup_path(slug=msg["slug"])
         await agent.async_download_backup(
             id=msg["backup_id"],
-            path=Path(manager.backup_dir, f"{msg['slug']}.tar"),  # type: ignore[attr-defined]
+            path=path,
         )
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "backup_agents_download", str(err))

@@ -1,7 +1,6 @@
 """Test the Kitchen Sink backup platform."""
 
 from collections.abc import AsyncGenerator
-from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID
 
@@ -50,7 +49,7 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "kitchen_sink.syncer"}],
+        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
         "syncing": False,
     }
 
@@ -100,7 +99,7 @@ async def test_agents_download(
     response = await client.receive_json()
 
     assert response["success"]
-    path = hass.config.path(f"backup/{slug}.tar")
+    path = hass.config.path(f"tmp_backups/{slug}.tar")
     assert f"Downloading backup {backup_id} to {path}" in caplog.text
 
 
@@ -114,10 +113,10 @@ async def test_agents_upload(
     client = await hass_ws_client(hass, hass_supervisor_access_token)
     slug = "test-backup"
     test_backup = Backup(
+        agent_ids=["backup.local"],
         slug=slug,
         name="Test",
         date="1970-01-01T00:00:00.000Z",
-        path=Path(hass.config.path(f"backups/{slug}.tar")),
         size=0.0,
         protected=False,
     )
@@ -125,6 +124,9 @@ async def test_agents_upload(
 
     with (
         patch("homeassistant.components.kitchen_sink.backup.uuid4", return_value=uuid),
+        patch(
+            "homeassistant.components.backup.backup.LocalBackupAgent.async_upload_backup",
+        ) as fetch_backup,
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
         ) as fetch_backup,

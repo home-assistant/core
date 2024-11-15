@@ -311,11 +311,11 @@ class BackupManager(BaseBackupManager[Backup]):
         backups = await self.async_get_backups()
         return backups.get(slug)
 
-    async def async_get_backup_path(self, *, slug: str, **kwargs: Any) -> Path | None:
+    async def async_get_backup_path(self, *, slug: str, **kwargs: Any) -> Path:
         """Return path to a backup which is available locally."""
         local_agent = cast(LocalBackupAgent, self.backup_agents[LOCAL_AGENT_ID])
         if not await local_agent.async_get_backup(slug=slug):
-            return None
+            return self.temp_backup_dir / f"{slug}.tar"
         return local_agent.get_backup_path(slug)
 
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
