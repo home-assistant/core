@@ -61,7 +61,7 @@
         "name": "Auto shutdown"
       },
       "temperature": {
-        "name": "Current Temperature"
+        "name": "Current temperature"
       }
     }
   },
