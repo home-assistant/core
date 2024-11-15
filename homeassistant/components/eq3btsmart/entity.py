@@ -7,19 +7,19 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import Eq3ConfigEntry
 from .const import (
     DEVICE_MODEL,
     MANUFACTURER,
     SIGNAL_THERMOSTAT_CONNECTED,
     SIGNAL_THERMOSTAT_DISCONNECTED,
 )
+from .coordinator import Eq3ConfigEntry
 
 
-class Eq3Entity(Entity):
+class Eq3Entity(CoordinatorEntity):
     """Base class for all eQ-3 entities."""
 
     _attr_has_entity_name = True
@@ -30,6 +30,8 @@ class Eq3Entity(Entity):
         unique_id_key: str | None = None,
     ) -> None:
         """Initialize the eq3 entity."""
+
+        super().__init__(entry.runtime_data.coordinator)
 
         self._eq3_config = entry.runtime_data.eq3_config
         self._thermostat = entry.runtime_data.thermostat
@@ -45,7 +47,7 @@ class Eq3Entity(Entity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
-        self._thermostat.register_update_callback(self._async_on_updated)
+        await super().async_added_to_hass()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -61,16 +63,6 @@ class Eq3Entity(Entity):
                 self._async_on_connected,
             )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-
-        self._thermostat.unregister_update_callback(self._async_on_updated)
-
-    def _async_on_updated(self) -> None:
-        """Handle updated data from the thermostat."""
-
-        self.async_write_ha_state()
 
     @callback
     def _async_on_disconnected(self) -> None:

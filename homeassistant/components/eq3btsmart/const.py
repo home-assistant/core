@@ -80,7 +80,8 @@ class TargetTemperatureSelector(str, Enum):
 
 DEFAULT_CURRENT_TEMP_SELECTOR = CurrentTemperatureSelector.DEVICE
 DEFAULT_TARGET_TEMP_SELECTOR = TargetTemperatureSelector.TARGET
-DEFAULT_SCAN_INTERVAL = 10  # seconds
+SCAN_INTERVAL = 10  # seconds
+RECONNECT_INTERVAL = 10  # seconds
 
 SIGNAL_THERMOSTAT_DISCONNECTED = f"{DOMAIN}.thermostat_disconnected"
 SIGNAL_THERMOSTAT_CONNECTED = f"{DOMAIN}.thermostat_connected"

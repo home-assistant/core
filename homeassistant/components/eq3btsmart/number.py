@@ -23,7 +23,6 @@ from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Eq3ConfigEntry
 from .const import (
     ENTITY_KEY_COMFORT,
     ENTITY_KEY_ECO,
@@ -32,6 +31,7 @@ from .const import (
     ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
     EQ3BT_STEP,
 )
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 

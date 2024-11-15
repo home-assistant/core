@@ -11,8 +11,8 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Eq3ConfigEntry
 from .const import ENTITY_KEY_AWAY, ENTITY_KEY_BOOST, ENTITY_KEY_LOCK
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 
