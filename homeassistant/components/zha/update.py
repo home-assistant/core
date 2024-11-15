@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import functools
 import logging
-import math
 from typing import Any
 
 from zha.exceptions import ZHAException
@@ -97,6 +96,7 @@ class ZHAFirmwareUpdateEntity(
         | UpdateEntityFeature.SPECIFIC_VERSION
         | UpdateEntityFeature.RELEASE_NOTES
     )
+    _attr_display_precision = 2  # 40 byte chunks with ~200KB files increments by 0.02%
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
@@ -115,20 +115,19 @@ class ZHAFirmwareUpdateEntity(
     def in_progress(self) -> bool | int | None:
         """Update installation progress.
 
+        Should return a boolean (True if in progress, False if not).
+        """
+        return self.entity_data.entity.in_progress
+
+    @property
+    def update_percentage(self) -> int | float | None:
+        """Update installation progress.
+
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
-        Can either return a boolean (True if in progress, False if not)
-        or an integer to indicate the progress in from 0 to 100%.
+        Can either return a number to indicate the progress from 0 to 100% or None.
         """
-        if not self.entity_data.entity.in_progress:
-            return self.entity_data.entity.in_progress
-
-        # Stay in an indeterminate state until we actually send something
-        if self.entity_data.entity.progress == 0:
-            return True
-
-        # Rescale 0-100% to 2-100% to avoid 0 and 1 colliding with None, False, and True
-        return int(math.ceil(2 + 98 * self.entity_data.entity.progress / 100))
+        return self.entity_data.entity.update_percentage
 
     @property
     def latest_version(self) -> str | None:
