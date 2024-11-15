@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-
 from homeassistant.components import cover
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
@@ -15,7 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.cover import CoverEntityFeature
-from homeassistant.components.lock import LockState, STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
+from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import (
