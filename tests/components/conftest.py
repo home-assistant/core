@@ -554,6 +554,7 @@ def _validate_translation_placeholders(
     full_key: str,
     translation: str,
     description_placeholders: dict[str, str] | None,
+    translation_errors: dict[str, str],
 ) -> str | None:
     """Raise if translation exists with missing placeholders."""
     tuples = list(string.Formatter().parse(translation))
@@ -564,14 +565,14 @@ def _validate_translation_placeholders(
             description_placeholders is None
             or placeholder not in description_placeholders
         ):
-            ignore_translations[full_key] = (
+            translation_errors[full_key] = (
                 f"Description not found for placeholder `{placeholder}` in {full_key}"
             )
 
 
 async def _validate_translation(
     hass: HomeAssistant,
-    ignore_translations: dict[str, StoreInfo],
+    translation_errors: dict[str, str],
     category: str,
     component: str,
     key: str,
@@ -584,18 +585,18 @@ async def _validate_translation(
     translations = await async_get_translations(hass, "en", category, [component])
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
-            full_key, translation, description_placeholders
+            full_key, translation, description_placeholders, translation_errors
         )
         return
 
     if not translation_required:
         return
 
-    if full_key in ignore_translations:
-        ignore_translations[full_key] = "used"
+    if full_key in translation_errors:
+        translation_errors[full_key] = "used"
         return
 
-    ignore_translations[full_key] = (
+    translation_errors[full_key] = (
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
     )
@@ -615,7 +616,7 @@ async def _check_config_flow_result_translations(
     manager: FlowManager,
     flow: FlowHandler,
     result: FlowResult[FlowContext, str],
-    ignore_translations: dict[str, str],
+    translation_errors: dict[str, str],
 ) -> None:
     if result["type"] is FlowResultType.CREATE_ENTRY:
         # No need to check translations for a completed flow
@@ -649,7 +650,7 @@ async def _check_config_flow_result_translations(
             for header in ("title", "description"):
                 await _validate_translation(
                     flow.hass,
-                    ignore_translations,
+                    translation_errors,
                     category,
                     integration,
                     f"{key_prefix}step.{step_id}.{header}",
@@ -660,7 +661,7 @@ async def _check_config_flow_result_translations(
             for error in errors.values():
                 await _validate_translation(
                     flow.hass,
-                    ignore_translations,
+                    translation_errors,
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
@@ -675,7 +676,7 @@ async def _check_config_flow_result_translations(
             return
         await _validate_translation(
             flow.hass,
-            ignore_translations,
+            translation_errors,
             category,
             integration,
             f"{key_prefix}abort.{result["reason"]}",
@@ -688,12 +689,12 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
     """Check that translation requirements are met.
 
     Current checks:
-    - data entry flow results (ConfigFlow/OptionsFlow)
+    - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
     """
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
 
-    _ignore_translations = {k: "unused" for k in ignore_translations}
+    translation_errors = {k: "unused" for k in ignore_translations}
 
     # Keep reference to original functions
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
@@ -704,7 +705,7 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
     ) -> FlowResult:
         result = await _original_flow_manager_async_handle_step(self, flow, *args)
         await _check_config_flow_result_translations(
-            self, flow, result, _ignore_translations
+            self, flow, result, translation_errors
         )
         return result
 
@@ -716,12 +717,12 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
         yield
 
     # Run final checks
-    unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
+    unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
     if unused_ignore:
         pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
             "Please remove them from the ignore_translations fixture."
         )
-    for description in _ignore_translations.values():
+    for description in translation_errors.values():
         if description not in {"used", "unused"}:
             pytest.fail(description)
