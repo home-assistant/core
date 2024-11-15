@@ -6,6 +6,7 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import Integration
 from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
 
@@ -485,7 +486,7 @@ async def test_report_integration_domain(
     what = "test_report_string"
 
     with (
-        patch.object(frame, "_REPORTED_INTEGRATIONS", set()), 
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
         patch("homeassistant.loader.async_get_issue_integration", integration),
     ):
         frame.report_usage(
