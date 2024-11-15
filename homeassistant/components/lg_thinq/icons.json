@@ -402,6 +402,14 @@
       "power_level_for_location": {
         "default": "mdi:radiator"
       }
+    },
+    "button": {
+      "unset_absolute_to_start": {
+        "default": "mdi:timer-cancel-outline"
+      },
+      "unset_absolute_to_stop": {
+        "default": "mdi:timer-cancel-outline"
+      }
     }
   }
 }
