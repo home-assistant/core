@@ -454,17 +454,20 @@ async def test_report(
     [
         pytest.param(
             None,
+            None,
             "code that",
             1,
             id="core",
         ),
         pytest.param(
+            None,
             "sensor",
             "that integration 'sensor'",
             1,
             id="core integration",
         ),
         pytest.param(
+            None,
             "hue",
             "that custom integration 'hue'",
             1,
@@ -480,9 +483,6 @@ async def test_report_integration_domain(
     expected_log: int,
 ) -> None:
     """Test report."""
-    for comp in ("hue", "sensor"):
-        assert await async_setup_component(hass, comp, {})
-
     what = "test_report_string"
 
     with (
