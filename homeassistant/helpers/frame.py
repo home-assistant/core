@@ -249,7 +249,7 @@ def _report_integration_domain(
     hass: HomeAssistant | None,
     what: str,
     breaks_in_ha_version: str | None,
-    integration: Integration | None,
+    integration: Integration,
     core_integration_behavior: ReportBehavior,
     custom_integration_behavior: ReportBehavior,
     exclude_integrations: set[str] | None,
@@ -287,10 +287,11 @@ def _report_integration_domain(
         report_issue,
     )
 
-    raise RuntimeError(
-        f"Detected that {integration_type}integration "
-        f"'{integration.domain}' {what}. Please {report_issue}"
-    )
+    if integration_behavior is ReportBehavior.ERROR:
+        raise RuntimeError(
+            f"Detected that {integration_type}integration "
+            f"'{integration.domain}' {what}. Please {report_issue}"
+        )
 
 
 def _report_integration_frame(
