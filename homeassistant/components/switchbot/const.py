@@ -30,6 +30,8 @@ class SupportedModels(StrEnum):
     LOCK_PRO = "lock_pro"
     BLIND_TILT = "blind_tilt"
     HUB2 = "hub2"
+    RELAY_SWITCH_1PM = "relay_switch_1pm"
+    RELAY_SWITCH_1PLUS = "relay_switch_1plus"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -44,6 +46,8 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LOCK_PRO: SupportedModels.LOCK_PRO,
     SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
     SwitchbotModel.HUB2: SupportedModels.HUB2,
+    SwitchbotModel.RelaySwitch1PM: SupportedModels.RELAY_SWITCH_1PM,
+    SwitchbotModel.RelaySwitch1Plus: SupportedModels.RELAY_SWITCH_1PLUS,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -60,6 +64,7 @@ SUPPORTED_MODEL_TYPES = (
 )
 
 SUPPORTED_LOCK_MODELS = {SwitchbotModel.LOCK, SwitchbotModel.LOCK_PRO}
+ENCRYPTED_MODELS = {SwitchbotModel.RelaySwitch1PM, SwitchbotModel.RelaySwitch1Plus}
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
     str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()

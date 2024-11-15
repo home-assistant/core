@@ -44,6 +44,7 @@ from .const import (
     DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
+    ENCRYPTED_MODELS,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SUPPORTED_LOCK_MODELS,
     SUPPORTED_MODEL_TYPES,
@@ -114,6 +115,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if model_name in SUPPORTED_LOCK_MODELS:
             return await self.async_step_lock_choose_method()
+        if model_name in ENCRYPTED_MODELS:
+            return await self.async_step_choose_method()
         if self._discovered_adv.data["isEncrypted"]:
             return await self.async_step_password()
         return await self.async_step_confirm()
@@ -253,6 +256,90 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="lock_key",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_KEY_ID): str,
+                    vol.Required(CONF_ENCRYPTION_KEY): str,
+                }
+            ),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+            },
+        )
+
+    async def async_step_choose_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the SwitchBot API chose method step."""
+        assert self._discovered_adv is not None
+
+        return self.async_show_menu(
+            step_id="choose_method",
+            menu_options=["auth", "key"],
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+            },
+        )
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the SwitchBot API auth step."""
+        errors = {}
+        assert self._discovered_adv is not None
+        description_placeholders = {}
+        if user_input is not None:
+            try:
+                key_details = await SwitchbotLock.async_retrieve_encryption_key(
+                    async_get_clientsession(self.hass),
+                    self._discovered_adv.address,
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+                _LOGGER.debug(
+                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                )
+                raise AbortFlow(
+                    "api_error", description_placeholders={"error_detail": str(ex)}
+                ) from ex
+            except SwitchbotAuthenticationError as ex:
+                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
+                errors = {"base": "auth_failed"}
+                description_placeholders = {"error_detail": str(ex)}
+            else:
+                return await self.async_step_key(key_details)
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="auth",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+                **description_placeholders,
+            },
+        )
+
+    async def async_step_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the encryption key step."""
+        errors: dict[str, str] = {}
+        assert self._discovered_adv is not None
+        if user_input is not None:
+            return await self._async_create_entry_from_discovery(user_input)
+
+        return self.async_show_form(
+            step_id="key",
             errors=errors,
             data_schema=vol.Schema(
                 {
