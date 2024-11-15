@@ -120,9 +120,10 @@ class SystemBridgeConfigFlow(
     VERSION = 1
     MINOR_VERSION = 2
 
+    _name: str
+
     def __init__(self) -> None:
         """Initialize flow."""
-        self._name: str | None = None
         self._input: dict[str, Any] = {}
 
     async def async_step_user(
