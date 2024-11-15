@@ -533,8 +533,6 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
-    # https://github.com/cereal2nd/velbus-aio/pull/126 - >2024.10.0
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:velbusaio.handler",
 
     # -- fixed for Python 3.13
     # https://github.com/rhasspy/wyoming/commit/e34af30d455b6f2bb9e5cfb25fad8d276914bc54 - >=1.4.2
