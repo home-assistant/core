@@ -16,8 +16,6 @@ from tests.common import (
     snapshot_platform,
 )
 
-SENSORS = ("weight", "battery")
-
 
 async def test_sensors(
     hass: HomeAssistant,
@@ -62,4 +60,4 @@ async def test_restore_state(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == str(65)
+    assert state.state == "65"
