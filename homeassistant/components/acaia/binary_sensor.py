@@ -22,7 +22,6 @@ class AcaiaBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Description for Acaia binary sensor entities."""
 
     is_on_fn: Callable[[AcaiaScale], bool]
-    available_fn: Callable[[AcaiaScale], bool] | None = None
 
 
 BINARY_SENSORS: tuple[AcaiaBinarySensorEntityDescription, ...] = (
@@ -31,13 +30,6 @@ BINARY_SENSORS: tuple[AcaiaBinarySensorEntityDescription, ...] = (
         translation_key="timer_running",
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=lambda scale: scale.timer_running,
-    ),
-    AcaiaBinarySensorEntityDescription(
-        key="connected",
-        translation_key="connected",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        is_on_fn=lambda scale: scale.connected,
-        available_fn=lambda _: True,
     ),
 )
 
@@ -64,10 +56,3 @@ class AcaiaBinarySensor(AcaiaEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self._scale)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if self.entity_description.available_fn is not None:
-            return self.entity_description.available_fn(self._scale)
-        return super().available

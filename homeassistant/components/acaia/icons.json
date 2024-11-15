@@ -1,13 +1,6 @@
 {
   "entity": {
     "binary_sensor": {
-      "connected": {
-        "default": "mdi:bluetooth",
-        "state": {
-          "on": "mdi:bluetooth-connect",
-          "off": "mdi:bluetooth-off"
-        }
-      },
       "timer_running": {
         "default": "mdi:timer",
         "state": {
