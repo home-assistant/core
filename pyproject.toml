@@ -95,8 +95,6 @@ dependencies    = [
 hass = "homeassistant.__main__:main"
 
 [tool.setuptools]
-platforms = ["any"]
-zip-safe  = false
 include-package-data = true
 
 [tool.setuptools.packages.find]
