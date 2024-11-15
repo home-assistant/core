@@ -2345,7 +2345,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.10.0
+velbus-aio==2024.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
