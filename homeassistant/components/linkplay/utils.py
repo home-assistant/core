@@ -14,8 +14,6 @@ MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
 MANUFACTURER_ARYLIC: Final[str] = "Arylic"
 MANUFACTURER_IEAST: Final[str] = "iEAST"
 MANUFACTURER_WIIM: Final[str] = "WiiM"
-MANUFACTURER_GGMM: Final[str] = "GGMM"
-MANUFACTURER_MEDION: Final[str] = "Medion"
 MANUFACTURER_GENERIC: Final[str] = "Generic"
 MODELS_ARTSOUND_SMART_ZONE4: Final[str] = "Smart Zone 4 AMP"
 MODELS_ARTSOUND_SMART_HYDE: Final[str] = "Smart Hyde"
@@ -33,8 +31,6 @@ MODELS_ARYLIC_UP2STREAM_PLATE_AMP: Final[str] = "Up2Stream Plate Amp"
 MODELS_IEAST_AUDIOCAST_M5: Final[str] = "AudioCast M5"
 MODELS_WIIM_AMP: Final[str] = "WiiM Amp"
 MODELS_WIIM_MINI: Final[str] = "WiiM Mini"
-MODELS_GGMM_GGMM_E2: Final[str] = "GGMM E2"
-MODELS_MEDION_MD_43970: Final[str] = "Life P66970 (MD 43970)"
 MODELS_GENERIC: Final[str] = "Generic"
 
 PROJECTID_LOOKUP: Final[dict[str, tuple[str, str]]] = {
@@ -74,7 +70,33 @@ PROJECTID_LOOKUP: Final[dict[str, tuple[str, str]]] = {
 
 def get_info_from_project(project: str) -> tuple[str, str]:
     """Get manufacturer and model info based on given project."""
-    return PROJECTID_LOOKUP.get(project, (MANUFACTURER_GENERIC, MODELS_GENERIC))
+    match project:
+        case "SMART_ZONE4_AMP":
+            return MANUFACTURER_ARTSOUND, MODELS_ARTSOUND_SMART_ZONE4
+        case "SMART_HYDE":
+            return MANUFACTURER_ARTSOUND, MODELS_ARTSOUND_SMART_HYDE
+        case "ARYLIC_S50":
+            return MANUFACTURER_ARYLIC, MODELS_ARYLIC_S50
+        case "RP0016_S50PRO_S":
+            return MANUFACTURER_ARYLIC, MODELS_ARYLIC_S50_PRO
+        case "RP0011_WB60_S":
+            return MANUFACTURER_ARYLIC, MODELS_ARYLIC_A30
+        case "ARYLIC_A50S":
+            return MANUFACTURER_ARYLIC, MODELS_ARYLIC_A50S
+        case "UP2STREAM_AMP_V3":
+            return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_AMP_V3
+        case "UP2STREAM_AMP_V4":
+            return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_AMP_V4
+        case "UP2STREAM_PRO_V3":
+            return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_PRO_V3
+        case "iEAST-02":
+            return MANUFACTURER_IEAST, MODELS_IEAST_AUDIOCAST_M5
+        case "WiiM_Amp_4layer":
+            return MANUFACTURER_WIIM, MODELS_WIIM_AMP
+        case "Muzo_Mini":
+            return MANUFACTURER_WIIM, MODELS_WIIM_MINI
+        case _:
+            return MANUFACTURER_GENERIC, MODELS_GENERIC
 
 
 async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
