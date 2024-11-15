@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_TIMEOUT, CONF_VERBOSITY, CONF_WATCHDOG, PLATFORMS
+from .const import CONF_TIMEOUT, CONF_VERBOSITY, CONF_WATCHDOG, PLATFORMS, ZIMI_WATCHDOG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,16 +41,16 @@ class ZimiCoordinator(DataUpdateCoordinator):
     async def _async_setup(self):
         """Set up the coordinator."""
 
-        try:
-            _LOGGER.debug(
-                "Connecting to %s:%d with verbosity=%s, timeout=%d and watchdog=%d",
-                self.config_entry.data[CONF_HOST],
-                self.config_entry.data[CONF_PORT],
-                self.config_entry.data[CONF_VERBOSITY],
-                self.config_entry.data[CONF_TIMEOUT],
-                self.config_entry.data[CONF_WATCHDOG],
-            )
+        _LOGGER.debug(
+            "Connecting to %s:%d with verbosity=%s, timeout=%d and watchdog=%d",
+            self.config_entry.data[CONF_HOST],
+            self.config_entry.data[CONF_PORT],
+            self.config_entry.data[CONF_VERBOSITY],
+            self.config_entry.data[CONF_TIMEOUT],
+            self.config_entry.data[CONF_WATCHDOG],
+        )
 
+        try:
             self.api = ControlPoint(
                 description=ControlPointDescription(
                     host=self.config_entry.data[CONF_HOST],
@@ -59,22 +59,20 @@ class ZimiCoordinator(DataUpdateCoordinator):
                 verbosity=self.config_entry.data[CONF_VERBOSITY],
                 timeout=self.config_entry.data[CONF_TIMEOUT],
             )
-
             await self.api.connect()
-            _LOGGER.debug("Connected")
-            _LOGGER.debug("\n%s", self.api.describe())
-
-            if self.config_entry.data[CONF_WATCHDOG] > 0:
-                self.api.start_watchdog(self.config_entry.data[CONF_WATCHDOG])
-                _LOGGER.debug(
-                    "Started %d minute watchdog", self.config_entry.data[CONF_WATCHDOG]
-                )
 
         except ControlPointError as error:
             _LOGGER.error("Initiation failed: %s", error)
             raise ConfigEntryNotReady(error) from error
 
         if self.api.ready:
+            _LOGGER.debug("Connected")
+            _LOGGER.debug("\n%s", self.api.describe())
+
+            if ZIMI_WATCHDOG > 0:
+                self.api.start_watchdog(ZIMI_WATCHDOG)
+                _LOGGER.debug("Started %d second watchdog", ZIMI_WATCHDOG)
+
             self.config_entry.runtime_data = self.api
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS
