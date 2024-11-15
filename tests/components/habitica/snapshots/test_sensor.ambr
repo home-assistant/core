@@ -23,7 +23,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bare Bones Cake',
+    'original_name': 'Bare bones cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -36,7 +36,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Skeleton.png',
-      'friendly_name': 'test-user Bare Bones Cake',
+      'friendly_name': 'test-user Bare bones cake',
       'key': 'Cake_Skeleton',
       'unit_of_measurement': 'foods',
     }),
@@ -72,7 +72,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bare Bones Candy',
+    'original_name': 'Bare bones candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -85,7 +85,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Skeleton.png',
-      'friendly_name': 'test-user Bare Bones Candy',
+      'friendly_name': 'test-user Bare bones candy',
       'key': 'Candy_Skeleton',
       'unit_of_measurement': 'foods',
     }),
@@ -170,7 +170,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Basic Apple Pie',
+    'original_name': 'Basic apple pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -183,7 +183,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Base.png',
-      'friendly_name': 'test-user Basic Apple Pie',
+      'friendly_name': 'test-user Basic apple pie',
       'key': 'Pie_Base',
       'unit_of_measurement': 'foods',
     }),
@@ -219,7 +219,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Basic Cake',
+    'original_name': 'Basic cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -232,7 +232,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Base.png',
-      'friendly_name': 'test-user Basic Cake',
+      'friendly_name': 'test-user Basic cake',
       'key': 'Cake_Base',
       'unit_of_measurement': 'foods',
     }),
@@ -268,7 +268,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Basic Candy',
+    'original_name': 'Basic candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -281,7 +281,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Base.png',
-      'friendly_name': 'test-user Basic Candy',
+      'friendly_name': 'test-user Basic candy',
       'key': 'Candy_Base',
       'unit_of_measurement': 'foods',
     }),
@@ -317,7 +317,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bear Cub egg',
+    'original_name': 'Bear cub egg',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -330,7 +330,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_BearCub.png',
-      'friendly_name': 'test-user Bear Cub egg',
+      'friendly_name': 'test-user Bear cub egg',
       'key': 'BearCub',
       'unit_of_measurement': 'eggs',
     }),
@@ -366,7 +366,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Blue Cotton Candy',
+    'original_name': 'Blue cotton candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -379,7 +379,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_CottonCandyBlue.png',
-      'friendly_name': 'test-user Blue Cotton Candy',
+      'friendly_name': 'test-user Blue cotton candy',
       'key': 'CottonCandyBlue',
       'unit_of_measurement': 'foods',
     }),
@@ -415,7 +415,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Blueberry Pie',
+    'original_name': 'Blueberry pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -428,7 +428,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_CottonCandyBlue.png',
-      'friendly_name': 'test-user Blueberry Pie',
+      'friendly_name': 'test-user Blueberry pie',
       'key': 'Pie_CottonCandyBlue',
       'unit_of_measurement': 'foods',
     }),
@@ -464,7 +464,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bone Marrow Pot Pie',
+    'original_name': 'Bone marrow pot pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -477,7 +477,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Skeleton.png',
-      'friendly_name': 'test-user Bone Marrow Pot Pie',
+      'friendly_name': 'test-user Bone marrow pot pie',
       'key': 'Pie_Skeleton',
       'unit_of_measurement': 'foods',
     }),
@@ -562,7 +562,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Candy Blue Cake',
+    'original_name': 'Candy blue cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -575,7 +575,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_CottonCandyBlue.png',
-      'friendly_name': 'test-user Candy Blue Cake',
+      'friendly_name': 'test-user Candy blue cake',
       'key': 'Cake_CottonCandyBlue',
       'unit_of_measurement': 'foods',
     }),
@@ -611,7 +611,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Candy Pink Cake',
+    'original_name': 'Candy pink cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -624,7 +624,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_CottonCandyPink.png',
-      'friendly_name': 'test-user Candy Pink Cake',
+      'friendly_name': 'test-user Candy pink cake',
       'key': 'Cake_CottonCandyPink',
       'unit_of_measurement': 'foods',
     }),
@@ -709,7 +709,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Chocolate Cake',
+    'original_name': 'Chocolate cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -722,7 +722,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Shade.png',
-      'friendly_name': 'test-user Chocolate Cake',
+      'friendly_name': 'test-user Chocolate cake',
       'key': 'Cake_Shade',
       'unit_of_measurement': 'foods',
     }),
@@ -758,7 +758,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Chocolate Candy',
+    'original_name': 'Chocolate candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -771,7 +771,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Shade.png',
-      'friendly_name': 'test-user Chocolate Candy',
+      'friendly_name': 'test-user Chocolate candy',
       'key': 'Candy_Shade',
       'unit_of_measurement': 'foods',
     }),
@@ -807,7 +807,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cinnamon Candy',
+    'original_name': 'Cinnamon candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -820,7 +820,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Red.png',
-      'friendly_name': 'test-user Cinnamon Candy',
+      'friendly_name': 'test-user Cinnamon candy',
       'key': 'Candy_Red',
       'unit_of_measurement': 'foods',
     }),
@@ -971,7 +971,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cotton Candy Blue hatching potion',
+    'original_name': 'Cotton candy blue hatching potion',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -984,7 +984,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_CottonCandyBlue.png',
-      'friendly_name': 'test-user Cotton Candy Blue hatching potion',
+      'friendly_name': 'test-user Cotton candy blue hatching potion',
       'key': 'CottonCandyBlue',
       'unit_of_measurement': 'potions',
     }),
@@ -1020,7 +1020,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cotton Candy Pink hatching potion',
+    'original_name': 'Cotton candy pink hatching potion',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1033,7 +1033,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_CottonCandyPink.png',
-      'friendly_name': 'test-user Cotton Candy Pink hatching potion',
+      'friendly_name': 'test-user Cotton candy pink hatching potion',
       'key': 'CottonCandyPink',
       'unit_of_measurement': 'potions',
     }),
@@ -1069,7 +1069,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cream Cake',
+    'original_name': 'Cream cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1082,7 +1082,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_White.png',
-      'friendly_name': 'test-user Cream Cake',
+      'friendly_name': 'test-user Cream cake',
       'key': 'Cake_White',
       'unit_of_measurement': 'foods',
     }),
@@ -1277,7 +1277,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Dark Chocolate Pie',
+    'original_name': 'Dark chocolate pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1290,7 +1290,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Shade.png',
-      'friendly_name': 'test-user Dark Chocolate Pie',
+      'friendly_name': 'test-user Dark chocolate pie',
       'key': 'Pie_Shade',
       'unit_of_measurement': 'foods',
     }),
@@ -1326,7 +1326,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Desert Dessert Pie',
+    'original_name': 'Desert dessert pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1339,7 +1339,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Desert.png',
-      'friendly_name': 'test-user Desert Dessert Pie',
+      'friendly_name': 'test-user Desert dessert pie',
       'key': 'Pie_Desert',
       'unit_of_measurement': 'foods',
     }),
@@ -1663,7 +1663,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Flying Pig egg',
+    'original_name': 'Flying pig egg',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1676,7 +1676,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_FlyingPig.png',
-      'friendly_name': 'test-user Flying Pig egg',
+      'friendly_name': 'test-user Flying pig egg',
       'key': 'FlyingPig',
       'unit_of_measurement': 'eggs',
     }),
@@ -1861,7 +1861,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Golden Banana Cream Pie',
+    'original_name': 'Golden banana cream pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1874,7 +1874,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Golden.png',
-      'friendly_name': 'test-user Golden Banana Cream Pie',
+      'friendly_name': 'test-user Golden banana cream pie',
       'key': 'Pie_Golden',
       'unit_of_measurement': 'foods',
     }),
@@ -2261,7 +2261,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Honey Cake',
+    'original_name': 'Honey cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2274,7 +2274,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Golden.png',
-      'friendly_name': 'test-user Honey Cake',
+      'friendly_name': 'test-user Honey cake',
       'key': 'Cake_Golden',
       'unit_of_measurement': 'foods',
     }),
@@ -2310,7 +2310,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Honey Candy',
+    'original_name': 'Honey candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2323,7 +2323,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Golden.png',
-      'friendly_name': 'test-user Honey Candy',
+      'friendly_name': 'test-user Honey candy',
       'key': 'Candy_Golden',
       'unit_of_measurement': 'foods',
     }),
@@ -2460,7 +2460,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Lion Cub egg',
+    'original_name': 'Lion cub egg',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2473,7 +2473,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_LionCub.png',
-      'friendly_name': 'test-user Lion Cub egg',
+      'friendly_name': 'test-user Lion cub egg',
       'key': 'LionCub',
       'unit_of_measurement': 'eggs',
     }),
@@ -2848,7 +2848,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Panda Cub egg',
+    'original_name': 'Panda cub egg',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2861,7 +2861,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_PandaCub.png',
-      'friendly_name': 'test-user Panda Cub egg',
+      'friendly_name': 'test-user Panda cub egg',
       'key': 'PandaCub',
       'unit_of_measurement': 'eggs',
     }),
@@ -3049,7 +3049,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Pink Cotton Candy',
+    'original_name': 'Pink cotton candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3062,7 +3062,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_CottonCandyPink.png',
-      'friendly_name': 'test-user Pink Cotton Candy',
+      'friendly_name': 'test-user Pink cotton candy',
       'key': 'CottonCandyPink',
       'unit_of_measurement': 'foods',
     }),
@@ -3098,7 +3098,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Pink Rhubarb Pie',
+    'original_name': 'Pink rhubarb pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3111,7 +3111,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_CottonCandyPink.png',
-      'friendly_name': 'test-user Pink Rhubarb Pie',
+      'friendly_name': 'test-user Pink rhubarb pie',
       'key': 'Pie_CottonCandyPink',
       'unit_of_measurement': 'foods',
     }),
@@ -3245,7 +3245,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Red Cherry Pie',
+    'original_name': 'Red cherry pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3258,7 +3258,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Red.png',
-      'friendly_name': 'test-user Red Cherry Pie',
+      'friendly_name': 'test-user Red cherry pie',
       'key': 'Pie_Red',
       'unit_of_measurement': 'foods',
     }),
@@ -3404,7 +3404,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Rotten Cake',
+    'original_name': 'Rotten cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3417,7 +3417,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Zombie.png',
-      'friendly_name': 'test-user Rotten Cake',
+      'friendly_name': 'test-user Rotten cake',
       'key': 'Cake_Zombie',
       'unit_of_measurement': 'foods',
     }),
@@ -3453,7 +3453,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Rotten Candy',
+    'original_name': 'Rotten candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3466,7 +3466,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Zombie.png',
-      'friendly_name': 'test-user Rotten Candy',
+      'friendly_name': 'test-user Rotten candy',
       'key': 'Candy_Zombie',
       'unit_of_measurement': 'foods',
     }),
@@ -3502,7 +3502,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Rotten Meat',
+    'original_name': 'Rotten meat',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3515,7 +3515,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_RottenMeat.png',
-      'friendly_name': 'test-user Rotten Meat',
+      'friendly_name': 'test-user Rotten meat',
       'key': 'RottenMeat',
       'unit_of_measurement': 'foods',
     }),
@@ -3551,7 +3551,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Rotten Pie',
+    'original_name': 'Rotten pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3564,7 +3564,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_Zombie.png',
-      'friendly_name': 'test-user Rotten Pie',
+      'friendly_name': 'test-user Rotten pie',
       'key': 'Pie_Zombie',
       'unit_of_measurement': 'foods',
     }),
@@ -3600,7 +3600,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Royal Purple hatching potion',
+    'original_name': 'Royal purple hatching potion',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3613,7 +3613,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_RoyalPurple.png',
-      'friendly_name': 'test-user Royal Purple hatching potion',
+      'friendly_name': 'test-user Royal purple hatching potion',
       'key': 'RoyalPurple',
       'unit_of_measurement': 'potions',
     }),
@@ -3698,7 +3698,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sand Cake',
+    'original_name': 'Sand cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3711,7 +3711,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Desert.png',
-      'friendly_name': 'test-user Sand Cake',
+      'friendly_name': 'test-user Sand cake',
       'key': 'Cake_Desert',
       'unit_of_measurement': 'foods',
     }),
@@ -3747,7 +3747,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sand Candy',
+    'original_name': 'Sand candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3760,7 +3760,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_Desert.png',
-      'friendly_name': 'test-user Sand Candy',
+      'friendly_name': 'test-user Sand candy',
       'key': 'Candy_Desert',
       'unit_of_measurement': 'foods',
     }),
@@ -3992,7 +3992,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sour Blue Candy',
+    'original_name': 'Sour blue candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4005,7 +4005,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_CottonCandyBlue.png',
-      'friendly_name': 'test-user Sour Blue Candy',
+      'friendly_name': 'test-user Sour blue candy',
       'key': 'Candy_CottonCandyBlue',
       'unit_of_measurement': 'foods',
     }),
@@ -4041,7 +4041,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sour Pink Candy',
+    'original_name': 'Sour pink candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4054,7 +4054,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_CottonCandyPink.png',
-      'friendly_name': 'test-user Sour Pink Candy',
+      'friendly_name': 'test-user Sour pink candy',
       'key': 'Candy_CottonCandyPink',
       'unit_of_measurement': 'foods',
     }),
@@ -4139,7 +4139,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Strawberry Cake',
+    'original_name': 'Strawberry cake',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4152,7 +4152,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Cake_Red.png',
-      'friendly_name': 'test-user Strawberry Cake',
+      'friendly_name': 'test-user Strawberry cake',
       'key': 'Cake_Red',
       'unit_of_measurement': 'foods',
     }),
@@ -4292,7 +4292,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Tiger Cub egg',
+    'original_name': 'Tiger cub egg',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4305,7 +4305,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_TigerCub.png',
-      'friendly_name': 'test-user Tiger Cub egg',
+      'friendly_name': 'test-user Tiger cub egg',
       'key': 'TigerCub',
       'unit_of_measurement': 'eggs',
     }),
@@ -4443,7 +4443,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Vanilla Candy',
+    'original_name': 'Vanilla candy',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4456,7 +4456,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Candy_White.png',
-      'friendly_name': 'test-user Vanilla Candy',
+      'friendly_name': 'test-user Vanilla candy',
       'key': 'Candy_White',
       'unit_of_measurement': 'foods',
     }),
@@ -4492,7 +4492,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Vanilla Pudding Pie',
+    'original_name': 'Vanilla pudding pie',
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4505,7 +4505,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Pie_White.png',
-      'friendly_name': 'test-user Vanilla Pudding Pie',
+      'friendly_name': 'test-user Vanilla pudding pie',
       'key': 'Pie_White',
       'unit_of_measurement': 'foods',
     }),
