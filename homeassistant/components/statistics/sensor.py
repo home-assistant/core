@@ -687,8 +687,8 @@ class StatisticsSensor(SensorEntity):
         self._percentile: int = percentile
         self._attr_available: bool = False
 
-        self.states: deque[float | bool] = deque(maxlen=samples_max_buffer_size)
-        self.ages: deque[float] = deque(maxlen=samples_max_buffer_size)
+        self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
+        self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
         self._attr_extra_state_attributes = {}
 
         self._state_characteristic_fn: Callable[
@@ -800,7 +800,7 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state == "on")
             else:
                 self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_reported_timestamp)
+            self.ages.append(new_state.last_reported)
             self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
             self._attr_extra_state_attributes[STAT_SOURCE_VALUE_VALID] = False
@@ -908,7 +908,7 @@ class StatisticsSensor(SensorEntity):
             return None
         return SensorStateClass.MEASUREMENT
 
-    def _purge_old_states(self, max_age: float) -> None:
+    def _purge_old_states(self, max_age: timedelta) -> None:
         """Remove states which are older than a given age."""
         now_timestamp = time.time()
         debug = _LOGGER.isEnabledFor(logging.DEBUG)
@@ -1079,7 +1079,8 @@ class StatisticsSensor(SensorEntity):
         if (max_age := self._samples_max_age) is not None:
             if len(self.states) >= 1:
                 self._attr_extra_state_attributes[STAT_AGE_COVERAGE_RATIO] = round(
-                    (self.ages[-1] - self.ages[0]) / max_age,
+                    (self.ages[-1] - self.ages[0]).total_seconds()
+                    / self._samples_max_age.total_seconds(),
                     2,
                 )
             else:
