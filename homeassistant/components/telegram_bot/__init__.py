@@ -1071,7 +1071,6 @@ class BaseTelegramBotEntity:
             ATTR_CHAT_ID: message.chat.id,
             ATTR_DATE: message.date,
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
-
         }
         if filters.COMMAND.filter(message):
             # This is a command message - set event type to command and split data into command and args
