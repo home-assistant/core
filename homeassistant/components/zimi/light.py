@@ -62,10 +62,6 @@ class ZimiLight(LightEntity):
         self.update()
         _LOGGER.debug("Initialising %s in %s", self.name, self._light.room)
 
-    def __del__(self):
-        """Cleanup ZimiLight with removal of notification."""
-        self._light.unsubscribe(self)
-
     @property
     def name(self) -> str:
         """Return the display name of this light."""
@@ -116,6 +112,11 @@ class ZimiLight(LightEntity):
         _LOGGER.debug("Sending turn_off() for %s", self.name)
 
         await self._light.turn_off()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cleanup ZimiLight with removal of notification prior to removal."""
+        self._light.unsubscribe(self)
+        return await super().async_will_remove_from_hass()
 
     def notify(self, _observable):
         """Receive notification from light device that state has changed."""
