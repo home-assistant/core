@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
-from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -18,11 +18,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_lawn_mower_states(
@@ -30,21 +26,23 @@ async def test_lawn_mower_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test lawn_mower state."""
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("lawn_mower.test_mower_1")
     assert state is not None
     assert state.state == LawnMowerActivity.DOCKED
 
     for activity, state, expected_state in (
-        ("UNKNOWN", "PAUSED", LawnMowerActivity.PAUSED),
-        ("MOWING", "NOT_APPLICABLE", LawnMowerActivity.MOWING),
-        ("NOT_APPLICABLE", "ERROR", LawnMowerActivity.ERROR),
-        ("GOING_HOME", "IN_OPERATION", LawnMowerActivity.RETURNING),
+        (MowerActivities.UNKNOWN, MowerStates.PAUSED, LawnMowerActivity.PAUSED),
+        (MowerActivities.MOWING, MowerStates.NOT_APPLICABLE, LawnMowerActivity.MOWING),
+        (MowerActivities.NOT_APPLICABLE, MowerStates.ERROR, LawnMowerActivity.ERROR),
+        (
+            MowerActivities.GOING_HOME,
+            MowerStates.IN_OPERATION,
+            LawnMowerActivity.RETURNING,
+        ),
     ):
         values[TEST_MOWER_ID].mower.activity = activity
         values[TEST_MOWER_ID].mower.state = state
@@ -253,12 +251,10 @@ async def test_lawn_mower_wrong_service_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)

@@ -24,8 +24,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LutronCasetaDeviceUpdatableEntity
 from .const import DEVICE_TYPE_SPECTRUM_TUNE, DEVICE_TYPE_WHITE_TUNE
+from .entity import LutronCasetaUpdatableEntity
 from .models import LutronCasetaData
 
 SUPPORTED_COLOR_MODE_DICT = {
@@ -68,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
+class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
     """Representation of a Lutron Light, including dimmable, white tune, and spectrum tune."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION

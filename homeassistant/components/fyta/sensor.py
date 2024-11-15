@@ -113,7 +113,7 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="salinity",
         translation_key="salinity",
-        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS,
+        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS_PER_CM,
         device_class=SensorDeviceClass.CONDUCTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda plant: plant.salinity,
@@ -149,6 +149,15 @@ async def async_setup_entry(
     ]
 
     async_add_entities(plant_entities)
+
+    def _async_add_new_device(plant_id: int) -> None:
+        async_add_entities(
+            FytaPlantSensor(coordinator, entry, sensor, plant_id)
+            for sensor in SENSORS
+            if sensor.key in dir(coordinator.data.get(plant_id))
+        )
+
+    coordinator.new_device_callbacks.append(_async_add_new_device)
 
 
 class FytaPlantSensor(FytaPlantEntity, SensorEntity):

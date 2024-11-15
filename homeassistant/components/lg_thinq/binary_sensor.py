@@ -82,6 +82,7 @@ BINARY_SENSOR_DESC: dict[ThinQProperty, ThinQBinarySensorEntityDescription] = {
     ThinQProperty.ONE_TOUCH_FILTER: ThinQBinarySensorEntityDescription(
         key=ThinQProperty.ONE_TOUCH_FILTER,
         translation_key=ThinQProperty.ONE_TOUCH_FILTER,
+        on_key="on",
     ),
 }
 
@@ -139,7 +140,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up an entry for binary sensor platform."""
     entities: list[ThinQBinarySensorEntity] = []
-    for coordinator in entry.runtime_data.values():
+    for coordinator in entry.runtime_data.coordinators.values():
         if (
             descriptions := DEVICE_TYPE_BINARY_SENSOR_MAP.get(
                 coordinator.api.device.device_type

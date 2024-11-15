@@ -9,12 +9,8 @@ from yalesmartalarmclient.client import (
 )
 from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    Platform,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.const import Platform
 
 CONF_AREA_ID = "area_id"
 CONF_LOCK_CODE_DIGITS = "lock_code_digits"
@@ -39,13 +35,15 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 STATE_MAP = {
-    YALE_STATE_DISARM: STATE_ALARM_DISARMED,
-    YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
-    YALE_STATE_ARM_FULL: STATE_ALARM_ARMED_AWAY,
+    YALE_STATE_DISARM: AlarmControlPanelState.DISARMED,
+    YALE_STATE_ARM_PARTIAL: AlarmControlPanelState.ARMED_HOME,
+    YALE_STATE_ARM_FULL: AlarmControlPanelState.ARMED_AWAY,
 }
 
 YALE_BASE_ERRORS = (

@@ -1,7 +1,8 @@
 """Test for todo platform of the Bring! integration."""
 
+from collections.abc import Generator
 import re
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from bring_api import BringItemOperation, BringRequestException
 import pytest
@@ -15,12 +16,22 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def todo_only() -> Generator[None]:
+    """Enable only the todo platform."""
+    with patch(
+        "homeassistant.components.bring.PLATFORMS",
+        [Platform.TODO],
+    ):
+        yield
 
 
 @pytest.mark.usefixtures("mock_bring_client")

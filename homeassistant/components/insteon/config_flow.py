@@ -44,23 +44,21 @@ async def _async_connect(**kwargs):
         _LOGGER.error("Could not connect to Insteon modem")
         return False
 
-    _LOGGER.info("Connected to Insteon modem")
+    _LOGGER.debug("Connected to Insteon modem")
     return True
 
 
 class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     """Insteon config flow handler."""
 
-    _device_path: str | None = None
-    _device_name: str | None = None
+    _device_path: str
+    _device_name: str
     discovered_conf: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Init the config flow."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         modem_types = [STEP_PLM, STEP_HUB_V1, STEP_HUB_V2]
         return self.async_show_menu(step_id="user", menu_options=modem_types)
 
@@ -135,9 +133,6 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: usb.UsbServiceInfo
     ) -> ConfigFlowResult:
         """Handle USB discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         self._device_path = discovery_info.device
         self._device_name = usb.human_readable_device_name(
             discovery_info.device,

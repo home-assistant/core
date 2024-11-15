@@ -26,8 +26,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import AirVisualConfigEntry, AirVisualEntity
+from . import AirVisualConfigEntry
 from .const import CONF_CITY
+from .entity import AirVisualEntity
 
 ATTR_CITY = "city"
 ATTR_COUNTRY = "country"

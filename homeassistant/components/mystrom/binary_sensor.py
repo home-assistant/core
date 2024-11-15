@@ -60,7 +60,7 @@ class MyStromView(HomeAssistantView):
         button_id = data[button_action]
         entity_id = f"{BINARY_SENSOR_DOMAIN}.{button_id}_{button_action}"
         if entity_id not in self.buttons:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "New myStrom button/action detected: %s/%s", button_id, button_action
             )
             self.buttons[entity_id] = MyStromBinarySensor(

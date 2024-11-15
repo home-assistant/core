@@ -15,49 +15,30 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ADS_VAR, DATA_ADS, DOMAIN
+from .const import CONF_ADS_VAR, DATA_ADS, DOMAIN, AdsType
 from .hub import AdsHub
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# Supported Types
-ADSTYPE_BOOL = "bool"
-ADSTYPE_BYTE = "byte"
-ADSTYPE_INT = "int"
-ADSTYPE_UINT = "uint"
-ADSTYPE_SINT = "sint"
-ADSTYPE_USINT = "usint"
-ADSTYPE_DINT = "dint"
-ADSTYPE_UDINT = "udint"
-ADSTYPE_WORD = "word"
-ADSTYPE_DWORD = "dword"
-ADSTYPE_LREAL = "lreal"
-ADSTYPE_REAL = "real"
-ADSTYPE_STRING = "string"
-ADSTYPE_TIME = "time"
-ADSTYPE_DATE = "date"
-ADSTYPE_DATE_AND_TIME = "dt"
-ADSTYPE_TOD = "tod"
-
 ADS_TYPEMAP = {
-    ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
-    ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
-    ADSTYPE_INT: pyads.PLCTYPE_INT,
-    ADSTYPE_UINT: pyads.PLCTYPE_UINT,
-    ADSTYPE_SINT: pyads.PLCTYPE_SINT,
-    ADSTYPE_USINT: pyads.PLCTYPE_USINT,
-    ADSTYPE_DINT: pyads.PLCTYPE_DINT,
-    ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
-    ADSTYPE_WORD: pyads.PLCTYPE_WORD,
-    ADSTYPE_DWORD: pyads.PLCTYPE_DWORD,
-    ADSTYPE_REAL: pyads.PLCTYPE_REAL,
-    ADSTYPE_LREAL: pyads.PLCTYPE_LREAL,
-    ADSTYPE_STRING: pyads.PLCTYPE_STRING,
-    ADSTYPE_TIME: pyads.PLCTYPE_TIME,
-    ADSTYPE_DATE: pyads.PLCTYPE_DATE,
-    ADSTYPE_DATE_AND_TIME: pyads.PLCTYPE_DT,
-    ADSTYPE_TOD: pyads.PLCTYPE_TOD,
+    AdsType.BOOL: pyads.PLCTYPE_BOOL,
+    AdsType.BYTE: pyads.PLCTYPE_BYTE,
+    AdsType.INT: pyads.PLCTYPE_INT,
+    AdsType.UINT: pyads.PLCTYPE_UINT,
+    AdsType.SINT: pyads.PLCTYPE_SINT,
+    AdsType.USINT: pyads.PLCTYPE_USINT,
+    AdsType.DINT: pyads.PLCTYPE_DINT,
+    AdsType.UDINT: pyads.PLCTYPE_UDINT,
+    AdsType.WORD: pyads.PLCTYPE_WORD,
+    AdsType.DWORD: pyads.PLCTYPE_DWORD,
+    AdsType.REAL: pyads.PLCTYPE_REAL,
+    AdsType.LREAL: pyads.PLCTYPE_LREAL,
+    AdsType.STRING: pyads.PLCTYPE_STRING,
+    AdsType.TIME: pyads.PLCTYPE_TIME,
+    AdsType.DATE: pyads.PLCTYPE_DATE,
+    AdsType.DATE_AND_TIME: pyads.PLCTYPE_DT,
+    AdsType.TOD: pyads.PLCTYPE_TOD,
 }
 
 CONF_ADS_FACTOR = "factor"
@@ -82,27 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
     {
-        vol.Required(CONF_ADS_TYPE): vol.In(
-            [
-                ADSTYPE_BOOL,
-                ADSTYPE_BYTE,
-                ADSTYPE_INT,
-                ADSTYPE_UINT,
-                ADSTYPE_SINT,
-                ADSTYPE_USINT,
-                ADSTYPE_DINT,
-                ADSTYPE_UDINT,
-                ADSTYPE_WORD,
-                ADSTYPE_DWORD,
-                ADSTYPE_REAL,
-                ADSTYPE_LREAL,
-                ADSTYPE_STRING,
-                ADSTYPE_TIME,
-                ADSTYPE_DATE,
-                ADSTYPE_DATE_AND_TIME,
-                ADSTYPE_TOD,
-            ]
-        ),
+        vol.Required(CONF_ADS_TYPE): vol.Coerce(AdsType),
         vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
         vol.Required(CONF_ADS_VAR): cv.string,
     }
@@ -136,9 +97,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def handle_write_data_by_name(call: ServiceCall) -> None:
         """Write a value to the connected ADS device."""
-        ads_var = call.data[CONF_ADS_VAR]
-        ads_type = call.data[CONF_ADS_TYPE]
-        value = call.data[CONF_ADS_VALUE]
+        ads_var: str = call.data[CONF_ADS_VAR]
+        ads_type: AdsType = call.data[CONF_ADS_TYPE]
+        value: int = call.data[CONF_ADS_VALUE]
 
         try:
             ads.write_by_name(ads_var, value, ADS_TYPEMAP[ads_type])

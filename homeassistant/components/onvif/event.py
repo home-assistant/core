@@ -165,7 +165,7 @@ class EventManager:
 
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
-                    LOGGER.info(
+                    LOGGER.warning(
                         "%s: No registered handler for event from %s: %s",
                         self.name,
                         unique_id,
@@ -177,7 +177,7 @@ class EventManager:
             event = await parser(unique_id, msg)
 
             if not event:
-                LOGGER.info(
+                LOGGER.warning(
                     "%s: Unable to parse event from %s: %s", self.name, unique_id, msg
                 )
                 return

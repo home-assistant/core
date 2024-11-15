@@ -15,3 +15,82 @@ api_call:
       example: '{"text": "Use API from Home Assistant", "type": "todo"}'
       selector:
         object:
+cast_skill:
+  fields:
+    config_entry: &config_entry
+      required: true
+      selector:
+        config_entry:
+          integration: habitica
+    skill:
+      required: true
+      selector:
+        select:
+          options:
+            - "pickpocket"
+            - "backstab"
+            - "smash"
+            - "fireball"
+          mode: dropdown
+          translation_key: "skill_select"
+    task: &task
+      required: true
+      selector:
+        text:
+accept_quest:
+  fields:
+    config_entry: *config_entry
+reject_quest:
+  fields:
+    config_entry: *config_entry
+start_quest:
+  fields:
+    config_entry: *config_entry
+cancel_quest:
+  fields:
+    config_entry: *config_entry
+abort_quest:
+  fields:
+    config_entry: *config_entry
+leave_quest:
+  fields:
+    config_entry: *config_entry
+score_habit:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    direction:
+      required: true
+      selector:
+        select:
+          options:
+            - value: up
+              label: "➕"
+            - value: down
+              label: "➖"
+score_reward:
+  fields:
+    config_entry: *config_entry
+    task: *task
+transformation:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: habitica
+    item:
+      required: true
+      selector:
+        select:
+          options:
+            - "snowball"
+            - "spooky_sparkles"
+            - "seafoam"
+            - "shiny_seed"
+          mode: dropdown
+          translation_key: "transformation_item_select"
+    target:
+      required: true
+      selector:
+        text:

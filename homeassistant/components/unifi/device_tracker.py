@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any
 
@@ -17,11 +16,12 @@ from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
+from propcache import cached_property
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
+    ScannerEntityDescription,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -142,7 +142,9 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiTrackerEntityDescription(UnifiEntityDescription[HandlerT, ApiItemT]):
+class UnifiTrackerEntityDescription(
+    UnifiEntityDescription[HandlerT, ApiItemT], ScannerEntityDescription
+):
     """Class describing UniFi device tracker entity."""
 
     heartbeat_timedelta_fn: Callable[[UnifiHub, str], timedelta]
@@ -274,11 +276,6 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._obj_id
-
-    @cached_property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.ROUTER
 
     @cached_property
     def unique_id(self) -> str:

@@ -1,23 +1,18 @@
 """Test the Teslemetry lock platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_LOCKED,
-    STATE_UNKNOWN,
-    STATE_UNLOCKED,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -39,7 +34,7 @@ async def test_lock(
 
 async def test_lock_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the lock entities are correct when offline."""
 
@@ -69,7 +64,7 @@ async def test_lock_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == STATE_LOCKED
+        assert state.state == LockState.LOCKED
         call.assert_called_once()
 
     with patch(
@@ -83,7 +78,7 @@ async def test_lock_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNLOCKED
+        assert state.state == LockState.UNLOCKED
         call.assert_called_once()
 
     entity_id = "lock.test_charge_cable_lock"
@@ -107,5 +102,5 @@ async def test_lock_services(
             blocking=True,
         )
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNLOCKED
+        assert state.state == LockState.UNLOCKED
         call.assert_called_once()

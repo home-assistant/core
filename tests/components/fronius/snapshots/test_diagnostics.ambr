@@ -7,6 +7,8 @@
         'is_logger': True,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'fronius',
       'entry_id': 'f1e2b9837e8adaed6fa682acaa216fd8',
       'minor_version': 1,

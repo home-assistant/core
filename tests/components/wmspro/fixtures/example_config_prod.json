@@ -1,0 +1,77 @@
+{
+  "command": "getConfiguration",
+  "protocolVersion": "1.0.0",
+  "destinations": [
+    {
+      "id": 58717,
+      "animationType": 1,
+      "names": ["Markise", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 0,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 16,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    },
+    {
+      "id": 97358,
+      "animationType": 6,
+      "names": ["Licht", "", "", ""],
+      "actions": [
+        {
+          "id": 0,
+          "actionType": 0,
+          "actionDescription": 8,
+          "minValue": 0,
+          "maxValue": 100
+        },
+        {
+          "id": 17,
+          "actionType": 6,
+          "actionDescription": 12
+        },
+        {
+          "id": 20,
+          "actionType": 4,
+          "actionDescription": 6
+        },
+        {
+          "id": 22,
+          "actionType": 8,
+          "actionDescription": 13
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": 19239,
+      "name": "Terrasse",
+      "destinations": [58717, 97358],
+      "scenes": [687471, 765095]
+    }
+  ],
+  "scenes": [
+    {
+      "id": 687471,
+      "names": ["Licht an", "", "", ""]
+    },
+    {
+      "id": 765095,
+      "names": ["Licht aus", "", "", ""]
+    }
+  ]
+}

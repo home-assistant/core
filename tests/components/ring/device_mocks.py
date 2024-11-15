@@ -8,6 +8,7 @@ Mocks the api calls on the devices such as history() and health().
 """
 
 from datetime import datetime
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock
 
 from ring_doorbell import (
@@ -17,6 +18,7 @@ from ring_doorbell import (
     RingOther,
     RingStickUpCam,
 )
+from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 
 from homeassistant.components.ring.const import DOMAIN
 from homeassistant.util import dt as dt_util
@@ -32,6 +34,8 @@ CHIME_HEALTH = load_json_value_fixture("chime_health_attrs.json", DOMAIN)
 FRONT_DOOR_DEVICE_ID = 987654
 INGRESS_DEVICE_ID = 185036587
 FRONT_DEVICE_ID = 765432
+INTERNAL_DEVICE_ID = 345678
+DOWNSTAIRS_DEVICE_ID = 123456
 
 
 def get_mock_devices():
@@ -143,6 +147,9 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
         mock_device.configure_mock(
             motion_detection=device_dict["settings"].get("motion_detection_enabled"),
         )
+        mock_device.async_set_motion_detection.side_effect = (
+            lambda i: mock_device.configure_mock(motion_detection=i)
+        )
 
     if has_capability(RingCapability.LIGHT):
         mock_device.configure_mock(lights=device_dict.get("led_status"))
@@ -153,10 +160,16 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
                 "doorbell_volume", device_dict["settings"].get("volume")
             )
         )
+        mock_device.async_set_volume.side_effect = lambda i: mock_device.configure_mock(
+            volume=i
+        )
 
     if has_capability(RingCapability.SIREN):
         mock_device.configure_mock(
             siren=device_dict["siren_status"].get("seconds_remaining")
+        )
+        mock_device.async_set_siren.side_effect = lambda i: mock_device.configure_mock(
+            siren=i
         )
 
     if has_capability(RingCapability.BATTERY):
@@ -166,11 +179,30 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
             )
         )
 
-    if device_family == "other":
+    if device_family == "doorbots":
         mock_device.configure_mock(
-            doorbell_volume=device_dict["settings"].get("doorbell_volume"),
-            mic_volume=device_dict["settings"].get("mic_volume"),
-            voice_volume=device_dict["settings"].get("voice_volume"),
+            existing_doorbell_type=DOORBELL_EXISTING_TYPE[
+                device_dict["settings"]["chime_settings"].get("type", 2)
+            ]
         )
+        mock_device.configure_mock(
+            existing_doorbell_type_enabled=device_dict["settings"][
+                "chime_settings"
+            ].get("enable", False)
+        )
+        mock_device.async_set_existing_doorbell_type_enabled.side_effect = (
+            lambda i: mock_device.configure_mock(existing_doorbell_type_enabled=i)
+        )
+
+    if device_family == "other":
+        for prop in ("doorbell_volume", "mic_volume", "voice_volume"):
+            mock_device.configure_mock(
+                **{
+                    prop: device_dict["settings"].get(prop),
+                    f"async_set_{prop}.side_effect": partial(
+                        setattr, mock_device, prop
+                    ),
+                }
+            )
 
     return mock_device

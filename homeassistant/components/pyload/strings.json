@@ -15,7 +15,7 @@
           "port": "pyLoad uses port 8000 by default."
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",

@@ -27,8 +27,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .base_platform import BaseStructPlatform
 from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
+from .entity import BaseStructPlatform
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,6 +91,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=None,
             name=name,
         )
 

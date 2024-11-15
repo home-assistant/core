@@ -5,7 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
+
 from homeassistant.components import cover
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -13,7 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.cover import CoverEntityFeature
-from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
+from homeassistant.components.lock import LockState, STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import (
@@ -25,16 +27,9 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -437,11 +432,11 @@ async def test_api_cover_turn_off(
 
 async def test_report_lock_state(hass: HomeAssistant) -> None:
     """Test LockController implements lockState property."""
-    hass.states.async_set("lock.locked", STATE_LOCKED, {})
-    hass.states.async_set("lock.unlocked", STATE_UNLOCKED, {})
-    hass.states.async_set("lock.unlocking", STATE_UNLOCKING, {})
-    hass.states.async_set("lock.locking", STATE_LOCKING, {})
-    hass.states.async_set("lock.jammed", STATE_JAMMED, {})
+    hass.states.async_set("lock.locked", LockState.LOCKED, {})
+    hass.states.async_set("lock.unlocked", LockState.UNLOCKED, {})
+    hass.states.async_set("lock.unlocking", LockState.UNLOCKING, {})
+    hass.states.async_set("lock.locking", LockState.LOCKING, {})
+    hass.states.async_set("lock.jammed", LockState.JAMMED, {})
     hass.states.async_set("lock.unknown", STATE_UNKNOWN, {})
 
     properties = await reported_properties(hass, "lock.locked")
@@ -1398,15 +1393,23 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
 
 async def test_report_alarm_control_panel_state(hass: HomeAssistant) -> None:
     """Test SecurityPanelController implements armState property."""
-    hass.states.async_set("alarm_control_panel.armed_away", STATE_ALARM_ARMED_AWAY, {})
     hass.states.async_set(
-        "alarm_control_panel.armed_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS, {}
+        "alarm_control_panel.armed_away", AlarmControlPanelState.ARMED_AWAY, {}
     )
-    hass.states.async_set("alarm_control_panel.armed_home", STATE_ALARM_ARMED_HOME, {})
     hass.states.async_set(
-        "alarm_control_panel.armed_night", STATE_ALARM_ARMED_NIGHT, {}
+        "alarm_control_panel.armed_custom_bypass",
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        {},
     )
-    hass.states.async_set("alarm_control_panel.disarmed", STATE_ALARM_DISARMED, {})
+    hass.states.async_set(
+        "alarm_control_panel.armed_home", AlarmControlPanelState.ARMED_HOME, {}
+    )
+    hass.states.async_set(
+        "alarm_control_panel.armed_night", AlarmControlPanelState.ARMED_NIGHT, {}
+    )
+    hass.states.async_set(
+        "alarm_control_panel.disarmed", AlarmControlPanelState.DISARMED, {}
+    )
 
     properties = await reported_properties(hass, "alarm_control_panel.armed_away")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")

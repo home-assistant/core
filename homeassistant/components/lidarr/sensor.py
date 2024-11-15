@@ -18,9 +18,10 @@ from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LidarrConfigEntry, LidarrEntity
+from . import LidarrConfigEntry
 from .const import BYTE_SIZES
 from .coordinator import LidarrDataUpdateCoordinator, T
+from .entity import LidarrEntity
 
 
 def get_space(data: list[LidarrRootFolder], name: str) -> str:
@@ -84,7 +85,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "queue": LidarrSensorEntityDescription[LidarrQueue](
         key="queue",
         translation_key="queue",
-        native_unit_of_measurement="Albums",
+        native_unit_of_measurement="albums",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         attributes_fn=lambda data: {i.title: queue_str(i) for i in data.records},
@@ -92,13 +93,21 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "wanted": LidarrSensorEntityDescription[LidarrQueue](
         key="wanted",
         translation_key="wanted",
-        native_unit_of_measurement="Albums",
+        native_unit_of_measurement="albums",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=False,
         attributes_fn=lambda data: {
             album.title: album.artist.artistName for album in data.records
         },
+    ),
+    "albums": LidarrSensorEntityDescription[int](
+        key="albums",
+        translation_key="albums",
+        native_unit_of_measurement="albums",
+        value_fn=lambda data, _: data,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
 }
 
