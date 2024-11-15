@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+import asyncio
+from collections.abc import AsyncGenerator, Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
 import string
@@ -684,20 +685,54 @@ async def _check_config_flow_result_translations(
         )
 
 
+async def _check_create_issue_translations(
+    issue_registry: ir.IssueRegistry,
+    issue: ir.IssueEntry,
+    translation_errors: dict[str, str],
+) -> None:
+    if issue.translation_key is None:
+        # `translation_key` is only None on dismissed issues
+        return
+    await _validate_translation(
+        issue_registry.hass,
+        translation_errors,
+        "issues",
+        issue.domain,
+        f"{issue.translation_key}.title",
+        issue.translation_placeholders,
+    )
+    if not issue.is_fixable:
+        # Description is required for non-fixable issues
+        await _validate_translation(
+            issue_registry.hass,
+            translation_errors,
+            "issues",
+            issue.domain,
+            f"{issue.translation_key}.description",
+            issue.translation_placeholders,
+        )
+
+
 @pytest.fixture(autouse=True)
-def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
+async def check_translations(
+    ignore_translations: str | list[str],
+) -> AsyncGenerator[None]:
     """Check that translation requirements are met.
 
     Current checks:
     - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
+    - issue registry entries
     """
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
 
     translation_errors = {k: "unused" for k in ignore_translations}
 
+    translation_coros = set()
+
     # Keep reference to original functions
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
+    _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -709,12 +744,31 @@ def check_translations(ignore_translations: str | list[str]) -> Generator[None]:
         )
         return result
 
+    def _issue_registry_async_create_issue(
+        self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
+    ) -> None:
+        result = _original_issue_registry_async_create_issue(
+            self, domain, issue_id, *args, **kwargs
+        )
+        translation_coros.add(
+            _check_create_issue_translations(self, result, translation_errors)
+        )
+        return result
+
     # Use override functions
-    with patch(
-        "homeassistant.data_entry_flow.FlowManager._async_handle_step",
-        _flow_manager_async_handle_step,
+    with (
+        patch(
+            "homeassistant.data_entry_flow.FlowManager._async_handle_step",
+            _flow_manager_async_handle_step,
+        ),
+        patch(
+            "homeassistant.helpers.issue_registry.IssueRegistry.async_get_or_create",
+            _issue_registry_async_create_issue,
+        ),
     ):
         yield
+
+    await asyncio.gather(*translation_coros)
 
     # Run final checks
     unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
