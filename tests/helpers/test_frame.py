@@ -449,27 +449,24 @@ async def test_report(
 
 
 @pytest.mark.parametrize(
-    ("integration", "integration_domain", "source", "expected_log"),
+    ("integration", "integration_domain", "source"),
     [
         pytest.param(
             None,
             None,
             "code that",
-            1,
             id="core",
         ),
         pytest.param(
             None,
             "sensor",
             "that integration 'sensor'",
-            1,
             id="core integration",
         ),
         pytest.param(
             None,
             "hue",
             "that custom integration 'hue'",
-            1,
             id="custom integration",
         ),
     ],
@@ -479,7 +476,6 @@ async def test_report_integration_domain(
     integration: Integration | None,
     integration_domain: str | None,
     source: str,
-    expected_log: int,
 ) -> None:
     """Test report."""
     what = "test_report_string"
