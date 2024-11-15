@@ -96,7 +96,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    host = hass.data[DOMAIN][entry.entry_id]["config"]["host"]
+    host = entry.runtime_data["config"]["host"]
 
     try:
         nhc = nikohomecontrol.NikoHomeControl(

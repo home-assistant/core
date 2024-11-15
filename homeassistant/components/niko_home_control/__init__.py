@@ -1,17 +1,21 @@
 """The Niko home control integration."""
 
 from __future__ import annotations
+from typing import TypedDict
 
 from nikohomecontrol import NikoHomeControlConnection
-
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
 
 from .const import DOMAIN
-from .errors import CannotConnect
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
+class NikoHomeControlRuntimeData(TypedDict):
+    """Runtime data stored in the config entry."""
+    config: dict
+    controller: NikoHomeControlConnection
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set Niko Home Control from a config entry."""
@@ -20,9 +24,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller = NikoHomeControlConnection(config["host"], config["port"])
 
     if not controller:
-        raise CannotConnect
+        raise ConfigEntryNotReady
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"config": config}
+    entry.runtime_data: NikoHomeControlRuntimeData = {
+        "config": config,
+        "controller": controller,
+    }
+
+    # hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"config": config}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
