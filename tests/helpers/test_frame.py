@@ -449,7 +449,7 @@ async def test_report(
 
 
 @pytest.mark.parametrize(
-    ("integration_domain", "source", "expected_log"),
+    ("integration", "integration_domain", "source", "expected_log"),
     [
         pytest.param(
             None,
@@ -471,10 +471,9 @@ async def test_report(
         ),
     ],
 )
-@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_report_integration_domain(
-    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    integration: Integration,
     integration_domain: str | None,
     source: str,
     expected_log: int,
@@ -485,7 +484,10 @@ async def test_report_integration_domain(
 
     what = "test_report_string"
 
-    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()), 
+        patch("homeassistant.loader.async_get_issue_integration", integration),
+    ):
         frame.report_usage(
             what,
             core_behavior=frame.ReportBehavior.LOG,
