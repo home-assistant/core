@@ -35,7 +35,6 @@ from .const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    PATCH_VERSION,
     Platform,
 )
 from .core import (
