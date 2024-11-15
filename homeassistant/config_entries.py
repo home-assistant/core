@@ -1487,9 +1487,9 @@ class ConfigEntriesFlowManager(
                 result["handler"], flow.unique_id
             )
 
-        if existing_entry is not None and PATCH_VERSION == "0.dev0":
-            # We temporarily restrict this to `dev` to get a feel for how many
-            # integrations this concerns
+        if existing_entry is not None:
+            # `mobile_app` does this on purpose
+            # if too many integrations are impacted, we may need to reconsider
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists, causing the old entry to be removed and replaced when it "
