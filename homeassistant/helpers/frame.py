@@ -15,11 +15,11 @@ from typing import Any, cast
 
 from propcache import cached_property
 
-from homeassistant.core import async_get_hass_or_none
+from homeassistant.core import HomeAssistant, async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import (
-    IntegrationNotLoaded,
-    async_get_loaded_integration,
+    Integration,
+    async_get_issue_integration,
     async_suggest_report_issue,
 )
 
@@ -205,15 +205,19 @@ def report_usage(
             exclude_integrations=exclude_integrations
         )
     except MissingIntegrationFrame as err:
-        if _report_integration_domain(
-            what,
-            breaks_in_ha_version,
-            integration_domain,
-            core_integration_behavior,
-            custom_integration_behavior,
-            exclude_integrations,
-            level,
+        if integration := async_get_issue_integration(
+            hass := async_get_hass_or_none(), integration_domain
         ):
+            _report_integration_domain(
+                hass,
+                what,
+                breaks_in_ha_version,
+                integration,
+                core_integration_behavior,
+                custom_integration_behavior,
+                exclude_integrations,
+                level,
+            )
             return
         msg = f"Detected code that {what}. Please report this issue"
         if core_behavior is ReportBehavior.ERROR:
@@ -242,40 +246,31 @@ def report_usage(
 
 
 def _report_integration_domain(
+    hass: HomeAssistant | None,
     what: str,
     breaks_in_ha_version: str | None,
-    integration_domain: str | None,
+    integration: Integration | None,
     core_integration_behavior: ReportBehavior,
     custom_integration_behavior: ReportBehavior,
     exclude_integrations: set[str] | None,
     level: int,
-) -> bool:
-    if (
-        not integration_domain
-        or (exclude_integrations and integration_domain in exclude_integrations)
-        or not (hass := async_get_hass_or_none())
-        or (
-            core_integration_behavior is ReportBehavior.IGNORE
-            and custom_integration_behavior is ReportBehavior.IGNORE
-        )
-    ):
-        return False
-    try:
-        integration = async_get_loaded_integration(hass, integration_domain)
-    except IntegrationNotLoaded:
-        return False
-
+) -> None:
     integration_behavior = core_integration_behavior
     if integration.is_built_in:
         integration_behavior = custom_integration_behavior
 
+    if integration_behavior is ReportBehavior.IGNORE or (
+        exclude_integrations and integration.domain in exclude_integrations
+    ):
+        return
+
     # Keep track of integrations already reported to prevent flooding
-    key = f"{integration_domain}:{what}"
+    key = f"{integration.domain}:{what}"
     if (
         integration_behavior is not ReportBehavior.ERROR
         and key in _REPORTED_INTEGRATIONS
     ):
-        return True
+        return
     _REPORTED_INTEGRATIONS.add(key)
 
     report_issue = async_suggest_report_issue(hass, integration=integration)
@@ -284,18 +279,17 @@ def _report_integration_domain(
         level,
         "Detected that %sintegration '%s' %s. %s %s",
         integration_type,
-        integration_domain,
+        integration.domain,
         what,
         f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
         if breaks_in_ha_version
         else "Please",
         report_issue,
     )
-    if integration_behavior is not ReportBehavior.ERROR:
-        return True
+
     raise RuntimeError(
         f"Detected that {integration_type}integration "
-        f"'{integration_domain}' {what}. Please {report_issue}"
+        f"'{integration.domain}' {what}. Please {report_issue}"
     )
 
 
