@@ -2966,7 +2966,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         step_id: str | None = None,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: Mapping[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> ConfigFlowResult:
