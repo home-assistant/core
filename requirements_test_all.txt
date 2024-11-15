@@ -336,7 +336,7 @@ aiorecollect==2023.09.0
 aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.41
+aioruckus==0.42
 
 # homeassistant.components.russound_rio
 aiorussound==4.0.5
@@ -363,7 +363,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.8.4
+aiostreammagic==2.8.5
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.4.0
@@ -396,7 +396,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.1.1
+aiowithings==3.1.3
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -836,7 +836,7 @@ gios==5.0.0
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.1.0
+go2rtc-client==0.1.1
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -861,7 +861,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==6.1.4
+google-nest-sdm==6.1.5
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1214,7 +1214,7 @@ nextdns==3.3.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.9
+nice-go==0.3.10
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1412,7 +1412,7 @@ pyElectra==1.2.4
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.30.4
+pyTibber==0.30.8
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1739,7 +1739,7 @@ pypck==0.7.24
 pypjlink2==1.2.1
 
 # homeassistant.components.plaato
-pyplaato==0.0.18
+pyplaato==0.0.19
 
 # homeassistant.components.point
 pypoint==3.0.0
@@ -1883,7 +1883,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.7
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.17
+python-linkplay==0.0.20
 
 # homeassistant.components.matter
 python-matter-server==6.6.0
@@ -1917,7 +1917,7 @@ python-rabbitair==0.0.8
 python-roborock==2.7.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.36
+python-smarttub==0.0.38
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2038,13 +2038,13 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.10.4
+reolink-aio==0.11.1
 
 # homeassistant.components.rflink
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell==0.9.8
+ring-doorbell==0.9.12
 
 # homeassistant.components.roku
 rokuecp==0.19.3
@@ -2090,7 +2090,7 @@ securetar==2024.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.13.3
+sense-energy==0.13.4
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2138,7 +2138,7 @@ smhi-pkg==1.0.18
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.4
+soco==0.30.6
 
 # homeassistant.components.solarlog
 solarlog_cli==0.3.2
@@ -2159,7 +2159,7 @@ speak2mary==1.4.0
 speedtest-cli==2.1.3
 
 # homeassistant.components.spotify
-spotifyaio==0.8.7
+spotifyaio==0.8.8
 
 # homeassistant.components.sql
 sqlparse==0.5.0
@@ -2307,7 +2307,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.24
+universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
 upb-lib==0.5.8
@@ -2449,7 +2449,7 @@ zeroconf==0.136.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.37
+zha==0.0.39
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.58.1

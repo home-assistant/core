@@ -294,7 +294,7 @@ class DefaultAgent(ConversationEntity):
                     self.hass, language, DOMAIN, [DOMAIN]
                 )
                 response_text = translations.get(
-                    f"component.{DOMAIN}.agent.done", "Done"
+                    f"component.{DOMAIN}.conversation.agent.done", "Done"
                 )
 
             response.async_set_speech(response_text)
