@@ -6,9 +6,8 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import Integration
 from homeassistant.helpers import frame
-from homeassistant.setup import async_setup_component
+from homeassistant.loader import Integration
 
 from tests.common import extract_stack_to_frame
 
