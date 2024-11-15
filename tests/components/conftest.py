@@ -688,14 +688,14 @@ async def _check_config_flow_result_translations(
 async def _check_create_issue_translations(
     issue_registry: ir.IssueRegistry,
     issue: ir.IssueEntry,
-    ignore_translations: dict[str, str],
+    translation_errors: dict[str, str],
 ) -> None:
     if issue.translation_key is None:
         # `translation_key` is only None on dismissed issues
         return
     await _validate_translation(
         issue_registry.hass,
-        ignore_translations,
+        translation_errors,
         "issues",
         issue.domain,
         f"{issue.translation_key}.title",
@@ -705,7 +705,7 @@ async def _check_create_issue_translations(
         # Description is required for non-fixable issues
         await _validate_translation(
             issue_registry.hass,
-            ignore_translations,
+            translation_errors,
             "issues",
             issue.domain,
             f"{issue.translation_key}.description",
