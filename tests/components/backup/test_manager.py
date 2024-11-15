@@ -83,7 +83,10 @@ async def _mock_backup_generation(
         "slug": ANY,
         "type": "partial",
     }
-    assert manager.backup_dir.as_posix() in str(mocked_tarfile.call_args_list[0][0][0])
+    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
+    assert local_agent.backup_dir.as_posix() in str(
+        mocked_tarfile.call_args_list[0][0][0]
+    )
     outer_tar = mocked_tarfile.return_value
     core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
     expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
@@ -109,7 +112,6 @@ async def _setup_backup_platform(
 async def test_constructor(hass: HomeAssistant) -> None:
     """Test BackupManager constructor."""
     manager = BackupManager(hass)
-    assert manager.backup_dir.as_posix() == hass.config.path("backups")
     assert manager.temp_backup_dir.as_posix() == hass.config.path("tmp_backups")
 
 

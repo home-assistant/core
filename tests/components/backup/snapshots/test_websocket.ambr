@@ -43,10 +43,10 @@
     'result': dict({
       'agents': list([
         dict({
-          'agent_id': 'domain.test',
+          'agent_id': 'backup.local',
         }),
         dict({
-          'agent_id': 'backup.local',
+          'agent_id': 'domain.test',
         }),
       ]),
       'syncing': False,
@@ -61,10 +61,10 @@
     'result': dict({
       'agents': list([
         dict({
-          'agent_id': 'domain.test',
+          'agent_id': 'backup.local',
         }),
         dict({
-          'agent_id': 'backup.local',
+          'agent_id': 'domain.test',
         }),
       ]),
       'syncing': False,

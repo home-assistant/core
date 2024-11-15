@@ -452,7 +452,7 @@ async def test_agents_info(
 ) -> None:
     """Test getting backup agents info."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -476,7 +476,7 @@ async def test_agents_list_backups(
 ) -> None:
     """Test backup agents list backups details."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -500,7 +500,7 @@ async def test_agents_download(
 ) -> None:
     """Test WS command to start downloading a backup."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
-    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -517,7 +517,7 @@ async def test_agents_download(
         assert await client.receive_json() == snapshot
         assert download_mock.call_args[1] == {
             "id": "abc123",
-            "path": Path(hass.config.path("backups"), "abc123.tar"),
+            "path": Path(hass.config.path("tmp_backups"), "abc123.tar"),
         }
 
 
@@ -528,7 +528,7 @@ async def test_agents_download_exception(
 ) -> None:
     """Test WS command to start downloading a backup throwing an exception."""
     await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
