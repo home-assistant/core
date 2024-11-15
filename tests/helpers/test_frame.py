@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
+from homeassistant.setup import async_setup_component
 
 from tests.common import extract_stack_to_frame
 
@@ -445,3 +446,51 @@ async def test_report(
     assert errored == expected_error
 
     assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.parametrize(
+    ("integration_domain", "source", "expected_log"),
+    [
+        pytest.param(
+            None,
+            "code that",
+            1,
+            id="core",
+        ),
+        pytest.param(
+            "sensor",
+            "that integration 'sensor'",
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "hue",
+            "that custom integration 'hue'",
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_report_integration_domain(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    integration_domain: str | None,
+    source: str,
+    expected_log: int,
+) -> None:
+    """Test report."""
+    for comp in ("hue", "sensor"):
+        assert await async_setup_component(hass, comp, {})
+
+    what = "test_report_string"
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        frame.report_usage(
+            what,
+            core_behavior=frame.ReportBehavior.LOG,
+            exclude_integrations={"mobile_app"},
+            integration_domain=integration_domain,
+        )
+
+    assert f"Detected {source} {what}" in caplog.text
