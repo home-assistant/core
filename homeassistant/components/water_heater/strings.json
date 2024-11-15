@@ -37,6 +37,9 @@
         "target_temp_low": {
           "name": "Lower target temperature"
         },
+        "target_temp_step": {
+          "name": "Target temperature step"
+        },
         "away_mode": {
           "name": "Away mode",
           "state": {

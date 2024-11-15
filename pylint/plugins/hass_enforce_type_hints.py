@@ -2750,6 +2750,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["float", None],
                 ),
                 TypeHintMatch(
+                    function_name="target_temperature_step",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
                     function_name="target_temperature_high",
                     return_type=["float", None],
                 ),
