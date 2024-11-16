@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -115,30 +116,57 @@ async def test_remove(
 
 
 @pytest.mark.parametrize(
+    ("with_hassio", "number_of_messages"),
+    [
+        pytest.param(True, 1, id="with_hassio"),
+        pytest.param(False, 2, id="without_hassio"),
+    ],
+)
+@pytest.mark.usefixtures("mock_backup_generation")
+async def test_generate(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    with_hassio: bool,
+    number_of_messages: int,
+) -> None:
+    """Test generating a backup."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    client = await hass_ws_client(hass)
+    freezer.move_to("2024-11-13 12:01:00+01:00")
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/generate"})
+    for _ in range(number_of_messages):
+        assert snapshot == await client.receive_json()
+
+
+@pytest.mark.parametrize(
     "with_hassio",
     [
         pytest.param(True, id="with_hassio"),
         pytest.param(False, id="without_hassio"),
     ],
 )
-async def test_generate(
+async def test_restore(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
     with_hassio: bool,
 ) -> None:
-    """Test generating a backup."""
+    """Test calling the restore command."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
-        return_value=TEST_BACKUP,
+        "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
     ):
-        await client.send_json_auto_id({"type": "backup/generate"})
-        assert snapshot == await client.receive_json()
+        await client.send_json_auto_id({"type": "backup/restore", "slug": "abc123"})
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(

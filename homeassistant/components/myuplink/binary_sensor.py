@@ -12,10 +12,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .const import F_SERIES
 from .entity import MyUplinkEntity, MyUplinkSystemEntity
-from .helpers import find_matching_platform
+from .helpers import find_matching_platform, transform_model_series
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, BinarySensorEntityDescription]] = {
+    F_SERIES: {
+        "43161": BinarySensorEntityDescription(
+            key="elect_add",
+            translation_key="elect_add",
+        ),
+    },
     "NIBEF": {
         "43161": BinarySensorEntityDescription(
             key="elect_add",
@@ -44,6 +51,7 @@ def get_description(device_point: DevicePoint) -> BinarySensorEntityDescription 
     2. Default to None
     """
     prefix, _, _ = device_point.category.partition(" ")
+    prefix = transform_model_series(prefix)
     return CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(device_point.parameter_id)
 
 

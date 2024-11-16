@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -33,6 +34,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         self,
         hass: HomeAssistant,
         history_stats: HistoryStats,
+        config_entry: ConfigEntry | None,
         name: str,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
@@ -43,6 +45,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=name,
             update_interval=UPDATE_INTERVAL,
         )

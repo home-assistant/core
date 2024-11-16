@@ -12,10 +12,21 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .const import F_SERIES
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform, skip_entity
+from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
+    F_SERIES: {
+        "50004": SwitchEntityDescription(
+            key="temporary_lux",
+            translation_key="temporary_lux",
+        ),
+        "50005": SwitchEntityDescription(
+            key="boost_ventilation",
+            translation_key="boost_ventilation",
+        ),
+    },
     "NIBEF": {
         "50004": SwitchEntityDescription(
             key="temporary_lux",
@@ -37,6 +48,7 @@ def get_description(device_point: DevicePoint) -> SwitchEntityDescription | None
     2. Default to None
     """
     prefix, _, _ = device_point.category.partition(" ")
+    prefix = transform_model_series(prefix)
     return CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(device_point.parameter_id)
 
 

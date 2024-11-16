@@ -72,10 +72,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert config_entry.title == "Electricity meter"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.utility_meter.config.error.tariffs_not_unique"],
-)
 async def test_tariffs(hass: HomeAssistant) -> None:
     """Test tariffs."""
     input_sensor_entity_id = "sensor.input"

@@ -11,6 +11,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "acaia": {
+      "name": "Acaia",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "accuweather": {
       "name": "AccuWeather",
       "integration_type": "service",
@@ -694,12 +700,6 @@
     },
     "blockchain": {
       "name": "Blockchain.com",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
-    "bloomsky": {
-      "name": "BloomSky",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -2252,13 +2252,6 @@
         }
       }
     },
-    "go2rtc": {
-      "name": "go2rtc",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "single_config_entry": true
-    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -2691,11 +2684,22 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
-    "husqvarna_automower": {
-      "name": "Husqvarna Automower",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
+    "husqvarna": {
+      "name": "Husqvarna",
+      "integrations": {
+        "husqvarna_automower": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Husqvarna Automower"
+        },
+        "husqvarna_automower_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Husqvarna Automower BLE"
+        }
+      }
     },
     "huum": {
       "name": "Huum",
@@ -3287,6 +3291,12 @@
           "iot_class": "local_polling",
           "name": "LG Soundbars"
         },
+        "lg_thinq": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "LG ThinQ"
+        },
         "webostv": {
           "integration_type": "hub",
           "config_flow": true,
@@ -3394,7 +3404,7 @@
     "local_file": {
       "name": "Local File",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "local_ip": {
@@ -3940,6 +3950,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "music_assistant": {
+      "name": "Music Assistant",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mutesync": {
       "name": "mutesync",
       "integration_type": "hub",
@@ -4002,6 +4018,12 @@
     },
     "nanoleaf": {
       "name": "Nanoleaf",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "nasweb": {
+      "name": "NASweb",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -4171,6 +4193,13 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "nordpool": {
+      "name": "Nord Pool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "norway_air": {
       "name": "Om Luftkvalitet i Norge (Norway Air)",
       "integration_type": "hub",
@@ -4325,8 +4354,8 @@
     },
     "onkyo": {
       "name": "Onkyo",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "onvif": {
@@ -4529,6 +4558,12 @@
     "p1_monitor": {
       "name": "P1 Monitor",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "palazzetti": {
+      "name": "Palazzetti",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5579,11 +5614,22 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "sky_hub": {
-      "name": "Sky Hub",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+    "sky": {
+      "name": "Sky",
+      "integrations": {
+        "sky_hub": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Sky Hub"
+        },
+        "sky_remote": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Sky Remote Control"
+        }
+      }
     },
     "skybeacon": {
       "name": "Skybeacon",
@@ -5669,7 +5715,7 @@
     "smarty": {
       "name": "Salda Smarty",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "smhi": {

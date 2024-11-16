@@ -6,7 +6,7 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, Final, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 from propcache import cached_property
 import voluptuous as vol
@@ -221,9 +221,15 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        if (alarm_state := self.alarm_state) is None:
-            return None
-        return alarm_state
+        if (alarm_state := self.alarm_state) is not None:
+            return alarm_state
+        if self._attr_state is not None:
+            # Backwards compatibility for integrations that set state directly
+            # Should be removed in 2025.11
+            if TYPE_CHECKING:
+                assert isinstance(self._attr_state, str)
+            return self._attr_state
+        return None
 
     @cached_property
     def alarm_state(self) -> AlarmControlPanelState | None:
