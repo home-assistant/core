@@ -39,6 +39,11 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
         self.home_server.removeBusEventListener(self)
         self.home_server.removeBusEventListener(self.home_server)
 
+    def async_remove(self) -> None:
+        """Trigger cleanup of bus event listeners after config flow."""
+        self.remove_bus_event_listeners()
+        return super().async_remove()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -90,12 +95,11 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create a configuration entry for the hausbus devices."""
-        self.remove_bus_event_listeners()
         return self.async_create_entry(title="Haus-Bus", data={})
 
     async def _async_wait_for_device(self) -> None:
         """Start searching for devices and wait until at least one device was found or timeout is reached."""
-        self.home_server.searchDevices()
+        self.hass.async_add_executor_job(self.home_server.searchDevices)
         # wait for up to 5 seconds to find devices
         await asyncio.wait_for(self._check_device_found(), 5)
 
