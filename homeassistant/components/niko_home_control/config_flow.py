@@ -25,9 +25,9 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int
     controller = NikoHomeControlConnection(host, port)
 
     if not controller:
-        raise ConfigEntryNotReady
+        raise CannotConnect('cannot_connect')
 
-    return {"host": host, "port": port}
+    return {CONF_HOST: host, CONF_PORT: port}
 
 
 class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,8 +45,8 @@ class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         HOST = DEFAULT_IP
         if self._import_info is not None:
-            if self._import_info["host"] is not None:
-                HOST = self._import_info["host"]
+            if self._import_info[CONF_HOST] is not None:
+                HOST = self._import_info[CONF_HOST]
 
         DATA_SCHEMA = vol.Schema(
             {
@@ -58,9 +58,8 @@ class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-            except ConfigEntryNotReady :
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
-
 
             return self.async_create_entry(
                 title=DOMAIN,
@@ -72,7 +71,11 @@ class NikoHomeControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, import_info) -> ConfigFlowResult:
+    async def async_step_import(self, import_info: dict[str, str]) -> ConfigFlowResult:
         """Import a config entry."""
         self._import_info = import_info
-        return await self.async_step_user(None)
+
+        try:
+            return await self.async_step_user(None)
+        except Exception:
+            return self.async_abort(reason="import_failed")

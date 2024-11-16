@@ -11,7 +11,11 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "data_description": {
+        "cannot_connect": "Unable to connect to the Niko Home Control gateway. Please check your device is on and the host/port is valid.",
+        "unknown": "An unknown error occurred. Please check your configuration and try again."
+      }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
