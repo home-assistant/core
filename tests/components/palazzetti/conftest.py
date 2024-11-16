@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pypalazzetti.temperature import TemperatureDefinition, TemperatureDescriptionKey
 import pytest
 
 from homeassistant.components.palazzetti.const import DOMAIN
@@ -71,4 +72,10 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.set_fan_silent.return_value = True
         mock_client.set_fan_high.return_value = True
         mock_client.set_fan_auto.return_value = True
+        mock_client.list_temperatures.return_value = [
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.WOOD_COMBUSTION_TEMP,
+                state_function=lambda: 120.0,
+            )
+        ]
         yield mock_client

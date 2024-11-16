@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfMass, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -54,49 +54,33 @@ async def async_setup_entry(
     """Set up Palazzetti sensor entities based on a config entry."""
 
     coordinator = entry.runtime_data
-    listener: Callable[[], None] | None = None
-    not_setup: set[PropertySensorEntityDescription] = set(PROPERTY_SENSOR_DESCRIPTIONS)
 
-    @callback
-    def add_entities() -> None:
-        """Add new entities based on the latest data."""
-        nonlocal not_setup, listener
-        sensor_descriptions = not_setup
-        not_setup = set()
-
-        sensors = [
-            PalazzettiSensor(
-                coordinator,
-                CallableSensorEntityDescription(
-                    key=sensor.description_key.value,
-                    device_class=SensorDeviceClass.TEMPERATURE,
-                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                    state_class=SensorStateClass.MEASUREMENT,
-                    translation_key=sensor.description_key.value,
-                    value_callable=sensor.value,
-                ),
-            )
-            for sensor in coordinator.client.list_temperatures()
-        ]
-
-        sensors.extend(
-            [
-                PalazzettiSensor(coordinator, description)
-                for description in sensor_descriptions
-                if not description.presence_flag
-                or getattr(coordinator.client, description.presence_flag)
-            ]
+    sensors = [
+        PalazzettiSensor(
+            coordinator,
+            CallableSensorEntityDescription(
+                key=sensor.description_key.value,
+                device_class=SensorDeviceClass.TEMPERATURE,
+                native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                state_class=SensorStateClass.MEASUREMENT,
+                translation_key=sensor.description_key.value,
+                value_callable=sensor.value,
+            ),
         )
+        for sensor in coordinator.client.list_temperatures()
+    ]
 
-        if sensors:
-            async_add_entities(sensors)
-        if not_setup:
-            if not listener:
-                listener = coordinator.async_add_listener(add_entities)
-        elif listener:
-            listener()
+    sensors.extend(
+        [
+            PalazzettiSensor(coordinator, description)
+            for description in PROPERTY_SENSOR_DESCRIPTIONS
+            if not description.presence_flag
+            or getattr(coordinator.client, description.presence_flag)
+        ]
+    )
 
-    add_entities()
+    if sensors:
+        async_add_entities(sensors)
 
 
 class PalazzettiSensor(SensorEntity):

@@ -1,0 +1,103 @@
+# serializer version: 1
+# name: test_all_entities[sensor.pellet_quantity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pellet_quantity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Pellet quantity',
+    'platform': 'palazzetti',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pellet_quantity',
+    'unique_id': '11:22:33:44:55:66-pellet_quantity',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.pellet_quantity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'Pellet quantity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pellet_quantity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "<MagicMock name='PalazzettiClient().pellet_quantity' id='281472887276656'>",
+  })
+# ---
+# name: test_all_entities[sensor.wood_combustion_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wood_combustion_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Wood combustion temperature',
+    'platform': 'palazzetti',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wood_combustion_temperature',
+    'unique_id': '11:22:33:44:55:66-wood_combustion_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.wood_combustion_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Wood combustion temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wood_combustion_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120.0',
+  })
+# ---
