@@ -58,7 +58,7 @@ class IntegerTypeData:
 
     def scale_value(self, value: float) -> float:
         """Scale a value."""
-        return value / (10**self.scale)
+        return value * self.step / (10**self.scale)
 
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
