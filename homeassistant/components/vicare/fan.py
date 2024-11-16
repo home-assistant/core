@@ -52,6 +52,8 @@ class VentilationMode(enum.StrEnum):
 
     PERMANENT = "permanent"  # on, speed controlled by program (levelOne-levelFour)
     VENTILATION = "ventilation"  # activated by schedule
+    STANDBY = "standby"  # activated by schedule
+    STANDARD = "standard"  # activated by schedule
     SENSOR_DRIVEN = "sensor_driven"  # activated by schedule, override by sensor
     SENSOR_OVERRIDE = "sensor_override"  # activated by sensor
 
@@ -79,6 +81,8 @@ class VentilationMode(enum.StrEnum):
 HA_TO_VICARE_MODE_VENTILATION = {
     VentilationMode.PERMANENT: "permanent",
     VentilationMode.VENTILATION: "ventilation",
+    VentilationMode.STANDBY: "standby",
+    VentilationMode.STANDARD: "standard",
     VentilationMode.SENSOR_DRIVEN: "sensorDriven",
     VentilationMode.SENSOR_OVERRIDE: "sensorOverride",
 }
@@ -137,6 +141,8 @@ class ViCareFan(ViCareEntity, FanEntity):
         [
             VentilationMode.PERMANENT,
             VentilationMode.VENTILATION,
+            VentilationMode.STANDBY,
+            VentilationMode.STANDARD,
             VentilationMode.SENSOR_DRIVEN,
             VentilationMode.SENSOR_OVERRIDE,
         ]
