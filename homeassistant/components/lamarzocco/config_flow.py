@@ -1,13 +1,15 @@
 """Config flow for La Marzocco integration."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.client_cloud import LaMarzoccoCloudClient
+from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -22,7 +24,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -339,12 +340,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> LmOptionsFlowHandler:
         """Create the options flow."""
-        return LmOptionsFlowHandler(config_entry)
+        return LmOptionsFlowHandler()
 
 
-class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class LmOptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
 
     async def async_step_init(
@@ -358,7 +359,7 @@ class LmOptionsFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_USE_BLUETOOTH,
-                    default=self.options.get(CONF_USE_BLUETOOTH, True),
+                    default=self.config_entry.options.get(CONF_USE_BLUETOOTH, True),
                 ): cv.boolean,
             }
         )

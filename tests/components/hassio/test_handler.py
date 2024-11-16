@@ -208,7 +208,7 @@ async def test_api_ingress_panels(
 @pytest.mark.parametrize(
     ("api_call", "method", "payload"),
     [
-        ("get_resolution_info", "GET", None),
+        ("get_network_info", "GET", None),
         ("update_diagnostics", "POST", True),
     ],
 )

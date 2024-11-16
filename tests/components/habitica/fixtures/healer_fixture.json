@@ -4,10 +4,10 @@
     "profile": { "name": "test-user" },
     "stats": {
       "buffs": {
-        "str": 0,
-        "int": 0,
-        "per": 0,
-        "con": 0,
+        "str": 26,
+        "int": 26,
+        "per": 26,
+        "con": 26,
         "stealth": 0,
         "streaks": false,
         "seafoam": false,
@@ -24,17 +24,36 @@
       "maxHealth": 50,
       "maxMP": 166,
       "toNextLevel": 880,
-      "points": 5
+      "points": 5,
+      "str": 15,
+      "con": 15,
+      "int": 15,
+      "per": 15
     },
     "preferences": {
       "sleep": false,
       "automaticAllocation": true,
-      "disableClasses": false
+      "disableClasses": false,
+      "language": "en"
     },
     "flags": {
       "classSelected": true
     },
     "needsCron": true,
-    "lastCron": "2024-09-21T22:01:55.586Z"
+    "lastCron": "2024-09-21T22:01:55.586Z",
+    "items": {
+      "gear": {
+        "equipped": {
+          "weapon": "weapon_healer_5",
+          "armor": "armor_healer_5",
+          "head": "head_healer_5",
+          "shield": "shield_healer_5",
+          "back": "heroicAureole",
+          "headAccessory": "headAccessory_armoire_gogglesOfBookbinding",
+          "eyewear": "plagueDoctorMask",
+          "body": "aetherAmulet"
+        }
+      }
+    }
   }
 }
