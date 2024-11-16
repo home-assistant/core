@@ -645,21 +645,9 @@ _CONVERTED_VALUE: dict[
         ),
         (
             1,
-            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            4.40286754,
-            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
-        ),
-        (
-            1,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             0.06,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        ),
-        (
-            1,
-            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-            16.6666667,
-            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
         (
             1,
@@ -690,6 +678,18 @@ _CONVERTED_VALUE: dict[
             UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
             7.48051948,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            4.40286754,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            1,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            16.6666667,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
     ],
 }

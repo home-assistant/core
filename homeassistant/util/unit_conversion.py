@@ -625,20 +625,21 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
-        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
-        / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
+        / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
 
 
