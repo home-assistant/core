@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .config_entry import HausbusConfig, HausbusConfigEntry
 from .const import DOMAIN
 from .gateway import HausbusGateway
 
@@ -53,3 +54,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     gateway.home_server.removeBusEventListener(gateway)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+type HausbusConfigEntry = ConfigEntry[HausbusConfig]
+
+
+@dataclass
+class HausbusConfig:
+    """Class for Hausbus ConfigEntry."""
+
+    from .gateway import HausbusGateway  # pylint: disable=import-outside-toplevel
+
+    gateway: HausbusGateway

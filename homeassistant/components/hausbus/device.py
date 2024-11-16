@@ -1,5 +1,7 @@
 """Representation of a Haus-Bus device."""
 
+from __future__ import annotations
+
 from pyhausbus import HausBusDevice
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId import (
     EFirmwareId,

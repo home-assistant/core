@@ -1,5 +1,7 @@
 """Representation of a Haus-Bus Entity."""
 
+from __future__ import annotations
+
 from typing import Any
 
 from homeassistant.core import callback

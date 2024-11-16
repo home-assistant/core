@@ -1,8 +1,10 @@
 """Support for Haus-Bus lights."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
 import colorsys
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.de.hausbus.homeassistant.proxy.Dimmer import Dimmer
@@ -39,10 +41,12 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .config_entry import HausbusConfigEntry
 from .const import ATTR_ON_STATE
 from .device import HausbusDevice
 from .entity import HausbusEntity
+
+if TYPE_CHECKING:
+    from . import HausbusConfigEntry
 
 
 async def async_setup_entry(
