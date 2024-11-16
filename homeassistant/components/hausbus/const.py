@@ -1,4 +1,5 @@
 """Constants for the Haus-Bus integration."""
+
 import logging
 
 LOGGER = logging.getLogger(__package__)
