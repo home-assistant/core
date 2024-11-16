@@ -6,9 +6,10 @@ import pprint
 from zcc import ControlPoint, ControlPointDescription, ControlPointError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_TIMEOUT, CONF_VERBOSITY, CONF_WATCHDOG, PLATFORMS, ZIMI_WATCHDOG
@@ -65,6 +66,10 @@ class ZimiCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Initiation failed: %s", error)
             raise ConfigEntryNotReady(error) from error
 
+        if self.config_entry.data[CONF_MAC] != format_mac(self.api.mac):
+            msg = f"Configured mac {self.config_entry.data[CONF_MAC]} != {format_mac(self.api.mac)}"
+            _LOGGER.debug(msg=msg)
+
         if self.api.ready:
             _LOGGER.debug("Connected")
             _LOGGER.debug("\n%s", self.api.describe())
@@ -77,6 +82,10 @@ class ZimiCoordinator(DataUpdateCoordinator):
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS
             )
+        else:
+            msg = "Initiation failed: ZCC API not ready"
+            _LOGGER.error(msg=msg)
+            raise ConfigEntryNotReady(msg)
 
     async def _async_update_data(self):
         """Fetch data from API.
