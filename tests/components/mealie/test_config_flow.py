@@ -110,6 +110,14 @@ async def test_ingress_host(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "ingress_url"}
 
+    mock_mealie_client.get_user_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "http://homeassistant:9001", CONF_API_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("version"),
