@@ -225,4 +225,6 @@ def mock_pynecil() -> Generator[AsyncMock]:
             operating_mode=OperatingMode.SOLDERING,
             estimated_power=24.8,
         )
+        client._client = AsyncMock()
+        client._client.return_value.is_connected = True
         yield client

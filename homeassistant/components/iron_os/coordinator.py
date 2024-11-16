@@ -53,6 +53,7 @@ type IronOSConfigEntry = ConfigEntry[IronOSCoordinators]
 class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """IronOS base coordinator."""
 
+    config_entry: ConfigEntry
     device_info: DeviceInfoResponse
     config_entry: IronOSConfigEntry
 
@@ -83,12 +84,8 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             self.device_info = await self.device.get_device_info()
 
-        except CommunicationError as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={CONF_NAME: self.config_entry.title},
-            ) from e
+        except (CommunicationError, TimeoutError):
+            self.device_info = DeviceInfoResponse()
 
         self.v223_features = AwesomeVersion(self.device_info.build) >= V223
 
@@ -112,12 +109,9 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
             self.device_info = await self.device.get_device_info()
             return await self.device.get_live_data()
 
-        except CommunicationError as e:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={CONF_NAME: self.config_entry.title},
-            ) from e
+        except CommunicationError:
+            _LOGGER.debug("Cannot connect to device", exc_info=True)
+            return self.data or LiveDataResponse()
 
     @property
     def has_tip(self) -> bool:
