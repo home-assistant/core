@@ -14,8 +14,8 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
+from . import async_connect_to_controller
 from .const import DOMAIN
-from .coordinator import async_connect_to_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_mac"
 
                 try:
-                    api = await async_connect_to_coordinator(
+                    api = await async_connect_to_controller(
                         data[CONF_HOST], data[CONF_PORT], fast=True
                     )
 
