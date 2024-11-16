@@ -2,4 +2,4 @@
 
 CONTROLLER = "zimi_controller"
 DOMAIN = "zimi"
-PLATFORMS = ["light"]
+PLATFORMS = [Platform.LIGHT]
