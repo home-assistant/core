@@ -10,9 +10,8 @@ from pynecil import Pynecil
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -50,14 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
     ble_device = bluetooth.async_ble_device_from_address(
         hass, entry.unique_id, connectable=True
     )
-    if not ble_device:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="setup_device_unavailable_exception",
-            translation_placeholders={CONF_NAME: entry.title},
-        )
 
-    device = Pynecil(ble_device)
+    device = Pynecil(ble_device or entry.unique_id)
 
     coordinator = IronOSLiveDataCoordinator(hass, device)
     await coordinator.async_config_entry_first_refresh()

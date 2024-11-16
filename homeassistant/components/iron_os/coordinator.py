@@ -24,7 +24,6 @@ SCAN_INTERVAL_GITHUB = timedelta(hours=3)
 class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     """IronOS live data coordinator."""
 
-    device_info: DeviceInfoResponse
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
@@ -36,6 +35,8 @@ class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
+        self.device_info = DeviceInfoResponse()
+        self.data = LiveDataResponse()
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
@@ -47,8 +48,9 @@ class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
             self.device_info = await self.device.get_device_info()
             return await self.device.get_live_data()
 
-        except CommunicationError as e:
-            raise UpdateFailed("Cannot connect to device") from e
+        except CommunicationError:
+            _LOGGER.debug("Cannot connect to device", exc_info=True)
+            return self.data
 
 
 class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):

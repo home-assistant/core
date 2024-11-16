@@ -31,11 +31,21 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
         )
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
-        self.device_info = DeviceInfo(
+
+        serial_number = None
+        if self.coordinator.device_info.device_sn:
+            serial_number = f"{self.coordinator.device_info.device_sn} (ID:{self.coordinator.device_info.device_id})"
+
+        self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name="Pinecil",
             sw_version=coordinator.device_info.build,
-            serial_number=f"{coordinator.device_info.device_sn} (ID:{coordinator.device_info.device_id})",
+            serial_number=serial_number,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.device._client.is_connected  # noqa: SLF001
