@@ -42,6 +42,7 @@ class ZimiLight(LightEntity):
         """Initialize an ZimiLight."""
 
         self._attr_unique_id = light.identifier
+        self._attr_name = light.name.strip()
         self._attr_should_poll = False
         self._light = light
         self._light.subscribe(self)
@@ -61,11 +62,6 @@ class ZimiLight(LightEntity):
         )
         self.update()
         _LOGGER.debug("Initialising %s in %s", self.name, self._light.room)
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this light."""
-        return self._light.name.strip()
 
     @property
     def available(self) -> bool:
