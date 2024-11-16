@@ -57,6 +57,21 @@
       },
       "wood_combustion_temperature": {
         "name": "Wood combustion temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "return_wate_temperature": {
+        "name": "Return water temperature"
+      },
+      "tank_water_temperature": {
+        "name": "Tank water temperature"
+      },
+      "t1_hydro": {
+        "name": "Hydro temperature 1"
+      },
+      "t2_hydro": {
+        "name": "Hydro temperature 2"
       }
     }
   }

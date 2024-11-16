@@ -19,31 +19,23 @@ from .coordinator import PalazzettiDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
-class PalazzettiSensorEntityDescription(SensorEntityDescription):
-    """Describes Palazzetti sensor entity."""
+class CallableSensorEntityDescription(SensorEntityDescription):
+    """Describes a Palazzetti sensor entity that is read from a `Callable`."""
+
+    value_callable: Callable[[], int | float | str]
+    """The function that returns the state value for this sensor"""
+
+
+@dataclass(frozen=True, kw_only=True)
+class PropertySensorEntityDescription(SensorEntityDescription):
+    """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
 
     presence_flag: None | str
     """`None` if the sensor is always present, name of a `bool` property of the PalazzettiClient otherwise"""
 
 
-SENSOR_DESCRIPTIONS: list[PalazzettiSensorEntityDescription] = [
-    PalazzettiSensorEntityDescription(
-        key="air_outlet_temperature",
-        presence_flag="has_air_outlet_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        translation_key="air_outlet_temperature",
-    ),
-    PalazzettiSensorEntityDescription(
-        key="wood_combustion_temperature",
-        presence_flag="has_wood_combustion_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        translation_key="wood_combustion_temperature",
-    ),
-    PalazzettiSensorEntityDescription(
+PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
+    PropertySensorEntityDescription(
         key="pellet_quantity",
         presence_flag=None,
         device_class=SensorDeviceClass.WEIGHT,
@@ -63,7 +55,7 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     listener: Callable[[], None] | None = None
-    not_setup: set[PalazzettiSensorEntityDescription] = set(SENSOR_DESCRIPTIONS)
+    not_setup: set[PropertySensorEntityDescription] = set(PROPERTY_SENSOR_DESCRIPTIONS)
 
     @callback
     def add_entities() -> None:
@@ -73,11 +65,28 @@ async def async_setup_entry(
         not_setup = set()
 
         sensors = [
-            PalazzettiSensor(coordinator, description)
-            for description in sensor_descriptions
-            if not description.presence_flag
-            or getattr(coordinator.client, description.presence_flag)
+            PalazzettiSensor(
+                coordinator,
+                CallableSensorEntityDescription(
+                    key=sensor.description_key.value,
+                    device_class=SensorDeviceClass.TEMPERATURE,
+                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    translation_key=sensor.description_key.value,
+                    value_callable=sensor.value,
+                ),
+            )
+            for sensor in coordinator.client.list_temperatures()
         ]
+
+        sensors.extend(
+            [
+                PalazzettiSensor(coordinator, description)
+                for description in sensor_descriptions
+                if not description.presence_flag
+                or getattr(coordinator.client, description.presence_flag)
+            ]
+        )
 
         if sensors:
             async_add_entities(sensors)
@@ -106,9 +115,11 @@ class PalazzettiSensor(SensorEntity):
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.client.mac}-{description.key}"
-        self._attr_name = f"{description.key}"
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor."""
+        """Return the state value of the sensor."""
+        if isinstance(self.entity_description, CallableSensorEntityDescription):
+            return self.entity_description.value_callable()
+
         return getattr(self.coordinator.client, self.entity_description.key)
