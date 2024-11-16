@@ -16,7 +16,7 @@ from .const import PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_connect_to_coordinator(
+async def async_connect_to_controller(
     host: str, port: int, fast: bool = False
 ) -> ControlPoint | None:
     """Connect to Zimi Cloud Controller with defined parameters."""
