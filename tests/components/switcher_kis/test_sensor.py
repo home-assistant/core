@@ -7,7 +7,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
 from . import init_integration
-from .consts import DUMMY_PLUG_DEVICE, DUMMY_SWITCHER_DEVICES, DUMMY_WATER_HEATER_DEVICE
+from .consts import (
+    DUMMY_PLUG_DEVICE,
+    DUMMY_SWITCHER_SENSORS_DEVICES,
+    DUMMY_THERMOSTAT_DEVICE,
+    DUMMY_WATER_HEATER_DEVICE,
+)
 
 DEVICE_SENSORS_TUPLE = (
     (
@@ -25,17 +30,23 @@ DEVICE_SENSORS_TUPLE = (
             ("remaining_time", "remaining_time"),
         ],
     ),
+    (
+        DUMMY_THERMOSTAT_DEVICE,
+        [
+            ("current_temperature", "temperature"),
+        ],
+    ),
 )
 
 
-@pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_DEVICES], indirect=True)
+@pytest.mark.parametrize("mock_bridge", [DUMMY_SWITCHER_SENSORS_DEVICES], indirect=True)
 async def test_sensor_platform(hass: HomeAssistant, mock_bridge) -> None:
     """Test sensor platform."""
     entry = await init_integration(hass)
     assert mock_bridge
 
     assert mock_bridge.is_running is True
-    assert len(entry.runtime_data) == 2
+    assert len(entry.runtime_data) == 3
 
     for device, sensors in DEVICE_SENSORS_TUPLE:
         for sensor, field in sensors:

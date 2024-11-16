@@ -23,6 +23,9 @@
     "sensor": {
       "water_usage_yesterday": {
         "name": "Water usage yesterday"
+      },
+      "water_price": {
+        "name": "Water price"
       }
     }
   }
