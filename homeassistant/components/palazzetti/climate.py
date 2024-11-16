@@ -7,6 +7,7 @@ from pypalazzetti.exceptions import CommunicationError, ValidationError
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -82,8 +83,16 @@ class PalazzettiClimateEntity(
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat or off mode."""
-        is_heating = bool(self.coordinator.client.is_heating)
-        return HVACMode.HEAT if is_heating else HVACMode.OFF
+        return HVACMode.HEAT if self.coordinator.client.is_on else HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return hvac action ie. heating or idle."""
+        return (
+            HVACAction.HEATING
+            if self.coordinator.client.is_heating
+            else HVACAction.IDLE
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
