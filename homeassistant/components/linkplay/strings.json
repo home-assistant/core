@@ -39,9 +39,6 @@
     "button": {
       "timesync": {
         "name": "Sync Time"
-      },
-      "restart": {
-        "name": "Restart device"
       }
     }
   },

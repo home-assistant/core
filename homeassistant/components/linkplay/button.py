@@ -9,7 +9,11 @@ from typing import Any
 
 from linkplay.bridge import LinkPlayBridge
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,7 +40,7 @@ BUTTON_TYPES: tuple[LinkPlayButtonEntityDescription, ...] = (
     ),
     LinkPlayButtonEntityDescription(
         key="restart",
-        translation_key="restart",
+        device_class=ButtonDeviceClass.RESTART,
         remote_function=lambda linkplay_bridge: linkplay_bridge.device.reboot(),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -52,10 +56,8 @@ async def async_setup_entry(
 
     # add entities
     async_add_entities(
-        [
-            LinkPlayButton(config_entry.runtime_data.bridge, description)
-            for description in BUTTON_TYPES
-        ]
+        LinkPlayButton(config_entry.runtime_data.bridge, description)
+        for description in BUTTON_TYPES
     )
 
 
