@@ -21,7 +21,7 @@
         "data": {
           "device_name": "Device Name"
         },
-        "description": "Enter your Hive configuration ",
+        "description": "Enter your Hive configuration",
         "title": "Hive Configuration."
       },
       "reauth": {

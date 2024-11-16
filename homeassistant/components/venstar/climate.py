@@ -36,7 +36,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import VenstarEntity
 from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
@@ -47,6 +46,7 @@ from .const import (
     HOLD_MODE_TEMPERATURE,
 )
 from .coordinator import VenstarDataUpdateCoordinator
+from .entity import VenstarEntity
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {

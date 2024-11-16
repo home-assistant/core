@@ -36,7 +36,6 @@ type SmConfigEntry = ConfigEntry[SmlightData]
 async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     """Set up SMLIGHT Zigbee from a config entry."""
     client = Api2(host=entry.data[CONF_HOST], session=async_get_clientsession(hass))
-    entry.async_create_background_task(hass, client.sse.client(), "smlight-sse-client")
 
     data_coordinator = SmDataUpdateCoordinator(hass, entry.data[CONF_HOST], client)
     firmware_coordinator = SmFirmwareUpdateCoordinator(
@@ -45,6 +44,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
 
     await data_coordinator.async_config_entry_first_refresh()
     await firmware_coordinator.async_config_entry_first_refresh()
+
+    if data_coordinator.data.info.legacy_api < 2:
+        entry.async_create_background_task(
+            hass, client.sse.client(), "smlight-sse-client"
+        )
 
     entry.runtime_data = SmlightData(
         data=data_coordinator, firmware=firmware_coordinator

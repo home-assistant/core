@@ -80,9 +80,8 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
         info = await self.client.get_info()
         self.unique_id = format_mac(info.MAC)
-
-        if info.legacy_api:
-            self.legacy_api = info.legacy_api
+        self.legacy_api = info.legacy_api
+        if info.legacy_api == 2:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,

@@ -24,6 +24,8 @@ from .entity import (
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
@@ -40,6 +42,18 @@ class ReolinkNumberEntityDescription(
     method: Callable[[Host, int, float], Any]
     mode: NumberMode = NumberMode.AUTO
     value: Callable[[Host, int], float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostNumberEntityDescription(
+    NumberEntityDescription,
+    ReolinkHostEntityDescription,
+):
+    """A class that describes number entities for the host."""
+
+    method: Callable[[Host, float], Any]
+    mode: NumberMode = NumberMode.AUTO
+    value: Callable[[Host], float | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -474,6 +488,33 @@ NUMBER_ENTITIES = (
     ),
 )
 
+HOST_NUMBER_ENTITIES = (
+    ReolinkHostNumberEntityDescription(
+        key="alarm_volume",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="alarm_volume",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api: api.supported(None, "hub_audio"),
+        value=lambda api: api.alarm_volume,
+        method=lambda api, value: api.set_hub_audio(alarm_volume=int(value)),
+    ),
+    ReolinkHostNumberEntityDescription(
+        key="message_volume",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="message_volume",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api: api.supported(None, "hub_audio"),
+        value=lambda api: api.message_volume,
+        method=lambda api, value: api.set_hub_audio(message_volume=int(value)),
+    ),
+)
+
 CHIME_NUMBER_ENTITIES = (
     ReolinkChimeNumberEntityDescription(
         key="volume",
@@ -497,12 +538,17 @@ async def async_setup_entry(
     """Set up a Reolink number entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[ReolinkNumberEntity | ReolinkChimeNumberEntity] = [
+    entities: list[NumberEntity] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
         for entity_description in NUMBER_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
+    entities.extend(
+        ReolinkHostNumberEntity(reolink_data, entity_description)
+        for entity_description in HOST_NUMBER_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
+    )
     entities.extend(
         ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_NUMBER_ENTITIES
@@ -545,6 +591,38 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         """Update the current value."""
         try:
             await self.entity_description.method(self._host.api, self._channel, value)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
+        self.async_write_ha_state()
+
+
+class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
+    """Base number entity class for Reolink Host."""
+
+    entity_description: ReolinkHostNumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        entity_description: ReolinkHostNumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink number entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data)
+
+        self._attr_mode = entity_description.mode
+
+    @property
+    def native_value(self) -> float | None:
+        """State of the number entity."""
+        return self.entity_description.value(self._host.api)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        try:
+            await self.entity_description.method(self._host.api, value)
         except InvalidParameterError as err:
             raise ServiceValidationError(err) from err
         except ReolinkError as err:

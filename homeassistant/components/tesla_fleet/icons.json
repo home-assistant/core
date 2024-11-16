@@ -7,6 +7,12 @@
           "on": "mdi:hvac"
         }
       },
+      "storm_mode_active": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "on": "mdi:weather-lightning-rainy"
+        }
+      },
       "vehicle_state_is_user_present": {
         "state": {
           "off": "mdi:account-remove-outline",
@@ -38,6 +44,26 @@
         }
       }
     },
+    "button": {
+      "boombox": {
+        "default": "mdi:volume-high"
+      },
+      "enable_keyless_driving": {
+        "default": "mdi:car-key"
+      },
+      "flash_lights": {
+        "default": "mdi:flashlight"
+      },
+      "homelink": {
+        "default": "mdi:garage"
+      },
+      "honk": {
+        "default": "mdi:bullhorn"
+      },
+      "wake": {
+        "default": "mdi:sleep-off"
+      }
+    },
     "climate": {
       "driver_temp": {
         "state_attributes": {
@@ -52,12 +78,28 @@
         }
       }
     },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "default": "mdi:ev-plug-ccs2"
+      }
+    },
     "device_tracker": {
       "location": {
         "default": "mdi:map-marker"
       },
       "route": {
         "default": "mdi:routes"
+      }
+    },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "default": "mdi:ev-plug-tesla"
+      },
+      "vehicle_state_locked": {
+        "state": {
+          "locked": "mdi:car-door-lock",
+          "unlocked": "mdi:car-door-lock-open"
+        }
       }
     },
     "select": {
@@ -180,6 +222,16 @@
       },
       "wall_connector_state": {
         "default": "mdi:ev-station"
+      },
+      "island_status": {
+        "default": "mdi:help-circle",
+        "state": {
+          "on_grid": "mdi:transmission-tower",
+          "off_grid": "mdi:transmission-tower-off",
+          "off_grid_unintentional": "mdi:transmission-tower-off",
+          "island_status_unknown": "mdi:help-circle",
+          "off_grid_intentional": "mdi:account-cancel"
+        }
       }
     },
     "switch": {

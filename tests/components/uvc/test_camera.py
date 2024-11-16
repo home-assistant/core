@@ -10,8 +10,8 @@ from homeassistant.components.camera import (
     DEFAULT_CONTENT_TYPE,
     SERVICE_DISABLE_MOTION,
     SERVICE_ENABLE_MOTION,
-    STATE_RECORDING,
     CameraEntityFeature,
+    CameraState,
     async_get_image,
     async_get_stream_source,
 )
@@ -336,7 +336,7 @@ async def test_properties(hass: HomeAssistant, mock_remote) -> None:
 
     assert state
     assert state.name == "Front"
-    assert state.state == STATE_RECORDING
+    assert state.state == CameraState.RECORDING
     assert state.attributes["brand"] == "Ubiquiti"
     assert state.attributes["model_name"] == "UVC"
     assert state.attributes["supported_features"] == CameraEntityFeature.STREAM
@@ -354,7 +354,7 @@ async def test_motion_recording_mode_properties(
     state = hass.states.get("camera.front")
 
     assert state
-    assert state.state == STATE_RECORDING
+    assert state.state == CameraState.RECORDING
 
     mock_remote.return_value.get_camera.return_value["recordingSettings"][
         "fullTimeRecordEnabled"
@@ -369,7 +369,7 @@ async def test_motion_recording_mode_properties(
     state = hass.states.get("camera.front")
 
     assert state
-    assert state.state != STATE_RECORDING
+    assert state.state != CameraState.RECORDING
     assert state.attributes["last_recording_start_time"] == datetime(
         2021, 1, 8, 1, 56, 32, 367000, tzinfo=UTC
     )
@@ -382,7 +382,7 @@ async def test_motion_recording_mode_properties(
     state = hass.states.get("camera.front")
 
     assert state
-    assert state.state != STATE_RECORDING
+    assert state.state != CameraState.RECORDING
 
     mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
         "MOTION_INPROGRESS"
@@ -394,7 +394,7 @@ async def test_motion_recording_mode_properties(
     state = hass.states.get("camera.front")
 
     assert state
-    assert state.state == STATE_RECORDING
+    assert state.state == CameraState.RECORDING
 
     mock_remote.return_value.get_camera.return_value["recordingIndicator"] = (
         "MOTION_FINISHED"
@@ -406,7 +406,7 @@ async def test_motion_recording_mode_properties(
     state = hass.states.get("camera.front")
 
     assert state
-    assert state.state == STATE_RECORDING
+    assert state.state == CameraState.RECORDING
 
 
 async def test_stream(hass: HomeAssistant, mock_remote) -> None:

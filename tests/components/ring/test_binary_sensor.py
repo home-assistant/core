@@ -1,11 +1,12 @@
 """The tests for the Ring binary sensor platform."""
 
 import time
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import Ring
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.ring.binary_sensor import RingEvent
@@ -17,10 +18,56 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .common import setup_automation
-from .device_mocks import FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_ID
+from .common import MockConfigEntry, setup_automation, setup_platform
+from .device_mocks import (
+    FRONT_DEVICE_ID,
+    FRONT_DOOR_DEVICE_ID,
+    INGRESS_DEVICE_ID,
+    INTERNAL_DEVICE_ID,
+)
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture
+def create_deprecated_binary_sensor_entities(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+):
+    """Create the entity so it is not ignored by the deprecation check."""
+    mock_config_entry.add_to_hass(hass)
+
+    def create_entry(device_name, device_id, key):
+        unique_id = f"{device_id}-{key}"
+
+        entity_registry.async_get_or_create(
+            domain=BINARY_SENSOR_DOMAIN,
+            platform=DOMAIN,
+            unique_id=unique_id,
+            suggested_object_id=f"{device_name}_{key}",
+            config_entry=mock_config_entry,
+        )
+
+    create_entry("front", FRONT_DEVICE_ID, "motion")
+    create_entry("front_door", FRONT_DOOR_DEVICE_ID, "motion")
+    create_entry("internal", INTERNAL_DEVICE_ID, "motion")
+
+    create_entry("ingress", INGRESS_DEVICE_ID, "ding")
+    create_entry("front_door", FRONT_DOOR_DEVICE_ID, "ding")
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_ring_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    create_deprecated_binary_sensor_entities,
+) -> None:
+    """Test states."""
+    await setup_platform(hass, Platform.BINARY_SENSOR)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

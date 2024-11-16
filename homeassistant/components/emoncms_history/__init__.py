@@ -86,15 +86,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
 
         if payload_dict:
-            payload = "{{{}}}".format(
-                ",".join(f"{key}:{val}" for key, val in payload_dict.items())
-            )
+            payload = ",".join(f"{key}:{val}" for key, val in payload_dict.items())
 
             send_data(
                 conf.get(CONF_URL),
                 conf.get(CONF_API_KEY),
                 str(conf.get(CONF_INPUTNODE)),
-                payload,
+                f"{{{payload}}}",
             )
 
         track_point_in_time(

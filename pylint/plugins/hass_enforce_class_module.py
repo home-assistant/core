@@ -2,12 +2,23 @@
 
 from __future__ import annotations
 
-from ast import ClassDef
-
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from homeassistant.const import Platform
+
+_BASE_ENTITY_MODULES: set[str] = {
+    "BaseCoordinatorEntity",
+    "CoordinatorEntity",
+    "Entity",
+    "EntityDescription",
+    "ManualTriggerEntity",
+    "RestoreEntity",
+    "ToggleEntity",
+    "ToggleEntityDescription",
+    "TriggerBaseEntity",
+}
 _MODULES: dict[str, set[str]] = {
     "air_quality": {"AirQualityEntity"},
     "alarm_control_panel": {
@@ -17,15 +28,21 @@ _MODULES: dict[str, set[str]] = {
     "assist_satellite": {"AssistSatelliteEntity", "AssistSatelliteEntityDescription"},
     "binary_sensor": {"BinarySensorEntity", "BinarySensorEntityDescription"},
     "button": {"ButtonEntity", "ButtonEntityDescription"},
-    "calendar": {"CalendarEntity"},
-    "camera": {"CameraEntity", "CameraEntityDescription"},
+    "calendar": {"CalendarEntity", "CalendarEntityDescription"},
+    "camera": {"Camera", "CameraEntityDescription"},
     "climate": {"ClimateEntity", "ClimateEntityDescription"},
     "coordinator": {"DataUpdateCoordinator"},
     "conversation": {"ConversationEntity"},
     "cover": {"CoverEntity", "CoverEntityDescription"},
     "date": {"DateEntity", "DateEntityDescription"},
     "datetime": {"DateTimeEntity", "DateTimeEntityDescription"},
-    "device_tracker": {"DeviceTrackerEntity"},
+    "device_tracker": {
+        "DeviceTrackerEntity",
+        "ScannerEntity",
+        "ScannerEntityDescription",
+        "TrackerEntity",
+        "TrackerEntityDescription",
+    },
     "event": {"EventEntity", "EventEntityDescription"},
     "fan": {"FanEntity", "FanEntityDescription"},
     "geo_location": {"GeolocationEvent"},
@@ -52,8 +69,8 @@ _MODULES: dict[str, set[str]] = {
     "time": {"TimeEntity", "TimeEntityDescription"},
     "todo": {"TodoListEntity"},
     "tts": {"TextToSpeechEntity"},
-    "update": {"UpdateEntityDescription"},
-    "vacuum": {"VacuumEntity", "VacuumEntityDescription"},
+    "update": {"UpdateEntity", "UpdateEntityDescription"},
+    "vacuum": {"StateVacuumEntity", "VacuumEntity", "VacuumEntityDescription"},
     "wake_word": {"WakeWordDetectionEntity"},
     "water_heater": {"WaterHeaterEntity"},
     "weather": {
@@ -62,6 +79,33 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntity",
         "WeatherEntityDescription",
     },
+}
+_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
+    {
+        "alert",
+        "automation",
+        "counter",
+        "dominos",
+        "input_boolean",
+        "input_button",
+        "input_datetime",
+        "input_number",
+        "input_select",
+        "input_text",
+        "microsoft_face",
+        "person",
+        "plant",
+        "remember_the_milk",
+        "schedule",
+        "script",
+        "tag",
+        "timer",
+    }
+)
+
+
+_MODULE_CLASSES = {
+    class_name for classes in _MODULES.values() for class_name in classes
 }
 
 
@@ -89,14 +133,25 @@ class HassEnforceClassModule(BaseChecker):
         current_integration = parts[2]
         current_module = parts[3] if len(parts) > 3 else ""
 
-        ancestors: list[ClassDef] | None = None
+        ancestors = list(node.ancestors())
+
+        if current_module != "entity" and current_integration not in _ENTITY_COMPONENTS:
+            top_level_ancestors = list(node.ancestors(recurs=False))
+
+            for ancestor in top_level_ancestors:
+                if ancestor.name in _BASE_ENTITY_MODULES and not any(
+                    anc.name in _MODULE_CLASSES for anc in ancestors
+                ):
+                    self.add_message(
+                        "hass-enforce-class-module",
+                        node=node,
+                        args=(ancestor.name, "entity"),
+                    )
+                    return
 
         for expected_module, classes in _MODULES.items():
             if expected_module in (current_module, current_integration):
                 continue
-
-            if ancestors is None:
-                ancestors = list(node.ancestors())  # cache result for other modules
 
             for ancestor in ancestors:
                 if ancestor.name in classes:

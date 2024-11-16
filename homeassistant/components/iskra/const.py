@@ -21,5 +21,9 @@ ATTR_PHASE1_CURRENT = "phase1_current"
 ATTR_PHASE2_CURRENT = "phase2_current"
 ATTR_PHASE3_CURRENT = "phase3_current"
 
+# Counters
+ATTR_NON_RESETTABLE_COUNTER = "non_resettable_counter_{}"
+ATTR_RESETTABLE_COUNTER = "resettable_counter_{}"
+
 # Frequency
 ATTR_FREQUENCY = "frequency"

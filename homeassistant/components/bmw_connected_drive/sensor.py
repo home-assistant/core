@@ -80,7 +80,6 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
     BMWSensorEntityDescription(
         key="fuel_and_battery.charging_target",
         translation_key="charging_target",
-        device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,

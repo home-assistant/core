@@ -1,7 +1,7 @@
 """Tests for the SMLIGHT update platform."""
 
-from collections.abc import Callable
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info
@@ -15,6 +15,7 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as PLATFORM,
     SERVICE_INSTALL,
 )
@@ -23,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import get_mock_event_function
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -67,18 +69,6 @@ MOCK_FIRMWARE_NOTES = [
 ]
 
 
-def get_callback_function(mock: MagicMock, trigger: SmEvents):
-    """Extract the callback function for a given trigger."""
-    return next(
-        (
-            call_args[0][1]
-            for call_args in mock.sse.register_callback.call_args_list
-            if trigger == call_args[0][0]
-        ),
-        None,
-    )
-
-
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Platforms, which should be loaded during the test."""
@@ -99,7 +89,9 @@ async def test_update_setup(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
 async def test_update_firmware(
+    mock_sleep: MagicMock,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
@@ -122,22 +114,62 @@ async def test_update_firmware(
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
 
-    event_function: Callable[[MessageEvent], None] = get_callback_function(
-        mock_smlight_client, SmEvents.ZB_FW_prgs
-    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_prgs)
 
-    async def _call_event_function(event: MessageEvent):
-        event_function(event)
-
-    await _call_event_function(MOCK_FIRMWARE_PROGRESS)
+    event_function(MOCK_FIRMWARE_PROGRESS)
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_IN_PROGRESS] == 50
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
 
-    event_function: Callable[[MessageEvent], None] = get_callback_function(
-        mock_smlight_client, SmEvents.FW_UPD_done
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+
+    event_function(MOCK_FIRMWARE_DONE)
+
+    mock_smlight_client.get_info.return_value = Info(
+        sw_version="v2.5.2",
     )
 
-    await _call_event_function(MOCK_FIRMWARE_DONE)
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+
+
+async def test_update_legacy_firmware_v2(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test firmware update for legacy v2 firmware."""
+    mock_smlight_client.get_info.return_value = Info(
+        sw_version="v2.0.18",
+        legacy_api=1,
+        MAC="AA:BB:CC:DD:EE:FF",
+    )
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.0.18"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+
+    await hass.services.async_call(
+        PLATFORM,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=False,
+    )
+
+    assert len(mock_smlight_client.fw_update.mock_calls) == 1
+
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ESP_UPD_done)
+
+    event_function(MOCK_FIRMWARE_DONE)
 
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.5.2",
@@ -175,9 +207,7 @@ async def test_update_firmware_failed(
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
 
-    event_function: Callable[[MessageEvent], None] = get_callback_function(
-        mock_smlight_client, SmEvents.ZB_FW_err
-    )
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.ZB_FW_err)
 
     async def _call_event_function(event: MessageEvent):
         event_function(event)
@@ -186,6 +216,55 @@ async def test_update_firmware_failed(
         await _call_event_function(MOCK_FIRMWARE_FAIL)
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+@patch("homeassistant.components.smlight.const.LOGGER.warning")
+async def test_update_reboot_timeout(
+    mock_warning: MagicMock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test firmware updates."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+
+    with (
+        patch(
+            "homeassistant.components.smlight.update.asyncio.timeout",
+            side_effect=TimeoutError,
+        ),
+        patch(
+            "homeassistant.components.smlight.update.asyncio.sleep",
+            return_value=None,
+        ),
+    ):
+        await hass.services.async_call(
+            PLATFORM,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=False,
+        )
+
+        assert len(mock_smlight_client.fw_update.mock_calls) == 1
+
+        event_function = get_mock_event_function(
+            mock_smlight_client, SmEvents.FW_UPD_done
+        )
+
+        event_function(MOCK_FIRMWARE_DONE)
+
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        mock_warning.assert_called_once()
 
 
 async def test_update_release_notes(

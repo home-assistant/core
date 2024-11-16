@@ -60,17 +60,21 @@ class ChangeStatisticsUnitTask(RecorderTask):
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
+    on_done: Callable[[], None] | None
     statistic_ids: list[str]
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.clear_statistics(instance, self.statistic_ids)
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
 class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
+    on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
@@ -83,6 +87,8 @@ class UpdateStatisticsMetadataTask(RecorderTask):
             self.new_statistic_id,
             self.new_unit_of_measurement,
         )
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)

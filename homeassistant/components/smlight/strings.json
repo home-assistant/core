@@ -49,6 +49,9 @@
       "internet": {
         "name": "Internet"
       },
+      "vpn": {
+        "name": "VPN"
+      },
       "wifi": {
         "name": "Wi-Fi"
       }
@@ -105,6 +108,9 @@
       },
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
+      },
+      "reconnect_zigbee_router": {
+        "name": "Reconnect zigbee router"
       }
     },
     "switch": {
@@ -116,6 +122,9 @@
       },
       "night_mode": {
         "name": "LED night mode"
+      },
+      "vpn_enabled": {
+        "name": "VPN enabled"
       }
     },
     "update": {

@@ -6,10 +6,10 @@ from collections.abc import Iterable
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
-from functools import cached_property
 import logging
 from typing import Any, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,10 +32,12 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "remote"
+DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -98,7 +100,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for remotes."""
-    component = hass.data[DOMAIN] = EntityComponent[RemoteEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[RemoteEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -155,14 +157,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[RemoteEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[RemoteEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class RemoteEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):

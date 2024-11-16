@@ -38,7 +38,7 @@
   },
   "options": {
     "step": {
-      "options": {
+      "init": {
         "title": "Options for the Azure Event Hub.",
         "data": {
           "send_interval": "Interval between sending batches to the hub."

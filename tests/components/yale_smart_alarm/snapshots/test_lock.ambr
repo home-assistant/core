@@ -236,7 +236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unlocked',
+    'state': 'open',
   })
 # ---
 # name: test_lock[load_platforms0][lock.device9-entry]

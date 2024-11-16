@@ -10,16 +10,6 @@
     }
   },
   "entity": {
-    "assist_satellite": {
-      "assist_satellite": {
-        "state": {
-          "listening_wake_word": "[%key:component::assist_satellite::entity_component::_::state::listening_wake_word%]",
-          "listening_command": "[%key:component::assist_satellite::entity_component::_::state::listening_command%]",
-          "responding": "[%key:component::assist_satellite::entity_component::_::state::responding%]",
-          "processing": "[%key:component::assist_satellite::entity_component::_::state::processing%]"
-        }
-      }
-    },
     "binary_sensor": {
       "call_in_progress": {
         "name": "Call in progress"
@@ -43,6 +33,18 @@
           "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
           "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "assist_in_progress_deprecated": {
+      "title": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::title%]",
+      "fix_flow": {
+        "step": {
+          "confirm_disable_entity": {
+            "description": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::fix_flow::step::confirm_disable_entity::description%]"
+          }
         }
       }
     }

@@ -86,3 +86,21 @@ async def async_remove_config_entry_device(
             if zone_id in dev_ids:
                 return False
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
+    """Migrate entry."""
+
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        # 1 -> 2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            minor_version = 2
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+            )
+
+    _LOGGER.debug("Migration successful")
+
+    return True

@@ -147,6 +147,8 @@ CONFIG_DEFAULTS = {
 
 
 @TYPES.register("Camera")
+# False-positive on pylint, not a CameraEntity
+# pylint: disable-next=hass-enforce-class-module
 class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
     """Generate a Camera accessory."""
 

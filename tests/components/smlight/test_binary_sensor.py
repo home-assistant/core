@@ -1,6 +1,5 @@
 """Tests for the SMLIGHT binary sensor platform."""
 
-from collections.abc import Callable
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -14,6 +13,7 @@ from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import get_mock_event_function
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -62,11 +62,14 @@ async def test_disabled_by_default_sensors(
     """Test wifi sensor is disabled by default ."""
     await setup_integration(hass, mock_config_entry)
 
-    assert not hass.states.get("binary_sensor.mock_title_wi_fi")
+    for sensor in ("wi_fi", "vpn"):
+        assert not hass.states.get(f"binary_sensor.mock_title_{sensor}")
 
-    assert (entry := entity_registry.async_get("binary_sensor.mock_title_wi_fi"))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert (
+            entry := entity_registry.async_get(f"binary_sensor.mock_title_{sensor}")
+        )
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_internet_sensor_event(
@@ -92,13 +95,8 @@ async def test_internet_sensor_event(
     assert len(mock_smlight_client.get_param.mock_calls) == 2
     mock_smlight_client.get_param.assert_called_with("inetState")
 
-    event_function: Callable[[MessageEvent], None] = next(
-        (
-            call_args[0][1]
-            for call_args in mock_smlight_client.sse.register_callback.call_args_list
-            if call_args[0][0] == Events.EVENT_INET_STATE
-        ),
-        None,
+    event_function = get_mock_event_function(
+        mock_smlight_client, Events.EVENT_INET_STATE
     )
 
     event_function(MOCK_INET_STATE)

@@ -13,6 +13,7 @@ from reolink_aio.api import (
     DayNightEnum,
     HDREnum,
     Host,
+    HubToneEnum,
     SpotlightModeEnum,
     StatusLedEnum,
     TrackMethodEnum,
@@ -115,6 +116,32 @@ SELECT_ENTITIES = (
         ),
     ),
     ReolinkSelectEntityDescription(
+        key="hub_alarm_ringtone",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="hub_alarm_ringtone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in HubToneEnum],
+        supported=lambda api, ch: api.supported(ch, "hub_audio"),
+        value=lambda api, ch: HubToneEnum(api.hub_alarm_tone_id(ch)).name,
+        method=lambda api, ch, name: (
+            api.set_hub_audio(ch, alarm_tone_id=HubToneEnum[name].value)
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="hub_visitor_ringtone",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="hub_visitor_ringtone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in HubToneEnum],
+        supported=lambda api, ch: (
+            api.supported(ch, "hub_audio") and api.is_doorbell(ch)
+        ),
+        value=lambda api, ch: HubToneEnum(api.hub_visitor_tone_id(ch)).name,
+        method=lambda api, ch, name: (
+            api.set_hub_audio(ch, visitor_tone_id=HubToneEnum[name].value)
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="auto_track_method",
         cmd_key="GetAiCfg",
         translation_key="auto_track_method",
@@ -169,6 +196,16 @@ CHIME_SELECT_ENTITIES = (
         supported=lambda chime: "people" in chime.chime_event_types,
         value=lambda chime: ChimeToneEnum(chime.tone("people")).name,
         method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="vehicle_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="vehicle_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "vehicle" in chime.chime_event_types,
+        value=lambda chime: ChimeToneEnum(chime.tone("vehicle")).name,
+        method=lambda chime, name: chime.set_tone("vehicle", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
         key="visitor_tone",
@@ -245,7 +282,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
         try:
             option = self.entity_description.value(self._host.api, self._channel)
-        except ValueError:
+        except (ValueError, KeyError):
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False
@@ -287,7 +324,7 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         """Return the current option."""
         try:
             option = self.entity_description.value(self._chime)
-        except ValueError:
+        except (ValueError, KeyError):
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False

@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .irobot_base import IRobotEntity
+from .entity import IRobotEntity
 from .models import RoombaData
 
 

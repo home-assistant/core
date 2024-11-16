@@ -85,6 +85,7 @@ HVAC_MODE_LIB_TO_HASS: Final[dict[OperationMode, HVACMode]] = {
     OperationMode.HEATING: HVACMode.HEAT,
     OperationMode.FAN: HVACMode.FAN_ONLY,
     OperationMode.DRY: HVACMode.DRY,
+    OperationMode.AUX_HEATING: HVACMode.HEAT,
     OperationMode.AUTO: HVACMode.HEAT_COOL,
 }
 HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
@@ -157,9 +158,10 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
         ]
-        self._attr_hvac_modes = [
+        _attr_hvac_modes = [
             HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
         ]
+        self._attr_hvac_modes = list(dict.fromkeys(_attr_hvac_modes))
         if (
             self.get_airzone_value(AZD_SPEED) is not None
             and self.get_airzone_value(AZD_SPEEDS) is not None
@@ -273,12 +275,18 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
-        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+        if (
+            self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            and self._attr_hvac_mode == HVACMode.HEAT_COOL
+        ):
             self._attr_target_temperature_high = self.get_airzone_value(
                 AZD_COOL_TEMP_SET
             )
             self._attr_target_temperature_low = self.get_airzone_value(
                 AZD_HEAT_TEMP_SET
             )
+            self._attr_target_temperature = None
         else:
+            self._attr_target_temperature_high = None
+            self._attr_target_temperature_low = None
             self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

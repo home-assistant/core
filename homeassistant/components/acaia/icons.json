@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "button": {
+      "tare": {
+        "default": "mdi:scale-balance"
+      },
+      "reset_timer": {
+        "default": "mdi:timer-refresh"
+      },
+      "start_stop": {
+        "default": "mdi:timer-play"
+      }
+    }
+  }
+}

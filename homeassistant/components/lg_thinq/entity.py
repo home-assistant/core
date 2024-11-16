@@ -105,11 +105,10 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         except ThinQAPIException as exc:
             if on_fail_method:
                 on_fail_method()
-
             raise ServiceValidationError(
-                exc.message,
-                translation_domain=DOMAIN,
-                translation_key=exc.code,
+                exc.message, translation_domain=DOMAIN, translation_key=exc.code
             ) from exc
-        finally:
-            await self.coordinator.async_request_refresh()
+        except ValueError as exc:
+            if on_fail_method:
+                on_fail_method()
+            raise ServiceValidationError(exc) from exc

@@ -11,7 +11,6 @@ from stringcase import snakecase
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -194,11 +193,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     @property
     def _device_unique_id(self) -> str:
         return self.mac_address
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return SourceType.ROUTER."""
-        return SourceType.ROUTER
 
     @property
     def ip_address(self) -> str | None:

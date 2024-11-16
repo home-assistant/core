@@ -13,8 +13,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
@@ -137,19 +135,6 @@ async def test_climate_set_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_TEMPERATURE] == 4
-
-    # Test set temperature without target temperature
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 30,
-        },
-        blocking=True,
-    )
-    mock_block_device.http_request.assert_not_called()
 
     # Test set temperature
     await hass.services.async_call(
@@ -683,19 +668,6 @@ async def test_rpc_climate_set_temperature(
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 23
-
-    # test set temperature without target temperature
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 30,
-        },
-        blocking=True,
-    )
-    mock_rpc_device.call_rpc.assert_not_called()
 
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "target_C", 28)
     await hass.services.async_call(

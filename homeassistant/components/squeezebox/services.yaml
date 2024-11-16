@@ -30,19 +30,3 @@ call_query:
       advanced: true
       selector:
         object:
-sync:
-  target:
-    entity:
-      integration: squeezebox
-      domain: media_player
-  fields:
-    other_player:
-      required: true
-      example: "media_player.living_room"
-      selector:
-        text:
-unsync:
-  target:
-    entity:
-      integration: squeezebox
-      domain: media_player

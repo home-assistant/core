@@ -15,7 +15,7 @@ from homeassistant.helpers import issue_registry as ir
 from .const import DOMAIN
 from .coordinator import FliprDataUpdateCoordinator, FliprHubDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

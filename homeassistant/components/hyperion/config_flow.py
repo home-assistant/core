@@ -111,6 +111,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    unique_id: str
+
     def __init__(self) -> None:
         """Instantiate config flow."""
         self._data: dict[str, Any] = {}
@@ -422,24 +424,22 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> HyperionOptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> HyperionOptionsFlow:
         """Get the Hyperion Options flow."""
-        return HyperionOptionsFlow(config_entry)
+        return HyperionOptionsFlow()
 
 
 class HyperionOptionsFlow(OptionsFlow):
     """Hyperion options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize a Hyperion options flow."""
-        self._config_entry = config_entry
-
     def _create_client(self) -> client.HyperionClient:
         """Create and connect a client instance."""
         return create_hyperion_client(
-            self._config_entry.data[CONF_HOST],
-            self._config_entry.data[CONF_PORT],
-            token=self._config_entry.data.get(CONF_TOKEN),
+            self.config_entry.data[CONF_HOST],
+            self.config_entry.data[CONF_PORT],
+            token=self.config_entry.data.get(CONF_TOKEN),
         )
 
     async def async_step_init(
@@ -468,8 +468,7 @@ class HyperionOptionsFlow(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         default_effect_show_list = list(
-            set(effects)
-            - set(self._config_entry.options.get(CONF_EFFECT_HIDE_LIST, []))
+            set(effects) - set(self.config_entry.options.get(CONF_EFFECT_HIDE_LIST, []))
         )
 
         return self.async_show_form(
@@ -478,7 +477,7 @@ class HyperionOptionsFlow(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_PRIORITY,
-                        default=self._config_entry.options.get(
+                        default=self.config_entry.options.get(
                             CONF_PRIORITY, DEFAULT_PRIORITY
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),

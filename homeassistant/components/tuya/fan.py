@@ -21,8 +21,8 @@ from homeassistant.util.percentage import (
 )
 
 from . import TuyaConfigEntry
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
 
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
