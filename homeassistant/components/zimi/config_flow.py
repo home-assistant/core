@@ -90,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     else:
                         errors["base"] = "cannot_connect"
 
-                except ConfigEntryNotReady as _:
+                except ConfigEntryNotReady:
                     errors["base"] = "cannot_connect"
 
             except Exception:  # pylint: disable=broad-except
