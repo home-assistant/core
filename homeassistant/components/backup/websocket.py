@@ -278,7 +278,7 @@ async def backup_agents_download(
         )
         return
     try:
-        path = await manager.async_get_backup_path(slug=msg["slug"])
+        path = manager.temp_backup_dir / f"{msg["slug"]}.tar"
         await agent.async_download_backup(
             id=msg["backup_id"],
             path=path,

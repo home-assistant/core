@@ -57,6 +57,17 @@ class BackupAgent(abc.ABC):
         """List backups."""
 
 
+class LocalBackupAgent(BackupAgent):
+    """Local backup agent."""
+
+    @abc.abstractmethod
+    def get_backup_path(self, slug: str) -> Path:
+        """Return the local path to a backup.
+
+        The method should return the path to the backup file with the specified slug.
+        """
+
+
 class BackupAgentPlatformProtocol(Protocol):
     """Define the format of backup platforms which implement backup agents."""
 

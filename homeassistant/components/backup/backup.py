@@ -12,7 +12,7 @@ from typing import Any, cast
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import json_loads_object
 
-from .agent import BackupAgent, UploadedBackup
+from .agent import BackupAgent, LocalBackupAgent, UploadedBackup
 from .const import BUF_SIZE, LOGGER
 from .models import BackupUploadMetadata
 
@@ -22,7 +22,7 @@ async def async_get_backup_agents(
     **kwargs: Any,
 ) -> list[BackupAgent]:
     """Register the backup agent."""
-    return [LocalBackupAgent(hass)]
+    return [CoreLocalBackupAgent(hass)]
 
 
 @dataclass(slots=True)
@@ -36,7 +36,7 @@ class LocalBackup(UploadedBackup):
         return {**asdict(self), "path": self.path.as_posix()}
 
 
-class LocalBackupAgent(BackupAgent):
+class CoreLocalBackupAgent(LocalBackupAgent):
     """Local backup agent for Core and Container installations."""
 
     name = "local"
