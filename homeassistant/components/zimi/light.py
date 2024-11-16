@@ -46,8 +46,6 @@ class ZimiLight(LightEntity):
         self._attr_should_poll = False
         self._light = light
         self._light.subscribe(self)
-        self._state = False
-        self._brightness = None
         if self._light.type == "dimmer":
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -56,7 +54,7 @@ class ZimiLight(LightEntity):
             self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, light.identifier)},
-            name=self._light.name,
+            name=self._attr_name,
             suggested_area=self._light.room,
             via_device=(DOMAIN, api.mac),
         )
@@ -70,24 +68,20 @@ class ZimiLight(LightEntity):
 
     @property
     def brightness(self) -> int | None:
-        """Return the brightness of the light.
+        """Return the brightness of the light."""
 
-        This method is optional. Removing it indicates to Home Assistant
-        that brightness is not supported for this light.
-        """
-        return self._brightness
+        if self._light.type == "dimmer":
+            return self._light.brightness * 255 / 100
+
+        return None
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._state
+        return self._light.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Instruct the light to turn on.
-
-        You can skip the brightness part if your light does not support
-        brightness control.
-        """
+        """Instruct the light to turn on (with optional brightness)."""
 
         _LOGGER.debug(
             "Sending turn_on(brightness=%d) for %s",
@@ -123,11 +117,7 @@ class ZimiLight(LightEntity):
     def update(self) -> None:
         """Fetch new state data for this light.
 
-        This is the only method that should fetch new data for Home Assistant.
+        (The only data that needs updating is the name that might be set from Zimi app).
         """
 
-        self._name = self._light.name
-        self._state = self._light.is_on
-        if self._light.type == "dimmer":
-            if self._light.brightness:
-                self._brightness = self._light.brightness * 255 / 100
+        self._attr_name = self._light.name.strip()
