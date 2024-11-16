@@ -284,6 +284,7 @@ async def async_setup_entry(
 
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
+            entities.append(TibberSensorElPriceExclTax(home))
             if coordinator is None:
                 coordinator = TibberDataCoordinator(hass, tibber_connection)
             entities.extend(
@@ -436,6 +437,61 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_extra_state_attributes["estimated_annual_consumption"] = data[
             "meteringPointData"
         ]["estimatedAnnualConsumption"]
+
+
+class TibberSensorElPriceExclTax(TibberSensor):
+    """Representation of a Tibber sensor for el price excluding tax."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "electricity_price_excl_tax"
+
+    def __init__(self, tibber_home: tibber.TibberHome) -> None:
+        """Initialize the sensor."""
+        super().__init__(tibber_home=tibber_home)
+        self._last_updated: datetime.datetime | None = None
+        self._spread_load_constant = randrange(TWENTY_MINUTES)
+
+        self._attr_available = False
+        self._attr_icon = ICON
+        self._attr_unique_id = f"{self._tibber_home.home_id}_excl_tax"
+        self._model = "Price Sensor Excluding Tax"
+
+        self._device_name = self._home_name
+
+    async def async_update(self) -> None:
+        """Get the latest data and updates the states."""
+        now = dt_util.now()
+        if (
+            not self._tibber_home.last_data_timestamp
+            or (self._tibber_home.last_data_timestamp - now).total_seconds()
+            < 5 * 3600 + self._spread_load_constant
+            or not self.available
+        ):
+            _LOGGER.debug("Asking for new data")
+            await self._fetch_data()
+
+        elif (
+            self._tibber_home.current_price_total
+            and self._last_updated
+            and self._last_updated.hour == now.hour
+            and self._tibber_home.last_data_timestamp
+        ):
+            return
+
+        # Price energy / tax
+        # current_price_info -> {'energy': 0.0737, 'tax': 0.1719, 'total': 0.2456, 'startsAt': '2024-08-06T09:00:00.000+02:00', 'level': 'NORMAL'}
+        res = self._tibber_home.current_price_info
+        self._attr_native_value = res.get("energy")
+        self._attr_available = self._attr_native_value is not None
+        self._attr_native_unit_of_measurement = self._tibber_home.price_unit
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def _fetch_data(self) -> None:
+        _LOGGER.debug("Fetching data")
+        try:
+            await self._tibber_home.update_current_price_info()
+        except (TimeoutError, aiohttp.ClientError):
+            return
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
