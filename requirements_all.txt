@@ -2870,7 +2870,7 @@ ttn_client==1.2.0
 tuya-device-sharing-sdk==0.1.9
 
 # homeassistant.components.twentemilieu
-twentemilieu==2.0.1
+twentemilieu==2.1.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
