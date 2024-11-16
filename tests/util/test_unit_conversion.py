@@ -634,14 +634,14 @@ _CONVERTED_VALUE: dict[
         (
             1,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            4.40286754,
-            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            0.58857777,
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         ),
         (
             1,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            0.58857777,
-            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            4.40286754,
+            UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         ),
         (
             1,
