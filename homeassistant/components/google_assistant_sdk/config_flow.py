@@ -66,10 +66,6 @@ class OAuth2FlowHandler(
                 self._get_reauth_entry(), data=data
             )
 
-        if self._async_current_entries():
-            # Config entry already exists, only one allowed.
-            return self.async_abort(reason="single_instance_allowed")
-
         return self.async_create_entry(
             title=DEFAULT_NAME,
             data=data,
