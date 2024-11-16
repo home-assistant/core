@@ -101,6 +101,14 @@
         "avoid_subscription_roads": {
           "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_subscription_roads%]",
           "description": "Whether to avoid subscription roads."
+        },
+        "incl_filter": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::incl_filter%]",
+          "description": "Exact streetname which must be part of the selected route."
+        },
+        "excl_filter": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::excl_filter%]",
+          "description": "Exact streetname which must NOT be part of the selected route."
         }
       }
     }
