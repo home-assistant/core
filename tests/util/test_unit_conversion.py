@@ -635,7 +635,7 @@ _CONVERTED_VALUE: dict[
             1,
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             277.7777778,
-            UnitOfVolumeFlowRate.MILILITERS_PER_SECOND,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
         (
             1,
@@ -659,7 +659,7 @@ _CONVERTED_VALUE: dict[
             1,
             UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
             16.6666667,
-            UnitOfVolumeFlowRate.MILILITERS_PER_SECOND,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
         (
             1,
