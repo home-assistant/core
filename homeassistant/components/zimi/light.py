@@ -115,8 +115,8 @@ class ZimiLight(LightEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup ZimiLight with removal of notification prior to removal."""
+        await super().async_will_remove_from_hass()
         self._light.unsubscribe(self)
-        return await super().async_will_remove_from_hass()
 
     def notify(self, _observable):
         """Receive notification from light device that state has changed."""
