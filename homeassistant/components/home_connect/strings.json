@@ -82,14 +82,6 @@
     "moved_program_options_keys": {
       "title": "Use new options in action such select program or set program options",
       "description": "The keys `key`, `value` and `unit` at the root level are deprecated and will be no longer valid after 2025.6.0 release. With an action like the following:\n{old_action}\nyou can do the following transformations:\n- Use the new recognized options:\n  {action_options}\n- If the option is not in the recognized options, you can use the `custom_options` list:\n  {action_custom_options}"
-    },
-    "deprecated_service_start_program": {
-      "title": "Start program service deprecated",
-      "description": "The `start_program` service is deprecated and will be removed in a future release. Please use the `select_program` service with the `start` set to `true` option instead."
-    },
-    "deprecated_program_options_action": {
-      "title": "Deprecated actions for setting program options",
-      "description": "The actions `home_connect.set_option_selected` and `home_connect.set_option_active` are deprecated and will be removed after 2025.6.0 release. Please use the `home_connect.set_program_options` action instead, and if you need to force the active program or the selected program options, use the `force_selected_active` option."
     }
   },
   "selector": {
@@ -413,9 +405,9 @@
     }
   },
   "services": {
-    "select_program": {
-      "name": "Select program",
-      "description": "Selects a program, sets the program options and optionally starts the program.",
+    "start_program": {
+      "name": "Start program",
+      "description": "Selects a program, sets the options, and starts it.",
       "fields": {
         "device_id": {
           "name": "Device ID",
@@ -424,10 +416,6 @@
         "program": {
           "name": "Program",
           "description": "Program to select. You can use the listed programs or use a custom program key such \"Dishcare.Dishwasher.Program.Auto2\""
-        },
-        "start": {
-          "name": "Start program",
-          "description": "Start the selected program"
         },
         "consumer_products_cleaning_robot_option_reference_map_id": {
           "name": "Reference map ID"
@@ -568,13 +556,164 @@
         }
       }
     },
+    "select_program": {
+      "name": "Select program",
+      "description": "Selects a program and sets options without starting it.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::home_connect::services::start_program::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
+        },
+        "program": {
+          "name": "[%key:component::home_connect::services::start_program::fields::program::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::program::description%]"
+        },
+        "consumer_products_cleaning_robot_option_reference_map_id": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]"
+        },
+        "consumer_products_cleaning_robot_option_cleaning_mode": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_cleaning_robot_option_cleaning_mode::name%]"
+        },
+        "consumer_products_coffee_maker_option_bean_amount": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_bean_amount::name%]"
+        },
+        "consumer_products_coffee_maker_option_fill_quantity": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_fill_quantity::name%]"
+        },
+        "consumer_products_coffee_maker_option_coffee_temperature": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_coffee_temperature::name%]"
+        },
+        "consumer_products_coffee_maker_option_bean_container": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_bean_container::name%]"
+        },
+        "consumer_products_coffee_maker_option_flow_rate": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_flow_rate::name%]"
+        },
+        "consumer_products_coffee_maker_option_multiple_beverages": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_multiple_beverages::name%]"
+        },
+        "consumer_products_coffee_maker_option_coffee_milk_ratio": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_coffee_milk_ratio::name%]"
+        },
+        "consumer_products_coffee_maker_option_hot_water_temperature": {
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_hot_water_temperature::name%]"
+        },
+        "b_s_h_common_option_start_in_relative": {
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_start_in_relative::name%]"
+        },
+        "dishcare_dishwasher_option_intensiv_zone": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
+        },
+        "dishcare_dishwasher_option_brilliance_dry": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_brilliance_dry::name%]"
+        },
+        "dishcare_dishwasher_option_vario_speed_plus": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_vario_speed_plus::name%]"
+        },
+        "dishcare_dishwasher_option_silence_on_demand": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_silence_on_demand::name%]"
+        },
+        "dishcare_dishwasher_option_half_load": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_half_load::name%]"
+        },
+        "dishcare_dishwasher_option_extra_dry": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_extra_dry::name%]"
+        },
+        "dishcare_dishwasher_option_hygiene_plus": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
+        },
+        "dishcare_dishwasher_option_eco_dry": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_eco_dry::name%]"
+        },
+        "dishcare_dishwasher_option_zeolite_dry": {
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_zeolite_dry::name%]"
+        },
+        "laundry_care_dryer_option_drying_target": {
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_dryer_option_drying_target::name%]"
+        },
+        "cooking_hood_option_venting_level": {
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_hood_option_venting_level::name%]"
+        },
+        "cooking_hood_option_intensive_level": {
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_hood_option_intensive_level::name%]"
+        },
+        "cooking_oven_option_setpoint_temperature": {
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_setpoint_temperature::name%]"
+        },
+        "b_s_h_common_option_duration": {
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_duration::name%]"
+        },
+        "cooking_oven_option_fast_pre_heat": {
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_fast_pre_heat::name%]"
+        },
+        "cooking_oven_option_warming_level": {
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_warming_level::name%]"
+        },
+        "laundry_care_washer_option_temperature": {
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_temperature::name%]"
+        },
+        "laundry_care_washer_option_spin_speed": {
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_spin_speed::name%]"
+        },
+        "b_s_h_common_option_finish_in_relative": {
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_finish_in_relative::name%]"
+        },
+        "laundry_care_washer_option_i_dos1_active": {
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_i_dos1_active::name%]"
+        },
+        "laundry_care_washer_option_i_dos2_active": {
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_i_dos2_active::name%]"
+        },
+        "laundry_care_washer_option_vario_perfect": {
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::name%]"
+        },
+        "custom_options": {
+          "name": "[%key:component::home_connect::services::start_program::fields::custom_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::custom_options::description%]"
+        }
+      },
+      "sections": {
+        "cleaning_robot_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::cleaning_robot_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::cleaning_robot_options::description%]"
+        },
+        "coffee_maker_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::coffee_maker_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::coffee_maker_options::description%]"
+        },
+        "dish_washer_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::dish_washer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::dish_washer_options::description%]"
+        },
+        "dryer_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::dryer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::dryer_options::description%]"
+        },
+        "hood_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::hood_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::hood_options::description%]"
+        },
+        "oven_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::oven_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::oven_options::description%]"
+        },
+        "warming_drawer_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::warming_drawer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::warming_drawer_options::description%]"
+        },
+        "washer_options": {
+          "name": "[%key:component::home_connect::services::start_program::sections::washer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::washer_options::description%]"
+        }
+      }
+    },
     "pause_program": {
       "name": "Pause program",
       "description": "Pauses the current running program.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::home_connect::services::select_program::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::select_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         }
       }
     },
@@ -583,8 +722,8 @@
       "description": "Resumes a paused program.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::home_connect::services::select_program::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::select_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         }
       }
     },
@@ -593,145 +732,145 @@
       "description": "Sets options for the active program.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::home_connect::services::select_program::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::select_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
         "consumer_products_cleaning_robot_option_reference_map_id": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]"
         },
         "consumer_products_cleaning_robot_option_cleaning_mode": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_cleaning_robot_option_cleaning_mode::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_cleaning_robot_option_cleaning_mode::name%]"
         },
         "consumer_products_coffee_maker_option_bean_amount": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_bean_amount::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_bean_amount::name%]"
         },
         "consumer_products_coffee_maker_option_fill_quantity": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_fill_quantity::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_fill_quantity::name%]"
         },
         "consumer_products_coffee_maker_option_coffee_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_coffee_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_coffee_temperature::name%]"
         },
         "consumer_products_coffee_maker_option_bean_container": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_bean_container::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_bean_container::name%]"
         },
         "consumer_products_coffee_maker_option_flow_rate": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_flow_rate::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_flow_rate::name%]"
         },
         "consumer_products_coffee_maker_option_multiple_beverages": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_multiple_beverages::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_multiple_beverages::name%]"
         },
         "consumer_products_coffee_maker_option_coffee_milk_ratio": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_coffee_milk_ratio::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_coffee_milk_ratio::name%]"
         },
         "consumer_products_coffee_maker_option_hot_water_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_hot_water_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_hot_water_temperature::name%]"
         },
         "b_s_h_common_option_start_in_relative": {
-          "name": "[%key:component::home_connect::services::select_program::fields::b_s_h_common_option_start_in_relative::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_start_in_relative::name%]"
         },
         "dishcare_dishwasher_option_intensiv_zone": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
         },
         "dishcare_dishwasher_option_brilliance_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_brilliance_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_brilliance_dry::name%]"
         },
         "dishcare_dishwasher_option_vario_speed_plus": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_vario_speed_plus::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_vario_speed_plus::name%]"
         },
         "dishcare_dishwasher_option_silence_on_demand": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_silence_on_demand::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_silence_on_demand::name%]"
         },
         "dishcare_dishwasher_option_half_load": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_half_load::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_half_load::name%]"
         },
         "dishcare_dishwasher_option_extra_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_extra_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_extra_dry::name%]"
         },
         "dishcare_dishwasher_option_hygiene_plus": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
         },
         "dishcare_dishwasher_option_eco_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_eco_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_eco_dry::name%]"
         },
         "dishcare_dishwasher_option_zeolite_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_zeolite_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_zeolite_dry::name%]"
         },
         "laundry_care_dryer_option_drying_target": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_dryer_option_drying_target::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_dryer_option_drying_target::name%]"
         },
         "cooking_hood_option_venting_level": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_hood_option_venting_level::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_hood_option_venting_level::name%]"
         },
         "cooking_hood_option_intensive_level": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_hood_option_intensive_level::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_hood_option_intensive_level::name%]"
         },
         "cooking_oven_option_setpoint_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_oven_option_setpoint_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_setpoint_temperature::name%]"
         },
         "b_s_h_common_option_duration": {
-          "name": "[%key:component::home_connect::services::select_program::fields::b_s_h_common_option_duration::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_duration::name%]"
         },
         "cooking_oven_option_fast_pre_heat": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_oven_option_fast_pre_heat::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_fast_pre_heat::name%]"
         },
         "cooking_oven_option_warming_level": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_oven_option_warming_level::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_warming_level::name%]"
         },
         "laundry_care_washer_option_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_temperature::name%]"
         },
         "laundry_care_washer_option_spin_speed": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_spin_speed::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_spin_speed::name%]"
         },
         "b_s_h_common_option_finish_in_relative": {
-          "name": "[%key:component::home_connect::services::select_program::fields::b_s_h_common_option_finish_in_relative::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_finish_in_relative::name%]"
         },
         "laundry_care_washer_option_i_dos1_active": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_i_dos1_active::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_i_dos1_active::name%]"
         },
         "laundry_care_washer_option_i_dos2_active": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_i_dos2_active::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_i_dos2_active::name%]"
         },
         "laundry_care_washer_option_vario_perfect": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_vario_perfect::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::name%]"
         },
         "custom_options": {
-          "name": "[%key:component::home_connect::services::select_program::fields::custom_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::fields::custom_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::custom_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::custom_options::description%]"
         }
       },
       "sections": {
         "cleaning_robot_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::cleaning_robot_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::cleaning_robot_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::cleaning_robot_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::cleaning_robot_options::description%]"
         },
         "coffee_maker_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::coffee_maker_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::coffee_maker_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::coffee_maker_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::coffee_maker_options::description%]"
         },
         "dish_washer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::dish_washer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::dish_washer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::dish_washer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::dish_washer_options::description%]"
         },
         "dryer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::dryer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::dryer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::dryer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::dryer_options::description%]"
         },
         "hood_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::hood_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::hood_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::hood_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::hood_options::description%]"
         },
         "oven_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::oven_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::oven_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::oven_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::oven_options::description%]"
         },
         "warming_drawer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::warming_drawer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::warming_drawer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::warming_drawer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::warming_drawer_options::description%]"
         },
         "washer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::washer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::washer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::washer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::washer_options::description%]"
         }
       }
     },
@@ -740,145 +879,145 @@
       "description": "Sets options for the selected program.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::home_connect::services::select_program::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::select_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
         "consumer_products_cleaning_robot_option_reference_map_id": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]"
         },
         "consumer_products_cleaning_robot_option_cleaning_mode": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_cleaning_robot_option_cleaning_mode::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_cleaning_robot_option_cleaning_mode::name%]"
         },
         "consumer_products_coffee_maker_option_bean_amount": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_bean_amount::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_bean_amount::name%]"
         },
         "consumer_products_coffee_maker_option_fill_quantity": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_fill_quantity::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_fill_quantity::name%]"
         },
         "consumer_products_coffee_maker_option_coffee_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_coffee_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_coffee_temperature::name%]"
         },
         "consumer_products_coffee_maker_option_bean_container": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_bean_container::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_bean_container::name%]"
         },
         "consumer_products_coffee_maker_option_flow_rate": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_flow_rate::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_flow_rate::name%]"
         },
         "consumer_products_coffee_maker_option_multiple_beverages": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_multiple_beverages::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_multiple_beverages::name%]"
         },
         "consumer_products_coffee_maker_option_coffee_milk_ratio": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_coffee_milk_ratio::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_coffee_milk_ratio::name%]"
         },
         "consumer_products_coffee_maker_option_hot_water_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::consumer_products_coffee_maker_option_hot_water_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::consumer_products_coffee_maker_option_hot_water_temperature::name%]"
         },
         "b_s_h_common_option_start_in_relative": {
-          "name": "[%key:component::home_connect::services::select_program::fields::b_s_h_common_option_start_in_relative::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_start_in_relative::name%]"
         },
         "dishcare_dishwasher_option_intensiv_zone": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
         },
         "dishcare_dishwasher_option_brilliance_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_brilliance_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_brilliance_dry::name%]"
         },
         "dishcare_dishwasher_option_vario_speed_plus": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_vario_speed_plus::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_vario_speed_plus::name%]"
         },
         "dishcare_dishwasher_option_silence_on_demand": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_silence_on_demand::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_silence_on_demand::name%]"
         },
         "dishcare_dishwasher_option_half_load": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_half_load::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_half_load::name%]"
         },
         "dishcare_dishwasher_option_extra_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_extra_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_extra_dry::name%]"
         },
         "dishcare_dishwasher_option_hygiene_plus": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
         },
         "dishcare_dishwasher_option_eco_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_eco_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_eco_dry::name%]"
         },
         "dishcare_dishwasher_option_zeolite_dry": {
-          "name": "[%key:component::home_connect::services::select_program::fields::dishcare_dishwasher_option_zeolite_dry::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::dishcare_dishwasher_option_zeolite_dry::name%]"
         },
         "laundry_care_dryer_option_drying_target": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_dryer_option_drying_target::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_dryer_option_drying_target::name%]"
         },
         "cooking_hood_option_venting_level": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_hood_option_venting_level::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_hood_option_venting_level::name%]"
         },
         "cooking_hood_option_intensive_level": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_hood_option_intensive_level::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_hood_option_intensive_level::name%]"
         },
         "cooking_oven_option_setpoint_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_oven_option_setpoint_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_setpoint_temperature::name%]"
         },
         "b_s_h_common_option_duration": {
-          "name": "[%key:component::home_connect::services::select_program::fields::b_s_h_common_option_duration::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_duration::name%]"
         },
         "cooking_oven_option_fast_pre_heat": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_oven_option_fast_pre_heat::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_fast_pre_heat::name%]"
         },
         "cooking_oven_option_warming_level": {
-          "name": "[%key:component::home_connect::services::select_program::fields::cooking_oven_option_warming_level::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::cooking_oven_option_warming_level::name%]"
         },
         "laundry_care_washer_option_temperature": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_temperature::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_temperature::name%]"
         },
         "laundry_care_washer_option_spin_speed": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_spin_speed::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_spin_speed::name%]"
         },
         "b_s_h_common_option_finish_in_relative": {
-          "name": "[%key:component::home_connect::services::select_program::fields::b_s_h_common_option_finish_in_relative::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::b_s_h_common_option_finish_in_relative::name%]"
         },
         "laundry_care_washer_option_i_dos1_active": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_i_dos1_active::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_i_dos1_active::name%]"
         },
         "laundry_care_washer_option_i_dos2_active": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_i_dos2_active::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_i_dos2_active::name%]"
         },
         "laundry_care_washer_option_vario_perfect": {
-          "name": "[%key:component::home_connect::services::select_program::fields::laundry_care_washer_option_vario_perfect::name%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::name%]"
         },
         "custom_options": {
-          "name": "[%key:component::home_connect::services::select_program::fields::custom_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::fields::custom_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::custom_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::custom_options::description%]"
         }
       },
       "sections": {
         "cleaning_robot_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::cleaning_robot_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::cleaning_robot_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::cleaning_robot_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::cleaning_robot_options::description%]"
         },
         "coffee_maker_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::coffee_maker_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::coffee_maker_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::coffee_maker_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::coffee_maker_options::description%]"
         },
         "dish_washer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::dish_washer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::dish_washer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::dish_washer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::dish_washer_options::description%]"
         },
         "dryer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::dryer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::dryer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::dryer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::dryer_options::description%]"
         },
         "hood_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::hood_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::hood_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::hood_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::hood_options::description%]"
         },
         "oven_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::oven_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::oven_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::oven_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::oven_options::description%]"
         },
         "warming_drawer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::warming_drawer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::warming_drawer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::warming_drawer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::warming_drawer_options::description%]"
         },
         "washer_options": {
-          "name": "[%key:component::home_connect::services::select_program::sections::washer_options::name%]",
-          "description": "[%key:component::home_connect::services::select_program::sections::washer_options::description%]"
+          "name": "[%key:component::home_connect::services::start_program::sections::washer_options::name%]",
+          "description": "[%key:component::home_connect::services::start_program::sections::washer_options::description%]"
         }
       }
     },
@@ -887,8 +1026,8 @@
       "description": "Changes a setting.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::home_connect::services::select_program::fields::device_id::name%]",
-          "description": "[%key:component::home_connect::services::select_program::fields::device_id::description%]"
+          "name": "[%key:component::home_connect::services::start_program::fields::device_id::name%]",
+          "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
         "key": { "name": "Key", "description": "Key of the setting." },
         "value": { "name": "Value", "description": "Value of the setting." }
