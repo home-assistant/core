@@ -66,6 +66,7 @@
         'auto',
       ]),
       'friendly_name': 'Stove',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
