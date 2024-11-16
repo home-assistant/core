@@ -1277,14 +1277,14 @@ def async_register_entity_service(
         schema = cv.make_entity_service_schema(schema)
     elif not cv.is_entity_service_schema(schema):
         # pylint: disable-next=import-outside-toplevel
-        from .frame import report
+        from .frame import ReportBehavior, report_usage
 
-        report(
+        report_usage(
             (
                 "registers an entity service with a non entity service schema "
                 "which will stop working in HA Core 2025.9"
             ),
-            error_if_core=False,
+            core_behavior=ReportBehavior.LOG,
         )
 
     service_func: str | HassJob[..., Any]

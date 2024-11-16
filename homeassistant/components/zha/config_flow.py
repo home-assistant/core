@@ -33,6 +33,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt as dt_util
 
@@ -104,25 +105,26 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
         yellow_radio.description = "Yellow Zigbee module"
         yellow_radio.manufacturer = "Nabu Casa"
 
-    # Present the multi-PAN addon as a setup option, if it's available
-    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
-        hass
-    )
-
-    try:
-        addon_info = await multipan_manager.async_get_addon_info()
-    except (AddonError, KeyError):
-        addon_info = None
-
-    if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
-        addon_port = ListPortInfo(
-            device=silabs_multiprotocol_addon.get_zigbee_socket(),
-            skip_link_detection=True,
+    if is_hassio(hass):
+        # Present the multi-PAN addon as a setup option, if it's available
+        multipan_manager = (
+            await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(hass)
         )
 
-        addon_port.description = "Multiprotocol add-on"
-        addon_port.manufacturer = "Nabu Casa"
-        ports.append(addon_port)
+        try:
+            addon_info = await multipan_manager.async_get_addon_info()
+        except (AddonError, KeyError):
+            addon_info = None
+
+        if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
+            addon_port = ListPortInfo(
+                device=silabs_multiprotocol_addon.get_zigbee_socket(),
+                skip_link_detection=True,
+            )
+
+            addon_port.description = "Multiprotocol add-on"
+            addon_port.manufacturer = "Nabu Casa"
+            ports.append(addon_port)
 
     return ports
 
