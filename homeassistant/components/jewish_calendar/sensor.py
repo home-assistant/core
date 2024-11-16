@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date as Date
-from enum import Enum
 import logging
 from typing import Any, cast
 
@@ -278,14 +277,14 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         if self.entity_description.key == "holiday":
             _id = _type = _type_id = ""
             _holiday_type = after_shkia_date.holiday_type
-            if isinstance(_holiday_type, Enum):
-                _id = after_shkia_date.holiday_name
-                _type = _holiday_type.name
-                _type_id = _holiday_type.value
-            elif isinstance(_holiday_type, list):
+            if isinstance(_holiday_type, list):
                 _id = ", ".join(after_shkia_date.holiday_name)
                 _type = ", ".join([_htype.name for _htype in _holiday_type])
                 _type_id = ", ".join([str(_htype.value) for _htype in _holiday_type])
+            else:
+                _id = after_shkia_date.holiday_name
+                _type = _holiday_type.name
+                _type_id = _holiday_type.value
             self._attrs = {"id": _id, "type": _type, "type_id": _type_id}
             self._attr_options = htables.get_all_holidays(self._language)
 
