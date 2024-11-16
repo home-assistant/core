@@ -11,17 +11,11 @@ from zcc import ControlPointDiscoveryService, ControlPointError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_TIMEOUT,
-    CONF_VERBOSITY,
-    CONF_WATCHDOG,
-    DOMAIN,
-    ZIMI_TIMEOUT,
-    ZIMI_VERBOSITY,
-    ZIMI_WATCHDOG,
-)
+from .const import DOMAIN
+from .coordinator import async_connect_to_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,13 +37,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         if user_input is not None:
-            data: dict[str, Any] = {
-                "title": "ZIMI Controller",
-                CONF_TIMEOUT: ZIMI_TIMEOUT,
-                CONF_VERBOSITY: ZIMI_VERBOSITY,
-                CONF_WATCHDOG: ZIMI_WATCHDOG,
-            }
+            data: dict[str, Any] = {"title": "ZIMI Controller"}
             errors: dict[str, str] = {}
+            description_placeholders: dict[str, str] = {}
 
             try:
                 if user_input[CONF_HOST] == "":
@@ -84,13 +74,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if data[CONF_MAC] is user_input[CONF_MAC]:
                     errors["base"] = "invalid_mac"
 
+                try:
+                    api = await async_connect_to_coordinator(
+                        data[CONF_HOST], data[CONF_PORT], fast=True
+                    )
+
+                    if api:
+                        if data[CONF_MAC] != format_mac(api.mac):
+                            msg = f"{data[CONF_MAC]} != {format_mac(api.mac)}"
+                            _LOGGER.error("Configured mac mismatch: %s", msg)
+                            errors["base"] = "mismatched_mac"
+                            description_placeholders["error_detail"] = msg
+
+                        api.disconnect()
+                    else:
+                        errors["base"] = "cannot_connect"
+
+                except ConfigEntryNotReady as _:
+                    errors["base"] = "cannot_connect"
+
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception during configuration steps")
                 errors["base"] = "unknown"
 
             if errors:
                 return self.async_show_form(
-                    step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors=errors,
+                    description_placeholders=description_placeholders,
                 )
 
             await self.async_set_unique_id(data["mac"])

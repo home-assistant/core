@@ -6,15 +6,49 @@ import pprint
 from zcc import ControlPoint, ControlPointDescription, ControlPointError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_TIMEOUT, CONF_VERBOSITY, CONF_WATCHDOG, PLATFORMS, ZIMI_WATCHDOG
+from .const import PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_connect_to_coordinator(
+    host: str, port: int, fast: bool = False
+) -> ControlPoint | None:
+    """Connect to Zimi Cloud Controller with defined parameters."""
+
+    _LOGGER.debug("Connecting to %s:%d", host, port)
+
+    try:
+        api = ControlPoint(
+            description=ControlPointDescription(
+                host=host,
+                port=port,
+            )
+        )
+        await api.connect(fast=fast)
+
+    except ControlPointError as error:
+        _LOGGER.error("Connection failed: %s", error)
+        raise ConfigEntryNotReady(error) from error
+
+    if api.ready:
+        _LOGGER.debug("Connected")
+
+        if not fast:
+            api.start_watchdog()
+            _LOGGER.debug("Started watchdog")
+
+        return api
+
+    msg = "Connection failed: not ready"
+    _LOGGER.error(msg=msg)
+
+    return None
 
 
 class ZimiCoordinator(DataUpdateCoordinator):
@@ -42,48 +76,25 @@ class ZimiCoordinator(DataUpdateCoordinator):
     async def _async_setup(self):
         """Set up the coordinator."""
 
-        _LOGGER.debug(
-            "Connecting to %s:%d with verbosity=%s, timeout=%d and watchdog=%d",
-            self.config_entry.data[CONF_HOST],
-            self.config_entry.data[CONF_PORT],
-            self.config_entry.data[CONF_VERBOSITY],
-            self.config_entry.data[CONF_TIMEOUT],
-            self.config_entry.data[CONF_WATCHDOG],
-        )
-
         try:
-            self.api = ControlPoint(
-                description=ControlPointDescription(
-                    host=self.config_entry.data[CONF_HOST],
-                    port=self.config_entry.data[CONF_PORT],
-                ),
-                verbosity=self.config_entry.data[CONF_VERBOSITY],
-                timeout=self.config_entry.data[CONF_TIMEOUT],
+            self.api = await async_connect_to_coordinator(
+                host=self.config_entry.data[CONF_HOST],
+                port=self.config_entry.data[CONF_PORT],
             )
-            await self.api.connect()
 
         except ControlPointError as error:
             _LOGGER.error("Initiation failed: %s", error)
             raise ConfigEntryNotReady(error) from error
 
-        if self.config_entry.data[CONF_MAC] != format_mac(self.api.mac):
-            msg = f"Configured mac {self.config_entry.data[CONF_MAC]} != {format_mac(self.api.mac)}"
-            _LOGGER.debug(msg=msg)
-
-        if self.api.ready:
-            _LOGGER.debug("Connected")
+        if self.api:
             _LOGGER.debug("\n%s", self.api.describe())
-
-            if ZIMI_WATCHDOG > 0:
-                self.api.start_watchdog(ZIMI_WATCHDOG)
-                _LOGGER.debug("Started %d second watchdog", ZIMI_WATCHDOG)
 
             self.config_entry.runtime_data = self.api
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS
             )
         else:
-            msg = "Initiation failed: ZCC API not ready"
+            msg = "Initiation failed: not ready"
             _LOGGER.error(msg=msg)
             raise ConfigEntryNotReady(msg)
 
