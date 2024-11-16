@@ -109,6 +109,12 @@
             }
           }
         }
+      },
+      "todo_reminders": {
+        "name": "To-do reminders"
+      },
+      "daily_reminders": {
+        "name": "Daily reminders"
       }
     },
     "sensor": {
