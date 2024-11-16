@@ -55,6 +55,7 @@ type IronOSConfigEntry = ConfigEntry[IronOSCoordinators]
 class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """IronOS base coordinator."""
 
+    config_entry: ConfigEntry
     device_info: DeviceInfoResponse
     config_entry: IronOSConfigEntry
 
