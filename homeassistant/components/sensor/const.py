@@ -419,7 +419,7 @@ class SensorDeviceClass(StrEnum):
     """Generic flow rate
 
     Unit of measurement: UnitOfVolumeFlowRate
-    - SI / metric: `m³/h`, `L/min`,`mL/s`
+    - SI / metric: `m³/h`, `L/min`, `mL/s`
     - USCS / imperial: `ft³/min`, `gal/min`
     """
 
