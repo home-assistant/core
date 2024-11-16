@@ -3,45 +3,37 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.apcupsd.coordinator import REQUEST_REFRESH_COOLDOWN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from . import MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test states of sensor."""
-    config_entry = await async_init_integration(hass, status=MOCK_STATUS)
-
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
-
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    with patch("homeassistant.components.apcupsd.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await async_init_integration(hass, status=MOCK_STATUS)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_state_update(hass: HomeAssistant) -> None:

@@ -5,11 +5,12 @@ from collections import OrderedDict
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.components.apcupsd.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify, utcnow
@@ -28,74 +29,36 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # Contains "SERIALNO" but no "UPSNAME" field.
         # We should create devices for the entities and prefix their IDs with default "APC UPS".
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
-        # Does not contain either "SERIALNO" field.
+        # Does not contain either "SERIALNO" field nor "UPSNAME".
+        # "SERIALNO" is used to determine the unique ID of the integration, but the integration should work fine without it.
         # We should _not_ create devices for the entities and their IDs will not have prefixes.
         MOCK_MINIMAL_STATUS,
     ],
 )
-async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> None:
-    """Test a successful setup entry."""
-    # Minimal status does not contain "SERIALNO" field, which is used to determine the
-    # unique ID of this integration. But, the integration should work fine without it.
-    # In such a case, the device will not be added either
-    await async_init_integration(hass, status=status)
-
-    prefix = ""
-    if "SERIALNO" in status:
-        prefix = slugify(status.get("UPSNAME", "APC UPS")) + "_"
-
-    # Verify successful setup by querying the status sensor.
-    state = hass.states.get(f"binary_sensor.{prefix}online_status")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "on"
-
-
-@pytest.mark.parametrize(
-    "status",
-    [
-        # We should not create device entries if SERIALNO is not reported.
-        MOCK_MINIMAL_STATUS,
-        # We should set the device name to be the friendly UPSNAME field if available.
-        MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX", "UPSNAME": "MyUPS"},
-        # Otherwise, we should fall back to default device name --- "APC UPS".
-        MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
-        # We should create all fields of the device entry if they are available.
-        MOCK_STATUS,
-    ],
-)
-async def test_device_entry(
-    hass: HomeAssistant, status: OrderedDict, device_registry: dr.DeviceRegistry
+async def test_async_setup_entry(
+    hass: HomeAssistant,
+    status: OrderedDict,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test successful setup of device entries."""
+    """Test a successful setup entry."""
     await async_init_integration(hass, status=status)
 
-    # Verify device info is properly set up.
-    if "SERIALNO" not in status:
-        assert len(device_registry.devices) == 0
-        return
+    config_entry = await async_init_integration(hass, status=status)
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry.unique_id)}
+    )
+    device_name = "None" if device_entry is None else device_entry.name
+    assert device_entry == snapshot(name=f"device-{device_name}")
 
-    assert len(device_registry.devices) == 1
-    entry = device_registry.async_get_device({(DOMAIN, status["SERIALNO"])})
-    assert entry is not None
-    # Specify the mapping between field name and the expected fields in device entry.
-    fields = {
-        "UPSNAME": entry.name,
-        "MODEL": entry.model,
-        "VERSION": entry.sw_version,
-        "FIRMWARE": entry.hw_version,
-    }
-
-    for field, entry_value in fields.items():
-        if field in status:
-            assert entry_value == status[field]
-        # Even if UPSNAME is not available, we must fall back to default "APC UPS".
-        elif field == "UPSNAME":
-            assert entry_value == "APC UPS"
-        else:
-            assert not entry_value
-
-    assert entry.manufacturer == "APC"
+    # Use a representative sensor to test the entity ID naming scheme.
+    online_status_sensor = next(
+        state
+        for state in hass.states.async_all(domain_filter=Platform.BINARY_SENSOR)
+        if state.entity_id.startswith(Platform.BINARY_SENSOR)
+        and state.entity_id.endswith("online_status")
+    )
+    assert online_status_sensor == snapshot(name=online_status_sensor.entity_id)
 
 
 async def test_multiple_integrations(hass: HomeAssistant) -> None:
