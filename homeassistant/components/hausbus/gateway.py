@@ -27,7 +27,6 @@ from homeassistant.core import HomeAssistant
 
 from .device import HausbusDevice
 from .entity import HausbusEntity
-from .event_handler import EventHandler
 from .light import (
     Dimmer,
     HausbusDimmerLight,
@@ -39,7 +38,7 @@ from .light import (
 )
 
 
-class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
+class HausbusGateway(IBusDataListener):  # type: ignore[misc]
     """Manages a single Haus-Bus gateway."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
