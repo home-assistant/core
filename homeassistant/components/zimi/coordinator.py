@@ -98,12 +98,6 @@ class ZimiCoordinator(DataUpdateCoordinator):
             _LOGGER.error(msg=msg)
             raise ConfigEntryNotReady(msg)
 
-    async def _async_update_data(self):
-        """Fetch data from API.
-
-        This is not used in this integration - each Entity subscribes
-        to a notification from the ControlPointDevice directly.
-        """
 
     async def disconnect(self) -> None:
         """Disconnect the coordinator."""
