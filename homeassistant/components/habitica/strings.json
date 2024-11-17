@@ -321,12 +321,25 @@
     },
     "quest_not_found": {
       "message": "Unable to complete action, quest or group not found"
+    },
+    "target_not_found": {
+      "message": "Unable to find target {target} in your party"
+    },
+    "party_not_found": {
+      "message": "Unable to find target, you are currently not in a party. You can only target yourself"
+    },
+    "item_not_found": {
+      "message": "Unable to use {item}, you don't own this item."
     }
   },
   "issues": {
     "deprecated_task_entity": {
       "title": "The Habitica {task_name} sensor is deprecated",
       "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
+    },
+    "deprecated_api_call": {
+      "title": "The Habitica action habitica.api_call is deprecated",
+      "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."
     }
   },
   "services": {
@@ -457,6 +470,24 @@
           "description": "The name (or task ID) of the custom reward."
         }
       }
+    },
+    "transformation": {
+      "name": "Use a transformation item",
+      "description": "Use a transformation item from your Habitica character's inventory on a member of your party or yourself.",
+      "fields": {
+        "config_entry": {
+          "name": "Select character",
+          "description": "Choose the Habitica character to use the transformation item."
+        },
+        "item": {
+          "name": "Transformation item",
+          "description": "Select the transformation item you want to use. Item must be in the characters inventory."
+        },
+        "target": {
+          "name": "Target character",
+          "description": "The name of the character you want to use the transformation item on. You can also specify the players username or user ID."
+        }
+      }
     }
   },
   "selector": {
@@ -466,6 +497,14 @@
         "pickpocket": "Rogue: Pickpocket",
         "backstab": "Rogue: Backstab",
         "smash": "Warrior: Brutal smash"
+      }
+    },
+    "transformation_item_select": {
+      "options": {
+        "snowball": "Snowball",
+        "spooky_sparkles": "Spooky sparkles",
+        "seafoam": "Seafoam",
+        "shiny_seed": "Shiny seed"
       }
     }
   }

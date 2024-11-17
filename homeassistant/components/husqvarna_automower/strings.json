@@ -311,6 +311,12 @@
       }
     }
   },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Husqvarna Automower {entity_name} sensor is deprecated",
+      "description": "The Husqavarna Automower entity `{entity}` is deprecated and will be removed in a future release.\nYou can use the new returning state of the lawn mower entity instead.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
+    }
+  },
   "services": {
     "override_schedule": {
       "name": "Override schedule",

@@ -34,6 +34,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
     _app_code: str
     _app_token: str
     _captcha_image: str
+    _phone_number: str
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -49,7 +50,6 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
         self._slnet_token_expires = None
         self._captcha_sid: str | None = None
         self._captcha_code: str | None = None
-        self._phone_number = None
 
         self._auth = StarlineAuth()
 

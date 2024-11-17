@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiorussound.models import CallbackType
+from aiorussound.models import CallbackType, PlayStatus
 import pytest
 
 from homeassistant.const import (
@@ -28,29 +28,29 @@ async def mock_state_update(client: AsyncMock) -> None:
 
 
 @pytest.mark.parametrize(
-    ("zone_status", "source_mode", "media_player_state"),
+    ("zone_status", "source_play_status", "media_player_state"),
     [
-        ("ON", None, STATE_ON),
-        ("ON", "playing", STATE_PLAYING),
-        ("ON", "paused", STATE_PAUSED),
-        ("ON", "transitioning", STATE_BUFFERING),
-        ("ON", "stopped", STATE_IDLE),
-        ("OFF", None, STATE_OFF),
-        ("OFF", "stopped", STATE_OFF),
+        (True, None, STATE_ON),
+        (True, PlayStatus.PLAYING, STATE_PLAYING),
+        (True, PlayStatus.PAUSED, STATE_PAUSED),
+        (True, PlayStatus.TRANSITIONING, STATE_BUFFERING),
+        (True, PlayStatus.STOPPED, STATE_IDLE),
+        (False, None, STATE_OFF),
+        (False, PlayStatus.STOPPED, STATE_OFF),
     ],
 )
 async def test_entity_state(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    zone_status: str,
-    source_mode: str | None,
+    zone_status: bool,
+    source_play_status: PlayStatus | None,
     media_player_state: str,
 ) -> None:
     """Test media player state."""
     await setup_integration(hass, mock_config_entry)
     mock_russound_client.controllers[1].zones[1].status = zone_status
-    mock_russound_client.sources[1].mode = source_mode
+    mock_russound_client.sources[1].play_status = source_play_status
     await mock_state_update(mock_russound_client)
     await hass.async_block_till_done()
 
