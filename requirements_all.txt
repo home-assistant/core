@@ -2155,7 +2155,7 @@ pyoverkiz==1.14.1
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.11
+pypalazzetti==0.1.12
 
 # homeassistant.components.elv
 pypca==0.0.7
