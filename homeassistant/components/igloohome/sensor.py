@@ -28,20 +28,18 @@ async def async_setup_entry(
         api: Api = entry.runtime_data
         devicesResponse = await api.get_devices()
 
-        entities = [
-            BatteryBasedDevice(
+    except Exception as e:
+        raise PlatformNotReady from e
+    else:
+         async_add_entities(
+                    BatteryBasedDevice(
                 device_id=device.deviceId,
                 device_name=device.deviceName,
                 type=device.type,
                 api=api,
             )
             for device in devicesResponse.payload
-            if device.type in ("Lock", "Keypad")
-        ]
-
-        async_add_entities(entities, update_before_add=True)
-    except Exception as e:
-        raise PlatformNotReady from e
+            if device.type in ("Lock", "Keypad"), update_before_add=True)
 
 
 class BatteryBasedDevice(BaseEntity, SensorEntity):
@@ -62,6 +60,7 @@ class BatteryBasedDevice(BaseEntity, SensorEntity):
         """Update the battery level."""
         try:
             response = await self.api.get_device_info(deviceId=self.device_id)
-            self._attr_native_value = response.batteryLevel
         except Exception as e:
             raise HomeAssistantError from e
+        else:
+             self._attr_native_value = response.batteryLevel
