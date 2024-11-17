@@ -9,7 +9,23 @@ from homeassistant.components.gpm._manager import (
 )
 from homeassistant.components.gpm.const import GIT_SHORT_HASH_LEN
 from homeassistant.components.gpm.update import GPMUpdateEntity, UpdateStrategy
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from . import init_integration
+
+
+async def test_async_setup_entry(
+    hass: HomeAssistant, integration_manager: IntegrationRepositoryManager
+) -> None:
+    """Test async_setup_entry."""
+    await init_integration(hass)
+
+    state = hass.states.get("update.awesome_component")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "off"
 
 
 async def test_integration_properties(
@@ -73,7 +89,7 @@ async def test_install(
 
 
 async def test_install_same_version(manager: RepositoryManager) -> None:
-    """Test failed update installation."""
+    """Test update installation fails due to the same version."""
     await manager.clone()
     await manager.checkout("v0.9.9")
     await manager.install()
@@ -83,3 +99,16 @@ async def test_install_same_version(manager: RepositoryManager) -> None:
     with pytest.raises(HomeAssistantError):
         await entity.async_install(version="v0.9.9", backup=False)
     assert manager.checkout.await_count == 0
+
+
+async def test_install_non_existing_version(manager: RepositoryManager) -> None:
+    """Test update installation fails due to non-existing version."""
+    await manager.clone()
+    await manager.checkout("v0.9.9")
+    await manager.install()
+    manager.checkout.reset_mock()
+    entity = GPMUpdateEntity(manager)
+    await entity.async_update()
+    with pytest.raises(HomeAssistantError):
+        await entity.async_install(version="non-existing", backup=False)
+    assert manager.checkout.await_count == 1
