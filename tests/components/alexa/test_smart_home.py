@@ -4546,6 +4546,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
         "tilt_position_attr_in_service_call",
         "supported_features",
         "service_call",
+        "stop_feature_enabled",
     ),
     [
         (
@@ -4556,6 +4557,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.set_cover_tilt_position",
+            True,
         ),
         (
             0,
@@ -4565,6 +4567,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.close_cover_tilt",
+            True,
         ),
         (
             99,
@@ -4574,6 +4577,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.set_cover_tilt_position",
+            True,
         ),
         (
             100,
@@ -4583,36 +4587,42 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.open_cover_tilt",
+            True,
         ),
         (
             0,
             0,
             CoverEntityFeature.SET_TILT_POSITION,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             60,
             60,
             CoverEntityFeature.SET_TILT_POSITION,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             100,
             100,
             CoverEntityFeature.SET_TILT_POSITION,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             0,
             0,
             CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.OPEN_TILT,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             100,
             100,
             CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.CLOSE_TILT,
             "cover.set_cover_tilt_position",
+            False,
         ),
     ],
     ids=[
@@ -4633,6 +4643,7 @@ async def test_cover_tilt_position(
     tilt_position_attr_in_service_call: int | None,
     supported_features: CoverEntityFeature,
     service_call: str,
+    stop_feature_enabled: bool,
 ) -> None:
     """Test cover discovery and tilt position using rangeController."""
     device = (
@@ -4651,12 +4662,24 @@ async def test_cover_tilt_position(
     assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
     assert appliance["friendlyName"] == "Test cover tilt range"
 
+    expected_interfaces: dict[bool, list[str]] = {
+        False: [
+            "Alexa.PowerController",
+            "Alexa.RangeController",
+            "Alexa.EndpointHealth",
+            "Alexa",
+        ],
+        True: [
+            "Alexa.PowerController",
+            "Alexa.RangeController",
+            "Alexa.PlaybackController",
+            "Alexa.EndpointHealth",
+            "Alexa",
+        ],
+    }
+
     capabilities = assert_endpoint_capabilities(
-        appliance,
-        "Alexa.PowerController",
-        "Alexa.RangeController",
-        "Alexa.EndpointHealth",
-        "Alexa",
+        appliance, *expected_interfaces[stop_feature_enabled]
     )
 
     range_capability = get_capability(capabilities, "Alexa.RangeController")
@@ -4713,6 +4736,7 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
         appliance,
         "Alexa.PowerController",
         "Alexa.RangeController",
+        "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
         "Alexa",
     )
