@@ -312,6 +312,7 @@ async def test_alarm_control_panel_not_log_deprecated_state_warning(
     )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
@@ -337,6 +338,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
         ),
+        built_in=False,
     )
 
     class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
@@ -378,15 +380,10 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -397,6 +394,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
     )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
@@ -462,15 +460,10 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
@@ -480,28 +473,18 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
         not in caplog.text
     )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        await help_test_async_alarm_control_panel_service(
-            hass, entity.entity_id, SERVICE_ALARM_DISARM
-        )
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
 
     assert (
         "the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
         in caplog.text
     )
     caplog.clear()
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        await help_test_async_alarm_control_panel_service(
-            hass, entity.entity_id, SERVICE_ALARM_DISARM
-        )
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
     # Test we only log once
     assert (
         "the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
@@ -509,6 +492,7 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
     )
 
 
+@pytest.mark.usefixtures("mock_as_custom_component")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
@@ -575,28 +559,18 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == "armed_away"
 
-    with patch.object(
-        MockLegacyAlarmControlPanel,
-        "__module__",
-        "tests.custom_components.test.alarm_control_panel",
-    ):
-        await help_test_async_alarm_control_panel_service(
-            hass, entity.entity_id, SERVICE_ALARM_DISARM
-        )
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
