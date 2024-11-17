@@ -130,25 +130,16 @@ async def async_setup_entry(
         await hass.async_add_executor_job(
             _build_entities,
             device_list,
-        )
+        ),
+        True,
     )
 
 
 class ViCareFan(ViCareEntity, FanEntity):
     """Representation of the ViCare ventilation device."""
 
-    _attr_preset_modes = list[str](
-        [
-            VentilationMode.PERMANENT,
-            VentilationMode.VENTILATION,
-            VentilationMode.STANDBY,
-            VentilationMode.STANDARD,
-            VentilationMode.SENSOR_DRIVEN,
-            VentilationMode.SENSOR_OVERRIDE,
-        ]
-    )
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = FanEntityFeature.SET_SPEED
     _attr_translation_key = "ventilation"
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -165,6 +156,18 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def update(self) -> None:
         """Update state of fan."""
+
+        # init presets
+        if self._attr_preset_modes is None:
+            supported_modes = list[str](self._api.getAvailableModes())
+            self._attr_preset_modes = [
+                mode
+                for mode in VentilationMode
+                if VentilationMode.to_vicare_mode(mode) in supported_modes
+            ]
+            if len(self._attr_preset_modes) > 0:
+                self._attr_supported_features |= FanEntityFeature.PRESET_MODE
+
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
