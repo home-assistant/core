@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import PalazzettiConfigEntry
 from .coordinator import PalazzettiDataUpdateCoordinator
+from .entity import PalazzettiEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,7 +84,7 @@ async def async_setup_entry(
         async_add_entities(sensors)
 
 
-class PalazzettiSensor(SensorEntity):
+class PalazzettiSensor(PalazzettiEntity, SensorEntity):
     """Define a Palazzetti sensor."""
 
     entity_description: SensorEntityDescription
@@ -96,9 +97,9 @@ class PalazzettiSensor(SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize Palazzetti sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.client.mac}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{description.key}"
 
     @property
     def native_value(self) -> StateType:

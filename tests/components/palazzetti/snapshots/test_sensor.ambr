@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.pellet_quantity-entry]
+# name: test_all_entities[sensor.stove_pellet_quantity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pellet_quantity',
+    'entity_id': 'sensor.stove_pellet_quantity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -34,23 +34,23 @@
     'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
   })
 # ---
-# name: test_all_entities[sensor.pellet_quantity-state]
+# name: test_all_entities[sensor.stove_pellet_quantity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
-      'friendly_name': 'Pellet quantity',
+      'friendly_name': 'Stove Pellet quantity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pellet_quantity',
+    'entity_id': 'sensor.stove_pellet_quantity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='PalazzettiClient().pellet_quantity' id='281472887276656'>",
+    'state': '1248',
   })
 # ---
-# name: test_all_entities[sensor.wood_combustion_temperature-entry]
+# name: test_all_entities[sensor.stove_wood_combustion_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.wood_combustion_temperature',
+    'entity_id': 'sensor.stove_wood_combustion_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -85,16 +85,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.wood_combustion_temperature-state]
+# name: test_all_entities[sensor.stove_wood_combustion_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wood combustion temperature',
+      'friendly_name': 'Stove Wood combustion temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.wood_combustion_temperature',
+    'entity_id': 'sensor.stove_wood_combustion_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
