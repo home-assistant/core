@@ -58,7 +58,7 @@ async def async_setup_entry(
             devices.append(
                 StopPointSensor(
                     stop_point_api,
-                    __getCommonName(stop_point_id, stop_point_info),
+                    __get_common_name(stop_point_id, stop_point_info),
                     stop_point_id,
                     unique_id,
                 )
@@ -80,7 +80,9 @@ async def async_setup_entry(
     async_add_entities(devices, True)
 
 
-def __getCommonName(stop_point_id: str, stop_point_info: dict[str, typing.Any]) -> str:
+def __get_common_name(
+    stop_point_id: str, stop_point_info: dict[str, typing.Any]
+) -> str:
     """Get the common name for the Stop Point.
 
     In the happy path, the Stop Point Id will match the naptanId, and this is simple.
