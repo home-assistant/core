@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from igloohome_api import Api, Auth
 
-from homeassistant.components.hassio import async_get_clientsession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
