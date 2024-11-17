@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class BaseEntity(Entity):
+class IgloohomeBaseEntity(Entity):
     """A base entity that is a part of all igloohome devices."""
 
     def __init__(self, device_id: str, device_name: str, type: str, api: Api) -> None:

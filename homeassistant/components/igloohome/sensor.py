@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IgloohomeConfigEntry
-from .entity import BaseEntity
+from .entity import IgloohomeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ async def async_setup_entry(
         raise PlatformNotReady from e
 
 
-class BatteryBasedDevice(BaseEntity, SensorEntity):
+class BatteryBasedDevice(IgloohomeBaseEntity, SensorEntity):
     """Implementation of a device that has a battery."""
 
     _attr_native_unit_of_measurement = "%"
