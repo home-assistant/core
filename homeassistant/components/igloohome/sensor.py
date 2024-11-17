@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyConfigEntry
+from . import IgloohomeConfigEntry
 from .entity import BaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +20,9 @@ SCAN_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: MyConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IgloohomeConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Do setup the lock entities."""
 

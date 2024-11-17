@@ -12,10 +12,10 @@ from homeassistant.core import HomeAssistant
 # For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type MyConfigEntry = ConfigEntry[Api]
+type IgloohomeConfigEntry = ConfigEntry[Api]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> bool:
     """Set up igloohome from a config entry."""
 
     session = async_get_clientsession(hass)
@@ -32,6 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
