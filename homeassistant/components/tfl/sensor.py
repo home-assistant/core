@@ -10,7 +10,7 @@ from urllib.error import HTTPError, URLError
 
 from tflwrapper import stopPoint
 
-from homeassistant.components.sensor import (  # ENTITY_ID_FORMAT,; PLATFORM_SCHEMA,
+from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
