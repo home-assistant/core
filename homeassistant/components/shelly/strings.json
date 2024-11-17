@@ -55,7 +55,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
       "ipv6_not_supported": "IPv6 is not supported.",
-      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again."
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]"
     }
   },
   "device_automation": {
