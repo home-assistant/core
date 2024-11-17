@@ -330,6 +330,7 @@ def migrate_entity_ids(
             if existing_device is None:
                 device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
             else:
+                _LOGGER.error("Reolink device with uid %s already exists, removing device with uid %s", new_device_id, device_uid)
                 device_reg.async_remove_device(device.id)
 
     entity_reg = er.async_get(hass)
