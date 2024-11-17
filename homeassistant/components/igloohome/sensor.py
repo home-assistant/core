@@ -30,33 +30,31 @@ async def async_setup_entry(
         api: Api = entry.runtime_data
         devicesResponse = await api.get_devices()
 
-        entities = [
-            BatteryBasedDevice(
+    except Exception as e:
+        raise PlatformNotReady from e
+    else:
+         async_add_entities(
+                    BatteryBasedDevice(
                 device_id=device.deviceId,
                 device_name=device.deviceName,
                 type=device.type,
                 api=api,
             )
             for device in devicesResponse.payload
-            if device.type in ("Lock", "Keypad")
-        ]
-
-        async_add_entities(entities, update_before_add=True)
-    except Exception as e:
-        raise PlatformNotReady from e
+            if device.type in ("Lock", "Keypad"), update_before_add=True)
 
 
 class BatteryBasedDevice(IgloohomeBaseEntity, SensorEntity):
     """Implementation of a device that has a battery."""
 
     _attr_native_unit_of_measurement = "%"
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     def __init__(self, device_id: str, device_name: str, type: str, api: Api) -> None:
         """Initialize the class."""
         super().__init__(
             device_id=device_id, device_name=device_name, type=type, api=api
         )
-        self._attr_device_class = SensorDeviceClass.BATTERY
         # Set the unique ID of the battery entity.
         self._attr_unique_id = f"battery_{device_id}"
 
@@ -64,6 +62,7 @@ class BatteryBasedDevice(IgloohomeBaseEntity, SensorEntity):
         """Update the battery level."""
         try:
             response = await self.api.get_device_info(deviceId=self.device_id)
-            self._attr_native_value = response.batteryLevel
         except Exception as e:
             raise HomeAssistantError from e
+        else:
+             self._attr_native_value = response.batteryLevel
