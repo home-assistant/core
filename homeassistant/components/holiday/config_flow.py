@@ -230,7 +230,9 @@ class HolidayOptionsFlowHandler(OptionsFlow):
         )
 
         return self.async_show_form(
-            data_schema=self.add_suggested_values_to_schema(schema, self.options),
+            data_schema=self.add_suggested_values_to_schema(
+                schema, self.config_entry.options
+            ),
             description_placeholders={
                 CONF_COUNTRY: self.config_entry.data[CONF_COUNTRY]
             },
