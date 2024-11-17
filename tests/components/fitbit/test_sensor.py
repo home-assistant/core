@@ -84,7 +84,7 @@ def mock_token_refresh(requests_mock: Mocker) -> None:
         ),
         (
             ["activities/tracker/activityCalories"],
-            "sensor.tracker_activity_calories",
+            "sensor.first_l_tracker_activity_calories",
             "activities/tracker/activityCalories",
             "135",
         ),
@@ -96,7 +96,7 @@ def mock_token_refresh(requests_mock: Mocker) -> None:
         ),
         (
             ["activities/tracker/calories"],
-            "sensor.tracker_calories",
+            "sensor.first_l_tracker_calories",
             "activities/tracker/calories",
             "139",
         ),

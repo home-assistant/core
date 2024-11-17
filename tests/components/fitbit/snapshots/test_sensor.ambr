@@ -60,12 +60,12 @@
     'fitbit-api-user-id-1_activities/activityCalories',
   )
 # ---
-# name: test_sensors[monitored_resources1-sensor.tracker_activity_calories-activities/tracker/activityCalories-135]
+# name: test_sensors[monitored_resources1-sensor.first_l_tracker_activity_calories-activities/tracker/activityCalories-135]
   tuple(
     '135',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'Tracker Activity Calories',
+      'friendly_name': 'First L. Tracker Activity Calories',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
@@ -274,12 +274,12 @@
     'fitbit-api-user-id-1_sleep/timeInBed',
   )
 # ---
-# name: test_sensors[monitored_resources3-sensor.tracker_calories-activities/tracker/calories-139]
+# name: test_sensors[monitored_resources3-sensor.first_l_tracker_calories-activities/tracker/calories-139]
   tuple(
     '139',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'Tracker Calories',
+      'friendly_name': 'First L. Tracker Calories',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',

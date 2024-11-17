@@ -140,6 +140,7 @@ def _build_device_info(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{unique_id}_tracker")},
             translation_key="tracker",
+            translation_placeholders={"display_name": config_entry.title},
         )
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,

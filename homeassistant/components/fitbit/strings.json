@@ -132,7 +132,7 @@
   },
   "device": {
     "tracker": {
-      "name": "Tracker"
+      "name": "{display_name} Tracker"
     }
   }
 }
