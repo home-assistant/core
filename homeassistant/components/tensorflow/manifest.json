@@ -10,6 +10,6 @@
     "tf-models-official==2.5.0",
     "pycocotools==2.0.6",
     "numpy==2.1.3",
-    "Pillow==10.4.0"
+    "Pillow==11.0.0"
   ]
 }
