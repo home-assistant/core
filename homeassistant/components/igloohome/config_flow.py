@@ -32,13 +32,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
+    session = aiohttp.ClientSession()
+    auth = Auth(
+        session=session,
+        client_id=data[CONF_CLIENT_ID],
+        client_secret=data[CONF_CLIENT_SECRET],
+    )
+
     try:
-        session = aiohttp.ClientSession()
-        auth = Auth(
-            session=session,
-            client_id=data[CONF_CLIENT_ID],
-            client_secret=data[CONF_CLIENT_SECRET],
-        )
         _ = await auth.async_get_access_token()
     except AuthException as e:
         raise InvalidAuth from e
