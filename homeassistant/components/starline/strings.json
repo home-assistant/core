@@ -126,10 +126,10 @@
         "name": "Horn"
       },
       "flex": {
-        "message": "Flex logic {num}"
+        "name": "Flex logic {num}"
       },
       "panic": {
-        "message": "Panic mode"
+        "name": "Panic mode"
       }
     }
   },
