@@ -1186,7 +1186,7 @@ ifaddr==0.2.0
 iglo==1.2.7
 
 # homeassistant.components.igloohome
-igloohome-api==0.0.4
+igloohome-api==0.0.5
 
 # homeassistant.components.ihc
 ihcsdk==2.8.5
