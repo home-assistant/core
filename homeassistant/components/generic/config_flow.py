@@ -87,6 +87,11 @@ IMAGE_PREVIEWS_ACTIVE = "previews"
 class InvalidStreamException(HomeAssistantError):
     """Error to indicate an invalid stream."""
 
+    def __init__(self, error: str, details: str | None = None) -> None:
+        """Initialize the error."""
+        super().__init__(error)
+        self.details = details
+
 
 def build_schema(
     user_input: Mapping[str, Any],
@@ -292,9 +297,9 @@ async def async_test_and_preview_stream(
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
     except StreamWorkerError as err:
-        return {CONF_STREAM_SOURCE: "unknown_with_details", "error_details": str(err)}
-    except PermissionError:
-        return {CONF_STREAM_SOURCE: "stream_not_permitted"}
+        raise InvalidStreamException("unknown_with_details", str(err)) from err
+    except PermissionError as err:
+        raise InvalidStreamException("stream_not_permitted") from err
     except OSError as err:
         if err.errno == EHOSTUNREACH:
             raise InvalidStreamException("stream_no_route_to_host") from err
@@ -360,7 +365,9 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     result = await async_test_and_preview_stream(hass, user_input)
                     self.preview_stream = result
                 except InvalidStreamException as err:
-                    errors |= {CONF_STREAM_SOURCE: str(err)}
+                    errors[CONF_STREAM_SOURCE] = str(err)
+                    if err.details:
+                        errors["error_details"] = err.details
                     self.preview_stream = None
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
@@ -439,6 +446,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
+        description_placeholders = {}
         hass = self.hass
 
         if user_input is not None:
@@ -448,7 +456,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
             try:
                 await async_test_and_preview_stream(hass, user_input)
             except InvalidStreamException as err:
-                errors |= {CONF_STREAM_SOURCE: str(err)}
+                errors[CONF_STREAM_SOURCE] = str(err)
+                if err.details:
+                    errors["error_details"] = err.details
                 # Stream preview during options flow not yet implemented
 
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
@@ -470,6 +480,8 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 # temporary preview for user to check the image
                 self.preview_cam = data
                 return await self.async_step_confirm_still()
+            if "error_details" in errors:
+                description_placeholders["error"] = errors.pop("error_details")
         return self.async_show_form(
             step_id="init",
             data_schema=build_schema(
