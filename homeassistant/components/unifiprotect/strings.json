@@ -144,6 +144,24 @@
             }
           }
         }
+      },
+      "doorbell_nfc": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "nfc_card_scanned": "Card scanned"
+            }
+          }
+        }
+      },
+      "doorbell_fingerprint": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "fingerprint_identified": "Finger identified"
+            }
+          }
+        }
       }
     }
   },
