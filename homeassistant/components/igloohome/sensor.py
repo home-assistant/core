@@ -33,15 +33,19 @@ async def async_setup_entry(
     except Exception as e:
         raise PlatformNotReady from e
     else:
-         async_add_entities(
-                    BatteryBasedDevice(
-                device_id=device.deviceId,
-                device_name=device.deviceName,
-                type=device.type,
-                api=api,
-            )
-            for device in devicesResponse.payload
-            if device.type in ("Lock", "Keypad"), update_before_add=True)
+        async_add_entities(
+            new_entities=(
+                BatteryBasedDevice(
+                    device_id=device.deviceId,
+                    device_name=device.deviceName,
+                    type=device.type,
+                    api=api,
+                )
+                for device in devicesResponse.payload
+                if device.type in ("Lock", "Keypad")
+            ),
+            update_before_add=True,
+        )
 
 
 class BatteryBasedDevice(IgloohomeBaseEntity, SensorEntity):
@@ -65,4 +69,4 @@ class BatteryBasedDevice(IgloohomeBaseEntity, SensorEntity):
         except Exception as e:
             raise HomeAssistantError from e
         else:
-             self._attr_native_value = response.batteryLevel
+            self._attr_native_value = response.batteryLevel
