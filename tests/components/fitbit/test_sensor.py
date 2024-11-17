@@ -212,8 +212,8 @@ def mock_token_refresh(requests_mock: Mocker) -> None:
 )
 async def test_sensors(
     hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
     entity_registry: er.EntityRegistry,
     entity_id: str,
@@ -226,7 +226,7 @@ async def test_sensors(
     register_timeseries(
         api_resource, timeseries_response(api_resource.replace("/", "-"), api_value)
     )
-    await sensor_platform_setup()
+    await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
@@ -243,13 +243,13 @@ async def test_sensors(
 )
 async def test_device_battery(
     hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test battery level sensor for devices."""
 
-    assert await sensor_platform_setup()
+    assert await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
@@ -290,13 +290,13 @@ async def test_device_battery(
 )
 async def test_device_battery_level(
     hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test battery level sensor for devices."""
 
-    assert await sensor_platform_setup()
+    assert await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
@@ -347,15 +347,15 @@ async def test_device_battery_level(
 )
 async def test_profile_local(
     hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
     expected_unit: str,
 ) -> None:
     """Test the fitbit profile locale impact on unit of measure."""
 
     register_timeseries("body/weight", timeseries_response("body-weight", "175"))
-    await sensor_platform_setup()
+    await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
@@ -365,7 +365,7 @@ async def test_profile_local(
 
 
 @pytest.mark.parametrize(
-    ("sensor_platform_config", "api_response", "expected_state"),
+    ("imported_config_data", "api_response", "expected_state"),
     [
         (
             {"clock_format": "12H", "monitored_resources": ["sleep/startTime"]},
@@ -396,8 +396,8 @@ async def test_profile_local(
 )
 async def test_sleep_time_clock_format(
     hass: HomeAssistant,
-    fitbit_config_setup: None,
-    sensor_platform_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
     api_response: str,
     expected_state: str,
@@ -407,7 +407,7 @@ async def test_sleep_time_clock_format(
     register_timeseries(
         "sleep/startTime", timeseries_response("sleep-startTime", api_response)
     )
-    await sensor_platform_setup()
+    assert await integration_setup()
 
     state = hass.states.get("sensor.sleep_start_time")
     assert state
