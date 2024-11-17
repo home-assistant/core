@@ -179,6 +179,9 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Remove metadata and cover art
         command_args.extend(["-map_metadata", "-1", "-vn"])
 
+        # disable progress stats on stderr
+        command_args.append("-nostats")
+
         # Output to stdout
         command_args.append("pipe:")
 
