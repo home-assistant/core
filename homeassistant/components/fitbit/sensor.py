@@ -6,30 +6,16 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
-import os
 from typing import Any, Final, cast
 
-from fitbit import Fitbit
-from oauthlib.oauth2.rfc6749.errors import OAuth2Error
-import voluptuous as vol
-
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_TOKEN,
-    CONF_UNIT_SYSTEM,
     PERCENTAGE,
     EntityCategory,
     UnitOfLength,
@@ -38,33 +24,13 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.json import load_json_object
 
 from .api import FitbitApi
-from .const import (
-    ATTR_ACCESS_TOKEN,
-    ATTR_LAST_SAVED_AT,
-    ATTR_REFRESH_TOKEN,
-    ATTRIBUTION,
-    BATTERY_LEVELS,
-    CONF_CLOCK_FORMAT,
-    CONF_MONITORED_RESOURCES,
-    DEFAULT_CLOCK_FORMAT,
-    DEFAULT_CONFIG,
-    DOMAIN,
-    FITBIT_CONFIG_FILE,
-    FITBIT_DEFAULT_RESOURCES,
-    FitbitScope,
-    FitbitUnitSystem,
-)
+from .const import ATTRIBUTION, BATTERY_LEVELS, DOMAIN, FitbitScope, FitbitUnitSystem
 from .coordinator import FitbitData, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
 from .model import FitbitDevice, config_from_entry_data
@@ -532,126 +498,6 @@ FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
     native_unit_of_measurement=PERCENTAGE,
 )
-
-FITBIT_RESOURCES_KEYS: Final[list[str]] = [
-    desc.key
-    for desc in (*FITBIT_RESOURCES_LIST, FITBIT_RESOURCE_BATTERY, SLEEP_START_TIME)
-]
-
-PLATFORM_SCHEMA: Final = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES
-        ): vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_KEYS)]),
-        vol.Optional(CONF_CLOCK_FORMAT, default=DEFAULT_CLOCK_FORMAT): vol.In(
-            ["12H", "24H"]
-        ),
-        vol.Optional(CONF_UNIT_SYSTEM, default=FitbitUnitSystem.LEGACY_DEFAULT): vol.In(
-            [
-                FitbitUnitSystem.EN_GB,
-                FitbitUnitSystem.EN_US,
-                FitbitUnitSystem.METRIC,
-                FitbitUnitSystem.LEGACY_DEFAULT,
-            ]
-        ),
-    }
-)
-
-# Only import configuration if it was previously created successfully with all
-# of the following fields.
-FITBIT_CONF_KEYS = [
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    ATTR_ACCESS_TOKEN,
-    ATTR_REFRESH_TOKEN,
-    ATTR_LAST_SAVED_AT,
-]
-
-
-def load_config_file(config_path: str) -> dict[str, Any] | None:
-    """Load existing valid fitbit.conf from disk for import."""
-    if os.path.isfile(config_path):
-        config_file = load_json_object(config_path)
-        if config_file != DEFAULT_CONFIG and all(
-            key in config_file for key in FITBIT_CONF_KEYS
-        ):
-            return config_file
-    return None
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Fitbit sensor."""
-    config_path = hass.config.path(FITBIT_CONFIG_FILE)
-    config_file = await hass.async_add_executor_job(load_config_file, config_path)
-    _LOGGER.debug("loaded config file: %s", config_file)
-
-    if config_file is not None:
-        _LOGGER.debug("Importing existing fitbit.conf application credentials")
-
-        # Refresh the token before importing to ensure it is working and not
-        # expired on first initialization.
-        authd_client = Fitbit(
-            config_file[CONF_CLIENT_ID],
-            config_file[CONF_CLIENT_SECRET],
-            access_token=config_file[ATTR_ACCESS_TOKEN],
-            refresh_token=config_file[ATTR_REFRESH_TOKEN],
-            expires_at=config_file[ATTR_LAST_SAVED_AT],
-            refresh_cb=lambda x: None,
-        )
-        try:
-            updated_token = await hass.async_add_executor_job(
-                authd_client.client.refresh_token
-            )
-        except OAuth2Error as err:
-            _LOGGER.debug("Unable to import fitbit OAuth2 credentials: %s", err)
-            translation_key = "deprecated_yaml_import_issue_cannot_connect"
-        else:
-            await async_import_client_credential(
-                hass,
-                DOMAIN,
-                ClientCredential(
-                    config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
-                ),
-            )
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    "auth_implementation": DOMAIN,
-                    CONF_TOKEN: {
-                        ATTR_ACCESS_TOKEN: updated_token[ATTR_ACCESS_TOKEN],
-                        ATTR_REFRESH_TOKEN: updated_token[ATTR_REFRESH_TOKEN],
-                        "expires_at": updated_token["expires_at"],
-                        "scope": " ".join(updated_token.get("scope", [])),
-                    },
-                    CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
-                    CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
-                    CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
-                },
-            )
-            translation_key = "deprecated_yaml_import"
-            if (
-                result.get("type") == FlowResultType.ABORT
-                and result.get("reason") == "cannot_connect"
-            ):
-                translation_key = "deprecated_yaml_import_issue_cannot_connect"
-    else:
-        translation_key = "deprecated_yaml_no_import"
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2024.5.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key=translation_key,
-    )
 
 
 async def async_setup_entry(
