@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -84,6 +84,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
         vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -102,6 +103,7 @@ class YamahaConfigInfo:
         self.source_names = config.get(CONF_SOURCE_NAMES)
         self.zone_ignore = config.get(CONF_ZONE_IGNORE)
         self.zone_names = config.get(CONF_ZONE_NAMES)
+        self.unique_id = config.get(CONF_UNIQUE_ID)
         self.from_discovery = False
         _LOGGER.debug("Discovery Info: %s", discovery_info)
         if discovery_info is not None:
@@ -171,6 +173,7 @@ async def async_setup_platform(
             config_info.source_ignore,
             config_info.source_names,
             config_info.zone_names,
+            config_info.unique_id,
         )
 
         # Only add device if it's not already added
@@ -217,6 +220,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         source_ignore: list[str] | None,
         source_names: dict[str, str] | None,
         zone_names: dict[str, str] | None,
+        unique_id: str | None,
     ) -> None:
         """Initialize the Yamaha Receiver."""
         self.zctrl = zctrl
@@ -231,11 +235,14 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self._play_status = None
         self._name = name
         self._zone = zctrl.zone
-        if self.zctrl.serial_number is not None:
-            # Since not all receivers will have a serial number and set a unique id
-            # the default name of the integration may not be changed
-            # to avoid a breaking change.
-            self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
+        if unique_id:
+            self._attr_unique_id = unique_id
+        else:
+            if self.zctrl.serial_number is not None:
+                # Since not all receivers will have a serial number and set a unique id
+                # the default name of the integration may not be changed
+                # to avoid a breaking change.
+                self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
 
     def update(self) -> None:
         """Get the latest details from the device."""
