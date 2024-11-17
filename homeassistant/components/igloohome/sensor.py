@@ -48,13 +48,13 @@ class BatteryBasedDevice(BaseEntity, SensorEntity):
     """Implementation of a device that has a battery."""
 
     _attr_native_unit_of_measurement = "%"
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     def __init__(self, device_id: str, device_name: str, type: str, api: Api) -> None:
         """Initialize the class."""
         super().__init__(
             device_id=device_id, device_name=device_name, type=type, api=api
         )
-        self._attr_device_class = SensorDeviceClass.BATTERY
         # Set the unique ID of the battery entity.
         self._attr_unique_id = f"battery_{device_id}"
 
