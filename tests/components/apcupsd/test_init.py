@@ -51,7 +51,8 @@ async def test_async_setup_entry(
     device_name = "None" if device_entry is None else device_entry.name
     assert device_entry == snapshot(name=f"device-{device_name}")
 
-    # Use a representative sensor to test the entity ID naming scheme.
+    # Use a representative sensor to test (1) if the integration is working, and (2) the entity ID
+    # is properly named.
     online_status_sensor = next(
         state
         for state in hass.states.async_all(domain_filter=Platform.BINARY_SENSOR)
