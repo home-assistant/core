@@ -260,13 +260,8 @@ class FFmpegConvertResponse(web.StreamResponse):
         assert proc.stdout is not None
         assert proc.stderr is not None
 
-        try:
-            while self.hass.is_running and (chunk := await proc.stderr.readline()):
-                _LOGGER.debug(
-                    "ffmpeg[%s] output: %s", proc.pid, chunk.decode().rstrip()
-                )
-        except:  # noqa: E722 - subprocess handling is done in _write_ffmpeg_data
-            pass
+        while self.hass.is_running and (chunk := await proc.stderr.readline()):
+            _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, chunk.decode().rstrip())
 
 
 class FFmpegProxyView(HomeAssistantView):
