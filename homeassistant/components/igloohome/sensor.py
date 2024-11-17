@@ -35,7 +35,7 @@ async def async_setup_entry(
     else:
         async_add_entities(
             new_entities=(
-                BatteryBasedDevice(
+                IgloohomeBatteryEntity(
                     device_id=device.deviceId,
                     device_name=device.deviceName,
                     type=device.type,
@@ -48,7 +48,7 @@ async def async_setup_entry(
         )
 
 
-class BatteryBasedDevice(IgloohomeBaseEntity, SensorEntity):
+class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
     """Implementation of a device that has a battery."""
 
     _attr_native_unit_of_measurement = "%"
