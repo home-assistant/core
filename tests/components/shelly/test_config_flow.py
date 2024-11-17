@@ -331,7 +331,7 @@ async def test_form_missing_model_key_zeroconf(
     ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
-        (MacAddressMismatchError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -437,7 +437,7 @@ async def test_user_setup_ignored_device(
     [
         (InvalidAuthError, "invalid_auth"),
         (DeviceConnectionError, "cannot_connect"),
-        (MacAddressMismatchError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -475,7 +475,7 @@ async def test_form_auth_errors_test_connection_gen1(
     [
         (DeviceConnectionError, "cannot_connect"),
         (InvalidAuthError, "invalid_auth"),
-        (MacAddressMismatchError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -847,9 +847,19 @@ async def test_reauth_successful(
         (3, {"password": "test2 password"}),
     ],
 )
-@pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
+@pytest.mark.parametrize(
+    ("exc", "abort_reason"),
+    [
+        (DeviceConnectionError, "reauth_unsuccessful"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
+    ],
+)
 async def test_reauth_unsuccessful(
-    hass: HomeAssistant, gen: int, user_input: dict[str, str], exc: Exception
+    hass: HomeAssistant,
+    gen: int,
+    user_input: dict[str, str],
+    exc: Exception,
+    abort_reason: str,
 ) -> None:
     """Test reauthentication flow failed."""
     entry = MockConfigEntry(
@@ -876,7 +886,7 @@ async def test_reauth_unsuccessful(
         )
 
         assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_unsuccessful"
+        assert result["reason"] == abort_reason
 
 
 async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
