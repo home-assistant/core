@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Holiday from a config entry."""
     country: str = entry.data[CONF_COUNTRY]
     province: str | None = entry.data.get(CONF_PROVINCE)
-    categories: list[str] | None = entry.data.get(CONF_CATEGORIES)
+    categories: list[str] | None = entry.options.get(CONF_CATEGORIES)
 
     # We only import here to ensure that that its not imported later
     # in the event loop since the platforms will call country_holidays
