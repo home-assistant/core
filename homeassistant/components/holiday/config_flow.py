@@ -45,10 +45,10 @@ def get_optional_categories(country: str) -> list[str]:
 def get_options_schema(country: str) -> vol.Schema:
     """Return the options schema."""
     schema = {}
-    if SUPPORTED_COUNTRIES[country]:
+    if provinces := SUPPORTED_COUNTRIES[country]:
         schema[vol.Optional(CONF_PROVINCE)] = SelectSelector(
             SelectSelectorConfig(
-                options=SUPPORTED_COUNTRIES[country],
+                options=provinces,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         )
