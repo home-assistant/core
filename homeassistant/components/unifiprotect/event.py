@@ -36,8 +36,8 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         event_types=[EventType.RING],
     ),
     ProtectEventEntityDescription(
-        key="doorbell-nfc",
-        translation_key="doorbell-nfc",
+        key="doorbell_nfc",
+        translation_key="doorbell_nfc",
         name="Doorbell-NFC",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:doorbell-video",
@@ -46,8 +46,8 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         event_types=[EventType.NFC_CARD_SCANNED],
     ),
     ProtectEventEntityDescription(
-        key="doorbell-fingerprint",
-        translation_key="doorbell-fingerprint",
+        key="doorbell_fingerprint",
+        translation_key="doorbell_fingerprint",
         name="Doorbell-Fingerprint",
         device_class=EventDeviceClass.DOORBELL,
         icon="mdi:doorbell-video",
