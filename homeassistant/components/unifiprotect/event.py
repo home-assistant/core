@@ -35,6 +35,26 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         ufp_event_obj="last_ring_event",
         event_types=[EventType.RING],
     ),
+    ProtectEventEntityDescription(
+        key="doorbell-nfc",
+        translation_key="doorbell-nfc",
+        name="Doorbell-NFC",
+        device_class=EventDeviceClass.DOORBELL,
+        icon="mdi:doorbell-video",
+        ufp_required_field="feature_flags.is_doorbell",
+        ufp_event_obj="last_nfc_card_scanned_event",
+        event_types=[EventType.NFC_CARD_SCANNED],
+    ),
+    ProtectEventEntityDescription(
+        key="doorbell-fingerprint",
+        translation_key="doorbell-fingerprint",
+        name="Doorbell-Fingerprint",
+        device_class=EventDeviceClass.DOORBELL,
+        icon="mdi:doorbell-video",
+        ufp_required_field="feature_flags.is_doorbell",
+        ufp_event_obj="last_fingerprint_identified_event",
+        event_types=[EventType.FINGERPRINT_IDENTIFIED],
+    ),
 )
 
 
@@ -60,7 +80,19 @@ class ProtectDeviceEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntit
             and (event_types := description.event_types)
             and (event_type := event.type) in event_types
         ):
-            self._trigger_event(event_type, {ATTR_EVENT_ID: event.id})
+            event_data = {ATTR_EVENT_ID: event.id}
+
+            if event.metadata and event.metadata.nfc and event.metadata.nfc.nfc_id:
+                event_data["nfc_id"] = event.metadata.nfc.nfc_id
+
+            if (
+                event.metadata
+                and event.metadata.fingerprint
+                and event.metadata.fingerprint.ulp_id
+            ):
+                event_data["ulp_id"] = event.metadata.fingerprint.ulp_id
+
+            self._trigger_event(event_type, event_data)
             self.async_write_ha_state()
 
 
