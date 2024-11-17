@@ -88,8 +88,6 @@ class PalazzettiSensor(PalazzettiEntity, SensorEntity):
     """Define a Palazzetti sensor."""
 
     entity_description: SensorEntityDescription
-    coordinator: PalazzettiDataUpdateCoordinator
-    _attr_has_entity_name = True
 
     def __init__(
         self,
