@@ -23,15 +23,17 @@ button_types = [
     ),
 ]
 
-for i in range(1, 10):
-    button_types.append(
+button_types.extend(
+    [
         ButtonEntityDescription(
             key=f"flex_{i}",
             translation_key="flex",
             translation_placeholders={"num": str(i)},
             entity_registry_enabled_default=False,
         )
-    )
+        for i in range(1, 10)
+    ]
+)
 
 BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = tuple(button_types)
 
