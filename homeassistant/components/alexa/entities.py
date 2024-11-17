@@ -559,6 +559,10 @@ class CoverCapabilities(AlexaEntity):
             )
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
+        if supported & (
+            cover.CoverEntityFeature.STOP | cover.CoverEntityFeature.STOP_TILT
+        ):
+            yield AlexaPlaybackController(self.entity, instance=f"{cover.DOMAIN}.stop")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 
