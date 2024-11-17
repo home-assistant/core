@@ -39,13 +39,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         session = aiohttp.ClientSession()
-        # response = await session.post(
-        #     url=OAUTH2_TOKEN_URL,
-        #     auth=aiohttp.BasicAuth(
-        #         login=data[CONF_CLIENT_ID], password=data[CONF_CLIENT_SECRET]
-        #     ),
-        #     data=form,
-        # )
         auth = Auth(
             session=session,
             client_id=data[CONF_CLIENT_ID],
