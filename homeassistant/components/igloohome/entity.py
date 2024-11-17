@@ -10,6 +10,8 @@ from .const import DOMAIN
 
 class BaseEntity(Entity):
     """A base entity that is a part of all igloohome devices."""
+    
+   _attr_has_entity_name = True
 
     def __init__(self, device_id: str, device_name: str, type: str, api: Api) -> None:
         """Initialize the base device class."""
