@@ -791,6 +791,12 @@
       },
       "valve_countdown_2": {
         "name": "Irrigation time 2"
+      },
+      "on_led_intensity": {
+        "name": "On LED Intesity"
+      },
+      "off_led_intensity": {
+        "name": "Off LED Intensity"
       }
     },
     "select": {
@@ -886,6 +892,12 @@
       },
       "weather_delay": {
         "name": "Weather delay"
+      },
+      "on_led_color": {
+        "name": "On LED Color"
+      },
+      "off_led_color": {
+        "name": "Off LED Color"
       }
     },
     "sensor": {
@@ -1193,6 +1205,9 @@
       },
       "valve_on_off_2": {
         "name": "Valve 2"
+      },
+      "double_up_full": {
+        "name": "Double Tap On - Full"
       }
     }
   }
