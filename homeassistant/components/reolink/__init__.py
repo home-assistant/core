@@ -326,7 +326,11 @@ def migrate_entity_ids(
             else:
                 new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
             new_identifiers = {(DOMAIN, new_device_id)}
-            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
+            if existing_device is None:
+                device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            else:
+                device_reg.async_remove_device(device.id)
 
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
