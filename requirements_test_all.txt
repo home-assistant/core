@@ -453,7 +453,7 @@ apprise==1.9.0
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.2.1
+apsystems-ez1==2.4.0
 
 # homeassistant.components.aranet
 aranet4==2.4.0
@@ -1055,7 +1055,7 @@ kegtron-ble==0.4.0
 knocki==0.3.5
 
 # homeassistant.components.knx
-knx-frontend==2024.9.10.221729
+knx-frontend==2024.11.16.205004
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1217,7 +1217,7 @@ nextcloudmonitor==1.5.1
 nextcord==2.6.0
 
 # homeassistant.components.nextdns
-nextdns==3.3.0
+nextdns==4.0.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.11.0
@@ -1754,7 +1754,7 @@ pypck==0.7.24
 pypjlink2==1.2.1
 
 # homeassistant.components.plaato
-pyplaato==0.0.18
+pyplaato==0.0.19
 
 # homeassistant.components.point
 pypoint==3.0.0
@@ -1929,7 +1929,7 @@ python-rabbitair==0.0.8
 python-roborock==2.7.2
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.36
+python-smarttub==0.0.38
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2298,7 +2298,7 @@ ttn_client==1.2.0
 tuya-device-sharing-sdk==0.2.1
 
 # homeassistant.components.twentemilieu
-twentemilieu==2.0.1
+twentemilieu==2.1.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2322,7 +2322,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.24
+universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
 upb-lib==0.5.8
@@ -2348,7 +2348,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.10.0
+velbus-aio==2024.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2467,7 +2467,7 @@ zeroconf==0.136.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.37
+zha==0.0.39
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.59.1
