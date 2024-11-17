@@ -7,7 +7,11 @@ from typing import Any
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.api.regions import get_region_from_name
-from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from bimmer_connected.models import (
+    MyBMWAPIError,
+    MyBMWAuthError,
+    MyBMWCaptchaMissingError,
+)
 from httpx import RequestError
 import voluptuous as vol
 
@@ -17,11 +21,10 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
@@ -55,6 +58,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         await auth.login()
+    except MyBMWCaptchaMissingError as ex:
+        raise MissingCaptcha from ex
     except MyBMWAuthError as ex:
         raise InvalidAuth from ex
     except (MyBMWAPIError, RequestError) as ex:
@@ -75,7 +80,6 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _existing_entry_data: Mapping[str, Any] | None = None
-    _existing_entry_unique_id: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -85,15 +89,12 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             unique_id = f"{user_input[CONF_REGION]}-{user_input[CONF_USERNAME]}"
+            await self.async_set_unique_id(unique_id)
 
-            if self.source not in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-                await self.async_set_unique_id(unique_id)
+            if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
+                self._abort_if_unique_id_mismatch(reason="account_mismatch")
+            else:
                 self._abort_if_unique_id_configured()
-            elif (
-                self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}
-                and unique_id != self._existing_entry_unique_id
-            ):
-                raise AbortFlow("account_mismatch")
 
             info = None
             try:
@@ -103,6 +104,8 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
                     CONF_GCID: info.get(CONF_GCID),
                 }
+            except MissingCaptcha:
+                errors["base"] = "missing_captcha"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -135,16 +138,13 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._existing_entry_data = entry_data
-        self._existing_entry_unique_id = self._get_reauth_entry().unique_id
         return await self.async_step_user()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        self._existing_entry_data = reconfigure_entry.data
-        self._existing_entry_unique_id = reconfigure_entry.unique_id
+        self._existing_entry_data = self._get_reconfigure_entry().data
         return await self.async_step_user()
 
     @staticmethod
@@ -153,10 +153,10 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> BMWOptionsFlow:
         """Return a MyBMW option flow."""
-        return BMWOptionsFlow(config_entry)
+        return BMWOptionsFlow()
 
 
-class BMWOptionsFlow(OptionsFlowWithConfigEntry):
+class BMWOptionsFlow(OptionsFlow):
     """Handle a option flow for MyBMW."""
 
     async def async_step_init(
@@ -200,3 +200,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class MissingCaptcha(HomeAssistantError):
+    """Error to indicate the captcha token is missing."""

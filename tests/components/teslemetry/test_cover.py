@@ -11,14 +11,9 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -101,7 +96,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_OPEN
+        assert state.state == CoverState.OPEN
 
         call.reset_mock()
         await hass.services.async_call(
@@ -113,7 +108,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_CLOSED
+        assert state.state == CoverState.CLOSED
 
     # Charge Port Door
     entity_id = "cover.test_charge_port_door"
@@ -130,7 +125,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_OPEN
+        assert state.state == CoverState.OPEN
 
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.charge_port_door_close",
@@ -145,7 +140,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_CLOSED
+        assert state.state == CoverState.CLOSED
 
     # Frunk
     entity_id = "cover.test_frunk"
@@ -162,7 +157,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_OPEN
+        assert state.state == CoverState.OPEN
 
     # Trunk
     entity_id = "cover.test_trunk"
@@ -179,7 +174,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_OPEN
+        assert state.state == CoverState.OPEN
 
         call.reset_mock()
         await hass.services.async_call(
@@ -191,7 +186,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_CLOSED
+        assert state.state == CoverState.CLOSED
 
     # Sunroof
     entity_id = "cover.test_sunroof"
@@ -208,7 +203,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_OPEN
+        assert state.state == CoverState.OPEN
 
         call.reset_mock()
         await hass.services.async_call(
@@ -220,7 +215,7 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_OPEN
+        assert state.state == CoverState.OPEN
 
         call.reset_mock()
         await hass.services.async_call(
@@ -232,4 +227,4 @@ async def test_cover_services(
         call.assert_called_once()
         state = hass.states.get(entity_id)
         assert state
-        assert state.state is STATE_CLOSED
+        assert state.state == CoverState.CLOSED

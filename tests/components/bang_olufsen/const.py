@@ -16,6 +16,7 @@ from mozart_api.models import (
     PlayQueueItemType,
     RenderingState,
     SceneProperties,
+    Source,
     UserFlow,
     VolumeLevel,
     VolumeMute,
@@ -52,14 +53,17 @@ TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.beosound_balance_11111111"
 TEST_FRIENDLY_NAME_2 = "Laundry room Balance"
 TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.22222222@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.beosound_balance_22222222"
+TEST_HOST_2 = "192.168.0.2"
 
 TEST_FRIENDLY_NAME_3 = "Lego room Balance"
 TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.33333333@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_3 = "media_player.beosound_balance_33333333"
+TEST_HOST_3 = "192.168.0.3"
 
 TEST_FRIENDLY_NAME_4 = "Lounge room Balance"
 TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.44444444@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.beosound_balance_44444444"
+TEST_HOST_4 = "192.168.0.4"
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
@@ -122,11 +126,15 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
     },
 )
 
-TEST_AUDIO_SOURCES = [BangOlufsenSource.TIDAL.name, BangOlufsenSource.LINE_IN.name]
+TEST_SOURCE = Source(
+    name="Tidal", id="tidal", is_seekable=True, is_enabled=True, is_playable=True
+)
+TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BangOlufsenSource.LINE_IN.name]
 TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [
     "Audio Streamer",
+    "Bluetooth",
     "Spotify Connect",
     "Line-In",
     "Optical",

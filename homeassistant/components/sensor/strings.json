@@ -6,6 +6,7 @@
       "is_aqi": "Current {entity_name} air quality index",
       "is_atmospheric_pressure": "Current {entity_name} atmospheric pressure",
       "is_battery_level": "Current {entity_name} battery level",
+      "is_blood_glucose_concentration": "Current {entity_name} blood glucose concentration",
       "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
       "is_carbon_dioxide": "Current {entity_name} carbon dioxide concentration level",
       "is_conductivity": "Current {entity_name} conductivity",
@@ -56,6 +57,7 @@
       "aqi": "{entity_name} air quality index changes",
       "atmospheric_pressure": "{entity_name} atmospheric pressure changes",
       "battery_level": "{entity_name} battery level changes",
+      "blood_glucose_concentration": "{entity_name} blood glucose concentration changes",
       "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
       "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
       "conductivity": "{entity_name} conductivity changes",
@@ -148,6 +150,9 @@
     },
     "battery": {
       "name": "Battery"
+    },
+    "blood_glucose_concentration": {
+      "name": "Blood glucose concentration"
     },
     "carbon_monoxide": {
       "name": "Carbon monoxide"

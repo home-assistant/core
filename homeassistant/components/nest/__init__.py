@@ -49,7 +49,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    issue_registry as ir,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
@@ -59,6 +58,7 @@ from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
+    CONF_SUBSCRIPTION_NAME,
     DATA_DEVICE_MANAGER,
     DATA_SDM,
     DATA_SUBSCRIBER,
@@ -103,10 +103,10 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.CAMERA, Platform.CLIMATE, Platform.EVENT, Platform.SENSOR]
 
 # Fetch media events with a disk backed cache, with a limit for each camera
-# device. The largest media items are mp4 clips at ~120kb each, and we target
+# device. The largest media items are mp4 clips at ~450kb each, and we target
 # ~125MB of storage per camera to try to balance a reasonable user experience
 # for event history not not filling the disk.
-EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
+EVENT_MEDIA_CACHE_SIZE = 256  # number of events
 
 THUMBNAIL_SIZE_PX = 175
 
@@ -118,20 +118,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
 
-    if DOMAIN in config and CONF_PROJECT_ID not in config[DOMAIN]:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "legacy_nest_deprecated",
-            breaks_in_ha_version="2023.8.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_nest_removed",
-            translation_placeholders={
-                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
-            },
-        )
-        return False
     return True
 
 
@@ -289,7 +275,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of pubsub subscriptions created during config flow."""
     if (
         DATA_SDM not in entry.data
-        or CONF_SUBSCRIBER_ID not in entry.data
+        or not (
+            CONF_SUBSCRIPTION_NAME in entry.data or CONF_SUBSCRIBER_ID in entry.data
+        )
         or CONF_SUBSCRIBER_ID_IMPORTED in entry.data
     ):
         return

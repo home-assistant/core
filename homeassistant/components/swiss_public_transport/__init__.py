@@ -8,8 +8,8 @@ from opendata_transport.exceptions import (
     OpendataTransportError,
 )
 
-from homeassistant import config_entries, core
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -20,7 +20,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN, PLACEHOLDERS
-from .coordinator import SwissPublicTransportDataUpdateCoordinator
+from .coordinator import (
+    SwissPublicTransportConfigEntry,
+    SwissPublicTransportDataUpdateCoordinator,
+)
 from .helper import unique_id_from_config
 from .services import setup_services
 
@@ -32,14 +35,14 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Swiss public transport component."""
     setup_services(hass)
     return True
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+    hass: HomeAssistant, entry: SwissPublicTransportConfigEntry
 ) -> bool:
     """Set up Swiss public transport from a config entry."""
     config = entry.data
@@ -74,24 +77,21 @@ async def async_setup_entry(
 
     coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+    hass: HomeAssistant, entry: SwissPublicTransportConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+    hass: HomeAssistant, config_entry: SwissPublicTransportConfigEntry
 ) -> bool:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)

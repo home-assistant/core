@@ -652,7 +652,8 @@ async def test_form_stream_worker_error(
             TESTDATA,
         )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"stream_source": "Some message"}
+    assert result2["errors"] == {"stream_source": "unknown_with_details"}
+    assert result2["description_placeholders"] == {"error": "Some message"}
 
 
 @respx.mock

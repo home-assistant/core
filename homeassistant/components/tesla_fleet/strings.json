@@ -8,7 +8,9 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -501,9 +503,6 @@
     },
     "command_no_reason": {
       "message": "Command was unsuccessful but did not return a reason why."
-    },
-    "command_signing": {
-      "message": "Vehicle requires command signing. Please see documentation for more details."
     },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."

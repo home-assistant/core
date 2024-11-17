@@ -38,7 +38,6 @@ from .deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
@@ -827,22 +826,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             via_device_id = UNDEFINED
 
-        if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry entry_type. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryType instead"
-                ),
-                error_if_core=False,
-            )
-            entry_type = DeviceEntryType(entry_type)
-
         device = self.async_update_device(
             device.id,
             allow_collisions=True,
             add_config_entry_id=config_entry_id,
-            add_config_entry=config_entry,
             configuration_url=configuration_url,
             device_info_type=device_info_type,
             disabled_by=disabled_by,
@@ -870,7 +857,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        add_config_entry: ConfigEntry | UndefinedType = UNDEFINED,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         # Temporary flag so we don't blow up when collisions are implicitly introduced
         # by calls to async_get_or_create. Must not be set by integrations.
@@ -905,13 +891,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         config_entries = old.config_entries
 
-        if add_config_entry_id is not UNDEFINED and add_config_entry is UNDEFINED:
-            config_entry = self.hass.config_entries.async_get_entry(add_config_entry_id)
-            if config_entry is None:
+        if add_config_entry_id is not UNDEFINED:
+            if self.hass.config_entries.async_get_entry(add_config_entry_id) is None:
                 raise HomeAssistantError(
                     f"Can't link device to unknown config entry {add_config_entry_id}"
                 )
-            add_config_entry = config_entry
 
         if not new_connections and not new_identifiers:
             raise HomeAssistantError(
@@ -928,19 +912,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Cannot define both merge_identifiers and new_identifiers"
             )
 
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, DeviceEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry disabled_by. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = DeviceEntryDisabler(disabled_by)
-
         if (
             suggested_area is not None
             and suggested_area is not UNDEFINED
@@ -955,11 +926,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
-        if add_config_entry is not UNDEFINED:
+        if add_config_entry_id is not UNDEFINED:
             primary_entry_id = old.primary_config_entry
             if (
                 device_info_type == "primary"
-                and add_config_entry.entry_id != primary_entry_id
+                and add_config_entry_id != primary_entry_id
             ):
                 if (
                     primary_entry_id is None
@@ -970,11 +941,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     )
                     or primary_entry.domain in LOW_PRIO_CONFIG_ENTRY_DOMAINS
                 ):
-                    new_values["primary_config_entry"] = add_config_entry.entry_id
-                    old_values["primary_config_entry"] = old.primary_config_entry
+                    new_values["primary_config_entry"] = add_config_entry_id
+                    old_values["primary_config_entry"] = primary_entry_id
 
-            if add_config_entry.entry_id not in old.config_entries:
-                config_entries = old.config_entries | {add_config_entry.entry_id}
+            if add_config_entry_id not in old.config_entries:
+                config_entries = old.config_entries | {add_config_entry_id}
 
         if (
             remove_config_entry_id is not UNDEFINED

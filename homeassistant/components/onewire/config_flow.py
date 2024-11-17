@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 import voluptuous as vol
@@ -10,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -100,12 +101,14 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OnewireOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnewireOptionsFlowHandler(config_entry)
 
 
-class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OnewireOptionsFlowHandler(OptionsFlow):
     """Handle OneWire Config options."""
 
     configurable_devices: dict[str, str]
@@ -123,6 +126,10 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
     current_device: str
     """Friendly name of the currently selected device."""
 
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.options = deepcopy(dict(config_entry.options))
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -137,7 +144,7 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
         }
 
         if not self.configurable_devices:
-            return self.async_abort(reason="No configurable devices found.")
+            return self.async_abort(reason="no_configurable_devices")
 
         return await self.async_step_device_selection(user_input=None)
 

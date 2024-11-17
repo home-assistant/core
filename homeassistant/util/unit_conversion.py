@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
@@ -173,14 +174,25 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
+class BloodGlucoseConcentrationConverter(BaseUnitConverter):
+    """Utility to convert blood glucose concentration values."""
+
+    UNIT_CLASS = "blood_glucose_concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER: 1,
+    }
+    VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
+
+
 class ConductivityConverter(BaseUnitConverter):
     """Utility to convert electric current values."""
 
     UNIT_CLASS = "conductivity"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfConductivity.MICROSIEMENS: 1,
-        UnitOfConductivity.MILLISIEMENS: 1e-3,
-        UnitOfConductivity.SIEMENS: 1e-6,
+        UnitOfConductivity.MICROSIEMENS_PER_CM: 1,
+        UnitOfConductivity.MILLISIEMENS_PER_CM: 1e-3,
+        UnitOfConductivity.SIEMENS_PER_CM: 1e-6,
     }
     VALID_UNITS = set(UnitOfConductivity)
 
@@ -222,6 +234,8 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
+        UnitOfEnergy.GIGA_WATT_HOUR: 1 / 1e6,
+        UnitOfEnergy.TERA_WATT_HOUR: 1 / 1e9,
         UnitOfEnergy.CALORIE: _WH_TO_CAL * 1e3,
         UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
         UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
@@ -292,10 +306,16 @@ class PowerConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
+        UnitOfPower.MEGA_WATT: 1 / 1e6,
+        UnitOfPower.GIGA_WATT: 1 / 1e9,
+        UnitOfPower.TERA_WATT: 1 / 1e12,
     }
     VALID_UNITS = {
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
+        UnitOfPower.MEGA_WATT,
+        UnitOfPower.GIGA_WATT,
+        UnitOfPower.TERA_WATT,
     }
 
 
