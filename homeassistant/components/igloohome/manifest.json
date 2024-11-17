@@ -3,11 +3,8 @@
   "name": "igloohome",
   "codeowners": ["@keithle888"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["hassio"],
   "documentation": "https://www.home-assistant.io/integrations/igloohome",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["igloohome-api==0.0.4"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["igloohome-api==0.0.4"]
 }
