@@ -827,6 +827,11 @@ class UnitOfElectricPotential(StrEnum):
     VOLT = "V"
 
 
+_DEPRECATED_ELECTRIC_POTENTIAL_MICROVOLT: Final = DeprecatedConstantEnum(
+    UnitOfElectricPotential.MICROVOLT,
+    "2025.1",
+)
+"""Deprecated: please use UnitOfElectricPotential.MICROVOLT."""
 _DEPRECATED_ELECTRIC_POTENTIAL_MILLIVOLT: Final = DeprecatedConstantEnum(
     UnitOfElectricPotential.MILLIVOLT,
     "2025.1",
