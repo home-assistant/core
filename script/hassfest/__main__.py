@@ -214,7 +214,7 @@ def main() -> int:
         return 0
 
     if config.action == "generate":
-        print("Found errors. Generating files canceled.")
+        print("Found errors. Generating files cancelled.")
         print()
 
     if general_errors:
