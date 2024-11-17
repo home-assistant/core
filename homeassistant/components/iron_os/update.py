@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
@@ -88,7 +89,7 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity, RestoreEntity):
         Register extra update listener for the firmware update coordinator.
         """
         if state := await self.async_get_last_state():
-            self._attr_installed_version = state.attributes.get("installed_version")
+            self._attr_installed_version = state.attributes.get(ATTR_INSTALLED_VERSION)
 
         await super().async_added_to_hass()
         self.async_on_remove(
