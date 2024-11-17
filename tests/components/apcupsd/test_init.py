@@ -43,8 +43,6 @@ async def test_async_setup_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a successful setup entry."""
-    await async_init_integration(hass, status=status)
-
     config_entry = await async_init_integration(hass, status=status)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, config_entry.unique_id)}
