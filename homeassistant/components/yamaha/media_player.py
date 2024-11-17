@@ -237,12 +237,11 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self._zone = zctrl.zone
         if unique_id:
             self._attr_unique_id = unique_id
-        else:
-            if self.zctrl.serial_number is not None:
-                # Since not all receivers will have a serial number and set a unique id
-                # the default name of the integration may not be changed
-                # to avoid a breaking change.
-                self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
+        elif self.zctrl.serial_number is not None:
+            # Since not all receivers will have a serial number and set a unique id
+            # the default name of the integration may not be changed
+            # to avoid a breaking change.
+            self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
 
     def update(self) -> None:
         """Get the latest details from the device."""
