@@ -331,11 +331,11 @@ async def test_attr_bluesound_group(
     ).attributes.get("bluesound_group")
     assert attr_bluesound_group is None
 
-    updated_status = dataclasses.replace(
-        player_mocks.player_data.status_long_polling_mock.get(),
-        group_name="player-name1111+player-name2222",
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data.sync_status_long_polling_mock.get(),
+        slaves=[PairedPlayer("2.2.2.2", 11000)],
     )
-    player_mocks.player_data.status_long_polling_mock.set(updated_status)
+    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
     # give the long polling loop a chance to update the state; this could be any async call
     await hass.async_block_till_done()
