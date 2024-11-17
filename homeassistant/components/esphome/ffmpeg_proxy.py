@@ -201,6 +201,9 @@ class FFmpegConvertResponse(web.StreamResponse):
         write_task = self.hass.async_create_background_task(
             self._write_ffmpeg_data(request, writer, proc), "ESPHome media proxy"
         )
+        self.hass.async_create_background_task(
+            self._dump_ffmpeg_stdout(proc), "ESPHome media proxy dump stderr"
+        )
         await write_task
 
     async def _write_ffmpeg_data(
@@ -249,6 +252,19 @@ class FFmpegConvertResponse(web.StreamResponse):
             # Close connection by writing EOF unless already closing
             if request.transport and not request.transport.is_closing():
                 await writer.write_eof()
+
+    async def _dump_ffmpeg_stdout(
+        self,
+        proc: asyncio.subprocess.Process,
+    ) -> None:
+        assert proc.stdout is not None
+        assert proc.stderr is not None
+
+        try:
+            while self.hass.is_running and (chunk := await proc.stderr.readline()):
+                _LOGGER.debug("FFmpeg output: %s", chunk.decode().rstrip())
+        except:  # noqa: E722 - subprocess handling is done in _write_ffmpeg_data
+            pass
 
 
 class FFmpegProxyView(HomeAssistantView):
