@@ -1244,6 +1244,96 @@ async def test_light_ui_color_temp(
     )
 
 
+async def test_light_ui_multi_mode(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a light with multiple color modes."""
+    await knx.setup_integration({})
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "_light_color_mode_schema": "default",
+            "ga_switch": {
+                "write": "1/1/1",
+                "passive": [],
+                "state": "2/2/2",
+            },
+            "sync_state": True,
+            "ga_brightness": {
+                "write": "0/6/0",
+                "state": "0/6/1",
+                "passive": [],
+            },
+            "ga_color_temp": {
+                "write": "0/6/2",
+                "dpt": "7.600",
+                "state": "0/6/3",
+                "passive": [],
+            },
+            "ga_color": {
+                "write": "0/6/4",
+                "dpt": "251.600",
+                "state": "0/6/5",
+                "passive": [],
+            },
+        },
+    )
+    await knx.assert_read("2/2/2", True)
+    await knx.assert_read("0/6/1", (0xFF,))
+    await knx.assert_read("0/6/5", (0xFF, 0x65, 0x66, 0x67, 0x00, 0x0F))
+    await knx.assert_read("0/6/3", (0x12, 0x34))
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.test",
+            ATTR_COLOR_NAME: "hotpink",
+        },
+        blocking=True,
+    )
+    await knx.assert_write("0/6/4", (255, 0, 128, 178, 0, 15))
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        brightness=255,
+        color_temp_kelvin=None,
+        rgbw_color=(255, 0, 128, 178),
+        supported_color_modes=[
+            ColorMode.COLOR_TEMP,
+            ColorMode.RGBW,
+        ],
+        color_mode=ColorMode.RGBW,
+    )
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.test",
+            ATTR_COLOR_TEMP_KELVIN: 4200,
+        },
+        blocking=True,
+    )
+    await knx.assert_write("0/6/2", (0x10, 0x68))
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        brightness=255,
+        color_temp_kelvin=4200,
+        rgbw_color=None,
+        supported_color_modes=[
+            ColorMode.COLOR_TEMP,
+            ColorMode.RGBW,
+        ],
+        color_mode=ColorMode.COLOR_TEMP,
+    )
+
+
 async def test_light_ui_load(
     hass: HomeAssistant,
     knx: KNXTestKit,
