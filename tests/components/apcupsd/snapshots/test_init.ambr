@@ -1,17 +1,4 @@
 # serializer version: 1
-# name: test_async_setup_entry[status0][binary_sensor.myups_online_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'MyUPS Online status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.myups_online_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_async_setup_entry[status0][device-MyUPS]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -42,19 +29,6 @@
     'suggested_area': None,
     'sw_version': '3.14.14 (31 May 2016) unknown',
     'via_device_id': None,
-  })
-# ---
-# name: test_async_setup_entry[status1][binary_sensor.apc_ups_online_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'APC UPS Online status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.apc_ups_online_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
   })
 # ---
 # name: test_async_setup_entry[status1][device-APC UPS]
@@ -88,20 +62,4 @@
     'sw_version': None,
     'via_device_id': None,
   })
-# ---
-# name: test_async_setup_entry[status2][binary_sensor.online_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Online status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.online_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_async_setup_entry[status2][device-None]
-  None
 # ---

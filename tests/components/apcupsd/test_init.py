@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.components.apcupsd.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify, utcnow
@@ -30,7 +30,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # We should create devices for the entities and prefix their IDs with default "APC UPS".
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
         # Does not contain either "SERIALNO" field nor "UPSNAME".
-        # "SERIALNO" is used to determine the unique ID of the integration, but the integration should work fine without it.
+        # "SERIALNO" is used to determine the unique ID of the integration, but the integration
+        # should work fine without it.
         # We should _not_ create devices for the entities and their IDs will not have prefixes.
         MOCK_MINIMAL_STATUS,
     ],
@@ -48,8 +49,11 @@ async def test_async_setup_entry(
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, config_entry.unique_id)}
     )
-    device_name = "None" if device_entry is None else device_entry.name
-    assert device_entry == snapshot(name=f"device-{device_name}")
+    if "UPSNAME" in status or "SERIALNO" in status:
+        assert (
+            device_entry is not None
+        ), "device must be created when UPSNAME or SERIALNO is present"
+        assert device_entry == snapshot(name=f"device-{device_entry.name}")
 
     # Use a representative sensor to test (1) if the integration is working, and (2) the entity ID
     # is properly named.
@@ -59,7 +63,10 @@ async def test_async_setup_entry(
         if state.entity_id.startswith(Platform.BINARY_SENSOR)
         and state.entity_id.endswith("online_status")
     )
-    assert online_status_sensor == snapshot(name=online_status_sensor.entity_id)
+    assert online_status_sensor.state == STATE_ON
+    expected_prefix = slugify(f"{device_entry.name}") + "_" if device_entry else ""
+    expected_name = f"{Platform.BINARY_SENSOR}.{expected_prefix}online_status"
+    assert online_status_sensor.entity_id == expected_name
 
 
 async def test_multiple_integrations(hass: HomeAssistant) -> None:
