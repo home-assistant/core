@@ -85,9 +85,6 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
             except vol.Invalid:
                 _LOGGER.exception("Invalid url")
                 errors[CONF_URL] = "invalid_url"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         data_schema = self.add_suggested_values_to_schema(
             STEP_USER_DATA_SCHEMA, user_input or {}
@@ -113,9 +110,6 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
             except vol.Invalid:
                 _LOGGER.exception("Invalid template")
                 errors[CONF_DOWNLOAD_URL] = "invalid_template"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         data_schema = self.add_suggested_values_to_schema(
             STEP_RESOURCE_DATA_SCHEMA, user_input or {}
