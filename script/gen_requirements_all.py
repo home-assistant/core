@@ -117,9 +117,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.66.2
-grpcio-status==1.66.2
-grpcio-reflection==1.66.2
+grpcio==1.67.1
+grpcio-status==1.67.1
+grpcio-reflection==1.67.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -160,7 +160,7 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.18
+pydantic==1.10.19
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -214,8 +214,8 @@ chacha20poly1305-reuseable>=0.13.0
 # https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
 pycountry>=23.12.11
 
-# scapy<2.5.0 will not work with python3.12
-scapy>=2.5.0
+# scapy==2.6.0 causes CI failures due to a race condition
+scapy>=2.6.1
 
 # tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
 # Only tuf>=4 includes a constraint to <1.0.
