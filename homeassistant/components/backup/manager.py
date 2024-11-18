@@ -288,7 +288,7 @@ class BackupManager(BaseBackupManager[Backup]):
         """Return backups."""
         backups: dict[str, Backup] = {}
         agent_errors: dict[str, Exception] = {}
-        agent_ids = list(self.backup_agents.keys())
+        agent_ids = list(self.backup_agents)
 
         list_backups_results = await asyncio.gather(
             *(agent.async_list_backups() for agent in self.backup_agents.values()),
