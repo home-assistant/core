@@ -160,7 +160,7 @@ def async_subscribe_topics_internal(
 if TYPE_CHECKING:
 
     def async_unsubscribe_topics(
-        hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
+        hass: HomeAssistant, new_state: dict[str, EntitySubscription] | None
     ) -> dict[str, EntitySubscription]:
         """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
 
