@@ -1139,7 +1139,7 @@ home-assistant-intents==2024.11.13
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.2
+homematicip==1.1.3
 
 # homeassistant.components.horizon
 horimote==0.4.1
