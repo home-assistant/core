@@ -13,6 +13,7 @@ from .const import DATA_SESSION, DOMAIN
 MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
 MANUFACTURER_ARYLIC: Final[str] = "Arylic"
 MANUFACTURER_IEAST: Final[str] = "iEAST"
+MANUFACTURER_WIIM: Final[str] = "WiiM"
 MANUFACTURER_GENERIC: Final[str] = "Generic"
 MODELS_ARTSOUND_SMART_ZONE4: Final[str] = "Smart Zone 4 AMP"
 MODELS_ARTSOUND_SMART_HYDE: Final[str] = "Smart Hyde"
@@ -24,6 +25,8 @@ MODELS_ARYLIC_UP2STREAM_AMP_V3: Final[str] = "Up2Stream Amp v3"
 MODELS_ARYLIC_UP2STREAM_AMP_V4: Final[str] = "Up2Stream Amp v4"
 MODELS_ARYLIC_UP2STREAM_PRO_V3: Final[str] = "Up2Stream Pro v3"
 MODELS_IEAST_AUDIOCAST_M5: Final[str] = "AudioCast M5"
+MODELS_WIIM_AMP: Final[str] = "WiiM Amp"
+MODELS_WIIM_MINI: Final[str] = "WiiM Mini"
 MODELS_GENERIC: Final[str] = "Generic"
 
 
@@ -50,6 +53,10 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_ARYLIC, MODELS_ARYLIC_UP2STREAM_PRO_V3
         case "iEAST-02":
             return MANUFACTURER_IEAST, MODELS_IEAST_AUDIOCAST_M5
+        case "WiiM_Amp_4layer":
+            return MANUFACTURER_WIIM, MODELS_WIIM_AMP
+        case "Muzo_Mini":
+            return MANUFACTURER_WIIM, MODELS_WIIM_MINI
         case _:
             return MANUFACTURER_GENERIC, MODELS_GENERIC
 

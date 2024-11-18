@@ -56,6 +56,7 @@ from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
 )
+from zwave_js_server.model.value import ConfigurationValueFormat
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -106,6 +107,8 @@ PROPERTY = "property"
 PROPERTY_KEY = "property_key"
 ENDPOINT = "endpoint"
 VALUE = "value"
+VALUE_SIZE = "value_size"
+VALUE_FORMAT = "value_format"
 
 # constants for log config commands
 CONFIG = "config"
@@ -416,6 +419,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_rebuild_node_routes)
     websocket_api.async_register_command(hass, websocket_set_config_parameter)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
+    websocket_api.async_register_command(hass, websocket_get_raw_config_parameter)
+    websocket_api.async_register_command(hass, websocket_set_raw_config_parameter)
     websocket_api.async_register_command(hass, websocket_subscribe_log_updates)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
@@ -1757,6 +1762,72 @@ async def websocket_get_config_parameters(
     connection.send_result(
         msg[ID],
         result,
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/set_raw_config_parameter",
+        vol.Required(DEVICE_ID): str,
+        vol.Required(PROPERTY): int,
+        vol.Required(VALUE): int,
+        vol.Required(VALUE_SIZE): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+        vol.Required(VALUE_FORMAT): vol.Coerce(ConfigurationValueFormat),
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_set_raw_config_parameter(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Set a custom config parameter value for a Z-Wave node."""
+    result = await node.async_set_raw_config_parameter_value(
+        msg[VALUE],
+        msg[PROPERTY],
+        value_size=msg[VALUE_SIZE],
+        value_format=msg[VALUE_FORMAT],
+    )
+
+    connection.send_result(
+        msg[ID],
+        {
+            STATUS: result.status,
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_raw_config_parameter",
+        vol.Required(DEVICE_ID): str,
+        vol.Required(PROPERTY): int,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_get_raw_config_parameter(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    node: Node,
+) -> None:
+    """Get a custom config parameter value for a Z-Wave node."""
+    value = await node.async_get_raw_config_parameter_value(
+        msg[PROPERTY],
+    )
+
+    connection.send_result(
+        msg[ID],
+        {
+            VALUE: value,
+        },
     )
 
 

@@ -15,7 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -115,6 +119,9 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
             await self.device_connection.cancel_status_request_handler(
                 self.setpoint_variable
             )
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_binary_sensor_{self.entity_id}"
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
@@ -201,6 +208,9 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
         await super().async_will_remove_from_hass()
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.source)
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_binary_sensor_{self.entity_id}"
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
