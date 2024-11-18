@@ -299,7 +299,6 @@ class BackupManager(BaseBackupManager[Backup]):
         backup: Backup | None = None
 
         for agent_id, agent in self.backup_agents.items():
-            LOGGER.warning("Querying agent %s", agent_id)
             if not (agent_backup := await agent.async_get_backup(slug=slug)):
                 continue
             if backup is None:

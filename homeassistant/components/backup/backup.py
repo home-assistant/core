@@ -122,7 +122,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         if not (backup := self._backups.get(slug)):
             return None
 
-        if not backup.path.exists():
+        if not await self._hass.async_add_executor_job(backup.path.exists):
             LOGGER.debug(
                 (
                     "Removing tracked backup (%s) that does not exists on the expected"
