@@ -251,8 +251,8 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         errors: dict[str, str] | None = {}
         description_placeholders: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            reauth_entry = self._get_reauth_entry()
             errors, _, description_placeholders = await self._async_try_connect(
                 {CONF_IP_ADDRESS: reauth_entry.data[CONF_IP_ADDRESS], **user_input}
             )
@@ -261,6 +261,10 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry, data_updates=user_input
                 )
 
+        self.context["title_placeholders"] = {
+            "name": reauth_entry.title,
+            "ip_address": reauth_entry.data[CONF_IP_ADDRESS],
+        }
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
