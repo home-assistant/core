@@ -53,6 +53,7 @@ def mock_single_site_api() -> Generator:
         status=SiteStatus.ACTIVE,
         active_from=date(2002, 1, 1),
         closed_on=None,
+        interval_length=30,
     )
 
     with patch("amberelectric.AmberApi") as mock:
@@ -71,6 +72,7 @@ def single_site_closed_no_close_date_api() -> Generator:
         status=SiteStatus.CLOSED,
         active_from=None,
         closed_on=None,
+        interval_length=30,
     )
 
     with patch("amberelectric.AmberApi") as mock:
@@ -89,6 +91,7 @@ def mock_single_site_pending_api() -> Generator:
         status=SiteStatus.PENDING,
         active_from=None,
         closed_on=None,
+        interval_length=30,
     )
 
     with patch("amberelectric.AmberApi") as mock:
@@ -108,6 +111,7 @@ def mock_single_site_rejoin_api() -> Generator:
         status=SiteStatus.CLOSED,
         active_from=date(2002, 1, 1),
         closed_on=date(2002, 6, 1),
+        interval_length=30,
     )
     site_2 = Site(
         id="01FG0AGP818PXK0DWHXJRRT2DH",
@@ -117,6 +121,7 @@ def mock_single_site_rejoin_api() -> Generator:
         status=SiteStatus.ACTIVE,
         active_from=date(2003, 1, 1),
         closed_on=None,
+        interval_length=30,
     )
     site_3 = Site(
         id="01FG0AGP818PXK0DWHXJRRT2DH",
@@ -126,6 +131,7 @@ def mock_single_site_rejoin_api() -> Generator:
         status=SiteStatus.CLOSED,
         active_from=date(2003, 1, 1),
         closed_on=date(2003, 6, 1),
+        interval_length=30,
     )
     instance.get_sites.return_value = [site_1, site_2, site_3]
 

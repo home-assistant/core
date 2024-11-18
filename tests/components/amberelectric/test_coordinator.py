@@ -47,6 +47,7 @@ def mock_api_current_price() -> Generator:
         status=SiteStatus("active"),
         activeFrom=date(2021, 1, 1),
         closedOn=None,
+        interval_length=30,
     )
     general_and_controlled_load = Site(
         id=GENERAL_AND_CONTROLLED_SITE_ID,
@@ -59,6 +60,7 @@ def mock_api_current_price() -> Generator:
         status=SiteStatus("active"),
         activeFrom=date(2021, 1, 1),
         closedOn=None,
+        interval_length=30,
     )
     general_and_feed_in = Site(
         id=GENERAL_AND_FEED_IN_SITE_ID,
@@ -71,6 +73,7 @@ def mock_api_current_price() -> Generator:
         status=SiteStatus("active"),
         activeFrom=date(2021, 1, 1),
         closedOn=None,
+        interval_length=30,
     )
     instance.get_sites.return_value = [
         general_site,
