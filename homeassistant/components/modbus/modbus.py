@@ -415,7 +415,7 @@ class ModbusHub:
         if self._config_delay:
             return None
         async with self._lock:
-            if not self._client or not self._client.connected:
+            if not self._client:
                 return None
             result = await self.low_level_pb_call(unit, address, value, use_call)
             if self._msg_wait:
