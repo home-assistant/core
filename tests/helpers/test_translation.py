@@ -66,13 +66,13 @@ def test_load_translations_files_by_language(
                     "switch": {
                         "other1": {
                             "name": "Other 1",
-                            "native_unit_of_measurement": "Units",
+                            "native_unit_of_measurement": "units",
                         },
                         "other2": {"name": "Other 2"},
                         "other3": {"name": "Other 3"},
                         "other4": {
                             "name": "Other 4",
-                            "native_unit_of_measurement": "Quantities",
+                            "native_unit_of_measurement": "quantities",
                         },
                         "outlet": {"name": "Outlet " "{placeholder}"},
                     }
@@ -93,11 +93,11 @@ def test_load_translations_files_by_language(
             "en",
             {
                 "component.test.entity.switch.other1.name": "Other 1",
-                "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+                "component.test.entity.switch.other1.native_unit_of_measurement": "units",
                 "component.test.entity.switch.other2.name": "Other 2",
                 "component.test.entity.switch.other3.name": "Other 3",
                 "component.test.entity.switch.other4.name": "Other 4",
-                "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+                "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
                 "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
             },
             [],
@@ -106,11 +106,11 @@ def test_load_translations_files_by_language(
             "es",
             {
                 "component.test.entity.switch.other1.name": "Otra 1",
-                "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+                "component.test.entity.switch.other1.native_unit_of_measurement": "units",
                 "component.test.entity.switch.other2.name": "Otra 2",
                 "component.test.entity.switch.other3.name": "Otra 3",
                 "component.test.entity.switch.other4.name": "Otra 4",
-                "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+                "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
                 "component.test.entity.switch.outlet.name": "Enchufe {placeholder}",
             },
             [],
@@ -120,14 +120,14 @@ def test_load_translations_files_by_language(
             {
                 # Correct
                 "component.test.entity.switch.other1.name": "Anderes 1",
-                "component.test.entity.switch.other1.native_unit_of_measurement": "Einheiten",
+                "component.test.entity.switch.other1.native_unit_of_measurement": "einheiten",
                 # Translation has placeholder missing in English
                 "component.test.entity.switch.other2.name": "Other 2",
                 # Correct (empty translation)
                 "component.test.entity.switch.other3.name": "",
                 # Translation missing
                 "component.test.entity.switch.other4.name": "Other 4",
-                "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+                "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
                 # Mismatch in placeholders
                 "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
             },
@@ -178,11 +178,11 @@ async def test_get_translations(hass: HomeAssistant, mock_config_flows) -> None:
 
     assert translations == {
         "component.test.entity.switch.other1.name": "Other 1",
-        "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+        "component.test.entity.switch.other1.native_unit_of_measurement": "units",
         "component.test.entity.switch.other2.name": "Other 2",
         "component.test.entity.switch.other3.name": "Other 3",
         "component.test.entity.switch.other4.name": "Other 4",
-        "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+        "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
         "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
     }
 
@@ -194,14 +194,14 @@ async def test_get_translations(hass: HomeAssistant, mock_config_flows) -> None:
     assert translations == {
         # Correct
         "component.test.entity.switch.other1.name": "Anderes 1",
-        "component.test.entity.switch.other1.native_unit_of_measurement": "Einheiten",
+        "component.test.entity.switch.other1.native_unit_of_measurement": "einheiten",
         # Translation has placeholder missing in English
         "component.test.entity.switch.other2.name": "Other 2",
         # Correct (empty translation)
         "component.test.entity.switch.other3.name": "",
         # Translation missing
         "component.test.entity.switch.other4.name": "Other 4",
-        "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+        "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
         # Mismatch in placeholders
         "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
     }
@@ -212,11 +212,11 @@ async def test_get_translations(hass: HomeAssistant, mock_config_flows) -> None:
 
     assert translations == {
         "component.test.entity.switch.other1.name": "Otra 1",
-        "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+        "component.test.entity.switch.other1.native_unit_of_measurement": "units",
         "component.test.entity.switch.other2.name": "Otra 2",
         "component.test.entity.switch.other3.name": "Otra 3",
         "component.test.entity.switch.other4.name": "Otra 4",
-        "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+        "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
         "component.test.entity.switch.outlet.name": "Enchufe {placeholder}",
     }
 
@@ -227,11 +227,11 @@ async def test_get_translations(hass: HomeAssistant, mock_config_flows) -> None:
 
     assert translations == {
         "component.test.entity.switch.other1.name": "Other 1",
-        "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+        "component.test.entity.switch.other1.native_unit_of_measurement": "units",
         "component.test.entity.switch.other2.name": "Other 2",
         "component.test.entity.switch.other3.name": "Other 3",
         "component.test.entity.switch.other4.name": "Other 4",
-        "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+        "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
         "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
     }
 
@@ -532,11 +532,11 @@ async def test_get_cached_translations(hass: HomeAssistant, mock_config_flows) -
     )
     assert translations == {
         "component.test.entity.switch.other1.name": "Other 1",
-        "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+        "component.test.entity.switch.other1.native_unit_of_measurement": "units",
         "component.test.entity.switch.other2.name": "Other 2",
         "component.test.entity.switch.other3.name": "Other 3",
         "component.test.entity.switch.other4.name": "Other 4",
-        "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+        "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
         "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
     }
 
@@ -549,11 +549,11 @@ async def test_get_cached_translations(hass: HomeAssistant, mock_config_flows) -
 
     assert translations == {
         "component.test.entity.switch.other1.name": "Otra 1",
-        "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+        "component.test.entity.switch.other1.native_unit_of_measurement": "units",
         "component.test.entity.switch.other2.name": "Otra 2",
         "component.test.entity.switch.other3.name": "Otra 3",
         "component.test.entity.switch.other4.name": "Otra 4",
-        "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+        "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
         "component.test.entity.switch.outlet.name": "Enchufe {placeholder}",
     }
 
@@ -568,11 +568,11 @@ async def test_get_cached_translations(hass: HomeAssistant, mock_config_flows) -
 
     assert translations == {
         "component.test.entity.switch.other1.name": "Other 1",
-        "component.test.entity.switch.other1.native_unit_of_measurement": "Units",
+        "component.test.entity.switch.other1.native_unit_of_measurement": "units",
         "component.test.entity.switch.other2.name": "Other 2",
         "component.test.entity.switch.other3.name": "Other 3",
         "component.test.entity.switch.other4.name": "Other 4",
-        "component.test.entity.switch.other4.native_unit_of_measurement": "Quantities",
+        "component.test.entity.switch.other4.native_unit_of_measurement": "quantities",
         "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
     }
 
