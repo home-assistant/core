@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SERIAL_NUMBER, CONF_SW_VERSION, MANUFACTURER, MODEL
+from .const import MANUFACTURER, MODEL
 from .coordinator import IronOSLiveDataCoordinator
 
 
@@ -33,18 +32,19 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
 
-        serial_number = None
-        if coordinator.config_entry.data.get(CONF_SERIAL_NUMBER):
-            serial_number = f"{coordinator.config_entry.data.get(CONF_SERIAL_NUMBER)} DeviceID:{coordinator.config_entry.data.get(CONF_DEVICE_ID)}"
-
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name="Pinecil",
-            sw_version=coordinator.config_entry.data.get(CONF_SW_VERSION),
-            serial_number=serial_number,
         )
+        if coordinator.device_info.is_synced:
+            self._attr_device_info.update(
+                DeviceInfo(
+                    sw_version=coordinator.device_info.build,
+                    serial_number=f"{coordinator.device_info.device_sn} (ID:{coordinator.device_info.device_id})",
+                )
+            )
 
     @property
     def available(self) -> bool:

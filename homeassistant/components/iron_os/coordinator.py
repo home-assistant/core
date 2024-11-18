@@ -10,11 +10,10 @@ from aiogithubapi import GitHubAPI, GitHubException, GitHubReleaseModel
 from pynecil import CommunicationError, DeviceInfoResponse, LiveDataResponse, Pynecil
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SERIAL_NUMBER, CONF_SW_VERSION, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,32 +46,11 @@ class IronOSLiveDataCoordinator(DataUpdateCoordinator[LiveDataResponse]):
             # coordinator refresh, only after the device has disconnected
             # the device info is refetched
             self.device_info = await self.device.get_device_info()
-            self.update_device_info()
             return await self.device.get_live_data()
 
         except CommunicationError:
             _LOGGER.debug("Cannot connect to device", exc_info=True)
             return self.data
-
-    def update_device_info(self) -> None:
-        """Update data in config entry for DeviceInfo."""
-
-        update_info = {}
-        if self.config_entry.data.get(CONF_SERIAL_NUMBER) is None:
-            update_info[CONF_SERIAL_NUMBER] = self.device_info.device_sn
-            update_info[CONF_DEVICE_ID] = self.device_info.device_id
-
-        if (
-            self.device_info.build
-            and self.device_info.build != self.config_entry.data.get(CONF_SW_VERSION)
-        ):
-            update_info[CONF_SW_VERSION] = self.device_info.build
-
-        if update_info:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={**self.config_entry.data, **update_info},
-            )
 
 
 class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
