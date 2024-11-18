@@ -80,11 +80,65 @@ class ProtectDeviceEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntit
             and (event_types := description.event_types)
             and (event_type := event.type) in event_types
         ):
-            event_data = {ATTR_EVENT_ID: event.id}
+            self._trigger_event(event_type, {ATTR_EVENT_ID: event.id})
+            self.async_write_ha_state()
 
+
+class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntity):
+    """A UniFi Protect NFC event entity."""
+
+    entity_description: ProtectEventEntityDescription
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        description = self.entity_description
+
+        prev_event = self._event
+        prev_event_end = self._event_end
+        super()._async_update_device_from_protect(device)
+        if event := description.get_event_obj(device):
+            self._event = event
+            self._event_end = event.end if event else None
+
+        if (
+            event
+            and not self._event_already_ended(prev_event, prev_event_end)
+            and (event_types := description.event_types)
+            and (event_type := event.type) in event_types
+        ):
+            event_data = {ATTR_EVENT_ID: event.id}
             if event.metadata and event.metadata.nfc and event.metadata.nfc.nfc_id:
                 event_data["nfc_id"] = event.metadata.nfc.nfc_id
 
+            self._trigger_event(event_type, event_data)
+            self.async_write_ha_state()
+
+
+class ProtectDeviceFingerprintEventEntity(
+    EventEntityMixin, ProtectDeviceEntity, EventEntity
+):
+    """A UniFi Protect fingerprint event entity."""
+
+    entity_description: ProtectEventEntityDescription
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        description = self.entity_description
+
+        prev_event = self._event
+        prev_event_end = self._event_end
+        super()._async_update_device_from_protect(device)
+        if event := description.get_event_obj(device):
+            self._event = event
+            self._event_end = event.end if event else None
+
+        if (
+            event
+            and not self._event_already_ended(prev_event, prev_event_end)
+            and (event_types := description.event_types)
+            and (event_type := event.type) in event_types
+        ):
+            event_data = {ATTR_EVENT_ID: event.id}
             if (
                 event.metadata
                 and event.metadata.fingerprint
@@ -103,11 +157,19 @@ def _async_event_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     for device in data.get_cameras() if ufp_device is None else [ufp_device]:
-        entities.extend(
-            ProtectDeviceEventEntity(data, device, description)
-            for description in EVENT_DESCRIPTIONS
-            if description.has_required(device)
-        )
+        for description in EVENT_DESCRIPTIONS:
+            if not description.has_required(device):
+                continue
+
+            if description.key == "doorbell_nfc":
+                entities.append(ProtectDeviceNFCEventEntity(data, device, description))
+            elif description.key == "doorbell_fingerprint":
+                entities.append(
+                    ProtectDeviceFingerprintEventEntity(data, device, description)
+                )
+            else:
+                entities.append(ProtectDeviceEventEntity(data, device, description))
+
     return entities
 
 
