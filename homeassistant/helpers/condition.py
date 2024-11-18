@@ -679,12 +679,12 @@ def sun(
     has_sunrise_condition = SUN_EVENT_SUNRISE in (before, after)
     has_sunset_condition = SUN_EVENT_SUNSET in (before, after)
 
-    after_sunrise = today > dt_util.as_local(cast(dt_date, sunrise)).date()
+    after_sunrise = today > dt_util.as_local(cast(dt_datetime, sunrise)).date()
     if after_sunrise and has_sunrise_condition:
         tomorrow = today + dt_timedelta(days=1)
         sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
 
-    after_sunset = today > dt_util.as_local(cast(dt_date, sunset)).date()
+    after_sunset = today > dt_util.as_local(cast(dt_datetime, sunset)).date()
     if after_sunset and has_sunset_condition:
         tomorrow = today + dt_timedelta(days=1)
         sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
