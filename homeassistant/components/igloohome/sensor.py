@@ -42,7 +42,7 @@ async def async_setup_entry(
                     api=api,
                 )
                 for device in devicesResponse.payload
-                if device.type in ("Lock", "Keypad")
+                if device.batteryLevel is not None
             ),
             update_before_add=True,
         )
