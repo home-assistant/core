@@ -20,7 +20,7 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
     **kwargs: Any,
 ) -> list[BackupAgent]:
-    """Register the backup agent."""
+    """Return the local backup agent."""
     return [CoreLocalBackupAgent(hass)]
 
 
