@@ -349,7 +349,10 @@ async def test_restore_local_agent(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch("pathlib.Path.exists", return_value=True):
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text"),
+    ):
         await client.send_json_auto_id(
             {
                 "type": "backup/restore",
@@ -392,14 +395,15 @@ async def test_restore_remote_agent(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    await client.send_json_auto_id(
-        {
-            "type": "backup/restore",
-            "backup_id": "abc123",
-            "agent_id": "test.remote",
-        }
-    )
-    assert await client.receive_json() == snapshot
+    with patch("pathlib.Path.write_text"):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "backup_id": "abc123",
+                "agent_id": "test.remote",
+            }
+        )
+        assert await client.receive_json() == snapshot
     assert len(restart_calls) == snapshot
 
 
