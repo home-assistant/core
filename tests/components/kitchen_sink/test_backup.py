@@ -104,6 +104,7 @@ async def test_agents_download(
     assert f"Downloading backup {backup_id} to {path}" in caplog.text
 
 
+@pytest.mark.xfail(reason="Disabled until /api/backup/upload accepts a list of agents")
 async def test_agents_upload(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

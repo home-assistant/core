@@ -22,7 +22,6 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
         websocket_api.async_register_command(hass, handle_backup_start)
-        websocket_api.async_register_command(hass, handle_backup_upload)
         return
 
     websocket_api.async_register_command(hass, handle_details)
@@ -185,34 +184,6 @@ async def handle_backup_end(
         await manager.async_post_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "post_backup_actions_failed", str(err))
-        return
-
-    connection.send_result(msg["id"])
-
-
-@websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "backup/upload",
-        vol.Required("data"): {
-            vol.Required("slug"): str,
-        },
-    }
-)
-@websocket_api.async_response
-async def handle_backup_upload(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Backup upload."""
-    LOGGER.debug("Backup upload notification")
-    data = msg["data"]
-
-    try:
-        await hass.data[DATA_MANAGER].async_upload_backup(slug=data["slug"])
-    except Exception as err:  # noqa: BLE001
-        connection.send_error(msg["id"], "backup_upload_failed", str(err))
         return
 
     connection.send_result(msg["id"])
