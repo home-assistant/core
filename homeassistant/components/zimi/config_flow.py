@@ -105,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     description_placeholders=description_placeholders,
                 )
 
-            await self.async_set_unique_id(data["mac"])
+            await self.async_set_unique_id(data[CONF_MAC])
             return self.async_create_entry(title=data["title"], data=data)
 
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
