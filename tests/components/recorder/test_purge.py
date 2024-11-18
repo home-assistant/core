@@ -1096,23 +1096,12 @@ async def test_purge_filtered_states_multiple_rounds(
             .filter(StatesMeta.entity_id == "sensor.excluded")
         )
         assert states_sensor_excluded.count() == 0
+        query = session.query(States)
 
-        assert (
-            session.query(States).filter(States.state_id == 72).first().old_state_id
-            is None
-        )
-        assert (
-            session.query(States).filter(States.state_id == 72).first().attributes_id
-            == 71
-        )
-        assert (
-            session.query(States).filter(States.state_id == 73).first().old_state_id
-            is None
-        )
-        assert (
-            session.query(States).filter(States.state_id == 73).first().attributes_id
-            == 71
-        )
+        assert query.filter(States.state_id == 72).first().old_state_id is None
+        assert query.filter(States.state_id == 72).first().attributes_id == 71
+        assert query.filter(States.state_id == 73).first().old_state_id is None
+        assert query.filter(States.state_id == 73).first().attributes_id == 71
 
         final_keep_state = session.query(States).filter(States.state_id == 74).first()
         assert final_keep_state.old_state_id == 62  # should have been kept
