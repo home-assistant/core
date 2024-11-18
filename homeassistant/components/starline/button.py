@@ -29,7 +29,7 @@ BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
             entity_registry_enabled_default=False,
         )
         for i in range(1, 10)
-    ]
+    ],
 )
 
 
