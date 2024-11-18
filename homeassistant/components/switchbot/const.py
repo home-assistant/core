@@ -46,8 +46,8 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LOCK_PRO: SupportedModels.LOCK_PRO,
     SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
     SwitchbotModel.HUB2: SupportedModels.HUB2,
-    SwitchbotModel.RelaySwitch1PM: SupportedModels.RELAY_SWITCH_1PM,
-    SwitchbotModel.RelaySwitch1Plus: SupportedModels.RELAY_SWITCH_1PLUS,
+    SwitchbotModel.RELAY_SWITCH_1PM: SupportedModels.RELAY_SWITCH_1PM,
+    SwitchbotModel.RELAY_SWITCH_1_PLUS: SupportedModels.RELAY_SWITCH_1PLUS,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -64,7 +64,7 @@ SUPPORTED_MODEL_TYPES = (
 )
 
 SUPPORTED_LOCK_MODELS = {SwitchbotModel.LOCK, SwitchbotModel.LOCK_PRO}
-ENCRYPTED_MODELS = {SwitchbotModel.RelaySwitch1PM, SwitchbotModel.RelaySwitch1Plus}
+ENCRYPTED_MODELS = {SwitchbotModel.RELAY_SWITCH_1_PLUS, SwitchbotModel.RELAY_SWITCH_1PM}
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
     str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()
