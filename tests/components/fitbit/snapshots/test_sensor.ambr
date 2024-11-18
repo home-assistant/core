@@ -16,7 +16,7 @@
     '1600',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Calories In',
+      'friendly_name': 'First L. Calories in',
       'icon': 'mdi:food-apple',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
@@ -40,7 +40,7 @@
     '1600',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Calories In',
+      'friendly_name': 'First L. Calories in',
       'icon': 'mdi:food-apple',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
@@ -52,7 +52,7 @@
     '135',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Activity Calories',
+      'friendly_name': 'First L. Activity calories',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
@@ -65,7 +65,7 @@
     '135',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Tracker Activity Calories',
+      'friendly_name': 'First L. tracker Activity calories',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
@@ -79,7 +79,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Minutes Sedentary',
+      'friendly_name': 'First L. Minutes sedentary',
       'icon': 'mdi:seat-recline-normal',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -93,7 +93,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Minutes Very Active',
+      'friendly_name': 'First L. Minutes very active',
       'icon': 'mdi:run',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -133,7 +133,7 @@
     '18.0',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Body Fat',
+      'friendly_name': 'First L. Body fat',
       'icon': 'mdi:human',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -159,7 +159,7 @@
     '7',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Awakenings Count',
+      'friendly_name': 'First L. Awakenings count',
       'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'times awaken',
@@ -172,7 +172,7 @@
     '80',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Sleep Efficiency',
+      'friendly_name': 'First L. Sleep efficiency',
       'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -186,7 +186,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Minutes After Wakeup',
+      'friendly_name': 'First L. Minutes after wakeup',
       'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -200,7 +200,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Sleep Minutes Asleep',
+      'friendly_name': 'First L. Sleep minutes asleep',
       'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -227,7 +227,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Sleep Minutes Awake',
+      'friendly_name': 'First L. Sleep minutes awake',
       'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -241,7 +241,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Sleep Minutes to Fall Asleep',
+      'friendly_name': 'First L. Sleep minutes to fall asleep',
       'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -254,7 +254,7 @@
     '2020-01-27T00:17:30.000',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Sleep Start Time',
+      'friendly_name': 'First L. Sleep start time',
       'icon': 'mdi:clock',
     }),
     'fitbit-api-user-id-1_sleep/startTime',
@@ -266,7 +266,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Sleep Time in Bed',
+      'friendly_name': 'First L. Sleep time in bed',
       'icon': 'mdi:hotel',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -279,7 +279,7 @@
     '139',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Tracker Calories',
+      'friendly_name': 'First L. tracker Calories',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
@@ -333,7 +333,7 @@
     '76',
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Resting Heart Rate',
+      'friendly_name': 'First L. Resting heart rate',
       'icon': 'mdi:heart-pulse',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'bpm',
@@ -347,7 +347,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Minutes Fairly Active',
+      'friendly_name': 'First L. Minutes fairly active',
       'icon': 'mdi:walk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -361,7 +361,7 @@
     ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
-      'friendly_name': 'First L. Minutes Lightly Active',
+      'friendly_name': 'First L. Minutes lightly active',
       'icon': 'mdi:walk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,

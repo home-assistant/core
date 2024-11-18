@@ -40,7 +40,7 @@
         "name": "Battery level"
       },
       "activity_calories": {
-        "name": "Activity Calories"
+        "name": "Activity calories"
       },
       "calories": {
         "name": "Calories"
@@ -58,22 +58,22 @@
         "name": "Floors"
       },
       "resting_heart_rate": {
-        "name": "Resting Heart Rate"
+        "name": "Resting heart rate"
       },
       "minutes_fairly_active": {
-        "name": "Minutes Fairly Active"
+        "name": "Minutes fairly active"
       },
       "minutes_lightly_active": {
-        "name": "Minutes Lightly Active"
+        "name": "Minutes lightly active"
       },
       "minutes_sedentary": {
-        "name": "Minutes Sedentary"
+        "name": "Minutes sedentary"
       },
       "minutes_very_active": {
-        "name": "Minutes Very Active"
+        "name": "Minutes very active"
       },
       "sleep_start_time": {
-        "name": "Sleep Start Time"
+        "name": "Sleep start time"
       },
       "steps": {
         "name": "Steps"
@@ -82,34 +82,34 @@
         "name": "BMI"
       },
       "body_fat": {
-        "name": "Body Fat"
+        "name": "Body fat"
       },
       "weight": {
         "name": "Weight"
       },
       "awakenings_count": {
-        "name": "Awakenings Count"
+        "name": "Awakenings count"
       },
       "sleep_efficiency": {
-        "name": "Sleep Efficiency"
+        "name": "Sleep efficiency"
       },
       "minutes_after_wakeup": {
-        "name": "Minutes After Wakeup"
+        "name": "Minutes after wakeup"
       },
       "sleep_minutes_asleep": {
-        "name": "Sleep Minutes Asleep"
+        "name": "Sleep minutes asleep"
       },
       "sleep_minutes_awake": {
-        "name": "Sleep Minutes Awake"
+        "name": "Sleep minutes awake"
       },
       "sleep_minutes_to_fall_asleep": {
-        "name": "Sleep Minutes to Fall Asleep"
+        "name": "Sleep minutes to fall asleep"
       },
       "sleep_time_in_bed": {
-        "name": "Sleep Time in Bed"
+        "name": "Sleep time in bed"
       },
       "calories_in": {
-        "name": "Calories In"
+        "name": "Calories in"
       },
       "water": {
         "name": "Water"
@@ -132,7 +132,7 @@
   },
   "device": {
     "tracker": {
-      "name": "{display_name} Tracker"
+      "name": "{display_name} tracker"
     }
   }
 }
