@@ -12,6 +12,9 @@
       },
       "moving_ban": {
         "default": "mdi:car-off"
+      },
+      "is_running": {
+        "default": "mdi:speedometer"
       }
     },
     "button": {

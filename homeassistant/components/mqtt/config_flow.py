@@ -33,7 +33,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
@@ -220,7 +220,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return MQTTOptionsFlowHandler(config_entry)
+        return MQTTOptionsFlowHandler()
 
     async def _async_install_addon(self) -> None:
         """Install the Mosquitto Mqtt broker add-on."""
@@ -543,11 +543,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize MQTT options flow."""
-        self.config_entry = config_entry
         self.broker_config: dict[str, str | int] = {}
-        self.options = config_entry.options
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
@@ -737,6 +735,16 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         )
 
 
+async def _get_uploaded_file(hass: HomeAssistant, id: str) -> str:
+    """Get file content from uploaded file."""
+
+    def _proces_uploaded_file() -> str:
+        with process_uploaded_file(hass, id) as file_path:
+            return file_path.read_text(encoding=DEFAULT_ENCODING)
+
+    return await hass.async_add_executor_job(_proces_uploaded_file)
+
+
 async def async_get_broker_settings(
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
@@ -795,8 +803,7 @@ async def async_get_broker_settings(
             return False
         certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
         if certificate_id:
-            with process_uploaded_file(hass, certificate_id) as certificate_file:
-                certificate = certificate_file.read_text(encoding=DEFAULT_ENCODING)
+            certificate = await _get_uploaded_file(hass, certificate_id)
 
         # Return to form for file upload CA cert or client cert and key
         if (
@@ -812,15 +819,9 @@ async def async_get_broker_settings(
             return False
 
         if client_certificate_id:
-            with process_uploaded_file(
-                hass, client_certificate_id
-            ) as client_certificate_file:
-                client_certificate = client_certificate_file.read_text(
-                    encoding=DEFAULT_ENCODING
-                )
+            client_certificate = await _get_uploaded_file(hass, client_certificate_id)
         if client_key_id:
-            with process_uploaded_file(hass, client_key_id) as key_file:
-                client_key = key_file.read_text(encoding=DEFAULT_ENCODING)
+            client_key = await _get_uploaded_file(hass, client_key_id)
 
         certificate_data: dict[str, Any] = {}
         if certificate:

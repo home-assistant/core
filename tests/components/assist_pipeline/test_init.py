@@ -11,13 +11,20 @@ import wave
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import assist_pipeline, media_source, stt, tts
+from homeassistant.components import (
+    assist_pipeline,
+    conversation,
+    media_source,
+    stt,
+    tts,
+)
 from homeassistant.components.assist_pipeline.const import (
     BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
     DOMAIN,
 )
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -927,3 +934,148 @@ async def test_tts_dict_preferred_format(
         assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)) == 48000
         assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)) == 2
         assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_BYTES)) == 2
+
+
+async def test_sentence_trigger_overrides_conversation_agent(
+    hass: HomeAssistant,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test that sentence triggers are checked before the conversation agent."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": [
+                        "test trigger sentence",
+                    ],
+                },
+                "action": {
+                    "set_conversation_response": "test trigger response",
+                },
+            }
+        },
+    )
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="test trigger sentence",
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+        ),
+    )
+    await pipeline_input.validate()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse"
+    ) as mock_async_converse:
+        await pipeline_input.execute()
+
+        # Sentence trigger should have been handled
+        mock_async_converse.assert_not_called()
+
+        # Verify sentence trigger response
+        intent_end_event = next(
+            (
+                e
+                for e in events
+                if e.type == assist_pipeline.PipelineEventType.INTENT_END
+            ),
+            None,
+        )
+        assert (intent_end_event is not None) and intent_end_event.data
+        assert (
+            intent_end_event.data["intent_output"]["response"]["speech"]["plain"][
+                "speech"
+            ]
+            == "test trigger response"
+        )
+
+
+async def test_prefer_local_intents(
+    hass: HomeAssistant,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test that the default agent is checked first when local intents are preferred."""
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    # Reuse custom sentences in test config
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            response = intent_obj.create_response()
+            response.async_set_speech("Order confirmed")
+            return response
+
+    handler = OrderBeerIntentHandler()
+    intent.async_register(hass, handler)
+
+    # Fake a test agent and prefer local intents
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, conversation_engine="test-agent", prefer_local_intents=True
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="I'd like to order a stout please",
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+        ),
+    )
+
+    # Ensure prepare succeeds
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(id="test-agent", name="Test Agent"),
+    ):
+        await pipeline_input.validate()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse"
+    ) as mock_async_converse:
+        await pipeline_input.execute()
+
+        # Test agent should not have been called
+        mock_async_converse.assert_not_called()
+
+        # Verify local intent response
+        intent_end_event = next(
+            (
+                e
+                for e in events
+                if e.type == assist_pipeline.PipelineEventType.INTENT_END
+            ),
+            None,
+        )
+        assert (intent_end_event is not None) and intent_end_event.data
+        assert (
+            intent_end_event.data["intent_output"]["response"]["speech"]["plain"][
+                "speech"
+            ]
+            == "Order confirmed"
+        )
