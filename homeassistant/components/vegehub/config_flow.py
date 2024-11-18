@@ -27,7 +27,6 @@ ip_dict: dict[str, str] = {}
 class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VegeHub integration."""
 
-
     def __init__(self) -> None:
         """Initialize the VegeHub config flow."""
         self._hub: VegeHub | None = None

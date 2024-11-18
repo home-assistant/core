@@ -16,8 +16,7 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, NAME, PLATFORMS
 
@@ -35,12 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     device_mac = str(entry.data.get("mac_address"))
 
-    if entry.unique_id is None:
-        new_data = entry.data.copy()
-        unique_id = device_mac
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, unique_id=unique_id
-        )
+    assert entry.unique_id
 
     if device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}):
         _LOGGER.error("Device %s is already registered", entry.entry_id)
