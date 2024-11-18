@@ -56,7 +56,11 @@ def mock_backup_generation_fixture(
         ),
         patch(
             "pathlib.Path.exists",
-            lambda x: x != Path(hass.config.path("backups")),
+            lambda x: x
+            not in (
+                Path(hass.config.path("backups")),
+                Path(hass.config.path("tmp_backups")),
+            ),
         ),
         patch(
             "pathlib.Path.is_symlink",
