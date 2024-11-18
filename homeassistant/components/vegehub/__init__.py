@@ -24,12 +24,6 @@ from .const import DOMAIN, NAME, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 # The integration is only set up through the UI (config flow)
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the VegeHub integration."""
-    return True  # For now, we are not using YAML config.
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
