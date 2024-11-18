@@ -38,7 +38,7 @@
   "entity": {
     "button": {
       "timesync": {
-        "name": "Sync Time"
+        "name": "Sync time"
       }
     }
   },
