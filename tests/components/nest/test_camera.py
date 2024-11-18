@@ -745,7 +745,7 @@ async def test_camera_web_rtc_unsupported(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_type=hls",
+        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
     }
 
 
