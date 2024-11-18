@@ -103,7 +103,7 @@ def async_prepare_subscribe_topics(
     """
     current_subscriptions: dict[str, EntitySubscription]
     current_subscriptions = sub_state if sub_state is not None else {}
-    new_state: dict[str, EntitySubscription] = {}
+    sub_state = {}
     for key, value in topics.items():
         # Extract the new requested subscription
         requested = EntitySubscription(
@@ -120,7 +120,7 @@ def async_prepare_subscribe_topics(
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
         requested.resubscribe_if_necessary(hass, current)
-        new_state[key] = requested
+        sub_state[key] = requested
 
     # Go through all remaining subscriptions and unsubscribe them
     for remaining in current_subscriptions.values():
@@ -133,7 +133,7 @@ def async_prepare_subscribe_topics(
                 remaining.entity_id,
             )
 
-    return new_state
+    return sub_state
 
 
 async def async_subscribe_topics(
