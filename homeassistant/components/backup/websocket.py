@@ -40,10 +40,13 @@ async def handle_info(
 ) -> None:
     """List all stored backups."""
     manager = hass.data[DATA_MANAGER]
-    backups = await manager.async_get_backups()
+    backups, agent_errors = await manager.async_get_backups()
     connection.send_result(
         msg["id"],
         {
+            "agent_errors": {
+                agent_id: str(err) for agent_id, err in agent_errors.items()
+            },
             "backups": [b.as_dict() for b in backups.values()],
             "backing_up": manager.backup_task is not None,
         },
