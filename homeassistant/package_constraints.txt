@@ -19,7 +19,7 @@ awesomeversion==24.6.0
 bcrypt==4.2.0
 bleak-retry-connector==3.6.0
 bleak==0.22.3
-bluetooth-adapters==0.20.0
+bluetooth-adapters==0.20.2
 bluetooth-auto-recovery==1.4.2
 bluetooth-data-tools==1.20.0
 cached-ipaddress==0.8.0
