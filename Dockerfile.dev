@@ -64,5 +64,17 @@ RUN uv pip install -r requirements_test.txt
 
 WORKDIR /workspaces
 
+# Copy the source code
+COPY . /workspaces
+
+# Install Home Assistant in editable mode
+# RUN uv pip install -e /workspaces
+
+# Expose the default Home Assistant port
+EXPOSE 8123
+
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
+
+# Command to run Home Assistant (optional)
+CMD ["python3", "-m", "homeassistant", "--config", "/workspaces/config"]
