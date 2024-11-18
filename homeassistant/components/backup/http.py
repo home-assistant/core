@@ -48,18 +48,24 @@ class DownloadBackupView(HomeAssistantView):
             return Response(status=HTTPStatus.BAD_REQUEST)
 
         manager = cast(BackupManager, request.app[KEY_HASS].data[DATA_MANAGER])
-        # TODO: Support non local agents
-        if agent_id not in manager.local_backup_agents:
+        if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
-        agent = manager.local_backup_agents[agent_id]
+        agent = manager.backup_agents[agent_id]
         backup = await agent.async_get_backup(slug=slug)
-        path = agent.get_backup_path(slug=slug)
 
         # We don't need to check if the path exists, aiohttp.FileResponse will handle
         # that
-        if backup is None or path is None:
+        if backup is None:
             return Response(status=HTTPStatus.NOT_FOUND)
 
+        if agent_id in manager.local_backup_agents:
+            local_agent = manager.local_backup_agents[agent_id]
+            path = local_agent.get_backup_path(slug=slug)
+        else:
+            path = manager.temp_backup_dir / f"{slug}.tar"
+            await agent.async_download_backup(id=backup.id, path=path)
+
+        # TODO: We need a callback to remove the temp file once the download is complete
         return FileResponse(
             path=path.as_posix(),
             headers={
