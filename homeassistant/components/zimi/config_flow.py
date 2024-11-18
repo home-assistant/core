@@ -58,9 +58,9 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     except socket.gaierror as _:
                         errors["base"] = "invalid_host"
                     if hostbyname:
+                        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        s.settimeout(10)
                         try:
-                            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            s.settimeout(10)
                             s.connect((data[CONF_HOST], data[CONF_PORT]))
                             s.close()
                         except ConnectionRefusedError as _:
