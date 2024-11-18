@@ -1,6 +1,6 @@
 """Sensor configuration for VegeHub integration."""
 
-from typing import Any
+from vegehub import vh400_transform
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -120,7 +120,7 @@ class VegeHubSensor(SensorEntity):
         if (
             self._data_type == OPTION_DATA_TYPE_CHOICES[1] and self._attr_native_value
         ):  # Percentage
-            return VH400_transform(self._attr_native_value)
+            return vh400_transform(self._attr_native_value)
         if (
             self._data_type == OPTION_DATA_TYPE_CHOICES[2] and self._attr_native_value
         ):  # Temperature C
@@ -172,39 +172,3 @@ class VegeHubSensor(SensorEntity):
 
         self._attr_native_value = value
         self.async_write_ha_state()
-
-
-def VH400_transform(x: Any) -> float:
-    """Perform a piecewise linear transformation on the input value `x`.
-
-    The transform is based on the following pairs of points:
-    (0,0), (1.1000, 10.0000), (1.3000, 15.0000), (1.8200, 40.0000),
-    (2.2000, 50.0000), (3.0000, 100.0000)
-    """
-    if isinstance(x, (int, str)):
-        x = float(x)
-
-    if not isinstance(x, float):
-        return 0.0
-
-    if x <= 0.0100:
-        # Below 0.01V is just noise and should be reported as 0
-        return 0
-    if x <= 1.1000:
-        # Linear interpolation between (0.0000, 0.0000) and (1.1000, 10.0000)
-        return (10.0000 - 0.0000) / (1.1000 - 0.0000) * (x - 0.0000) + 0.0000
-    if x <= 1.3000:
-        # Linear interpolation between (1.1000, 10.0000) and (1.3000, 15.0000)
-        return (15.0000 - 10.0000) / (1.3000 - 1.1000) * (x - 1.1000) + 10.0000
-    if x <= 1.8200:
-        # Linear interpolation between (1.3000, 15.0000) and (1.8200, 40.0000)
-        return (40.0000 - 15.0000) / (1.8200 - 1.3000) * (x - 1.3000) + 15.0000
-    if x <= 2.2000:
-        # Linear interpolation between (1.8200, 40.0000) and (2.2000, 50.0000)
-        return (50.0000 - 40.0000) / (2.2000 - 1.8200) * (x - 1.8200) + 40.0000
-    if x <= 3.0000:
-        # Linear interpolation between (2.2000, 50.0000) and (3.0000, 100.0000)
-        return (100.0000 - 50.0000) / (3.0000 - 2.2000) * (x - 2.2000) + 50.0000
-
-    # For values greater than 3.0000, return 100.0000
-    return 100.0000
