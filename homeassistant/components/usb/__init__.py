@@ -232,7 +232,9 @@ class USBDiscovery:
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
-        await self._async_start_monitor()
+        if await self._async_supports_monitoring():
+            await self._async_start_monitor()
+
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
@@ -246,14 +248,17 @@ class USBDiscovery:
         if self._request_debouncer:
             self._request_debouncer.async_shutdown()
 
+    async def _async_supports_monitoring(self) -> bool:
+        info = await system_info.async_get_system_info(self.hass)
+        if info.get("docker"):
+            return False
+
+        return True
+
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware."""
-        fallback_to_polling = await self._async_start_monitor_udev()
-
-        if not fallback_to_polling:
-            return
-
-        await self._async_start_monitor_polling()
+        if not await self._async_start_monitor_udev():
+            await self._async_start_monitor_polling()
 
     async def _async_start_monitor_polling(self) -> None:
         """Start monitoring hardware with polling."""
@@ -271,11 +276,8 @@ class USBDiscovery:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
     async def _async_start_monitor_udev(self) -> bool:
-        """Start monitoring hardware with pyudev. Returns True if polling is needed."""
+        """Start monitoring hardware with pyudev. Returns True if successful."""
         if not sys.platform.startswith("linux"):
-            return True
-        info = await system_info.async_get_system_info(self.hass)
-        if info.get("docker"):
             return False
 
         if not (
@@ -283,14 +285,14 @@ class USBDiscovery:
                 self._get_monitor_observer
             )
         ):
-            return True
+            return False
 
         def _stop_observer(event: Event) -> None:
             observer.stop()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_observer)
         self.observer_active = True
-        return False
+        return True
 
     def _get_monitor_observer(self) -> MonitorObserver | None:
         """Get the monitor observer.
