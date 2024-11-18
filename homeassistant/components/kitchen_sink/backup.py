@@ -5,12 +5,11 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 from homeassistant.components.backup import (
     BackupAgent,
     BackupUploadMetadata,
-    UploadedBackup,
+    BaseBackup,
 )
 from homeassistant.core import HomeAssistant
 
@@ -32,25 +31,23 @@ class KitchenSinkBackupAgent(BackupAgent):
         super().__init__()
         self.name = name
         self._uploads = [
-            UploadedBackup(
-                id="def456",
+            BaseBackup(
+                backup_id="abc123",
+                date="1970-01-01T00:00:00Z",
                 name="Kitchen sink syncer",
                 protected=False,
-                slug="abc123",
                 size=1234,
-                date="1970-01-01T00:00:00Z",
             )
         ]
 
     async def async_download_backup(
         self,
-        *,
-        id: str,
+        backup_id: str,
         path: Path,
         **kwargs: Any,
     ) -> None:
         """Download a backup file."""
-        LOGGER.info("Downloading backup %s to %s", id, path)
+        LOGGER.info("Downloading backup %s to %s", backup_id, path)
 
     async def async_upload_backup(
         self,
@@ -62,28 +59,26 @@ class KitchenSinkBackupAgent(BackupAgent):
         """Upload a backup."""
         LOGGER.info("Uploading backup %s %s", path.name, metadata)
         self._uploads.append(
-            UploadedBackup(
-                id=uuid4().hex,
+            BaseBackup(
+                backup_id=metadata.backup_id,
+                date=metadata.date,
                 name=metadata.name,
                 protected=metadata.protected,
-                slug=metadata.slug,
                 size=metadata.size,
-                date=metadata.date,
             )
         )
 
-    async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
+    async def async_list_backups(self, **kwargs: Any) -> list[BaseBackup]:
         """List synced backups."""
         return self._uploads
 
     async def async_get_backup(
         self,
-        *,
-        slug: str,
+        backup_id: str,
         **kwargs: Any,
-    ) -> UploadedBackup | None:
+    ) -> BaseBackup | None:
         """Return a backup."""
         for backup in self._uploads:
-            if backup.slug == slug:
+            if backup.backup_id == backup_id:
                 return backup
         return None

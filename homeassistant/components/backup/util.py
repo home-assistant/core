@@ -20,9 +20,9 @@ def read_backup(backup_path: Path) -> BaseBackup:
             raise KeyError("backup.json not found in tar file")
         data = json_loads_object(data_file.read())
         return BaseBackup(
-            slug=cast(str, data["slug"]),
-            name=cast(str, data["name"]),
+            backup_id=cast(str, data["slug"]),
             date=cast(str, data["date"]),
-            size=round(backup_path.stat().st_size / 1_048_576, 2),
+            name=cast(str, data["name"]),
             protected=cast(bool, data.get("protected", False)),
+            size=round(backup_path.stat().st_size / 1_048_576, 2),
         )

@@ -79,12 +79,11 @@
     'result': list([
       dict({
         'agent_id': 'domain.test',
+        'backup_id': 'abc123',
         'date': '1970-01-01T00:00:00Z',
-        'id': 'abc123',
         'name': 'Test',
         'protected': False,
         'size': 13.37,
-        'slug': 'abc123',
       }),
     ]),
     'success': True,
@@ -97,12 +96,11 @@
     'result': list([
       dict({
         'agent_id': 'domain.test',
+        'backup_id': 'abc123',
         'date': '1970-01-01T00:00:00Z',
-        'id': 'abc123',
         'name': 'Test',
         'protected': False,
         'size': 13.37,
-        'slug': 'abc123',
       }),
     ]),
     'success': True,
@@ -287,11 +285,11 @@
         'agent_ids': list([
           'backup.local',
         ]),
+        'backup_id': 'abc123',
         'date': '1970-01-01T00:00:00.000Z',
         'name': 'Test',
         'protected': False,
         'size': 0.0,
-        'slug': 'abc123',
       }),
     }),
     'success': True,
@@ -345,7 +343,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'slug': '27f5c632',
+      'backup_id': '27f5c632',
     }),
     'success': True,
     'type': 'result',
@@ -366,7 +364,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'slug': '27f5c632',
+      'backup_id': '27f5c632',
     }),
     'success': True,
     'type': 'result',
@@ -387,7 +385,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'slug': '27f5c632',
+      'backup_id': '27f5c632',
     }),
     'success': True,
     'type': 'result',
@@ -408,7 +406,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'slug': 'abc123',
+      'backup_id': 'abc123',
     }),
     'success': True,
     'type': 'result',
@@ -418,7 +416,7 @@
   dict({
     'id': 1,
     'result': dict({
-      'slug': 'abc123',
+      'backup_id': 'abc123',
     }),
     'success': True,
     'type': 'result',
@@ -447,11 +445,11 @@
           'agent_ids': list([
             'backup.local',
           ]),
+          'backup_id': 'abc123',
           'date': '1970-01-01T00:00:00.000Z',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
-          'slug': 'abc123',
         }),
       ]),
     }),
@@ -472,11 +470,11 @@
           'agent_ids': list([
             'backup.local',
           ]),
+          'backup_id': 'abc123',
           'date': '1970-01-01T00:00:00.000Z',
           'name': 'Test',
           'protected': False,
           'size': 0.0,
-          'slug': 'abc123',
         }),
       ]),
     }),

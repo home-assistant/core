@@ -108,7 +108,9 @@ async def test_details(
     await hass.async_block_till_done()
 
     with patch("pathlib.Path.exists", return_value=True):
-        await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
+        await client.send_json_auto_id(
+            {"type": "backup/details", "backup_id": "abc123"}
+        )
         assert await client.receive_json() == snapshot
 
 
@@ -134,7 +136,7 @@ async def test_remove(
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_remove_backup",
     ):
-        await client.send_json_auto_id({"type": "backup/remove", "slug": "abc123"})
+        await client.send_json_auto_id({"type": "backup/remove", "backup_id": "abc123"})
         assert await client.receive_json() == snapshot
 
 
@@ -257,7 +259,11 @@ async def test_restore(
         "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
     ):
         await client.send_json_auto_id(
-            {"type": "backup/restore", "slug": "abc123", "agent_id": "backup.local"}
+            {
+                "type": "backup/restore",
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+            }
         )
         assert await client.receive_json() == snapshot
 
@@ -457,15 +463,14 @@ async def test_agents_download(
     await client.send_json_auto_id(
         {
             "type": "backup/agents/download",
-            "slug": "abc123",
             "agent_id": "domain.test",
             "backup_id": "abc123",
         }
     )
     with patch.object(BackupAgentTest, "async_download_backup") as download_mock:
         assert await client.receive_json() == snapshot
+        assert download_mock.call_args[0] == ("abc123",)
         assert download_mock.call_args[1] == {
-            "id": "abc123",
             "path": Path(hass.config.path("tmp_backups"), "abc123.tar"),
         }
 
@@ -485,7 +490,6 @@ async def test_agents_download_exception(
     await client.send_json_auto_id(
         {
             "type": "backup/agents/download",
-            "slug": "abc123",
             "agent_id": "domain.test",
             "backup_id": "abc123",
         }
@@ -509,7 +513,6 @@ async def test_agents_download_unknown_agent(
     await client.send_json_auto_id(
         {
             "type": "backup/agents/download",
-            "slug": "abc123",
             "agent_id": "domain.test",
             "backup_id": "abc123",
         }
