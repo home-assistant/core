@@ -61,7 +61,7 @@ async def test_sensors_unavailable(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_pynecil._client.is_connected = False
+    mock_pynecil.is_connected = False
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
 
