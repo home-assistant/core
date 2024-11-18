@@ -515,3 +515,18 @@ async def test_agents_download_unknown_agent(
         }
     )
     assert await client.receive_json() == snapshot
+
+
+async def test_config_info(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting backup config info."""
+    await setup_backup_integration(hass)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/config/info"})
+    assert await client.receive_json() == snapshot

@@ -257,6 +257,18 @@
     'type': 'result',
   })
 # ---
+# name: test_config_info
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'last_automatic_backup': None,
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_details[with_hassio-with_backup_content]
   dict({
     'error': dict({

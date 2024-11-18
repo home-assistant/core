@@ -29,6 +29,8 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_remove)
     websocket_api.async_register_command(hass, handle_restore)
 
+    websocket_api.async_register_command(hass, handle_config_info)
+
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "backup/info"})
@@ -264,3 +266,21 @@ async def backup_agents_download(
         return
 
     connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "backup/config/info"})
+@websocket_api.async_response
+async def handle_config_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Send the stored backup config."""
+    manager = hass.data[DATA_MANAGER]
+    connection.send_result(
+        msg["id"],
+        {
+            "config": manager.config.data,
+        },
+    )
