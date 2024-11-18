@@ -199,6 +199,8 @@ def report_usage(
     Please create a bug report at https://..."
     :param breaks_in_ha_version: if set, the report will be adjusted to specify the
     breaking version
+    :param integration_domain: fallback for identifying the integration if the
+    frame is not found
     """
     try:
         integration_frame = get_integration_frame(
