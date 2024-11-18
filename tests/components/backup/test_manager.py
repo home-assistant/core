@@ -16,12 +16,13 @@ from homeassistant.components.backup import (
     BackupPlatformProtocol,
     backup as local_backup_platform,
 )
-from homeassistant.components.backup.manager import LOCAL_AGENT_ID, BackupProgress
+from homeassistant.components.backup.manager import BackupProgress
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    LOCAL_AGENT_ID,
     TEST_BACKUP,
     TEST_BACKUP_PATH,
     TEST_BASE_BACKUP,
@@ -217,8 +218,11 @@ async def test_getting_backup_that_does_not_exist(
     local_agent._loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=False):
-        backup = await manager.async_get_backup(slug=TEST_LOCAL_BACKUP.slug)
+        backup, agent_errors = await manager.async_get_backup(
+            slug=TEST_LOCAL_BACKUP.slug
+        )
         assert backup is None
+        assert agent_errors == {}
 
         assert (
             f"Removing tracked backup ({TEST_LOCAL_BACKUP.slug}) that "

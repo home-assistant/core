@@ -18,7 +18,7 @@ class BackupAgentError(HomeAssistantError):
 
 
 class BackupAgentUnreachableError(BackupAgentError):
-    """Raised when the agent can't reach it's API."""
+    """Raised when the agent can't reach its API."""
 
     _message = "The backup agent is unreachable."
 
