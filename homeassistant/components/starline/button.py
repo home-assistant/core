@@ -11,7 +11,7 @@ from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
-button_types = [
+BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(
         key="poke",
         translation_key="horn",
@@ -21,19 +21,16 @@ button_types = [
         translation_key="panic",
         entity_registry_enabled_default=False,
     ),
-]
-
-button_types.extend(
-    ButtonEntityDescription(
-        key=f"flex_{i}",
-        translation_key="flex",
-        translation_placeholders={"num": str(i)},
-        entity_registry_enabled_default=False,
-    )
-    for i in range(1, 10)
+    *[
+        ButtonEntityDescription(
+            key=f"flex_{i}",
+            translation_key="flex",
+            translation_placeholders={"num": str(i)},
+            entity_registry_enabled_default=False,
+        )
+        for i in range(1, 10)
+    ]
 )
-
-BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = tuple(button_types)
 
 
 async def async_setup_entry(
