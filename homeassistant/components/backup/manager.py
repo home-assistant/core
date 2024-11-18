@@ -29,7 +29,12 @@ from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 
-from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
+from .agent import (
+    BackupAgent,
+    BackupAgentError,
+    BackupAgentPlatformProtocol,
+    LocalBackupAgent,
+)
 from .const import (
     BUF_SIZE,
     DOMAIN,
@@ -207,7 +212,9 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         """
 
     @abc.abstractmethod
-    async def async_get_backups(self, **kwargs: Any) -> dict[str, _BackupT]:
+    async def async_get_backups(
+        self, **kwargs: Any
+    ) -> tuple[dict[str, Backup], dict[str, Exception]]:
         """Get backups.
 
         Return a dictionary of Backup instances keyed by their slug.
@@ -275,12 +282,25 @@ class BackupManager(BaseBackupManager[Backup]):
         finally:
             self.syncing = False
 
-    async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
+    async def async_get_backups(
+        self, **kwargs: Any
+    ) -> tuple[dict[str, Backup], dict[str, Exception]]:
         """Return backups."""
         backups: dict[str, Backup] = {}
-        for agent_id, agent in self.backup_agents.items():
-            agent_backups = await agent.async_list_backups()
-            for agent_backup in agent_backups:
+        agent_errors: dict[str, Exception] = {}
+        agent_ids = list(self.backup_agents.keys())
+
+        list_backups_results = await asyncio.gather(
+            *(agent.async_list_backups() for agent in self.backup_agents.values()),
+            return_exceptions=True,
+        )
+        for idx, result in enumerate(list_backups_results):
+            if isinstance(result, BackupAgentError):
+                agent_errors[agent_ids[idx]] = result
+                continue
+            if isinstance(result, BaseException):
+                raise result
+            for agent_backup in result:
                 if agent_backup.slug not in backups:
                     backups[agent_backup.slug] = Backup(
                         slug=agent_backup.slug,
@@ -290,9 +310,9 @@ class BackupManager(BaseBackupManager[Backup]):
                         size=agent_backup.size,
                         protected=agent_backup.protected,
                     )
-                backups[agent_backup.slug].agent_ids.append(agent_id)
+                backups[agent_backup.slug].agent_ids.append(agent_ids[idx])
 
-        return backups
+        return (backups, agent_errors)
 
     async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
         """Return a backup."""
