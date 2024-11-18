@@ -35,6 +35,7 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
+from .config import BackupConfig
 from .const import (
     BUF_SIZE,
     DOMAIN,
@@ -91,10 +92,12 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.backup_agents: dict[str, BackupAgent] = {}
         self.local_backup_agents: dict[str, LocalBackupAgent] = {}
+        self.config = BackupConfig(hass)
         self.syncing = False
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
+        await self.config.load()
         await self.load_platforms()
 
     @callback
