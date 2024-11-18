@@ -11,7 +11,7 @@
         },
         "data_description": {
           "host": "Optional - If not entered HA will attempt to discover on LAN.",
-          "port": "Optional - If not entered HA will attempt to use the defualt value.",
+          "port": "Optional - If not entered HA will attempt to use the default value.",
           "mac": "Mandatory - You can find the MAC on the back of your Zimi Cloud Connect."
         }
       }
