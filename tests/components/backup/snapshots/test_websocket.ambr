@@ -439,6 +439,8 @@
   dict({
     'id': 1,
     'result': dict({
+      'agent_errors': dict({
+      }),
       'backing_up': False,
       'backups': list([
         dict({
@@ -454,6 +456,42 @@
       ]),
     }),
     'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_info_with_errors[BackupAgentUnreachableError]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+        'domain.test': 'The backup agent is unreachable.',
+      }),
+      'backing_up': False,
+      'backups': list([
+        dict({
+          'agent_ids': list([
+            'backup.local',
+          ]),
+          'date': '1970-01-01T00:00:00.000Z',
+          'name': 'Test',
+          'protected': False,
+          'size': 0.0,
+          'slug': 'abc123',
+        }),
+      ]),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_info_with_errors[side_effect0]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Boom!',
+    }),
+    'id': 1,
+    'success': False,
     'type': 'result',
   })
 # ---

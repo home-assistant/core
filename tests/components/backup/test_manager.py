@@ -143,8 +143,9 @@ async def test_load_backups(hass: HomeAssistant) -> None:
         ),
     ):
         await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
-    backups = await manager.async_get_backups()
+    backups, agent_errors = await manager.async_get_backups()
     assert backups == {TEST_BACKUP.slug: TEST_BACKUP}
+    assert agent_errors == {}
 
 
 async def test_load_backups_with_exception(
@@ -162,9 +163,10 @@ async def test_load_backups_with_exception(
         patch("tarfile.open", side_effect=OSError("Test exception")),
     ):
         await manager.backup_agents[LOCAL_AGENT_ID].load_backups()
-    backups = await manager.async_get_backups()
+    backups, agent_errors = await manager.async_get_backups()
     assert f"Unable to read backup {TEST_BACKUP_PATH}: Test exception" in caplog.text
     assert backups == {}
+    assert agent_errors == {}
 
 
 async def test_removing_backup(

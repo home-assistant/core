@@ -9,6 +9,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import BaseBackup
+from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import NewBackup
 from homeassistant.core import HomeAssistant
@@ -54,6 +55,27 @@ async def test_info(
 
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+)
+async def test_info_with_errors(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting backup info with one unavailable agent."""
+    await setup_backup_integration(hass, with_hassio=False, backups=[TEST_LOCAL_BACKUP])
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch.object(BackupAgentTest, "async_list_backups", side_effect=side_effect):
+        await client.send_json_auto_id({"type": "backup/info"})
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
