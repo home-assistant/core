@@ -14,11 +14,13 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.backup import LocalBackup
 from homeassistant.components.backup.const import DATA_MANAGER
-from homeassistant.components.backup.manager import LOCAL_AGENT_ID, Backup
+from homeassistant.components.backup.manager import Backup
 from homeassistant.components.backup.models import BaseBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+
+LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
 TEST_BASE_BACKUP = BaseBackup(
     slug="abc123",

@@ -45,8 +45,6 @@ from .const import (
 from .models import BackupUploadMetadata, BaseBackup
 from .util import read_backup
 
-LOCAL_AGENT_ID = f"{DOMAIN}.local"
-
 _BackupT = TypeVar("_BackupT", bound=BaseBackup, default=BaseBackup)
 
 
