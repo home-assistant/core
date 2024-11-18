@@ -53,7 +53,7 @@ _BackupT = TypeVar("_BackupT", bound=BaseBackup, default=BaseBackup)
 class NewBackup:
     """New backup class."""
 
-    slug: str
+    backup_id: str
 
 
 @dataclass(slots=True)
@@ -185,7 +185,7 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     @abc.abstractmethod
     async def async_restore_backup(
         self,
-        slug: str,
+        backup_id: str,
         *,
         agent_id: str,
         password: str | None,
@@ -218,17 +218,17 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
     ) -> tuple[dict[str, Backup], dict[str, Exception]]:
         """Get backups.
 
-        Return a dictionary of Backup instances keyed by their slug.
+        Return a dictionary of Backup instances keyed by their ID.
         """
 
     @abc.abstractmethod
     async def async_get_backup(
-        self, *, slug: str, **kwargs: Any
+        self, backup_id: str, **kwargs: Any
     ) -> tuple[_BackupT | None, dict[str, Exception]]:
         """Get a backup."""
 
     @abc.abstractmethod
-    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
+    async def async_remove_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
 
     @abc.abstractmethod
@@ -265,12 +265,12 @@ class BackupManager(BaseBackupManager[Backup]):
                     self.backup_agents[agent_id].async_upload_backup(
                         path=path,
                         metadata=BackupUploadMetadata(
-                            homeassistant=HAVERSION,
-                            size=backup.size,
+                            backup_id=backup.backup_id,
                             date=backup.date,
-                            slug=backup.slug,
+                            homeassistant=HAVERSION,
                             name=backup.name,
                             protected=backup.protected,
+                            size=backup.size,
                         ),
                     )
                     for agent_id in agent_ids
@@ -304,21 +304,21 @@ class BackupManager(BaseBackupManager[Backup]):
             if isinstance(result, BaseException):
                 raise result
             for agent_backup in result:
-                if agent_backup.slug not in backups:
-                    backups[agent_backup.slug] = Backup(
-                        slug=agent_backup.slug,
-                        name=agent_backup.name,
-                        date=agent_backup.date,
+                if agent_backup.backup_id not in backups:
+                    backups[agent_backup.backup_id] = Backup(
                         agent_ids=[],
-                        size=agent_backup.size,
+                        backup_id=agent_backup.backup_id,
+                        date=agent_backup.date,
+                        name=agent_backup.name,
                         protected=agent_backup.protected,
+                        size=agent_backup.size,
                     )
-                backups[agent_backup.slug].agent_ids.append(agent_ids[idx])
+                backups[agent_backup.backup_id].agent_ids.append(agent_ids[idx])
 
         return (backups, agent_errors)
 
     async def async_get_backup(
-        self, *, slug: str, **kwargs: Any
+        self, backup_id: str, **kwargs: Any
     ) -> tuple[Backup | None, dict[str, Exception]]:
         """Return a backup."""
         backup: Backup | None = None
@@ -327,7 +327,7 @@ class BackupManager(BaseBackupManager[Backup]):
 
         get_backup_results = await asyncio.gather(
             *(
-                agent.async_get_backup(slug=slug)
+                agent.async_get_backup(backup_id)
                 for agent in self.backup_agents.values()
             ),
             return_exceptions=True,
@@ -342,23 +342,23 @@ class BackupManager(BaseBackupManager[Backup]):
                 continue
             if backup is None:
                 backup = Backup(
-                    slug=result.slug,
-                    name=result.name,
-                    date=result.date,
                     agent_ids=[],
-                    size=result.size,
+                    backup_id=result.backup_id,
+                    date=result.date,
+                    name=result.name,
                     protected=result.protected,
+                    size=result.size,
                 )
                 backup.agent_ids.append(agent_ids[idx])
 
         return (backup, agent_errors)
 
-    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
+    async def async_remove_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
         for agent in self.backup_agents.values():
             if not hasattr(agent, "async_remove_backup"):
                 continue
-            await agent.async_remove_backup(slug=slug)
+            await agent.async_remove_backup(backup_id)
 
     async def async_receive_backup(
         self,
@@ -415,7 +415,7 @@ class BackupManager(BaseBackupManager[Backup]):
             if local_file_paths:
                 tar_file_path = local_file_paths[0]
             else:
-                tar_file_path = self.temp_backup_dir / f"{backup.slug}.tar"
+                tar_file_path = self.temp_backup_dir / f"{backup.backup_id}.tar"
             for local_path in local_file_paths:
                 shutil.copy(target_temp_file, local_path)
             temp_dir_handler.cleanup()
@@ -430,7 +430,7 @@ class BackupManager(BaseBackupManager[Backup]):
             return
 
         local_file_paths = [
-            self.local_backup_agents[agent_id].get_backup_path(backup.slug)
+            self.local_backup_agents[agent_id].get_backup_path(backup.backup_id)
             for agent_id in agent_ids
             if agent_id in self.local_backup_agents
         ]
@@ -464,23 +464,23 @@ class BackupManager(BaseBackupManager[Backup]):
             raise HomeAssistantError("Invalid agent selected")
         backup_name = name or f"Core {HAVERSION}"
         date_str = dt_util.now().isoformat()
-        slug = _generate_slug(date_str, backup_name)
+        backup_id = _generate_backup_id(date_str, backup_name)
         self.backup_task = self.hass.async_create_task(
             self._async_create_backup(
                 addons_included=addons_included,
                 agent_ids=agent_ids,
+                backup_id=backup_id,
                 backup_name=backup_name,
                 database_included=database_included,
                 date_str=date_str,
                 folders_included=folders_included,
                 on_progress=on_progress,
                 password=password,
-                slug=slug,
             ),
             name="backup_manager_create_backup",
             eager_start=False,  # To ensure the task is not started before we return
         )
-        return NewBackup(slug=slug)
+        return NewBackup(backup_id=backup_id)
 
     async def _async_create_backup(
         self,
@@ -493,13 +493,13 @@ class BackupManager(BaseBackupManager[Backup]):
         folders_included: list[str] | None,
         on_progress: Callable[[BackupProgress], None] | None,
         password: str | None,
-        slug: str,
+        backup_id: str,
     ) -> BaseBackup:
         """Generate a backup."""
         success = False
 
         local_file_paths = [
-            self.local_backup_agents[agent_id].get_backup_path(slug)
+            self.local_backup_agents[agent_id].get_backup_path(backup_id)
             for agent_id in agent_ids
             if agent_id in self.local_backup_agents
         ]
@@ -508,17 +508,17 @@ class BackupManager(BaseBackupManager[Backup]):
             await self.async_pre_backup_actions()
 
             backup_data = {
-                "slug": slug,
-                "name": backup_name,
+                "compressed": True,
                 "date": date_str,
-                "type": "partial",
                 "folders": ["homeassistant"],
                 "homeassistant": {
                     "exclude_database": not database_included,
                     "version": HAVERSION,
                 },
-                "compressed": True,
+                "name": backup_name,
                 "protected": password is not None,
+                "slug": backup_id,
+                "type": "partial",
             }
 
             tar_file_path, size_in_bytes = await self.hass.async_add_executor_job(
@@ -529,15 +529,15 @@ class BackupManager(BaseBackupManager[Backup]):
                 password,
             )
             backup = BaseBackup(
-                slug=slug,
-                name=backup_name,
+                backup_id=backup_id,
                 date=date_str,
-                size=round(size_in_bytes / 1_048_576, 2),
+                name=backup_name,
                 protected=password is not None,
+                size=round(size_in_bytes / 1_048_576, 2),
             )
             LOGGER.debug(
-                "Generated new backup with slug %s, uploading to agents %s",
-                slug,
+                "Generated new backup with backup_id %s, uploading to agents %s",
+                backup_id,
                 agent_ids,
             )
             await self._async_upload_backup(
@@ -564,7 +564,7 @@ class BackupManager(BaseBackupManager[Backup]):
         if tar_file_paths:
             tar_file_path = tar_file_paths[0]
         else:
-            tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
+            tar_file_path = self.temp_backup_dir / f"{backup_data['backup_id']}.tar"
         if not (backup_dir := tar_file_path.parent).exists():
             LOGGER.debug("Creating backup directory %s", backup_dir)
             backup_dir.mkdir()
@@ -600,7 +600,7 @@ class BackupManager(BaseBackupManager[Backup]):
 
     async def async_restore_backup(
         self,
-        slug: str,
+        backup_id: str,
         *,
         agent_id: str,
         password: str | None,
@@ -614,17 +614,21 @@ class BackupManager(BaseBackupManager[Backup]):
 
         if agent_id in self.local_backup_agents:
             local_agent = self.local_backup_agents[agent_id]
-            if not await local_agent.async_get_backup(slug=slug):
-                raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
-            path = local_agent.get_backup_path(slug=slug)
+            if not await local_agent.async_get_backup(backup_id):
+                raise HomeAssistantError(
+                    f"Backup {backup_id} not found in agent {agent_id}"
+                )
+            path = local_agent.get_backup_path(backup_id)
         else:
-            path = self.temp_backup_dir / f"{slug}.tar"
+            path = self.temp_backup_dir / f"{backup_id}.tar"
             agent = self.backup_agents[agent_id]
-            if not (backup := await agent.async_get_backup(slug=slug)):
-                raise HomeAssistantError(f"Backup {slug} not found in agent {agent_id}")
-            await agent.async_download_backup(id=backup.id, path=path)
+            if not await agent.async_get_backup(backup_id):
+                raise HomeAssistantError(
+                    f"Backup {backup_id} not found in agent {agent_id}"
+                )
+            await agent.async_download_backup(backup_id, path=path)
 
-        path = local_agent.get_backup_path(slug)
+        path = local_agent.get_backup_path(backup_id)
 
         def _write_restore_file() -> None:
             """Write the restore file."""
@@ -637,6 +641,6 @@ class BackupManager(BaseBackupManager[Backup]):
         await self.hass.services.async_call("homeassistant", "restart", {})
 
 
-def _generate_slug(date: str, name: str) -> str:
-    """Generate a backup slug."""
+def _generate_backup_id(date: str, name: str) -> str:
+    """Generate a backup ID."""
     return hashlib.sha1(f"{date} - {name}".lower().encode()).hexdigest()[:8]

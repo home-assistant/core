@@ -7,10 +7,10 @@ from dataclasses import asdict, dataclass
 class BaseBackup:
     """Base backup class."""
 
+    backup_id: str
     date: str
     name: str
     protected: bool
-    slug: str
     size: float
 
     def as_dict(self) -> dict:
@@ -22,9 +22,9 @@ class BaseBackup:
 class BackupUploadMetadata:
     """Backup upload metadata."""
 
+    backup_id: str  # The ID of the backup
     date: str  # The date the backup was created
-    slug: str  # The slug of the backup
-    size: float  # The size of the backup (in bytes)
-    name: str  # The name of the backup
     homeassistant: str  # The version of Home Assistant that created the backup
+    name: str  # The name of the backup
     protected: bool  # If the backup is protected
+    size: float  # The size of the backup (in bytes)
