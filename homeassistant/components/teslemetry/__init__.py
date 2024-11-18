@@ -7,6 +7,7 @@ from typing import Final
 from tesla_fleet_api import EnergySpecific, Teslemetry, VehicleSpecific
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
+    Forbidden,
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
@@ -155,10 +156,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 serial_number=str(site_id),
             )
 
+            # Check live status endpoint works before creating its coordinator
+            try:
+                live_status = (await api.live_status())["response"]
+            except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+                raise ConfigEntryAuthFailed from e
+            except TeslaFleetError as e:
+                raise ConfigEntryNotReady(e.message) from e
+
             energysites.append(
                 TeslemetryEnergyData(
                     api=api,
-                    live_coordinator=TeslemetryEnergySiteLiveCoordinator(hass, api),
+                    live_coordinator=(
+                        TeslemetryEnergySiteLiveCoordinator(hass, api, live_status)
+                        if isinstance(live_status, dict)
+                        else None
+                    ),
                     info_coordinator=TeslemetryEnergySiteInfoCoordinator(
                         hass, api, product
                     ),
@@ -177,10 +190,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
-        ),
-        *(
-            energysite.live_coordinator.async_config_entry_first_refresh()
-            for energysite in energysites
         ),
         *(
             energysite.info_coordinator.async_config_entry_first_refresh()

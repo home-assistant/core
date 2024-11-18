@@ -111,7 +111,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
     updated_once: bool
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific, data: dict) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
         super().__init__(
             hass,
@@ -120,6 +120,12 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             update_interval=ENERGY_LIVE_INTERVAL,
         )
         self.api = api
+
+        # Convert Wall Connectors from array to dict
+        data["wall_connectors"] = {
+            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+        }
+        self.data = data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
@@ -130,10 +136,6 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-
-        # Some energy sites do not return live status
-        if not isinstance(data, dict):
-            return {}
 
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
