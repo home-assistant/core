@@ -316,14 +316,29 @@ class BackupManager(BaseBackupManager[Backup]):
 
     async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
         """Return a backup."""
-        # TODO: This is not efficient, but it's fine for draft
-        backups = await self.async_get_backups()
-        return backups.get(slug)
+        backup: Backup | None = None
+
+        for agent_id, agent in self.backup_agents.items():
+            LOGGER.warning("Querying agent %s", agent_id)
+            if not (agent_backup := await agent.async_get_backup(slug=slug)):
+                continue
+            if backup is None:
+                backup = Backup(
+                    slug=agent_backup.slug,
+                    name=agent_backup.name,
+                    date=agent_backup.date,
+                    agent_ids=[],
+                    size=agent_backup.size,
+                    protected=agent_backup.protected,
+                )
+                backup.agent_ids.append(agent_id)
+
+        return backup
 
     async def async_get_backup_path(self, *, slug: str, **kwargs: Any) -> Path | None:
         """Return path to a backup if it is available locally."""
         for local_agent in self.local_backup_agents.values():
-            if not await local_agent.async_get_backup(slug=slug):  # type: ignore[attr-defined]
+            if not await local_agent.async_get_backup(slug=slug):
                 continue
             return local_agent.get_backup_path(slug)
         return None

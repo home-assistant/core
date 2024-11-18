@@ -85,6 +85,24 @@ class BackupAgentTest(BackupAgent):
             )
         ]
 
+    async def async_get_backup(
+        self,
+        *,
+        slug: str,
+        **kwargs: Any,
+    ) -> UploadedBackup | None:
+        """Return a backup."""
+        if slug != "abc123":
+            return None
+        return UploadedBackup(
+            id="abc123",
+            date="1970-01-01T00:00:00Z",
+            name="Test",
+            protected=False,
+            size=13.37,
+            slug="abc123",
+        )
+
 
 async def setup_backup_integration(
     hass: HomeAssistant,

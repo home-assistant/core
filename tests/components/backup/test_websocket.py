@@ -85,8 +85,9 @@ async def test_details(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
-    assert await client.receive_json() == snapshot
+    with patch("pathlib.Path.exists", return_value=True):
+        await client.send_json_auto_id({"type": "backup/details", "slug": "abc123"})
+        assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(

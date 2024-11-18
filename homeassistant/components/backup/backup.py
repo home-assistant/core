@@ -110,7 +110,10 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         return list(self._backups.values())
 
     async def async_get_backup(
-        self, *, slug: str, **kwargs: Any
+        self,
+        *,
+        slug: str,
+        **kwargs: Any,
     ) -> UploadedBackup | None:
         """Return a backup."""
         if not self._loaded_backups:

@@ -52,7 +52,7 @@ class DownloadBackupView(HomeAssistantView):
         if agent_id not in manager.local_backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.local_backup_agents[agent_id]
-        backup = await agent.async_get_backup(slug=slug)  # type: ignore[attr-defined]
+        backup = await agent.async_get_backup(slug=slug)
         path = agent.get_backup_path(slug=slug)
 
         # We don't need to check if the path exists, aiohttp.FileResponse will handle

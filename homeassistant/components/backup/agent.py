@@ -56,6 +56,15 @@ class BackupAgent(abc.ABC):
     async def async_list_backups(self, **kwargs: Any) -> list[UploadedBackup]:
         """List backups."""
 
+    @abc.abstractmethod
+    async def async_get_backup(
+        self,
+        *,
+        slug: str,
+        **kwargs: Any,
+    ) -> UploadedBackup | None:
+        """Return a backup."""
+
 
 class LocalBackupAgent(BackupAgent):
     """Local backup agent."""
