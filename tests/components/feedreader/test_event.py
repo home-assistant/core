@@ -59,3 +59,41 @@ async def test_event_entity(
         assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
         assert state.attributes[ATTR_CONTENT] == "This is a summary"
         assert state.attributes[ATTR_DESCRIPTION] == "Description 1"
+
+
+async def test_event_htmlentities(hass: HomeAssistant, feed_htmlentities) -> None:
+    """Test feed event entity with HTML Entities."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=[feed_htmlentities],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("event.mock_title")
+        assert state
+        assert state.attributes[ATTR_TITLE] == "Título 1"
+        assert state.attributes[ATTR_CONTENT] == "Contenido 1 en español"
+        assert state.attributes[ATTR_DESCRIPTION] == "Descripción 1"
+
+
+async def test_event_atom_htmlentities(
+    hass: HomeAssistant, feed_atom_htmlentities
+) -> None:
+    """Test ATOM feed event entity with HTML Entities."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=[feed_atom_htmlentities],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("event.mock_title")
+        assert state
+        assert state.attributes[ATTR_TITLE] == "Título"
+        assert state.attributes[ATTR_CONTENT] == "Contenido en español"
+        assert state.attributes[ATTR_DESCRIPTION] == "Resumen en español"
