@@ -217,8 +217,11 @@ async def test_getting_backup_that_does_not_exist(
     local_agent._loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=False):
-        backup = await manager.async_get_backup(slug=TEST_LOCAL_BACKUP.slug)
+        backup, agent_errors = await manager.async_get_backup(
+            slug=TEST_LOCAL_BACKUP.slug
+        )
         assert backup is None
+        assert agent_errors == {}
 
         assert (
             f"Removing tracked backup ({TEST_LOCAL_BACKUP.slug}) that "

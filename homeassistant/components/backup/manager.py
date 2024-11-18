@@ -221,7 +221,9 @@ class BaseBackupManager(abc.ABC, Generic[_BackupT]):
         """
 
     @abc.abstractmethod
-    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> _BackupT | None:
+    async def async_get_backup(
+        self, *, slug: str, **kwargs: Any
+    ) -> tuple[_BackupT | None, dict[str, Exception]]:
         """Get a backup."""
 
     @abc.abstractmethod
@@ -314,25 +316,41 @@ class BackupManager(BaseBackupManager[Backup]):
 
         return (backups, agent_errors)
 
-    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
+    async def async_get_backup(
+        self, *, slug: str, **kwargs: Any
+    ) -> tuple[Backup | None, dict[str, Exception]]:
         """Return a backup."""
         backup: Backup | None = None
+        agent_errors: dict[str, Exception] = {}
+        agent_ids = list(self.backup_agents.keys())
 
-        for agent_id, agent in self.backup_agents.items():
-            if not (agent_backup := await agent.async_get_backup(slug=slug)):
+        get_backup_results = await asyncio.gather(
+            *(
+                agent.async_get_backup(slug=slug)
+                for agent in self.backup_agents.values()
+            ),
+            return_exceptions=True,
+        )
+        for idx, result in enumerate(get_backup_results):
+            if isinstance(result, BackupAgentError):
+                agent_errors[agent_ids[idx]] = result
+                continue
+            if isinstance(result, BaseException):
+                raise result
+            if not result:
                 continue
             if backup is None:
                 backup = Backup(
-                    slug=agent_backup.slug,
-                    name=agent_backup.name,
-                    date=agent_backup.date,
+                    slug=result.slug,
+                    name=result.name,
+                    date=result.date,
                     agent_ids=[],
-                    size=agent_backup.size,
-                    protected=agent_backup.protected,
+                    size=result.size,
+                    protected=result.protected,
                 )
-                backup.agent_ids.append(agent_id)
+                backup.agent_ids.append(agent_ids[idx])
 
-        return backup
+        return (backup, agent_errors)
 
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
