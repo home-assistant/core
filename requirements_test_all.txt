@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.51.0
+PySwitchbot==0.53.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -119,7 +119,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.0.0
 
 # homeassistant.components.accuweather
-accuweather==3.0.0
+accuweather==4.0.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -965,7 +965,7 @@ home-assistant-intents==2024.11.13
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.2
+homematicip==1.1.3
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1626,7 +1626,7 @@ pykmtronic==0.3.0
 pykodi==0.2.7
 
 # homeassistant.components.kostal_plenticore
-pykoplenti==1.2.2
+pykoplenti==1.3.0
 
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
@@ -1745,7 +1745,7 @@ pyoverkiz==1.14.1
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.11
+pypalazzetti==0.1.12
 
 # homeassistant.components.lcn
 pypck==0.7.24
@@ -1950,7 +1950,7 @@ pytile==2023.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.1.8
+pytouchlinesl==0.1.9
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2186,7 +2186,7 @@ srpenergy==1.3.6
 starline==0.1.5
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.1.3
+starlink-grpc-core==1.2.0
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -2313,7 +2313,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.4.0
+uiprotect==6.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
