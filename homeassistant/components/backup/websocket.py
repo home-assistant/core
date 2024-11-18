@@ -1,7 +1,6 @@
 """Websocket commands for the Backup integration."""
 
-from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -9,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_MANAGER, LOGGER
-from .manager import BackupProgress
+from .manager import BackupManager, BackupProgress
 
 
 @callback
@@ -97,6 +96,7 @@ async def handle_remove(
     {
         vol.Required("type"): "backup/restore",
         vol.Required("slug"): str,
+        vol.Required("agent_id"): str,
         vol.Optional("password"): str,
     }
 )
@@ -109,6 +109,7 @@ async def handle_restore(
     """Restore a backup."""
     await hass.data[DATA_MANAGER].async_restore_backup(
         slug=msg["slug"],
+        agent_id=msg["agent_id"],
         password=msg.get("password"),
     )
     connection.send_result(msg["id"])
@@ -119,6 +120,7 @@ async def handle_restore(
     {
         vol.Required("type"): "backup/generate",
         vol.Optional("addons_included"): [str],
+        vol.Required("agent_ids"): [str],
         vol.Optional("database_included", default=True): bool,
         vol.Optional("folders_included"): [str],
         vol.Optional("name"): str,
@@ -138,6 +140,7 @@ async def handle_create(
 
     backup = await hass.data[DATA_MANAGER].async_create_backup(
         addons_included=msg.get("addons_included"),
+        agent_ids=msg["agent_ids"],
         database_included=msg["database_included"],
         folders_included=msg.get("folders_included"),
         name=msg.get("name"),
@@ -199,7 +202,6 @@ async def backup_agents_info(
 ) -> None:
     """Return backup agents info."""
     manager = hass.data[DATA_MANAGER]
-    await manager.load_platforms()
     connection.send_result(
         msg["id"],
         {
@@ -220,7 +222,6 @@ async def backup_agents_list_backups(
     """Return a list of uploaded backups."""
     manager = hass.data[DATA_MANAGER]
     backups: list[dict[str, Any]] = []
-    await manager.load_platforms()
     for agent_id, agent in manager.backup_agents.items():
         _listed_backups = await agent.async_list_backups()
         backups.extend({**b.as_dict(), "agent_id": agent_id} for b in _listed_backups)
@@ -243,18 +244,17 @@ async def backup_agents_download(
     msg: dict[str, Any],
 ) -> None:
     """Download an uploaded backup."""
-    manager = hass.data[DATA_MANAGER]
-    await manager.load_platforms()
-
+    manager = cast(BackupManager, hass.data[DATA_MANAGER])
     if not (agent := manager.backup_agents.get(msg["agent_id"])):
         connection.send_error(
             msg["id"], "unknown_agent", f"Agent {msg['agent_id']} not found"
         )
         return
     try:
+        path = manager.temp_backup_dir / f"{msg["slug"]}.tar"
         await agent.async_download_backup(
             id=msg["backup_id"],
-            path=Path(hass.config.path("backup"), f"{msg['slug']}.tar"),
+            path=path,
         )
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "backup_agents_download", str(err))
