@@ -297,7 +297,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "ywcgq": (
         NumberEntityDescription(
             key=DPCode.MAX_SET,
-            translation_key="max_set",
+            translation_key="liquid_high_level",
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=PERCENTAGE,
             icon="mdi:arrow-collapse-up",
@@ -307,7 +307,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.MINI_SET,
-            translation_key="mini_set",
+            translation_key="liquid_low_level",
             entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=PERCENTAGE,
             icon="mdi:arrow-collapse-down",
@@ -328,7 +328,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.LIQUID_DEPTH_MAX,
-            translation_key="liquid_depth_max",
+            translation_key="maximum_depth",
             entity_category=EntityCategory.CONFIG,
             device_class=NumberDeviceClass.DISTANCE,
             native_unit_of_measurement=UnitOfLength.METERS,
