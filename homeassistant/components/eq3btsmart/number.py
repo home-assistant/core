@@ -20,7 +20,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Eq3ConfigEntry
@@ -132,27 +132,19 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @property
-    def native_value(self) -> float:
-        """Return the state of the entity."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
         if TYPE_CHECKING:
-            assert self._thermostat.status is not None
-            assert self._thermostat.status.presets is not None
+            assert self._status.presets is not None
 
-        return self.entity_description.value_func(self._thermostat.status.presets)
+        self._attr_native_value = self.entity_description.value_func(
+            self._status.presets
+        )
+        super()._handle_coordinator_update()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the state of the entity."""
 
         await self.entity_description.value_set_func(self._thermostat)(value)
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-
-        return (
-            self._thermostat.status is not None
-            and self._thermostat.status.presets is not None
-            and self._attr_available
-        )

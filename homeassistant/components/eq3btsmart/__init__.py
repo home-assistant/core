@@ -1,11 +1,9 @@
 """Support for EQ3 devices."""
 
-import asyncio
-import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from eq3btsmart import Thermostat
-from eq3btsmart.exceptions import Eq3Exception
 from eq3btsmart.thermostat_config import ThermostatConfig
 
 from homeassistant.components import bluetooth
@@ -13,10 +11,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import SIGNAL_THERMOSTAT_CONNECTED, SIGNAL_THERMOSTAT_DISCONNECTED
-from .models import Eq3Config, Eq3ConfigEntryData
+from .coordinator import Eq3Coordinator
+from .models import Eq3Config
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -26,7 +23,14 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
-_LOGGER = logging.getLogger(__name__)
+
+@dataclass(slots=True)
+class Eq3ConfigEntryData:
+    """Config entry for a single eQ-3 device."""
+
+    eq3_config: Eq3Config
+    thermostat: Thermostat
+    coordinator: Eq3Coordinator
 
 
 type Eq3ConfigEntry = ConfigEntry[Eq3ConfigEntryData]
@@ -59,15 +63,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
         ),
         ble_device=device,
     )
+    coordinator = Eq3Coordinator(hass, thermostat, mac_address)
 
     entry.runtime_data = Eq3ConfigEntryData(
-        eq3_config=eq3_config, thermostat=thermostat
+        eq3_config=eq3_config, thermostat=thermostat, coordinator=coordinator
     )
     entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_create_background_task(
-        hass, _async_run_thermostat(hass, entry), entry.entry_id
-    )
+    coordinator.async_update_listeners()
 
     return True
 
@@ -85,66 +90,3 @@ async def update_listener(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
     """Handle config entry update."""
 
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def _async_run_thermostat(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
-    """Run the thermostat."""
-
-    thermostat = entry.runtime_data.thermostat
-    mac_address = entry.runtime_data.eq3_config.mac_address
-    scan_interval = entry.runtime_data.eq3_config.scan_interval
-
-    await _async_reconnect_thermostat(hass, entry)
-
-    while True:
-        try:
-            await thermostat.async_get_status()
-        except Eq3Exception as e:
-            if not thermostat.is_connected:
-                _LOGGER.error(
-                    "[%s] eQ-3 device disconnected",
-                    mac_address,
-                )
-                async_dispatcher_send(
-                    hass,
-                    f"{SIGNAL_THERMOSTAT_DISCONNECTED}_{mac_address}",
-                )
-                await _async_reconnect_thermostat(hass, entry)
-                continue
-
-            _LOGGER.error(
-                "[%s] Error updating eQ-3 device: %s",
-                mac_address,
-                e,
-            )
-
-        await asyncio.sleep(scan_interval)
-
-
-async def _async_reconnect_thermostat(
-    hass: HomeAssistant, entry: Eq3ConfigEntry
-) -> None:
-    """Reconnect the thermostat."""
-
-    thermostat = entry.runtime_data.thermostat
-    mac_address = entry.runtime_data.eq3_config.mac_address
-    scan_interval = entry.runtime_data.eq3_config.scan_interval
-
-    while True:
-        try:
-            await thermostat.async_connect()
-        except Eq3Exception:
-            await asyncio.sleep(scan_interval)
-            continue
-
-        _LOGGER.debug(
-            "[%s] eQ-3 device connected",
-            mac_address,
-        )
-
-        async_dispatcher_send(
-            hass,
-            f"{SIGNAL_THERMOSTAT_CONNECTED}_{mac_address}",
-        )
-
-        return
