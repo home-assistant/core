@@ -337,3 +337,15 @@
     }),
   })
 # ---
+# name: test_device_diagnostics
+  dict({
+    'BSH.Common.Setting.ChildLock': dict({
+      'type': 'Boolean',
+      'value': False,
+    }),
+    'BSH.Common.Setting.PowerState': dict({
+      'type': 'BSH.Common.EnumType.PowerState',
+      'value': 'BSH.Common.EnumType.PowerState.On',
+    }),
+  })
+# ---
