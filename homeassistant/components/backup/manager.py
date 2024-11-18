@@ -272,28 +272,31 @@ class BackupManager(BaseBackupManager[Backup]):
     ) -> None:
         """Upload a backup to selected agents."""
         self.syncing = True
-        sync_backup_results = await asyncio.gather(
-            *(
-                self.backup_agents[agent_id].async_upload_backup(
-                    path=path,
-                    metadata=BackupUploadMetadata(
-                        homeassistant=HAVERSION,
-                        size=backup.size,
-                        date=backup.date,
-                        slug=backup.slug,
-                        name=backup.name,
-                        protected=backup.protected,
-                    ),
-                )
-                for agent_id in agent_ids
-            ),
-            return_exceptions=True,
-        )
-        for result in sync_backup_results:
-            if isinstance(result, Exception):
-                LOGGER.error("Error during backup upload - %s", result)
-        # TODO: Reset self.syncing in a finally block
-        self.syncing = False
+        try:
+            sync_backup_results = await asyncio.gather(
+                *(
+                    self.backup_agents[agent_id].async_upload_backup(
+                        path=path,
+                        metadata=BackupUploadMetadata(
+                            homeassistant=HAVERSION,
+                            size=backup.size,
+                            date=backup.date,
+                            slug=backup.slug,
+                            name=backup.name,
+                            protected=backup.protected,
+                        ),
+                    )
+                    for agent_id in agent_ids
+                ),
+                return_exceptions=True,
+            )
+            for result in sync_backup_results:
+                if isinstance(result, Exception):
+                    LOGGER.exception(
+                        "Error during backup upload - %s", result, exc_info=result
+                    )
+        finally:
+            self.syncing = False
 
     async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
         """Return backups."""
@@ -345,7 +348,6 @@ class BackupManager(BaseBackupManager[Backup]):
 
     async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
-        # TODO: We should only remove from the agents that have the backup
         for agent in self.backup_agents.values():
             await agent.async_remove_backup(slug=slug)  # type: ignore[attr-defined]
 
@@ -360,8 +362,6 @@ class BackupManager(BaseBackupManager[Backup]):
         queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
             SimpleQueue()
         )
-        # TODO: I think we can't safely use TemporaryDirectory here, it might be a RAM
-        # disk, and we might exhaust the memory
         temp_dir_handler = await self.hass.async_add_executor_job(TemporaryDirectory)
         target_temp_file = Path(
             temp_dir_handler.name, contents.filename or "backup.tar"
