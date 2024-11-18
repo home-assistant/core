@@ -332,7 +332,7 @@ def migrate_entity_ids(
                     device.id, new_identifiers=new_identifiers
                 )
             else:
-                _LOGGER.error(
+                _LOGGER.warning(
                     "Reolink device with uid %s already exists, "
                     "removing device with uid %s",
                     new_device_id,
@@ -372,7 +372,7 @@ def migrate_entity_ids(
                         entity.entity_id, new_unique_id=new_id
                     )
                 else:
-                    _LOGGER.error(
+                    _LOGGER.warning(
                         "Reolink entity with unique_id %s already exists, "
                         "removing device with unique_id %s",
                         new_id,
