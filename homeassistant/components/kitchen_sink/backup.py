@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_backup_sync_agents(
+async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Register the backup agents."""
@@ -29,11 +29,13 @@ class KitchenSinkBackupAgent(BackupAgent):
 
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
-        super().__init__(name)
+        super().__init__()
+        self.name = name
         self._uploads = [
             UploadedBackup(
                 id="def456",
                 name="Kitchen sink syncer",
+                protected=False,
                 slug="abc123",
                 size=1234,
                 date="1970-01-01T00:00:00Z",
@@ -63,6 +65,7 @@ class KitchenSinkBackupAgent(BackupAgent):
             UploadedBackup(
                 id=uuid4().hex,
                 name=metadata.name,
+                protected=metadata.protected,
                 slug=metadata.slug,
                 size=metadata.size,
                 date=metadata.date,

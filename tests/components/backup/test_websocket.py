@@ -1,14 +1,16 @@
 """Tests for the Backup integration."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import ANY, AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.backup import BaseBackup
 from homeassistant.components.backup.const import DATA_MANAGER
-from homeassistant.components.backup.models import BaseBackup
+from homeassistant.components.backup.manager import NewBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -126,6 +128,14 @@ async def test_remove(
 
 
 @pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        {},
+        {"password": "abc123"},
+    ],
+)
+@pytest.mark.parametrize(
     ("with_hassio", "number_of_messages"),
     [
         pytest.param(True, 1, id="with_hassio"),
@@ -136,6 +146,7 @@ async def test_remove(
 async def test_generate(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    data: dict[str, Any] | None,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     with_hassio: bool,
@@ -148,9 +159,64 @@ async def test_generate(
     freezer.move_to("2024-11-13 12:01:00+01:00")
     await hass.async_block_till_done()
 
-    await client.send_json_auto_id({"type": "backup/generate"})
+    await client.send_json_auto_id({"type": "backup/generate", **(data or {})})
     for _ in range(number_of_messages):
         assert await client.receive_json() == snapshot
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    ("params", "expected_extra_call_params"),
+    [
+        ({}, {}),
+        (
+            {
+                "addons_included": ["ssl"],
+                "database_included": False,
+                "folders_included": ["media"],
+                "name": "abc123",
+            },
+            {
+                "addons_included": ["ssl"],
+                "database_included": False,
+                "folders_included": ["media"],
+                "name": "abc123",
+            },
+        ),
+    ],
+)
+async def test_generate_without_hassio(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    params: dict,
+    expected_extra_call_params: tuple,
+) -> None:
+    """Test generating a backup."""
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+    freezer.move_to("2024-11-13 12:01:00+01:00")
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+        return_value=NewBackup("abc123"),
+    ) as generate_backup:
+        await client.send_json_auto_id({"type": "backup/generate"} | params)
+        assert await client.receive_json() == snapshot
+        generate_backup.assert_called_once_with(
+            **{
+                "addons_included": None,
+                "database_included": True,
+                "folders_included": None,
+                "name": None,
+                "on_progress": ANY,
+                "password": None,
+            }
+            | expected_extra_call_params
+        )
 
 
 @pytest.mark.parametrize(
@@ -375,7 +441,7 @@ async def test_agents_download(
         {
             "type": "backup/agents/download",
             "slug": "abc123",
-            "agent": "domain.test",
+            "agent_id": "domain.test",
             "backup_id": "abc123",
         }
     )
@@ -403,7 +469,7 @@ async def test_agents_download_exception(
         {
             "type": "backup/agents/download",
             "slug": "abc123",
-            "agent": "domain.test",
+            "agent_id": "domain.test",
             "backup_id": "abc123",
         }
     )
@@ -427,7 +493,7 @@ async def test_agents_download_unknown_agent(
         {
             "type": "backup/agents/download",
             "slug": "abc123",
-            "agent": "domain.test",
+            "agent_id": "domain.test",
             "backup_id": "abc123",
         }
     )

@@ -6,10 +6,13 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.backup import DOMAIN
-from homeassistant.components.backup.agent import BackupAgent, UploadedBackup
+from homeassistant.components.backup import (
+    DOMAIN,
+    BackupAgent,
+    BackupUploadMetadata,
+    UploadedBackup,
+)
 from homeassistant.components.backup.manager import Backup
-from homeassistant.components.backup.models import BackupUploadMetadata
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -20,11 +23,16 @@ TEST_BACKUP = Backup(
     date="1970-01-01T00:00:00.000Z",
     path=Path("abc123.tar"),
     size=0.0,
+    protected=False,
 )
 
 
 class BackupAgentTest(BackupAgent):
     """Test backup agent."""
+
+    def __init__(self, name: str) -> None:
+        """Initialize the backup agent."""
+        self.name = name
 
     async def async_download_backup(
         self,
@@ -49,10 +57,11 @@ class BackupAgentTest(BackupAgent):
         return [
             UploadedBackup(
                 id="abc123",
-                name="Test",
-                slug="abc123",
-                size=13.37,
                 date="1970-01-01T00:00:00Z",
+                name="Test",
+                protected=False,
+                size=13.37,
+                slug="abc123",
             )
         ]
 

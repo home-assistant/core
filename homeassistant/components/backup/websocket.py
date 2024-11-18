@@ -97,6 +97,7 @@ async def handle_remove(
     {
         vol.Required("type"): "backup/restore",
         vol.Required("slug"): str,
+        vol.Optional("password"): str,
     }
 )
 @websocket_api.async_response
@@ -106,12 +107,24 @@ async def handle_restore(
     msg: dict[str, Any],
 ) -> None:
     """Restore a backup."""
-    await hass.data[DATA_MANAGER].async_restore_backup(msg["slug"])
+    await hass.data[DATA_MANAGER].async_restore_backup(
+        slug=msg["slug"],
+        password=msg.get("password"),
+    )
     connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/generate"})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/generate",
+        vol.Optional("addons_included"): [str],
+        vol.Optional("database_included", default=True): bool,
+        vol.Optional("folders_included"): [str],
+        vol.Optional("name"): str,
+        vol.Optional("password"): str,
+    }
+)
 @websocket_api.async_response
 async def handle_create(
     hass: HomeAssistant,
@@ -123,7 +136,14 @@ async def handle_create(
     def on_progress(progress: BackupProgress) -> None:
         connection.send_message(websocket_api.event_message(msg["id"], progress))
 
-    backup = await hass.data[DATA_MANAGER].async_create_backup(on_progress=on_progress)
+    backup = await hass.data[DATA_MANAGER].async_create_backup(
+        addons_included=msg.get("addons_included"),
+        database_included=msg["database_included"],
+        folders_included=msg.get("folders_included"),
+        name=msg.get("name"),
+        on_progress=on_progress,
+        password=msg.get("password"),
+    )
     connection.send_result(msg["id"], backup)
 
 
@@ -183,7 +203,7 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"id": agent_id} for agent_id in manager.backup_agents],
+            "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
             "syncing": manager.syncing,
         },
     )
@@ -211,7 +231,7 @@ async def backup_agents_list_backups(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/agents/download",
-        vol.Required("agent"): str,
+        vol.Required("agent_id"): str,
         vol.Required("backup_id"): str,
         vol.Required("slug"): str,
     }
@@ -226,9 +246,9 @@ async def backup_agents_download(
     manager = hass.data[DATA_MANAGER]
     await manager.load_platforms()
 
-    if not (agent := manager.backup_agents.get(msg["agent"])):
+    if not (agent := manager.backup_agents.get(msg["agent_id"])):
         connection.send_error(
-            msg["id"], "unknown_agent", f"Agent {msg['agent']} not found"
+            msg["id"], "unknown_agent", f"Agent {msg['agent_id']} not found"
         )
         return
     try:

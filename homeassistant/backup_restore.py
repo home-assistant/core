@@ -1,6 +1,7 @@
 """Home Assistant module to handle restoring backups."""
 
 from dataclasses import dataclass
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -24,6 +25,18 @@ class RestoreBackupFileContent:
     """Definition for restore backup file content."""
 
     backup_file_path: Path
+    password: str | None = None
+
+
+def password_to_key(password: str) -> bytes:
+    """Generate a AES Key from password.
+
+    Matches the implementation in supervisor.backups.utils.password_to_key.
+    """
+    key: bytes = password.encode()
+    for _ in range(100):
+        key = hashlib.sha256(key).digest()
+    return key[:16]
 
 
 def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | None:
@@ -32,7 +45,8 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
     try:
         instruction_content = json.loads(instruction_path.read_text(encoding="utf-8"))
         return RestoreBackupFileContent(
-            backup_file_path=Path(instruction_content["path"])
+            backup_file_path=Path(instruction_content["path"]),
+            password=instruction_content.get("password"),
         )
     except (FileNotFoundError, json.JSONDecodeError):
         return None
@@ -54,7 +68,11 @@ def _clear_configuration_directory(config_dir: Path) -> None:
             shutil.rmtree(entrypath)
 
 
-def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
+def _extract_backup(
+    config_dir: Path,
+    backup_file_path: Path,
+    password: str | None = None,
+) -> None:
     """Extract the backup file to the config directory."""
     with (
         TemporaryDirectory() as tempdir,
@@ -88,21 +106,27 @@ def _extract_backup(config_dir: Path, backup_file_path: Path) -> None:
                 f"homeassistant.tar{'.gz' if backup_meta["compressed"] else ''}",
             ),
             gzip=backup_meta["compressed"],
+            key=password_to_key(password) if password is not None else None,
             mode="r",
         ) as istf:
-            for member in istf.getmembers():
-                if member.name == "data":
-                    continue
-                member.name = member.name.replace("data/", "")
-            _clear_configuration_directory(config_dir)
             istf.extractall(
-                path=config_dir,
-                members=[
-                    member
-                    for member in securetar.secure_path(istf)
-                    if member.name != "data"
-                ],
+                path=Path(
+                    tempdir,
+                    "homeassistant",
+                ),
+                members=securetar.secure_path(istf),
                 filter="fully_trusted",
+            )
+            _clear_configuration_directory(config_dir)
+            shutil.copytree(
+                Path(
+                    tempdir,
+                    "homeassistant",
+                    "data",
+                ),
+                config_dir,
+                dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns(*(KEEP_PATHS)),
             )
 
 
@@ -119,7 +143,11 @@ def restore_backup(config_dir_path: str) -> bool:
     backup_file_path = restore_content.backup_file_path
     _LOGGER.info("Restoring %s", backup_file_path)
     try:
-        _extract_backup(config_dir, backup_file_path)
+        _extract_backup(
+            config_dir=config_dir,
+            backup_file_path=backup_file_path,
+            password=restore_content.password,
+        )
     except FileNotFoundError as err:
         raise ValueError(f"Backup file {backup_file_path} does not exist") from err
     _LOGGER.info("Restore complete, restarting")

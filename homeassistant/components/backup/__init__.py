@@ -1,24 +1,33 @@
 """The Backup integration."""
 
+import voluptuous as vol
+
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
-from .agent import BackupAgent, UploadedBackup
+from .agent import BackupAgent, BackupAgentPlatformProtocol, UploadedBackup
 from .const import DOMAIN, LOGGER
 from .http import async_register_http_views
-from .manager import BackupManager
-from .models import BackupUploadMetadata
+from .manager import Backup, BackupManager, BackupPlatformProtocol
+from .models import BackupUploadMetadata, BaseBackup
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
+    "Backup",
     "BackupAgent",
+    "BackupAgentPlatformProtocol",
+    "BackupPlatformProtocol",
     "BackupUploadMetadata",
+    "BaseBackup",
     "UploadedBackup",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+SERVICE_CREATE_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -39,11 +48,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_create_service(call: ServiceCall) -> None:
         """Service handler for creating backups."""
-        await backup_manager.async_create_backup(on_progress=None)
+        await backup_manager.async_create_backup(
+            addons_included=None,
+            database_included=True,
+            folders_included=None,
+            name=None,
+            on_progress=None,
+            password=call.data.get(CONF_PASSWORD),
+        )
         if backup_task := backup_manager.backup_task:
             await backup_task
 
-    hass.services.async_register(DOMAIN, "create", async_handle_create_service)
+    hass.services.async_register(
+        DOMAIN,
+        "create",
+        async_handle_create_service,
+        schema=SERVICE_CREATE_SCHEMA,
+    )
 
     async_register_http_views(hass)
 
