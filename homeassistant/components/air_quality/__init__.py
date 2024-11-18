@@ -29,6 +29,7 @@ ATTR_AQI: Final = "air_quality_index"
 ATTR_CO2: Final = "carbon_dioxide"
 ATTR_CO: Final = "carbon_monoxide"
 ATTR_N2O: Final = "nitrogen_oxide"
+ATTR_NH3: Final = "ammonia"
 ATTR_NO: Final = "nitrogen_monoxide"
 ATTR_NO2: Final = "nitrogen_dioxide"
 ATTR_OZONE: Final = "ozone"
@@ -39,6 +40,7 @@ ATTR_SO2: Final = "sulphur_dioxide"
 
 PROP_TO_ATTR: Final[dict[str, str]] = {
     "air_quality_index": ATTR_AQI,
+    "ammonia": ATTR_NH3,
     "carbon_dioxide": ATTR_CO2,
     "carbon_monoxide": ATTR_CO,
     "nitrogen_oxide": ATTR_N2O,
@@ -89,6 +91,11 @@ class AirQualityEntity(Entity):
     @property
     def particulate_matter_0_1(self) -> StateType:
         """Return the particulate matter 0.1 level."""
+        return None
+
+    @property
+    def ammonia(self) -> StateType:
+        """Return the NH3 (ammonia) level."""
         return None
 
     @property
