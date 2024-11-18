@@ -215,7 +215,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(19, 17, 25)
+        mock_set_color.assert_called_with(20, 17, 25)
 
         with patch.object(mock_light, "set_color") as mock_set_color:
             await hass.services.async_call(
@@ -226,7 +226,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(220, 201, 110)
+        mock_set_color.assert_called_with(220, 202, 110)
 
         with patch.object(
             mock_light,
@@ -246,7 +246,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(75, 68, 37)
+        mock_set_color.assert_called_with(75, 69, 38)
 
         with patch.object(mock_light, "set_color") as mock_set_color:
             await hass.services.async_call(
@@ -261,7 +261,7 @@ async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
             )
             await hass.async_block_till_done()
 
-        mock_set_color.assert_called_with(162, 200, 50)
+        mock_set_color.assert_called_with(163, 200, 50)
 
 
 async def test_light_turn_off(hass: HomeAssistant, mock_light) -> None:
@@ -352,6 +352,6 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             ATTR_COLOR_MODE: ColorMode.HS,
             ATTR_BRIGHTNESS: 220,
             ATTR_HS_COLOR: (261.429, 31.818),
-            ATTR_RGB_COLOR: (202, 173, 255),
-            ATTR_XY_COLOR: (0.291, 0.232),
+            ATTR_RGB_COLOR: (203, 174, 255),
+            ATTR_XY_COLOR: (0.292, 0.234),
         }
