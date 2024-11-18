@@ -105,6 +105,12 @@ class SensorDeviceClass(StrEnum):
     """
 
     # Numerical device classes, these should be aligned with NumberDeviceClass
+    AMMONIA = "ammonia"
+    """Amount of NH3.
+
+    Unit of measurement: `µg/m³`
+    """
+
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
