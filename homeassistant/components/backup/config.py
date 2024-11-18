@@ -8,6 +8,7 @@ from typing import Self, TypedDict
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
 
@@ -51,7 +52,6 @@ class BackupConfig:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize backup config."""
         self.data = BackupConfigData()
-        self._hass = hass
         self._store: Store[StoredBackupConfig] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -65,3 +65,13 @@ class BackupConfig:
     async def save(self) -> None:
         """Save config."""
         await self._store.async_save(self.data.to_dict())
+
+    async def update(
+        self, *, max_copies: int | None | UndefinedType = UNDEFINED
+    ) -> None:
+        """Update config."""
+        for param_name, param_value in {"max_copies": max_copies}.items():
+            if param_value is not UNDEFINED:
+                setattr(self.data, param_name, param_value)
+
+        await self.save()

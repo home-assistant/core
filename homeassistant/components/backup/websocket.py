@@ -302,6 +302,8 @@ async def handle_config_update(
 ) -> None:
     """Update the stored backup config."""
     manager = hass.data[DATA_MANAGER]
-    manager.config.data.max_copies = msg.get("max_copies")
-    await manager.config.save()
+    changes = dict(msg)
+    changes.pop("id")
+    changes.pop("type")
+    await manager.config.update(**changes)
     connection.send_result(msg["id"])
