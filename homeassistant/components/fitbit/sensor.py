@@ -145,7 +145,6 @@ def _build_device_info(
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, unique_id)},
-        name=config_entry.title,
     )
 
 
@@ -179,7 +178,6 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
     ),
     FitbitSensorEntityDescription(
         key="activities/distance",
-        translation_key="distance",
         icon="mdi:map-marker",
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
