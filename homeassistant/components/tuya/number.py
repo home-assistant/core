@@ -9,7 +9,6 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-<<<<<<< HEAD
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
@@ -17,9 +16,6 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfLength
 )
-=======
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
->>>>>>> dev
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
