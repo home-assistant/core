@@ -20,7 +20,7 @@ from aiohttp import hdrs, web
 import attr
 from propcache import cached_property, under_cached_property
 import voluptuous as vol
-from webrtc_models import RTCIceCandidate, RTCIceServer
+from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -865,7 +865,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return config
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle a WebRTC candidate."""
         if self._webrtc_provider:
