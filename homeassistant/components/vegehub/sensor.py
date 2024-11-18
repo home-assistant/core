@@ -84,6 +84,8 @@ class VegeHubSensor(SensorEntity):
             f"vegehub_{mac_address}_{slot}".lower()
         )  # Generate a unique_id using mac and slot
 
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "analog"
         self._attr_name: str = name
         self._data_type: str = data_type
         self._unit_of_measurement: str = ""
@@ -102,17 +104,20 @@ class VegeHubSensor(SensorEntity):
             self._unit_of_measurement = UnitOfElectricPotential.VOLT
             self._attr_device_class = SensorDeviceClass.VOLTAGE
 
+        self._attr_suggested_unit_of_measurement = self._unit_of_measurement
+        self._attr_native_unit_of_measurement = self._unit_of_measurement
         self._mac_address: str = mac_address
         self._slot: int = slot
         self._attr_unique_id: str = new_id
-        self.entity_id: str = "sensor." + new_id
         self._ip_addr: str = ip_addr
         self._dev_name: str = dev_name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._attr_name
+        self._attr_suggested_display_precision = 2
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._mac_address)},
+            name=self._dev_name,
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+        )
 
     @property
     def native_value(self) -> float | None:
@@ -131,41 +136,6 @@ class VegeHubSensor(SensorEntity):
         if isinstance(self._attr_native_value, (int, str, float)):
             return float(self._attr_native_value)
         return None
-
-    @property
-    def suggested_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this sensor."""
-        return self._attr_device_class
-
-    @property
-    def suggested_display_precision(self) -> int:
-        """Return the suggested display precision of this sensor."""
-        return 2
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._attr_unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._mac_address)},
-            name=self._dev_name,
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-        )
 
     async def async_update_sensor(self, value):
         """Update the sensor state with the latest value."""
