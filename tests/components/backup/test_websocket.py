@@ -10,7 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import BaseBackup
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
-from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import NewBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -517,12 +517,29 @@ async def test_agents_download_unknown_agent(
     assert await client.receive_json() == snapshot
 
 
+@pytest.mark.parametrize(
+    "storage_data",
+    [
+        {},
+        {"last_automatic_backup": "2024-10-26T02:00:00+00:00", "max_copies": 3},
+        {"last_automatic_backup": None, "max_copies": 3},
+        {"last_automatic_backup": "2024-10-26T02:00:00+00:00", "max_copies": None},
+    ],
+)
 async def test_config_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
+    hass_storage: dict[str, Any],
+    storage_data: dict[str, Any],
 ) -> None:
     """Test getting backup config info."""
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": 1,
+    }
+
     await setup_backup_integration(hass)
     await hass.async_block_till_done()
 
