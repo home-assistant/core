@@ -187,6 +187,9 @@
     },
     "score_reward": {
       "service": "mdi:sack"
+    },
+    "transformation": {
+      "service": "mdi:flask-round-bottom"
     }
   }
 }

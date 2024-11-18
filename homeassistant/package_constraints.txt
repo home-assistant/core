@@ -5,7 +5,7 @@ aiodiscover==2.1.0
 aiodns==3.2.0
 aiohasupervisor==0.2.1
 aiohttp-fast-zlib==0.2.0
-aiohttp==3.11.1
+aiohttp==3.11.2
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -19,7 +19,7 @@ awesomeversion==24.6.0
 bcrypt==4.2.0
 bleak-retry-connector==3.6.0
 bleak==0.22.3
-bluetooth-adapters==0.20.0
+bluetooth-adapters==0.20.2
 bluetooth-auto-recovery==1.4.2
 bluetooth-data-tools==1.20.0
 cached-ipaddress==0.8.0
@@ -32,7 +32,7 @@ go2rtc-client==0.1.1
 ha-ffmpeg==3.2.2
 habluetooth==3.6.0
 hass-nabucasa==0.84.0
-hassil==2.0.1
+hassil==2.0.2
 home-assistant-bluetooth==1.13.0
 home-assistant-frontend==20241106.2
 home-assistant-intents==2024.11.13
@@ -69,8 +69,8 @@ uv==0.5.0
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-webrtc-models==0.2.0
-yarl==1.17.1
+webrtc-models==0.3.0
+yarl==1.17.2
 zeroconf==0.136.0
 
 # Constrain pycryptodome to avoid vulnerability

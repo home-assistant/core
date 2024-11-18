@@ -230,13 +230,15 @@ def require_webrtc_support(
             """Validate that the camera supports WebRTC."""
             entity_id = msg["entity_id"]
             camera = get_camera_from_entity_id(hass, entity_id)
-            if camera.frontend_stream_type != StreamType.WEB_RTC:
+            if StreamType.WEB_RTC not in (
+                stream_types := camera.camera_capabilities.frontend_stream_types
+            ):
                 connection.send_error(
                     msg["id"],
                     error_code,
                     (
                         "Camera does not support WebRTC,"
-                        f" frontend_stream_type={camera.frontend_stream_type}"
+                        f" frontend_stream_types={stream_types}"
                     ),
                 )
                 return
